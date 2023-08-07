@@ -5,7 +5,7 @@ import { CONFIG_TEST } from '../../src/ConfigTest'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { entryPointTranslator } from '../../src/utils/utils'
+import { peerDescriptorTranslator } from '../../src/utils/utils'
 import { createTestStream, createTestClient } from '../test-utils/utils'
 import { waitForCondition } from '@streamr/utils'
 import { NetworkNode } from '@streamr/trackerless-network'
@@ -17,7 +17,7 @@ const PAYLOAD = { hello: 'world' }
 const ENCRYPTED_MESSSAGE_FORMAT = /^[0-9A-Fa-f]+$/
 
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
-    const entryPoints = entryPointTranslator(CONFIG_TEST.network!.controlLayer!.entryPoints!)
+    const entryPoints = CONFIG_TEST.network!.controlLayer!.entryPoints!.map(peerDescriptorTranslator)
     const networkNode = new NetworkNode({
         layer0: {
             entryPoints,

@@ -7,11 +7,11 @@ import { AbortSignal as FetchAbortSignal } from 'node-fetch/externals'
 import split2 from 'split2'
 import { Readable } from 'stream'
 import LRU from '../../vendor/quick-lru'
-import { StrictStreamrClientConfig, JsonPeerDescriptor } from '../Config'
+import { StrictStreamrClientConfig, JsonPeerDescriptor, JsonNodeType } from '../Config'
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
-import { PeerDescriptor, PeerID } from '@streamr/dht'
+import { PeerDescriptor, PeerID, NodeType } from '@streamr/dht'
 
 const logger = new Logger(module)
 
@@ -112,16 +112,15 @@ export class MaxSizedSet<T> {
     }
 }
 
-export function entryPointTranslator(json: JsonPeerDescriptor[]): PeerDescriptor[] {
-    return json.map((ep: JsonPeerDescriptor) => {
-        const peerDescriptor: PeerDescriptor = {
-            kademliaId: PeerID.fromString(ep.id).value,
-            type: ep.type,
-            openInternet: ep.openInternet,
-            websocket: ep.websocket
-        }
-        return peerDescriptor
-    })
+export function peerDescriptorTranslator(json: JsonPeerDescriptor): PeerDescriptor {
+    const type = json.type === JsonNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
+    const peerDescriptor: PeerDescriptor = {
+        ...json,
+        kademliaId: PeerID.fromString(json.id).value,
+        type,
+        websocket: json.websocket
+    }
+    return peerDescriptor
 }
 
 export function generateClientId(): string {

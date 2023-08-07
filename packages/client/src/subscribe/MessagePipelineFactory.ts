@@ -1,9 +1,10 @@
-import { StreamMessage } from '@streamr/protocol'
+import { StreamID, StreamMessage } from '@streamr/protocol'
 import { MarkOptional } from 'ts-essentials'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
 import { DestroySignal } from '../DestroySignal'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { StreamRegistry } from '../registry/StreamRegistry'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushPipeline } from '../utils/PushPipeline'
@@ -16,12 +17,14 @@ type MessagePipelineFactoryOptions = MarkOptional<Omit<MessagePipelineOptions,
     'streamRegistry' |
     'destroySignal' |
     'loggerFactory'>,
+    'getStorageNodes' |
     'config'> 
 
 @scoped(Lifecycle.ContainerScoped)
 export class MessagePipelineFactory {
 
     private readonly resends: Resends
+    private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly streamRegistry: StreamRegistry
     private readonly groupKeyManager: GroupKeyManager
     private readonly config: MessagePipelineOptions['config']
@@ -31,6 +34,7 @@ export class MessagePipelineFactory {
     /* eslint-disable indent */
     constructor(
         @inject(delay(() => Resends)) resends: Resends,
+        streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
         @inject(delay(() => GroupKeyManager)) groupKeyManager: GroupKeyManager,
         @inject(ConfigInjectionToken) config: MessagePipelineOptions['config'],
@@ -38,6 +42,7 @@ export class MessagePipelineFactory {
         loggerFactory: LoggerFactory
     ) {
         this.resends = resends
+        this.streamStorageRegistry = streamStorageRegistry
         this.streamRegistry = streamRegistry
         this.groupKeyManager = groupKeyManager
         this.config = config
@@ -49,6 +54,7 @@ export class MessagePipelineFactory {
     createMessagePipeline(opts: MessagePipelineFactoryOptions): PushPipeline<StreamMessage, StreamMessage> {
         return _createMessagePipeline({
             ...opts,
+            getStorageNodes: opts.getStorageNodes ?? ((streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId)),
             resends: this.resends,
             streamRegistry: this.streamRegistry,
             groupKeyManager: this.groupKeyManager,

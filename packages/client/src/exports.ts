@@ -9,6 +9,7 @@ export { PublishMetadata } from './publish/Publisher'
 export { Subscription, SubscriptionEvents, } from './subscribe/Subscription'
 export type { MessageStream, MessageListener } from './subscribe/MessageStream'
 export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions, ResendRef } from './subscribe/Resends'
+export { GapFillStrategy } from './subscribe/ordering/GapFiller'
 export {
     StreamPermission,
     PermissionQuery,
@@ -33,7 +34,8 @@ export {
     ControlLayerConfig as Layer0Config,
     NetworkNodeConfig,
     JsonPeerDescriptor,
-    ConnectivityMethod
+    ConnectivityMethod,
+    JsonNodeType
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
@@ -63,7 +65,6 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
-export { NodeType } from '@streamr/dht'
 export type { IceServer, PeerDescriptor } from '@streamr/dht' 
 export type { ConnectionInfo } from '@ethersproject/web'
 export type { ExternalProvider } from '@ethersproject/providers'

@@ -17,11 +17,11 @@
   "dependencies": {},
   "devDependencies": {
     "@electron/rebuild": "^3.2.9",
-    "@jest/fake-timers": "^29.6.1",
+    "@jest/fake-timers": "^29.6.2",
     "buffer": "^6.0.3",
-    "electron": "^25.2.0",
-    "expect": "^29.6.1",
-    "jest-mock": "^29.6.1",
+    "electron": "^25.4.0",
+    "expect": "^29.6.2",
+    "jest-mock": "^29.6.2",
     "karma": "^6.4.0",
     "karma-chrome-launcher": "^3.1.1",
     "karma-electron": "^7.3.0",
@@ -32,7 +32,7 @@
     "node-module-polyfill": "^1.0.1",
     "node-polyfill-webpack-plugin": "^2.0.1",
     "timers-browserify": "^2.0.12",
-    "webpack": "^5.88.1",
+    "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
   }
 }

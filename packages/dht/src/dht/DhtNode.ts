@@ -347,9 +347,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             if (peerId.equals(this.ownPeerId!)) {
                 logger.error('own peerdescriptor added to connections in initKBucket')
             }
-
             this.connections.set(peerId.toKey(), dhtPeer)
-            logger.debug(' ' + this.config.nodeName + ' connectionschange add ' + this.connections.size)
         })
         this.randomPeers = new RandomContactList(selfId, this.config.maxNeighborListSize)
         this.randomPeers.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
@@ -374,9 +372,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         )
         if (!this.connections.has(PeerID.fromValue(dhtPeer.id).toKey())) {
             this.connections.set(PeerID.fromValue(dhtPeer.id).toKey(), dhtPeer)
-            logger.debug(' ' + this.config.nodeName + ' connectionschange add ' + this.connections.size)
+            logger.trace(' ' + this.config.nodeName + ' connectionschange add ' + this.connections.size)
         } else {
-            logger.debug('new connection not set to connections, there is already a connection with the peer ID')
+            logger.trace('new connection not set to connections, there is already a connection with the peer ID')
         }
         if (this.ownPeerDescriptor!.nodeName === 'entrypoint') {
             logger.trace("connected: " + this.ownPeerDescriptor!.nodeName + ", " + peerDescriptor.nodeName + ' ' + this.connections.size)
@@ -387,7 +385,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private onTransportDisconnected(peerDescriptor: PeerDescriptor, dicsonnectionType: DisconnectionType): void {
         logger.trace('disconnected: ' + this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ')
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
-        logger.debug(' ' + this.config.nodeName + ' connectionschange remove ' + this.connections.size)
         // only remove from bucket if we are on layer 0
         if (this.connectionManager) {
             this.bucket!.remove(peerDescriptor.kademliaId)

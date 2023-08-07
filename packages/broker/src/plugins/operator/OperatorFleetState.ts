@@ -3,6 +3,7 @@ import { Logger } from '@streamr/utils'
 import { StreamID } from '@streamr/protocol'
 import { EventEmitter } from 'eventemitter3'
 import { NodeId } from '@streamr/trackerless-network'
+import min from 'lodash/min'
 
 const logger = new Logger(module)
 
@@ -10,7 +11,7 @@ const DEFAULT_PRUNE_AGE_IN_MS = 5 * 60 * 1000
 
 const DEFAULT_PRUNE_INTERVAL_IN_MS = 30 * 1000
 
-interface OperatorFleetStateEvents {
+export interface OperatorFleetStateEvents {
     added: (nodeId: string) => void
     removed: (nodeId: string) => void
 }
@@ -66,6 +67,10 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     async destroy(): Promise<void> {
         clearInterval(this.pruneNodesIntervalRef)
         await this.subscription?.unsubscribe()
+    }
+
+    getLeaderNodeId(): string | undefined {
+        return min(this.getNodeIds()) // we just need the leader to be consistent
     }
 
     getNodeIds(): string[] {

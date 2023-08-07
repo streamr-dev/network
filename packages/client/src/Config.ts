@@ -1,14 +1,14 @@
 import 'reflect-metadata'
 import type { Overrides } from '@ethersproject/contracts'
-import cloneDeep from 'lodash/cloneDeep'
 import type { ExternalProvider } from '@ethersproject/providers'
-import { MarkOptional, DeepRequired } from 'ts-essentials'
-import { LogLevel } from '@streamr/utils'
-import { IceServer, NodeType } from '@streamr/dht'
-
 import type { ConnectionInfo } from '@ethersproject/web'
+import cloneDeep from 'lodash/cloneDeep'
+import { DeepRequired, MarkOptional } from 'ts-essentials'
+import { LogLevel } from '@streamr/utils'
+import { IceServer } from '@streamr/dht'
 import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
+import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 
 export interface ProviderAuthConfig {
     ethereum: ExternalProvider
@@ -77,7 +77,9 @@ export interface ControlLayerConfig {
 
     /**
      * The port to use for the client's Network Node WebSocket server.
-     * If not specified, the server will not be started
+     * If not specified, the server will not be started.
+     * The server is used by the network layer to accept incoming connections
+     * over the public internet to improve the network node's connectivity.
      */
     webSocketPort?: number
 }
@@ -118,9 +120,14 @@ export interface NetworkConfig {
     node?: NetworkNodeConfig
 }
 
+export enum JsonNodeType {
+    NODEJS = 'nodejs',
+    BROWSER = 'browser'
+}
+
 export interface JsonPeerDescriptor {
     id: string
-    type: NodeType
+    type?: JsonNodeType
     websocket?: ConnectivityMethod
     openInternet?: boolean
     region?: number
@@ -211,6 +218,27 @@ export interface StreamrClientConfig {
      * proceeding to the next attempt.
      */
     retryResendAfter?: number
+
+    /**
+     * When gap filling is enabled, this setting controls whether to enable a
+     * lighter (default) or a full gap fill strategy.
+     *
+     * While filling a gap, new gaps may emerge further along the message
+     * chain. After a gap has been filled, the gap filling mechanism will
+     * attend to the next gap until that has been resolved and so forth.
+     *
+     * This is great in theory, but sometimes in practice, especially in
+     * streams with heavy traffic, the gap filling mechanism may never catch
+     * up leading to permanently increased latency, and even dropped messages
+     * (due to buffer overflows) further exacerbating the presence of gaps.
+     *
+     * With `light` strategy, when a gap cannot be successfully filled and
+     * must be dropped, all subsequent accumulated gaps will be dropped as
+     * well. This improves the ability to stay up-to-date at the cost of
+     * potentially missing messages. With `full` strategy the subsequent gaps
+     * will not be dropped.
+     */
+    gapFillStrategy?: GapFillStrategy
 
     /**
      * Controls how messages encryption and decryption should be handled and

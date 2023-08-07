@@ -12,6 +12,7 @@ import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, c
 import { DestroySignal } from './DestroySignal'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { ProxyDirection } from '@streamr/trackerless-network'
+import { StreamID } from '@streamr/protocol'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
@@ -193,6 +194,7 @@ export class StreamrClient {
                 sub,
                 options.resend,
                 this.resends,
+                (streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId),
                 this.config,
                 eventEmitter,
                 this.loggerFactory
@@ -260,7 +262,8 @@ export class StreamrClient {
         onMessage?: MessageListener
     ): Promise<MessageStream> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        const pipeline = await this.resends.resend(streamPartId, options)
+        const getStorageNodes = (streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId)
+        const pipeline = await this.resends.resend(streamPartId, options, getStorageNodes)
         const messageStream = new MessageStream(pipeline)
         if (onMessage !== undefined) {
             messageStream.useLegacyOnMessageHandler(onMessage)
@@ -305,7 +308,7 @@ export class StreamrClient {
             timeout: this.config._timeouts.storageNode.timeout,
             count: 100
         }
-        return waitForStorage(message, merge(defaultOptions, options), this.resends)
+        return waitForStorage(message, merge(defaultOptions, options), this.resends, this.streamStorageRegistry)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -565,10 +568,10 @@ export class StreamrClient {
     }
 
     /**
-     * Used to set known entry points for a stream partition. If entry points are not set they 
+     * Used to set known entry points for a stream partition. If entry points are not set they
      * will be automatically discovered from the Streamr Network.
     */
-    async setStreamEntryPoints(streamDefinition: StreamDefinition, entryPoints: JsonPeerDescriptor[]): Promise<void> {
+    async setStreamPartitionEntryPoints(streamDefinition: StreamDefinition, entryPoints: JsonPeerDescriptor[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await this.node.setStreamPartEntryPoints(streamPartId, entryPoints)
     }
@@ -656,4 +659,3 @@ export class StreamrClient {
         this.eventEmitter.off(eventName, listener as any)
     }
 }
-

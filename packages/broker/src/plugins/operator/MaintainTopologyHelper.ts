@@ -22,7 +22,7 @@ export interface MaintainTopologyHelperEvents {
     /**
      * Emitted when staking into a Sponsorship on a stream that we haven't staked on before (in another Sponsorship)
      */
-    addStakedStream: (streamIds: StreamID[]) => void
+    addStakedStreams: (streamIds: StreamID[]) => void
 
     /**
      * Emitted when un-staked from all Sponsorships for the given stream
@@ -67,7 +67,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
             const sponsorshipCount = (this.sponsorshipCountOfStream.get(streamId) ?? 0) + 1
             this.sponsorshipCountOfStream.set(streamId, sponsorshipCount)
             if (sponsorshipCount === 1) {
-                this.emit('addStakedStream', [streamId])
+                this.emit('addStakedStreams', [streamId])
             }
         })
         this.operatorContract.on('Unstaked', (sponsorship: string) => {
@@ -89,7 +89,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
         
         const initialStreams = await this.pullStakedStreams(latestBlock)
         if (initialStreams.length > 0) {
-            this.emit('addStakedStream', initialStreams)
+            this.emit('addStakedStreams', initialStreams)
         }
     }
 
