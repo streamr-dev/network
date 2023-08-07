@@ -33,7 +33,7 @@ export {
     NetworkConfig,
     ControlLayerConfig as Layer0Config,
     NetworkNodeConfig,
-    JsonPeerDescriptor,
+    NetworkPeerDescriptor,
     ConnectivityMethod,
     JsonNodeType
 } from './Config'

@@ -4,7 +4,7 @@ import StreamrClient, {
     StreamPermission,
     StreamMetadata,
     StreamrClientConfig,
-    JsonPeerDescriptor
+    NetworkPeerDescriptor
 } from 'streamr-client'
 import padEnd from 'lodash/padEnd'
 import { Wallet } from 'ethers'
@@ -24,7 +24,7 @@ interface TestConfig {
     apiAuthentication?: Config['apiAuthentication']
     enableCassandra?: boolean
     storageConfigRefreshInterval?: number
-    entryPoints?: JsonPeerDescriptor[]
+    entryPoints?: NetworkPeerDescriptor[]
 }
 
 export const DEFAULT_ENTRYPOINTS = [{
@@ -161,7 +161,7 @@ export async function startStorageNode(
     storageNodePrivateKey: string,
     httpPort: number,
     networkLayerWsServerPort: number,
-    entryPoints?: JsonPeerDescriptor[],
+    entryPoints?: NetworkPeerDescriptor[],
     extraPlugins = {}
 ): Promise<Broker> {
     const client = new StreamrClient({

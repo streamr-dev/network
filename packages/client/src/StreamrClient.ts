@@ -8,7 +8,7 @@ import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata } from '../src/publish/Publisher'
 import { Authentication, AuthenticationInjectionToken, createAuthentication } from './Authentication'
-import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, createStrictConfig, redactConfig, JsonPeerDescriptor } from './Config'
+import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, createStrictConfig, redactConfig, NetworkPeerDescriptor } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { ProxyDirection } from '@streamr/trackerless-network'
@@ -559,7 +559,7 @@ export class StreamrClient {
 
     async setProxies(
         streamDefinition: StreamDefinition,
-        proxyNodes: JsonPeerDescriptor[],
+        proxyNodes: NetworkPeerDescriptor[],
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
@@ -571,7 +571,7 @@ export class StreamrClient {
      * Used to set known entry points for a stream partition. If entry points are not set they
      * will be automatically discovered from the Streamr Network.
     */
-    async setStreamPartitionEntryPoints(streamDefinition: StreamDefinition, entryPoints: JsonPeerDescriptor[]): Promise<void> {
+    async setStreamPartitionEntryPoints(streamDefinition: StreamDefinition, entryPoints: NetworkPeerDescriptor[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await this.node.setStreamPartEntryPoints(streamPartId, entryPoints)
     }

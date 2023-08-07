@@ -8,7 +8,7 @@ import { MetricsContext } from '@streamr/utils'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
-import { ConfigInjectionToken, StrictStreamrClientConfig, JsonPeerDescriptor } from './Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig, NetworkPeerDescriptor } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { pOnce } from './utils/promises'
 import { uuid } from './utils/uuid'
@@ -220,7 +220,7 @@ export class NetworkNodeFacade {
 
     async setProxies(
         streamPartId: StreamPartID,
-        proxyNodes: JsonPeerDescriptor[],
+        proxyNodes: NetworkPeerDescriptor[],
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
@@ -237,7 +237,7 @@ export class NetworkNodeFacade {
         )
     }
 
-    async setStreamPartEntryPoints(streamPartId: StreamPartID, nodeDescriptors: JsonPeerDescriptor[]): Promise<void> {
+    async setStreamPartEntryPoints(streamPartId: StreamPartID, nodeDescriptors: NetworkPeerDescriptor[]): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask(false)
         }

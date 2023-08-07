@@ -1,4 +1,4 @@
-import { createStrictConfig, JsonPeerDescriptor, redactConfig, JsonNodeType } from '../../src/Config'
+import { createStrictConfig, NetworkPeerDescriptor, redactConfig, JsonNodeType } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -122,7 +122,7 @@ describe('Config', () => {
             })
             expect(clientOverrides.network.controlLayer!.entryPoints!).toEqual(entryPoints)
             expect(clientOverrides.network.controlLayer!.entryPoints!).not.toBe(entryPoints)
-            expect((clientOverrides.network.controlLayer! as JsonPeerDescriptor[])[0]).not.toBe(entryPoints[0])
+            expect((clientOverrides.network.controlLayer! as NetworkPeerDescriptor[])[0]).not.toBe(entryPoints[0])
         })
     })
 
