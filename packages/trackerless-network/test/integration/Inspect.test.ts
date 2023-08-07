@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor, PeerID, Simulator, SimulatorTransport } from "@streamr/dht"
+import { LatencyType, NodeType, PeerDescriptor, PeerID, Simulator, SimulatorTransport } from "@streamr/dht"
 import { NetworkStack } from "../../src/NetworkStack"
 import { range } from 'lodash'
 import { createStreamMessage } from "../utils/utils"
@@ -30,7 +30,8 @@ describe('inspect', () => {
     let publishInterval: NodeJS.Timeout
 
     beforeEach(async () => {
-        simulator = new Simulator()
+        Simulator.useFakeTimers()
+        simulator = new Simulator(LatencyType.RANDOM)
         const publisherTransport = new SimulatorTransport(publisherDescriptor, simulator)
         publisherNode = new NetworkStack({
             layer0: {
@@ -93,6 +94,7 @@ describe('inspect', () => {
             inspectorNode.stop(),
             ...inspectedNodes.map((node) => node.stop())
         ])
+        Simulator.useFakeTimers(false)
     })
 
     it('gets successful inspections from all suspects', async () => {
@@ -115,6 +117,6 @@ describe('inspect', () => {
             const result = await inspectorNode.getStreamrNode().inspect(node.getLayer0DhtNode().getPeerDescriptor(), streamId)
             expect(result).toEqual(true)
         }
-    }, 15000)
+    }, 25000)
 
 })
