@@ -1,27 +1,25 @@
 import { Contract } from "@ethersproject/contracts"
-import { Provider } from "@ethersproject/providers"
+import { Provider, JsonRpcProvider } from "@ethersproject/providers"
 import { parseEther, formatEther } from "@ethersproject/units"
 
-import { Chains } from "@streamr/config"
-import { tokenABI, TestToken, Operator } from "@streamr/network-contracts"
+import { tokenABI, TestToken, Operator, StreamrEnvDeployer } from "@streamr/network-contracts"
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
 import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
-import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens, getProvider } from "./smartContractUtils"
+import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens } from "./smartContractUtils"
 
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
-import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
-import { createClient } from "../../../utils"
 
-const config = Chains.load()["dev1"]
-const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
+// TODO: use createClient once configs allow it. For now I'm creating the stream directly using the contract
+// import { createClient } from "../../../utils"
+import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+
+import { Chain } from "@streamr/config"
+
+const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
-
-const SPONSOR_AMOUNT = 250
-const STAKE_AMOUNT = 100
-const PENALTY_LIMIT_FRACTION = parseEther("0.1")
 
 async function getTotalUnwithdrawnEarnings(operatorContract: Operator): Promise<bigint> {
     const { earnings } = await operatorContract.getEarningsFromSponsorships()
@@ -37,15 +35,14 @@ describe("MaintainOperatorValueService", () => {
     let provider: Provider
     let token: TestToken
     let streamId: string
-
-    let operatorConfig: OperatorServiceConfig
+    let config: Chain
 
     const deployNewOperator = async () => {
-        const operatorWallet = await generateWalletWithGasAndTokens(provider)
+        const operatorWallet = await generateWalletWithGasAndTokens(provider, config)
         logger.debug("Deploying operator contract")
         const operatorContract = await deployOperatorContract(config, operatorWallet, { operatorSharePercent: 10 })
         logger.debug(`Operator deployed at ${operatorContract.address}`)
-        operatorConfig = {
+        const operatorConfig = {
             operatorContractAddress: toEthereumAddress(operatorContract.address),
             provider,
             theGraphUrl,
@@ -53,49 +50,74 @@ describe("MaintainOperatorValueService", () => {
             maxSponsorshipsCount: 20,
             minSponsorshipEarnings: 1 // full tokens
         }
-        return { operatorWallet, operatorContract }
+        return { operatorWallet, operatorContract, operatorConfig }
     }
 
     beforeAll(async () => {
-        const client = createClient(ADMIN_WALLET_PK)
-        streamId = (await client.createStream(`/operatorvalueservicetest-${Date.now()}`)).id
+        const streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_WALLET_PK, `http://${STREAMR_DOCKER_DEV_HOST}:8547`)
+        await streamrEnvDeployer.deployEnvironment()
+        const { contracts } = streamrEnvDeployer
+        config = { contracts: streamrEnvDeployer.addresses } as unknown as Chain
 
-        provider = getProvider()
+        // const client = createClient(ADMIN_WALLET_PK, {
+        //     contracts: {
+        //         streamRegistryChainAddress: contracts.streamRegistry.address,
+        //     },
+        // })
+        // streamId = (await client.createStream(`/operatorvaluewatchertest-${Date.now()}`)).id
+        // await client.destroy()
+
+        const createStreamReceipt = await (await contracts.streamRegistry.createStream(
+            `/operatorvaluewatchertest-${Date.now()}`,
+            '{"partitions":1}"}')
+        ).wait()
+        streamId = createStreamReceipt.events?.find((e) => e.event === "StreamCreated")?.args?.id
+
+        // TODO: streamExists=false?!
+        const streamExists = await contracts.streamRegistry.exists(streamId)
+        logger.debug("Stream created:", { streamId, streamExists })
+
+        // provider = getProvider()
+        provider = new JsonRpcProvider(`http://${STREAMR_DOCKER_DEV_HOST}:8547`)
         logger.debug("Connected to: ", await provider.getNetwork())
 
-        token = new Contract(config.contracts.LINK, tokenABI, provider) as TestToken
-        await client.destroy()
+        // token = new Contract(config.contracts.DATA, tokenABI) as unknown as TestToken
+        token = new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
     }, 60 * 1000)
 
     it("withdraws sponsorship earnings when earnings are above the safe threshold", async () => {
-        const { operatorWallet, operatorContract } = await deployNewOperator()
+        const { operatorWallet, operatorContract, operatorConfig } = await deployNewOperator()
 
         const sponsorship1 = await deploySponsorship(config, operatorWallet, { streamId, earningsPerSecond: parseEther("1") })
-        await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther(`${SPONSOR_AMOUNT}`), "0x")).wait()
-        await (
-            await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther(`${STAKE_AMOUNT * 2}`), operatorWallet.address)
-        ).wait()
-        await (await operatorContract.stake(sponsorship1.address, parseEther(`${STAKE_AMOUNT}`))).wait()
+        await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther("250"), "0x")).wait()
+        await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
+        await (await operatorContract.stake(sponsorship1.address, parseEther("100"))).wait()
 
         const sponsorship2 = await deploySponsorship(config, operatorWallet, { streamId, earningsPerSecond: parseEther("2") })
-        await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther(`${SPONSOR_AMOUNT}`), "0x")).wait()
-        await (await operatorContract.stake(sponsorship2.address, parseEther(`${STAKE_AMOUNT}`))).wait()
+        await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther("250"), "0x")).wait()
+        await (await operatorContract.stake(sponsorship2.address, parseEther("100"))).wait()
 
-        const withdrawLimitSafetyFraction = 0.5
-        const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig, withdrawLimitSafetyFraction)
+        // workaround for fast-chain not producing blocks: force regular "mining"
+        // const forcedMiningHandle = setInterval(async () => {
+        //     await (provider as any).send("evm_mine", [0])
+        // }, 1000)
+
+        const service = new MaintainOperatorValueService(operatorConfig, 0.5)
 
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
-        const allowedDifference: bigint = poolValueBeforeWithdraw.mul(PENALTY_LIMIT_FRACTION).div(parseEther("1")).toBigInt()
-        const safeAllowedDifference: bigint = allowedDifference * BigInt(withdrawLimitSafetyFraction * 1e18) / BigInt(1e18)
+        const allowedDifference = poolValueBeforeWithdraw.div("10").toBigInt()
 
-        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > safeAllowedDifference, 10000, 1000)
-        await maintainOperatorValueService.start()
-        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) < safeAllowedDifference, 10000, 1000)
-        
+        logger.debug("Waiting until above", { allowedDifference })
+        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > allowedDifference, 10000, 1000)
+        await service.start()
+        logger.debug("Waiting until below", { allowedDifference })
+        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) < allowedDifference, 10000, 1000)
+
         const poolValueAfterWithdraw = await operatorContract.getApproximatePoolValue()
         expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
 
-        await maintainOperatorValueService.stop()
+        await service.stop()
+        // clearInterval(forcedMiningHandle)
     }, 60 * 1000)
 })
 

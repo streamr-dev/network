@@ -1,5 +1,5 @@
 import { BigNumber, Contract } from 'ethers'
-import { Operator, Sponsorship, StreamrConfig, operatorABI, streamrConfigABI } from '@streamr/network-contracts'
+import { Operator, StreamrConfig, operatorABI, streamrConfigABI } from '@streamr/network-contracts'
 import { OperatorServiceConfig } from './OperatorPlugin'
 import { EthereumAddress } from 'streamr-client'
 import { Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'

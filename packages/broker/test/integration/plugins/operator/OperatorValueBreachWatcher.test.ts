@@ -3,21 +3,20 @@ import { Provider, JsonRpcProvider } from "@ethersproject/providers"
 import { parseEther, formatEther } from "@ethersproject/units"
 
 import { tokenABI, TestToken, Operator, StreamrEnvDeployer } from "@streamr/network-contracts"
-import { EthereumAddress, Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
 import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
-import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens, getProvider } from "./smartContractUtils"
+import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens } from "./smartContractUtils"
 
-import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
+// import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 import { OperatorValueBreachWatcher } from "../../../../src/plugins/operator/OperatorValueBreachWatcher"
 
-import { STREAMR_DOCKER_DEV_HOST, createClient } from '../../../utils'
+// TODO: use createClient once configs allow it. For now I'm creating the stream directly using the contract
+// import { STREAMR_DOCKER_DEV_HOST, createClient } from '../../../utils'
+import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 
 import type { Chain } from "@streamr/config"
-// import { StreamrClient } from "../../../../../client/src/StreamrClient"
-// import { StreamrClient } from "streamr-client/src/StreamrClient"
-import StreamrClient from "streamr-client"
 
 const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
@@ -50,7 +49,7 @@ describe("OperatorValueBreachWatcher", () => {
             theGraphUrl,
             signer: operatorWallet,
             maxSponsorshipsCount: 20,
-            minSponsorshipEarnings: 1
+            minSponsorshipEarnings: 1 // full tokens
         }
         return { operatorWallet, operatorContract, operatorConfig }
     }
@@ -83,31 +82,26 @@ describe("OperatorValueBreachWatcher", () => {
         provider = new JsonRpcProvider(`http://${STREAMR_DOCKER_DEV_HOST}:8547`)
         logger.debug("Connected to: ", await provider.getNetwork())
 
-        token = new Contract(config.contracts.DATA, tokenABI) as unknown as TestToken
+        // token = new Contract(config.contracts.DATA, tokenABI) as unknown as TestToken
+        token = new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
     }, 60 * 1000)
 
     it("withdraws sponsorship earnings when earnings are above the threshold", async () => {
         const { operatorWallet, operatorContract, operatorConfig } = await deployNewOperator()
-
-        await getTotalUnwithdrawnEarnings(operatorContract)
 
         const sponsorship1 = await deploySponsorship(config, operatorWallet, { streamId, earningsPerSecond: parseEther("1") })
         await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther("250"), "0x")).wait()
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
         await (await operatorContract.stake(sponsorship1.address, parseEther("100"))).wait()
 
-        await getTotalUnwithdrawnEarnings(operatorContract)
-
         const sponsorship2 = await deploySponsorship(config, operatorWallet, { streamId, earningsPerSecond: parseEther("2") })
         await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther("250"), "0x")).wait()
         await (await operatorContract.stake(sponsorship2.address, parseEther("100"))).wait()
 
-        await getTotalUnwithdrawnEarnings(operatorContract)
-
         // workaround for fast-chain not producing blocks: force regular "mining"
-        const forcedMiningHandle = setInterval(async () => {
-            await (provider as any).send("evm_mine", [0])
-        }, 1000)
+        // const forcedMiningHandle = setInterval(async () => {
+        //     await (provider as any).send("evm_mine", [0])
+        // }, 1000)
 
         const operatorValueBreachWatcher = new OperatorValueBreachWatcher(operatorConfig)
 
@@ -116,15 +110,15 @@ describe("OperatorValueBreachWatcher", () => {
 
         logger.debug("Waiting until above", { allowedDifference })
         await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > allowedDifference, 10000, 1000)
-        await operatorValueBreachWatcher.start()
+        // await operatorValueBreachWatcher.start()
+        await operatorValueBreachWatcher.checkUnwithdrawnEarningsOf(toEthereumAddress(operatorContract.address))
         logger.debug("Waiting until below", { allowedDifference })
         await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) < allowedDifference, 10000, 1000)
-
-        clearInterval(forcedMiningHandle)
 
         const poolValueAfterWithdraw = await operatorContract.getApproximatePoolValue()
         expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
 
         await operatorValueBreachWatcher.stop()
+        // clearInterval(forcedMiningHandle)
     }, 60 * 1000)
 })
