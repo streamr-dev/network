@@ -120,14 +120,14 @@ export interface NetworkConfig {
     node?: NetworkNodeConfig
 }
 
-export enum JsonNodeType {
+export enum NetworkNodeType {
     NODEJS = 'nodejs',
     BROWSER = 'browser'
 }
 
 export interface NetworkPeerDescriptor {
     id: string
-    type?: JsonNodeType
+    type?: NetworkNodeType
     websocket?: ConnectivityMethod
     openInternet?: boolean
     region?: number

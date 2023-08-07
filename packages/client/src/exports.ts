@@ -35,7 +35,7 @@ export {
     NetworkNodeConfig,
     NetworkPeerDescriptor,
     ConnectivityMethod,
-    JsonNodeType
+    NetworkNodeType
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'

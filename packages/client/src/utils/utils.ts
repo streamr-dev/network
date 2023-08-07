@@ -7,7 +7,7 @@ import { AbortSignal as FetchAbortSignal } from 'node-fetch/externals'
 import split2 from 'split2'
 import { Readable } from 'stream'
 import LRU from '../../vendor/quick-lru'
-import { StrictStreamrClientConfig, NetworkPeerDescriptor, JsonNodeType } from '../Config'
+import { StrictStreamrClientConfig, NetworkPeerDescriptor, NetworkNodeType } from '../Config'
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
@@ -113,7 +113,7 @@ export class MaxSizedSet<T> {
 }
 
 export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescriptor {
-    const type = json.type === JsonNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
+    const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
         ...json,
         kademliaId: PeerID.fromString(json.id).value,
