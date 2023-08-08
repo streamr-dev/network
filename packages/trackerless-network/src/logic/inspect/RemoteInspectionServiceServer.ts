@@ -10,8 +10,8 @@ export class RemoteInspectionServiceServer extends Remote<IInspectionServiceClie
 
     async inspectConnection(ownPeerDescriptor: PeerDescriptor): Promise<boolean> {
         const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
+            sourceDescriptor: ownPeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor,
         }
         const request: InspectConnectionRequest = {
             senderId: keyFromPeerDescriptor(ownPeerDescriptor)
