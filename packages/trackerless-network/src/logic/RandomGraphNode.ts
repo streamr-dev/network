@@ -270,8 +270,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     broadcast(msg: StreamMessage, previousPeer?: string): void {
         if (!previousPeer) {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
-        } else {
-            this.config.inspector.markMessage(previousPeer as PeerIDKey, msg.messageRef!)
         }
         this.emit('message', msg)
         this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), previousPeer || null)
