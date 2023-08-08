@@ -29,6 +29,15 @@ updates:
       dependencies:
         patterns:
           - "*"
+        exclude-patterns:
+          - "inquirer"
+          - "node-fetch"
+          - "env-paths"
+          - "chalk"
+          - "p-limit"
+          - "p-memoize"
+          - "p-queue"
+          - "p-throttle"
     reviewers:
       - harbu
   - package-ecosystem: docker
