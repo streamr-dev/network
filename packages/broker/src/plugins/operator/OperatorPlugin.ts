@@ -13,6 +13,8 @@ import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import { MaintainOperatorValueService } from './MaintainOperatorValueService'
 import { OperatorFleetState } from './OperatorFleetState'
 import { toStreamID } from '@streamr/protocol'
+import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
+import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -28,6 +30,7 @@ export interface OperatorServiceConfig {
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly announceNodeToStreamService: AnnounceNodeToStreamService
+    private readonly announceNodeToContractService: AnnounceNodeToContractService
     private readonly inspectRandomNodeService = new InspectRandomNodeService()
     private readonly maintainOperatorContractService = new MaintainOperatorContractService()
     private readonly voteOnSuspectNodeService: VoteOnSuspectNodeService
@@ -53,6 +56,12 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             this.streamrClient,
             toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
         )
+        this.announceNodeToContractService = new AnnounceNodeToContractService(
+            this.streamrClient,
+            new AnnounceNodeToContractHelper(this.serviceConfig),
+            this.fleetState,
+            {}
+        )
         this.maintainOperatorValueService = new MaintainOperatorValueService(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
             this.streamrClient,
@@ -75,7 +84,10 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
 
-        await this.fleetState.start() // must be started last!
+        await Promise.all([
+            this.fleetState.start(),
+            this.announceNodeToContractService.start()
+        ])
     }
 
     async stop(): Promise<void> {

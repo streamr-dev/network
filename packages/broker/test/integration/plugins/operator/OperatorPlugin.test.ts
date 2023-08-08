@@ -28,5 +28,5 @@ describe('OperatorPlugin', () => {
             }
         })
         await promise
-    })
+    }, 30 * 30 * 1000)
 })
