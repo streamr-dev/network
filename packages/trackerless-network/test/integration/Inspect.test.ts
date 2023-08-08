@@ -29,61 +29,42 @@ describe('inspect', () => {
 
     let publishInterval: NodeJS.Timeout
 
+    const initiateNode = async (peerDescriptor: PeerDescriptor, simulator: Simulator): Promise<NetworkStack> => {
+        const transportLayer = new SimulatorTransport(peerDescriptor, simulator)
+        const node = new NetworkStack({
+            layer0: {
+                entryPoints: [publisherDescriptor],
+                peerDescriptor,
+                transportLayer
+            },
+            networkNode: {}
+        })
+        await node.start()
+        await node.getLayer0DhtNode().joinDht(publisherDescriptor)
+        return node
+    }
+
     beforeEach(async () => {
         Simulator.useFakeTimers()
         simulator = new Simulator(LatencyType.RANDOM)
-        const publisherTransport = new SimulatorTransport(publisherDescriptor, simulator)
-        publisherNode = new NetworkStack({
-            layer0: {
-                entryPoints: [publisherDescriptor],
-                peerDescriptor: publisherDescriptor,
-                transportLayer: publisherTransport
-            },
-            networkNode: {}
-        })
-        await publisherNode.start()
-        await publisherNode.getLayer0DhtNode().joinDht(publisherDescriptor)
 
-        const inspectorTransport = new SimulatorTransport(inspectorPeerDescriptor, simulator)
-        inspectorNode = new NetworkStack({
-            layer0: {
-                entryPoints: [publisherDescriptor],
-                peerDescriptor: inspectorPeerDescriptor,
-                transportLayer: inspectorTransport
-            },
-            networkNode: {}
-        })
-        await inspectorNode.start()
-        await inspectorNode.getLayer0DhtNode().joinDht(publisherDescriptor)
-        
+        publisherNode = await initiateNode(publisherDescriptor, simulator)
+        inspectorNode = await initiateNode(inspectorPeerDescriptor, simulator)
+
         inspectedNodes = []
-        range(inspectedNodeCount).forEach((i) => {
+        await Promise.all(range(inspectedNodeCount).map(async (i) => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: PeerID.fromString(`inspected${i}`).value,
-                type: NodeType.NODEJS,
+                type: NodeType.NODEJS
             }
-            const transport = new SimulatorTransport(peerDescriptor, simulator)
-            const node = new NetworkStack({
-                layer0: {
-                    entryPoints: [publisherDescriptor],
-                    peerDescriptor,
-                    transportLayer: transport
-                },
-                networkNode: {}
-            })
+            const node = await initiateNode(peerDescriptor, simulator)
             inspectedNodes.push(node)
-        })
-
-        await Promise.all(inspectedNodes.map(async (node) => {
-            await node.start()
-            await node.getLayer0DhtNode().joinDht(publisherDescriptor)
         }))
         await Promise.all([
             publisherNode.getStreamrNode().waitForJoinAndSubscribe(streamId, 5000, 4),
             inspectorNode.getStreamrNode().waitForJoinAndSubscribe(streamId, 5000, 4),
             ...inspectedNodes.map((node) => node.getStreamrNode().waitForJoinAndSubscribe(streamId, 5000, 4))
         ])
-
         sequenceNumber = 0
     })
 
