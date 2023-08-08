@@ -4,7 +4,7 @@ import { StreamID, toStreamID } from '@streamr/protocol'
 
 const logger = new Logger(module)
 
-const DEFAULT_INTERVAL_IN_MS = 1000 * 10
+export const DEFAULT_INTERVAL_IN_MS = 1000 * 10
 
 export class AnnounceNodeService {
     private readonly abortController = new AbortController()
