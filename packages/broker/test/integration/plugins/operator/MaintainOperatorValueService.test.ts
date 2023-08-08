@@ -1,13 +1,15 @@
-import { Contract } from "@ethersproject/contracts"
-import { Provider, JsonRpcProvider } from "@ethersproject/providers"
+// import { Contract } from "@ethersproject/contracts"
+// import { Provider, JsonRpcProvider } from "@ethersproject/providers"
+import { Provider } from "@ethersproject/providers"
 import { parseEther, formatEther } from "@ethersproject/units"
 
-import { tokenABI, TestToken, Operator, StreamrEnvDeployer } from "@streamr/network-contracts"
+import { TestToken, Operator, StreamrEnvDeployer } from "@streamr/network-contracts"
+// import { tokenABI, TestToken, Operator, StreamrEnvDeployer } from "@streamr/network-contracts"
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
 import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
-import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens } from "./smartContractUtils"
+import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens, getProvider, getTokenContract } from "./smartContractUtils"
 
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
 
@@ -77,12 +79,12 @@ describe("MaintainOperatorValueService", () => {
         const streamExists = await contracts.streamRegistry.exists(streamId)
         logger.debug("Stream created:", { streamId, streamExists })
 
-        // provider = getProvider()
-        provider = new JsonRpcProvider(`http://${STREAMR_DOCKER_DEV_HOST}:8547`)
+        provider = getProvider()
+        // provider = new JsonRpcProvider(`http://${STREAMR_DOCKER_DEV_HOST}:8547`)
         logger.debug("Connected to: ", await provider.getNetwork())
 
         // token = new Contract(config.contracts.DATA, tokenABI) as unknown as TestToken
-        token = new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
+        token = getTokenContract()
     }, 60 * 1000)
 
     it("withdraws sponsorship earnings when earnings are above the safe threshold", async () => {
