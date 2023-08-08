@@ -28,7 +28,7 @@
     "cancelable-promise": "^4.3.1",
     "commander": "^11.0.0",
     "heap": "^0.2.6",
-    "ipaddr.js": "^2.0.1",
+    "ipaddr.js": "^2.1.0",
     "lodash": "^4.17.21",
     "node-datachannel": "^0.4.3",
     "setimmediate": "^1.0.5",
