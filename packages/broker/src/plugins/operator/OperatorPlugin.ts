@@ -1,7 +1,7 @@
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Schema } from 'ajv'
-import { AnnounceNodeService } from './AnnounceNodeService'
+import { AnnounceNodeToStreamService } from './AnnounceNodeToStreamService'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorContractService } from './MaintainOperatorContractService'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
@@ -27,7 +27,7 @@ export interface OperatorServiceConfig {
 }
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
-    private readonly announceNodeService: AnnounceNodeService
+    private readonly announceNodeToStreamService: AnnounceNodeToStreamService
     private readonly inspectRandomNodeService = new InspectRandomNodeService()
     private readonly maintainOperatorContractService = new MaintainOperatorContractService()
     private readonly voteOnSuspectNodeService: VoteOnSuspectNodeService
@@ -45,7 +45,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
             signer: Wallet.createRandom().connect(provider)
         }
-        this.announceNodeService = new AnnounceNodeService(
+        this.announceNodeToStreamService = new AnnounceNodeToStreamService(
             this.streamrClient,
             toEthereumAddress(this.pluginConfig.operatorContractAddress)
         )
@@ -68,7 +68,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
-        await this.announceNodeService.start()
+        await this.announceNodeToStreamService.start()
         await this.inspectRandomNodeService.start()
         await this.maintainOperatorContractService.start()
         await this.maintainOperatorValueService.start()
@@ -79,7 +79,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     }
 
     async stop(): Promise<void> {
-        await this.announceNodeService.stop()
+        await this.announceNodeToStreamService.stop()
         await this.inspectRandomNodeService.stop()
         await this.maintainOperatorContractService.stop()
         await this.maintainOperatorValueService.stop()

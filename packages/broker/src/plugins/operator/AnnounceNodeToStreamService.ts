@@ -6,7 +6,7 @@ const logger = new Logger(module)
 
 export const DEFAULT_INTERVAL_IN_MS = 1000 * 10
 
-export class AnnounceNodeService {
+export class AnnounceNodeToStreamService {
     private readonly abortController = new AbortController()
     private readonly streamrClient: StreamrClient
     private readonly coordinationStream: StreamID
