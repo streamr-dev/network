@@ -27,8 +27,8 @@ export class NetworkNode {
         this.stack.getStreamrNode().setExtraMetadata(metadata)
     }
 
-    async inspect(peerDescriptor: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
-        return this.stack.getStreamrNode().inspect(peerDescriptor, streamPartId)
+    async inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
+        return this.stack.getStreamrNode().inspect(node, streamPartId)
     }
 
     async publish(streamMessage: StreamMessage): Promise<void> {
