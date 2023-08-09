@@ -29,6 +29,7 @@ export interface NetworkNodeStub {
     getNeighbors: () => string[]
     getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<string>
     setExtraMetadata: (metadata: Record<string, unknown>) => void
+    getPeerDescriptor: () => PeerDescriptor
     getMetricsContext: () => MetricsContext
     getDiagnosticInfo: () => Record<string, unknown>
     hasStreamPart: (streamPartId: StreamPartID) => boolean
