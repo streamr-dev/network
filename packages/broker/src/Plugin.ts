@@ -59,4 +59,9 @@ export abstract class Plugin<T extends object> {
     getConfigSchema(): Schema | undefined {
         return undefined
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    getClientConfig(): { path: string, value: any }[] {
+        return []
+    }
 }

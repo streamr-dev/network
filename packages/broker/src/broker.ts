@@ -27,6 +27,19 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
     const config = validateConfig(configWithoutDefaults, BROKER_CONFIG_SCHEMA)
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => createPlugin(name, config))
 
+    plugins.forEach((plugin) => {
+        const clientConfig = plugin.getClientConfig()
+        clientConfig.forEach((item) => {
+            if (!has(config.client, item.path)) {
+                set(config.client, item.path, item.value)
+            } else {
+                const existingValue = get(config.client, item.path)
+                if (!isEqual(item.value, existingValue)) {
+                    throw new Error(`Plugin ${plugin.name} doesn't support client config value ${JSON.stringify(item.value)} in ${item.path}`)
+                }
+            }
+        })
+    })
     const streamrClient = new StreamrClient(config.client)
 
     let started = false
