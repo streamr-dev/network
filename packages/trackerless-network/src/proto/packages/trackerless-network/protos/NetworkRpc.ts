@@ -660,8 +660,8 @@ export const NeighborUpdateRpc = new ServiceType("NeighborUpdateRpc", [
     { name: "neighborUpdate", options: {}, I: NeighborUpdate, O: NeighborUpdate }
 ]);
 /**
- * @generated ServiceType for protobuf service InspectionService
+ * @generated ServiceType for protobuf service InspectionRpc
  */
-export const InspectionService = new ServiceType("InspectionService", [
-    { name: "inspectConnection", options: {}, I: InspectConnectionRequest, O: InspectConnectionResponse }
+export const InspectionRpc = new ServiceType("InspectionRpc", [
+    { name: "openInspectConnection", options: {}, I: InspectConnectionRequest, O: InspectConnectionResponse }
 ]);

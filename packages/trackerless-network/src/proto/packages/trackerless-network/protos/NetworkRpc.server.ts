@@ -58,11 +58,11 @@ export interface INeighborUpdateRpc<T = ServerCallContext> {
     neighborUpdate(request: NeighborUpdate, context: T): Promise<NeighborUpdate>;
 }
 /**
- * @generated from protobuf service InspectionService
+ * @generated from protobuf service InspectionRpc
  */
-export interface IInspectionService<T = ServerCallContext> {
+export interface IInspectionRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: inspectConnection(InspectConnectionRequest) returns (InspectConnectionResponse);
+     * @generated from protobuf rpc: openInspectConnection(InspectConnectionRequest) returns (InspectConnectionResponse);
      */
-    inspectConnection(request: InspectConnectionRequest, context: T): Promise<InspectConnectionResponse>;
+    openInspectConnection(request: InspectConnectionRequest, context: T): Promise<InspectConnectionResponse>;
 }

@@ -24,8 +24,8 @@ service NeighborUpdateRpc {
   rpc neighborUpdate (NeighborUpdate) returns (NeighborUpdate);
 }
 
-service InspectionService {
-  rpc inspectConnection (InspectConnectionRequest) returns (InspectConnectionResponse);
+service InspectionRpc {
+  rpc openInspectConnection (InspectConnectionRequest) returns (InspectConnectionResponse);
 }
 
 message MessageRef {

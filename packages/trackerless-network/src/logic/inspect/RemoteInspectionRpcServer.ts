@@ -1,14 +1,14 @@
 import { DhtRpcOptions, PeerDescriptor, keyFromPeerDescriptor } from "@streamr/dht"
-import { IInspectionServiceClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
+import { IInspectionRpcClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
 import { Remote } from "../Remote"
 import { InspectConnectionRequest } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
 import { Logger } from "@streamr/utils"
 
 const logger = new Logger(module)
 
-export class RemoteInspectionServiceServer extends Remote<IInspectionServiceClient> {
+export class RemoteInspectionRpcServer extends Remote<IInspectionRpcClient> {
 
-    async inspectConnection(ownPeerDescriptor: PeerDescriptor): Promise<boolean> {
+    async openInspectConnection(ownPeerDescriptor: PeerDescriptor): Promise<boolean> {
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor,
@@ -17,7 +17,7 @@ export class RemoteInspectionServiceServer extends Remote<IInspectionServiceClie
             senderId: keyFromPeerDescriptor(ownPeerDescriptor)
         }
         try {
-            const response = await this.client.inspectConnection(request, options)
+            const response = await this.client.openInspectConnection(request, options)
             return response.accepted
         } catch (err: any) {
             logger.debug(`inspectConnection to ${keyFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)

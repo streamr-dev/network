@@ -1,10 +1,10 @@
 import { PeerIDKey, PeerDescriptor, keyFromPeerDescriptor, ConnectionLocker } from "@streamr/dht"
 import { MessageRef } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
 import { InspectSession, Events as InspectSessionEvents } from "./InspectSession"
-import { InspectionServiceClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
+import { InspectionRpcClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from "@streamr/proto-rpc"
 import { Logger, waitForEvent3 } from "@streamr/utils"
-import { RemoteInspectionServiceServer } from "./RemoteInspectionServiceServer"
+import { RemoteInspectionRpcServer } from "./RemoteInspectionRpcServer"
 
 interface InspectorConfig {
     ownPeerDescriptor: PeerDescriptor
@@ -29,7 +29,7 @@ export class Inspector implements IInspector {
 
     private readonly sessions: Map<PeerIDKey, InspectSession> = new Map()
     private readonly graphId: string
-    private readonly client: ProtoRpcClient<InspectionServiceClient>
+    private readonly client: ProtoRpcClient<InspectionRpcClient>
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly connectionLocker: ConnectionLocker
     private readonly inspectionTimeout: number
@@ -38,15 +38,15 @@ export class Inspector implements IInspector {
     constructor(config: InspectorConfig) {
         this.graphId = config.graphId
         this.ownPeerDescriptor = config.ownPeerDescriptor
-        this.client = toProtoRpcClient(new InspectionServiceClient(config.rpcCommunicator.getRpcClientTransport()))
+        this.client = toProtoRpcClient(new InspectionRpcClient(config.rpcCommunicator.getRpcClientTransport()))
         this.connectionLocker = config.connectionLocker
         this.inspectionTimeout = config.inspectionTimeout || DEFAULT_TIMEOUT
         this.openInspectConnection = config.openInspectConnection || this.defaultOpenInspectConnection
     }
 
     async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: string): Promise<void> {
-        const remoteRandomGraphNode = new RemoteInspectionServiceServer(peerDescriptor, this.graphId, this.client)
-        await remoteRandomGraphNode.inspectConnection(this.ownPeerDescriptor)
+        const remoteRandomGraphNode = new RemoteInspectionRpcServer(peerDescriptor, this.graphId, this.client)
+        await remoteRandomGraphNode.openInspectConnection(this.ownPeerDescriptor)
         this.connectionLocker.lockConnection(peerDescriptor, lockId)
     }
 

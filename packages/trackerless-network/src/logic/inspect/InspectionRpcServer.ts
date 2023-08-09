@@ -1,21 +1,21 @@
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc"
 import { InspectConnectionRequest, InspectConnectionResponse } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
-import { IInspectionService } from "../../proto/packages/trackerless-network/protos/NetworkRpc.server"
+import { IInspectionRpc } from "../../proto/packages/trackerless-network/protos/NetworkRpc.server"
 import { DhtCallContext, PeerDescriptor } from "@streamr/dht"
 
-interface InspectionServiceServerConfig {
+interface InspectionRpcServerConfig {
     onInspectConnection: (sender: PeerDescriptor) => void
 }
 
-export class InspectionServiceServer implements IInspectionService {
+export class InspectionRpcServer implements IInspectionRpc {
 
-    private readonly config: InspectionServiceServerConfig
+    private readonly config: InspectionRpcServerConfig
 
-    constructor(config: InspectionServiceServerConfig) {
+    constructor(config: InspectionRpcServerConfig) {
         this.config = config
     }
 
-    async inspectConnection(
+    async openInspectConnection(
         _request: InspectConnectionRequest,
         context: ServerCallContext
     ): Promise<InspectConnectionResponse> {

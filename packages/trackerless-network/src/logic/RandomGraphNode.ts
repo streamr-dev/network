@@ -20,7 +20,7 @@ import {
 import { PeerList } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
-import { IInspectionService, INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { IInspectionRpc, INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -33,7 +33,7 @@ import { StreamNodeServer } from './StreamNodeServer'
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 import { IInspector } from './inspect/Inspector'
-import { InspectionServiceServer } from './inspect/InspectionServiceServer'
+import { InspectionRpcServer } from './inspect/InspectionRpcServer'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -76,7 +76,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     private readonly abortController: AbortController
     private config: StrictRandomGraphNodeConfig
     private readonly server: INetworkRpc
-    private readonly inspectionServer: IInspectionService
+    private readonly inspectionServer: IInspectionRpc
 
     constructor(config: StrictRandomGraphNodeConfig) {
         super()
@@ -107,7 +107,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             },
             markForInspection: (senderId: PeerIDKey, messageRef: MessageRef) => this.config.inspector.markMessage(senderId, messageRef)
         })
-        this.inspectionServer = new InspectionServiceServer({
+        this.inspectionServer = new InspectionRpcServer({
             onInspectConnection: (peerDescriptor: PeerDescriptor) => {
                 const remote = new RemoteRandomGraphNode(
                     peerDescriptor,
@@ -149,8 +149,8 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             (msg: StreamMessage, context) => this.server.sendData(msg, context))
         this.config.rpcCommunicator.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice',
             (req: LeaveStreamNotice, context) => this.server.leaveStreamNotice(req, context))
-        this.config.rpcCommunicator.registerRpcMethod(InspectConnectionRequest, InspectConnectionResponse, 'inspectConnection',
-            (req: InspectConnectionRequest, context) => this.inspectionServer.inspectConnection(req, context))
+        this.config.rpcCommunicator.registerRpcMethod(InspectConnectionRequest, InspectConnectionResponse, 'openInspectConnection',
+            (req: InspectConnectionRequest, context) => this.inspectionServer.openInspectConnection(req, context))
     }
 
     private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
