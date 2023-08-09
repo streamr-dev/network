@@ -8,7 +8,7 @@ import set from 'lodash/set'
 import StreamrClient, { NetworkNodeStub, NetworkPeerDescriptor } from 'streamr-client'
 import { version as CURRENT_VERSION } from '../package.json'
 import { HttpServerEndpoint, Plugin } from './Plugin'
-import { Config } from './config/config'
+import { Config, StrictConfig } from './config/config'
 import BROKER_CONFIG_SCHEMA from './config/config.schema.json'
 import { validateConfig } from './config/validateConfig'
 import { generateMnemonicFromAddress } from './helpers/generateMnemonicFromAddress'
@@ -24,29 +24,31 @@ export interface Broker {
     getPeerDescriptor: () => Promise<NetworkPeerDescriptor>
 }
 
-export const createBroker = async (configWithoutDefaults: Config): Promise<Broker> => {
-    const config = validateConfig(configWithoutDefaults, BROKER_CONFIG_SCHEMA)
-    const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => createPlugin(name, config))
-
+const applyPluginClientConfigs = (plugins: Plugin<any>[], clientConfig: StrictConfig['client']) => {
     plugins.forEach((plugin) => {
-        const clientConfig = plugin.getClientConfig()
-        clientConfig.forEach((item) => {
-            if (!has(config.client, item.path)) {
-                set(config.client, item.path, item.value)
+        plugin.getClientConfig().forEach((item) => {
+            if (!has(clientConfig, item.path)) {
+                set(clientConfig, item.path, item.value)
             } else {
-                const existingValue = get(config.client, item.path)
+                const existingValue = get(clientConfig, item.path)
                 if (!isEqual(item.value, existingValue)) {
                     throw new Error(`Plugin ${plugin.name} doesn't support client config value ${JSON.stringify(item.value)} in ${item.path}`)
                 }
             }
         })
     })
+}
+
+export const createBroker = async (configWithoutDefaults: Config): Promise<Broker> => {
+    const config = validateConfig(configWithoutDefaults, BROKER_CONFIG_SCHEMA)
+    const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => createPlugin(name, config))
+    applyPluginClientConfigs(plugins, config.client)
     const streamrClient = new StreamrClient(config.client)
 
     let started = false
     let httpServer: HttpServer | HttpsServer | undefined
 
-    const failIfNotStarted = async (): Promise<NetworkNodeStub> => {
+    const failIfNotStarted = (): void => {
         if (!started) {
             throw new Error('cannot invoke on non-started broker')
         }
