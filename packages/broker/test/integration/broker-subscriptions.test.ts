@@ -58,8 +58,8 @@ describe('broker subscriptions', () => {
             networkLayerWsServerPort: networkLayerPort2
         })
 
-        client1 = await createClient(await fetchPrivateKeyWithGas())
-        client2 = await createClient(await fetchPrivateKeyWithGas())
+        client1 = createClient(await fetchPrivateKeyWithGas())
+        client2 = createClient(await fetchPrivateKeyWithGas())
 
         mqttClient1 = await createMqttClient(mqttPort1)
         mqttClient2 = await createMqttClient(mqttPort2)
