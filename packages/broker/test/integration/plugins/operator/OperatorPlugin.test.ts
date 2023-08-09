@@ -1,12 +1,11 @@
+import { Chains } from '@streamr/config'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Wallet } from 'ethers'
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-
+import { ProxyDirection } from 'streamr-client'
 import { Broker } from '../../../../src/broker'
 import { createClient, createTestStream, startBroker } from '../../../utils'
-import { ProxyDirection } from 'streamr-client'
-import { getProvider } from './smartContractUtils'
-import { Chains } from '@streamr/config'
 import { createWalletAndDeployOperator } from './createWalletAndDeployOperator'
+import { getProvider } from './smartContractUtils'
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
