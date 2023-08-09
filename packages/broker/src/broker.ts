@@ -5,7 +5,7 @@ import get from 'lodash/get'
 import has from 'lodash/has'
 import isEqual from 'lodash/isEqual'
 import set from 'lodash/set'
-import StreamrClient, { NetworkNodeStub } from 'streamr-client'
+import StreamrClient, { NetworkNodeStub, NetworkPeerDescriptor } from 'streamr-client'
 import { version as CURRENT_VERSION } from '../package.json'
 import { HttpServerEndpoint, Plugin } from './Plugin'
 import { Config } from './config/config'
@@ -18,9 +18,10 @@ import { createPlugin } from './pluginRegistry'
 const logger = new Logger(module)
 
 export interface Broker {
-    getNode: () => Promise<NetworkNodeStub>
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
+    getNode: () => Promise<NetworkNodeStub>
+    getPeerDescriptor: () => Promise<NetworkPeerDescriptor>
 }
 
 export const createBroker = async (configWithoutDefaults: Config): Promise<Broker> => {
@@ -45,15 +46,13 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
     let started = false
     let httpServer: HttpServer | HttpsServer | undefined
 
-    const getNode = async (): Promise<NetworkNodeStub> => {
+    const failIfNotStarted = async (): Promise<NetworkNodeStub> => {
         if (!started) {
             throw new Error('cannot invoke on non-started broker')
         }
-        return streamrClient.getNode()
     }
 
     return {
-        getNode,
         start: async () => {
             logger.info(`Start broker version ${CURRENT_VERSION}`)
             await Promise.all(plugins.map((plugin) => plugin.start(streamrClient)))
@@ -89,6 +88,14 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
             }
             await Promise.all(plugins.map((plugin) => plugin.stop()))
             await streamrClient.destroy()
+        },
+        getNode: () => {
+            failIfNotStarted()
+            return streamrClient.getNode()
+        },
+        getPeerDescriptor: () => {
+            failIfNotStarted()
+            return streamrClient.getPeerDescriptor()
         }
     }
 }
