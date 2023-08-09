@@ -45,7 +45,7 @@ describe('StorageConfig', () => {
     })
 
     beforeEach(async () => {
-        client = await createClient(publisherAccount.privateKey)
+        client = createClient(publisherAccount.privateKey)
         stream = await createTestStream(client, module)
         storageNode = await startStorageNode(
             storageNodeAccount.privateKey,

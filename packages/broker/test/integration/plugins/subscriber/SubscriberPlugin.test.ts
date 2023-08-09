@@ -40,7 +40,7 @@ describe('Subscriber Plugin', () => {
     let plugin: any
 
     beforeAll(async () => {
-        client = await createClient(wallet.privateKey)
+        client = createClient(wallet.privateKey)
         plugin = await createMockPlugin()
         await plugin.start(client)
     })

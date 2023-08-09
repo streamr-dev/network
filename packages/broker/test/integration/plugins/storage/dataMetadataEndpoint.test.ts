@@ -34,7 +34,7 @@ describe('dataMetadataEndpoints', () => {
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
-        client1 = await createClient(await fetchPrivateKeyWithGas())
+        client1 = createClient(await fetchPrivateKeyWithGas())
         storageNode = await startStorageNode(
             storageNodeAccount.privateKey,
             httpPort1,
