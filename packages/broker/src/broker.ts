@@ -1,15 +1,19 @@
 import { Logger, toEthereumAddress } from '@streamr/utils'
-import StreamrClient, { NetworkNodeStub } from 'streamr-client'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
-import { createPlugin } from './pluginRegistry'
-import { validateConfig } from './config/validateConfig'
+import get from 'lodash/get'
+import has from 'lodash/has'
+import isEqual from 'lodash/isEqual'
+import set from 'lodash/set'
+import StreamrClient, { NetworkNodeStub } from 'streamr-client'
 import { version as CURRENT_VERSION } from '../package.json'
+import { HttpServerEndpoint, Plugin } from './Plugin'
 import { Config } from './config/config'
-import { HttpServerEndpoint, Plugin, PluginOptions } from './Plugin'
-import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './config/config.schema.json'
+import { validateConfig } from './config/validateConfig'
 import { generateMnemonicFromAddress } from './helpers/generateMnemonicFromAddress'
+import { startServer as startHttpServer, stopServer } from './httpServer'
+import { createPlugin } from './pluginRegistry'
 
 const logger = new Logger(module)
 
@@ -21,16 +25,9 @@ export interface Broker {
 
 export const createBroker = async (configWithoutDefaults: Config): Promise<Broker> => {
     const config = validateConfig(configWithoutDefaults, BROKER_CONFIG_SCHEMA)
-    const streamrClient = new StreamrClient(config.client)
+    const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => createPlugin(name, config))
 
-    const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
-        const pluginOptions: PluginOptions = {
-            name,
-            streamrClient,
-            brokerConfig: config
-        }
-        return createPlugin(name, pluginOptions)
-    })
+    const streamrClient = new StreamrClient(config.client)
 
     let started = false
     let httpServer: HttpServer | HttpsServer | undefined
@@ -46,7 +43,7 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
         getNode,
         start: async () => {
             logger.info(`Start broker version ${CURRENT_VERSION}`)
-            await Promise.all(plugins.map((plugin) => plugin.start()))
+            await Promise.all(plugins.map((plugin) => plugin.start(streamrClient)))
             const httpServerEndpoints = plugins.flatMap((plugin: Plugin<any>) => {
                 return plugin.getHttpServerEndpoints().map((endpoint: HttpServerEndpoint) => {
                     return { ...endpoint, apiAuthentication: plugin.getApiAuthentication() }
