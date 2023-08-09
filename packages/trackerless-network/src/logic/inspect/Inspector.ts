@@ -40,8 +40,8 @@ export class Inspector implements IInspector {
         this.ownPeerDescriptor = config.ownPeerDescriptor
         this.client = toProtoRpcClient(new InspectionRpcClient(config.rpcCommunicator.getRpcClientTransport()))
         this.connectionLocker = config.connectionLocker
-        this.inspectionTimeout = config.inspectionTimeout || DEFAULT_TIMEOUT
-        this.openInspectConnection = config.openInspectConnection || this.defaultOpenInspectConnection
+        this.inspectionTimeout = config.inspectionTimeout ?? DEFAULT_TIMEOUT
+        this.openInspectConnection = config.openInspectConnection ?? this.defaultOpenInspectConnection
     }
 
     async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: string): Promise<void> {
@@ -58,16 +58,16 @@ export class Inspector implements IInspector {
         const lockId = `inspector-${this.graphId}`
         this.sessions.set(nodeId, session)
         await this.openInspectConnection(peerDescriptor, lockId)
+        let success = false
         try {
             await waitForEvent3<InspectSessionEvents>(session, 'done', this.inspectionTimeout)
-            this.connectionLocker.unlockConnection(peerDescriptor, lockId)
-            this.sessions.delete(nodeId)
-            return true
+            success = true
         } catch (err) {
-            logger.warn('Inspect session timed out, removing')
+            logger.trace('Inspect session timed out, removing')
+        } finally {
             this.sessions.delete(nodeId)
             this.connectionLocker.unlockConnection(peerDescriptor, lockId)
-            return session.getInspectedMessageCount() < 1
+            return success || session.getInspectedMessageCount() < 1
         }
     }
 
