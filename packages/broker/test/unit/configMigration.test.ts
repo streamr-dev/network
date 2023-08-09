@@ -11,7 +11,7 @@ const validateTargetConfig = async (config: any): Promise<void> | never => {
     for (const pluginName of Object.keys(config.plugins)) {
         const pluginConfig = config.plugins[pluginName]
         // validates the config against the schema
-        await createPlugin(pluginName, {
+        createPlugin(pluginName, {
             ...pluginConfig,
             name: pluginName,
             streamrClient: undefined,
