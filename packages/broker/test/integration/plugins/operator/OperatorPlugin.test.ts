@@ -1,16 +1,26 @@
 import { Wallet } from 'ethers'
-import { fastWallet } from '@streamr/test-utils'
+import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 
 import { Broker } from '../../../../src/broker'
-import { startBroker } from '../../../utils'
+import { createClient, createTestStream, startBroker } from '../../../utils'
+import { ProxyDirection } from 'streamr-client'
+import { getProvider } from './smartContractUtils'
+import { Chains } from '@streamr/config'
+import { createWalletAndDeployOperator } from './createWalletAndDeployOperator'
+
+const config = Chains.load()["dev1"]
+const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 describe('OperatorPlugin', () => {
-    let brokerWallet: Wallet
     let broker: Broker
+    let brokerWallet: Wallet
+    let operatorContractAddress: string
 
-    beforeEach(async () => {
-        brokerWallet = fastWallet()
-    })
+    beforeAll(async () => {
+        const deployment = (await createWalletAndDeployOperator(getProvider(), config, theGraphUrl))
+        brokerWallet = deployment.operatorWallet
+        operatorContractAddress = deployment.operatorContract.address
+    }, 30 * 1000)
 
     afterEach(async () => {
         await Promise.allSettled([
@@ -19,14 +29,30 @@ describe('OperatorPlugin', () => {
     })
 
     it('can start broker with operator plugin', async () => {
-        const promise = startBroker({
+        broker = await startBroker({
             privateKey: brokerWallet.privateKey,
             extraPlugins: {
                 operator: {
-                    operatorContractAddress: '0x4A5C0EC07F7ddBd4B6050181638e24b0153991b2'
+                    operatorContractAddress
                 }
             }
         })
-        await promise
+    })
+
+    it.skip('accepts proxy connections', async () => {
+        broker = await startBroker({
+            privateKey: brokerWallet.privateKey,
+            extraPlugins: {
+                operator: {
+                    operatorContractAddress
+                }
+            }
+        })
+        const subscriber = createClient(await fetchPrivateKeyWithGas())
+        const stream = await createTestStream(subscriber, module)
+        const brokerDescriptor = await broker.getPeerDescriptor()
+        subscriber.setProxies({ id: stream.id }, [brokerDescriptor], ProxyDirection.SUBSCRIBE)
+        await subscriber.subscribe(stream.id, () => {
+        })
     })
 })
