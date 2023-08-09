@@ -134,6 +134,10 @@ export class NetworkNode {
         await this.stack.stop()
     }
 
+    getPeerDescriptor(): PeerDescriptor {
+        return this.stack.getLayer0DhtNode().getPeerDescriptor()
+    }
+
     getMetricsContext(): MetricsContext {
         return this.stack.getMetricsContext()
     }
