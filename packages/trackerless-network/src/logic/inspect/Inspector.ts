@@ -67,8 +67,8 @@ export class Inspector implements IInspector {
         } finally {
             this.sessions.delete(nodeId)
             this.connectionLocker.unlockConnection(peerDescriptor, lockId)
-            return success || session.getInspectedMessageCount() < 1
         }
+        return success || session.getInspectedMessageCount() < 1
     }
 
     markMessage(sender: PeerIDKey, messageId: MessageRef): void {
