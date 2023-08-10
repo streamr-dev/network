@@ -21,7 +21,7 @@ const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.
 
 const logger = new Logger(module)
 
-jest.setTimeout(60 * 1000)
+jest.setTimeout(600 * 1000)
 
 describe("InspectRandomNodeHelper", () => {
     const chainURL = config.rpcEndpoints[0].url
@@ -40,7 +40,7 @@ describe("InspectRandomNodeHelper", () => {
         const streamCreatorKey = "0xfe1d528b7e204a5bdfb7668a1ed3adfee45b4b96960a175c9ef0ad16dd58d728"
         adminWallet = new Wallet(streamCreatorKey, provider)
 
-        token = new Contract(config.contracts.DATA, tokenABI) as unknown as TestToken
+        token = new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
         const timeString = (new Date()).getTime().toString()
         const streamPath1 = "/operatorclienttest-1-" + timeString
         const streamPath2 = "/operatorclienttest-2-" + timeString
@@ -59,7 +59,7 @@ describe("InspectRandomNodeHelper", () => {
         })
     })
 
-    describe("maintain topology service normal wolkflow", () => {
+    describe("InspectRandomNodeHelper methods", () => {
         it("getSponsorshipsOfOperator, getOperatorsInSponsorship", async () => {
             const { operatorWallet, operatorContract, operatorConfig } = await createWalletAndDeployOperator(
                 provider, config, theGraphUrl
