@@ -11,16 +11,15 @@ const logger = new Logger(module)
 export class InspectRandomNodeHelper {
 
     private readonly operatorContractAddress: EthereumAddress
-    private readonly provider: Provider
     private readonly operatorContract: Operator
     private readonly theGraphClient: TheGraphClient
 
-    constructor({ operatorContractAddress, provider, theGraphUrl }: OperatorServiceConfig) {
-        this.operatorContractAddress = operatorContractAddress
-        this.provider = provider
-        this.operatorContract = new Contract(operatorContractAddress, operatorABI, this.provider) as unknown as Operator
+    constructor(config: OperatorServiceConfig) {
+        this.operatorContractAddress = config.operatorContractAddress
+        const signer = config.signer.connect(config.provider)
+        this.operatorContract = new Contract(config.operatorContractAddress, operatorABI, signer) as unknown as Operator
         this.theGraphClient = new TheGraphClient({
-            serverUrl: theGraphUrl,
+            serverUrl: config.theGraphUrl,
             fetch,
             logger
         })
@@ -107,7 +106,7 @@ export class InspectRandomNodeHelper {
         return Array.from(operatorIds)
     }
 
-    async flag(sponsorship: string, operator: string): Promise<void> {
+    async flag(sponsorship: EthereumAddress, operator: EthereumAddress): Promise<void> {
         await (await this.operatorContract.flag(sponsorship, operator)).wait()
     }
     
