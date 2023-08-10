@@ -32,6 +32,7 @@ export class InspectRandomNodeHelper {
                     {
                         operator(id: "${operatorAddress}") {
                             stakes(where: {id_gt: "${lastId}"}, first: ${pageSize}) {
+                                id
                                 sponsorship {
                                     id
                                 }
@@ -46,7 +47,8 @@ export class InspectRandomNodeHelper {
                     `
             }
         }
-        const parseItems = (response: any) => {
+        const parseItems = (response: { operator: { stakes: { id: string, sponsorship: { id: string } }[] } }): 
+        { id: string, sponsorship: { id: string } }[] => {
             if (!response.operator) {
                 logger.error('Unable to find operator in The Graph', { operatorContractAddress: this.operatorContractAddress })
                 return []
@@ -54,7 +56,7 @@ export class InspectRandomNodeHelper {
             return response.operator.stakes
         }
         this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
-        const queryResult = this.theGraphClient.queryEntities<any>(createQuery, parseItems) // TODO: add type
+        const queryResult = this.theGraphClient.queryEntities<{ id: string, sponsorship: { id: string } }>(createQuery, parseItems)
         const sponsorshipIds = new Set<EthereumAddress>()
         for await (const stake of queryResult) {
             const sponsorshipId = stake.sponsorship?.id
@@ -72,6 +74,7 @@ export class InspectRandomNodeHelper {
                     {
                         sponsorship(id: "${sponsorshipAddress}") {
                             stakes(where: {id_gt: "${lastId}"}, first: ${pageSize}) {
+                                id
                                 operator {
                                     id
                                 }
@@ -86,7 +89,8 @@ export class InspectRandomNodeHelper {
                     `
             }
         }
-        const parseItems = (response: any) => {
+        const parseItems = (response: { sponsorship: { stakes: { id: string, operator: { id: string } }[] } } ):
+        { id: string, operator: { id: string } }[] => {
             if (!response.sponsorship) {
                 logger.error('Unable to find sponsorship in The Graph', { sponsorshipAddress })
                 return []
@@ -94,7 +98,7 @@ export class InspectRandomNodeHelper {
             return response.sponsorship.stakes
         }
         this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
-        const queryResult = this.theGraphClient.queryEntities<any>(createQuery, parseItems) // TODO: add type
+        const queryResult = this.theGraphClient.queryEntities<{ id: string, operator: { id: string } }>(createQuery, parseItems)
         const operatorIds = new Set<EthereumAddress>()
         for await (const stake of queryResult) {
             const operatorId = stake.operator?.id
