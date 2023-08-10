@@ -215,7 +215,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
         this.emit('message', msg)
-        this.propagation.feedUnseenMessage(msg, this.targetNeighbors.getStringIds(), previousPeer || null)
+        this.propagation.feedUnseenMessage(msg, this.targetNeighbors.getStringIds(), previousPeer ?? null)
     }
 
     getTargetNeighborStringIds(): string[] {

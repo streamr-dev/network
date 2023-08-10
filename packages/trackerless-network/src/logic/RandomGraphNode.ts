@@ -251,7 +251,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         }
         this.emit('message', msg)
         
-        this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), previousPeer || null)
+        this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), previousPeer ?? null)
     }
 
     private getPropagationTargets(msg: StreamMessage): string[] {

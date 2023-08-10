@@ -65,17 +65,17 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     constructor(options: NetworkOptions) {
         super()
         this.options = options
-        this.metricsContext = options.metricsContext || new MetricsContext()
+        this.metricsContext = options.metricsContext ?? new MetricsContext()
         this.layer0DhtNode = new DhtNode({
             ...options.layer0,
             metricsContext: this.metricsContext
         })
         this.streamrNode = new StreamrNode({
             ...options.networkNode,
-            nodeName: options.networkNode.nodeName || options.layer0.nodeName,
+            nodeName: options.networkNode.nodeName ?? options.layer0.nodeName,
             metricsContext: this.metricsContext
         })
-        this.firstConnectionTimeout = options.networkNode.firstConnectionTimeout || 5000
+        this.firstConnectionTimeout = options.networkNode.firstConnectionTimeout ?? 5000
     }
 
     async start(doJoin = true): Promise<void> {

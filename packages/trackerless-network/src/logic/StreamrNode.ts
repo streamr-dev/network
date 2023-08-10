@@ -111,7 +111,7 @@ export class StreamrNode extends EventEmitter<Events> {
         super()
         this.config = config
         this.streams = new Map()
-        this.metricsContext = config.metricsContext || new MetricsContext()
+        this.metricsContext = config.metricsContext ?? new MetricsContext()
         this.metrics = {
             publishMessagesPerSecond: new RateMetric(),
             publishBytesPerSecond: new RateMetric()
@@ -276,10 +276,10 @@ export class StreamrNode extends EventEmitter<Events> {
         await this.joinStream(streamPartId)
         if (this.getStream(streamPartId)!.layer1!.getBucketSize() > 0) {
             const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, 1)
-            await neighborCounter.waitForTargetReached(timeout || 5001)
+            await neighborCounter.waitForTargetReached(timeout ?? 5001)
         }
         this.publishToStream(streamPartId, msg)
-        return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
+        return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length ?? 0
     }
 
     async waitForJoinAndSubscribe(
@@ -293,10 +293,10 @@ export class StreamrNode extends EventEmitter<Events> {
         await this.joinStream(streamPartId)
         if (this.getStream(streamPartId)!.layer1!.getBucketSize() > 0) {
             const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, expectedNeighbors)
-            await neighborCounter.waitForTargetReached(timeout || 5002)
+            await neighborCounter.waitForTargetReached(timeout ?? 5002)
         }
         this.subscribeToStream(streamPartId)
-        return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
+        return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length ?? 0
     }
 
     async setProxies(

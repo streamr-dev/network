@@ -76,7 +76,7 @@ export class StreamMessageTranslator {
             newGroupKey = {
                 encryptedGroupKeyHex: msg.getNewGroupKey()!.encryptedGroupKeyHex,
                 groupKeyId: msg.getNewGroupKey()!.groupKeyId,
-                serialized: msg.getNewGroupKey()!.serialized || undefined
+                serialized: msg.getNewGroupKey()!.serialized ?? undefined
             }
         }
         const translated: StreamMessage = {
@@ -86,7 +86,7 @@ export class StreamMessageTranslator {
             previousMessageRef,
             messageType: contentType,
             signature: msg.signature,
-            groupKeyId: msg.groupKeyId || undefined,
+            groupKeyId: msg.groupKeyId ?? undefined,
             newGroupKey,
         }
         return translated
