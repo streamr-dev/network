@@ -227,9 +227,10 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             return
         }
         this.stopped = true
+
         this.abortController.abort()
-        this.config.targetNeighbors.values().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor))
-        this.config.proxyConnectionServer?.getConnections().map((connection) => connection.remote.leaveStreamNotice(this.config.ownPeerDescriptor))
+        this.config.proxyConnectionServer?.stop()
+        this.config.targetNeighbors.getPeers().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor))
         this.config.rpcCommunicator.stop()
         this.removeAllListeners()
         this.config.layer1.off('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
@@ -242,7 +243,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.config.randomContactPool.stop()
         this.config.neighborFinder.stop()
         this.config.neighborUpdateManager.stop()
-        this.config.proxyConnectionServer?.stop()
     }
 
     broadcast(msg: StreamMessage, previousPeer?: string): void {

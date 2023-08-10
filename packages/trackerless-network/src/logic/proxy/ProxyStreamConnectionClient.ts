@@ -248,7 +248,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     }
 
     stop(): void {
-        this.targetNeighbors.values().map((remote) => {
+        this.targetNeighbors.getPeers().map((remote) => {
             this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), 'proxy-stream-connection-client')
             remote.leaveStreamNotice(this.config.ownPeerDescriptor)
         })
