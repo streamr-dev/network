@@ -1,5 +1,4 @@
 import { Contract } from "@ethersproject/contracts"
-import { Provider } from "@ethersproject/providers"
 import { operatorABI } from "@streamr/network-contracts"
 import type { Operator } from "@streamr/network-contracts"
 import { EthereumAddress, Logger, TheGraphClient, toEthereumAddress } from "@streamr/utils"
