@@ -11,7 +11,7 @@ export class GroupKeyResponseTranslator {
             const encryptedGroupKey: EncryptedGroupKey = {
                 encryptedGroupKeyHex: groupKey.encryptedGroupKeyHex,
                 groupKeyId: groupKey.groupKeyId,
-                serialized: groupKey.serialized || undefined
+                serialized: groupKey.serialized ?? undefined
             }
             return encryptedGroupKey
         })

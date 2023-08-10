@@ -105,7 +105,7 @@ describe('multiple publisher plugins', () => {
 
     beforeAll(async () => {
         privateKey = await fetchPrivateKeyWithGas()
-        const client = await createClient(privateKey)
+        const client = createClient(privateKey)
         const stream = await createTestStream(client, module)
         streamId = stream.id
         await stream.grantPermissions({
@@ -139,7 +139,7 @@ describe('multiple publisher plugins', () => {
     it('subscribe by StreamrClient', async () => {
 
         const receivedMessages: Queue<unknown> = new Queue()
-        const subscriber = await createClient(fastPrivateKey())
+        const subscriber = createClient(fastPrivateKey())
         await subscriber.subscribe(streamId, (message: unknown) => {
             receivedMessages.push(message)
         })

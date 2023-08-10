@@ -1,17 +1,18 @@
 import { ContractReceipt } from '@ethersproject/contracts'
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { Logger, TheGraphClient, composeAbortSignals, merge, randomString, toEthereumAddress } from '@streamr/utils'
+import { composeAbortSignals, Logger, merge, randomString, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import compact from 'lodash/compact'
 import fetch, { Response } from 'node-fetch'
 import { AbortSignal as FetchAbortSignal } from 'node-fetch/externals'
 import split2 from 'split2'
 import { Readable } from 'stream'
 import LRU from '../../vendor/quick-lru'
-import { StrictStreamrClientConfig, JsonPeerDescriptor, JsonNodeType } from '../Config'
+import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } from '../Config'
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
-import { PeerDescriptor, PeerID, NodeType } from '@streamr/dht'
+import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
+import omit from 'lodash/omit'
 
 const logger = new Logger(module)
 
@@ -112,8 +113,9 @@ export class MaxSizedSet<T> {
     }
 }
 
-export function peerDescriptorTranslator(json: JsonPeerDescriptor): PeerDescriptor {
-    const type = json.type === JsonNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
+// TODO: rename to convertNetworkPeerDescriptorToPeerDescriptor
+export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescriptor {
+    const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
         ...json,
         kademliaId: PeerID.fromString(json.id).value,
@@ -121,6 +123,17 @@ export function peerDescriptorTranslator(json: JsonPeerDescriptor): PeerDescript
         websocket: json.websocket
     }
     return peerDescriptor
+}
+
+export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDescriptor): NetworkPeerDescriptor {
+    if (descriptor.type === NodeType.VIRTUAL) {
+        throw new Error('nodeType "virtual" not supported')
+    }
+    return {
+        ...omit(descriptor, 'kademliaId'),
+        id: PeerID.fromValue(descriptor.kademliaId).toString(),
+        type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
+    }
 }
 
 export function generateClientId(): string {

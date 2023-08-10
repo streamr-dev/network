@@ -87,7 +87,6 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         })
         this.propagation = new Propagation({
             minPropagationTargets: 2,
-            randomGraphId: config.streamPartId,
             sendToNeighbor: async (neighborId: string, msg: StreamMessage): Promise<void> => {
                 const remote = this.targetNeighbors.getNeighborWithId(neighborId)
                 if (remote) {
@@ -217,7 +216,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
         this.emit('message', msg)
-        this.propagation.feedUnseenMessage(msg, this.targetNeighbors.getStringIds(), previousPeer || null)
+        this.propagation.feedUnseenMessage(msg, this.targetNeighbors.getStringIds(), previousPeer ?? null)
     }
 
     getTargetNeighborStringIds(): string[] {
@@ -249,7 +248,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     }
 
     stop(): void {
-        this.targetNeighbors.values().map((remote) => {
+        this.targetNeighbors.getPeers().map((remote) => {
             this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), 'proxy-stream-connection-client')
             remote.leaveStreamNotice(this.config.ownPeerDescriptor)
         })

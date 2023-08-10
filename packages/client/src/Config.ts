@@ -27,7 +27,7 @@ export interface ControlLayerConfig {
     /**
      * The list of entry point PeerDescriptors used to join the Streamr Network.
      */
-    entryPoints?: JsonPeerDescriptor[]
+    entryPoints?: NetworkPeerDescriptor[]
 
     /**
      * The list of STUN and TURN servers to use in ICE protocol when
@@ -73,7 +73,7 @@ export interface ControlLayerConfig {
      * Can be used in cases where the client's public IP address is known before
      * starting the network node. If not specified, the PeerDescriptor will be auto-generated.
     */
-    peerDescriptor?: JsonPeerDescriptor
+    peerDescriptor?: NetworkPeerDescriptor
 
     /**
      * The port to use for the client's Network Node WebSocket server.
@@ -120,14 +120,14 @@ export interface NetworkConfig {
     node?: NetworkNodeConfig
 }
 
-export enum JsonNodeType {
+export enum NetworkNodeType {
     NODEJS = 'nodejs',
     BROWSER = 'browser'
 }
 
-export interface JsonPeerDescriptor {
+export interface NetworkPeerDescriptor {
     id: string
-    type?: JsonNodeType
+    type?: NetworkNodeType
     websocket?: ConnectivityMethod
     openInternet?: boolean
     region?: number

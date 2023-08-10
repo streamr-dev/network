@@ -37,7 +37,6 @@ describe(Propagation, () => {
         sendToNeighbor = jest.fn()
         propagation = new Propagation({
             sendToNeighbor,
-            randomGraphId: 's1#0',
             minPropagationTargets: 3,
             ttl: TTL,
             maxMessages: 5
