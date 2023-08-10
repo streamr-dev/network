@@ -51,8 +51,8 @@ export async function generateWalletWithGasAndTokens(provider: Provider, config?
     return newWallet.connect(provider)
 }
 
-export async function deploySponsorship(streamId: string, operatorWallet: Wallet): Promise<Sponsorship> {
-    return await _deploySponsorship(CONFIG, operatorWallet, { streamId })
+export async function deploySponsorship(streamId: string, wallet: Wallet): Promise<Sponsorship> {
+    return await _deploySponsorship(CONFIG, wallet, { streamId })
 }
 
 export async function deployOperatorContract(operatorWallet: Wallet): Promise<Operator> {

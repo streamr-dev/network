@@ -5,10 +5,11 @@ import { Provider } from "@ethersproject/providers"
 import type { Operator } from "@streamr/network-contracts"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 import { generateWalletWithGasAndTokens } from "./smartContractUtils"
-import { toEthereumAddress } from "@streamr/utils"
+import { EthereumAddress, toEthereumAddress } from "@streamr/utils"
 import { deployOperatorContract } from "./deployOperatorContract"
 
 export interface SetupOperatorOpts {
+    nodeAddresses?: EthereumAddress[]
     provider: Provider
     chainConfig: Chain
     theGraphUrl: string
@@ -25,6 +26,9 @@ export async function setupOperatorContract(
         signer: operatorWallet,
         provider: opts.provider,
         theGraphUrl: opts.theGraphUrl
+    }
+    if (opts.nodeAddresses !== undefined) {
+        await operatorContract.setNodeAddresses(opts.nodeAddresses)
     }
     return { operatorWallet, operatorContract, operatorConfig }
 }
