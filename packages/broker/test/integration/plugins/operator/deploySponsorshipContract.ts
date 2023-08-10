@@ -7,12 +7,14 @@ import type { Sponsorship, SponsorshipFactory } from "@streamr/network-contracts
 
 const { parseEther } = utils
 
+export const DEFAULT_MINIMUM_STAKE = parseEther("60")
+
 export async function deploySponsorship(
     chainConfig: Chain,
     deployer: Wallet, {
         streamId = `Stream-${Date.now()}`,
         metadata = "{}",
-        minimumStakeWei = parseEther("60"),
+        minimumStakeWei = DEFAULT_MINIMUM_STAKE,
         minHorizonSeconds = 0,
         minOperatorCount = 1,
     } = {},

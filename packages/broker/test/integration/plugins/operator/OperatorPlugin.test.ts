@@ -1,20 +1,27 @@
+import { parseEther } from '@ethersproject/units'
 import { Chains } from '@streamr/config'
+import type { Operator } from '@streamr/network-contracts'
 import { fastPrivateKey, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { toEthereumAddress, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { ProxyDirection, StreamPermission } from 'streamr-client'
 import { Broker } from '../../../../src/broker'
 import { createClient, createTestStream, startBroker } from '../../../utils'
 import { setupOperatorContract } from './setupOperatorContract'
-import { deploySponsorship, generateWalletWithGasAndTokens, getProvider } from './smartContractUtils'
-import { toEthereumAddress, wait } from '@streamr/utils'
+import { deploySponsorship, generateWalletWithGasAndTokens, getProvider, getTokenContract } from './smartContractUtils'
+import { DEFAULT_MINIMUM_STAKE } from './deploySponsorshipContract'
 
 const chainConfig = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
+const DEFAULT_SENDER = '0x'
+const SPONSORSHIP_AMOUNT = parseEther('500')
+
 describe('OperatorPlugin', () => {
     let broker: Broker
     let brokerWallet: Wallet
-    let operatorContractAddress: string
+    let operatorContract: Operator
+    let operatorWallet: Wallet
 
     beforeAll(async () => {
         brokerWallet = fastWallet()
@@ -24,43 +31,39 @@ describe('OperatorPlugin', () => {
             chainConfig, 
             theGraphUrl
         }))
-        operatorContractAddress = deployment.operatorContract.address
+        operatorWallet = deployment.operatorWallet
+        operatorContract = deployment.operatorContract
     }, 30 * 1000)
 
     afterEach(async () => {
-        await Promise.allSettled([
-            broker?.stop(),
-        ])
-    })
-
-    it('can start broker with operator plugin', async () => {
-        broker = await startBroker({
-            privateKey: brokerWallet.privateKey,
-            extraPlugins: {
-                operator: {
-                    operatorContractAddress
-                }
-            }
-        })
+        await Promise.allSettled([broker?.stop()])
     })
 
     it('accepts proxy connections', async () => {
         const subscriber = createClient(await fetchPrivateKeyWithGas())
         const stream = await createTestStream(subscriber, module)
-        await deploySponsorship(stream.id, await generateWalletWithGasAndTokens(getProvider(), chainConfig))
+
+        const sponsorship = await deploySponsorship(stream.id, await generateWalletWithGasAndTokens(getProvider(), chainConfig))
+        await (await getTokenContract().connect(operatorWallet).approve(sponsorship.address, SPONSORSHIP_AMOUNT)).wait()
+        await (await sponsorship.connect(operatorWallet).sponsor(SPONSORSHIP_AMOUNT)).wait()
+
+        await (await getTokenContract().connect(operatorWallet).transferAndCall(operatorContract.address, DEFAULT_MINIMUM_STAKE, DEFAULT_SENDER)).wait()
+        await wait(3000)  // TODO remove wait after we've migrated to the fast chain
+        await (await operatorContract.stake(sponsorship.address, DEFAULT_MINIMUM_STAKE)).wait()
+
         const publisher = createClient(fastPrivateKey())
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
             user: await publisher.getAddress()
         })
-        setInterval(async () => {
+        const publishTimer = setInterval(async () => {
             await publisher.publish({ id: stream.id }, { foo: 'bar' })
         }, 500)
         broker = await startBroker({
             privateKey: brokerWallet.privateKey,
             extraPlugins: {
                 operator: {
-                    operatorContractAddress
+                    operatorContractAddress: operatorContract.address
                 }
             }
         })
@@ -70,6 +73,9 @@ describe('OperatorPlugin', () => {
             // eslint-disable-next-line no-console
             // console.log(_content)
         })
-        await wait(10000)
-    }, 60 * 1000)
+        await wait(30000)
+        clearInterval(publishTimer)
+        await subscriber.destroy()
+        await publisher.destroy()
+    }, 90 * 1000)
 })
