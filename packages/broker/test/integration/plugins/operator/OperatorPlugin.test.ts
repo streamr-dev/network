@@ -16,7 +16,11 @@ describe('OperatorPlugin', () => {
     let operatorContractAddress: string
 
     beforeAll(async () => {
-        const deployment = (await createWalletAndDeployOperator(getProvider(), config, theGraphUrl))
+        const deployment = (await setupOperatorContract({
+            provider: getProvider(), 
+            chainConfig, 
+            theGraphUrl
+        }))
         brokerWallet = deployment.operatorWallet
         operatorContractAddress = deployment.operatorContract.address
     }, 30 * 1000)

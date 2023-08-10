@@ -8,17 +8,23 @@ import { generateWalletWithGasAndTokens } from "./smartContractUtils"
 import { toEthereumAddress } from "@streamr/utils"
 import { deployOperatorContract } from "./deployOperatorContract"
 
-export async function createWalletAndDeployOperator(provider: Provider, config: Chain, theGraphUrl: string, 
-    adminKey?: string): 
-    Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig }> {
-    const operatorWallet = await generateWalletWithGasAndTokens(provider, config, adminKey)
+export interface SetupOperatorOpts {
+    provider: Provider
+    chainConfig: Chain
+    theGraphUrl: string
+    adminKey?: string
+}
 
-    const operatorContract = await deployOperatorContract(config, operatorWallet)
+export async function setupOperatorContract(
+    opts: SetupOperatorOpts
+): Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig }> {
+    const operatorWallet = await generateWalletWithGasAndTokens(opts.provider, opts.chainConfig, opts.adminKey)
+    const operatorContract = await deployOperatorContract(opts.chainConfig, operatorWallet)
     const operatorConfig = {
         operatorContractAddress: toEthereumAddress(operatorContract.address),
         signer: operatorWallet,
-        provider,
-        theGraphUrl
+        provider: opts.provider,
+        theGraphUrl: opts.theGraphUrl
     }
     return { operatorWallet, operatorContract, operatorConfig }
 }
