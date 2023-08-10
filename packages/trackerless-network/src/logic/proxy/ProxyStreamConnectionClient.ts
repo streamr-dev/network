@@ -86,7 +86,6 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         })
         this.propagation = new Propagation({
             minPropagationTargets: 2,
-            randomGraphId: config.streamPartId,
             sendToNeighbor: async (neighborId: string, msg: StreamMessage): Promise<void> => {
                 const remote = this.targetNeighbors.getNeighborWithId(neighborId)
                 if (remote) {
