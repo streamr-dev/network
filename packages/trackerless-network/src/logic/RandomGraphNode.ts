@@ -15,8 +15,8 @@ import {
     MessageRef,
     StreamMessageType,
     GroupKeyRequest,
-    InspectConnectionRequest,
-    InspectConnectionResponse,
+    TemporaryConnectionRequest,
+    TemporaryConnectionResponse,
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { PeerList } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -33,7 +33,7 @@ import { StreamNodeServer } from './StreamNodeServer'
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 import { IInspector } from './inspect/Inspector'
-import { InspectionRpcServer } from './inspect/InspectionRpcServer'
+import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -63,7 +63,7 @@ export interface StrictRandomGraphNodeConfig {
     acceptProxyConnections: boolean
     neighborUpdateInterval: number
     inspector: IInspector
-    inspectionServer: InspectionRpcServer
+    temporaryConnectionServer: TemporaryConnectionRpcServer
     proxyConnectionServer?: ProxyStreamConnectionServer
 }
 
@@ -138,8 +138,8 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             (msg: StreamMessage, context) => this.server.sendData(msg, context))
         this.config.rpcCommunicator.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice',
             (req: LeaveStreamNotice, context) => this.server.leaveStreamNotice(req, context))
-        this.config.rpcCommunicator.registerRpcMethod(InspectConnectionRequest, InspectConnectionResponse, 'openInspectConnection',
-            (req: InspectConnectionRequest, context) => this.config.inspectionServer.openInspectConnection(req, context))
+        this.config.rpcCommunicator.registerRpcMethod(TemporaryConnectionRequest, TemporaryConnectionResponse, 'openConnection',
+            (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionServer.openConnection(req, context))
     }
 
     private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
@@ -215,7 +215,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             this.config.targetNeighbors.remove(peerDescriptor)
             this.config.connectionLocker.unlockConnection(peerDescriptor, this.config.randomGraphId)
             this.config.neighborFinder.start([keyFromPeerDescriptor(peerDescriptor)])
-            this.config.inspectionServer.removePeer(peerDescriptor)
+            this.config.temporaryConnectionServer.removePeer(peerDescriptor)
         }
     }
 
@@ -280,7 +280,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         }
 
         propagationTargets = propagationTargets.filter((target) => !this.config.inspector.isInspected(target as PeerIDKey))
-        propagationTargets = propagationTargets.concat(this.config.inspectionServer.getInspectingPeers().getStringIds())
+        propagationTargets = propagationTargets.concat(this.config.temporaryConnectionServer.getPeers().getStringIds())
         return propagationTargets
     }
 

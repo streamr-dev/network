@@ -1,6 +1,6 @@
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc"
-import { InspectConnectionRequest, InspectConnectionResponse } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
-import { IInspectionRpc } from "../../proto/packages/trackerless-network/protos/NetworkRpc.server"
+import { TemporaryConnectionRequest, TemporaryConnectionResponse } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
+import { ITemporaryConnectionRpc } from "../../proto/packages/trackerless-network/protos/NetworkRpc.server"
 import { DhtCallContext, ListeningRpcCommunicator, PeerID } from "@streamr/dht"
 import { NetworkRpcClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
 import { PeerList } from "../PeerList"
@@ -8,41 +8,41 @@ import { toProtoRpcClient } from "@streamr/proto-rpc"
 import { RemoteRandomGraphNode } from "../RemoteRandomGraphNode"
 import { PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc"
 
-interface InspectionRpcServerConfig {
+interface TemporaryConnectionRpcServerConfig {
     randomGraphId: string
     rpcCommunicator: ListeningRpcCommunicator
     ownPeerId: PeerID
 } 
 
-export class InspectionRpcServer implements IInspectionRpc {
+export class TemporaryConnectionRpcServer implements ITemporaryConnectionRpc {
 
-    private readonly config: InspectionRpcServerConfig
-    private readonly inspectingPeers: PeerList
+    private readonly config: TemporaryConnectionRpcServerConfig
+    private readonly temporaryPeers: PeerList
 
-    constructor(config: InspectionRpcServerConfig) {
+    constructor(config: TemporaryConnectionRpcServerConfig) {
         this.config = config
-        this.inspectingPeers = new PeerList(config.ownPeerId, 10)
+        this.temporaryPeers = new PeerList(config.ownPeerId, 10)
     }
 
-    getInspectingPeers(): PeerList {
-        return this.inspectingPeers
+    getPeers(): PeerList {
+        return this.temporaryPeers
     }
 
     removePeer(peer: PeerDescriptor): void {
-        this.inspectingPeers.remove(peer)
+        this.temporaryPeers.remove(peer)
     }
 
-    async openInspectConnection(
-        _request: InspectConnectionRequest,
+    async openConnection(
+        _request: TemporaryConnectionRequest,
         context: ServerCallContext
-    ): Promise<InspectConnectionResponse> {
+    ): Promise<TemporaryConnectionResponse> {
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
         const remote = new RemoteRandomGraphNode(
             sender,
             this.config.randomGraphId,
             toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
         )
-        this.inspectingPeers.add(remote)
+        this.temporaryPeers.add(remote)
         return {
             accepted: true
         }

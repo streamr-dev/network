@@ -11,13 +11,13 @@ import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer
 import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { StreamMessageType } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Inspector } from './inspect/Inspector'
-import { InspectionRpcServer } from './inspect/InspectionRpcServer'
+import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     "nearbyContactPool" | "randomContactPool" | "targetNeighbors" | "propagation"
     | "handshaker" | "neighborFinder" | "neighborUpdateManager" | "nodeName" | "numOfTargetNeighbors"
     | "maxNumberOfContacts" | "minPropagationTargets" | "rpcCommunicator" | "peerViewSize" | "acceptProxyConnections"
-    | "neighborUpdateInterval" | "inspector" | "inspectionServer">
+    | "neighborUpdateInterval" | "inspector" | "temporaryConnectionServer">
 
 const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
     const peerId = peerIdFromPeerDescriptor(config.ownPeerDescriptor)
@@ -32,7 +32,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const randomContactPool = config.randomContactPool ?? new PeerList(peerId, maxNumberOfContacts)
     const targetNeighbors = config.targetNeighbors ?? new PeerList(peerId, maxNumberOfContacts)
 
-    const inspectionServer = new InspectionRpcServer({
+    const temporaryConnectionServer = new TemporaryConnectionRpcServer({
         randomGraphId: config.randomGraphId,
         rpcCommunicator,
         ownPeerId: peerId
@@ -46,7 +46,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         minPropagationTargets,
         randomGraphId: config.randomGraphId,
         sendToNeighbor: async (neighborId: string, msg: StreamMessage): Promise<void> => {
-            const remote = targetNeighbors.getNeighborWithId(neighborId) ?? inspectionServer.getInspectingPeers().getNeighborWithId(neighborId)
+            const remote = targetNeighbors.getNeighborWithId(neighborId) ?? temporaryConnectionServer.getPeers().getNeighborWithId(neighborId)
             const proxyConnection = proxyConnectionServer?.getConnection(neighborId as PeerIDKey)
             if (remote) {
                 await remote.sendData(config.ownPeerDescriptor, msg)
@@ -112,7 +112,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         proxyConnectionServer,
         neighborUpdateInterval,
         inspector,
-        inspectionServer
+        temporaryConnectionServer
     }
 }
 

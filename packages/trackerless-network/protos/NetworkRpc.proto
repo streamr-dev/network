@@ -24,8 +24,8 @@ service NeighborUpdateRpc {
   rpc neighborUpdate (NeighborUpdate) returns (NeighborUpdate);
 }
 
-service InspectionRpc {
-  rpc openInspectConnection (InspectConnectionRequest) returns (InspectConnectionResponse);
+service TemporaryConnectionRpc {
+  rpc openConnection (TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
 }
 
 message MessageRef {
@@ -147,11 +147,11 @@ message ProxyConnectionResponse {
   bool accepted = 5;
 }
 
-message InspectConnectionRequest {
+message TemporaryConnectionRequest {
   string senderId = 1;
 }
 
-message InspectConnectionResponse {
+message TemporaryConnectionResponse {
   bool accepted = 1;
 }
 

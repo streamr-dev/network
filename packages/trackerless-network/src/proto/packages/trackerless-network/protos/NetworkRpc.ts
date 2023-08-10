@@ -313,18 +313,18 @@ export interface ProxyConnectionResponse {
     accepted: boolean;
 }
 /**
- * @generated from protobuf message InspectConnectionRequest
+ * @generated from protobuf message TemporaryConnectionRequest
  */
-export interface InspectConnectionRequest {
+export interface TemporaryConnectionRequest {
     /**
      * @generated from protobuf field: string senderId = 1;
      */
     senderId: string;
 }
 /**
- * @generated from protobuf message InspectConnectionResponse
+ * @generated from protobuf message TemporaryConnectionResponse
  */
-export interface InspectConnectionResponse {
+export interface TemporaryConnectionResponse {
     /**
      * @generated from protobuf field: bool accepted = 1;
      */
@@ -610,29 +610,29 @@ class ProxyConnectionResponse$Type extends MessageType<ProxyConnectionResponse> 
  */
 export const ProxyConnectionResponse = new ProxyConnectionResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class InspectConnectionRequest$Type extends MessageType<InspectConnectionRequest> {
+class TemporaryConnectionRequest$Type extends MessageType<TemporaryConnectionRequest> {
     constructor() {
-        super("InspectConnectionRequest", [
+        super("TemporaryConnectionRequest", [
             { no: 1, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message InspectConnectionRequest
+ * @generated MessageType for protobuf message TemporaryConnectionRequest
  */
-export const InspectConnectionRequest = new InspectConnectionRequest$Type();
+export const TemporaryConnectionRequest = new TemporaryConnectionRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class InspectConnectionResponse$Type extends MessageType<InspectConnectionResponse> {
+class TemporaryConnectionResponse$Type extends MessageType<TemporaryConnectionResponse> {
     constructor() {
-        super("InspectConnectionResponse", [
+        super("TemporaryConnectionResponse", [
             { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message InspectConnectionResponse
+ * @generated MessageType for protobuf message TemporaryConnectionResponse
  */
-export const InspectConnectionResponse = new InspectConnectionResponse$Type();
+export const TemporaryConnectionResponse = new TemporaryConnectionResponse$Type();
 /**
  * @generated ServiceType for protobuf service NetworkRpc
  */
@@ -660,8 +660,8 @@ export const NeighborUpdateRpc = new ServiceType("NeighborUpdateRpc", [
     { name: "neighborUpdate", options: {}, I: NeighborUpdate, O: NeighborUpdate }
 ]);
 /**
- * @generated ServiceType for protobuf service InspectionRpc
+ * @generated ServiceType for protobuf service TemporaryConnectionRpc
  */
-export const InspectionRpc = new ServiceType("InspectionRpc", [
-    { name: "openInspectConnection", options: {}, I: InspectConnectionRequest, O: InspectConnectionResponse }
+export const TemporaryConnectionRpc = new ServiceType("TemporaryConnectionRpc", [
+    { name: "openConnection", options: {}, I: TemporaryConnectionRequest, O: TemporaryConnectionResponse }
 ]);
