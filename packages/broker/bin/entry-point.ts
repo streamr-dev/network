@@ -16,7 +16,7 @@ const main = async () => {
     })
     await dhtNode.start()
     await dhtNode.joinDht(peerDescriptor)
-    console.info('Entrypoint started')
+    console.info('Entry point started')
 }
 
 main()
