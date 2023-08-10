@@ -28,7 +28,7 @@ export async function setupOperatorContract(
         theGraphUrl: opts.theGraphUrl
     }
     if (opts.nodeAddresses !== undefined) {
-        await operatorContract.setNodeAddresses(opts.nodeAddresses)
+        await (await operatorContract.setNodeAddresses(opts.nodeAddresses)).wait()
     }
     return { operatorWallet, operatorContract, operatorConfig }
 }

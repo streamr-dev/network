@@ -24,7 +24,6 @@ describe('OperatorPlugin', () => {
             chainConfig, 
             theGraphUrl
         }))
-        brokerWallet = deployment.operatorWallet
         operatorContractAddress = deployment.operatorContract.address
     }, 30 * 1000)
 
