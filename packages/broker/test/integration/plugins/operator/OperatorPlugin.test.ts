@@ -1,13 +1,14 @@
 import { Chains } from '@streamr/config'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Wallet } from 'ethers'
-import { ProxyDirection } from 'streamr-client'
+import { ProxyDirection, StreamPermission } from 'streamr-client'
 import { Broker } from '../../../../src/broker'
 import { createClient, createTestStream, startBroker } from '../../../utils'
-import { createWalletAndDeployOperator } from './createWalletAndDeployOperator'
-import { getProvider } from './smartContractUtils'
+import { setupOperatorContract } from './setupOperatorContract'
+import { deploySponsorship, getProvider } from './smartContractUtils'
+import { wait } from '@streamr/utils'
 
-const config = Chains.load()["dev1"]
+const chainConfig = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 describe('OperatorPlugin', () => {
@@ -42,7 +43,18 @@ describe('OperatorPlugin', () => {
         })
     })
 
-    it.skip('accepts proxy connections', async () => {
+    it('accepts proxy connections', async () => {
+        const subscriber = createClient(await fetchPrivateKeyWithGas())
+        const stream = await createTestStream(subscriber, module)
+        await deploySponsorship(stream.id, brokerWallet)
+        const publisher = createClient(fastPrivateKey())
+        await stream.grantPermissions({
+            permissions: [StreamPermission.PUBLISH],
+            user: await publisher.getAddress()
+        })
+        setInterval(async () => {
+            await publisher.publish({ id: stream.id }, { foo: 'bar' })
+        }, 500)
         broker = await startBroker({
             privateKey: brokerWallet.privateKey,
             extraPlugins: {
@@ -51,11 +63,12 @@ describe('OperatorPlugin', () => {
                 }
             }
         })
-        const subscriber = createClient(await fetchPrivateKeyWithGas())
-        const stream = await createTestStream(subscriber, module)
         const brokerDescriptor = await broker.getPeerDescriptor()
-        subscriber.setProxies({ id: stream.id }, [brokerDescriptor], ProxyDirection.SUBSCRIBE)
-        await subscriber.subscribe(stream.id, () => {
+        await subscriber.setProxies({ id: stream.id }, [brokerDescriptor], ProxyDirection.SUBSCRIBE)
+        await subscriber.subscribe(stream.id, (_content) => {
+            // eslint-disable-next-line no-console
+            // console.log(_content)
         })
-    })
+        await wait(10000)
+    }, 30 * 1000)
 })
