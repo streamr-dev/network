@@ -258,12 +258,10 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     private getPropagationTargets(msg: StreamMessage): string[] {
         let propagationTargets = this.config.targetNeighbors.getStringIds()
         if (this.config.proxyConnectionServer) {
-            if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
-                const { recipient } = GroupKeyRequest.fromBinary(msg.content)
-                propagationTargets = propagationTargets.concat(this.config.proxyConnectionServer!.getPeerKeysForUserId(recipient))
-            } else {
-                propagationTargets = propagationTargets.concat(this.config.proxyConnectionServer!.getSubscribers())
-            }
+            const proxyTargets = (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST)
+                ? this.config.proxyConnectionServer.getPeerKeysForUserId(GroupKeyRequest.fromBinary(msg.content).recipient)
+                : this.config.proxyConnectionServer.getSubscribers()
+            propagationTargets = propagationTargets.concat(proxyTargets)
         }
         return propagationTargets
     }
