@@ -1,6 +1,9 @@
 import { toEthereumAddress } from '@streamr/utils'
 import { StreamrClientConfig, NetworkNodeType } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
+import { Chains } from '@streamr/config'
+
+const CHAIN_CONFIG = Chains.load()['dev2']
 
 function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
@@ -34,9 +37,9 @@ export const CONFIG_TEST: StreamrClientConfig = {
         }
     },
     contracts: {
-        streamRegistryChainAddress: '0x6cCdd5d866ea766f6DF5965aA98DeCCD629ff222',
-        streamStorageRegistryChainAddress: '0xd04af489677001444280366Dd0885B03dAaDe71D',
-        storageNodeRegistryChainAddress: '0x231b810D98702782963472e1D60a25496999E75D',    
+        streamRegistryChainAddress: CHAIN_CONFIG.contracts.StreamRegistry,
+        streamStorageRegistryChainAddress: CHAIN_CONFIG.contracts.StreamStorageRegistry,
+        storageNodeRegistryChainAddress: CHAIN_CONFIG.contracts.StorageNodeRegistry,
         mainChainRPCs: {
             name: 'dev_ethereum',
             chainId: 8995,
