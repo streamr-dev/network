@@ -27,7 +27,7 @@ export async function generateWalletWithGasAndTokens(provider: Provider, config?
     // we have LINK in the local dev env, and DATA in the env deployed by the network-contracts package
     // TOTO: change this to only use DATA once we moved to the new cleaned up docker dev env
     if (config && !config.contracts.LINK) {
-        const token = new Contract(config.contracts.DATA, tokenABI, adminWallet) as unknown as TestToken 
+        const token = new Contract(config.contracts.DATA, tokenABI, adminWallet) as unknown as TestToken
         await (await token.mint(newWallet.address, parseEther("1000000"), {
             nonce: await adminWallet.getTransactionCount()
         })).wait()

@@ -15,7 +15,7 @@ import { STREAMR_DOCKER_DEV_HOST, createClient } from '../../../utils'
 const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const TIMEOUT = 1000 * 60 * 10
-const ADMIN_PRIV_KEY = "0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285" // sidechain
+const ADMIN_PRIV_KEY = "0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0" // sidechain
 // const ADMIN_PRIV_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" // fastChain
 
 const logger = new Logger(module)

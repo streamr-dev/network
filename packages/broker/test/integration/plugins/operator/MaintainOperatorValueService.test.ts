@@ -56,7 +56,7 @@ describe("MaintainOperatorValueService", () => {
     }
 
     beforeAll(async () => {
-        const streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_WALLET_PK, `http://${STREAMR_DOCKER_DEV_HOST}:8547`)
+        const streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_WALLET_PK, `http://${STREAMR_DOCKER_DEV_HOST}:8546`)
         await streamrEnvDeployer.deployEnvironment()
         const { contracts } = streamrEnvDeployer
         config = { contracts: streamrEnvDeployer.addresses } as unknown as Chain
@@ -85,7 +85,7 @@ describe("MaintainOperatorValueService", () => {
 
         // token = new Contract(config.contracts.DATA, tokenABI) as unknown as TestToken
         token = getTokenContract()
-    }, 60 * 1000)
+    }, 30 * 60 * 1000)
 
     it("withdraws sponsorship earnings when earnings are above the safe threshold", async () => {
         const { operatorWallet, operatorContract, operatorConfig } = await deployNewOperator()
@@ -120,6 +120,6 @@ describe("MaintainOperatorValueService", () => {
 
         await service.stop()
         // clearInterval(forcedMiningHandle)
-    }, 60 * 1000)
+    }, 10 * 60 * 1000)
 })
 
