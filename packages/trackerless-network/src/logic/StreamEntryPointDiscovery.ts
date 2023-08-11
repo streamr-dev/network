@@ -76,7 +76,7 @@ export class StreamEntryPointDiscovery {
     constructor(config: StreamEntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
-        this.cacheInterval = this.config.cacheInterval || 60000
+        this.cacheInterval = this.config.cacheInterval ?? 60000
         this.servicedStreams = new Map()
     }
 
