@@ -107,7 +107,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: broker
-      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph deploy-network-subgraphs
+      docker-services: cassandra init-keyspace deploy-network-subgraphs-fastchain
       run-entry-point: true
       command: npm run test-integration
   client-browser:
