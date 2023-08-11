@@ -16,7 +16,7 @@ import { deploySponsorship } from "./deploySponsorshipContract"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 import { createWalletAndDeployOperator } from "./createWalletAndDeployOperator"
 
-const config = Chains.load()["dev2"]
+const chainConfig = Chains.load()['dev2']
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
@@ -24,7 +24,7 @@ const logger = new Logger(module)
 jest.setTimeout(60 * 1000)
 
 describe("MaintainTopologyHelper", () => {
-    const chainURL = config.rpcEndpoints[0].url
+    const chainURL = chainConfig.rpcEndpoints[0].url
 
     let provider: Provider
     let token: TestToken
@@ -39,13 +39,13 @@ describe("MaintainTopologyHelper", () => {
         const streamCreatorKey = "0xfe1d528b7e204a5bdfb7668a1ed3adfee45b4b96960a175c9ef0ad16dd58d728"
         adminWallet = new Wallet(streamCreatorKey, provider)
 
-        token = new Contract(config.contracts.DATA, tokenABI) as unknown as TestToken
+        token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
         const timeString = (new Date()).getTime().toString()
         const streamPath1 = "/operatorclienttest-1-" + timeString
         const streamPath2 = "/operatorclienttest-2-" + timeString
         streamId1 = adminWallet.address.toLowerCase() + streamPath1
         streamId2 = adminWallet.address.toLowerCase() + streamPath2
-        const streamRegistry = new Contract(config.contracts.StreamRegistry, streamRegistryABI, adminWallet) as unknown as StreamRegistry
+        const streamRegistry = new Contract(chainConfig.contracts.StreamRegistry, streamRegistryABI, adminWallet) as unknown as StreamRegistry
         logger.debug(`creating stream with streamId1 ${streamId1}`)
         await (await streamRegistry.createStream(streamPath1, "metadata")).wait()
         logger.debug(`creating stream with streamId2 ${streamId2}`)
@@ -62,7 +62,7 @@ describe("MaintainTopologyHelper", () => {
 
         beforeAll(async () => {
             ({ operatorWallet, operatorContract, operatorConfig } = await createWalletAndDeployOperator(
-                provider, config, theGraphUrl
+                provider, chainConfig, theGraphUrl
             ))
         })
         afterEach(async () => {
@@ -83,9 +83,9 @@ describe("MaintainTopologyHelper", () => {
             await topologyHelper.start()
             
             logger.debug("Added OperatorClient listeners, deploying Sponsorship contract...")
-            sponsorship = await deploySponsorship(config, operatorWallet, {
+            sponsorship = await deploySponsorship(chainConfig, operatorWallet, {
                 streamId: streamId1 })
-            sponsorship2 = await deploySponsorship(config, operatorWallet, {
+            sponsorship2 = await deploySponsorship(chainConfig, operatorWallet, {
                 streamId: streamId2
             })
 
@@ -157,7 +157,7 @@ describe("MaintainTopologyHelper", () => {
 
         beforeAll(async () => {
             ({ operatorWallet, operatorContract, operatorConfig } = await createWalletAndDeployOperator(
-                provider, config, theGraphUrl
+                provider, chainConfig, theGraphUrl
             ))
         })
         afterEach(async () => {
@@ -180,9 +180,9 @@ describe("MaintainTopologyHelper", () => {
             await operatorClient.start()
 
             logger.debug("Added OperatorClient listeners, deploying Sponsorship contract...")
-            sponsorship = await deploySponsorship(config, operatorWallet, {
+            sponsorship = await deploySponsorship(chainConfig, operatorWallet, {
                 streamId: streamId1 })
-            sponsorship2 = await deploySponsorship(config, operatorWallet, {
+            sponsorship2 = await deploySponsorship(chainConfig, operatorWallet, {
                 streamId: streamId1
             })
 
