@@ -39,9 +39,9 @@ export interface NeighborCounterEvents {
 class NeighborCounter {
 
     private counter = 0
-    private emitter = new EventEmitter<NeighborCounterEvents>()
-    private randomGraphNode: RandomGraphNode
-    private targetNumberOfNeighbors: number
+    private readonly emitter = new EventEmitter<NeighborCounterEvents>()
+    private readonly randomGraphNode: RandomGraphNode
+    private readonly targetNumberOfNeighbors: number
 
     constructor(randomGraphNode: RandomGraphNode, targetNumberOfNeighbors: number) {
         this.randomGraphNode = randomGraphNode
