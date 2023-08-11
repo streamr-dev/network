@@ -10,14 +10,14 @@ import { Chain, Chains } from '@streamr/config'
 import { wait } from '@streamr/utils'
 
 export const ADMIN_WALLET_PK = '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
-const CONFIG = Chains.load()["dev1"]
+const CHAIN_CONFIG = Chains.load()['dev2']
 
 export function getProvider(): Provider {
-    return new JsonRpcProvider(CONFIG.rpcEndpoints[0].url)
+    return new JsonRpcProvider(CHAIN_CONFIG.rpcEndpoints[0].url)
 }
 
 export function getTokenContract(): TestToken {
-    return new Contract(CONFIG.contracts.LINK, tokenABI) as unknown as TestToken
+    return new Contract(CHAIN_CONFIG.contracts.DATA, tokenABI) as unknown as TestToken
 }
 
 export async function generateWalletWithGasAndTokens(provider: Provider, config?: Chain, adminKey?: string): Promise<Wallet> {
@@ -26,7 +26,7 @@ export async function generateWalletWithGasAndTokens(provider: Provider, config?
 
     // we have LINK in the local dev env, and DATA in the env deployed by the network-contracts package
     // TOTO: change this to only use DATA once we moved to the new cleaned up docker dev env
-    if (config && !config.contracts.LINK) {
+    if (config && !config.contracts.DATA) {
         const token = new Contract(config.contracts.DATA, tokenABI, adminWallet) as unknown as TestToken 
         await (await token.mint(newWallet.address, parseEther("1000000"), {
             nonce: await adminWallet.getTransactionCount()
@@ -52,9 +52,9 @@ export async function generateWalletWithGasAndTokens(provider: Provider, config?
 }
 
 export async function deploySponsorship(streamId: string, operatorWallet: Wallet): Promise<Sponsorship> {
-    return await _deploySponsorship(CONFIG, operatorWallet, { streamId })
+    return await _deploySponsorship(CHAIN_CONFIG, operatorWallet, { streamId })
 }
 
 export async function deployOperatorContract(operatorWallet: Wallet): Promise<Operator> {
-    return await _deployOperatorContract(CONFIG, operatorWallet)
+    return await _deployOperatorContract(CHAIN_CONFIG, operatorWallet)
 }
