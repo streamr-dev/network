@@ -16,6 +16,6 @@ For further reading, checkout the [light paper](https://streamr.network/lightpap
 
 ### Explore the Network
 
-The network is highly dynamic, with a regular cast of broker nodes, but also a constantly revolving number of light nodes appearing and disappearing. The <a target="_blank" rel="noopener noreferrer" href="https://streamr.network/network-explorer">Network Explorer</a> is an application that brings visibility to the stream topologies inside the Streamr Network. Being able to explore it helps node runners inspect their nodes and diagnose any issues.
+The network is highly dynamic, with a regular cast of Streamr nodes, but also a constantly revolving number of light nodes appearing and disappearing. The <a target="_blank" rel="noopener noreferrer" href="https://streamr.network/network-explorer">Network Explorer</a> is an application that brings visibility to the stream topologies inside the Streamr Network. Being able to explore it helps node runners inspect their nodes and diagnose any issues.
 
 You can search for areas, say all nodes in Helsinki, streams by path name or description, as well as specific nodes by generated name or Ethereum address. By searching or selecting a stream, the nodes participating in the stream overlay will be shown in both the results list, and on the geo map. Selecting a node in this list gives you access to all the metrics, and as the full tokenomics rolls out in Tatum milestone, will also give access to the node’s Ethereum address, and link out to its transaction history on Etherscan.

@@ -3,13 +3,15 @@ sidebar_position: 3
 ---
 
 # Dashboards and APIs
+
 Earned rewards will be automatically sent to the node’s address and therefore compounded (up to the 20 000 DATA cap). The estimated reward distribution date is the first business day of each month.
 
 There is an API as well as a community-built [BrubeckScan dashboard](https://brubeckscan.app/) for checking earnings and other mining and staking statistics.
 
-In order to see the rewards a Broker node has accumulated, the following API endpoints are available:
+In order to see the rewards a Streamr node has accumulated, the following API endpoints are available:
 
 ### Accumulated rewards for a node address
+
 Endpoint: https://brubeck1.streamr.network:3013/datarewards/:nodeAddress
 
 ```
@@ -20,6 +22,7 @@ Example response:
 ```
 
 ### Claimed rewards for a node address
+
 Endpoint: https://brubeck1.streamr.network:3013/stats/:nodeAddress
 
 ```
@@ -41,6 +44,7 @@ Example response:
 ```
 
 ### Annual percentage yield, annual percentage rate and amount of DATA staked
+
 Endpoint: https://brubeck1.streamr.network:3013/apy
 
 Spot is the value calculated from the last reward code, and the 24h value is a sliding average from the reward codes published in the last 24 hours.

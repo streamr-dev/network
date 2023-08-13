@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # How to use
 
-The Streamr Client, i.e. the Light node is the main JS client for interacting with the Streamr Network. It should be installed as part of your application where possible. The Client is also used inside the Streamr Broker and CLI tools.
+The Streamr Client, i.e. the Light node is the main JS client for interacting with the Streamr Network. It should be installed as part of your application where possible. The Client is also used inside the Streamr Node and CLI tools.
 
 <!-- TODO explainer on what the client is, and how it fits into the network. API ref and so on. Link to Streams section. -->
 
@@ -23,13 +23,13 @@ To use with react please see [streamr-client-react](https://github.com/streamr-d
 If using TypeScript you can import the library with:
 
 ```js
-import { StreamrClient } from 'streamr-client';
+import { StreamrClient } from "streamr-client"
 ```
 
 If using Node.js you can import the library with:
 
 ```js
-const { StreamrClient } = require('streamr-client');
+const { StreamrClient } = require("streamr-client")
 ```
 
 ### Environments and frameworks
@@ -52,7 +52,7 @@ Due to the stricter security rules inside browser extensions you must use the we
 
 #### React Native
 
-We are actively working on React Native compatibility but currently the Streamr JavaScript Client is not compatible with React Native. To connect, pull or push data into the Streamr Network, use the [Broker integration pattern](https://streamr.network/docs/streamr-network/connecting-applications).
+We are actively working on React Native compatibility but currently the Streamr JavaScript Client is not compatible with React Native. To connect, pull or push data into the Streamr Network, use the [Operator integration pattern](https://streamr.network/docs/streamr-network/connecting-applications).
 
 ## Troubleshooting
 

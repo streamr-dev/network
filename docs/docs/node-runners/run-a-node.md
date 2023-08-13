@@ -6,22 +6,25 @@ sidebar_position: 1
 
 :::tip
 
-- You can run up to 5 nodes per IP address
-- Rewards are automatically paid out at the beginning of the following month. The DATA token rewards are transferred to the wallet(s) you use for staking.
-- You can stake up to 20K DATA per node. However, if you stake the full amount, you will need to transfer the amount above 20K after you get your first rewards paid out to also stake and earn rewards on those. You can avoid the need to transfer tokens every month by staking less than 20K per node, such as 17K-18K DATA.
+-   You can run up to 5 nodes per IP address
+-   Rewards are automatically paid out at the beginning of the following month. The DATA token rewards are transferred to the wallet(s) you use for staking.
+-   You can stake up to 20K DATA per node. However, if you stake the full amount, you will need to transfer the amount above 20K after you get your first rewards paid out to also stake and earn rewards on those. You can avoid the need to transfer tokens every month by staking less than 20K per node, such as 17K-18K DATA.
 
 :::
 
 ## Pick a method
+
 You have two methods to choose from: Docker and npm. Docker is the most straightforward and recommended method unless you are well-acquainted with npm. You only need 300MB of available memory per node that runs using Docker and a little less if you use the npm method.
 
 Once you have either Docker or Node.js installed, the steps to download and start the node are very similar, regardless of whether you’re running Linux, macOS, or Windows (use PowerShell). You may need to adapt the commands for your platform or install OS-specific dependencies if they are missing.
 
 ## The configuration wizard
+
 As part of both approaches, we show how to run the configuration wizard to initialize your node’s config file, which will be saved on your disk. The wizard will let you either generate or import an Ethereum private key for your node. It will also allow you to enable additional plugins, but they are entirely unnecessary if you simply want to run a node to help expand the network and stake DATA tokens.
 
 ## The Docker approach
-If you are using Windows/PowerShell or macOS and don’t have Docker installed, get Docker Desktop [here](https://docs.docker.com/get-docker/). 
+
+If you are using Windows/PowerShell or macOS and don’t have Docker installed, get Docker Desktop [here](https://docs.docker.com/get-docker/).
 
 **Linux**
 
@@ -61,7 +64,7 @@ sudo sh get-docker.sh
 
 Docker's install script also installs all required dependencies.
 
-When you have Docker installed, you can download, configure, and start the Streamr Broker node.
+When you have Docker installed, you can download, configure, and start the Streamr node.
 
 ### Step 1: Create a folder for your node
 
@@ -87,7 +90,7 @@ sudo chmod -R 777 ~/.streamrDocker*/
 
 ### Step 3: Run the config wizard to create and configure your Streamr node
 
-Start the config wizard with the below command. Docker will download the Broker image unless you have it already.
+Start the config wizard with the below command. Docker will download the image unless you have it already.
 
 **Linux / macOS**
 
@@ -113,7 +116,7 @@ docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:latest bin/c
 
 _"Generate or import Ethereum private key"_
 
-You can generate a new private key or use one you already have. You can avoid having the private key of the wallet with your soon-to-be staked DATA stored in a plain text file by generating a new private key in this step and adding your staking wallet's public key as a *beneficiary address* once you are done configuring the node via the config wizard (highly recommended).
+You can generate a new private key or use one you already have. You can avoid having the private key of the wallet with your soon-to-be staked DATA stored in a plain text file by generating a new private key in this step and adding your staking wallet's public key as a _beneficiary address_ once you are done configuring the node via the config wizard (highly recommended).
 
 _"Plugins to enable"_
 
@@ -131,7 +134,7 @@ The path to the config file in the `docker run` command and the path defined via
 
 ### Step 4: Add a Beneficiary Address to your node (optional)
 
-A *beneficiary address* allows you to only add the public key of the wallet with your staked DATA tokens to the config file instead of the private key. By using a beneficiary address, if your node is compromised, the staked DATA tokens will not be at risk. We highly recommend you use a beneficiary address.
+A _beneficiary address_ allows you to only add the public key of the wallet with your staked DATA tokens to the config file instead of the private key. By using a beneficiary address, if your node is compromised, the staked DATA tokens will not be at risk. We highly recommend you use a beneficiary address.
 
 Exercise caution when you edit the config file. If you accidentally remove a character such as a curly bracket or use the wrong type of quotation symbol, the config file's JSON format will be invalid and your node will fail to run.
 
@@ -167,7 +170,7 @@ Add the Beneficiary Address's public key within the curly brackets after `"brube
 
 Press `CTRL+S` to save. Close the editor.
 
-### Step 5: Start your Streamr Broker Node using Docker
+### Step 5: Start your Streamr Node using Docker
 
 **Linux / macOS**
 
@@ -259,9 +262,11 @@ docker logs --tail 100 streamr1
 See [Docker's documentation](https://docs.docker.com/engine/reference/commandline/logs/) to learn more about how to use the `docker logs` command.
 
 ## The npm approach
-If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Broker requires at least Node.js version 14.x. Once installed, you can download, configure, and start the Streamr Broker.
+
+If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Streamr node requires at least Node.js version 14.x. Once installed, you can download, configure, and start the Streamr node.
 
 ### Step 1: Install the latest version using npm
+
 -   Run `npm install -g streamr-broker@latest` to download and install the package. You may need administrative access to run this command.
 
 ```
@@ -271,6 +276,7 @@ npm install -g streamr-broker@latest
 There can be plenty of output from npm. If the installation fails with an error, you should address it before continuing.
 
 ### Step 2: Configure your node with streamr-broker-init
+
 -   Run `streamr-broker-init` to generate a configuration file using a step-by-step wizard. Answer the questions by using arrow keys and ‘enter’ to navigate.
 -   Generate or Import Ethereum private key: Generate one unless you have one you want to use with the node
 -   Plugins to enable: Hit enter
@@ -278,7 +284,8 @@ There can be plenty of output from npm. If the installation fails with an error,
 
 Towards the end, the wizard asks if you would like it to display your Ethereum private key. From here, you should copy-paste it to a safe place! You can also find it later in the configuration file, which is saved by default to `.streamr/broker-config.json` under your home directory.
 
-### Step 3: Start the Broker node
+### Step 3: Start the Streamr node
+
 -   Run `streamr-broker` to start the node! You should start to see logging similar to this:
 
 ```
@@ -304,9 +311,9 @@ To create one or more Streamr nodes via Zonaris, go to [Zonaris's website](https
 
 **Prerequisites**
 
-- A ZelID
-- A Polygon wallet with the DATA tokens you want to stake
-- Flux coins
+-   A ZelID
+-   A Polygon wallet with the DATA tokens you want to stake
+-   Flux coins
 
 **Instructions**
 
