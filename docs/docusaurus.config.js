@@ -29,7 +29,7 @@ const config = {
         locales: ["en"],
     },
 
-    plugins: [
+    /* plugins: [
         [
             "docusaurus-plugin-typedoc",
 
@@ -55,7 +55,7 @@ const config = {
             },
         ],
         path.resolve("plugins", "refine-docs"),
-    ],
+    ], */
 
     presets: [
         [
