@@ -25,7 +25,6 @@ describe("MaintainTopologyHelper", () => {
 
     let provider: Provider
     let token: TestToken
-    let adminWallet: Wallet
     let streamId1: string
     let streamId2: string
     let operatorWallet: Wallet
@@ -35,9 +34,6 @@ describe("MaintainTopologyHelper", () => {
     beforeAll(async () => {
         provider = new JsonRpcProvider(chainURL)
         logger.debug("Connected to: ", await provider.getNetwork())
-
-        const streamCreatorKey = "0xfe1d528b7e204a5bdfb7668a1ed3adfee45b4b96960a175c9ef0ad16dd58d728"
-        adminWallet = new Wallet(streamCreatorKey, provider)
 
         token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
         const client = createClient(await fetchPrivateKeyWithGas())
