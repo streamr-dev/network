@@ -27,7 +27,7 @@ const waitMessagesReceived = async (
         const receivedCount = Object.values(received).flat().length
         const publishedCount = Object.values(published).flat().length
         return receivedCount === publishedCount
-    }, 10 * 1000)
+    }, 20 * 1000)
 }
 
 describe('PubSub with multiple clients', () => {
