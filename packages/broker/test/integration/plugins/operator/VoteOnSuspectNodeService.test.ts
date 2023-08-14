@@ -1,15 +1,16 @@
-import { Logger, wait, waitForCondition } from '@streamr/utils'
-import { parseEther } from 'ethers/lib/utils'
-import { deploySponsorship } from './deploySponsorshipContract'
 import { Provider } from '@ethersproject/abstract-provider'
 import { JsonRpcProvider } from '@ethersproject/providers'
+import { config as CHAIN_CONFIG } from "@streamr/config"
 import { StreamrEnvDeployer, TestToken } from '@streamr/network-contracts'
+import { Logger, wait, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
+import { parseEther } from 'ethers/lib/utils'
 import { mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
-import { setupOperatorContract } from './setupOperatorContract'
+import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
 import { createClient } from '../../../utils'
+import { deploySponsorship } from './deploySponsorshipContract'
+import { setupOperatorContract } from './setupOperatorContract'
 
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
@@ -27,7 +28,7 @@ describe('VoteOnSuspectNodeService', () => {
     let streamrEnvDeployer: StreamrEnvDeployer
     let chainConfig: any
 
-    const chainURL = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8546`
+    const chainURL = CHAIN_CONFIG['dev2'].rpcEndpoints[0].url
 
     beforeAll(async () => {
         streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, chainURL)
