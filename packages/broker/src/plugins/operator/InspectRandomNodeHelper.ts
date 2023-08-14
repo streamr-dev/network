@@ -47,10 +47,9 @@ export class InspectRandomNodeHelper {
                     `
             }
         }
-        const parseItems = (response: { operator: { stakes: { id: string, sponsorship: { id: string } }[] } }): 
+        const parseItems = (response: { operator?: { stakes: { id: string, sponsorship: { id: string } }[] } }): 
         { id: string, sponsorship: { id: string } }[] => {
             if (!response.operator) {
-                logger.error('Unable to find operator in The Graph', { operatorContractAddress: this.operatorContractAddress })
                 return []
             }
             return response.operator.stakes
@@ -59,10 +58,7 @@ export class InspectRandomNodeHelper {
         const queryResult = this.theGraphClient.queryEntities<{ id: string, sponsorship: { id: string } }>(createQuery, parseItems)
         const sponsorshipIds = new Set<EthereumAddress>()
         for await (const stake of queryResult) {
-            const sponsorshipId = stake.sponsorship?.id
-            if (sponsorshipId) {
-                sponsorshipIds.add(toEthereumAddress(sponsorshipId))
-            }
+            sponsorshipIds.add(toEthereumAddress(stake.sponsorship?.id))
         }
         return Array.from(sponsorshipIds)
     }
@@ -89,10 +85,9 @@ export class InspectRandomNodeHelper {
                     `
             }
         }
-        const parseItems = (response: { sponsorship: { stakes: { id: string, operator: { id: string } }[] } } ):
+        const parseItems = (response: { sponsorship?: { stakes: { id: string, operator: { id: string } }[] } } ):
         { id: string, operator: { id: string } }[] => {
             if (!response.sponsorship) {
-                logger.error('Unable to find sponsorship in The Graph', { sponsorshipAddress })
                 return []
             }
             return response.sponsorship.stakes
@@ -101,10 +96,7 @@ export class InspectRandomNodeHelper {
         const queryResult = this.theGraphClient.queryEntities<{ id: string, operator: { id: string } }>(createQuery, parseItems)
         const operatorIds = new Set<EthereumAddress>()
         for await (const stake of queryResult) {
-            const operatorId = stake.operator?.id
-            if (operatorId) {
-                operatorIds.add(toEthereumAddress(operatorId))
-            }
+            operatorIds.add(toEthereumAddress(stake.operator?.id))
         }
         return Array.from(operatorIds)
     }

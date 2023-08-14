@@ -100,8 +100,6 @@ describe("InspectRandomNodeHelper", () => {
             const target = await createWalletAndDeployOperator(provider, config, theGraphUrl)
             logger.trace('deployed target contract ' + target.operatorConfig.operatorContractAddress)
 
-            // await wait(5000) // wait for events to be processed // wait for events to be processed
-
             logger.trace('deploying sponsorship contract')
             const sponsorship = await deploySponsorship(config, adminWallet, {
                 streamId: streamId1 })
