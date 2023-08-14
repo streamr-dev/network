@@ -1,15 +1,15 @@
-// import { Contract } from "@ethersproject/contracts"
-// import { Provider, JsonRpcProvider } from "@ethersproject/providers"
-import { Provider } from "@ethersproject/providers"
+import { Contract } from "@ethersproject/contracts"
+import { Provider, JsonRpcProvider } from "@ethersproject/providers"
+// import { Provider } from "@ethersproject/providers"
 import { parseEther, formatEther } from "@ethersproject/units"
 
-import { TestToken, Operator, StreamrEnvDeployer } from "@streamr/network-contracts"
-// import { tokenABI, TestToken, Operator, StreamrEnvDeployer } from "@streamr/network-contracts"
+// import { TestToken, Operator, StreamrEnvDeployer } from "@streamr/network-contracts"
+import { tokenABI, TestToken, Operator, StreamrEnvDeployer } from "@streamr/network-contracts"
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
 import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
-import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens, getProvider, getTokenContract } from "./smartContractUtils"
+import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens } from "./smartContractUtils"
 
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
 
@@ -29,7 +29,7 @@ async function getTotalUnwithdrawnEarnings(operatorContract: Operator): Promise<
     for (const e of earnings) {
         unwithdrawnEarnings += e.toBigInt()
     }
-    logger.debug(`Total unwithdrawn earnings: ${formatEther(unwithdrawnEarnings.toString())} (t = ${Date.now()})`)
+    logger.debug(`Total unwithdrawn earnings: ${formatEther(unwithdrawnEarnings.toString())} DATA (t = ${Date.now()})`)
     return unwithdrawnEarnings
 }
 
@@ -56,11 +56,12 @@ describe("MaintainOperatorValueService", () => {
     }
 
     beforeAll(async () => {
-        const streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_WALLET_PK, `http://${STREAMR_DOCKER_DEV_HOST}:8546`)
+        const streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_WALLET_PK, `http://${STREAMR_DOCKER_DEV_HOST}:8547`)
         await streamrEnvDeployer.deployEnvironment()
         const { contracts } = streamrEnvDeployer
         config = { contracts: streamrEnvDeployer.addresses } as unknown as Chain
 
+        logger.debug("Creating stream for the test")
         // const client = createClient(ADMIN_WALLET_PK, {
         //     contracts: {
         //         streamRegistryChainAddress: contracts.streamRegistry.address,
@@ -75,17 +76,16 @@ describe("MaintainOperatorValueService", () => {
         ).wait()
         streamId = createStreamReceipt.events?.find((e) => e.event === "StreamCreated")?.args?.id
 
-        // TODO: streamExists=false?!
         const streamExists = await contracts.streamRegistry.exists(streamId)
         logger.debug("Stream created:", { streamId, streamExists })
 
-        provider = getProvider()
-        // provider = new JsonRpcProvider(`http://${STREAMR_DOCKER_DEV_HOST}:8547`)
+        // provider = getProvider()
+        provider = new JsonRpcProvider(`http://${STREAMR_DOCKER_DEV_HOST}:8547`)
         logger.debug("Connected to: ", await provider.getNetwork())
 
-        // token = new Contract(config.contracts.DATA, tokenABI) as unknown as TestToken
-        token = getTokenContract()
-    }, 30 * 60 * 1000)
+        token = new Contract(config.contracts.DATA, tokenABI) as unknown as TestToken
+        // token = getTokenContract()
+    })
 
     it("withdraws sponsorship earnings when earnings are above the safe threshold", async () => {
         const { operatorWallet, operatorContract, operatorConfig } = await deployNewOperator()
@@ -99,29 +99,22 @@ describe("MaintainOperatorValueService", () => {
         await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther("250"), "0x")).wait()
         await (await operatorContract.stake(sponsorship2.address, parseEther("100"))).wait()
 
-        // workaround for fast-chain not producing blocks: force regular "mining"
-        // const forcedMiningHandle = setInterval(async () => {
-        //     await (provider as any).send("evm_mine", [0])
-        // }, 1000)
-
-        const service = new MaintainOperatorValueService(operatorConfig, 0.5)
         // 1000 = check every second
         const service = new MaintainOperatorValueService(operatorConfig, 0.5, 1000)
 
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
-        const allowedDifference = poolValueBeforeWithdraw.div("10").toBigInt()
 
-        logger.debug("Waiting until above", { allowedDifference })
-        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > allowedDifference, 10000, 1000)
+        // safe threshold is 5 DATA, that's when withdraw happens
         await service.start()
-        logger.debug("Waiting until below", { allowedDifference })
-        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) < allowedDifference, 10000, 1000)
+
+        // wait until we see the withdraw happened: first we go above a sum (that must be < safe threshold), then below
+        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > parseEther("3").toBigInt(), 10000, 1000)
+        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) < parseEther("3").toBigInt(), 10000, 1000)
 
         const poolValueAfterWithdraw = await operatorContract.getApproximatePoolValue()
         expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
 
         await service.stop()
-        // clearInterval(forcedMiningHandle)
-    }, 10 * 60 * 1000)
+    })
 })
 

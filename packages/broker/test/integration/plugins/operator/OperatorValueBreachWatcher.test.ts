@@ -1,15 +1,15 @@
-// import { Contract } from "@ethersproject/contracts"
-// import { Provider, JsonRpcProvider } from "@ethersproject/providers"
-import { Provider } from "@ethersproject/providers"
+import { Contract } from "@ethersproject/contracts"
+import { Provider, JsonRpcProvider } from "@ethersproject/providers"
+// import { Provider } from "@ethersproject/providers"
 import { parseEther, formatEther } from "@ethersproject/units"
 
-import { TestToken, Operator, StreamrEnvDeployer } from "@streamr/network-contracts"
-// import { tokenABI, TestToken, Operator, StreamrEnvDeployer } from "@streamr/network-contracts"
+// import { TestToken, Operator, StreamrEnvDeployer } from "@streamr/network-contracts"
+import { tokenABI, TestToken, Operator, StreamrEnvDeployer } from "@streamr/network-contracts"
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
 import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
-import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens, getProvider, getTokenContract } from "./smartContractUtils"
+import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens } from "./smartContractUtils"
 
 // import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 import { OperatorValueBreachWatcher } from "../../../../src/plugins/operator/OperatorValueBreachWatcher"
@@ -57,7 +57,7 @@ describe("OperatorValueBreachWatcher", () => {
     }
 
     beforeAll(async () => {
-        const streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_WALLET_PK, `http://${STREAMR_DOCKER_DEV_HOST}:8546`)
+        const streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_WALLET_PK, `http://${STREAMR_DOCKER_DEV_HOST}:8547`)
         await streamrEnvDeployer.deployEnvironment()
         const { contracts } = streamrEnvDeployer
         config = { contracts: streamrEnvDeployer.addresses } as unknown as Chain
@@ -77,20 +77,20 @@ describe("OperatorValueBreachWatcher", () => {
         ).wait()
         streamId = createStreamReceipt.events?.find((e) => e.event === "StreamCreated")?.args?.id
 
-        // TODO: streamExists=false?!
         const streamExists = await contracts.streamRegistry.exists(streamId)
         logger.debug("Stream created:", { streamId, streamExists })
 
-        provider = getProvider()
-        // provider = new JsonRpcProvider(`http://${STREAMR_DOCKER_DEV_HOST}:8547`)
+        // provider = getProvider()
+        provider = new JsonRpcProvider(`http://${STREAMR_DOCKER_DEV_HOST}:8547`)
         logger.debug("Connected to: ", await provider.getNetwork())
 
-        // token = new Contract(config.contracts.DATA, tokenABI) as unknown as TestToken
-        token = getTokenContract()
+        token = new Contract(config.contracts.DATA, tokenABI) as unknown as TestToken
+        // token = getTokenContract()
     }, 30 * 60 * 1000)
 
-    it("withdraws sponsorship earnings when earnings are above the threshold", async () => {
+    it("withdraws the other Operator's earnings when they are above the penalty limit", async () => {
         const { operatorWallet, operatorContract, operatorConfig } = await deployNewOperator()
+        // TODO: add another Operator
 
         const sponsorship1 = await deploySponsorship(config, operatorWallet, { streamId, earningsPerSecond: parseEther("1") })
         await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther("250"), "0x")).wait()
@@ -100,11 +100,6 @@ describe("OperatorValueBreachWatcher", () => {
         const sponsorship2 = await deploySponsorship(config, operatorWallet, { streamId, earningsPerSecond: parseEther("2") })
         await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther("250"), "0x")).wait()
         await (await operatorContract.stake(sponsorship2.address, parseEther("100"))).wait()
-
-        // workaround for fast-chain not producing blocks: force regular "mining"
-        // const forcedMiningHandle = setInterval(async () => {
-        //     await (provider as any).send("evm_mine", [0])
-        // }, 1000)
 
         const operatorValueBreachWatcher = new OperatorValueBreachWatcher(operatorConfig)
 
@@ -122,6 +117,6 @@ describe("OperatorValueBreachWatcher", () => {
         expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
 
         await operatorValueBreachWatcher.stop()
-        // clearInterval(forcedMiningHandle)
+
     }, 10 * 60 * 1000)
 })

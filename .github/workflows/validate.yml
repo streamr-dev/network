@@ -110,6 +110,14 @@ jobs:
       docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph deploy-network-subgraphs
       run-entry-point: true
       command: npm run test-integration
+  broker-e2e-fast:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: broker
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph deploy-network-subgraphs deploy-network-subgraphs-fastchain
+      run-entry-point: true
+      command: npm run test-operator-plugins
   client-browser:
     needs: build
     uses: ./.github/workflows/test-setup.yml
