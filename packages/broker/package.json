@@ -22,14 +22,15 @@
     "test": "jest test/unit test/integration && npm run test-sequential",
     "test-unit": "jest test/unit",
     "test-sequential": "jest --forceExit --maxWorkers=1 test/sequential # always run sequential tests with maxWorkers=1",
-    "test-integration": "jest --forceExit test/integration && npm run test-sequential"
+    "test-integration": "jest --testPathIgnorePatterns='test/integration/plugins/operator/' --forceExit test/integration && npm run test-sequential",
+    "test-operator-plugins": "jest --forceExit test/integration/plugins/operator"
   },
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
     "@ethersproject/hdnode": "^5.4.0",
     "@streamr/config": "^3.0.1",
-    "@streamr/network-contracts": "^3.0.0",
+    "@streamr/network-contracts": "^4.3.0",
     "@streamr/protocol": "8.5.5",
     "@streamr/utils": "8.5.5",
     "aedes": "^0.50.0",
