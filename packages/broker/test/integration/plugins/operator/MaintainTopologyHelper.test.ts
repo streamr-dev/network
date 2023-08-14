@@ -16,7 +16,7 @@ import { deploySponsorship } from "./deploySponsorshipContract"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 import { setupOperatorContract } from "./setupOperatorContract"
 
-const chainConfig = CHAIN_CONFIG["dev1"]
+const chainConfig = CHAIN_CONFIG['dev2']
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
@@ -42,7 +42,7 @@ describe("MaintainTopologyHelper", () => {
         const streamCreatorKey = "0xfe1d528b7e204a5bdfb7668a1ed3adfee45b4b96960a175c9ef0ad16dd58d728"
         adminWallet = new Wallet(streamCreatorKey, provider)
 
-        token = new Contract(chainConfig.contracts.LINK, tokenABI) as unknown as TestToken
+        token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
         const timeString = (new Date()).getTime().toString()
         const streamPath1 = "/operatorclienttest-1-" + timeString
         const streamPath2 = "/operatorclienttest-2-" + timeString
