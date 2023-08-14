@@ -62,6 +62,7 @@ describe("OperatorValueBreachWatcher", () => {
         const { contracts } = streamrEnvDeployer
         config = { contracts: streamrEnvDeployer.addresses } as unknown as Chain
 
+        logger.debug("Creating stream for the test")
         // const client = createClient(ADMIN_WALLET_PK, {
         //     contracts: {
         //         streamRegistryChainAddress: contracts.streamRegistry.address,
