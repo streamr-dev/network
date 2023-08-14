@@ -1,204 +1,117 @@
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
-import { FakeMaintainTopologyHelper as FakeMaintainTopologyHelper } from './FakeMaintainTopologyHelper'
-import { StreamID, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { mock, MockProxy } from 'jest-mock-extended'
 import StreamrClient, { Subscription } from 'streamr-client'
-import range from 'lodash/range'
 import { wait, waitForCondition } from '@streamr/utils'
+import { StreamAssignmentLoadBalancerEvents } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
+import EventEmitter3 from 'eventemitter3'
 
 interface MockSubscription {
     unsubscribe: jest.MockedFn<Subscription['unsubscribe']>
 }
 
-const STREAM_A = toStreamID('STREAM_A')
-const STREAM_B = toStreamID('STREAM_B')
-const STREAM_C = toStreamID('STREAM_C')
-const STREAM_D = toStreamID('STREAM_D')
-const STREAM_E = toStreamID('STREAM_E')
-const STREAM_F = toStreamID('STREAM_F')
+const SP1 = toStreamPartID(toStreamID('aa'), 0)
+const SP2 = toStreamPartID(toStreamID('aa'), 1)
+const SP3 = toStreamPartID(toStreamID('bb'), 4)
+const SP4 = toStreamPartID(toStreamID('cc'), 0)
+const SP5 = toStreamPartID(toStreamID('cc'), 5)
 const STREAM_NOT_EXIST = toStreamID('STREAM_NOT_EXIST')
+const STREAM_PART_NOT_EXIST = toStreamPartID(STREAM_NOT_EXIST, 1)
 
-const STREAM_PARTITIONS: Record<StreamID, number> = Object.freeze({
-    [STREAM_A]: 1,
-    [STREAM_B]: 3,
-    [STREAM_C]: 2,
-    [STREAM_D]: 2,
-    [STREAM_E]: 1,
-    [STREAM_F]: 4,
-    [STREAM_NOT_EXIST]: 3
-})
+const ALL_STREAM_PARTS = [SP1, SP2, SP3, SP4, SP5, STREAM_PART_NOT_EXIST]
 
 const NOTHING_HAPPENED_DELAY = 250
 
-function setUpFixturesAndMocks(streamrClient: MockProxy<StreamrClient>): Record<StreamID, MockSubscription[]> {
-    const result: Record<StreamID, MockSubscription[]> = {}
+function setUpFixturesAndMocks(streamrClient: MockProxy<StreamrClient>): Record<StreamPartID, MockSubscription> {
+    const result: Record<StreamPartID, MockSubscription> = {}
 
     // Set up streamrClient#subscribe
-    for (const [streamId, partitions] of Object.entries(STREAM_PARTITIONS)) {
-        result[toStreamID(streamId)] = range(partitions).map(() => ({ unsubscribe: jest.fn() }))
+    for (const streamPartId of ALL_STREAM_PARTS) {
+        result[streamPartId] = { unsubscribe: jest.fn() }
     }
     streamrClient.subscribe.mockImplementation(async (opts) => {
-        return result[(opts as any).id][(opts as any).partition] as any
+        if ((opts as any).id === STREAM_NOT_EXIST) {
+            throw new Error('non-existing stream')
+        }
+        return result[toStreamPartID(toStreamID((opts as any).id), (opts as any).partition)] as any
     })
-
-    // Set up streamrClient#getStream
-    for (const [streamId, partitions] of Object.entries(STREAM_PARTITIONS)) {
-        streamrClient.getStream.calledWith(streamId).mockResolvedValue({
-            getStreamParts: () => range(partitions).map((p) => toStreamPartID(toStreamID(streamId), p))
-        } as any)
-    }
-    streamrClient.getStream.calledWith(STREAM_NOT_EXIST).mockRejectedValue(new Error('non-existing stream'))
 
     return result
 }
 
-const formRawSubscriptionParam = (id: StreamID, partition: number) => ({ id, partition, raw: true })
-
-const INITIAL_BLOCK = 10
+const formRawSubscriptionParam = (streamPartId: StreamPartID) => ({
+    id: StreamPartIDUtils.getStreamID(streamPartId),
+    partition: StreamPartIDUtils.getStreamPartition(streamPartId),
+    raw: true
+})
 
 describe('MaintainTopologyService', () => {
     let streamrClient: MockProxy<StreamrClient>
-    let fixtures: Record<string, MockSubscription[]>
-    let fakeMaintainTopologyHelper: FakeMaintainTopologyHelper
+    let fixtures: Record<StreamPartID, MockSubscription>
+    let streamAssignmentLoadBalancer: EventEmitter3<StreamAssignmentLoadBalancerEvents>
     let service: MaintainTopologyService
 
-    beforeEach(() => {
+    beforeEach(async () => {
         streamrClient = mock<StreamrClient>()
         fixtures = setUpFixturesAndMocks(streamrClient)
-    })
-
-    async function setUpAndStart(initialState: StreamID[]): Promise<void> {
-        fakeMaintainTopologyHelper = new FakeMaintainTopologyHelper(initialState, INITIAL_BLOCK)
-        service = new MaintainTopologyService(streamrClient, fakeMaintainTopologyHelper as any)
+        streamAssignmentLoadBalancer = new EventEmitter3()
+        service = new MaintainTopologyService(streamrClient, streamAssignmentLoadBalancer as any)
         await service.start()
-    }
-
-    it('subscribes to nothing given empty state at start', async () => {
-        await setUpAndStart([])
-
-        expect(streamrClient.subscribe).toHaveBeenCalledTimes(0)
     })
 
-    it('subscribes to initial state on start', async () => {
-        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
-
-        await waitForCondition(() => streamrClient.subscribe.mock.calls.length == 6)
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_A, 0))
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_B, 0))
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_B, 1))
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_B, 2))
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_C, 0))
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_C, 1))
-    })
-
-    it('ignores non-existing streams on start', async () => {
-        await setUpAndStart([STREAM_A, STREAM_NOT_EXIST, STREAM_C])
-
-        // expect(streamrClient.subscribe).toHaveBeenCalledTimes(1 + 2)
-        await waitForCondition(() => streamrClient.subscribe.mock.calls.length == 3)
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_A, 0))
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_C, 0))
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_C, 1))
-    })
-
-    it('handles addStakedStream event (happy path)', async () => {
-        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
-        await waitForCondition(() => streamrClient.subscribe.mock.calls.length == 6)
-        streamrClient.subscribe.mockClear()
-
-        fakeMaintainTopologyHelper.addStreamToState(STREAM_D)
+    it('handles "assigned" event (happy path)', async () => {
+        streamAssignmentLoadBalancer.emit('assigned', SP1)
+        streamAssignmentLoadBalancer.emit('assigned', SP2)
 
         await waitForCondition(() => streamrClient.subscribe.mock.calls.length >= 2)
         expect(streamrClient.subscribe).toHaveBeenCalledTimes(2)
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_D, 0))
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_D, 1))
+        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(SP1))
+        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(SP2))
     })
 
-    it('handles addStakedStream event given non-existing stream', async () => {
-        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
-        await waitForCondition(() => streamrClient.subscribe.mock.calls.length == 6)
-        streamrClient.subscribe.mockClear()
-
-        fakeMaintainTopologyHelper.addStreamToState(STREAM_NOT_EXIST)
+    it('handles "assigned" event given non-existing stream (does not crash)', async () => {
+        streamAssignmentLoadBalancer.emit('assigned', STREAM_PART_NOT_EXIST)
 
         await wait(NOTHING_HAPPENED_DELAY)
-        expect(streamrClient.subscribe).toHaveBeenCalledTimes(0)
+        expect(streamrClient.subscribe).toHaveBeenCalledTimes(1)
     })
 
-    // TODO: client#subscribe throw on initial poll or event
-
-    function totalUnsubscribes(streamId: StreamID): number {
-        return fixtures[streamId].reduce((total, sub) => total + sub.unsubscribe.mock.calls.length, 0)
+    function totalUnsubscribes(streamPartId: StreamPartID): number {
+        return fixtures[streamPartId].unsubscribe.mock.calls.length
     }
 
-    it('handles removeStakedStream event (happy path)', async () => {
-        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
+    it('handles "unassigned" event (happy path)', async () => {
+        streamAssignmentLoadBalancer.emit('assigned', SP1)
+        streamAssignmentLoadBalancer.emit('assigned', SP2)
 
-        fakeMaintainTopologyHelper.removeStreamFromState(STREAM_C)
+        streamAssignmentLoadBalancer.emit('unassigned', SP1)
 
-        await waitForCondition(() => totalUnsubscribes(STREAM_C) >= 2)
-        expect(fixtures[STREAM_C][0].unsubscribe).toHaveBeenCalledTimes(1)
-        expect(fixtures[STREAM_C][1].unsubscribe).toHaveBeenCalledTimes(1)
+        await waitForCondition(() => totalUnsubscribes(SP1) === 1)
+        expect(totalUnsubscribes(SP2)).toEqual(0)
     })
 
-    it('handles removeStakedStream event for stream previously added by event (happy path)', async () => {
-        await setUpAndStart([STREAM_A, STREAM_B])
-
-        fakeMaintainTopologyHelper.addStreamToState(STREAM_C)
-        fakeMaintainTopologyHelper.removeStreamFromState(STREAM_C)
-
-        await waitForCondition(() => totalUnsubscribes(STREAM_C) >= 2)
-        expect(fixtures[STREAM_C][0].unsubscribe).toHaveBeenCalledTimes(1)
-        expect(fixtures[STREAM_C][1].unsubscribe).toHaveBeenCalledTimes(1)
-    })
-
-    it('handles removeStakedStream event once even if triggered twice', async () => {
-        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
-
-        fakeMaintainTopologyHelper.removeStreamFromState(STREAM_C)
-        fakeMaintainTopologyHelper.removeStreamFromState(STREAM_C)
-
-        await waitForCondition(() => totalUnsubscribes(STREAM_C) >= 2)
-        await wait(NOTHING_HAPPENED_DELAY)
-        expect(totalUnsubscribes(STREAM_C)).toEqual(2)
-        expect(fixtures[STREAM_C][0].unsubscribe).toHaveBeenCalledTimes(1)
-        expect(fixtures[STREAM_C][1].unsubscribe).toHaveBeenCalledTimes(1)
-    })
-
-    it('handles removeStakedStream event given non-existing stream', async () => {
-        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
-
-        fakeMaintainTopologyHelper.removeStreamFromState(STREAM_NOT_EXIST)
+    it('handles "unassigned" event given non-existing stream', async () => {
+        streamAssignmentLoadBalancer.emit('unassigned', STREAM_PART_NOT_EXIST)
 
         await wait(NOTHING_HAPPENED_DELAY)
-        expect(totalUnsubscribes(STREAM_NOT_EXIST)).toEqual(0)
-    })
-
-    it('handles removeStakedStream event given not subscribed stream', async () => {
-        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
-
-        fakeMaintainTopologyHelper.removeStreamFromState(STREAM_D)
-
-        await wait(NOTHING_HAPPENED_DELAY)
-        expect(totalUnsubscribes(STREAM_D)).toEqual(0)
+        expect(totalUnsubscribes(STREAM_PART_NOT_EXIST)).toEqual(0)
     })
 
     it('handles concurrency properly', async () => {
-        await setUpAndStart([STREAM_C])
-        streamrClient.subscribe.mockClear()
+        streamAssignmentLoadBalancer.emit('assigned', SP3)
 
         for (let i = 1; i < 21; i += 2) {
-            fakeMaintainTopologyHelper.removeStreamFromState(STREAM_C)
-            fakeMaintainTopologyHelper.addStreamToState(STREAM_C)
+            streamAssignmentLoadBalancer.emit('unassigned', SP3)
+            streamAssignmentLoadBalancer.emit('assigned', SP3)
         }
 
         await waitForCondition(
-            () => totalUnsubscribes(STREAM_C) >= 10 * 2,
+            () => totalUnsubscribes(SP3) >= 10,
             undefined,
             undefined,
             undefined,
-            () => `was ${totalUnsubscribes(STREAM_C)}`
+            () => `was ${totalUnsubscribes(SP3)}`
         )
-        expect(streamrClient.subscribe).toHaveBeenCalledTimes(10 * 2)
+        expect(streamrClient.subscribe).toHaveBeenCalledTimes(1 + 10)
     })
 })

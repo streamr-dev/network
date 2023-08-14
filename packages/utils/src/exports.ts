@@ -24,7 +24,6 @@ import { toEthereumAddressOrENSName } from './toEthereumAddressOrENSName'
 import { Events, BrandedString } from './types'
 import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
-import { DuplicateMessageDetector, NumberPair, GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
 import { TimeoutError, withTimeout } from './withTimeout'
 import { composeAbortSignals, ComposedAbortSignal } from './composeAbortSignals'
 import { waitForCondition } from './waitForCondition'
@@ -36,6 +35,8 @@ import { merge } from './merge'
 import { collect } from './collect'
 import { Gate } from './Gate'
 import { TheGraphClient, GraphQLQuery, FetchResponse } from './TheGraphClient'
+import { Heap } from './Heap'
+import { executeSafePromise } from './executeSafePromise'
 
 export {
     BrandedString,
@@ -66,10 +67,6 @@ export {
     waitForEvent,
     withRateLimit,
     withTimeout,
-    DuplicateMessageDetector,
-    NumberPair,
-    GapMisMatchError,
-    InvalidNumberingError,
     waitForEvent3,
     runAndWaitForEvents3,
     raceEvents3,
@@ -83,7 +80,9 @@ export {
     Gate,
     TheGraphClient,
     GraphQLQuery,
-    FetchResponse
+    FetchResponse,
+    Heap,
+    executeSafePromise
 }
 
 export {

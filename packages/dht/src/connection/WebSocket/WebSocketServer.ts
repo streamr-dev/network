@@ -26,7 +26,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     public start(port: number, host?: string): Promise<void> {
         return new Promise((resolve, reject) => {
             this.httpServer = http.createServer((request, response) => {
-                logger.trace((new Date()) + ' Received request for ' + request.url)
+                logger.trace('Received request for ' + request.url)
                 response.writeHead(404)
                 response.end()
             })
@@ -41,13 +41,13 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
                 if (!originIsAllowed(request.origin)) {
                     // Make sure we only accept requests from an allowed origin
                     request.reject()
-                    logger.trace((new Date()) + ' IConnection from origin ' + request.origin + ' rejected.')
+                    logger.trace('IConnection from origin ' + request.origin + ' rejected.')
                     return
                 }
                 
                 const connection = request.accept(undefined, request.origin)
                 
-                logger.trace((new Date()) + ' IConnection accepted.')
+                logger.trace('IConnection accepted.')
 
                 this.emit('connected', new ServerWebSocket(connection, request.resourceURL))
             })
@@ -57,7 +57,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
             })
 
             this.httpServer.once('listening', () => {
-                logger.info((new Date()) + ' Websocket server is listening on port ' + port)
+                logger.debug('Websocket server is listening on port ' + port)
                 resolve()
             })
 

@@ -9,6 +9,7 @@ export { PublishMetadata } from './publish/Publisher'
 export { Subscription, SubscriptionEvents, } from './subscribe/Subscription'
 export type { MessageStream, MessageListener } from './subscribe/MessageStream'
 export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions, ResendRef } from './subscribe/Resends'
+export { GapFillStrategy } from './subscribe/ordering/GapFiller'
 export {
     StreamPermission,
     PermissionQuery,
@@ -32,8 +33,9 @@ export {
     NetworkConfig,
     ControlLayerConfig as Layer0Config,
     NetworkNodeConfig,
-    JsonPeerDescriptor,
-    ConnectivityMethod
+    NetworkPeerDescriptor,
+    ConnectivityMethod,
+    NetworkNodeType
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
@@ -43,8 +45,8 @@ export { NetworkNodeStub } from './NetworkNodeFacade'
 export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
 
-export type { StreamID, StreamPartID, TrackerRegistryRecord } from '@streamr/protocol'
-export { ProxyDirection } from '@streamr/protocol'
+export type { StreamID, StreamPartID } from '@streamr/protocol'
+export { ProxyDirection } from '@streamr/trackerless-network'
 export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
@@ -63,7 +65,6 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
-export { NodeType } from '@streamr/dht'
 export type { IceServer, PeerDescriptor } from '@streamr/dht' 
 export type { ConnectionInfo } from '@ethersproject/web'
 export type { ExternalProvider } from '@ethersproject/providers'

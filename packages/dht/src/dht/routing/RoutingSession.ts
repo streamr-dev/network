@@ -10,7 +10,6 @@ import { RemoteRouter } from './RemoteRouter'
 import { RoutingRpcCommunicator } from "../../transport/RoutingRpcCommunicator"
 import { RoutingServiceClient } from "../../proto/packages/dht/protos/DhtRpc.client"
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { protoToString } from "../../helpers/protoToString"
 
 const logger = new Logger(module)
 
@@ -87,15 +86,12 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         const contacts = this.findMoreContacts()
         if (contacts.length < 1 && this.ongoingRequests.size < 1) {
-            logger.debug('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
-            logger.debug('' + protoToString(this.messageToRoute, RouteMessageWrapper))
-            logger.debug('' + JSON.stringify(this.connections))
-            
+            logger.trace('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
             this.stopped = true
             this.emitFailure()
         } else {
             this.failedHopCounter += 1
-            logger.debug('routing failed, retrying to route sessionId: ' + this.sessionId + ' failedHopCounter: ' + this.failedHopCounter)
+            logger.trace('routing failed, retrying to route sessionId: ' + this.sessionId + ' failedHopCounter: ' + this.failedHopCounter)
             this.sendMoreRequests(contacts)
         }
     }
@@ -179,7 +175,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             return
         }
         if (this.failedHopCounter >= MAX_FAILED_HOPS) {
-            logger.debug(`Stopping routing after ${MAX_FAILED_HOPS} failed attempts for sessionId: ${this.sessionId}`)
+            logger.trace(`Stopping routing after ${MAX_FAILED_HOPS} failed attempts for sessionId: ${this.sessionId}`)
             this.emitFailure()
             return
         }

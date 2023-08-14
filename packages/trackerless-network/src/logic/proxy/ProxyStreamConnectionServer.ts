@@ -51,6 +51,7 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
     }
 
     stop(): void {
+        this.connections.forEach((connection) => connection.remote.leaveStreamNotice(this.config.ownPeerDescriptor))
         this.connections.clear()
         this.removeAllListeners()
     }

@@ -111,7 +111,7 @@ export class Handshaker implements IHandshaker {
 
     private async selectNewTargetAndHandshake(excludedIds: string[]): Promise<string[]> {
         const exclude = excludedIds.concat(this.config.targetNeighbors.getStringIds())
-        const targetNeighbor = this.config.nearbyContactPool.getClosest(exclude) || this.config.randomContactPool.getRandom(exclude)
+        const targetNeighbor = this.config.nearbyContactPool.getClosest(exclude) ?? this.config.randomContactPool.getRandom(exclude)
         if (targetNeighbor) {
             const accepted = await this.handshakeWithTarget(this.createRemoteHandshaker(targetNeighbor.getPeerDescriptor()))
             if (!accepted) {
@@ -127,7 +127,6 @@ export class Handshaker implements IHandshaker {
         const result = await targetNeighbor.handshake(
             this.config.ownPeerDescriptor,
             this.config.targetNeighbors.getStringIds(),
-            this.config.nearbyContactPool.getStringIds(),
             concurrentStringId
         )
         if (result.accepted) {
@@ -152,9 +151,7 @@ export class Handshaker implements IHandshaker {
         const result = await targetNeighbor.handshake(
             this.config.ownPeerDescriptor,
             this.config.targetNeighbors.getStringIds(),
-            this.config.nearbyContactPool.getStringIds(),
             undefined,
-            true,
             interleavingFrom
         )
         if (result.accepted) {

@@ -58,6 +58,14 @@
             "type": "number",
             "default": 5000
         },
+        "gapFillStrategy": {
+            "type": "string",
+            "enum": [
+                "light",
+                "full"
+            ],
+            "default": "light"
+        },
         "network": {
             "type": "object",
             "additionalProperties": false,
@@ -74,7 +82,7 @@
                             },
                             "default": [{
                                 "id": "productionEntryPoint1",
-                                "type": 0,
+                                "type": "nodejs",
                                 "websocket": {
                                     "ip": "127.0.0.1",
                                     "port": 40401
@@ -458,26 +466,26 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-                "id",
-                "type"
+                "id"
             ],
             "properties": {
                 "id": {
                     "type": "string"
                 },
                 "type": {
-                    "type": "number"
+                    "$ref": "#/definitions/nodeType"
                 },
                 "websocket": {
                     "$ref": "#/definitions/connectivityMethod"
-                },
-                "openInternet": {
-                    "type": "boolean"
-                },
-                "region": {
-                    "type": "number"
                 }
             }
+        },
+        "nodeType": {
+            "type": "string",
+            "enum": [
+                "browser",
+                "nodejs"
+            ]
         },
         "connectivityMethod": {
             "type": "object",

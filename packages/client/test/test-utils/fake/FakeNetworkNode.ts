@@ -97,6 +97,11 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    getPeerDescriptor(): PeerDescriptor {
+        throw new Error('not implemented')
+    }
+
     hasStreamPart(streamPartId: StreamPartID): boolean {
         return this.subscriptions.has(streamPartId)
     }

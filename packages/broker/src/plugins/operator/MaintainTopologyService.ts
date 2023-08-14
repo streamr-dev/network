@@ -1,68 +1,98 @@
-import { Logger, Multimap } from '@streamr/utils'
-import { MaintainTopologyHelper } from './MaintainTopologyHelper'
-import StreamrClient, { Stream, Subscription } from 'streamr-client'
-import { StreamID, StreamPartIDUtils } from '@streamr/protocol'
+import { Logger } from '@streamr/utils'
+import StreamrClient, { Subscription } from 'streamr-client'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import pLimit from 'p-limit'
+import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
+import { MaintainTopologyHelper } from './MaintainTopologyHelper'
+import { OperatorServiceConfig } from './OperatorPlugin'
+import { OperatorFleetState } from './OperatorFleetState'
 
 const logger = new Logger(module)
 
+/**
+ * Helper function for setting up and starting a MaintainTopologyService along
+ * with all its dependencies.
+ */
+export async function setUpAndStartMaintainTopologyService({
+    streamrClient,
+    replicationFactor,
+    serviceHelperConfig,
+    operatorFleetState
+}: {
+    streamrClient: StreamrClient
+    replicationFactor: number
+    serviceHelperConfig: OperatorServiceConfig
+    operatorFleetState: OperatorFleetState
+}): Promise<MaintainTopologyService> {
+    // TODO: check that operatorFleetState is NOT started
+    const maintainTopologyHelper = new MaintainTopologyHelper(serviceHelperConfig)
+    const nodeId = (await streamrClient.getNode()).getNodeId()
+    const service = new MaintainTopologyService(
+        streamrClient,
+        new StreamAssignmentLoadBalancer(
+            nodeId,
+            replicationFactor,
+            async (streamId) => {
+                const stream = await streamrClient.getStream(streamId)
+                return stream.getStreamParts()
+            },
+            operatorFleetState,
+            maintainTopologyHelper
+        )
+    )
+    await service.start()
+    await maintainTopologyHelper.start()
+    return service
+}
+
 export class MaintainTopologyService {
     private readonly streamrClient: StreamrClient
-    private readonly maintainTopologyHelper: MaintainTopologyHelper
-    private readonly subscriptions = new Multimap<StreamID, Subscription>()
+    private readonly streamAssignmentLoadBalancer: StreamAssignmentLoadBalancer
+    private readonly subscriptions = new Map<StreamPartID, Subscription>()
     private readonly concurrencyLimit = pLimit(1)
 
-    constructor(streamrClient: StreamrClient, maintainTopologyHelper: MaintainTopologyHelper) {
+    constructor(streamrClient: StreamrClient, streamAssignmentLoadBalancer: StreamAssignmentLoadBalancer) {
         this.streamrClient = streamrClient
-        this.maintainTopologyHelper = maintainTopologyHelper
+        this.streamAssignmentLoadBalancer = streamAssignmentLoadBalancer
     }
 
     async start(): Promise<void> {
-        this.maintainTopologyHelper.on('addStakedStream', this.onAddStakedStreams)
-        this.maintainTopologyHelper.on('removeStakedStream', this.onRemoveStakedStream)
-        await this.maintainTopologyHelper.start()
+        this.streamAssignmentLoadBalancer.on('assigned', this.onAddStakedStreamPart)
+        this.streamAssignmentLoadBalancer.on('unassigned', this.onRemoveStakedStreamPart)
         logger.info('Started')
     }
 
-    async stop(): Promise<void> {
-        this.maintainTopologyHelper.stop()
-    }
-
-    private onAddStakedStreams = (streamIDs: StreamID[]) => {
-        streamIDs.map(this.concurrencyLimiter(this.addStream.bind(this)))
-    }
-
-    private onRemoveStakedStream = this.concurrencyLimiter(async (streamId: StreamID) => {
-        const subscriptions = this.subscriptions.get(streamId)
-        this.subscriptions.removeAll(streamId, subscriptions)
-        await Promise.all(subscriptions.map((sub) => sub.unsubscribe())) // TODO: rejects?
-    })
-
-    private async addStream(streamId: StreamID): Promise<void> {
-        let stream: Stream
+    private onAddStakedStreamPart = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
+        const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+        let subscription: Subscription
         try {
-            stream = await this.streamrClient.getStream(streamId)
-        } catch (err) {
-            logger.warn('Ignore non-existing stream', { streamId, reason: err?.message })
-            return
-        }
-        for (const streamPart of stream.getStreamParts()) {
-            const id = StreamPartIDUtils.getStreamID(streamPart)
-            const partition = StreamPartIDUtils.getStreamPartition(streamPart)
-            const subscription = await this.streamrClient.subscribe({
+            subscription = await this.streamrClient.subscribe({
                 id,
                 partition,
                 raw: true
-            }) // TODO: rejects?
-            this.subscriptions.add(id, subscription)
+            })
+        } catch (err) {
+            logger.warn('Failed to subscribe', { streamPartId, reason: err?.reason })
+            return
         }
-    }
+        this.subscriptions.set(streamPartId, subscription)
+    })
+
+    private onRemoveStakedStreamPart = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
+        const subscription = this.subscriptions.get(streamPartId)
+        this.subscriptions.delete(streamPartId)
+        try {
+            await subscription?.unsubscribe()
+        } catch (err) {
+            logger.warn('Failed to unsubscribe', { streamPartId, reason: err?.reason })
+        }
+    })
 
     private concurrencyLimiter(
-        fn: (streamId: StreamID) => Promise<void>
-    ): (streamId: StreamID) => void {
-        return (streamId) => {
-            this.concurrencyLimit(() => fn(streamId)).catch((err) => {
+        fn: (streamPartId: StreamPartID) => Promise<void>
+    ): (streamPartId: StreamPartID) => void {
+        return (streamPartId) => {
+            this.concurrencyLimit(() => fn(streamPartId)).catch((err) => {
                 logger.warn('Encountered error while processing event', { err })
             })
         }

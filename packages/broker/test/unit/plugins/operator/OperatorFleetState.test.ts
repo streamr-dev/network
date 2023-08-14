@@ -8,6 +8,9 @@ import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-util
 const ADDRESS = randomEthereumAddress()
 const coordinationStreamId = toStreamID('/operator/coordination', ADDRESS)
 
+const READY_WAIT_MS = 500
+const JITTER = 100
+
 describe(OperatorFleetState, () => {
     let streamrClient: MockProxy<StreamrClient>
     let subscription: MockProxy<Subscription>
@@ -29,7 +32,7 @@ describe(OperatorFleetState, () => {
             return subscription
         })
         currentTime = 0
-        state = new OperatorFleetState(streamrClient, coordinationStreamId, () => currentTime, 10, 100)
+        state = new OperatorFleetState(streamrClient, coordinationStreamId, () => currentTime, 10, 100, READY_WAIT_MS, 0)
     })
 
     afterEach(() => {
@@ -124,5 +127,48 @@ describe(OperatorFleetState, () => {
         currentTime = 30
         await waitForEvent(state as any, 'removed')
         expect(state.getNodeIds()).toEqual([])
+    })
+
+    it('getLeaderNodeId returns undefined when no nodes', async () => {
+        await state.start()
+        expect(state.getLeaderNodeId()).toBeUndefined()
+    })
+
+    it('getLeaderNodeId returns leader node when nodes', async () => {
+        await state.start()
+        await setTimeAndPublishMessage(5, { msgType: 'heartbeat', nodeId: 'd' })
+        await setTimeAndPublishMessage(5, { msgType: 'heartbeat', nodeId: 'a' })
+        await setTimeAndPublishMessage(5, { msgType: 'heartbeat', nodeId: 'c' })
+        await setTimeAndPublishMessage(5, { msgType: 'heartbeat', nodeId: 'b' })
+
+        expect(state.getLeaderNodeId()).toEqual('a')
+    })
+
+    describe('waitUntilReady', () => {
+        let ready: boolean
+
+        beforeEach(() => {
+            ready = false
+            // eslint-disable-next-line promise/always-return,promise/catch-or-return
+            state.waitUntilReady().then(() => {
+                ready = true
+            })
+        })
+
+        it('does not become ready if no heartbeat arrives', async () => {
+            await state.start()
+            await wait(READY_WAIT_MS + JITTER)
+            expect(ready).toBeFalse()
+        })
+
+        it('eventually becomes ready if heartbeat arrives', async () => {
+            await state.start()
+            await setTimeAndPublishMessage(5, { msgType: 'heartbeat', nodeId: 'a' })
+            await setTimeAndPublishMessage(5, { msgType: 'heartbeat', nodeId: 'b' })
+            await setTimeAndPublishMessage(10, { msgType: 'heartbeat', nodeId: 'c' })
+            expect(ready).toBeFalse()
+            await wait(READY_WAIT_MS + JITTER)
+            expect(ready).toBeTrue()
+        })
     })
 })

@@ -48,7 +48,7 @@ describe('MQTT Bridge', () => {
     })
 
     beforeEach(async () => {
-        streamrClient = await createClient(brokerUser.privateKey)
+        streamrClient = createClient(brokerUser.privateKey)
         stream = await createTestStream(streamrClient, module)
     })
 

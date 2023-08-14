@@ -1,5 +1,4 @@
-import { NodeType } from '@streamr/dht'
-import { createStrictConfig, JsonPeerDescriptor, redactConfig } from '../../src/Config'
+import { createStrictConfig, NetworkPeerDescriptor, redactConfig, NetworkNodeType } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -15,20 +14,6 @@ describe('Config', () => {
                     }
                 } as any)
             }).toThrow('/network must NOT have additional properties: foo')
-        })
-
-        it('missing property', () => {
-            expect(() => {
-                return createStrictConfig({
-                    network: {
-                        controlLayer: {
-                            entryPoints: [{
-                                id: 'test'
-                            }]
-                        }
-                    }
-                } as any)
-            }).toThrow('/network/controlLayer/entryPoints/0 must have required property \'type\'')
         })
 
         it('empty array', () => {
@@ -122,7 +107,7 @@ describe('Config', () => {
         it('can override entryPoints', () => {
             const entryPoints = [{
                 id: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
-                type: NodeType.NODEJS,
+                type: NetworkNodeType.NODEJS,
                 websocket: {
                     ip: 'brubeck3.streamr.network',
                     port: 30401
@@ -137,7 +122,7 @@ describe('Config', () => {
             })
             expect(clientOverrides.network.controlLayer!.entryPoints!).toEqual(entryPoints)
             expect(clientOverrides.network.controlLayer!.entryPoints!).not.toBe(entryPoints)
-            expect((clientOverrides.network.controlLayer! as JsonPeerDescriptor[])[0]).not.toBe(entryPoints[0])
+            expect((clientOverrides.network.controlLayer! as NetworkPeerDescriptor[])[0]).not.toBe(entryPoints[0])
         })
     })
 

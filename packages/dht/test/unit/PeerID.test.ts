@@ -13,7 +13,7 @@ describe('PeerID', () => {
     })
 
     it('peerKey', () => {
-        const peerIdFromString = PeerID.fromString('asdadstqj12312f12f123')
+        const peerIdFromString = PeerID.fromString('peerId')
         const peerKey = peerIdFromString.toKey()
         const peerIdFromKey = PeerID.fromKey(peerKey)
         expect(peerIdFromString.equals(peerIdFromKey)).toEqual(true)        
