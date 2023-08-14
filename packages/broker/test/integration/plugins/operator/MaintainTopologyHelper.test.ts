@@ -1,19 +1,16 @@
-import { JsonRpcProvider, Provider } from "@ethersproject/providers"
-import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
-import { config as CHAIN_CONFIG } from "@streamr/config"
-import { Wallet } from "@ethersproject/wallet"
-import { parseEther } from "@ethersproject/units"
-import { Logger, waitForCondition } from '@streamr/utils'
-
-import type { TestToken, Operator } from "@streamr/network-contracts"
-import type { StreamRegistry } from "@streamr/network-contracts"
-
-import { tokenABI } from "@streamr/network-contracts"
-import { streamRegistryABI } from "@streamr/network-contracts"
 import { Contract } from "@ethersproject/contracts"
-
-import { deploySponsorship } from "./deploySponsorshipContract"
+import { JsonRpcProvider, Provider } from "@ethersproject/providers"
+import { parseEther } from "@ethersproject/units"
+import { Wallet } from "@ethersproject/wallet"
+import { config as CHAIN_CONFIG } from "@streamr/config"
+import type { Operator, TestToken } from "@streamr/network-contracts"
+import { tokenABI } from "@streamr/network-contracts"
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { Logger, waitForCondition } from '@streamr/utils'
+import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
+import { createClient, createTestStream } from '../../../utils'
+import { deploySponsorship } from "./deploySponsorshipContract"
 import { setupOperatorContract } from "./setupOperatorContract"
 
 const chainConfig = CHAIN_CONFIG["dev1"]
@@ -43,16 +40,10 @@ describe("MaintainTopologyHelper", () => {
         adminWallet = new Wallet(streamCreatorKey, provider)
 
         token = new Contract(chainConfig.contracts.LINK, tokenABI) as unknown as TestToken
-        const timeString = (new Date()).getTime().toString()
-        const streamPath1 = "/operatorclienttest-1-" + timeString
-        const streamPath2 = "/operatorclienttest-2-" + timeString
-        streamId1 = adminWallet.address.toLowerCase() + streamPath1
-        streamId2 = adminWallet.address.toLowerCase() + streamPath2
-        const streamRegistry = new Contract(chainConfig.contracts.StreamRegistry, streamRegistryABI, adminWallet) as unknown as StreamRegistry
-        logger.debug(`creating stream with streamId1 ${streamId1}`)
-        await (await streamRegistry.createStream(streamPath1, "metadata")).wait()
-        logger.debug(`creating stream with streamId2 ${streamId2}`)
-        await (await streamRegistry.createStream(streamPath2, "metadata")).wait()
+        const client = createClient(await fetchPrivateKeyWithGas())
+        streamId1 = (await createTestStream(client, module)).id
+        streamId2 = (await createTestStream(client, module)).id
+        await client.destroy()
         ;({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({
             provider,
             chainConfig,

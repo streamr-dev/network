@@ -1,15 +1,16 @@
-import { Logger, wait, waitForCondition } from '@streamr/utils'
-import { parseEther } from 'ethers/lib/utils'
-import { deploySponsorship } from './deploySponsorshipContract'
 import { Provider } from '@ethersproject/abstract-provider'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { StreamrEnvDeployer, TestToken } from '@streamr/network-contracts'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { Logger, wait, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
+import { parseEther } from 'ethers/lib/utils'
 import { mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
+import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
+import { createClient, createTestStream } from '../../../utils'
+import { deploySponsorship } from './deploySponsorshipContract'
 import { setupOperatorContract } from './setupOperatorContract'
-import { createClient } from '../../../utils'
 
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
@@ -41,15 +42,10 @@ describe('VoteOnSuspectNodeService', () => {
         adminWallet = new Wallet(ADMIN_PRIV_KEY, provider)
     
         token = contracts.DATA as unknown as TestToken
-        const timeString = (new Date()).getTime().toString()
-        const streamPath1 = '/voteonsuspectnodeservicetest-1-' + timeString
-        const streamPath2 = '/voteonsuspectnodeservicetest-2-' + timeString
-        streamId1 = adminWallet.address.toLowerCase() + streamPath1
-        streamId2 = adminWallet.address.toLowerCase() + streamPath2
-        logger.trace('Create stream', { streamId1 })
-        await (await contracts.streamRegistry.createStream(streamPath1, '{"partitions":"1"}')).wait()
-        logger.trace('Create stream', { streamId2 })
-        await (await contracts.streamRegistry.createStream(streamPath2, '{"partitions":"1"}')).wait()
+        const client = createClient(await fetchPrivateKeyWithGas())
+        streamId1 = (await createTestStream(client, module)).id
+        streamId2 = (await createTestStream(client, module)).id
+        await client.destroy()
 
     }, TIMEOUT)
     
