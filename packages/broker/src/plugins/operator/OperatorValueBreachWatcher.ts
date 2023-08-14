@@ -22,14 +22,14 @@ export class OperatorValueBreachWatcher {
         return this.checkUnwithdrawnEarningsOf(randomOperatorAddress)
     }
 
-    async checkUnwithdrawnEarningsOf(operatorAddress: EthereumAddress): Promise<void> {
+    async checkUnwithdrawnEarningsOf(targetOperatorAddress: EthereumAddress): Promise<void> {
         logger.info('Check unwithdrawn earnings and check if they are above the safe threshold')
-        const { fraction, sponsorshipAddresses } = await this.helper.getUnwithdrawnEarningsOf(operatorAddress)
+        const { fraction, sponsorshipAddresses } = await this.helper.getUnwithdrawnEarningsOf(targetOperatorAddress)
         const limit = await this.getPenaltyLimitFraction()
         logger.info(` -> is ${fraction} > ${limit}?`)
         if (fraction > limit) {
             logger.info("Withdrawing earnings from sponsorships", { sponsorshipAddresses })
-            await this.helper.withdrawEarningsFromSponsorships(sponsorshipAddresses)
+            await this.helper.triggerWithdraw(targetOperatorAddress, sponsorshipAddresses)
         }
     }
 
