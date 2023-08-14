@@ -24,7 +24,6 @@ describe('VoteOnSuspectNodeService', () => {
     let adminWallet: Wallet
     let token: TestToken
     let streamId1: string
-    let streamId2: string
     let streamrEnvDeployer: StreamrEnvDeployer
     let chainConfig: any
 
@@ -44,7 +43,7 @@ describe('VoteOnSuspectNodeService', () => {
         token = contracts.DATA as unknown as TestToken
         const client = createClient(await fetchPrivateKeyWithGas())
         streamId1 = (await createTestStream(client, module)).id
-        streamId2 = (await createTestStream(client, module)).id
+        await createTestStream(client, module)
         await client.destroy()
 
     }, TIMEOUT)
