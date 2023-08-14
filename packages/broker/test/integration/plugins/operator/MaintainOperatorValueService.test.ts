@@ -14,7 +14,7 @@ import { MaintainOperatorValueService } from "../../../../src/plugins/operator/M
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 import { getProvider } from "./smartContractUtils"
 import { createClient } from "../../../utils"
-import { createWalletAndDeployOperator } from "./createWalletAndDeployOperator"
+import { setupOperatorContract } from "./setupOperatorContract"
 
 const config = CHAIN_CONFIG["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -60,9 +60,11 @@ describe.skip("MaintainOperatorValueService", () => {
 
         token = new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
 
-        ({ operatorWallet, operatorContract } = await createWalletAndDeployOperator(
-            provider, config, theGraphUrl
-        ))
+        ({ operatorWallet, operatorContract } = await setupOperatorContract({
+            provider, 
+            chainConfig: config, 
+            theGraphUrl
+        }))
 
         await (
             await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther(`${STAKE_AMOUNT * 2}`), operatorWallet.address)

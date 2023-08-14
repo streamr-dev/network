@@ -14,7 +14,7 @@ import { Contract } from "@ethersproject/contracts"
 
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
-import { createWalletAndDeployOperator } from "./createWalletAndDeployOperator"
+import { setupOperatorContract } from "./setupOperatorContract"
 
 const config = CHAIN_CONFIG["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -61,9 +61,11 @@ describe("MaintainTopologyHelper", () => {
         let topologyHelper: MaintainTopologyHelper
 
         beforeAll(async () => {
-            ({ operatorWallet, operatorContract, operatorConfig } = await createWalletAndDeployOperator(
-                provider, config, theGraphUrl
-            ))
+            ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({
+                provider, 
+                chainConfig: config, 
+                theGraphUrl
+            }))
         })
         afterEach(async () => {
             topologyHelper.stop()
@@ -156,9 +158,11 @@ describe("MaintainTopologyHelper", () => {
         let operatorClient: MaintainTopologyHelper
 
         beforeAll(async () => {
-            ({ operatorWallet, operatorContract, operatorConfig } = await createWalletAndDeployOperator(
-                provider, config, theGraphUrl
-            ))
+            ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({
+                provider, 
+                chainConfig: config, 
+                theGraphUrl
+            }))
         })
         afterEach(async () => {
             operatorClient.stop()

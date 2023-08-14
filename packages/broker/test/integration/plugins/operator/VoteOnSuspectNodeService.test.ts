@@ -8,7 +8,7 @@ import { Wallet } from 'ethers'
 import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
 import { mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
-import { createWalletAndDeployOperator } from './createWalletAndDeployOperator'
+import { setupOperatorContract } from './setupOperatorContract'
 import { createClient } from '../../../utils'
 
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -54,11 +54,11 @@ describe('VoteOnSuspectNodeService', () => {
     }, TIMEOUT)
     
     it('allows to flag an operator as malicious', async () => {
-        const flagger = await createWalletAndDeployOperator(provider, config, theGraphUrl, ADMIN_PRIV_KEY)
+        const flagger = await setupOperatorContract({ provider, chainConfig: config, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         logger.trace('deployed flagger contract ' + flagger.operatorConfig.operatorContractAddress)
-        const target = await createWalletAndDeployOperator(provider, config, theGraphUrl, ADMIN_PRIV_KEY)
+        const target = await setupOperatorContract({ provider, chainConfig: config, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         logger.trace('deployed target contract ' + target.operatorConfig.operatorContractAddress)
-        const voter = await createWalletAndDeployOperator(provider, config, theGraphUrl, ADMIN_PRIV_KEY)
+        const voter = await setupOperatorContract({ provider, chainConfig: config, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         logger.trace('deployed voter contract ' + voter.operatorConfig.operatorContractAddress)
 
         await wait(5000) // wait for events to be processed // wait for events to be processed
