@@ -1,19 +1,17 @@
 import { toEthereumAddress } from '@streamr/utils'
 import { StreamrClientConfig } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
-import { Chains } from '@streamr/config'
+import { config as CHAIN_CONFIG } from '@streamr/config'
 
-const MAIN_CHAIN_NAME = 'dev0'
-const SIDE_CHAIN_NAME = 'dev1'
-const MAIN_CHAIN_CONFIG = Chains.load()[MAIN_CHAIN_NAME]
-const SIDE_CHAIN_CONFIG = Chains.load()[SIDE_CHAIN_NAME]
+const MAIN_CHAIN_CONFIG = CHAIN_CONFIG['dev0']
+const SIDE_CHAIN_CONFIG = CHAIN_CONFIG['dev1']
 
 function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
 }
 
 const sideChainConfig = {
-    name: SIDE_CHAIN_NAME,
+    name: SIDE_CHAIN_CONFIG.name,
     chainId: SIDE_CHAIN_CONFIG.id,
     rpcs: [{
         url: SIDE_CHAIN_CONFIG.rpcEndpoints[0].url,
@@ -49,7 +47,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
         streamStorageRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StreamStorageRegistry,
         storageNodeRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StorageNodeRegistry,
         mainChainRPCs: {
-            name: MAIN_CHAIN_NAME,
+            name: MAIN_CHAIN_CONFIG.name,
             chainId: MAIN_CHAIN_CONFIG.id,
             rpcs: [{
                 url: MAIN_CHAIN_CONFIG.rpcEndpoints[0].url,
