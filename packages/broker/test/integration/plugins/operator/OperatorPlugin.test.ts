@@ -72,8 +72,9 @@ describe('OperatorPlugin', () => {
         await subscriber.setProxies({ id: stream.id }, [brokerDescriptor], ProxyDirection.SUBSCRIBE)
         await subscriber.subscribe(stream.id, (_content) => {
             // eslint-disable-next-line no-console
-            // console.log(_content)
+            console.log(_content)
         })
+        // TODO do not wait(30000) but wait until we get one message from subscriber.subscribe() callback
         await wait(30000)
         clearInterval(publishTimer)
         await subscriber.destroy()
