@@ -3,15 +3,17 @@ import { StreamrClientConfig } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
 import { Chains } from '@streamr/config'
 
-const MAIN_CHAIN_CONFIG = Chains.load()['dev0']
-const SIDE_CHAIN_CONFIG = Chains.load()['dev1']
+const MAIN_CHAIN_NAME = 'dev0'
+const SIDE_CHAIN_NAME = 'dev1'
+const MAIN_CHAIN_CONFIG = Chains.load()[MAIN_CHAIN_NAME]
+const SIDE_CHAIN_CONFIG = Chains.load()[SIDE_CHAIN_NAME]
 
 function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
 }
 
 const sideChainConfig = {
-    name: 'streamr', // TODO from config?
+    name: SIDE_CHAIN_NAME,
     chainId: SIDE_CHAIN_CONFIG.id,
     rpcs: [{
         // TODO do we need "process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST" support?
@@ -48,7 +50,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
         streamStorageRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StreamStorageRegistry,
         storageNodeRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StorageNodeRegistry,
         mainChainRPCs: {
-            name: 'dev_ethereum',  // TODO from config?
+            name: MAIN_CHAIN_NAME,
             chainId: MAIN_CHAIN_CONFIG.id,
             rpcs: [{
                 // TODO do we need "process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST" support?
