@@ -1,0 +1,31 @@
+import { PeerId, PeerInfo } from '../PeerInfo';
+import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint';
+export declare const HIGH_BACK_PRESSURE: number;
+export declare const LOW_BACK_PRESSURE: number;
+export type ReadyState = 0 | 1 | 2 | 3;
+export declare abstract class AbstractWsConnection {
+    private readonly peerInfo;
+    private readonly logger;
+    private respondedPong;
+    private rtt?;
+    private rttStart?;
+    private highBackPressure;
+    private onLowBackPressure?;
+    private onHighBackPressure?;
+    protected constructor(peerInfo: PeerInfo);
+    setBackPressureHandlers(onLowBackPressure: () => void, onHighBackPressure: () => void): void | never;
+    ping(): void;
+    onPong(): void;
+    evaluateBackPressure(): void;
+    getPeerInfo(): PeerInfo;
+    getRespondedPong(): boolean;
+    getRtt(): number | undefined;
+    getPeerId(): PeerId;
+    getDiagnosticInfo(): Record<string, unknown>;
+    abstract sendPing(): void;
+    abstract getBufferedAmount(): number;
+    abstract send(message: string): Promise<void>;
+    abstract terminate(): void;
+    abstract getReadyState(): ReadyState;
+    abstract close(code: DisconnectionCode, reason: DisconnectionReason): void;
+}

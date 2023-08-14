@@ -1,0 +1,33 @@
+import { MessageID, MessageRef, StreamPartID } from '@streamr/protocol';
+import { StreamPartStatus } from '../identifiers';
+import { NodeId } from '../identifiers';
+export declare class StreamPartManager {
+    private readonly streamParts;
+    setUpStreamPart(streamPartId: StreamPartID, isBehindProxy?: boolean): void;
+    markNumbersAndCheckThatIsNotDuplicate(messageId: MessageID, previousMessageReference: MessageRef | null): boolean | never;
+    updateCounter(streamPartId: StreamPartID, counter: number): void;
+    isNewStream(streamPartId: StreamPartID): boolean;
+    addNeighbor(streamPartId: StreamPartID, node: NodeId): void;
+    addInOnlyNeighbor(streamPartId: StreamPartID, node: NodeId): void;
+    addOutOnlyNeighbor(streamPartId: StreamPartID, node: NodeId): void;
+    removeNodeFromStreamPart(streamPartId: StreamPartID, node: NodeId): void;
+    getStreamPartStatus(streamPartId: StreamPartID): StreamPartStatus;
+    removeNodeFromAllStreamParts(node: NodeId): [StreamPartID[], StreamPartID[]];
+    removeStreamPart(streamPartId: StreamPartID): void;
+    isSetUp(streamPartId: StreamPartID): boolean;
+    isNodePresent(node: NodeId): boolean;
+    getStreamParts(): IterableIterator<StreamPartID>;
+    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId>;
+    getOutboundNodesForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId>;
+    getInboundNodesForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId>;
+    getAllNodesForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId>;
+    getAllNodes(): ReadonlyArray<NodeId>;
+    hasNeighbor(streamPartId: StreamPartID, node: NodeId): boolean;
+    hasOutOnlyConnection(streamPartId: StreamPartID, node: NodeId): boolean;
+    hasInOnlyConnection(streamPartId: StreamPartID, node: NodeId): boolean;
+    hasOnewayConnection(streamPartId: StreamPartID, node: NodeId): boolean;
+    hasInboundConnection(streamPartId: StreamPartID, node: NodeId): boolean;
+    isBehindProxy(streamPartId: StreamPartID): boolean;
+    getDiagnosticInfo(): Record<string, unknown>;
+    private ensureThatIsSetUp;
+}
