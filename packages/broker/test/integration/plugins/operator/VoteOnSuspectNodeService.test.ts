@@ -1,7 +1,6 @@
 import { Provider } from '@ethersproject/abstract-provider'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { StreamrEnvDeployer, TestToken } from '@streamr/network-contracts'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, wait, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
@@ -19,6 +18,7 @@ const ADMIN_PRIV_KEY = "0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414d
 // const ADMIN_PRIV_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" // fastChain
 
 const logger = new Logger(module)
+
 describe('VoteOnSuspectNodeService', () => {
     let provider: Provider
     let adminWallet: Wallet
@@ -41,7 +41,17 @@ describe('VoteOnSuspectNodeService', () => {
         adminWallet = new Wallet(ADMIN_PRIV_KEY, provider)
     
         token = contracts.DATA as unknown as TestToken
-        const client = createClient(await fetchPrivateKeyWithGas())
+        const client = createClient(ADMIN_PRIV_KEY, { 
+            contracts: { 
+                streamRegistryChainAddress: chainConfig.contracts.StreamRegistry,
+                streamRegistryChainRPCs: {
+                    chainId: 0,  // some chain id
+                    rpcs: [{
+                        url: chainURL
+                    }]
+                }
+            }
+        })
         streamId1 = (await createTestStream(client, module)).id
         await createTestStream(client, module)
         await client.destroy()
