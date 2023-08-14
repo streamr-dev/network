@@ -27,9 +27,6 @@ describe("MaintainTopologyHelper", () => {
     let token: TestToken
     let streamId1: string
     let streamId2: string
-    let operatorWallet: Wallet
-    let operatorContract: Operator
-    let operatorConfig: OperatorServiceConfig
 
     beforeAll(async () => {
         provider = new JsonRpcProvider(chainURL)
@@ -40,18 +37,24 @@ describe("MaintainTopologyHelper", () => {
         streamId1 = (await createTestStream(client, module)).id
         streamId2 = (await createTestStream(client, module)).id
         await client.destroy()
-        ;({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({
-            provider,
-            chainConfig,
-            theGraphUrl
-        }))
     })
 
     describe("maintain topology service normal wolkflow", () => {
 
+        let operatorWallet: Wallet
+        let operatorContract: Operator
+        let operatorConfig: OperatorServiceConfig
         let sponsorship: Contract
         let sponsorship2: Contract
         let topologyHelper: MaintainTopologyHelper
+
+        beforeAll(async () => {
+            ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({
+                provider, 
+                chainConfig, 
+                theGraphUrl
+            }))
+        })
 
         afterEach(async () => {
             topologyHelper.stop()
@@ -136,9 +139,20 @@ describe("MaintainTopologyHelper", () => {
 
     describe("maintain topology workflow edge cases", () => {
 
+        let operatorWallet: Wallet
+        let operatorContract: Operator
+        let operatorConfig: OperatorServiceConfig
         let sponsorship: Contract
         let sponsorship2: Contract
         let operatorClient: MaintainTopologyHelper
+
+        beforeAll(async () => {
+            ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({
+                provider, 
+                chainConfig, 
+                theGraphUrl
+            }))
+        })
 
         afterEach(async () => {
             operatorClient.stop()
