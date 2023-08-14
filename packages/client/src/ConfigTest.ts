@@ -16,8 +16,7 @@ const sideChainConfig = {
     name: SIDE_CHAIN_NAME,
     chainId: SIDE_CHAIN_CONFIG.id,
     rpcs: [{
-        // TODO do we need "process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST" support?
-        url: process.env.SIDECHAIN_URL || SIDE_CHAIN_CONFIG.rpcEndpoints[0].url,
+        url: SIDE_CHAIN_CONFIG.rpcEndpoints[0].url,
         timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
     }]
 }
@@ -53,8 +52,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
             name: MAIN_CHAIN_NAME,
             chainId: MAIN_CHAIN_CONFIG.id,
             rpcs: [{
-                // TODO do we need "process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST" support?
-                url: process.env.ETHEREUM_SERVER_URL || MAIN_CHAIN_CONFIG.rpcEndpoints[0].url,
+                url: MAIN_CHAIN_CONFIG.rpcEndpoints[0].url,
                 timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
             }]
         },
