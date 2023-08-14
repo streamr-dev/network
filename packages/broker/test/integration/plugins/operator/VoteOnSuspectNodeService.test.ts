@@ -25,7 +25,7 @@ describe('VoteOnSuspectNodeService', () => {
     let streamId1: string
     let streamId2: string
     let streamrEnvDeployer: StreamrEnvDeployer
-    let config: any
+    let chainConfig: any
 
     const chainURL = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8546`
 
@@ -33,7 +33,7 @@ describe('VoteOnSuspectNodeService', () => {
         streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, chainURL)
         await streamrEnvDeployer.deployEvironment()
         const { contracts } = streamrEnvDeployer
-        config = { contracts: streamrEnvDeployer.addresses } as any
+        chainConfig = { contracts: streamrEnvDeployer.addresses } as any
 
         provider = new JsonRpcProvider(chainURL)
         logger.trace('Connected', { networkInfo: await provider.getNetwork() })
@@ -54,11 +54,11 @@ describe('VoteOnSuspectNodeService', () => {
     }, TIMEOUT)
     
     it('allows to flag an operator as malicious', async () => {
-        const flagger = await setupOperatorContract({ provider, chainConfig: config, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
+        const flagger = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         logger.trace('deployed flagger contract ' + flagger.operatorConfig.operatorContractAddress)
-        const target = await setupOperatorContract({ provider, chainConfig: config, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
+        const target = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         logger.trace('deployed target contract ' + target.operatorConfig.operatorContractAddress)
-        const voter = await setupOperatorContract({ provider, chainConfig: config, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
+        const voter = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         logger.trace('deployed voter contract ' + voter.operatorConfig.operatorContractAddress)
 
         await wait(5000) // wait for events to be processed // wait for events to be processed
@@ -75,7 +75,7 @@ describe('VoteOnSuspectNodeService', () => {
         await voterVoteService.start()
 
         logger.trace('deploying sponsorship contract')
-        const sponsorship = await deploySponsorship(config, adminWallet, {
+        const sponsorship = await deploySponsorship(chainConfig, adminWallet, {
             streamId: streamId1 })
         logger.trace('sponsoring sponsorship contract')
         await (await token.connect(flagger.operatorWallet).approve(sponsorship.address, parseEther('500'))).wait()
