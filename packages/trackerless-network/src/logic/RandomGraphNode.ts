@@ -22,7 +22,7 @@ import { PeerList } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
+import { DuplicateMessageDetector } from './DuplicateMessageDetector'
 import { Logger } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { IHandshaker } from './neighbor-discovery/Handshaker'
@@ -34,6 +34,7 @@ import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 import { IInspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
+import { markAndCheckDuplicate } from './utils'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -86,7 +87,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.randomGraphId,
             rpcCommunicator: this.config.rpcCommunicator,
-            markAndCheckDuplicate: (msg: MessageRef, prev?: MessageRef) => this.markAndCheckDuplicate(msg, prev),
+            markAndCheckDuplicate: (msg: MessageRef, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousPeer?: string) => this.broadcast(message, previousPeer),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
                 const senderId = notice.senderId
@@ -258,7 +259,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
 
     broadcast(msg: StreamMessage, previousPeer?: string): void {
         if (!previousPeer) {
-            this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
+            markAndCheckDuplicate(this.duplicateDetectors, msg.messageRef!, msg.previousMessageRef)
         }
         this.emit('message', msg)
         this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), previousPeer ?? null)
@@ -271,28 +272,15 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     private getPropagationTargets(msg: StreamMessage): string[] {
         let propagationTargets = this.config.targetNeighbors.getStringIds()
         if (this.config.proxyConnectionServer) {
-            if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
-                const { recipient } = GroupKeyRequest.fromBinary(msg.content)
-                propagationTargets = propagationTargets.concat(this.config.proxyConnectionServer!.getPeerKeysForUserId(recipient))
-            } else {
-                propagationTargets = propagationTargets.concat(this.config.proxyConnectionServer!.getSubscribers())
-            }
+            const proxyTargets = (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST)
+                ? this.config.proxyConnectionServer.getPeerKeysForUserId(GroupKeyRequest.fromBinary(msg.content).recipient)
+                : this.config.proxyConnectionServer.getSubscribers()
+            propagationTargets = propagationTargets.concat(proxyTargets)
         }
 
         propagationTargets = propagationTargets.filter((target) => !this.config.inspector.isInspected(target as PeerIDKey))
         propagationTargets = propagationTargets.concat(this.config.temporaryConnectionServer.getPeers().getStringIds())
         return propagationTargets
-    }
-
-    private markAndCheckDuplicate(currentMessageRef: MessageRef, previousMessageRef?: MessageRef): boolean {
-        const previousNumberPair = previousMessageRef ?
-            new NumberPair(Number(previousMessageRef!.timestamp), previousMessageRef!.sequenceNumber)
-            : null
-        const currentNumberPair = new NumberPair(Number(currentMessageRef.timestamp), currentMessageRef.sequenceNumber)
-        if (!this.duplicateDetectors.has(currentMessageRef.messageChainId)) {
-            this.duplicateDetectors.set(currentMessageRef.messageChainId, new DuplicateMessageDetector(10000))
-        }
-        return this.duplicateDetectors.get(currentMessageRef.messageChainId)!.markAndCheck(previousNumberPair, currentNumberPair)
     }
 
     getOwnStringId(): PeerIDKey {
