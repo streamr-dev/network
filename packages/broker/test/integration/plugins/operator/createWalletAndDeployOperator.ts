@@ -1,4 +1,3 @@
-import { Chain } from "@streamr/config"
 import { Wallet } from "ethers"
 import { Provider } from "@ethersproject/providers"
 
@@ -8,9 +7,12 @@ import { generateWalletWithGasAndTokens } from "./smartContractUtils"
 import { toEthereumAddress } from "@streamr/utils"
 import { deployOperatorContract } from "./deployOperatorContract"
 
-export async function createWalletAndDeployOperator(provider: Provider, config: Chain, theGraphUrl: string, 
-    adminKey?: string): 
-    Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig }> {
+export async function createWalletAndDeployOperator(
+    provider: Provider, 
+    // eslint-disable-next-line max-len
+    config: { contracts: { DATA?: string, LINK?: string, OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }, theGraphUrl: string, 
+    adminKey?: string
+): Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig }> {
     const operatorWallet = await generateWalletWithGasAndTokens(provider, config, adminKey)
 
     const operatorContract = await deployOperatorContract(config, operatorWallet)

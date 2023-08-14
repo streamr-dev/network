@@ -1,5 +1,5 @@
 import { Provider } from "@ethersproject/providers"
-import { Chains } from "@streamr/config"
+import { config as CHAIN_CONFIG } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
 import { Logger, waitForCondition } from '@streamr/utils'
@@ -16,7 +16,7 @@ import { getProvider } from "./smartContractUtils"
 import { createClient } from "../../../utils"
 import { createWalletAndDeployOperator } from "./createWalletAndDeployOperator"
 
-const config = Chains.load()["dev1"]
+const config = CHAIN_CONFIG["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
