@@ -68,7 +68,7 @@ describe("MaintainTopologyHelper", () => {
 
         afterEach(async () => {
             topologyHelper.stop()
-            await operatorContract.provider.removeAllListeners()
+            operatorContract.provider.removeAllListeners()
         })
 
         it("client emits events when sponsorships are staked", async () => {
@@ -155,7 +155,7 @@ describe("MaintainTopologyHelper", () => {
 
         afterEach(async () => {
             operatorClient.stop()
-            await operatorContract.provider.removeAllListeners()
+            operatorContract.provider.removeAllListeners()
         })
 
         it("edge cases, 2 sponsorships for the same stream, join only fired once", async () => {
