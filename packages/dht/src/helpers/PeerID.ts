@@ -40,6 +40,10 @@ export class PeerID {
         return new PeerID({ value })
     }
 
+    static fromKey(value: PeerIDKey): PeerID {
+        return new PeerID({ value: Buffer.from(value, 'hex') })
+    }
+
     static fromString(stringValue: string): PeerID {
         return new PeerID({ stringValue })
     }

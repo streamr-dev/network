@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/parameter-properties */
-
-import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor, PeerDescriptor } from '@streamr/dht'
+import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor } from '@streamr/dht'
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
 import { MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -11,16 +9,19 @@ interface ReadynessEvents {
 }
 
 class ReadynessListener {
-    private emitter = new EventEmitter<ReadynessEvents>()
 
-    constructor(private networkStack: NetworkStack,
-        private dhtNode: DhtNode) {
+    private readonly emitter = new EventEmitter<ReadynessEvents>()
+    private readonly networkStack: NetworkStack
+    private readonly dhtNode: DhtNode
 
-        networkStack.on('stopped', this.onStopped)
-        dhtNode.on('connected', this.onConnected)
+    constructor(networkStack: NetworkStack, dhtNode: DhtNode) {
+        this.networkStack = networkStack
+        this.dhtNode = dhtNode
+        this.networkStack.on('stopped', this.onStopped)
+        this.dhtNode.on('connected', this.onConnected)
     }
 
-    private onConnected = (_peerDescriptor: PeerDescriptor) => {
+    private onConnected = () => {
         this.networkStack.off('stopped', this.onStopped)
         this.dhtNode.off('connected', this.onConnected)
         this.emitter.emit('done')
@@ -37,7 +38,6 @@ class ReadynessListener {
             return
         } else {
             await waitForEvent3<ReadynessEvents>(this.emitter, 'done', timeout)
-
         }
     }
 }
@@ -65,17 +65,17 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     constructor(options: NetworkOptions) {
         super()
         this.options = options
-        this.metricsContext = options.metricsContext || new MetricsContext()
+        this.metricsContext = options.metricsContext ?? new MetricsContext()
         this.layer0DhtNode = new DhtNode({
             ...options.layer0,
             metricsContext: this.metricsContext
         })
         this.streamrNode = new StreamrNode({
             ...options.networkNode,
-            nodeName: options.networkNode.nodeName || options.layer0.nodeName,
+            nodeName: options.networkNode.nodeName ?? options.layer0.nodeName,
             metricsContext: this.metricsContext
         })
-        this.firstConnectionTimeout = options.networkNode.firstConnectionTimeout || 5000
+        this.firstConnectionTimeout = options.networkNode.firstConnectionTimeout ?? 5000
     }
 
     async start(doJoin = true): Promise<void> {

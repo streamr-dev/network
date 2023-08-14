@@ -45,7 +45,7 @@ export { NetworkNodeStub } from './NetworkNodeFacade'
 export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
 
-export type { StreamID, StreamPartID, TrackerRegistryRecord } from '@streamr/protocol'
+export type { StreamID, StreamPartID } from '@streamr/protocol'
 export { ProxyDirection } from '@streamr/trackerless-network'
 export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
 

@@ -44,7 +44,7 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
             const response: NeighborUpdate = {
                 senderId: this.config.ownStringId,
                 randomGraphId: this.config.randomGraphId,
-                neighborDescriptors: this.config.targetNeighbors.values().map((neighbor) => neighbor.getPeerDescriptor()),
+                neighborDescriptors: this.config.targetNeighbors.getPeers().map((neighbor) => neighbor.getPeerDescriptor()),
                 removeMe: false
             }
             return response
@@ -52,7 +52,7 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
             const response: NeighborUpdate = {
                 senderId: this.config.ownStringId,
                 randomGraphId: this.config.randomGraphId,
-                neighborDescriptors: this.config.targetNeighbors.values().map((neighbor) => neighbor.getPeerDescriptor()),
+                neighborDescriptors: this.config.targetNeighbors.getPeers().map((neighbor) => neighbor.getPeerDescriptor()),
                 removeMe: true
             }
             return response
