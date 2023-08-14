@@ -83,58 +83,12 @@ export class MaintainOperatorValueHelper {
         return this.getUnwithdrawnEarningsOf(this.config.operatorContractAddress)
     }
 
-    async withdrawEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
+    async withdrawMyEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
         await (await this.operator.withdrawEarningsFromSponsorships(sponsorshipAddresses)).wait()
     }
 
-    /**  TODO: remove. Logic should be in the service side.
-     * Checks if the Operator contract has too much outstanding earnings in Sponsorships.
-     * Too much unwithdrawn earnings means if the operator doesn't withdraw, someone else can do it and get rewarded.
-     * @dev ethers5 uses BigNumber, but once it's upgrated to ethers6, it will be changed to BigInt (see ETH-536)
-     * @param withdrawLimitFraction Fraction of the pool value that triggers the withdraw
-     * @param operatorContractAddress default to "my" Operator contract
-     */
-    async checkAndWithdrawEarningsFromSponsorships(
-        withdrawLimitFraction: bigint,
-        operatorContractAddress?: EthereumAddress,
-    ): Promise<void> {
-        const operator = operatorContractAddress
-            ? new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
-            : this.operator
-        const minSponsorshipEarningsWei = this.config.minSponsorshipEarnings
-            ? BigNumber.from(this.config.minSponsorshipEarnings)
-            : BigNumber.from(0)
-        const { sponsorshipAddresses, earnings } = await operator.getEarningsFromSponsorships()
-
-        const sponsorships: { address: string, earnings: BigNumber }[] = []
-        for (let i = 0; i < sponsorshipAddresses.length; i++) {
-            // skip sponsorships with too low earnings
-            if (earnings[i] < minSponsorshipEarningsWei) {
-                continue
-            }
-            const sponsorship = {
-                address: sponsorshipAddresses[i],
-                earnings: earnings[i],
-            }
-            sponsorships.push(sponsorship)
-        }
-
-        // sort sponsorships by earnings in descending order and pick the most valuable ones
-        const sortedSponsorships = sponsorships.sort((a: any, b: any) => b.earnings - a.earnings)
-        const neededSponsorships = sortedSponsorships.slice(0, this.config.maxSponsorshipsCount)
-
-        let sumEarningsDataWei = BigInt(0)
-        for (const sponsorship of neededSponsorships) {
-            sumEarningsDataWei += sponsorship.earnings.toBigInt()
-        }
-
-        const approxPoolValueBeforeWithdraw = (await operator.totalValueInSponsorshipsWei()).toBigInt()
-        const withdrawLimitDataWei = approxPoolValueBeforeWithdraw * withdrawLimitFraction / ONE_ETHER
-
-        logger.info(`Withdraw earnings from ${neededSponsorships.length} sponsorships`, { sumEarningsDataWei, withdrawLimitDataWei })
-        if (sumEarningsDataWei > withdrawLimitDataWei) {
-            await (await operator.withdrawEarningsFromSponsorships(neededSponsorships.map((sponsorship) => sponsorship.address))).wait()
-        }
+    async triggerWithdraw(targetOperatorAddress: EthereumAddress, sponsorshipAddresses: EthereumAddress[]): Promise<void> {
+        await (await this.operator.triggerAnotherOperatorWithdraw(targetOperatorAddress, sponsorshipAddresses)).wait()
     }
 
     private async getOperatorAddresses(requiredBlockNumber: number, queryFilter: string): Promise<EthereumAddress[]> {

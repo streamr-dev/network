@@ -105,6 +105,8 @@ describe("MaintainOperatorValueService", () => {
         // }, 1000)
 
         const service = new MaintainOperatorValueService(operatorConfig, 0.5)
+        // 1000 = check every second
+        const service = new MaintainOperatorValueService(operatorConfig, 0.5, 1000)
 
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
         const allowedDifference = poolValueBeforeWithdraw.div("10").toBigInt()
