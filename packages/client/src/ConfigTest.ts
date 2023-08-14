@@ -1,19 +1,20 @@
 import { toEthereumAddress } from '@streamr/utils'
 import { StreamrClientConfig, NetworkNodeType } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
-import { Chains } from '@streamr/config'
+import { config as CHAIN_CONFIG } from '@streamr/config'
 
-const CHAIN_CONFIG = Chains.load()['dev2']
+const MAIN_CHAIN_CONFIG = CHAIN_CONFIG['dev0']
+const SIDE_CHAIN_CONFIG = CHAIN_CONFIG['dev1']
 
 function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
 }
 
 const sideChainConfig = {
-    name: 'streamr',
-    chainId: 8997,
+    name: SIDE_CHAIN_CONFIG.name,
+    chainId: SIDE_CHAIN_CONFIG.id,
     rpcs: [{
-        url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8546`,
+        url: SIDE_CHAIN_CONFIG.rpcEndpoints[0].url,
         timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
     }]
 }
@@ -37,19 +38,19 @@ export const CONFIG_TEST: StreamrClientConfig = {
         }
     },
     contracts: {
-        streamRegistryChainAddress: CHAIN_CONFIG.contracts.StreamRegistry,
-        streamStorageRegistryChainAddress: CHAIN_CONFIG.contracts.StreamStorageRegistry,
-        storageNodeRegistryChainAddress: CHAIN_CONFIG.contracts.StorageNodeRegistry,
+        streamRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StreamRegistry,
+        streamStorageRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StreamStorageRegistry,
+        storageNodeRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StorageNodeRegistry,
         mainChainRPCs: {
-            name: 'dev_ethereum',
-            chainId: 8995,
+            name: MAIN_CHAIN_CONFIG.name,
+            chainId: MAIN_CHAIN_CONFIG.id,
             rpcs: [{
-                url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8545`,
+                url: MAIN_CHAIN_CONFIG.rpcEndpoints[0].url,
                 timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
             }]
         },
         streamRegistryChainRPCs: sideChainConfig,
-        theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8800/subgraphs/name/streamr-dev/network-contracts`,
+        theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
     },
     encryption: {
         rsaKeyLength: MIN_KEY_LENGTH
