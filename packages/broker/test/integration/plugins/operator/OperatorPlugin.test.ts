@@ -1,5 +1,5 @@
 import { parseEther } from '@ethersproject/units'
-import { Chains } from '@streamr/config'
+import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator } from '@streamr/network-contracts'
 import { fastPrivateKey, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, wait } from '@streamr/utils'
@@ -11,7 +11,7 @@ import { setupOperatorContract } from './setupOperatorContract'
 import { deploySponsorship, generateWalletWithGasAndTokens, getProvider, getTokenContract } from './smartContractUtils'
 import { DEFAULT_MINIMUM_STAKE } from './deploySponsorshipContract'
 
-const chainConfig = Chains.load()["dev1"]
+const chainConfig = CHAIN_CONFIG["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const DEFAULT_SENDER = '0x'
@@ -47,6 +47,7 @@ describe('OperatorPlugin', () => {
         await (await getTokenContract().connect(operatorWallet).approve(sponsorship.address, SPONSORSHIP_AMOUNT)).wait()
         await (await sponsorship.connect(operatorWallet).sponsor(SPONSORSHIP_AMOUNT)).wait()
 
+        // eslint-disable-next-line max-len
         await (await getTokenContract().connect(operatorWallet).transferAndCall(operatorContract.address, DEFAULT_MINIMUM_STAKE, DEFAULT_SENDER)).wait()
         await wait(3000)  // TODO remove wait after we've migrated to the fast chain
         await (await operatorContract.stake(sponsorship.address, DEFAULT_MINIMUM_STAKE)).wait()

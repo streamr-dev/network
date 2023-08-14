@@ -8,7 +8,6 @@ import { Wallet } from 'ethers'
 import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
 import { mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
-import { Chain } from '@streamr/config'
 import { setupOperatorContract } from './setupOperatorContract'
 import { createClient } from '../../../utils'
 
@@ -26,7 +25,7 @@ describe('VoteOnSuspectNodeService', () => {
     let streamId1: string
     let streamId2: string
     let streamrEnvDeployer: StreamrEnvDeployer
-    let chainConfig: Chain
+    let chainConfig: any
 
     const chainURL = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8546`
 
@@ -34,7 +33,7 @@ describe('VoteOnSuspectNodeService', () => {
         streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, chainURL)
         await streamrEnvDeployer.deployEvironment()
         const { contracts } = streamrEnvDeployer
-        chainConfig = { contracts: streamrEnvDeployer.addresses } as unknown as Chain
+        chainConfig = { contracts: streamrEnvDeployer.addresses } as any
 
         provider = new JsonRpcProvider(chainURL)
         logger.trace('Connected', { networkInfo: await provider.getNetwork() })

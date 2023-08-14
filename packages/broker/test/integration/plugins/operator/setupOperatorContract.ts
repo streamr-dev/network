@@ -1,4 +1,3 @@
-import { Chain } from "@streamr/config"
 import { Wallet } from "ethers"
 import { Provider } from "@ethersproject/providers"
 
@@ -11,7 +10,8 @@ import { deployOperatorContract } from "./deployOperatorContract"
 export interface SetupOperatorOpts {
     nodeAddresses?: EthereumAddress[]
     provider: Provider
-    chainConfig: Chain
+    // eslint-disable-next-line max-len
+    chainConfig: { contracts: { DATA?: string, LINK?: string, OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
     theGraphUrl: string
     adminKey?: string
 }
