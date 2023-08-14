@@ -138,7 +138,7 @@ const buildQuery = (
             $canGrant: Boolean
             $id_gt: String
         ) {
-            permissions (
+            streamPermissions (
                 first: ${pageSize},
                 orderBy: "stream__${orderBy.field}",
                 orderDirection: "${orderBy.direction}", 

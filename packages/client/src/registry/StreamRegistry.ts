@@ -316,7 +316,7 @@ export class StreamRegistry {
     ): GraphQLQuery {
         const query = `
         {
-            permissions (
+            streamPermissions (
                 first: ${pageSize}
                 orderBy: "id"
                 where: {
