@@ -192,7 +192,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         if (isOwnPeerId && this.ongoingSessions.has(serviceId)) {
             this.ongoingSessions.get(serviceId)!
                 .doReportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
-        } else if (!isOwnPeerId) {
+        } else {
             const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.sessionTransport, { rpcRequestTimeout: 15000 })
             const remoteSession = new RemoteRecursiveFindSession(
                 this.ownPeerDescriptor,

@@ -8,8 +8,6 @@ import { Propagation } from './propagation/Propagation'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { MarkOptional } from 'ts-essentials'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
-import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { StreamMessageType } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 
@@ -49,10 +47,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
             const proxyConnection = proxyConnectionServer?.getConnection(neighborId as PeerIDKey)
             if (remote) {
                 await remote.sendData(config.ownPeerDescriptor, msg)
-            } else if (proxyConnection && (proxyConnection.direction === ProxyDirection.SUBSCRIBE
-                || msg.messageType === StreamMessageType.GROUP_KEY_REQUEST
-                || msg.messageType === StreamMessageType.GROUP_KEY_RESPONSE)
-            ) {
+            } else if (proxyConnection) {
                 await proxyConnection.remote.sendData(config.ownPeerDescriptor, msg)
             } else {
                 throw new Error('Propagation target not found')

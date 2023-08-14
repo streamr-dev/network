@@ -6,11 +6,12 @@ export const markAndCheckDuplicate = (
     currentMessageRef: MessageRef, 
     previousMessageRef?: MessageRef
 ): boolean => {
+    const detectorKey = `${currentMessageRef.publisherId}-${currentMessageRef.messageChainId}`
     const previousNumberPair = previousMessageRef ?
         new NumberPair(Number(previousMessageRef!.timestamp), previousMessageRef!.sequenceNumber) : null
     const currentNumberPair = new NumberPair(Number(currentMessageRef.timestamp), currentMessageRef.sequenceNumber)
-    if (!duplicateDetectors.has(currentMessageRef.messageChainId)) {
-        duplicateDetectors.set(currentMessageRef.messageChainId, new DuplicateMessageDetector())
+    if (!duplicateDetectors.has(detectorKey)) {
+        duplicateDetectors.set(detectorKey, new DuplicateMessageDetector())
     }
-    return duplicateDetectors.get(currentMessageRef.messageChainId)!.markAndCheck(previousNumberPair, currentNumberPair)
+    return duplicateDetectors.get(detectorKey)!.markAndCheck(previousNumberPair, currentNumberPair)
 }

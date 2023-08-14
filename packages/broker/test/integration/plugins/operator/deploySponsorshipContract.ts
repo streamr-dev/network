@@ -1,5 +1,4 @@
 // TODO: copy-paste from network-contracts, import from there?
-import { Chain } from "@streamr/config"
 import { utils, Wallet, Contract, ContractReceipt } from "ethers"
 
 import { sponsorshipABI, sponsorshipFactoryABI } from "@streamr/network-contracts"
@@ -8,7 +7,8 @@ import type { Sponsorship, SponsorshipFactory } from "@streamr/network-contracts
 const { parseEther } = utils
 
 export async function deploySponsorship(
-    chainConfig: Chain,
+    // eslint-disable-next-line max-len
+    chainConfig: { contracts: { SponsorshipFactory: string, SponsorshipStakeWeightedAllocationPolicy: string, SponsorshipDefaultLeavePolicy: string, SponsorshipVoteKickPolicy: string } },
     deployer: Wallet, {
         streamId = `Stream-${Date.now()}`,
         metadata = "{}",
