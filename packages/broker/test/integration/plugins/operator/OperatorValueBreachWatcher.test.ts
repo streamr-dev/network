@@ -86,7 +86,7 @@ describe("OperatorValueBreachWatcher", () => {
 
         token = new Contract(config.contracts.DATA, tokenABI) as unknown as TestToken
         // token = getTokenContract()
-    }, 30 * 60 * 1000)
+    }, 60 * 1000)
 
     it("withdraws the other Operator's earnings when they are above the penalty limit", async () => {
         const { operatorWallet, operatorContract, operatorConfig } = await deployNewOperator()
@@ -118,5 +118,5 @@ describe("OperatorValueBreachWatcher", () => {
 
         await operatorValueBreachWatcher.stop()
 
-    }, 10 * 60 * 1000)
+    }, 60 * 1000)
 })

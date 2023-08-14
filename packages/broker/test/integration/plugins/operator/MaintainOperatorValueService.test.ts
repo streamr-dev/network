@@ -85,7 +85,7 @@ describe("MaintainOperatorValueService", () => {
 
         token = new Contract(config.contracts.DATA, tokenABI) as unknown as TestToken
         // token = getTokenContract()
-    })
+    }, 60 * 1000)
 
     it("withdraws sponsorship earnings when earnings are above the safe threshold", async () => {
         const { operatorWallet, operatorContract, operatorConfig } = await deployNewOperator()
@@ -115,6 +115,6 @@ describe("MaintainOperatorValueService", () => {
         expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
 
         await service.stop()
-    })
+    }, 60 * 1000)
 })
 
