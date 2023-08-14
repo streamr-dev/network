@@ -17,7 +17,7 @@ import { createClient } from "../../../utils"
 import { setupOperatorContract } from "./setupOperatorContract"
 
 const chainConfig = CHAIN_CONFIG["dev1"]
-const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
+const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
 
