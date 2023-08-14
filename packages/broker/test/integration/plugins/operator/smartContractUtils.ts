@@ -21,12 +21,14 @@ export function getTokenContract(): TestToken {
 
 export async function generateWalletWithGasAndTokens(
     provider: Provider,
-    config?: { contracts: { DATA: string } }, 
+    config?: { contracts: { DATA: string } },
     adminKey?: string
 ): Promise<Wallet> {
     const newWallet = new Wallet(fastPrivateKey())
     const adminWallet = new Wallet(adminKey ?? ADMIN_WALLET_PK).connect(provider)
-    const token = new Contract(config.contracts.DATA!, tokenABI, adminWallet) as unknown as TestToken 
+    const token = (config !== undefined) 
+        ? new Contract(config.contracts.DATA!, tokenABI, adminWallet) as unknown as TestToken
+        : getTokenContract()
     await (await token.mint(newWallet.address, parseEther("1000000"), {
         nonce: await adminWallet.getTransactionCount()
     })).wait()
