@@ -1,16 +1,20 @@
 import { toEthereumAddress } from '@streamr/utils'
 import { StreamrClientConfig } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
+import { config as CHAIN_CONFIG } from '@streamr/config'
+
+const MAIN_CHAIN_CONFIG = CHAIN_CONFIG['dev0']
+const SIDE_CHAIN_CONFIG = CHAIN_CONFIG['dev1']
 
 function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
 }
 
 const sideChainConfig = {
-    name: 'streamr',
-    chainId: 8997,
+    name: SIDE_CHAIN_CONFIG.name,
+    chainId: SIDE_CHAIN_CONFIG.id,
     rpcs: [{
-        url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8546`,
+        url: SIDE_CHAIN_CONFIG.rpcEndpoints[0].url,
         timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
     }]
 }
@@ -39,14 +43,14 @@ export const CONFIG_TEST: StreamrClientConfig = {
         iceServers: []
     },
     contracts: {
-        streamRegistryChainAddress: '0x6cCdd5d866ea766f6DF5965aA98DeCCD629ff222',
-        streamStorageRegistryChainAddress: '0xd04af489677001444280366Dd0885B03dAaDe71D',
-        storageNodeRegistryChainAddress: '0x231b810D98702782963472e1D60a25496999E75D',    
+        streamRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StreamRegistry,
+        streamStorageRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StreamStorageRegistry,
+        storageNodeRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StorageNodeRegistry,
         mainChainRPCs: {
-            name: 'dev_ethereum',
-            chainId: 8995,
+            name: MAIN_CHAIN_CONFIG.name,
+            chainId: MAIN_CHAIN_CONFIG.id,
             rpcs: [{
-                url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8545`,
+                url: MAIN_CHAIN_CONFIG.rpcEndpoints[0].url,
                 timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
             }]
         },
