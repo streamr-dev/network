@@ -45,7 +45,7 @@ import { waitForStorage } from './subscribe/waitForStorage'
 import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
-import { createTheGraphClient } from './utils/utils'
+import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -625,6 +625,10 @@ export class StreamrClient {
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
     })
+
+    async getPeerDescriptor(): Promise<NetworkPeerDescriptor> {
+        return convertPeerDescriptorToNetworkPeerDescriptor((await this.node.getNode()).getPeerDescriptor())
+    }
 
     /**
      * Get diagnostic info about the underlying network. Useful for debugging issues.

@@ -11,4 +11,12 @@ describe('PeerID', () => {
         expect(id1.toString()).toEqual(id2.toString())
         expect(stringId).toEqual(id2.toString())
     })
+
+    it('peerKey', () => {
+        const peerIdFromString = PeerID.fromString('peerId')
+        const peerKey = peerIdFromString.toKey()
+        const peerIdFromKey = PeerID.fromKey(peerKey)
+        expect(peerIdFromString.equals(peerIdFromKey)).toEqual(true)        
+    })
+
 })

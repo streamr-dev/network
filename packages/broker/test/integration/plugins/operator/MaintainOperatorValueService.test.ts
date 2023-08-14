@@ -1,5 +1,5 @@
 import { Provider } from "@ethersproject/providers"
-import { Chains } from "@streamr/config"
+import { config as CHAIN_CONFIG } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
 import { Logger, waitForCondition } from '@streamr/utils'
@@ -14,9 +14,9 @@ import { MaintainOperatorValueService } from "../../../../src/plugins/operator/M
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 import { getProvider } from "./smartContractUtils"
 import { createClient } from "../../../utils"
-import { createWalletAndDeployOperator } from "./createWalletAndDeployOperator"
+import { setupOperatorContract } from "./setupOperatorContract"
 
-const config = Chains.load()["dev1"]
+const chainConfig = CHAIN_CONFIG["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
@@ -58,17 +58,19 @@ describe.skip("MaintainOperatorValueService", () => {
         provider = getProvider()
         logger.debug("Connected to: ", await provider.getNetwork())
 
-        token = new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
+        token = new Contract(chainConfig.contracts.LINK, tokenABI) as unknown as TestToken
 
-        ({ operatorWallet, operatorContract } = await createWalletAndDeployOperator(
-            provider, config, theGraphUrl
-        ))
+        ({ operatorWallet, operatorContract } = await setupOperatorContract({
+            provider,
+            chainConfig,
+            theGraphUrl
+        }))
 
         await (
             await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther(`${STAKE_AMOUNT * 2}`), operatorWallet.address)
         ).wait()
         for (const streamId of [streamId1, streamId2]) {
-            const sponsorship = await deploySponsorship(config, operatorWallet, { streamId })
+            const sponsorship = await deploySponsorship(chainConfig, operatorWallet, { streamId })
             await (await token.connect(operatorWallet).transferAndCall(sponsorship.address, parseEther(`${SPONSOR_AMOUNT}`), "0x")).wait()
             await (await operatorContract.stake(sponsorship.address, parseEther(`${STAKE_AMOUNT}`))).wait()
         }

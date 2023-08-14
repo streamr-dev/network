@@ -103,7 +103,7 @@ export class PeerList extends EventEmitter<Events> {
         this.peers.clear()
     }
 
-    values(): RemoteRandomGraphNode[] {
+    getPeers(): RemoteRandomGraphNode[] {
         return Array.from(this.peers.values())
     }
 

@@ -1,5 +1,4 @@
 // TODO: copy-paste from network-contracts, import from there?
-import { Chain } from "@streamr/config"
 import { Wallet, ContractReceipt, Contract, utils } from "ethers"
 import { AddressZero } from "@ethersproject/constants"
 
@@ -13,11 +12,16 @@ const { parseEther } = utils
  * @returns Operator
  */
 export async function deployOperatorContract(
-    chainConfig: Chain, deployer: Wallet, {
+    // eslint-disable-next-line max-len
+    chainConfig: { contracts: { OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }, 
+    deployer: Wallet,
+    {
         minOperatorStakePercent = 0,
         operatorSharePercent = 0,
         operatorMetadata = "{}",
-    } = {}, poolTokenName = `Pool-${Date.now()}`): Promise<Operator> {
+    } = {},
+    poolTokenName = `Pool-${Date.now()}`
+): Promise<Operator> {
 
     const abi = operatorFactoryABI
     const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, abi, deployer) as unknown as OperatorFactory

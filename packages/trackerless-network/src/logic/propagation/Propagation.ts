@@ -6,7 +6,6 @@ type SendToNeighborFn = (neighborId: string, msg: StreamMessage) => Promise<void
 interface ConstructorOptions {
     sendToNeighbor: SendToNeighborFn
     minPropagationTargets: number
-    randomGraphId: string
     ttl?: number
     maxMessages?: number
 }
@@ -26,17 +25,14 @@ export class Propagation {
     private readonly sendToNeighbor: SendToNeighborFn
     private readonly minPropagationTargets: number
     private readonly activeTaskStore: PropagationTaskStore
-    private readonly randomGraphId: string
 
     constructor({
         sendToNeighbor,
         minPropagationTargets,
-        randomGraphId,
         ttl = DEFAULT_TTL,
         maxMessages = DEFAULT_MAX_MESSAGES
     }: ConstructorOptions) {
         this.sendToNeighbor = sendToNeighbor
-        this.randomGraphId = randomGraphId
         this.minPropagationTargets = minPropagationTargets
         this.activeTaskStore = new PropagationTaskStore(ttl, maxMessages)
     }
