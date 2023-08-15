@@ -1,6 +1,5 @@
 import { JsonRpcProvider, Provider } from "@ethersproject/providers"
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
-import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
 import { Logger, waitForCondition } from '@streamr/utils'
@@ -16,7 +15,9 @@ import { deploySponsorship } from "./deploySponsorshipContract"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 import { createWalletAndDeployOperator } from "./createWalletAndDeployOperator"
 
-const config = Chains.load()["dev1"]
+import { config as configs } from "@streamr/config"
+const config = configs.dev1
+
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)

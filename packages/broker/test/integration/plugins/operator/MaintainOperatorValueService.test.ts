@@ -17,8 +17,6 @@ import { MaintainOperatorValueService } from "../../../../src/plugins/operator/M
 // import { createClient } from "../../../utils"
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 
-import { Chain } from "@streamr/config"
-
 const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
@@ -37,7 +35,7 @@ describe("MaintainOperatorValueService", () => {
     let provider: Provider
     let token: TestToken
     let streamId: string
-    let config: Chain
+    let config: { contracts: Record<string, string> }
 
     const deployNewOperator = async () => {
         const operatorWallet = await generateWalletWithGasAndTokens(provider, config)
@@ -59,7 +57,7 @@ describe("MaintainOperatorValueService", () => {
         const streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_WALLET_PK, `http://${STREAMR_DOCKER_DEV_HOST}:8547`)
         await streamrEnvDeployer.deployEnvironment()
         const { contracts } = streamrEnvDeployer
-        config = { contracts: streamrEnvDeployer.addresses } as unknown as Chain
+        config = { contracts: streamrEnvDeployer.addresses }
 
         logger.debug("Creating stream for the test")
         // const client = createClient(ADMIN_WALLET_PK, {

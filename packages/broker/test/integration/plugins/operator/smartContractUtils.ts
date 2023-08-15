@@ -6,21 +6,25 @@ import { fastPrivateKey } from '@streamr/test-utils'
 import { parseEther } from '@ethersproject/units'
 import { deploySponsorship as _deploySponsorship } from './deploySponsorshipContract'
 import { deployOperatorContract as _deployOperatorContract } from './deployOperatorContract'
-import { Chain, Chains } from '@streamr/config'
 import { wait } from '@streamr/utils'
 
 export const ADMIN_WALLET_PK = '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
-const CONFIG = Chains.load()["dev1"]
+import { config as configs } from "@streamr/config"
+const config = configs.dev1
 
 export function getProvider(): Provider {
-    return new JsonRpcProvider(CONFIG.rpcEndpoints[0].url)
+    return new JsonRpcProvider(config.rpcEndpoints[0].url)
 }
 
 export function getTokenContract(): TestToken {
-    return new Contract(CONFIG.contracts.LINK, tokenABI) as unknown as TestToken
+    return new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
 }
 
-export async function generateWalletWithGasAndTokens(provider: Provider, config?: Chain, adminKey?: string): Promise<Wallet> {
+export async function generateWalletWithGasAndTokens(
+    provider: Provider,
+    config?: { contracts: Record<string, string> },
+    adminKey?: string
+): Promise<Wallet> {
     const newWallet = new Wallet(fastPrivateKey())
     const adminWallet = new Wallet(adminKey ?? ADMIN_WALLET_PK).connect(provider)
 
@@ -52,9 +56,9 @@ export async function generateWalletWithGasAndTokens(provider: Provider, config?
 }
 
 export async function deploySponsorship(streamId: string, operatorWallet: Wallet): Promise<Sponsorship> {
-    return await _deploySponsorship(CONFIG, operatorWallet, { streamId })
+    return await _deploySponsorship(config, operatorWallet, { streamId })
 }
 
 export async function deployOperatorContract(operatorWallet: Wallet): Promise<Operator> {
-    return await _deployOperatorContract(CONFIG, operatorWallet)
+    return await _deployOperatorContract(config, operatorWallet)
 }

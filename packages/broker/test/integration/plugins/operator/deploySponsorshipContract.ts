@@ -1,6 +1,5 @@
 import { utils, Wallet, Contract, ContractReceipt } from "ethers"
 
-import { Chain } from "@streamr/config"
 import { Logger } from "@streamr/utils"
 
 import { sponsorshipABI, sponsorshipFactoryABI, streamRegistryABI } from "@streamr/network-contracts"
@@ -11,7 +10,7 @@ const { parseEther } = utils
 const logger = new Logger(module)
 
 export async function deploySponsorship(
-    chainConfig: Chain,
+    chainConfig: { contracts: Record<string, string> },
     deployer: Wallet, {
         streamId = `Stream-${Date.now()}`,
         metadata = "{}",
