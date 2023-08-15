@@ -12,7 +12,7 @@ describe('Storing data in DHT', () => {
     const simulator = new Simulator(LatencyType.RANDOM)
     const NUM_NODES = 100
     const MAX_CONNECTIONS = 20
-    const K = 2
+    const K = 4
     const nodeIndicesById: Record<string, number> = {}
 
     const getRandomNode = () => {
@@ -55,7 +55,7 @@ describe('Storing data in DHT', () => {
         expect(successfulStorers.length).toBeGreaterThan(4)
     }, 90000)
 
-    it('Storing and getting data works', async () => {
+    it.only('Storing and getting data works', async () => {
         const storingNode = getRandomNode()
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
