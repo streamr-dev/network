@@ -12,7 +12,7 @@ describe('Storing data in DHT', () => {
     const simulator = new Simulator(LatencyType.RANDOM)
     const NUM_NODES = 100
     const MAX_CONNECTIONS = 20
-    const K = 2
+    const K = 4
     const nodeIndicesById: Record<string, number> = {}
 
     const getRandomNode = () => {

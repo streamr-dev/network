@@ -269,7 +269,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             ownPeerId: this.ownPeerId!,
             addContact: this.addNewContact.bind(this),
             isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
-            getClosestPeerDescriptors: this.getClosestPeerDescriptors.bind(this),
             localDataStore: this.localDataStore
         })
         this.dataStore = new DataStore({
