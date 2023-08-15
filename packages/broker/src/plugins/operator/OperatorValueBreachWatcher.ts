@@ -8,8 +8,9 @@ const CHECK_VALUE_INTERVAL = 1000 * 60 * 60 // 1 hour
 
 export class OperatorValueBreachWatcher {
     private penaltyLimitFractionCached?: bigint
-    private readonly helper: MaintainOperatorValueHelper
     private readonly abortController: AbortController
+    
+    readonly helper: MaintainOperatorValueHelper
 
     constructor(config: OperatorServiceConfig) {
         this.helper = new MaintainOperatorValueHelper(config)
@@ -40,11 +41,6 @@ export class OperatorValueBreachWatcher {
         return this.penaltyLimitFractionCached
     }
 
-    // TODO: remove operator contract address param from start() AND:
-    //      deploy new env (using streamrEnvDeployer) with 2 operator contracts
-    //      if should pick the other one, not itself
-    //      test against the "other" one
-    //      develop agains the fast chain
     async start(): Promise<void> {
         await scheduleAtInterval(
             () => this.checkRandomUnwithdrawnEarnings().catch((err) => {
