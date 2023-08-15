@@ -1,5 +1,5 @@
 import { JsonRpcProvider, Provider } from "@ethersproject/providers"
-import { Chains } from "@streamr/config"
+import { config } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
 import { Logger, TheGraphClient, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
@@ -13,18 +13,18 @@ import { streamRegistryABI } from "@streamr/network-contracts"
 import { Contract } from "@ethersproject/contracts"
 
 import { deploySponsorship } from "./deploySponsorshipContract"
-import { createWalletAndDeployOperator } from "./createWalletAndDeployOperator"
+import { setupOperatorContract } from "./setupOperatorContract"
 import { InspectRandomNodeHelper } from "../../../../src/plugins/operator/InspectRandomNodeHelper"
 
-const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
+const chainConfig = config.dev1
 
 jest.setTimeout(600 * 1000)
 
 describe("InspectRandomNodeHelper", () => {
-    const chainURL = config.rpcEndpoints[0].url
+    const chainURL = chainConfig.rpcEndpoints[0]
 
     let provider: Provider
     let token: TestToken
@@ -40,13 +40,14 @@ describe("InspectRandomNodeHelper", () => {
         const streamCreatorKey = "0xfe1d528b7e204a5bdfb7668a1ed3adfee45b4b96960a175c9ef0ad16dd58d728"
         adminWallet = new Wallet(streamCreatorKey, provider)
 
-        token = new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
+        token = new Contract(chainConfig.contracts.LINK, tokenABI) as unknown as TestToken
+
         const timeString = (new Date()).getTime().toString()
-        const streamPath1 = "/operatorclienttest-1-" + timeString
-        const streamPath2 = "/operatorclienttest-2-" + timeString
+        const streamPath1 = '/inspectRandomNodeService-1-' + timeString
+        const streamPath2 = '/inspectRandomNodeService-2-' + timeString
         streamId1 = adminWallet.address.toLowerCase() + streamPath1
         streamId2 = adminWallet.address.toLowerCase() + streamPath2
-        const streamRegistry = new Contract(config.contracts.StreamRegistry, streamRegistryABI, adminWallet) as unknown as StreamRegistry
+        const streamRegistry = new Contract(chainConfig.contracts.StreamRegistry, streamRegistryABI, adminWallet) as unknown as StreamRegistry
         logger.debug(`creating stream with streamId1 ${streamId1}`)
         await (await streamRegistry.createStream(streamPath1, "metadata")).wait()
         logger.debug(`creating stream with streamId2 ${streamId2}`)
@@ -61,19 +62,21 @@ describe("InspectRandomNodeHelper", () => {
 
     describe("InspectRandomNodeHelper methods", () => {
         it("getSponsorshipsOfOperator, getOperatorsInSponsorship", async () => {
-            const { operatorWallet, operatorContract, operatorConfig } = await createWalletAndDeployOperator(
-                provider, config, theGraphUrl
+            const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract(
+                { chainConfig, provider, theGraphUrl },
             )
+            logger.debug("Deployed OperatorContract at: " + operatorContract.address)
             const inspectRandomNodeHelper = new InspectRandomNodeHelper(operatorConfig)
             
             logger.debug("Added OperatorClient listeners, deploying Sponsorship contract...")
-            const sponsorship = await deploySponsorship(config, operatorWallet, {
+            const sponsorship = await deploySponsorship(chainConfig, operatorWallet, {
                 streamId: streamId1 })
-            const sponsorship2 = await deploySponsorship(config, operatorWallet, {
+            const sponsorship2 = await deploySponsorship(chainConfig, operatorWallet, {
                 streamId: streamId2
             })
 
-            logger.debug(`Sponsorship deployed at ${sponsorship.address}, delegating...`)
+            logger.debug(`Sponsorship1 deployed at ${sponsorship.address}`)
+            logger.debug(`Sponsorship2 deployed at ${sponsorship2.address}`)
             await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
 
             logger.debug("Staking to sponsorship...")
@@ -91,17 +94,16 @@ describe("InspectRandomNodeHelper", () => {
                 const res = await inspectRandomNodeHelper.getOperatorsInSponsorship(toEthereumAddress(sponsorship.address), 0)
                 return res.length === 1
             }, 10000, 1000)
-
         })
 
         it("works to flag through the inspectRandomNodeHelper", async () => {
-            const flagger = await createWalletAndDeployOperator(provider, config, theGraphUrl)
+            const flagger = await setupOperatorContract({ chainConfig, provider, theGraphUrl })
             logger.trace('deployed flagger contract ' + flagger.operatorConfig.operatorContractAddress)
-            const target = await createWalletAndDeployOperator(provider, config, theGraphUrl)
+            const target = await setupOperatorContract({ chainConfig, provider, theGraphUrl })
             logger.trace('deployed target contract ' + target.operatorConfig.operatorContractAddress)
 
             logger.trace('deploying sponsorship contract')
-            const sponsorship = await deploySponsorship(config, adminWallet, {
+            const sponsorship = await deploySponsorship(chainConfig, adminWallet, {
                 streamId: streamId1 })
             logger.trace('sponsoring sponsorship contract')
             await (await token.connect(flagger.operatorWallet).approve(sponsorship.address, parseEther('500'))).wait()
@@ -110,10 +112,10 @@ describe("InspectRandomNodeHelper", () => {
             logger.trace('each operator delegates to its operactor contract')
             logger.trace('delegating from flagger: ' + flagger.operatorWallet.address)
             await (await token.connect(flagger.operatorWallet).transferAndCall(flagger.operatorContract.address,
-                parseEther('200'), flagger.operatorWallet.address)).wait()
+                parseEther('200'), flagger.operatorWallet.address)).wait() 
             logger.trace('delegating from target: ' + target.operatorWallet.address)
             await (await token.connect(target.operatorWallet).transferAndCall(target.operatorContract.address,
-                parseEther('200'), target.operatorWallet.address)).wait()
+                parseEther('300'), target.operatorWallet.address)).wait()
         
             await wait(3000) // sometimes these stake fail, possibly when they end up in the same block
             logger.trace('staking to sponsorship contract from flagger and target and voter')
@@ -121,7 +123,7 @@ describe("InspectRandomNodeHelper", () => {
             await (await flagger.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
             await wait(3000)
             logger.trace('staking from target: ' + target.operatorContract.address)
-            await (await target.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
+            await (await target.operatorContract.stake(sponsorship.address, parseEther('250'))).wait()
             await wait(3000)
 
             logger.trace('registering node addresses')

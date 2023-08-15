@@ -38,11 +38,6 @@ export class InspectRandomNodeHelper {
                                 }
                             }
                         }
-                        _meta {
-                            block {
-                            number
-                            }
-                        }
                     }
                     `
             }
@@ -74,11 +69,6 @@ export class InspectRandomNodeHelper {
                                 operator {
                                     id
                                 }
-                            }
-                        }
-                        _meta {
-                            block {
-                            number
                             }
                         }
                     }
