@@ -56,7 +56,7 @@ export interface StrictRandomGraphNodeConfig {
     numOfTargetNeighbors: number
     maxNumberOfContacts: number
     minPropagationTargets: number
-    nodeName: string
+    name: string
     acceptProxyConnections: boolean
     neighborUpdateInterval: number
     proxyConnectionServer?: ProxyStreamConnectionServer
@@ -83,9 +83,9 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             broadcast: (message: StreamMessage, previousPeer?: string) => this.broadcast(message, previousPeer),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
                 const senderId = notice.senderId
-                const contact = this.config.nearbyContactPool.getNeighborWithId(senderId)
-                || this.config.randomContactPool.getNeighborWithId(senderId)
-                || this.config.targetNeighbors.getNeighborWithId(senderId)
+                const contact = this.config.nearbyContactPool.getNeighborById(senderId)
+                || this.config.randomContactPool.getNeighborById(senderId)
+                || this.config.targetNeighbors.getNeighborById(senderId)
                 || this.config.proxyConnectionServer?.getConnection(senderId as PeerIDKey)?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
