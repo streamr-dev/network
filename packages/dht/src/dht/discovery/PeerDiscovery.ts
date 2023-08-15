@@ -4,7 +4,7 @@ import crypto from "crypto"
 import * as Err from '../../helpers/errors'
 import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { Logger, scheduleAtInterval } from '@streamr/utils'
+import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import KBucket from 'k-bucket'
 import { SortedContactList } from '../contact/SortedContactList'
 import { ConnectionManager } from '../../connection/ConnectionManager'
@@ -121,7 +121,7 @@ export class PeerDiscovery {
         } catch (err) {
             logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)
             if (!this.stopped) {
-                setTimeout(() => this.rejoinDht(entryPoint), 5000)
+                setAbortableTimeout(() => this.rejoinDht(entryPoint), 5000, this.abortController.signal)
             }
         } finally {
             this.rejoinOngoing = false
