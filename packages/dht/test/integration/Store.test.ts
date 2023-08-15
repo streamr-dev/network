@@ -55,7 +55,7 @@ describe('Storing data in DHT', () => {
         expect(successfulStorers.length).toBeGreaterThan(4)
     }, 90000)
 
-    it.only('Storing and getting data works', async () => {
+    it('Storing and getting data works', async () => {
         const storingNode = getRandomNode()
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
