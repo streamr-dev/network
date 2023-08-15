@@ -13,7 +13,7 @@ import { createClient, createTestStream } from '../../../utils'
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { setupOperatorContract } from "./setupOperatorContract"
 
-const chainConfig = CHAIN_CONFIG['dev2']
+const chainConfig = CHAIN_CONFIG.dev2
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)

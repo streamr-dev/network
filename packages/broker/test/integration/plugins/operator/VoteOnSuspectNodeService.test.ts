@@ -27,7 +27,7 @@ describe('VoteOnSuspectNodeService', () => {
     let streamrEnvDeployer: StreamrEnvDeployer
     let chainConfig: any
 
-    const chainURL = CHAIN_CONFIG['dev2'].rpcEndpoints[0].url
+    const chainURL = CHAIN_CONFIG.dev2.rpcEndpoints[0].url
 
     beforeAll(async () => {
         streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, chainURL)

@@ -3,7 +3,7 @@ import { StreamrClientConfig, NetworkNodeType } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
-const DOCKER_DEV_CHAIN_CONFIG = CHAIN_CONFIG['dev2']
+const DOCKER_DEV_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
 function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
