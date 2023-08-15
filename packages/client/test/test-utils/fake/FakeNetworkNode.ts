@@ -120,6 +120,11 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
+    async inspect(_node: PeerDescriptor, _streamPartId: StreamPartID): Promise<boolean> {
+        return true
+    }
+
+    // eslint-disable-next-line class-methods-use-this
     async setProxies(
         _streamPartId: StreamPartID,
         _peerDescriptors: PeerDescriptor[],

@@ -564,6 +564,11 @@ export class StreamrClient {
         return this.node.getNode()
     }
 
+    async inspect(node: NetworkPeerDescriptor, streamDefinition: StreamDefinition): Promise<boolean> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        return this.node.inspect(node, streamPartId)
+    }
+
     async setProxies(
         streamDefinition: StreamDefinition,
         proxyNodes: NetworkPeerDescriptor[],

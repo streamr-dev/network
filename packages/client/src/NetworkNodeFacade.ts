@@ -33,6 +33,7 @@ export interface NetworkNodeStub {
     getMetricsContext: () => MetricsContext
     getDiagnosticInfo: () => Record<string, unknown>
     hasStreamPart: (streamPartId: StreamPartID) => boolean
+    inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean>
     /** @internal */
     hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
     /** @internal */
@@ -217,6 +218,14 @@ export class NetworkNodeFacade {
             )
         }
         return this.cachedNode!.publish(streamMessage)
+    }
+
+    async inspect(node: NetworkPeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
+        if (this.isStarting()) {
+            await this.startNodeTask(false)
+        }
+        const peerDescriptor = peerDescriptorTranslator(node)
+        return this.cachedNode!.inspect(peerDescriptor, streamPartId)
     }
 
     async setProxies(
