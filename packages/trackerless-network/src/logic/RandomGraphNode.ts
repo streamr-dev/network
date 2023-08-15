@@ -68,7 +68,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     private stopped = false
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
-    private readonly abortController: AbortController
     private config: StrictRandomGraphNodeConfig
     private readonly server: INetworkRpc
 
@@ -76,7 +75,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         super()
         this.config = config
         this.duplicateDetectors = new Map()
-        this.abortController = new AbortController()
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.randomGraphId,
@@ -228,8 +226,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             return
         }
         this.stopped = true
-
-        this.abortController.abort()
         this.config.proxyConnectionServer?.stop()
         this.config.targetNeighbors.getPeers().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor))
         this.config.rpcCommunicator.stop()
