@@ -23,7 +23,7 @@ describe('Propagation', () => {
         randomGraphNodes = []
         const [entryPoint, node1] = createMockRandomGraphNodeAndDhtNode(entryPointDescriptor, entryPointDescriptor, STREAM_ID, simulator)
         await entryPoint.start()
-        await entryPoint.joinDht(entryPointDescriptor)
+        await entryPoint.joinDht([entryPointDescriptor])
         await node1.start()
         node1.on('message', () => {totalReceived += 1})
         dhtNodes.push(entryPoint)
@@ -42,7 +42,7 @@ describe('Propagation', () => {
             )
             await dht.start()
             await graph.start()
-            await dht.joinDht(entryPointDescriptor).then(() => {
+            await dht.joinDht([entryPointDescriptor]).then(() => {
                 graph.on('message', () => { totalReceived += 1 })
                 dhtNodes.push(dht)
                 randomGraphNodes.push(graph)

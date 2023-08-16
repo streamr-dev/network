@@ -198,13 +198,7 @@ export class StreamEntryPointDiscovery {
             if (this.config.streams.has(streamPartID)) {
                 const stream = this.config.streams.get(streamPartID)
                 const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartID)
-                const sortedEntrypoints = new SortedContactList(PeerID.fromString(streamPartID), 4)
-                sortedEntrypoints.addContacts(
-                    rediscoveredEntrypoints
-                        .filter((entryPoint) => !isSamePeerDescriptor(entryPoint, this.config.ownPeerDescriptor))
-                        .map((entryPoint) => new Contact(entryPoint)))
-                await Promise.allSettled(sortedEntrypoints.getAllContacts()
-                    .map((entryPoint) => stream!.layer1!.joinDht(entryPoint.getPeerDescriptor(), false)))
+                await stream!.layer1!.joinDht(rediscoveredEntrypoints, false)
                 if (stream!.layer1!.getBucketSize() < 4) {
                     throw new Error(`Network split is still possible`)
                 }
