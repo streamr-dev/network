@@ -84,7 +84,7 @@ export interface DhtNodeOptions {
 
 export class DhtNodeConfig {
     serviceId = 'layer0'
-    joinParallelism = 5
+    joinParallelism = 3
     maxNeighborListSize = 200
     numberOfNodesPerKBucket = 8
     joinNoProgressLimit = 4
