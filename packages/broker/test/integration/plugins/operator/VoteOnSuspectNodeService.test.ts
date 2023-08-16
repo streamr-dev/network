@@ -15,7 +15,7 @@ import { setupOperatorContract } from './setupOperatorContract'
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 const TIMEOUT = 1000 * 60 * 10
-const ADMIN_PRIV_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+const ADMIN_PRIV_KEY = CHAIN_CONFIG.dev2.adminPrivateKey
 
 const logger = new Logger(module)
 
