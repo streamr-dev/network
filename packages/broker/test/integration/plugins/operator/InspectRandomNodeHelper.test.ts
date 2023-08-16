@@ -36,7 +36,7 @@ describe("InspectRandomNodeHelper", () => {
 
         adminWallet = new Wallet(STREAM_CREATION_KEY, provider)
 
-        token = new Contract(chainConfig.contracts.LINK, tokenABI) as unknown as TestToken
+        token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
 
         const client = createClient(STREAM_CREATION_KEY)
         streamId1 = (await client.createStream(`/operatorvalueservicetest-1-${Date.now()}`)).id
