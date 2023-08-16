@@ -3,7 +3,7 @@ import { Contract } from "@ethersproject/contracts"
 import { Provider, JsonRpcProvider } from "@ethersproject/providers"
 import { parseEther, formatEther } from "@ethersproject/units"
 
-import { tokenABI, TestToken, Operator, streamRegistryABI, StreamRegistry } from "@streamr/network-contracts"
+import { tokenABI, TestToken, Operator, streamRegistryABI, StreamRegistry, operatorFactoryABI, OperatorFactory } from "@streamr/network-contracts"
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { config } from "@streamr/config"
 
@@ -31,6 +31,7 @@ async function getTotalUnwithdrawnEarnings(operatorContract: Operator): Promise<
 
 describe("OperatorValueBreachWatcher", () => {
     let provider: Provider
+    let adminWallet: Wallet
     let token: TestToken
     let streamId: string
 
@@ -54,7 +55,7 @@ describe("OperatorValueBreachWatcher", () => {
         provider = new JsonRpcProvider(`http://${STREAMR_DOCKER_DEV_HOST}:8547`)
         logger.debug("Connected to: ", await provider.getNetwork())
 
-        const adminWallet = new Wallet(ADMIN_WALLET_PK, provider)
+        adminWallet = new Wallet(ADMIN_WALLET_PK, provider)
         const streamRegistry = new Contract(fastChainConfig.contracts.StreamRegistry, streamRegistryABI, adminWallet) as unknown as StreamRegistry
         logger.debug("Creating stream for the test")
         const createStreamReceipt = await (await streamRegistry.createStream(
@@ -83,9 +84,12 @@ describe("OperatorValueBreachWatcher", () => {
 
         const operatorValueBreachWatcher = new OperatorValueBreachWatcher(operatorConfig)
         const randomOperatorAddress = operatorValueBreachWatcher.helper.getRandomOperator()
+        // check it's a valid operator, deployed by the OperatorFactory
+        const operatorFactory = new Contract(fastChainConfig.contracts.OperatorFactory, operatorFactoryABI, adminWallet) as unknown as OperatorFactory
+        const isDeployedByFactory = await operatorFactory.deploymentTimestamp(randomOperatorAddress)
+        expect(isDeployedByFactory).not.toEqual(0)
         // check it's not my operator
         expect(randomOperatorAddress).not.toEqual(operatorContract.address)
-        // TODO: check it's an operator (from OperatorFactory?)
     })
 
     it("withdraws the other Operator's earnings when they are above the penalty limit", async () => {
