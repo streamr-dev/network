@@ -60,7 +60,8 @@ describe('MaintainTopologyService', () => {
         await client?.destroy()
     })
 
-    // TODO enable test (errors "sending a transaction requires a signer (operation="sendTransaction", code=UNSUPPORTED_OPERATION, version=contracts/5.7.0)")
+    // TODO enable test (errors "sending a transaction requires a signer (operation="sendTransaction", 
+    // code=UNSUPPORTED_OPERATION, version=contracts/5.7.0)")
     it.skip('happy path', async () => {
         const provider = getProvider()
         const operatorWallet = await generateWalletWithGasAndTokens(provider)
