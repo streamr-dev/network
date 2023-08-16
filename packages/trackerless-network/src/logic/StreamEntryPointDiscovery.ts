@@ -2,9 +2,6 @@ import { createHash } from 'crypto'
 import {
     isSamePeerDescriptor,
     PeerDescriptor,
-    PeerID,
-    Contact,
-    SortedContactList,
     RecursiveFindResult,
     DataEntry
 } from '@streamr/dht'

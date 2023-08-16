@@ -27,8 +27,8 @@ describe('multiple entry point joining', () => {
             ]
         })
 
-        afterEach(() => {
-            Promise.all([
+        afterEach(async () => {
+            await Promise.all([
                 node1.stop(),
                 node2.stop(),
                 node3.stop()
