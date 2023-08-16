@@ -96,7 +96,7 @@ describe('Migrating data from node to node in DHT', () => {
 
         logger.info('node 0 joining to the DHT')
 
-        await nodes[0].joinDht(entrypointDescriptor)
+        await nodes[0].joinDht([entrypointDescriptor])
 
         logger.info('storing data to node 0')
         const successfulStorers = await nodes[0].storeDataToDht(dataKey.value, data)
@@ -121,7 +121,7 @@ describe('Migrating data from node to node in DHT', () => {
         await Promise.all(
             nodes.map((node) => {
                 if (node.getNodeName() != '0') {
-                    node.joinDht(entrypointDescriptor)
+                    node.joinDht([entrypointDescriptor])
                 }
             })
         )
@@ -158,7 +158,7 @@ describe('Migrating data from node to node in DHT', () => {
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
             nodes.map((node) => {
-                node.joinDht(entrypointDescriptor)
+                node.joinDht([entrypointDescriptor])
             })
         )
 

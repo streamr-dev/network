@@ -57,10 +57,10 @@ describe('Recursive find correctness', () => {
     })
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
-        await entryPoint.joinDht(entrypointDescriptor)
+        await entryPoint.joinDht([entrypointDescriptor])
 
         await Promise.all(
-            nodes.map((node) => node.joinDht(entrypointDescriptor))
+            nodes.map((node) => node.joinDht([entrypointDescriptor]))
         )
 
         logger.info('waiting 120s')

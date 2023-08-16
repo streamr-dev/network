@@ -15,7 +15,7 @@ describe('DhtNodeExternalApi', () => {
         simulator = new Simulator(LatencyType.NONE)
         dhtNode1 = await createMockConnectionDhtNode('node1', simulator)
         remote = await createMockConnectionDhtNode('remote', simulator)
-        await dhtNode1.joinDht(dhtNode1.getPeerDescriptor())
+        await dhtNode1.joinDht([dhtNode1.getPeerDescriptor()])
     })
 
     afterEach(async () => {
