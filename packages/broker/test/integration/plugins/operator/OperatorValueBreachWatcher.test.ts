@@ -1,24 +1,20 @@
+import { Wallet } from "ethers"
 import { Contract } from "@ethersproject/contracts"
 import { Provider, JsonRpcProvider } from "@ethersproject/providers"
 import { parseEther, formatEther } from "@ethersproject/units"
 
 import { tokenABI, TestToken, Operator, streamRegistryABI, StreamRegistry } from "@streamr/network-contracts"
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { config } from "@streamr/config"
 
 import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens } from "./smartContractUtils"
 
 import { OperatorValueBreachWatcher } from "../../../../src/plugins/operator/OperatorValueBreachWatcher"
-
-// TODO: use createClient once configs allow it. For now I'm creating the stream directly using the contract
-// import { STREAMR_DOCKER_DEV_HOST, createClient } from '../../../utils'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 
-import { Wallet } from "ethers"
-import { config } from "@streamr/config"
 const fastChainConfig = config.dev2
-
 const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
@@ -55,7 +51,6 @@ describe("OperatorValueBreachWatcher", () => {
     }
 
     beforeAll(async () => {
-        // provider = getProvider()
         provider = new JsonRpcProvider(`http://${STREAMR_DOCKER_DEV_HOST}:8547`)
         logger.debug("Connected to: ", await provider.getNetwork())
 
@@ -67,6 +62,8 @@ describe("OperatorValueBreachWatcher", () => {
             '{"partitions":1}"}')
         ).wait()
         streamId = createStreamReceipt.events?.find((e) => e.event === "StreamCreated")?.args?.id
+        const streamExists = await streamRegistry.exists(streamId)
+        logger.debug("Stream created:", { streamId, streamExists })
         // TODO: use createClient once configs allow it. For now I'm creating the stream directly using the contract
         // const client = createClient(ADMIN_WALLET_PK, {
         //     contracts: {
@@ -76,11 +73,7 @@ describe("OperatorValueBreachWatcher", () => {
         // streamId = (await client.createStream(`/operatorvaluewatchertest-${Date.now()}`)).id
         // await client.destroy()
 
-        const streamExists = await streamRegistry.exists(streamId)
-        logger.debug("Stream created:", { streamId, streamExists })
-
         token = new Contract(fastChainConfig.contracts.DATA, tokenABI) as unknown as TestToken
-        // token = getTokenContract()
     }, 60 * 1000)
 
     it("can find a random operator, excluding himself", async () => {
@@ -113,7 +106,7 @@ describe("OperatorValueBreachWatcher", () => {
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
         const allowedDifference = poolValueBeforeWithdraw.div("10").toBigInt()
 
-        // overwrite, for this test only, the getRandomOperator method to deterministically return the operator's address
+        // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
         operatorValueBreachWatcher.helper.getRandomOperator = async () => {
             return toEthereumAddress(operatorContract.address)
         }
