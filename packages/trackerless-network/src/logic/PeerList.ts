@@ -86,11 +86,8 @@ export class PeerList extends EventEmitter<Events> {
         const included = getValuesOfIncludedKeys(this.peers, exclude)
         if (included.length === 0) {
             return []
-        } else if (included.length > 1) {
-            return [included[0], included[included.length - 1]]
-        } else {
-            return [included[0]]
         }
+        return included.length > 1 ? [this.getClosest(exclude)!, this.getFurthest(exclude)!] : [this.getClosest(exclude)!]
     }
 
     getFurthest(exclude: string[]): RemoteRandomGraphNode | undefined {
