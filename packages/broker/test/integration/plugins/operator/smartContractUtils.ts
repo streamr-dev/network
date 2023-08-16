@@ -9,7 +9,6 @@ import { deployOperatorContract as _deployOperatorContract } from './deployOpera
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
 const TEST_CHAIN = 'dev2'
-export const ADMIN_WALLET_PK = '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
 
 export function getProvider(): Provider {
     return new JsonRpcProvider(CHAIN_CONFIG[TEST_CHAIN].rpcEndpoints[0].url)
@@ -25,7 +24,7 @@ export async function generateWalletWithGasAndTokens(
     adminKey?: string
 ): Promise<Wallet> {
     const newWallet = new Wallet(fastPrivateKey())
-    const adminWallet = new Wallet(adminKey ?? ADMIN_WALLET_PK).connect(provider)
+    const adminWallet = new Wallet(adminKey ?? CHAIN_CONFIG[TEST_CHAIN].adminPrivateKey).connect(provider)
     const token = (config !== undefined) 
         ? new Contract(config.contracts.DATA!, tokenABI, adminWallet) as unknown as TestToken
         : getTokenContract()
