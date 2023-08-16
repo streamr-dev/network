@@ -9,12 +9,10 @@ const logger = new Logger(module)
 
 export class InspectRandomNodeHelper {
 
-    private readonly operatorContractAddress: EthereumAddress
     private readonly operatorContract: Operator
     private readonly theGraphClient: TheGraphClient
 
     constructor(config: OperatorServiceConfig) {
-        this.operatorContractAddress = config.operatorContractAddress
         const signer = config.signer.connect(config.provider)
         this.operatorContract = new Contract(config.operatorContractAddress, operatorABI, signer) as unknown as Operator
         this.theGraphClient = new TheGraphClient({
