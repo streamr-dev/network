@@ -222,7 +222,7 @@ export class StreamEntryPointDiscovery {
     }
 
     async destroy(): Promise<void> {
-        await Promise.all(Array.from(this.servicedStreams.keys()).map((streamPartId) => this.removeSelfAsEntryPoint(streamPartId)))
+        this.servicedStreams.forEach((_, streamPartId) => this.removeSelfAsEntryPoint(streamPartId))
         this.servicedStreams.clear()
         this.abortController.abort()
     }
