@@ -1,25 +1,22 @@
+import { Contract } from "@ethersproject/contracts"
 import { JsonRpcProvider, Provider } from "@ethersproject/providers"
-import { config } from "@streamr/config"
-import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
+import { Wallet } from "@ethersproject/wallet"
+import { config } from "@streamr/config"
+import type { TestToken } from "@streamr/network-contracts"
+import { tokenABI } from "@streamr/network-contracts"
 import { Logger, TheGraphClient, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import fetch from 'node-fetch'
-
-import type { TestToken } from "@streamr/network-contracts"
-import type { StreamRegistry } from "@streamr/network-contracts"
-
-import { tokenABI } from "@streamr/network-contracts"
-import { streamRegistryABI } from "@streamr/network-contracts"
-import { Contract } from "@ethersproject/contracts"
-
+import { InspectRandomNodeHelper } from "../../../../src/plugins/operator/InspectRandomNodeHelper"
+import { createClient } from '../../../utils'
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { setupOperatorContract } from "./setupOperatorContract"
-import { InspectRandomNodeHelper } from "../../../../src/plugins/operator/InspectRandomNodeHelper"
 
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
-const chainConfig = config.dev1
+const chainConfig = config.dev2
+const STREAM_CREATION_KEY = "0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7"
 
 jest.setTimeout(600 * 1000)
 
@@ -37,21 +34,14 @@ describe("InspectRandomNodeHelper", () => {
         provider = new JsonRpcProvider(chainURL)
         logger.debug("Connected to: ", await provider.getNetwork())
 
-        const streamCreatorKey = "0xfe1d528b7e204a5bdfb7668a1ed3adfee45b4b96960a175c9ef0ad16dd58d728"
-        adminWallet = new Wallet(streamCreatorKey, provider)
+        adminWallet = new Wallet(STREAM_CREATION_KEY, provider)
 
         token = new Contract(chainConfig.contracts.LINK, tokenABI) as unknown as TestToken
 
-        const timeString = (new Date()).getTime().toString()
-        const streamPath1 = '/inspectRandomNodeService-1-' + timeString
-        const streamPath2 = '/inspectRandomNodeService-2-' + timeString
-        streamId1 = adminWallet.address.toLowerCase() + streamPath1
-        streamId2 = adminWallet.address.toLowerCase() + streamPath2
-        const streamRegistry = new Contract(chainConfig.contracts.StreamRegistry, streamRegistryABI, adminWallet) as unknown as StreamRegistry
-        logger.debug(`creating stream with streamId1 ${streamId1}`)
-        await (await streamRegistry.createStream(streamPath1, "metadata")).wait()
-        logger.debug(`creating stream with streamId2 ${streamId2}`)
-        await (await streamRegistry.createStream(streamPath2, "metadata")).wait()
+        const client = createClient(STREAM_CREATION_KEY)
+        streamId1 = (await client.createStream(`/operatorvalueservicetest-1-${Date.now()}`)).id
+        streamId2 = (await client.createStream(`/operatorvalueservicetest-2-${Date.now()}`)).id
+        await client.destroy()
 
         graphClient = new TheGraphClient({
             serverUrl: theGraphUrl,
