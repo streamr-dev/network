@@ -56,11 +56,10 @@ export interface DhtNodeEvents {
 
 export interface DhtNodeOptions {
     serviceId?: string
-    parallelism?: number
+    joinParallelism?: number
     maxNeighborListSize?: number
     numberOfNodesPerKBucket?: number
     joinNoProgressLimit?: number
-    routeMessageTimeout?: number
     dhtJoinTimeout?: number
     metricsContext?: MetricsContext
     storeHighestTtl?: number
@@ -85,11 +84,10 @@ export interface DhtNodeOptions {
 
 export class DhtNodeConfig {
     serviceId = 'layer0'
-    parallelism = 3
+    joinParallelism = 3
     maxNeighborListSize = 200
     numberOfNodesPerKBucket = 8
     joinNoProgressLimit = 4
-    routeMessageTimeout = 2000
     dhtJoinTimeout = 60000
     getClosestContactsLimit = 5
     maxConnections = 80
@@ -245,7 +243,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             getClosestContactsLimit: this.config.getClosestContactsLimit,
             joinTimeout: this.config.dhtJoinTimeout,
             serviceId: this.config.serviceId,
-            parallelism: this.config.parallelism,
+            parallelism: this.config.joinParallelism,
             addContact: this.addNewContact.bind(this),
             connectionManager: this.connectionManager
         })
@@ -254,7 +252,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connections: this.connections,
             ownPeerDescriptor: this.ownPeerDescriptor!,
             ownPeerId: this.ownPeerId!,
-            routeMessageTimeout: this.config.routeMessageTimeout,
             addContact: this.addNewContact.bind(this),
             serviceId: this.config.serviceId,
             connectionManager: this.connectionManager
@@ -269,7 +266,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             ownPeerId: this.ownPeerId!,
             addContact: this.addNewContact.bind(this),
             isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
-            getClosestPeerDescriptors: this.getClosestPeerDescriptors.bind(this),
             localDataStore: this.localDataStore
         })
         this.dataStore = new DataStore({

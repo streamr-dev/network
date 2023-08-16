@@ -27,11 +27,7 @@ export class ConnectionLockHandler {
         if (!serviceName) {
             return this.localLocks.has(id)
         } else {
-            if (this.localLocks.has(id) && this.localLocks.get(id)!.has(serviceName)) {
-                return true
-            } else {
-                return false
-            }
+            return this.localLocks.has(id) && this.localLocks.get(id)!.has(serviceName)
         }
     }
 

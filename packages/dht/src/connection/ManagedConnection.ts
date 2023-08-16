@@ -28,7 +28,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     private implementation?: IConnection
 
     private outputBuffer: Uint8Array[] = []
-    private inputBuffer: [data: Uint8Array][] = []
+    private inputBuffer: Uint8Array[] = []
 
     public connectionId: ConnectionID
     private peerDescriptor?: PeerDescriptor
@@ -128,8 +128,8 @@ export class ManagedConnection extends EventEmitter<Events> {
         if (event === 'managedData' && this.listenerCount('managedData') === 0) {
             while (this.inputBuffer.length > 0) {
                 logger.trace('emptying inputBuffer objectId: ' + this.objectId)
-                const data = (this.inputBuffer.shift()!)
-                fn(data[0], this.getPeerDescriptor())
+                const data = this.inputBuffer.shift()!
+                fn(data, this.getPeerDescriptor())
             }
         }
         super.on(event, fn, context)
@@ -146,8 +146,8 @@ export class ManagedConnection extends EventEmitter<Events> {
             if (this.inputBuffer.length > 0) {
                 while (this.inputBuffer.length > 0) {
                     logger.trace('emptying inputBuffer objectId: ' + this.objectId)
-                    const data = (this.inputBuffer.shift()!)
-                    fn(data[0], this.getPeerDescriptor())
+                    const data = this.inputBuffer.shift()!
+                    fn(data, this.getPeerDescriptor())
                 }
             } else {
                 super.once(event, fn, context)
@@ -199,7 +199,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.lastUsed = Date.now()
             if (this.listenerCount('managedData') < 1) {
 
-                this.inputBuffer.push([bytes])
+                this.inputBuffer.push(bytes)
             } else {
                 this.emit('managedData', bytes, this.getPeerDescriptor()!)
             }
