@@ -56,7 +56,7 @@ export interface DhtNodeEvents {
 
 export interface DhtNodeOptions {
     serviceId?: string
-    parallelism?: number
+    joinParallelism?: number
     maxNeighborListSize?: number
     numberOfNodesPerKBucket?: number
     joinNoProgressLimit?: number
@@ -84,7 +84,7 @@ export interface DhtNodeOptions {
 
 export class DhtNodeConfig {
     serviceId = 'layer0'
-    parallelism = 3
+    joinParallelism = 5
     maxNeighborListSize = 200
     numberOfNodesPerKBucket = 8
     joinNoProgressLimit = 4
@@ -243,7 +243,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             getClosestContactsLimit: this.config.getClosestContactsLimit,
             joinTimeout: this.config.dhtJoinTimeout,
             serviceId: this.config.serviceId,
-            parallelism: this.config.parallelism,
+            parallelism: this.config.joinParallelism,
             addContact: this.addNewContact.bind(this),
             connectionManager: this.connectionManager
         })

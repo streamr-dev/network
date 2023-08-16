@@ -132,7 +132,7 @@ export class PeerDiscovery {
         if (this.stopped) {
             return
         }
-        await Promise.allSettled(this.config.bucket.closest(this.config.ownPeerId.value, 5).map(async (peer: DhtPeer) => {
+        await Promise.allSettled(this.config.bucket.closest(this.config.ownPeerId.value, this.config.parallelism).map(async (peer: DhtPeer) => {
             const contacts = await peer.getClosestPeers(this.config.ownPeerDescriptor.kademliaId!)
             contacts.forEach((contact) => {
                 this.config.addContact(contact)
