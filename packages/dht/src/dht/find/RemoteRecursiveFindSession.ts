@@ -18,8 +18,8 @@ export class RemoteRecursiveFindSession extends Remote<IRecursiveFindSessionServ
         const report: RecursiveFindReport = {
             routingPath,
             nodes: closestNodes,
-            dataEntries: dataEntries,
-            noCloserNodesFound: noCloserNodesFound
+            dataEntries,
+            noCloserNodesFound
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: this.ownPeerDescriptor,

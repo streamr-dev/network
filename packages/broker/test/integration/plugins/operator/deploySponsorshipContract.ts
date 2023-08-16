@@ -1,3 +1,4 @@
+// TODO: copy-paste from network-contracts, import from there?
 import { utils, Wallet, Contract, ContractReceipt } from "ethers"
 
 import { Logger } from "@streamr/utils"
@@ -10,7 +11,8 @@ const { parseEther } = utils
 const logger = new Logger(module)
 
 export async function deploySponsorship(
-    chainConfig: { contracts: Record<string, string> },
+    // eslint-disable-next-line max-len
+    chainConfig: { contracts: { SponsorshipFactory: string, SponsorshipStakeWeightedAllocationPolicy: string, SponsorshipDefaultLeavePolicy: string, SponsorshipVoteKickPolicy: string, StreamRegistry: string } },
     deployer: Wallet, {
         streamId = `Stream-${Date.now()}`,
         metadata = "{}",

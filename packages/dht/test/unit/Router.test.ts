@@ -54,8 +54,7 @@ describe('Router', () => {
             rpcCommunicator: mockRpcCommunicator,
             addContact: (_contact) => {},
             serviceId: 'router',
-            connections,
-            routeMessageTimeout: 2000
+            connections
         })
     })
 

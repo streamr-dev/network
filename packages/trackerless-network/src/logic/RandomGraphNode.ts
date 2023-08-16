@@ -19,7 +19,7 @@ import { PeerList } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
+import { DuplicateMessageDetector } from './DuplicateMessageDetector'
 import { Logger } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { IHandshaker } from './neighbor-discovery/Handshaker'
@@ -30,6 +30,7 @@ import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
 import { StreamNodeServer } from './StreamNodeServer'
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
+import { markAndCheckDuplicate } from './utils'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -55,7 +56,7 @@ export interface StrictRandomGraphNodeConfig {
     numOfTargetNeighbors: number
     maxNumberOfContacts: number
     minPropagationTargets: number
-    nodeName: string
+    name: string
     acceptProxyConnections: boolean
     neighborUpdateInterval: number
     proxyConnectionServer?: ProxyStreamConnectionServer
@@ -67,7 +68,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     private stopped = false
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
-    private readonly abortController: AbortController
     private config: StrictRandomGraphNodeConfig
     private readonly server: INetworkRpc
 
@@ -75,18 +75,17 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         super()
         this.config = config
         this.duplicateDetectors = new Map()
-        this.abortController = new AbortController()
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.randomGraphId,
             rpcCommunicator: this.config.rpcCommunicator,
-            markAndCheckDuplicate: (msg: MessageRef, prev?: MessageRef) => this.markAndCheckDuplicate(msg, prev),
+            markAndCheckDuplicate: (msg: MessageRef, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousPeer?: string) => this.broadcast(message, previousPeer),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
                 const senderId = notice.senderId
-                const contact = this.config.nearbyContactPool.getNeighborWithId(senderId)
-                || this.config.randomContactPool.getNeighborWithId(senderId)
-                || this.config.targetNeighbors.getNeighborWithId(senderId)
+                const contact = this.config.nearbyContactPool.getNeighborById(senderId)
+                || this.config.randomContactPool.getNeighborById(senderId)
+                || this.config.targetNeighbors.getNeighborById(senderId)
                 || this.config.proxyConnectionServer?.getConnection(senderId as PeerIDKey)?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
@@ -227,8 +226,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             return
         }
         this.stopped = true
-
-        this.abortController.abort()
         this.config.proxyConnectionServer?.stop()
         this.config.targetNeighbors.getPeers().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor))
         this.config.rpcCommunicator.stop()
@@ -247,7 +244,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
 
     broadcast(msg: StreamMessage, previousPeer?: string): void {
         if (!previousPeer) {
-            this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
+            markAndCheckDuplicate(this.duplicateDetectors, msg.messageRef!, msg.previousMessageRef)
         }
         this.emit('message', msg)
         
@@ -257,25 +254,12 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     private getPropagationTargets(msg: StreamMessage): string[] {
         let propagationTargets = this.config.targetNeighbors.getStringIds()
         if (this.config.proxyConnectionServer) {
-            if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
-                const { recipient } = GroupKeyRequest.fromBinary(msg.content)
-                propagationTargets = propagationTargets.concat(this.config.proxyConnectionServer!.getPeerKeysForUserId(recipient))
-            } else {
-                propagationTargets = propagationTargets.concat(this.config.proxyConnectionServer!.getSubscribers())
-            }
+            const proxyTargets = (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST)
+                ? this.config.proxyConnectionServer.getPeerKeysForUserId(GroupKeyRequest.fromBinary(msg.content).recipient)
+                : this.config.proxyConnectionServer.getSubscribers()
+            propagationTargets = propagationTargets.concat(proxyTargets)
         }
         return propagationTargets
-    }
-
-    private markAndCheckDuplicate(currentMessageRef: MessageRef, previousMessageRef?: MessageRef): boolean {
-        const previousNumberPair = previousMessageRef ?
-            new NumberPair(Number(previousMessageRef!.timestamp), previousMessageRef!.sequenceNumber)
-            : null
-        const currentNumberPair = new NumberPair(Number(currentMessageRef.timestamp), currentMessageRef.sequenceNumber)
-        if (!this.duplicateDetectors.has(currentMessageRef.messageChainId)) {
-            this.duplicateDetectors.set(currentMessageRef.messageChainId, new DuplicateMessageDetector(10000))
-        }
-        return this.duplicateDetectors.get(currentMessageRef.messageChainId)!.markAndCheck(previousNumberPair, currentNumberPair)
     }
 
     getOwnStringId(): PeerIDKey {

@@ -1,16 +1,15 @@
-import { Logger, wait, waitForCondition } from '@streamr/utils'
-import { parseEther } from 'ethers/lib/utils'
-import { deploySponsorship } from './deploySponsorshipContract'
 import { Provider } from '@ethersproject/abstract-provider'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { StreamrEnvDeployer, TestToken } from '@streamr/network-contracts'
+import { Logger, wait, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
+import { parseEther } from 'ethers/lib/utils'
 import { mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
-import { Chain } from '@streamr/config'
-import { createWalletAndDeployOperator } from './createWalletAndDeployOperator'
-import { STREAMR_DOCKER_DEV_HOST, createClient } from '../../../utils'
+import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
+import { STREAMR_DOCKER_DEV_HOST, createClient, createTestStream } from '../../../utils'
+import { deploySponsorship } from './deploySponsorshipContract'
+import { setupOperatorContract } from './setupOperatorContract'
 
 const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
@@ -19,14 +18,14 @@ const ADMIN_PRIV_KEY = "0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e
 // const ADMIN_PRIV_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" // fastChain
 
 const logger = new Logger(module)
+
 describe('VoteOnSuspectNodeService', () => {
     let provider: Provider
     let adminWallet: Wallet
     let token: TestToken
     let streamId1: string
-    let streamId2: string
     let streamrEnvDeployer: StreamrEnvDeployer
-    let config: Chain
+    let chainConfig: any
 
     // const chainURL = "http://127.0.0.1:8545"
     const chainURL = `http://${STREAMR_DOCKER_DEV_HOST}:8546`
@@ -35,7 +34,7 @@ describe('VoteOnSuspectNodeService', () => {
         streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, chainURL)
         await streamrEnvDeployer.deployEnvironment()
         const { contracts } = streamrEnvDeployer
-        config = { contracts: streamrEnvDeployer.addresses } as unknown as Chain
+        chainConfig = { contracts: streamrEnvDeployer.addresses } as any
 
         provider = new JsonRpcProvider(chainURL)
         logger.trace('Connected', { networkInfo: await provider.getNetwork() })
@@ -43,24 +42,29 @@ describe('VoteOnSuspectNodeService', () => {
         adminWallet = new Wallet(ADMIN_PRIV_KEY, provider)
 
         token = contracts.DATA as unknown as TestToken
-        const timeString = (new Date()).getTime().toString()
-        const streamPath1 = '/voteonsuspectnodeservicetest-1-' + timeString
-        const streamPath2 = '/voteonsuspectnodeservicetest-2-' + timeString
-        streamId1 = adminWallet.address.toLowerCase() + streamPath1
-        streamId2 = adminWallet.address.toLowerCase() + streamPath2
-        logger.trace('Create stream', { streamId1 })
-        await (await contracts.streamRegistry.createStream(streamPath1, '{"partitions":"1"}')).wait()
-        logger.trace('Create stream', { streamId2 })
-        await (await contracts.streamRegistry.createStream(streamPath2, '{"partitions":"1"}')).wait()
+        const client = createClient(ADMIN_PRIV_KEY, { 
+            contracts: { 
+                streamRegistryChainAddress: chainConfig.contracts.StreamRegistry,
+                streamRegistryChainRPCs: {
+                    chainId: 0,  // some chain id
+                    rpcs: [{
+                        url: chainURL
+                    }]
+                }
+            }
+        })
+        streamId1 = (await createTestStream(client, module)).id
+        await createTestStream(client, module)
+        await client.destroy()
 
     }, TIMEOUT)
 
     it('allows to flag an operator as malicious', async () => {
-        const flagger = await createWalletAndDeployOperator(provider, config, theGraphUrl, ADMIN_PRIV_KEY)
+        const flagger = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         logger.trace('deployed flagger contract ' + flagger.operatorConfig.operatorContractAddress)
-        const target = await createWalletAndDeployOperator(provider, config, theGraphUrl, ADMIN_PRIV_KEY)
+        const target = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         logger.trace('deployed target contract ' + target.operatorConfig.operatorContractAddress)
-        const voter = await createWalletAndDeployOperator(provider, config, theGraphUrl, ADMIN_PRIV_KEY)
+        const voter = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         logger.trace('deployed voter contract ' + voter.operatorConfig.operatorContractAddress)
 
         await wait(5000) // wait for events to be processed // wait for events to be processed
@@ -77,7 +81,8 @@ describe('VoteOnSuspectNodeService', () => {
         await voterVoteService.start()
 
         logger.trace('deploying sponsorship contract')
-        const sponsorship = await deploySponsorship(config, adminWallet, { streamId: streamId1 })
+        const sponsorship = await deploySponsorship(chainConfig, adminWallet, {
+            streamId: streamId1 })
         logger.trace('sponsoring sponsorship contract')
         await (await token.connect(flagger.operatorWallet).approve(sponsorship.address, parseEther('500'))).wait()
         await (await sponsorship.connect(flagger.operatorWallet).sponsor(parseEther('500'))).wait()

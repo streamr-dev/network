@@ -50,7 +50,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.kademliaIdToFind = config.kademliaIdToFind
         this.ownPeerID = config.ownPeerID
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
-        this.results = new SortedContactList(PeerID.fromValue(this.kademliaIdToFind), 10)
+        this.results = new SortedContactList(PeerID.fromValue(this.kademliaIdToFind), 10, undefined, true)
         this.mode = config.mode
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.rpcTransport, {
             rpcRequestTimeout: 15000

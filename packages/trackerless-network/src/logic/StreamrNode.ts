@@ -245,7 +245,6 @@ export class StreamrNode extends EventEmitter<Events> {
             transportLayer: this.layer0!,
             serviceId: 'layer1::' + streamPartID,
             peerDescriptor: this.layer0!.getPeerDescriptor(),
-            routeMessageTimeout: 5000,
             entryPoints: entryPoints,
             numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 15000,
@@ -263,7 +262,7 @@ export class StreamrNode extends EventEmitter<Events> {
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
             numOfTargetNeighbors: this.config.streamPartitionNumOfNeighbors,
-            nodeName: this.config.nodeName,
+            name: this.config.nodeName,
             acceptProxyConnections: this.config.acceptProxyConnections
         })
     }

@@ -9,7 +9,7 @@ import {
     DataEntry
 } from '@streamr/dht'
 import { Any } from '../proto/google/protobuf/any'
-import { Logger, wait } from '@streamr/utils'
+import { Logger, setAbortableTimeout, wait } from '@streamr/utils'
 import { StreamObject } from './StreamrNode'
 
 export const streamPartIdToDataKey = (streamPartId: string): Uint8Array => {
@@ -71,7 +71,6 @@ export class StreamEntryPointDiscovery {
     private readonly config: StreamEntryPointDiscoveryConfig
     private readonly servicedStreams: Map<string, NodeJS.Timeout>
     private readonly cacheInterval: number
-    private destroyed = false
 
     constructor(config: StreamEntryPointDiscoveryConfig) {
         this.config = config
@@ -216,19 +215,14 @@ export class StreamEntryPointDiscovery {
 
     removeSelfAsEntryPoint(streamPartId: string): void {
         if (this.servicedStreams.has(streamPartId)) {
-            setImmediate(async () => {
-                if (!this.destroyed) {
-                    await this.config.deleteEntryPointData(streamPartIdToDataKey(streamPartId))
-                }
-            })
+            setAbortableTimeout(() => this.config.deleteEntryPointData(streamPartIdToDataKey(streamPartId)), 0, this.abortController.signal)
             clearTimeout(this.servicedStreams.get(streamPartId)!)
             this.servicedStreams.delete(streamPartId)
         }
     }
 
     async destroy(): Promise<void> {
-        this.destroyed = true
-        await Promise.all(Array.from(this.servicedStreams.keys()).map((streamPartId) => this.removeSelfAsEntryPoint(streamPartId)))
+        this.servicedStreams.forEach((_, streamPartId) => this.removeSelfAsEntryPoint(streamPartId))
         this.servicedStreams.clear()
         this.abortController.abort()
     }

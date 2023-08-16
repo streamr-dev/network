@@ -67,7 +67,6 @@ describe('RecursiveFinder', () => {
             localDataStore: new LocalDataStore(),
             sessionTransport: new MockTransport(),
             addContact: (_contact, _setActive) => {},
-            getClosestPeerDescriptors: (_kademliaId, _limit) => [],
             isPeerCloserToIdThanSelf: (_peer1, _compareToId) => true,
             rpcCommunicator: createMockRoutingRpcCommunicator()
         })

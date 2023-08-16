@@ -25,7 +25,6 @@ interface HandshakerConfig {
     randomContactPool: PeerList
     rpcCommunicator: RpcCommunicator
     N: number
-    nodeName?: string
 }
 
 const logger = new Logger(module)

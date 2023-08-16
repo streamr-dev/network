@@ -24,7 +24,6 @@ import { toEthereumAddressOrENSName } from './toEthereumAddressOrENSName'
 import { Events, BrandedString } from './types'
 import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
-import { DuplicateMessageDetector, NumberPair, GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
 import { TimeoutError, withTimeout } from './withTimeout'
 import { composeAbortSignals, ComposedAbortSignal } from './composeAbortSignals'
 import { waitForCondition } from './waitForCondition'
@@ -68,10 +67,6 @@ export {
     waitForEvent,
     withRateLimit,
     withTimeout,
-    DuplicateMessageDetector,
-    NumberPair,
-    GapMisMatchError,
-    InvalidNumberingError,
     waitForEvent3,
     runAndWaitForEvents3,
     raceEvents3,
