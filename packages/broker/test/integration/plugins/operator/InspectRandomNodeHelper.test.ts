@@ -89,8 +89,11 @@ describe("InspectRandomNodeHelper", () => {
             return res.length === 2
         }, 10000, 1000)
 
-        const res = await inspectRandomNodeHelper.getOperatorsInSponsorship(toEthereumAddress(sponsorship.address), 0)
-        expect(res.length).toEqual(1)
+        const sponsorships = await inspectRandomNodeHelper.getSponsorshipsOfOperator(toEthereumAddress(operatorContract.address), 0)
+        expect(sponsorships).toEqual(expect.arrayContaining([toEthereumAddress(sponsorship.address), toEthereumAddress(sponsorship2.address)]))
+        
+        const operators = await inspectRandomNodeHelper.getOperatorsInSponsorship(toEthereumAddress(sponsorship.address), 0)
+        expect(operators).toEqual([toEthereumAddress(operatorContract.address)])
     })
 
     it("works to flag through the inspectRandomNodeHelper", async () => {
