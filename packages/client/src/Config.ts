@@ -114,7 +114,7 @@ export interface NetworkNodeConfig {
      * When enabling this option, a WebSocket server should be configured for the client
      * and the node needs to be in the open internet. The server can be started by setting
      * the webSocketPort configuration to a free port in the network control layer configuration.
-    */
+     */
     acceptProxyConnections?: boolean
 }
 
