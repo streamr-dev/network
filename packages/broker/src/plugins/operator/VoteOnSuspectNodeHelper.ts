@@ -31,10 +31,6 @@ export class VoteOnSuspectNodeHelper {
         })
     }
 
-    async flag(sponsorship: string, operator: string): Promise<void> {
-        await (await this.contract.flag(sponsorship, operator)).wait()
-    }
-
     async voteOnFlag(sponsorship: string, targetOperator: string, kick: boolean): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
         await (await this.contract.voteOnFlag(sponsorship, targetOperator, voteData)).wait()
