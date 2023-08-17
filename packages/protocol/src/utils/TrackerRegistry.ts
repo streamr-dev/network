@@ -1,4 +1,4 @@
-import { StreamPartID } from "./StreamPartID"
+import { StreamPartID } from './StreamPartID'
 import { keyToArrayIndex } from '@streamr/utils'
 
 export interface TrackerRegistryRecord {
