@@ -1,4 +1,4 @@
-import { AnnounceNodeService } from '../../../../src/plugins/operator/AnnounceNodeService'
+import { AnnounceNodeToStreamService } from '../../../../src/plugins/operator/AnnounceNodeToStreamService'
 import { StreamrClient } from 'streamr-client'
 import { mock, mockClear, MockProxy } from 'jest-mock-extended'
 import { toEthereumAddress, wait } from '@streamr/utils'
@@ -8,10 +8,10 @@ const ADDRESS = toEthereumAddress('0x61BBf708Fb7bB1D4dA10D1958C88A170988d3d1F')
 const NODE_ID = toEthereumAddress('0xA3B2B8AAAC099833275b1f7fCC415E121326D38c')
 const INTERVAL_IN_MS = 25
 
-describe(AnnounceNodeService, () => {
+describe(AnnounceNodeToStreamService, () => {
 
     let streamrClient: MockProxy<StreamrClient>
-    let service: AnnounceNodeService
+    let service: AnnounceNodeToStreamService
 
     beforeEach(async () => {
         streamrClient = mock<StreamrClient>()
@@ -19,7 +19,7 @@ describe(AnnounceNodeService, () => {
             getNodeId: () => NODE_ID
         } as any)
         streamrClient.publish.mockResolvedValue(null as any)
-        service = new AnnounceNodeService(streamrClient, ADDRESS, INTERVAL_IN_MS)
+        service = new AnnounceNodeToStreamService(streamrClient, ADDRESS, INTERVAL_IN_MS)
         await service.start()
     })
 

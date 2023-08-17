@@ -5,7 +5,7 @@ import { EventEmitter } from 'eventemitter3'
 import { NodeId } from '@streamr/trackerless-network'
 import min from 'lodash/min'
 import once from 'lodash/once'
-import { DEFAULT_INTERVAL_IN_MS } from './AnnounceNodeService'
+import { DEFAULT_INTERVAL_IN_MS } from './AnnounceNodeToStreamService'
 
 const logger = new Logger(module)
 
