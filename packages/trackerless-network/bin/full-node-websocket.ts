@@ -41,13 +41,13 @@ async function run(): Promise<void> {
 
     await layer0.start()
 
-    await layer0.joinDht(epPeerDescriptor)
+    await layer0.joinDht([epPeerDescriptor])
 
     const connectionManager = layer0.getTransport() as ConnectionManager
     const streamrNode = new StreamrNode({})
     await streamrNode.start(layer0, connectionManager, connectionManager)
 
-    streamrNode.subscribeToStream(streamPartId, epPeerDescriptor)
+    streamrNode.subscribeToStream(streamPartId)
 
     streamrNode.on(StreamrNodeEvent.NEW_MESSAGE, (msg: StreamMessage) => {
         // eslint-disable-next-line no-console

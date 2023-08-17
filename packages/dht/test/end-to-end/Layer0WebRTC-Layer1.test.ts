@@ -94,8 +94,8 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         await layer1Node3.start()
         await layer1Node4.start()
 
-        await layer0EntryPoint.joinDht(entrypointDescriptor)
-        await layer1EntryPoint.joinDht(entrypointDescriptor)
+        await layer0EntryPoint.joinDht([entrypointDescriptor])
+        await layer1EntryPoint.joinDht([entrypointDescriptor])
     })
 
     afterEach(async () => {
@@ -115,16 +115,16 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
     it('Happy Path', async () => {
         await Promise.all([
-            layer0Node1.joinDht(entrypointDescriptor),
-            layer0Node2.joinDht(entrypointDescriptor),
-            layer0Node3.joinDht(entrypointDescriptor),
-            layer0Node4.joinDht(entrypointDescriptor)
+            layer0Node1.joinDht([entrypointDescriptor]),
+            layer0Node2.joinDht([entrypointDescriptor]),
+            layer0Node3.joinDht([entrypointDescriptor]),
+            layer0Node4.joinDht([entrypointDescriptor])
         ])
 
-        await layer1Node1.joinDht(entrypointDescriptor)
-        await layer1Node2.joinDht(entrypointDescriptor)
-        await layer1Node3.joinDht(entrypointDescriptor)
-        await layer1Node4.joinDht(entrypointDescriptor)
+        await layer1Node1.joinDht([entrypointDescriptor])
+        await layer1Node2.joinDht([entrypointDescriptor])
+        await layer1Node3.joinDht([entrypointDescriptor])
+        await layer1Node4.joinDht([entrypointDescriptor])
 
         expect(layer1Node1.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(layer1Node2.getBucketSize()).toBeGreaterThanOrEqual(2)

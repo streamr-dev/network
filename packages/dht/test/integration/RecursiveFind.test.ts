@@ -28,8 +28,8 @@ describe('Recursive find correctness', () => {
             const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, nodeId, 20, 60000)
             nodes.push(node)
         }
-        await entryPoint.joinDht(entrypointDescriptor)
-        await Promise.all(nodes.map((node) => node.joinDht(entrypointDescriptor)))
+        await entryPoint.joinDht([entrypointDescriptor])
+        await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
         await waitConnectionManagersReadyForTesting(nodes.map((node) => node.connectionManager!), 20)
     }, 90000)
 

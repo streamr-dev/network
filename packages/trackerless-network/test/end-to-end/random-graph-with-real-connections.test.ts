@@ -74,12 +74,12 @@ describe('random graph with real connections', () => {
             connectionLocker: dhtNode4.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode4.getPeerDescriptor()
         })
-        await epDhtNode.joinDht(epPeerDescriptor)
+        await epDhtNode.joinDht([epPeerDescriptor])
         await Promise.all([
-            dhtNode1.joinDht(epPeerDescriptor),
-            dhtNode2.joinDht(epPeerDescriptor),
-            dhtNode3.joinDht(epPeerDescriptor),
-            dhtNode4.joinDht(epPeerDescriptor)
+            dhtNode1.joinDht([epPeerDescriptor]),
+            dhtNode2.joinDht([epPeerDescriptor]),
+            dhtNode3.joinDht([epPeerDescriptor]),
+            dhtNode4.joinDht([epPeerDescriptor])
         ])
         await Promise.all([
             randomGraphNode1.start(),

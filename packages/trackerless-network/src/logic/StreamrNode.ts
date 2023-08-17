@@ -217,7 +217,7 @@ export class StreamrNode extends EventEmitter<Events> {
             forwardingPeer
         )
         entryPoints = knownEntryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await Promise.all(sampleSize(entryPoints, 4).map((entryPoint) => layer1.joinDht(entryPoint)))
+        await layer1.joinDht(sampleSize(entryPoints, 4))
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
             discoveryResult.joiningEmptyStream,

@@ -78,7 +78,6 @@ export class ConnectivityChecker {
             return await retPromise
         } catch (e) {
             logger.error('error getting connectivityresponse')
-
             throw e
         }
     }
@@ -93,7 +92,7 @@ export class ConnectivityChecker {
                     logger.trace('handleIncomingConnectivityRequest ok')
                     return
                 }).catch((e) => {
-                    logger.error('handleIncomingConnectivityRequest poikkeus KIINNI' + e)
+                    logger.error('handleIncomingConnectivityRequest' + e)
                 })
             }
         })

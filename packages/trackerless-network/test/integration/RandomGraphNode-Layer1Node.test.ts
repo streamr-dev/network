@@ -131,7 +131,7 @@ describe('RandomGraphNode-DhtNode', () => {
         })
 
         await dhtEntryPoint.start()
-        await dhtEntryPoint.joinDht(entrypointDescriptor)
+        await dhtEntryPoint.joinDht([entrypointDescriptor])
         await Promise.all(dhtNodes.map((node) => node.start()))
     })
 
@@ -147,7 +147,7 @@ describe('RandomGraphNode-DhtNode', () => {
 
         const successListener = new SuccessListener(graphNodes[0], 1, 1)
         await entryPointRandomGraphNode.start()
-        await dhtNodes[0].joinDht(entrypointDescriptor)
+        await dhtNodes[0].joinDht([entrypointDescriptor])
 
         await graphNodes[0].start()
 
@@ -166,7 +166,7 @@ describe('RandomGraphNode-DhtNode', () => {
         entryPointRandomGraphNode.start()
         range(4).map((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
-            await dhtNodes[i].joinDht(entrypointDescriptor)
+            await dhtNodes[i].joinDht([entrypointDescriptor])
         }))
 
         await promise
@@ -192,7 +192,7 @@ describe('RandomGraphNode-DhtNode', () => {
     it('happy path 64 peers', async () => {
         await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
         await Promise.all(range(numOfNodes).map((i) => {
-            dhtNodes[i].joinDht(entrypointDescriptor)
+            dhtNodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(graphNodes.map((node) =>
             waitForCondition(() => node.getTargetNeighborStringIds().length >= 4, 10000)
