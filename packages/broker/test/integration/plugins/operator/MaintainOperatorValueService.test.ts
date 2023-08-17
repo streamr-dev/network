@@ -19,10 +19,6 @@ import { deploySponsorship } from "./deploySponsorshipContract"
 import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens } from "./smartContractUtils"
 
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
-import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
-import { getProvider } from "./smartContractUtils"
-import { createClient } from "../../../utils"
-import { setupOperatorContract } from "./setupOperatorContract"
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 
 const chainConfig = CHAIN_CONFIG["dev2"]
