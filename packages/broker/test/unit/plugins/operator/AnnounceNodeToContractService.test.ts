@@ -115,6 +115,8 @@ describe(AnnounceNodeToContractService, () => {
             nodeId: 'myNodeId',
             leaderNodeId: [
                 'myNodeId',
+                'leaderNodeId',
+                'leaderNodeId',
                 'myNodeId',
                 'leaderNodeId',
                 'leaderNodeId',
