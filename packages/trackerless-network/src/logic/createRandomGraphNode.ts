@@ -13,14 +13,14 @@ import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryCo
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     "nearbyContactPool" | "randomContactPool" | "targetNeighbors" | "propagation"
-    | "handshaker" | "neighborFinder" | "neighborUpdateManager" | "nodeName" | "numOfTargetNeighbors"
+    | "handshaker" | "neighborFinder" | "neighborUpdateManager" | "name" | "numOfTargetNeighbors"
     | "maxNumberOfContacts" | "minPropagationTargets" | "rpcCommunicator" | "peerViewSize" | "acceptProxyConnections"
     | "neighborUpdateInterval" | "inspector" | "temporaryConnectionServer">
 
 const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
     const peerId = peerIdFromPeerDescriptor(config.ownPeerDescriptor)
     const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(`layer2-${config.randomGraphId}`, config.P2PTransport)
-    const nodeName = config.nodeName ?? peerId.toKey()
+    const name = config.name ?? peerId.toKey()
     const numOfTargetNeighbors = config.numOfTargetNeighbors ?? 4
     const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
     const minPropagationTargets = config.minPropagationTargets ?? 2
@@ -43,7 +43,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const propagation = config.propagation ?? new Propagation({
         minPropagationTargets,
         sendToNeighbor: async (neighborId: string, msg: StreamMessage): Promise<void> => {
-            const remote = targetNeighbors.getNeighborWithId(neighborId) ?? temporaryConnectionServer.getPeers().getNeighborWithId(neighborId)
+            const remote = targetNeighbors.getNeighborById(neighborId) ?? temporaryConnectionServer.getPeers().getNeighborById(neighborId)
             const proxyConnection = proxyConnectionServer?.getConnection(neighborId as PeerIDKey)
             if (remote) {
                 await remote.sendData(config.ownPeerDescriptor, msg)
@@ -58,7 +58,6 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         ownPeerDescriptor: config.ownPeerDescriptor,
         randomGraphId: config.randomGraphId,
         connectionLocker: config.connectionLocker,
-        nodeName: config.nodeName,
         rpcCommunicator,
         nearbyContactPool,
         randomContactPool,
@@ -100,7 +99,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         numOfTargetNeighbors,
         minPropagationTargets,
         maxNumberOfContacts,
-        nodeName,
+        name,
         peerViewSize: maxNumberOfContacts,
         acceptProxyConnections,
         proxyConnectionServer,

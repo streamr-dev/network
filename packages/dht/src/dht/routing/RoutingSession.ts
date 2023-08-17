@@ -40,7 +40,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     private readonly messageToRoute: RouteMessageWrapper
     private connections: Map<PeerIDKey, DhtPeer>
     private readonly parallelism: number
-    private firstHopTimeout: number
     private failedHopCounter = 0
     private successfulHopCounter = 0
     private readonly mode: RoutingMode = RoutingMode.ROUTE
@@ -52,7 +51,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         messageToRoute: RouteMessageWrapper,
         connections: Map<PeerIDKey, DhtPeer>,
         parallelism: number,
-        firstHopTimeout: number,
         mode: RoutingMode = RoutingMode.ROUTE,
         destinationId?: Uint8Array,
         excludedPeerIDs?: PeerID[]
@@ -63,7 +61,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.messageToRoute = messageToRoute
         this.connections = connections
         this.parallelism = parallelism
-        this.firstHopTimeout = firstHopTimeout
         this.mode = mode
         const previousId = messageToRoute.previousPeer ? PeerID.fromValue(messageToRoute.previousPeer.kademliaId) : undefined
         this.contactList = new SortedContactList(

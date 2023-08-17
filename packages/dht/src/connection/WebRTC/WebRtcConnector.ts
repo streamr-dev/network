@@ -51,8 +51,6 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
     private ownPeerDescriptor?: PeerDescriptor
     private stopped = false
-    private static objectCounter = 0
-    private objectId = 0
     private iceServers: IceServer[]
     private allowPrivateAddresses: boolean
     private config: WebRtcConnectorConfig
@@ -62,12 +60,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         config: WebRtcConnectorConfig,
         incomingConnectionCallback: (connection: ManagedConnection) => boolean
     ) {
-
         this.config = config
-
-        WebRtcConnector.objectCounter++
-        this.objectId = WebRtcConnector.objectCounter
-
         this.iceServers = config.iceServers || []
         this.allowPrivateAddresses = config.allowPrivateAddresses || true
         this.incomingConnectionCallback = incomingConnectionCallback

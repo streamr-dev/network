@@ -40,7 +40,6 @@ describe('inspect', () => {
             networkNode: {}
         })
         await node.start()
-        await node.getLayer0DhtNode().joinDht(publisherDescriptor)
         return node
     }
 

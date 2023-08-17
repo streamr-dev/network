@@ -20,7 +20,7 @@ describe('WebSocket IConnection Requests', () => {
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
         await epDhtNode.start()
 
-        await epDhtNode.joinDht(epPeerDescriptor)
+        await epDhtNode.joinDht([epPeerDescriptor])
 
         node1 = new DhtNode({ peerIdString: '2', nodeName: 'node1', webSocketPort: 10022, entryPoints: [epPeerDescriptor] })
         node2 = new DhtNode({ peerIdString: '1', nodeName: 'node2', entryPoints: [epPeerDescriptor] })
@@ -50,8 +50,8 @@ describe('WebSocket IConnection Requests', () => {
             }
         })
 
-        await node2.joinDht(epPeerDescriptor)
-        await node1.joinDht(epPeerDescriptor)
+        await node2.joinDht([epPeerDescriptor])
+        await node1.joinDht([epPeerDescriptor])
 
         await waitForCondition(() => { return (connected1 && connected2) })
 

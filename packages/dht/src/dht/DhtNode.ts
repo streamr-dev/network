@@ -56,11 +56,10 @@ export interface DhtNodeEvents {
 
 export interface DhtNodeOptions {
     serviceId?: string
-    parallelism?: number
+    joinParallelism?: number
     maxNeighborListSize?: number
     numberOfNodesPerKBucket?: number
     joinNoProgressLimit?: number
-    routeMessageTimeout?: number
     dhtJoinTimeout?: number
     metricsContext?: MetricsContext
     storeHighestTtl?: number
@@ -85,11 +84,10 @@ export interface DhtNodeOptions {
 
 export class DhtNodeConfig {
     serviceId = 'layer0'
-    parallelism = 3
+    joinParallelism = 3
     maxNeighborListSize = 200
     numberOfNodesPerKBucket = 8
     joinNoProgressLimit = 4
-    routeMessageTimeout = 2000
     dhtJoinTimeout = 60000
     getClosestContactsLimit = 5
     maxConnections = 80
@@ -245,7 +243,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             getClosestContactsLimit: this.config.getClosestContactsLimit,
             joinTimeout: this.config.dhtJoinTimeout,
             serviceId: this.config.serviceId,
-            parallelism: this.config.parallelism,
+            parallelism: this.config.joinParallelism,
             addContact: this.addNewContact.bind(this),
             connectionManager: this.connectionManager
         })
@@ -254,7 +252,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connections: this.connections,
             ownPeerDescriptor: this.ownPeerDescriptor!,
             ownPeerId: this.ownPeerId!,
-            routeMessageTimeout: this.config.routeMessageTimeout,
             addContact: this.addNewContact.bind(this),
             serviceId: this.config.serviceId,
             connectionManager: this.connectionManager
@@ -269,7 +266,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             ownPeerId: this.ownPeerId!,
             addContact: this.addNewContact.bind(this),
             isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
-            getClosestPeerDescriptors: this.getClosestPeerDescriptors.bind(this),
             localDataStore: this.localDataStore
         })
         this.dataStore = new DataStore({
@@ -475,7 +471,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             && this.config.entryPoints.length > 0
         ) {
             setImmediate(async () => {
-                await this.peerDiscovery!.rejoinDht(this.config.entryPoints![0])
+                await Promise.all(this.config.entryPoints!.map((entryPoint) => 
+                    this.peerDiscovery!.rejoinDht(entryPoint)
+                )) 
             })
         }
     }
@@ -611,11 +609,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         await this.router!.send(msg, reachableThrough)
     }
 
-    public async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin?: boolean): Promise<void> {
+    public async joinDht(entryPointDescriptors: PeerDescriptor[], doRandomJoin?: boolean): Promise<void> {
         if (!this.started) {
             throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
-        await this.peerDiscovery!.joinDht(entryPointDescriptor, doRandomJoin)
+        await Promise.all(entryPointDescriptors.map((entryPoint) => 
+            this.peerDiscovery!.joinDht(entryPoint, doRandomJoin)
+        ))
     }
 
     public async startRecursiveFind(idToFind: Uint8Array, findMode?: FindMode, excludedPeer?: PeerDescriptor): Promise<RecursiveFindResult> {

@@ -36,8 +36,8 @@ describe('Mock connection Dht joining with real latencies', () => {
     })
 
     it('Happy path', async () => {
-        await entryPoint.joinDht(entrypointDescriptor)
-        await Promise.all(nodes.map((node) => node.joinDht(entrypointDescriptor)))
+        await entryPoint.joinDht([entrypointDescriptor])
+        await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
         nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 3)
             expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 3)

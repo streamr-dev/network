@@ -79,7 +79,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             broadcast: (message: StreamMessage, previousPeer?: string) => this.broadcast(message, previousPeer),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
                 const senderId = notice.senderId
-                const contact = this.targetNeighbors.getNeighborWithId(senderId)
+                const contact = this.targetNeighbors.getNeighborById(senderId)
                 if (contact) {
                     setImmediate(() => this.onPeerDisconnected(contact.getPeerDescriptor()))
                 }
@@ -90,7 +90,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         this.propagation = new Propagation({
             minPropagationTargets: 2,
             sendToNeighbor: async (neighborId: string, msg: StreamMessage): Promise<void> => {
-                const remote = this.targetNeighbors.getNeighborWithId(neighborId)
+                const remote = this.targetNeighbors.getNeighborById(neighborId)
                 if (remote) {
                     await remote.sendData(config.ownPeerDescriptor, msg)
                 } else {
@@ -191,7 +191,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             logger.info('Close proxy connection', {
                 peerKey
             })
-            const server = this.targetNeighbors.getNeighborWithId(peerKey)
+            const server = this.targetNeighbors.getNeighborById(peerKey)
             server?.leaveStreamNotice(this.config.ownPeerDescriptor)
             this.removeConnection(peerKey)
         }
@@ -243,7 +243,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), 'proxy-stream-connection-client')
             remote.leaveStreamNotice(this.config.ownPeerDescriptor)
         })
-        this.targetNeighbors.clear()
+        this.targetNeighbors.stop()
         this.rpcCommunicator.stop()
         this.connections.clear()
         this.abortController.abort()

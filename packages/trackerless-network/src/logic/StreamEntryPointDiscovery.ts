@@ -2,14 +2,11 @@ import { createHash } from 'crypto'
 import {
     isSamePeerDescriptor,
     PeerDescriptor,
-    PeerID,
-    Contact,
-    SortedContactList,
     RecursiveFindResult,
     DataEntry
 } from '@streamr/dht'
 import { Any } from '../proto/google/protobuf/any'
-import { Logger, wait } from '@streamr/utils'
+import { Logger, setAbortableTimeout, wait } from '@streamr/utils'
 import { StreamObject } from './StreamrNode'
 
 export const streamPartIdToDataKey = (streamPartId: string): Uint8Array => {
@@ -71,7 +68,6 @@ export class StreamEntryPointDiscovery {
     private readonly config: StreamEntryPointDiscoveryConfig
     private readonly servicedStreams: Map<string, NodeJS.Timeout>
     private readonly cacheInterval: number
-    private destroyed = false
 
     constructor(config: StreamEntryPointDiscoveryConfig) {
         this.config = config
@@ -199,13 +195,7 @@ export class StreamEntryPointDiscovery {
             if (this.config.streams.has(streamPartID)) {
                 const stream = this.config.streams.get(streamPartID)
                 const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartID)
-                const sortedEntrypoints = new SortedContactList(PeerID.fromString(streamPartID), 4)
-                sortedEntrypoints.addContacts(
-                    rediscoveredEntrypoints
-                        .filter((entryPoint) => !isSamePeerDescriptor(entryPoint, this.config.ownPeerDescriptor))
-                        .map((entryPoint) => new Contact(entryPoint)))
-                await Promise.allSettled(sortedEntrypoints.getAllContacts()
-                    .map((entryPoint) => stream!.layer1!.joinDht(entryPoint.getPeerDescriptor(), false)))
+                await stream!.layer1!.joinDht(rediscoveredEntrypoints, false)
                 if (stream!.layer1!.getBucketSize() < 4) {
                     throw new Error(`Network split is still possible`)
                 }
@@ -216,19 +206,14 @@ export class StreamEntryPointDiscovery {
 
     removeSelfAsEntryPoint(streamPartId: string): void {
         if (this.servicedStreams.has(streamPartId)) {
-            setImmediate(async () => {
-                if (!this.destroyed) {
-                    await this.config.deleteEntryPointData(streamPartIdToDataKey(streamPartId))
-                }
-            })
+            setAbortableTimeout(() => this.config.deleteEntryPointData(streamPartIdToDataKey(streamPartId)), 0, this.abortController.signal)
             clearTimeout(this.servicedStreams.get(streamPartId)!)
             this.servicedStreams.delete(streamPartId)
         }
     }
 
     async destroy(): Promise<void> {
-        this.destroyed = true
-        await Promise.all(Array.from(this.servicedStreams.keys()).map((streamPartId) => this.removeSelfAsEntryPoint(streamPartId)))
+        this.servicedStreams.forEach((_, streamPartId) => this.removeSelfAsEntryPoint(streamPartId))
         this.servicedStreams.clear()
         this.abortController.abort()
     }
