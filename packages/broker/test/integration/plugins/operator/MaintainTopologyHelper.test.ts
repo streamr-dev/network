@@ -13,8 +13,8 @@ import { createClient, createTestStream } from '../../../utils'
 import { deploySponsorship } from './deploySponsorshipContract'
 import { setupOperatorContract } from './setupOperatorContract'
 
-const chainConfig = CHAIN_CONFIG['dev1']
-const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
+const chainConfig = CHAIN_CONFIG.dev2
+const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
 
@@ -32,7 +32,7 @@ describe('MaintainTopologyHelper', () => {
         provider = new JsonRpcProvider(chainURL)
         logger.debug('Connected to: ', await provider.getNetwork())
 
-        token = new Contract(chainConfig.contracts.LINK, tokenABI) as unknown as TestToken
+        token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
         const client = createClient(await fetchPrivateKeyWithGas())
         streamId1 = (await createTestStream(client, module)).id
         streamId2 = (await createTestStream(client, module)).id

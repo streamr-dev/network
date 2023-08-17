@@ -3,20 +3,10 @@ import { StreamrClientConfig, NetworkNodeType } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
-const MAIN_CHAIN_CONFIG = CHAIN_CONFIG['dev0']
-const SIDE_CHAIN_CONFIG = CHAIN_CONFIG['dev1']
+const DOCKER_DEV_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
 function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
-}
-
-const sideChainConfig = {
-    name: SIDE_CHAIN_CONFIG.name,
-    chainId: SIDE_CHAIN_CONFIG.id,
-    rpcs: [{
-        url: SIDE_CHAIN_CONFIG.rpcEndpoints[0].url,
-        timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
-    }]
 }
 
 /**
@@ -38,19 +28,26 @@ export const CONFIG_TEST: StreamrClientConfig = {
         }
     },
     contracts: {
-        streamRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StreamRegistry,
-        streamStorageRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StreamStorageRegistry,
-        storageNodeRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StorageNodeRegistry,
+        streamRegistryChainAddress: DOCKER_DEV_CHAIN_CONFIG.contracts.StreamRegistry,
+        streamStorageRegistryChainAddress: DOCKER_DEV_CHAIN_CONFIG.contracts.StreamStorageRegistry,
+        storageNodeRegistryChainAddress: DOCKER_DEV_CHAIN_CONFIG.contracts.StorageNodeRegistry,
         mainChainRPCs: {
-            name: MAIN_CHAIN_CONFIG.name,
-            chainId: MAIN_CHAIN_CONFIG.id,
+            name: DOCKER_DEV_CHAIN_CONFIG.name,
+            chainId: DOCKER_DEV_CHAIN_CONFIG.id,
             rpcs: [{
-                url: MAIN_CHAIN_CONFIG.rpcEndpoints[0].url,
+                url: DOCKER_DEV_CHAIN_CONFIG.rpcEndpoints[0].url,
                 timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
             }]
         },
-        streamRegistryChainRPCs: sideChainConfig,
-        theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
+        streamRegistryChainRPCs: {
+            name: DOCKER_DEV_CHAIN_CONFIG.name,
+            chainId: DOCKER_DEV_CHAIN_CONFIG.id,
+            rpcs: [{
+                url: DOCKER_DEV_CHAIN_CONFIG.rpcEndpoints[0].url,
+                timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
+            }]
+        },
+        theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`,
     },
     encryption: {
         rsaKeyLength: MIN_KEY_LENGTH

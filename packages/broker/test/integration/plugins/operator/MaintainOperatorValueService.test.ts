@@ -13,11 +13,11 @@ import { deploySponsorship } from './deploySponsorshipContract'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { getProvider } from './smartContractUtils'
-import { createClient } from '../../../utils'
+import { createClient, createTestStream } from '../../../utils'
 import { setupOperatorContract } from './setupOperatorContract'
 
-const chainConfig = CHAIN_CONFIG['dev1']
-const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
+const chainConfig = CHAIN_CONFIG.dev2
+const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
 
@@ -49,8 +49,8 @@ describe.skip('MaintainOperatorValueService', () => {
 
     beforeAll(async () => {
         const client = createClient(STREAM_CREATION_KEY)
-        streamId1 = (await client.createStream(`/operatorvalueservicetest-1-${Date.now()}`)).id
-        streamId2 = (await client.createStream(`/operatorvalueservicetest-2-${Date.now()}`)).id
+        streamId1 = (await createTestStream(client, module)).id
+        streamId2 = (await createTestStream(client, module)).id
         await client.destroy()
     })
 
@@ -58,7 +58,7 @@ describe.skip('MaintainOperatorValueService', () => {
         provider = getProvider()
         logger.debug('Connected to: ', await provider.getNetwork())
 
-        token = new Contract(chainConfig.contracts.LINK, tokenABI) as unknown as TestToken
+        token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
 
         ({ operatorWallet, operatorContract } = await setupOperatorContract({
             provider,
