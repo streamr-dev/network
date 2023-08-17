@@ -1,12 +1,12 @@
-import { ServerCallContext } from "@protobuf-ts/runtime-rpc"
-import { TemporaryConnectionRequest, TemporaryConnectionResponse } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
-import { ITemporaryConnectionRpc } from "../../proto/packages/trackerless-network/protos/NetworkRpc.server"
-import { DhtCallContext, ListeningRpcCommunicator, PeerID } from "@streamr/dht"
-import { NetworkRpcClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
-import { PeerList } from "../PeerList"
-import { toProtoRpcClient } from "@streamr/proto-rpc"
-import { RemoteRandomGraphNode } from "../RemoteRandomGraphNode"
-import { PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc"
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { TemporaryConnectionRequest, TemporaryConnectionResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { ITemporaryConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { DhtCallContext, ListeningRpcCommunicator, PeerID } from '@streamr/dht'
+import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { PeerList } from '../PeerList'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
+import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 
 interface TemporaryConnectionRpcServerConfig {
     randomGraphId: string

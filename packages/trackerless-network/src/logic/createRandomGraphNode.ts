@@ -12,10 +12,10 @@ import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
-    "nearbyContactPool" | "randomContactPool" | "targetNeighbors" | "propagation"
-    | "handshaker" | "neighborFinder" | "neighborUpdateManager" | "name" | "numOfTargetNeighbors"
-    | "maxNumberOfContacts" | "minPropagationTargets" | "rpcCommunicator" | "peerViewSize" | "acceptProxyConnections"
-    | "neighborUpdateInterval" | "inspector" | "temporaryConnectionServer">
+    'nearbyContactPool' | 'randomContactPool' | 'targetNeighbors' | 'propagation'
+    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'name' | 'numOfTargetNeighbors'
+    | 'maxNumberOfContacts' | 'minPropagationTargets' | 'rpcCommunicator' | 'peerViewSize' | 'acceptProxyConnections'
+    | 'neighborUpdateInterval' | 'inspector' | 'temporaryConnectionServer'>
 
 const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
     const peerId = peerIdFromPeerDescriptor(config.ownPeerDescriptor)

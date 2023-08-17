@@ -1,8 +1,8 @@
-import { PeerDescriptor, NodeType, PeerID } from "@streamr/dht"
-import { NetworkNode } from "../../src/NetworkNode"
-import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from "@streamr/protocol"
-import { EthereumAddress } from "streamr-client"
-import { waitForCondition } from "@streamr/utils"
+import { PeerDescriptor, NodeType, PeerID } from '@streamr/dht'
+import { NetworkNode } from '../../src/NetworkNode'
+import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { EthereumAddress } from 'streamr-client'
+import { waitForCondition } from '@streamr/utils'
 
 describe('inspect', () => {
 
