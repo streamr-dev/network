@@ -15,6 +15,7 @@ import { OperatorFleetState } from './OperatorFleetState'
 import { toStreamID } from '@streamr/protocol'
 import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
+import { CONFIG_TEST } from 'streamr-client'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -45,7 +46,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         this.serviceConfig = {
             provider,
             operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
-            theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
+            // TODO read from client, as we need to use production value in production environment (not ConfigTest)
+            theGraphUrl: CONFIG_TEST.contracts!.theGraphUrl!,
             signer: Wallet.createRandom().connect(provider)
         }
         this.announceNodeToStreamService = new AnnounceNodeToStreamService(

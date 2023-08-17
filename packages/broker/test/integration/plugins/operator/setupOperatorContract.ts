@@ -11,7 +11,7 @@ export interface SetupOperatorOpts {
     nodeAddresses?: EthereumAddress[]
     provider: Provider
     // eslint-disable-next-line max-len
-    chainConfig: { contracts: { DATA?: string, LINK?: string, OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
+    chainConfig: { contracts: { DATA: string, OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
     theGraphUrl: string
     adminKey?: string
 }
