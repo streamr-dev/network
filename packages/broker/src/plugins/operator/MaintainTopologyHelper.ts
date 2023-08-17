@@ -1,10 +1,10 @@
-import { Contract } from "@ethersproject/contracts"
-import { Provider } from "@ethersproject/providers"
-import { operatorABI, sponsorshipABI } from "@streamr/network-contracts"
-import type { Operator, Sponsorship } from "@streamr/network-contracts"
-import { EventEmitter } from "eventemitter3"
-import { EthereumAddress, Logger, TheGraphClient, toEthereumAddress } from "@streamr/utils"
-import { OperatorServiceConfig } from "./OperatorPlugin"
+import { Contract } from '@ethersproject/contracts'
+import { Provider } from '@ethersproject/providers'
+import { operatorABI, sponsorshipABI } from '@streamr/network-contracts'
+import type { Operator, Sponsorship } from '@streamr/network-contracts'
+import { EventEmitter } from 'eventemitter3'
+import { EthereumAddress, Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
+import { OperatorServiceConfig } from './OperatorPlugin'
 import { StreamID, toStreamID } from '@streamr/protocol'
 import fetch from 'node-fetch'
 

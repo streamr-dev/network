@@ -17,7 +17,7 @@ describe('Kademlia correctness', () => {
 
     if (!fs.existsSync('test/data/nodeids.json')) {
         console.log('gound truth data does not exist yet, generating..')
-        execSync("npm run prepare-kademlia-simulation")
+        execSync('npm run prepare-kademlia-simulation')
     }
 
     const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
@@ -86,7 +86,7 @@ describe('Kademlia correctness', () => {
                     correctNeighbors++
                 }
             } catch (e) {
-                console.error("Node " + nodes[i].getNodeName() + " had only " + kademliaNeighbors.length + " kademlia neighbors")
+                console.error('Node ' + nodes[i].getNodeName() + ' had only ' + kademliaNeighbors.length + ' kademlia neighbors')
             }
             if (correctNeighbors === 0) {
                 console.log('No correct neighbors found for node ' + i)
@@ -94,7 +94,7 @@ describe('Kademlia correctness', () => {
                 console.log(kadString)
             }
             if (correctNeighbors < minimumCorrectNeighbors) {
-                console.log("NEW MIN", i, correctNeighbors)
+                console.log('NEW MIN', i, correctNeighbors)
                 minimumCorrectNeighbors = correctNeighbors
             }
 

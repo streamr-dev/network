@@ -60,7 +60,7 @@ describe('NetworkStack', () => {
             receivedMessages += 1
         })
         const content: ContentMessage = {
-            body: JSON.stringify({ hello: "WORLD" })
+            body: JSON.stringify({ hello: 'WORLD' })
         }
         const msg = createStreamMessage(
             content,

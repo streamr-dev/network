@@ -31,7 +31,7 @@ describe('StreamrNode', () => {
     const STREAM_ID = 'test'
 
     const content: ContentMessage = {
-        body: JSON.stringify({ hello: "WORLD" })
+        body: JSON.stringify({ hello: 'WORLD' })
     }
     const msg = createStreamMessage(
         content,

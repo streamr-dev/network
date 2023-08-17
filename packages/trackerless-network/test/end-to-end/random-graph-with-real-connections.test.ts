@@ -141,7 +141,7 @@ describe('random graph with real connections', () => {
         }, 10000)
 
         const content: ContentMessage = {
-            body: JSON.stringify({ hello: "WORLD" })
+            body: JSON.stringify({ hello: 'WORLD' })
         }
         const msg = createStreamMessage(
             content,

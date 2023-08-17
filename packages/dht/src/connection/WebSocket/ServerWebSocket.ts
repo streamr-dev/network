@@ -81,7 +81,7 @@ export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements I
                 this.socket.sendBytes(Buffer.from(data))
             }
         } else {
-            logger.error("Tried to call send() on a stopped socket")
+            logger.error('Tried to call send() on a stopped socket')
         }
 
     }
@@ -90,7 +90,7 @@ export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements I
         if (!this.stopped) {
             this.socket?.close()
         } else {
-            logger.error("Tried to close a stopped connection")
+            logger.error('Tried to close a stopped connection')
         }
     }
 
@@ -112,8 +112,8 @@ export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements I
         if (!this.stopped && this.socket) {
             return this.socket.remoteAddress
         } else {
-            logger.error("Tried to get the remoteAddress of a stopped connection")
-            return ""
+            logger.error('Tried to get the remoteAddress of a stopped connection')
+            return ''
         }
     }
 }

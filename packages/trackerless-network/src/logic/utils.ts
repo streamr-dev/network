@@ -1,5 +1,5 @@
-import { DuplicateMessageDetector, NumberPair } from "./DuplicateMessageDetector" 
-import { MessageRef } from "../proto/packages/trackerless-network/protos/NetworkRpc"
+import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector' 
+import { MessageRef } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 
 export const markAndCheckDuplicate = (
     duplicateDetectors: Map<string, DuplicateMessageDetector>,

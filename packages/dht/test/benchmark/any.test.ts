@@ -1,6 +1,6 @@
-import { Logger } from "@streamr/utils"
-import { Any } from "../../src/proto/google/protobuf/any"
-import { SomeMessage, TestMessage } from "../../src/proto/tests"
+import { Logger } from '@streamr/utils'
+import { Any } from '../../src/proto/google/protobuf/any'
+import { SomeMessage, TestMessage } from '../../src/proto/tests'
 
 const logger = new Logger(module)
 
