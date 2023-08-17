@@ -9,7 +9,7 @@ import { deployOperatorContract as _deployOperatorContract } from './deployOpera
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { wait } from '@streamr/utils'
 
-const TEST_CHAIN = 'dev2'
+const TEST_CHAIN = 'dev1'
 export const ADMIN_WALLET_PK = '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
 
 export function getProvider(): Provider {
@@ -17,7 +17,7 @@ export function getProvider(): Provider {
 }
 
 export function getTokenContract(): TestToken {
-    return new Contract(CHAIN_CONFIG[TEST_CHAIN].contracts.DATA, tokenABI) as unknown as TestToken
+    return new Contract(CHAIN_CONFIG[TEST_CHAIN].contracts.LINK, tokenABI) as unknown as TestToken
 }
 
 export async function generateWalletWithGasAndTokens(

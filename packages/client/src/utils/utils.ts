@@ -113,6 +113,7 @@ export class MaxSizedSet<T> {
     }
 }
 
+// TODO: rename to convertNetworkPeerDescriptorToPeerDescriptor
 export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescriptor {
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
