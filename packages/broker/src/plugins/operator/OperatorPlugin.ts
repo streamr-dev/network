@@ -5,7 +5,7 @@ import { AnnounceNodeToStreamService } from './AnnounceNodeToStreamService'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorContractService } from './MaintainOperatorContractService'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { Signer } from '@ethersproject/abstract-signer'
 import { Wallet } from 'ethers'
@@ -28,6 +28,8 @@ export interface OperatorServiceConfig {
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
 }
+
+const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly announceNodeToStreamService: AnnounceNodeToStreamService
@@ -84,11 +86,11 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.maintainOperatorValueService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
-
-        await Promise.all([
-            this.fleetState.start(),
-            this.announceNodeToContractService.start()
-        ])
+        await this.fleetState.start()
+        this.announceNodeToContractService.start().catch((err) => {
+            logger.fatal('Encountered fatal error in announceNodeToContractService', { err })
+            process.exit(1)
+        })
     }
 
     async stop(): Promise<void> {
