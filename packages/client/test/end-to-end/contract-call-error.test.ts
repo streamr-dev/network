@@ -2,9 +2,9 @@ import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 
-// TODO enable the test
-describe.skip('contract call error', () => {
-    
+describe('contract call error', () => {
+
+    // TODO: see NET-1007, could improve error messages in fast-chain
     it('insufficient funds', async () => {
         const client = new StreamrClient({
             ...CONFIG_TEST,
@@ -14,7 +14,7 @@ describe.skip('contract call error', () => {
         })
         await expect(() => client.createStream('/path')).rejects.toThrow(
             // eslint-disable-next-line max-len
-            'Error while executing contract call "streamRegistry.createStream", reason=insufficient funds for intrinsic transaction cost, code=INSUFFICIENT_FUNDS'
+            'Error while executing contract call "streamRegistry.createStream", reason=processing response error, code=SERVER_ERROR'
         )
     })
 
@@ -48,6 +48,6 @@ describe.skip('contract call error', () => {
             client.createStream('/path1' + Date.now()),
             client.createStream('/path2' + Date.now())
             // eslint-disable-next-line max-len
-        ])).rejects.toThrow('Error while executing contract call "streamRegistry.createStream", reason=replacement fee too low, code=REPLACEMENT_UNDERPRICED')
+        ])).rejects.toThrow('Error while executing contract call "streamRegistry.createStream", reason=nonce has already been used, code=NONCE_EXPIRED')
     })
 })
