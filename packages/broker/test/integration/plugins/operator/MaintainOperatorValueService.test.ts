@@ -23,7 +23,7 @@ import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 
 const chainConfig = CHAIN_CONFIG["dev2"]
 
-const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`
+const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 const logger = new Logger(module)
 
 async function getTotalUnwithdrawnEarnings(operatorContract: Operator): Promise<bigint> {
