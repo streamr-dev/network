@@ -49,4 +49,7 @@ export class AnnounceNodeToContractHelper {
         }
     }
 
+    getOperatorContractAddress(): string {
+        return this.operator.address
+    }
 }

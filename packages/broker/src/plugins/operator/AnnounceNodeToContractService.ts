@@ -30,30 +30,38 @@ export class AnnounceNodeToContractService {
     async start(): Promise<void> {
         await this.operatorFleetState.waitUntilReady()
         await scheduleAtInterval(async () => {
-            if (await this.isHeartbeatStale()) {
-                if (await this.isLeader()) {
-                    await this.writeHeartbeat()
-                } else {
-                    logger.debug('Skip writing heartbeat (not leader)')
-                }
+            if (await this.isHeartbeatStale() && await this.isLeader()) {
+                await this.writeHeartbeat()
             }
         }, this.pollIntervalInMs, true, this.abortController.signal)
     }
 
+    async stop(): Promise<void> {
+        this.abortController.abort()
+    }
+
     private async isHeartbeatStale(): Promise<boolean> {
+        logger.debug('Polling last heartbeat timestamp', {
+            operatorContractAddress: this.helper.getOperatorContractAddress()
+        })
         let lastHeartbeatTs
         try {
             lastHeartbeatTs = await this.helper.getTimestampOfLastHeartbeat()
         } catch (err) {
             logger.warn('Failed to poll last heartbeat timestamp', { reason: err?.message })
-            return false // here we don't really know if heartbeat is stale, but we don't want execution to continue
+            return false // we don't know if heartbeat is stale, but we don't want execution to continue
         }
-        return lastHeartbeatTs !== undefined ? lastHeartbeatTs + this.writeIntervalInMs <= Date.now() : true
+        const stale = lastHeartbeatTs !== undefined ? lastHeartbeatTs + this.writeIntervalInMs <= Date.now() : true
+        logger.debug('Polled last heartbeat timestamp', { lastHeartbeatTs, stale })
+        return stale
     }
 
     private async isLeader(): Promise<boolean> {
         const myNodeId = (await this.streamrClient.getNode()).getNodeId()
-        return this.operatorFleetState.getLeaderNodeId() === myNodeId
+        const leaderNodeId = this.operatorFleetState.getLeaderNodeId()
+        const isLeader = myNodeId === leaderNodeId
+        logger.debug('Check if leader', { isLeader, leaderNodeId, myNodeId })
+        return isLeader
     }
 
     private async writeHeartbeat(): Promise<void> {
@@ -61,12 +69,9 @@ export class AnnounceNodeToContractService {
         try {
             const nodeDescriptor = await this.streamrClient.getPeerDescriptor()
             await this.helper.writeHeartbeat(nodeDescriptor)
+            logger.debug('Wrote heartbeat', { nodeDescriptor })
         } catch (err) {
             logger.warn('Failed to write heartbeat', { reason: err?.message })
         }
-    }
-
-    async stop(): Promise<void> {
-        this.abortController.abort()
     }
 }
