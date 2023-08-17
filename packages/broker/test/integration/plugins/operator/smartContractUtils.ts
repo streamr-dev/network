@@ -27,7 +27,7 @@ export async function generateWalletWithGasAndTokens(
     const adminWallet = new Wallet(adminKey ?? CHAIN_CONFIG[TEST_CHAIN].adminPrivateKey).connect(provider)
     const token = (config !== undefined) 
         ? new Contract(config.contracts.DATA!, tokenABI, adminWallet) as unknown as TestToken
-        : getTokenContract()
+        : getTokenContract().connect(adminWallet)
     await (await token.mint(newWallet.address, parseEther('1000000'), {
         nonce: await adminWallet.getTransactionCount()
     })).wait()
