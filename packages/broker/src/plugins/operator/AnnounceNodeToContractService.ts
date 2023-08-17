@@ -32,7 +32,7 @@ export class AnnounceNodeToContractService {
         await this.operatorFleetState.waitUntilReady()
         const isLeader = await createIsLeaderFn(this.streamrClient, this.operatorFleetState)
         await scheduleAtInterval(async () => {
-            if (await this.isHeartbeatStale() && isLeader()) {
+            if (isLeader() && await this.isHeartbeatStale()) {
                 await this.writeHeartbeat()
             }
         }, this.pollIntervalInMs, true, this.abortController.signal)
