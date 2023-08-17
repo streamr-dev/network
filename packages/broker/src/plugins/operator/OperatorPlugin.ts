@@ -1,11 +1,11 @@
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Schema } from 'ajv'
-import { AnnounceNodeService } from './AnnounceNodeService'
+import { AnnounceNodeToStreamService } from './AnnounceNodeToStreamService'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorContractService } from './MaintainOperatorContractService'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { Signer } from '@ethersproject/abstract-signer'
 import { Wallet } from 'ethers'
@@ -14,6 +14,8 @@ import { MaintainOperatorValueService } from './MaintainOperatorValueService'
 import { OperatorValueBreachWatcher } from './OperatorValueBreachWatcher'
 import { OperatorFleetState } from './OperatorFleetState'
 import { toStreamID } from '@streamr/protocol'
+import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
+import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { CONFIG_TEST } from 'streamr-client'
 
 export interface OperatorPluginConfig {
@@ -30,8 +32,11 @@ export interface OperatorServiceConfig {
     minSponsorshipEarnings?: number
 }
 
+const logger = new Logger(module)
+
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
-    private readonly announceNodeService: AnnounceNodeService
+    private readonly announceNodeToStreamService: AnnounceNodeToStreamService
+    private readonly announceNodeToContractService: AnnounceNodeToContractService
     private readonly inspectRandomNodeService = new InspectRandomNodeService()
     private readonly maintainOperatorContractService = new MaintainOperatorContractService()
     private readonly voteOnSuspectNodeService: VoteOnSuspectNodeService
@@ -53,13 +58,18 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             maxSponsorshipsCount: 20, // max number of sponsorships to loop over before tx reverts
             minSponsorshipEarnings: 1 // token value, not wei
         }
-        this.announceNodeService = new AnnounceNodeService(
+        this.announceNodeToStreamService = new AnnounceNodeToStreamService(
             this.streamrClient,
             toEthereumAddress(this.pluginConfig.operatorContractAddress)
         )
         this.fleetState = new OperatorFleetState(
             this.streamrClient,
             toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
+        )
+        this.announceNodeToContractService = new AnnounceNodeToContractService(
+            this.streamrClient,
+            new AnnounceNodeToContractHelper(this.serviceConfig),
+            this.fleetState
         )
         this.maintainOperatorValueService = new MaintainOperatorValueService(this.serviceConfig)
         this.operatorValueBreachWatcher = new OperatorValueBreachWatcher(this.serviceConfig)
@@ -77,19 +87,22 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
-        await this.announceNodeService.start()
+        await this.announceNodeToStreamService.start()
         await this.inspectRandomNodeService.start()
         await this.maintainOperatorContractService.start()
         await this.maintainOperatorValueService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
         await this.operatorValueBreachWatcher.start()
-
-        await this.fleetState.start() // must be started last!
+        await this.fleetState.start()
+        this.announceNodeToContractService.start().catch((err) => {
+            logger.fatal('Encountered fatal error in announceNodeToContractService', { err })
+            process.exit(1)
+        })
     }
 
     async stop(): Promise<void> {
-        await this.announceNodeService.stop()
+        await this.announceNodeToStreamService.stop()
         await this.inspectRandomNodeService.stop()
         await this.maintainOperatorContractService.stop()
         await this.maintainOperatorValueService.stop()
