@@ -1,5 +1,5 @@
-import { UUID } from "../helpers/UUID"
-import { DisconnectionType } from "../transport/ITransport"
+import { UUID } from '../helpers/UUID'
+import { DisconnectionType } from '../transport/ITransport'
 
 export interface ConnectionEvents {
     data: (bytes: Uint8Array) => void

@@ -91,10 +91,10 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     serverSocket.resourceURL.query) {
                     const query = serverSocket.resourceURL.query as unknown as ParsedUrlQuery
                     if (query.connectivityRequest) {
-                        logger.trace("Received connectivity request connection")
+                        logger.trace('Received connectivity request connection')
                         this.connectivityChecker.listenToIncomingConnectivityRequests(serverSocket)
                     } else if (query.connectivityProbe) {
-                        logger.trace("Received connectivity probe connection")
+                        logger.trace('Received connectivity probe connection')
                     } else {
                         this.attachHandshaker(connection)
                     }

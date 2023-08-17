@@ -1,8 +1,8 @@
 /* eslint-disable prefer-spread, @typescript-eslint/consistent-indexed-object-style, 
 @typescript-eslint/ban-types, @typescript-eslint/no-invalid-void-type */
 
-import type { ServiceInfo } from "@protobuf-ts/runtime-rpc"
-import { Empty } from "./proto/google/protobuf/empty"
+import type { ServiceInfo } from '@protobuf-ts/runtime-rpc'
+import { Empty } from './proto/google/protobuf/empty'
 
 interface Indexable {
     [key: string]: any

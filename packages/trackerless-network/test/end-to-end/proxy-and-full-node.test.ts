@@ -1,9 +1,9 @@
-import { NodeType, PeerDescriptor, PeerID } from "@streamr/dht"
-import { NetworkNode } from "../../src/NetworkNode"
-import { MessageID, MessageRef, StreamID, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from "@streamr/protocol"
-import { EthereumAddress, waitForEvent3 } from "@streamr/utils"
-import { ProxyDirection, StreamMessage as InternalStreamMessage } from "../../src/proto/packages/trackerless-network/protos/NetworkRpc"
-import { StreamNodeType } from "../../src/logic/StreamrNode"
+import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
+import { NetworkNode } from '../../src/NetworkNode'
+import { MessageID, MessageRef, StreamID, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { EthereumAddress, waitForEvent3 } from '@streamr/utils'
+import { ProxyDirection, StreamMessage as InternalStreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamNodeType } from '../../src/logic/StreamrNode'
 
 const createMessage = (streamId: StreamID): StreamMessage => {
     return new StreamMessage({ 

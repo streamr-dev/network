@@ -19,7 +19,7 @@ describe('WebSocket Connection Management', () => {
     const simulator = new Simulator()
 
     const wsServerConnectorPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString("peerWithServer").value,
+        kademliaId: PeerID.fromString('peerWithServer').value,
         type: NodeType.NODEJS,
         websocket: {
             ip: '127.0.0.1',
@@ -28,7 +28,7 @@ describe('WebSocket Connection Management', () => {
     }
 
     const noWsServerConnectorPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString("peerWithoutServer").value,
+        kademliaId: PeerID.fromString('peerWithoutServer').value,
         type: NodeType.NODEJS,
     }
 

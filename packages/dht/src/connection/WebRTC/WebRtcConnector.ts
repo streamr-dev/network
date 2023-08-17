@@ -14,7 +14,7 @@ import { PeerIDKey } from '../../helpers/PeerID'
 import { ManagedWebRtcConnection } from '../ManagedWebRtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
-import { IWebRtcConnectorService } from "../../proto/packages/dht/protos/DhtRpc.server"
+import { IWebRtcConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'

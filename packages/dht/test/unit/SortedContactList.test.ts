@@ -1,15 +1,15 @@
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
-import type { ServiceInfo, MethodInfo } from "@protobuf-ts/runtime-rpc"
+import type { ServiceInfo, MethodInfo } from '@protobuf-ts/runtime-rpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { IDhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { LeaveNotice, NodeType, PeerDescriptor, RouteMessageAck } from "../../src/proto/packages/dht/protos/DhtRpc"
-import type { FindDataRequest, FindDataResponse, PingResponse } from "../../src/proto/packages/dht/protos/DhtRpc"
-import type { PingRequest } from "../../src/proto/packages/dht/protos/DhtRpc"
-import type { ClosestPeersResponse } from "../../src/proto/packages/dht/protos/DhtRpc"
-import type { ClosestPeersRequest } from "../../src/proto/packages/dht/protos/DhtRpc"
-import { UnaryCall } from "@protobuf-ts/runtime-rpc"
-import type { RpcOptions } from "@protobuf-ts/runtime-rpc"
+import { LeaveNotice, NodeType, PeerDescriptor, RouteMessageAck } from '../../src/proto/packages/dht/protos/DhtRpc'
+import type { FindDataRequest, FindDataResponse, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
+import type { PingRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
+import type { ClosestPeersResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
+import type { ClosestPeersRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { UnaryCall } from '@protobuf-ts/runtime-rpc'
+import type { RpcOptions } from '@protobuf-ts/runtime-rpc'
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { IMessageType } from '@protobuf-ts/runtime'
 import { Empty } from '../../src/proto/google/protobuf/empty'

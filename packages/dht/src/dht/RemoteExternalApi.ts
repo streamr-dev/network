@@ -1,7 +1,7 @@
-import { DhtRpcOptions } from "../exports"
-import { DataEntry, FindDataRequest } from "../proto/packages/dht/protos/DhtRpc"
-import { IExternalApiServiceClient } from "../proto/packages/dht/protos/DhtRpc.client"
-import { Remote } from "./contact/Remote"
+import { DhtRpcOptions } from '../exports'
+import { DataEntry, FindDataRequest } from '../proto/packages/dht/protos/DhtRpc'
+import { IExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { Remote } from './contact/Remote'
 
 export class RemoteExternalApi extends Remote<IExternalApiServiceClient> {
 

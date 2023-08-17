@@ -1,7 +1,7 @@
-import InvalidJsonError from "./InvalidJsonError"
-import UnsupportedVersionError from "./UnsupportedVersionError"
-import ValidationError from "./ValidationError"
-import StreamMessageError from "./StreamMessageError"
+import InvalidJsonError from './InvalidJsonError'
+import UnsupportedVersionError from './UnsupportedVersionError'
+import ValidationError from './ValidationError'
+import StreamMessageError from './StreamMessageError'
 
 export {
     InvalidJsonError,

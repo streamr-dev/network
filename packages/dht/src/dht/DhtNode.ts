@@ -373,7 +373,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             logger.trace('new connection not set to connections, there is already a connection with the peer ID')
         }
         if (this.ownPeerDescriptor!.nodeName === 'entrypoint') {
-            logger.trace("connected: " + this.ownPeerDescriptor!.nodeName + ", " + peerDescriptor.nodeName + ' ' + this.connections.size)
+            logger.trace('connected: ' + this.ownPeerDescriptor!.nodeName + ', ' + peerDescriptor.nodeName + ' ' + this.connections.size)
         }
         this.emit('connected', peerDescriptor)
     }

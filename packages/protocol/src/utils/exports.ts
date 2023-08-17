@@ -1,8 +1,8 @@
-import { createTrackerRegistry, TrackerRegistry, TrackerRegistryRecord } from "./TrackerRegistry"
-import { StreamID, toStreamID, StreamIDUtils } from "./StreamID"
+import { createTrackerRegistry, TrackerRegistry, TrackerRegistryRecord } from './TrackerRegistry'
+import { StreamID, toStreamID, StreamIDUtils } from './StreamID'
 import { MAX_PARTITION_COUNT, ensureValidStreamPartitionCount } from './partition'
-import { StreamPartID, toStreamPartID, StreamPartIDUtils } from "./StreamPartID"
-import { ProxyDirection } from "./types"
+import { StreamPartID, toStreamPartID, StreamPartIDUtils } from './StreamPartID'
+import { ProxyDirection } from './types'
 
 export {
     TrackerRegistryRecord,

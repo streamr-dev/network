@@ -1,6 +1,6 @@
 import ControlMessage from '../ControlMessage'
 
-import ProxyConnectionResponse from "./ProxyConnectionResponse"
+import ProxyConnectionResponse from './ProxyConnectionResponse'
 import { Serializer } from '../../../Serializer'
 import { toStreamID } from '../../../../src/utils/StreamID'
 

@@ -1,8 +1,8 @@
-import { ListeningRpcCommunicator, PeerDescriptor, PeerID } from "@streamr/dht"
-import { StreamNodeServer } from "../../src/logic/StreamNodeServer"
-import { ContentMessage, LeaveStreamNotice } from "../../src/proto/packages/trackerless-network/protos/NetworkRpc"
-import { MockTransport } from "../utils/mock/Transport"
-import { createStreamMessage } from "../utils/utils"
+import { ListeningRpcCommunicator, PeerDescriptor, PeerID } from '@streamr/dht'
+import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
+import { ContentMessage, LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { MockTransport } from '../utils/mock/Transport'
+import { createStreamMessage } from '../utils/utils'
 
 describe('StreamNodeServer', () => {
 
@@ -18,7 +18,7 @@ describe('StreamNodeServer', () => {
     }
 
     const content: ContentMessage = {
-        body: JSON.stringify({ hello: "WORLD" })
+        body: JSON.stringify({ hello: 'WORLD' })
     }
     const message = createStreamMessage(content, 'random-graph', 'publisher')
 

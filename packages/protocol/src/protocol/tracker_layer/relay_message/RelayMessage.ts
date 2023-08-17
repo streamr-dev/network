@@ -4,7 +4,7 @@ import {
     validateIsOneOf,
 } from '../../../utils/validations'
 import TrackerMessage, { TrackerMessageOptions } from '../TrackerMessage'
-import { Originator } from "../Originator"
+import { Originator } from '../Originator'
 
 export enum RelayMessageSubType {
     RTC_OFFER = 'rtcOffer',

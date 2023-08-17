@@ -1,9 +1,9 @@
-import { DhtNode } from "../../src/dht/DhtNode"
-import { LatencyType, Simulator } from "../../src/connection/Simulator/Simulator"
-import { createMockConnectionDhtNode } from "../utils/utils"
-import { Any } from "../../src/proto/google/protobuf/any"
-import { PeerDescriptor } from "../../src/proto/packages/dht/protos/DhtRpc"
-import { PeerID } from "../../src/helpers/PeerID"
+import { DhtNode } from '../../src/dht/DhtNode'
+import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
+import { createMockConnectionDhtNode } from '../utils/utils'
+import { Any } from '../../src/proto/google/protobuf/any'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerID } from '../../src/helpers/PeerID'
 
 describe('DhtNodeExternalApi', () => {
 

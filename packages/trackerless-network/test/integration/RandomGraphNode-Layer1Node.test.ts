@@ -214,7 +214,7 @@ describe('RandomGraphNode-DhtNode', () => {
                 if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
                     const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
                     if (!neighbor!.getTargetNeighborStringIds().includes(nodeId)) {
-                        logger.info('mismatching ids length: ' + nodeId + " " + neighbor!.getTargetNeighborStringIds().length)
+                        logger.info('mismatching ids length: ' + nodeId + ' ' + neighbor!.getTargetNeighborStringIds().length)
                         mismatchCounter += 1
                     }
                 }

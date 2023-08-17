@@ -13,7 +13,7 @@ import { EthereumAddress } from '@streamr/utils'
 describe('StreamMessageTranslator', () => {
 
     const content: ContentMessage = {
-        body: JSON.stringify({ hello: "WORLD" })
+        body: JSON.stringify({ hello: 'WORLD' })
     }
     const protobufMsg = createStreamMessage(content, 'TEST', 'publisher')
 
@@ -29,7 +29,7 @@ describe('StreamMessageTranslator', () => {
     const oldProtocolMsg = new OldStreamMessage({
         messageId,
         prevMsgRef: null,
-        content: { hello: "WORLD" },
+        content: { hello: 'WORLD' },
         messageType: OldStreamMessageType.MESSAGE,
         encryptionType: EncryptionType.NONE,
         signature: 'signature',
@@ -46,7 +46,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageType).toEqual(StreamMessageType.MESSAGE)
         expect(translated.groupKeyId).toEqual(undefined)
         expect(translated.signature).toEqual('signature')
-        expect(JSON.parse(ContentMessage.fromBinary(translated.content).body)).toEqual({ hello: "WORLD" })
+        expect(JSON.parse(ContentMessage.fromBinary(translated.content).body)).toEqual({ hello: 'WORLD' })
 
     })
 
@@ -62,6 +62,6 @@ describe('StreamMessageTranslator', () => {
         expect(translated.contentType).toEqual(0)
         expect(translated.groupKeyId).toEqual(null)
         expect(translated.signature).toEqual('signature')
-        expect(translated.getParsedContent()).toEqual({ hello: "WORLD" })
+        expect(translated.getParsedContent()).toEqual({ hello: 'WORLD' })
     })
 })

@@ -15,7 +15,7 @@ describe('StreamrNode', () => {
     }
     const stream = 'stream'
     const content: ContentMessage = {
-        body: JSON.stringify({ hello: "WORLD" })
+        body: JSON.stringify({ hello: 'WORLD' })
     }
     const message = createStreamMessage(content, stream, 'publisher')
 

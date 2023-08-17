@@ -1,5 +1,5 @@
-import { DhtNode } from "../exports"
-import { FindDataRequest, FindDataResponse, FindMode } from "../proto/packages/dht/protos/DhtRpc"
+import { DhtNode } from '../exports'
+import { FindDataRequest, FindDataResponse, FindMode } from '../proto/packages/dht/protos/DhtRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 export class ExternalApi {

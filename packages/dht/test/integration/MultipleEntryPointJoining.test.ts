@@ -1,7 +1,7 @@
-import { LatencyType, Simulator } from "../../src/connection/Simulator/Simulator"
-import { DhtNode } from "../../src/dht/DhtNode"
-import { PeerDescriptor } from "../../src/proto/packages/dht/protos/DhtRpc"
-import { createMockConnectionDhtNode } from "../utils/utils"
+import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
+import { DhtNode } from '../../src/dht/DhtNode'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { createMockConnectionDhtNode } from '../utils/utils'
 
 describe('multiple entry point joining', () => {
 

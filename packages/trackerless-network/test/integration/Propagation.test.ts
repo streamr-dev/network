@@ -66,7 +66,7 @@ describe('Propagation', () => {
             return avg >= 4
         }, 20000)
         const content: ContentMessage = {
-            body: JSON.stringify({ hello: "WORLD" })
+            body: JSON.stringify({ hello: 'WORLD' })
         }
         const msg = createStreamMessage(
             content,

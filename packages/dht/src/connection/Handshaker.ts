@@ -1,8 +1,8 @@
-import { Logger } from "@streamr/utils"
-import { EventEmitter } from "eventemitter3"
-import { v4 } from "uuid"
-import { Message, HandshakeRequest, HandshakeResponse, MessageType, PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
-import { IConnection } from "./IConnection"
+import { Logger } from '@streamr/utils'
+import { EventEmitter } from 'eventemitter3'
+import { v4 } from 'uuid'
+import { Message, HandshakeRequest, HandshakeResponse, MessageType, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { IConnection } from './IConnection'
 
 const logger = new Logger(module)
 

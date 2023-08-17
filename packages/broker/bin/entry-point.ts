@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { DhtNode, NodeType, PeerID } from "@streamr/dht"
+import { DhtNode, NodeType, PeerID } from '@streamr/dht'
 
 const main = async () => {
     const peerDescriptor = {
