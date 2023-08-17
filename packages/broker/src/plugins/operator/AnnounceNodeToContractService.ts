@@ -30,7 +30,7 @@ export class AnnounceNodeToContractService {
 
     async start(): Promise<void> {
         await this.operatorFleetState.waitUntilReady()
-        const isLeader = await createIsLeaderFn(this.streamrClient, this.operatorFleetState)
+        const isLeader = await createIsLeaderFn(this.streamrClient, this.operatorFleetState, logger)
         await scheduleAtInterval(async () => {
             if (isLeader() && await this.isHeartbeatStale()) {
                 await this.writeHeartbeat()
