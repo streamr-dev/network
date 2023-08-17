@@ -52,7 +52,7 @@ describe('toProtoRpcClient', () => {
         })
 
         const { greeting } = await helloClient.sayHello({ myName: 'Alice' })
-        expect(greeting).toBe("Hello Alice!")
+        expect(greeting).toBe('Hello Alice!')
 
         communicator1.stop()
         communicator2.stop()
@@ -77,7 +77,7 @@ describe('toProtoRpcClient', () => {
         })
 
         wakeUpService.on('wakeUpCalled', async (reason) => {
-            expect(reason).toBe("School")
+            expect(reason).toBe('School')
             communicator1.stop()
             communicator2.stop()
             done()

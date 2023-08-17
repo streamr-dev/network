@@ -10,10 +10,10 @@ import { MarkOptional } from 'ts-essentials'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
-    "nearbyContactPool" | "randomContactPool" | "targetNeighbors" | "propagation"
-    | "handshaker" | "neighborFinder" | "neighborUpdateManager" | "name" | "numOfTargetNeighbors"
-    | "maxNumberOfContacts" | "minPropagationTargets" | "rpcCommunicator" | "peerViewSize" | "acceptProxyConnections"
-    | "neighborUpdateInterval">
+    'nearbyContactPool' | 'randomContactPool' | 'targetNeighbors' | 'propagation'
+    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'name' | 'numOfTargetNeighbors'
+    | 'maxNumberOfContacts' | 'minPropagationTargets' | 'rpcCommunicator' | 'peerViewSize' | 'acceptProxyConnections'
+    | 'neighborUpdateInterval'>
 
 const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
     const peerId = peerIdFromPeerDescriptor(config.ownPeerDescriptor)

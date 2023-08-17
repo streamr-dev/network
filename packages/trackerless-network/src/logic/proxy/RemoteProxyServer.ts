@@ -1,10 +1,10 @@
-import { DhtRpcOptions, keyFromPeerDescriptor } from "@streamr/dht"
-import { PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc"
-import { IProxyConnectionRpcClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
-import { Remote } from "../Remote"
-import { StreamPartIDUtils, toStreamID } from "@streamr/protocol"
-import { ProxyDirection, ProxyConnectionRequest } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
-import { Logger } from "@streamr/utils"
+import { DhtRpcOptions, keyFromPeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { IProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { Remote } from '../Remote'
+import { StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { ProxyDirection, ProxyConnectionRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 

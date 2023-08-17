@@ -1,8 +1,8 @@
-import { Contract } from "@ethersproject/contracts"
-import { operatorABI } from "@streamr/network-contracts"
-import type { Operator } from "@streamr/network-contracts"
-import { EthereumAddress, Logger, TheGraphClient, toEthereumAddress } from "@streamr/utils"
-import { OperatorServiceConfig } from "./OperatorPlugin"
+import { Contract } from '@ethersproject/contracts'
+import { operatorABI } from '@streamr/network-contracts'
+import type { Operator } from '@streamr/network-contracts'
+import { EthereumAddress, Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
+import { OperatorServiceConfig } from './OperatorPlugin'
 import fetch from 'node-fetch'
 
 const logger = new Logger(module)

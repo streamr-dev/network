@@ -1,7 +1,7 @@
 // Connection locks are independent of the existence of connections
 // that is why this class is needed
 
-import { PeerIDKey } from "../helpers/PeerID"
+import { PeerIDKey } from '../helpers/PeerID'
 
 type ServiceName = string
 

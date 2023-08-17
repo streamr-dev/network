@@ -1,6 +1,6 @@
-import { PeerID } from "@streamr/dht"
-import { NetworkStack } from "../../src/NetworkStack"
-import { NodeType } from "../../src/proto/packages/dht/protos/DhtRpc"
+import { PeerID } from '@streamr/dht'
+import { NetworkStack } from '../../src/NetworkStack'
+import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 
 describe('NetworkStack can be stopped during start', () => {
     

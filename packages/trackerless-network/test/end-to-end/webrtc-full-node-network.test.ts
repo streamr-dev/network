@@ -83,7 +83,7 @@ describe('Full node network with WebRTC connections', () => {
             })
         })
         const content: ContentMessage = {
-            body: JSON.stringify({ hello: "WORLD" })
+            body: JSON.stringify({ hello: 'WORLD' })
         }
         const msg = createStreamMessage(
             content,

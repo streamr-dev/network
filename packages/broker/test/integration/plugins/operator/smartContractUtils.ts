@@ -32,14 +32,14 @@ export async function generateWalletWithGasAndTokens(
     // TOTO: change this to only use DATA once we moved to the new cleaned up docker dev env
     if (config && !config.contracts.LINK) {
         const token = new Contract(config.contracts.DATA!, tokenABI, adminWallet) as unknown as TestToken 
-        await (await token.mint(newWallet.address, parseEther("1000000"), {
+        await (await token.mint(newWallet.address, parseEther('1000000'), {
             nonce: await adminWallet.getTransactionCount()
         })).wait()
     } else {
         const token = getTokenContract().connect(adminWallet)
         for (let i = 0; i < 5; i++) {
             try {
-                await (await token.transfer(newWallet.address, parseEther("1000"), {
+                await (await token.transfer(newWallet.address, parseEther('1000'), {
                     nonce: await adminWallet.getTransactionCount()
                 })).wait()
                 break
@@ -50,7 +50,7 @@ export async function generateWalletWithGasAndTokens(
     }
     await (await adminWallet.sendTransaction({
         to: newWallet.address,
-        value: parseEther("1")
+        value: parseEther('1')
     })).wait()
     return newWallet.connect(provider)
 }

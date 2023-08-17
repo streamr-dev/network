@@ -1,6 +1,6 @@
 import { DiscoverySession } from './DiscoverySession'
 import { DhtPeer } from '../DhtPeer'
-import crypto from "crypto"
+import crypto from 'crypto'
 import * as Err from '../../helpers/errors'
 import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'

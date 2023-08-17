@@ -1,4 +1,4 @@
-import { Router } from "../../src/dht/routing/Router"
+import { Router } from '../../src/dht/routing/Router'
 import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
 import { DhtPeer } from '../../src/dht/DhtPeer'
