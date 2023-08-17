@@ -133,7 +133,7 @@ describe(AnnounceNodeToContractService, () => {
         })
         await service.start()
         await waitForCondition(() => helper.writeHeartbeat.mock.calls.length >= 3)
-        await wait(100)
+        await wait(100) // wait for a couple of remaining executions
         expect(helper.writeHeartbeat).toHaveBeenCalledTimes(3)
     })
 })

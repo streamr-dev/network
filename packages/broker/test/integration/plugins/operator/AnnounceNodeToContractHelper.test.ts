@@ -18,7 +18,7 @@ describe(AnnounceNodeToContractHelper, () => {
     let helper: AnnounceNodeToContractHelper
 
     beforeEach(async () => {
-        const nodeWallet = new Wallet((await fetchPrivateKeyWithGas()))
+        const nodeWallet = new Wallet(await fetchPrivateKeyWithGas())
         ;({ operatorContract, operatorConfig } = await setupOperatorContract({
             provider,
             chainConfig,

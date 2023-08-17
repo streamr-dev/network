@@ -16,8 +16,7 @@ export class AnnounceNodeToContractHelper {
     private readonly theGraphClient: TheGraphClient
 
     constructor(config: OperatorServiceConfig) {
-        this.operator = (new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator)
-            .connect(config.signer)
+        this.operator = new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator
         this.theGraphClient = new TheGraphClient({
             serverUrl: config.theGraphUrl,
             fetch,
