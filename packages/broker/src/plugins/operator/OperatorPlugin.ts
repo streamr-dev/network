@@ -59,8 +59,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         this.announceNodeToContractService = new AnnounceNodeToContractService(
             this.streamrClient,
             new AnnounceNodeToContractHelper(this.serviceConfig),
-            this.fleetState,
-            {}
+            this.fleetState
         )
         this.maintainOperatorValueService = new MaintainOperatorValueService(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
