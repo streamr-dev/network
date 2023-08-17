@@ -23,6 +23,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
                     port: 40401
                 }
             }],
+            webSocketPort: undefined,
             iceServers: [],
             webrtcAllowPrivateAddresses: true
         }

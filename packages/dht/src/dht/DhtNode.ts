@@ -41,6 +41,7 @@ import { IceServer } from '../connection/WebRTC/WebRtcConnector'
 import { ExternalApi } from './ExternalApi'
 import { RemoteExternalApi } from './RemoteExternalApi'
 import { UUID } from '../exports'
+import { isNodeJS } from '../helpers/browser/isNodeJS'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -181,6 +182,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         logger.trace(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
         this.started = true
 
+        if (!isNodeJS()) {
+            this.config.webSocketPort = undefined
+            if (this.config.peerDescriptor) {
+                this.config.peerDescriptor.websocket = undefined
+            }
+        }
         // If transportLayer is given, do not create a ConnectionManager
         if (this.config.transportLayer) {
             this.transportLayer = this.config.transportLayer
@@ -202,7 +209,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 maxConnections: this.config.maxConnections
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
-            if (this.config.peerDescriptor && this.config.peerDescriptor.websocket) {
+            if (this.config.peerDescriptor && this.config.peerDescriptor.websocket && isNodeJS()) {
                 connectionManagerConfig.webSocketHost = this.config.peerDescriptor.websocket.ip
                 connectionManagerConfig.webSocketPort = this.config.peerDescriptor.websocket.port
             } else {

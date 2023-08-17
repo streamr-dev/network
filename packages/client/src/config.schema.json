@@ -90,7 +90,8 @@
                             }]
                         },
                         "webSocketPort": {
-                            "type": "number"
+                            "type": "number",
+                            "default": 32200
                         },
                         "peerDescriptor": {
                             "$ref": "#/definitions/peerDescriptor"
