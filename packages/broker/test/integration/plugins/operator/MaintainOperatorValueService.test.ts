@@ -62,11 +62,12 @@ describe('MaintainOperatorValueService', () => {
         logger.debug('Creating stream for the test')
         const createStreamReceipt = await (await streamRegistry.createStream(
             `/operatorvaluewatchertest-${Date.now()}`,
-            '{"partitions":1}')
+            '{\'partitions\':1}')
         ).wait()
         streamId = createStreamReceipt.events?.find((e) => e.event === 'StreamCreated')?.args?.id
         const streamExists = await streamRegistry.exists(streamId)
         logger.debug('Stream created:', { streamId, streamExists })
+        // TODO: use createClient once configs allow it. For now I'm creating the stream directly using the contract
         // const client = createClient(STREAM_CREATION_KEY)
         // streamId = (await createTestStream(client, module)).id
         // await client.destroy()
