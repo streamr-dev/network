@@ -5,22 +5,22 @@ import {
     PeerIDKey,
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
-} from "@streamr/dht"
-import { LeaveStreamNotice, MessageRef, ProxyDirection, StreamMessage } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
-import { IStreamNode } from "../IStreamNode"
+} from '@streamr/dht'
+import { LeaveStreamNotice, MessageRef, ProxyDirection, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { IStreamNode } from '../IStreamNode'
 import { EventEmitter } from 'eventemitter3'
-import { ConnectionLocker } from "@streamr/dht/src/exports"
-import { StreamNodeServer } from "../StreamNodeServer"
-import { Logger, wait } from "@streamr/utils"
-import { DuplicateMessageDetector } from "../DuplicateMessageDetector"
-import { PeerList } from "../PeerList"
-import { Propagation } from "../propagation/Propagation"
+import { ConnectionLocker } from '@streamr/dht/src/exports'
+import { StreamNodeServer } from '../StreamNodeServer'
+import { Logger, wait } from '@streamr/utils'
+import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
+import { PeerList } from '../PeerList'
+import { Propagation } from '../propagation/Propagation'
 import { sampleSize } from 'lodash'
-import { RemoteProxyServer } from "./RemoteProxyServer"
-import { NetworkRpcClient, ProxyConnectionRpcClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
-import { toProtoRpcClient } from "@streamr/proto-rpc"
-import { RemoteRandomGraphNode } from "../RemoteRandomGraphNode"
-import { markAndCheckDuplicate } from "../utils"
+import { RemoteProxyServer } from './RemoteProxyServer'
+import { NetworkRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
+import { markAndCheckDuplicate } from '../utils'
 
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
     // eslint-disable-next-line no-constant-condition
@@ -79,7 +79,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             broadcast: (message: StreamMessage, previousPeer?: string) => this.broadcast(message, previousPeer),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
                 const senderId = notice.senderId
-                const contact = this.targetNeighbors.getNeighborWithId(senderId)
+                const contact = this.targetNeighbors.getNeighborById(senderId)
                 if (contact) {
                     setImmediate(() => this.onPeerDisconnected(contact.getPeerDescriptor()))
                 }
@@ -90,7 +90,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         this.propagation = new Propagation({
             minPropagationTargets: 2,
             sendToNeighbor: async (neighborId: string, msg: StreamMessage): Promise<void> => {
-                const remote = this.targetNeighbors.getNeighborWithId(neighborId)
+                const remote = this.targetNeighbors.getNeighborById(neighborId)
                 if (remote) {
                     await remote.sendData(config.ownPeerDescriptor, msg)
                 } else {
@@ -191,7 +191,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             logger.info('Close proxy connection', {
                 peerKey
             })
-            const server = this.targetNeighbors.getNeighborWithId(peerKey)
+            const server = this.targetNeighbors.getNeighborById(peerKey)
             server?.leaveStreamNotice(this.config.ownPeerDescriptor)
             this.removeConnection(peerKey)
         }
@@ -243,7 +243,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), 'proxy-stream-connection-client')
             remote.leaveStreamNotice(this.config.ownPeerDescriptor)
         })
-        this.targetNeighbors.clear()
+        this.targetNeighbors.stop()
         this.rpcCommunicator.stop()
         this.connections.clear()
         this.abortController.abort()

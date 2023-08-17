@@ -31,7 +31,7 @@ describe('StreamrNode', () => {
     const STREAM_ID = 'test'
 
     const content: ContentMessage = {
-        body: JSON.stringify({ hello: "WORLD" })
+        body: JSON.stringify({ hello: 'WORLD' })
     }
     const msg = createStreamMessage(
         content,
@@ -65,8 +65,8 @@ describe('StreamrNode', () => {
             layer02.start()
         ])
         await Promise.all([
-            layer01.joinDht(peer1),
-            layer02.joinDht(peer1)
+            layer01.joinDht([peer1]),
+            layer02.joinDht([peer1])
         ])
 
         node1 = new StreamrNode({})

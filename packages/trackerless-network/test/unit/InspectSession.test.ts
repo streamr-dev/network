@@ -1,7 +1,7 @@
-import { PeerIDKey, PeerID } from "@streamr/dht"
-import { InspectSession, Events } from "../../src/logic/inspect/InspectSession"
-import { MessageRef } from "../../src/proto/packages/trackerless-network/protos/NetworkRpc"
-import { waitForEvent3 } from "../../../utils/dist/src/waitForEvent3"
+import { PeerIDKey, PeerID } from '@streamr/dht'
+import { InspectSession, Events } from '../../src/logic/inspect/InspectSession'
+import { MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { waitForEvent3 } from '../../../utils/dist/src/waitForEvent3'
 
 describe('InspectSession', () => {
 

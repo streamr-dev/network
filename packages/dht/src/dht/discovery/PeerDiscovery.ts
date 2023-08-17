@@ -1,10 +1,10 @@
 import { DiscoverySession } from './DiscoverySession'
 import { DhtPeer } from '../DhtPeer'
-import crypto from "crypto"
+import crypto from 'crypto'
 import * as Err from '../../helpers/errors'
 import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { Logger, scheduleAtInterval } from '@streamr/utils'
+import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import KBucket from 'k-bucket'
 import { SortedContactList } from '../contact/SortedContactList'
 import { ConnectionManager } from '../../connection/ConnectionManager'
@@ -121,7 +121,7 @@ export class PeerDiscovery {
         } catch (err) {
             logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)
             if (!this.stopped) {
-                setTimeout(() => this.rejoinDht(entryPoint), 5000)
+                setAbortableTimeout(() => this.rejoinDht(entryPoint), 5000, this.abortController.signal)
             }
         } finally {
             this.rejoinOngoing = false
@@ -132,7 +132,7 @@ export class PeerDiscovery {
         if (this.stopped) {
             return
         }
-        await Promise.allSettled(this.config.bucket.closest(this.config.ownPeerId.value, 5).map(async (peer: DhtPeer) => {
+        await Promise.allSettled(this.config.bucket.closest(this.config.ownPeerId.value, this.config.parallelism).map(async (peer: DhtPeer) => {
             const contacts = await peer.getClosestPeers(this.config.ownPeerDescriptor.kademliaId!)
             contacts.forEach((contact) => {
                 this.config.addContact(contact)

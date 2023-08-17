@@ -1,8 +1,8 @@
-import { DhtRpcOptions, PeerDescriptor, keyFromPeerDescriptor } from "@streamr/dht"
-import { ITemporaryConnectionRpcClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
-import { Remote } from "../Remote"
-import { TemporaryConnectionRequest } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
-import { Logger } from "@streamr/utils"
+import { DhtRpcOptions, PeerDescriptor, keyFromPeerDescriptor } from '@streamr/dht'
+import { ITemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { Remote } from '../Remote'
+import { TemporaryConnectionRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 

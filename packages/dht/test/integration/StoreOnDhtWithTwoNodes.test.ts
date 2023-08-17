@@ -30,8 +30,8 @@ describe('Storing data in DHT with two peers', () => {
         await entryPoint.start()
         await otherNode.start()
 
-        await entryPoint.joinDht(entryPoint.getPeerDescriptor())
-        await otherNode.joinDht(entryPoint.getPeerDescriptor())
+        await entryPoint.joinDht([entryPoint.getPeerDescriptor()])
+        await otherNode.joinDht([entryPoint.getPeerDescriptor()])
     })
 
     afterEach(async () => {

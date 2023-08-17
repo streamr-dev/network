@@ -14,7 +14,7 @@ import { PeerIDKey } from '../../helpers/PeerID'
 import { ManagedWebRtcConnection } from '../ManagedWebRtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
-import { IWebRtcConnectorService } from "../../proto/packages/dht/protos/DhtRpc.server"
+import { IWebRtcConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -51,8 +51,6 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
     private ownPeerDescriptor?: PeerDescriptor
     private stopped = false
-    private static objectCounter = 0
-    private objectId = 0
     private iceServers: IceServer[]
     private allowPrivateAddresses: boolean
     private config: WebRtcConnectorConfig
@@ -62,12 +60,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         config: WebRtcConnectorConfig,
         incomingConnectionCallback: (connection: ManagedConnection) => boolean
     ) {
-
         this.config = config
-
-        WebRtcConnector.objectCounter++
-        this.objectId = WebRtcConnector.objectCounter
-
         this.iceServers = config.iceServers || []
         this.allowPrivateAddresses = config.allowPrivateAddresses || true
         this.incomingConnectionCallback = incomingConnectionCallback

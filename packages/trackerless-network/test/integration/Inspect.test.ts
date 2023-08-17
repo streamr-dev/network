@@ -1,8 +1,8 @@
-import { LatencyType, NodeType, PeerDescriptor, PeerID, Simulator, SimulatorTransport } from "@streamr/dht"
-import { NetworkStack } from "../../src/NetworkStack"
+import { LatencyType, NodeType, PeerDescriptor, PeerID, Simulator, SimulatorTransport } from '@streamr/dht'
+import { NetworkStack } from '../../src/NetworkStack'
 import { range } from 'lodash'
-import { createStreamMessage } from "../utils/utils"
-import { ContentMessage } from "../../src/proto/packages/trackerless-network/protos/NetworkRpc"
+import { createStreamMessage } from '../utils/utils'
+import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 
 describe('inspect', () => {
 
@@ -40,7 +40,6 @@ describe('inspect', () => {
             networkNode: {}
         })
         await node.start()
-        await node.getLayer0DhtNode().joinDht(publisherDescriptor)
         return node
     }
 
@@ -66,7 +65,7 @@ describe('inspect', () => {
             ...inspectedNodes.map((node) => node.getStreamrNode().waitForJoinAndSubscribe(streamId, 5000, 4))
         ])
         sequenceNumber = 0
-    })
+    }, 30000)
 
     afterEach(async () => {
         clearInterval(publishInterval)
@@ -81,7 +80,7 @@ describe('inspect', () => {
     it('gets successful inspections from all suspects', async () => {
         publishInterval = setInterval(async () => {
             const content: ContentMessage = {
-                body: JSON.stringify({ hello: "WORLD" })
+                body: JSON.stringify({ hello: 'WORLD' })
             }
             const msg = createStreamMessage(
                 content,

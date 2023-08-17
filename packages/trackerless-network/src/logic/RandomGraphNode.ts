@@ -60,7 +60,7 @@ export interface StrictRandomGraphNodeConfig {
     numOfTargetNeighbors: number
     maxNumberOfContacts: number
     minPropagationTargets: number
-    nodeName: string
+    name: string
     acceptProxyConnections: boolean
     neighborUpdateInterval: number
     inspector: IInspector
@@ -74,7 +74,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     private stopped = false
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
-    private readonly abortController: AbortController
     private config: StrictRandomGraphNodeConfig
     private readonly server: INetworkRpc
 
@@ -82,7 +81,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         super()
         this.config = config
         this.duplicateDetectors = new Map()
-        this.abortController = new AbortController()
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.randomGraphId,
@@ -91,9 +89,9 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             broadcast: (message: StreamMessage, previousPeer?: string) => this.broadcast(message, previousPeer),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
                 const senderId = notice.senderId
-                const contact = this.config.nearbyContactPool.getNeighborWithId(senderId)
-                || this.config.randomContactPool.getNeighborWithId(senderId)
-                || this.config.targetNeighbors.getNeighborWithId(senderId)
+                const contact = this.config.nearbyContactPool.getNeighborById(senderId)
+                || this.config.randomContactPool.getNeighborById(senderId)
+                || this.config.targetNeighbors.getNeighborById(senderId)
                 || this.config.proxyConnectionServer?.getConnection(senderId as PeerIDKey)?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
@@ -238,8 +236,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             return
         }
         this.stopped = true
-
-        this.abortController.abort()
         this.config.proxyConnectionServer?.stop()
         this.config.targetNeighbors.getPeers().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor))
         this.config.rpcCommunicator.stop()

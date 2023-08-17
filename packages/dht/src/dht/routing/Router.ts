@@ -31,7 +31,6 @@ export interface RouterConfig {
     ownPeerDescriptor: PeerDescriptor
     ownPeerId: PeerID
     connections: Map<PeerIDKey, DhtPeer>
-    routeMessageTimeout: number
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     serviceId: string
     connectionManager?: ConnectionManager
@@ -61,7 +60,6 @@ export class Router implements IRouter {
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly ownPeerId: PeerID
     private readonly connections: Map<PeerIDKey, DhtPeer>
-    private readonly routeMessageTimeout: number
     private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     private readonly serviceId: string
     private readonly connectionManager?: ConnectionManager
@@ -75,7 +73,6 @@ export class Router implements IRouter {
         this.ownPeerDescriptor = config.ownPeerDescriptor
         this.ownPeerId = config.ownPeerId
         this.connections = config.connections
-        this.routeMessageTimeout = config.routeMessageTimeout
         this.addContact = config.addContact
         this.serviceId = config.serviceId
         this.connectionManager = config.connectionManager
@@ -158,7 +155,6 @@ export class Router implements IRouter {
             routedMessage,
             this.connections,
             this.ownPeerId!.equals(peerIdFromPeerDescriptor(routedMessage.sourcePeer!)) ? 2 : 1,
-            this.routeMessageTimeout,
             mode,
             undefined,
             excludedPeers

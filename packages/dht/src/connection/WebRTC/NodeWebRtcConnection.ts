@@ -41,7 +41,7 @@ enum RTCPeerConnectionStateEnum {
     new = 'new'
 }
 
-nodeDatachannel.initLogger("Fatal")
+nodeDatachannel.initLogger('Fatal')
 
 type RTCPeerConnectionState = keyof typeof RTCPeerConnectionStateEnum
 

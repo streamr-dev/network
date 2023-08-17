@@ -1,5 +1,5 @@
 import { keyFromPeerDescriptor, PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
-import { sampleSize } from 'lodash'
+import { sample } from 'lodash'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { EventEmitter } from 'eventemitter3'
 
@@ -65,7 +65,7 @@ export class PeerList extends EventEmitter<Events> {
         return Array.from(this.peers.keys())
     }
 
-    getNeighborWithId(id: string): RemoteRandomGraphNode | undefined {
+    getNeighborById(id: string): RemoteRandomGraphNode | undefined {
         return this.peers.get(id)
     }
 
@@ -74,8 +74,7 @@ export class PeerList extends EventEmitter<Events> {
     }
 
     getRandom(exclude: string[]): RemoteRandomGraphNode | undefined {
-        const shuffled = sampleSize(getValuesOfIncludedKeys(this.peers, exclude), 1)
-        return shuffled[0]
+        return sample(getValuesOfIncludedKeys(this.peers, exclude))
     }
 
     getClosest(exclude: string[]): RemoteRandomGraphNode | undefined {
@@ -87,11 +86,8 @@ export class PeerList extends EventEmitter<Events> {
         const included = getValuesOfIncludedKeys(this.peers, exclude)
         if (included.length === 0) {
             return []
-        } else if (included.length > 1) {
-            return [included[0], included[included.length - 1]]
-        } else {
-            return [included[0]]
         }
+        return included.length > 1 ? [this.getClosest(exclude)!, this.getFurthest(exclude)!] : [this.getClosest(exclude)!]
     }
 
     getFurthest(exclude: string[]): RemoteRandomGraphNode | undefined {
@@ -99,16 +95,12 @@ export class PeerList extends EventEmitter<Events> {
         return included[included.length - 1]
     }
 
-    clear(): void {
-        this.peers.clear()
-    }
-
     getPeers(): RemoteRandomGraphNode[] {
         return Array.from(this.peers.values())
     }
 
     stop(): void {
-        this.clear()
+        this.peers.clear()
         this.removeAllListeners()
     }
 }

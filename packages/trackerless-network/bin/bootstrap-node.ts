@@ -31,14 +31,14 @@ async function run(): Promise<void> {
 
     const layer0 = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 8 })
     await layer0.start()
-    await layer0.joinDht(epPeerDescriptor)
+    await layer0.joinDht([epPeerDescriptor])
 
     const connectionManager = layer0.getTransport() as ConnectionManager
     const streamrNode = new StreamrNode({})
     await streamrNode.start(layer0, connectionManager, connectionManager)
 
-    await streamrNode.joinStream(streamPartId, epPeerDescriptor)
-    streamrNode.subscribeToStream(streamPartId, epPeerDescriptor)
+    await streamrNode.joinStream(streamPartId)
+    streamrNode.subscribeToStream(streamPartId)
 
     streamrNode.on(StreamrNodeEvent.NEW_MESSAGE, (msg: StreamMessage) => {
         // eslint-disable-next-line no-console

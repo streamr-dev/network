@@ -1,10 +1,10 @@
-import { PeerIDKey, PeerDescriptor, keyFromPeerDescriptor, ConnectionLocker } from "@streamr/dht"
-import { MessageRef } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
-import { InspectSession, Events as InspectSessionEvents } from "./InspectSession"
-import { TemporaryConnectionRpcClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
-import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from "@streamr/proto-rpc"
-import { Logger, waitForEvent3 } from "@streamr/utils"
-import { RemoteTemporaryConnectionRpcServer } from "../temporary-connection/RemoteTemporaryConnectionRpcServer"
+import { PeerIDKey, PeerDescriptor, keyFromPeerDescriptor, ConnectionLocker } from '@streamr/dht'
+import { MessageRef } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
+import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
+import { Logger, waitForEvent3 } from '@streamr/utils'
+import { RemoteTemporaryConnectionRpcServer } from '../temporary-connection/RemoteTemporaryConnectionRpcServer'
 
 interface InspectorConfig {
     ownPeerDescriptor: PeerDescriptor

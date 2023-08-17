@@ -1,12 +1,12 @@
-import { keyFromPeerDescriptor, ListeningRpcCommunicator, PeerDescriptor, DhtCallContext, PeerIDKey } from "@streamr/dht"
-import { Empty } from "../proto/google/protobuf/empty"
+import { keyFromPeerDescriptor, ListeningRpcCommunicator, PeerDescriptor, DhtCallContext, PeerIDKey } from '@streamr/dht'
+import { Empty } from '../proto/google/protobuf/empty'
 import {
     LeaveStreamNotice,
     MessageRef,
     StreamMessage
-} from "../proto/packages/trackerless-network/protos/NetworkRpc"
-import { INetworkRpc } from "../proto/packages/trackerless-network/protos/NetworkRpc.server"
-import { ServerCallContext } from "@protobuf-ts/runtime-rpc"
+} from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 export interface StreamNodeServerConfig {
     ownPeerDescriptor: PeerDescriptor

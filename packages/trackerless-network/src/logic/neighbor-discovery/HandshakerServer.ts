@@ -1,11 +1,11 @@
-import { Empty } from "../../proto/google/protobuf/empty"
-import { InterleaveNotice, StreamHandshakeRequest, StreamHandshakeResponse } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
+import { Empty } from '../../proto/google/protobuf/empty'
+import { InterleaveNotice, StreamHandshakeRequest, StreamHandshakeResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { PeerList } from "../PeerList"
-import { ConnectionLocker, keyFromPeerDescriptor, PeerDescriptor } from "@streamr/dht"
-import { IHandshakeRpc } from "../../proto/packages/trackerless-network/protos/NetworkRpc.server"
-import { RemoteHandshaker } from "./RemoteHandshaker"
-import { RemoteRandomGraphNode } from "../RemoteRandomGraphNode"
+import { PeerList } from '../PeerList'
+import { ConnectionLocker, keyFromPeerDescriptor, PeerDescriptor } from '@streamr/dht'
+import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { RemoteHandshaker } from './RemoteHandshaker'
+import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 
 interface HandshakerServerConfig {
     randomGraphId: string
@@ -88,7 +88,7 @@ export class HandshakerServer implements IHandshakeRpc {
     async interleaveNotice(message: InterleaveNotice, _context: ServerCallContext): Promise<Empty> {
         if (message.randomGraphId === this.config.randomGraphId) {
             if (this.config.targetNeighbors.hasPeerWithStringId(message.senderId)) {
-                const senderDescriptor = this.config.targetNeighbors.getNeighborWithId(message.senderId)!.getPeerDescriptor()
+                const senderDescriptor = this.config.targetNeighbors.getNeighborById(message.senderId)!.getPeerDescriptor()
                 this.config.connectionLocker.unlockConnection(senderDescriptor, this.config.randomGraphId)
                 this.config.targetNeighbors.remove(senderDescriptor)
             }

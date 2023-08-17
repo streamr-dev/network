@@ -25,7 +25,7 @@ describe('Layer0-Layer1', () => {
 
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
         await epDhtNode.start()
-        await epDhtNode.joinDht(epPeerDescriptor)
+        await epDhtNode.joinDht([epPeerDescriptor])
 
         node1 = new DhtNode({ peerIdString: '1', webSocketPort: 10017, entryPoints: [epPeerDescriptor] })
         node2 = new DhtNode({ peerIdString: '2', webSocketPort: 10018, entryPoints: [epPeerDescriptor] })
@@ -62,17 +62,17 @@ describe('Layer0-Layer1', () => {
 
     it('Happy path', async () => {
         await Promise.all([
-            node1.joinDht(epPeerDescriptor),
-            node2.joinDht(epPeerDescriptor)
+            node1.joinDht([epPeerDescriptor]),
+            node2.joinDht([epPeerDescriptor])
         ])
         await Promise.all([
-            stream1Node1.joinDht(epPeerDescriptor),
-            stream1Node2.joinDht(epPeerDescriptor)
+            stream1Node1.joinDht([epPeerDescriptor]),
+            stream1Node2.joinDht([epPeerDescriptor])
         ])
         
         await Promise.all([
-            stream2Node1.joinDht(epPeerDescriptor),
-            stream2Node2.joinDht(epPeerDescriptor)
+            stream2Node1.joinDht([epPeerDescriptor]),
+            stream2Node2.joinDht([epPeerDescriptor])
         ])
         expect(stream1Node1.getNeighborList().getSize()).toEqual(1)
         expect(stream1Node2.getNeighborList().getSize()).toEqual(1)

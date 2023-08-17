@@ -1,6 +1,6 @@
 /* eslint-disable promise/no-nesting */
 
-import { WebSocketServer } from "../../src/connection/WebSocket/WebSocketServer"
+import { WebSocketServer } from '../../src/connection/WebSocket/WebSocketServer'
 
 describe('WebSocketServer', () => {
 

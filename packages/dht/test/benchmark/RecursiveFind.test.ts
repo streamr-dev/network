@@ -22,7 +22,7 @@ describe('Recursive find correctness', () => {
 
     if (!fs.existsSync('test/data/nodeids.json')) {
         console.log('ground truth data does not exist yet, generating..')
-        execSync("npm run prepare-kademlia-simulation")
+        execSync('npm run prepare-kademlia-simulation')
     }
 
     const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
@@ -57,10 +57,10 @@ describe('Recursive find correctness', () => {
     })
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
-        await entryPoint.joinDht(entrypointDescriptor)
+        await entryPoint.joinDht([entrypointDescriptor])
 
         await Promise.all(
-            nodes.map((node) => node.joinDht(entrypointDescriptor))
+            nodes.map((node) => node.joinDht([entrypointDescriptor]))
         )
 
         logger.info('waiting 120s')

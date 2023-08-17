@@ -81,10 +81,11 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     async start(doJoin = true): Promise<void> {
         await this.layer0DhtNode!.start()
         this.connectionManager = this.layer0DhtNode!.getTransport() as ConnectionManager
-        const entryPoint = this.options.layer0.entryPoints![0]
-        if (isSamePeerDescriptor(entryPoint, this.layer0DhtNode!.getPeerDescriptor())) {
+        if (this.options.layer0.entryPoints!.some((entryPoint) => 
+            isSamePeerDescriptor(entryPoint, this.layer0DhtNode!.getPeerDescriptor())
+        )) {
             this.dhtJoinRequired = false
-            await this.layer0DhtNode?.joinDht(entryPoint)
+            await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints!)
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         } else {
             if (doJoin) {
@@ -97,7 +98,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     private async joinDht(): Promise<void> {
         setImmediate(() => {
-            this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints![0])
+            this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints!)
         })
         await this.waitForFirstConnection()
     }

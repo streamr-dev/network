@@ -1,7 +1,7 @@
 // Connection locks are independent of the existence of connections
 // that is why this class is needed
 
-import { PeerIDKey } from "../helpers/PeerID"
+import { PeerIDKey } from '../helpers/PeerID'
 
 type ServiceName = string
 
@@ -27,11 +27,7 @@ export class ConnectionLockHandler {
         if (!serviceName) {
             return this.localLocks.has(id)
         } else {
-            if (this.localLocks.has(id) && this.localLocks.get(id)!.has(serviceName)) {
-                return true
-            } else {
-                return false
-            }
+            return this.localLocks.has(id) && this.localLocks.get(id)!.has(serviceName)
         }
     }
 

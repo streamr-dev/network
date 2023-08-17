@@ -27,4 +27,4 @@ ajv.addFormat('ethereum-private-key', /^(0x)?[a-zA-Z0-9]{64}$/)
 
 const validate = ajv.compile(CONFIG_SCHEMA)
 const moduleCode = standaloneCode(ajv, validate)
-fs.writeFileSync(path.join(__dirname, "../src/generated/validateConfig.js"), moduleCode)
+fs.writeFileSync(path.join(__dirname, '../src/generated/validateConfig.js'), moduleCode)

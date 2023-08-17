@@ -1,7 +1,7 @@
-import { ListeningRpcCommunicator, NodeType, PeerDescriptor, PeerID, keyFromPeerDescriptor } from "@streamr/dht"
-import { Inspector } from "../../src/logic/inspect/Inspector"
-import { mockConnectionLocker } from "../utils/utils"
-import { MockTransport } from "../utils/mock/Transport"
+import { ListeningRpcCommunicator, NodeType, PeerDescriptor, PeerID, keyFromPeerDescriptor } from '@streamr/dht'
+import { Inspector } from '../../src/logic/inspect/Inspector'
+import { mockConnectionLocker } from '../utils/utils'
+import { MockTransport } from '../utils/mock/Transport'
 
 describe('Inspector', () => {
     

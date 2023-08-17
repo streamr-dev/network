@@ -36,8 +36,8 @@ export class ConnectivityChecker {
                 mode: ConnectionMode.REQUEST
             })
         } catch (e) {
-            logger.error("Failed to connect to the entrypoints")
-            throw new Err.ConnectionFailed("Failed to connect to the entrypoints", e)
+            logger.error('Failed to connect to the entrypoints')
+            throw new Err.ConnectionFailed('Failed to connect to the entrypoints', e)
         }
         // send connectivity request
         const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort! }
@@ -78,7 +78,6 @@ export class ConnectivityChecker {
             return await retPromise
         } catch (e) {
             logger.error('error getting connectivityresponse')
-
             throw e
         }
     }
@@ -93,7 +92,7 @@ export class ConnectivityChecker {
                     logger.trace('handleIncomingConnectivityRequest ok')
                     return
                 }).catch((e) => {
-                    logger.error('handleIncomingConnectivityRequest poikkeus KIINNI' + e)
+                    logger.error('handleIncomingConnectivityRequest' + e)
                 })
             }
         })
@@ -123,7 +122,7 @@ export class ConnectivityChecker {
         }
         if (outgoingConnection) {
             outgoingConnection.close('OTHER')
-            logger.trace("Connectivity test produced positive result, communicating reply to the requester")
+            logger.trace('Connectivity test produced positive result, communicating reply to the requester')
             connectivityResponseMessage = {
                 openInternet: true,
                 ip: (connection as ServerWebSocket).getRemoteAddress(),
