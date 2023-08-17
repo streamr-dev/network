@@ -20,7 +20,7 @@ describe('Layer0', () => {
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
         await epDhtNode.start()
         
-        await epDhtNode.joinDht(epPeerDescriptor)
+        await epDhtNode.joinDht([epPeerDescriptor])
 
         node1 = new DhtNode({ peerIdString: '1', webSocketPort: 10012, entryPoints: [epPeerDescriptor] })
         node2 = new DhtNode({ peerIdString: '2', webSocketPort: 10013, entryPoints: [epPeerDescriptor] })
@@ -46,10 +46,10 @@ describe('Layer0', () => {
 
     it('Happy path', async () => {
         await Promise.all([
-            node1.joinDht(epPeerDescriptor),
-            node2.joinDht(epPeerDescriptor),
-            node3.joinDht(epPeerDescriptor),
-            node4.joinDht(epPeerDescriptor)
+            node1.joinDht([epPeerDescriptor]),
+            node2.joinDht([epPeerDescriptor]),
+            node3.joinDht([epPeerDescriptor]),
+            node4.joinDht([epPeerDescriptor])
         ])
 
         expect(node1.getBucketSize()).toBeGreaterThanOrEqual(2)

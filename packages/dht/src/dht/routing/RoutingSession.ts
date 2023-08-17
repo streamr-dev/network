@@ -1,14 +1,14 @@
-import { PeerDescriptor } from "../../exports"
-import { DhtPeer } from "../DhtPeer"
-import { SortedContactList } from "../contact/SortedContactList"
+import { PeerDescriptor } from '../../exports'
+import { DhtPeer } from '../DhtPeer'
+import { SortedContactList } from '../contact/SortedContactList'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { Logger } from "@streamr/utils"
+import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import { v4 } from "uuid"
-import { RouteMessageWrapper } from "../../proto/packages/dht/protos/DhtRpc"
+import { v4 } from 'uuid'
+import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { RemoteRouter } from './RemoteRouter'
-import { RoutingRpcCommunicator } from "../../transport/RoutingRpcCommunicator"
-import { RoutingServiceClient } from "../../proto/packages/dht/protos/DhtRpc.client"
+import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
+import { RoutingServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 const logger = new Logger(module)

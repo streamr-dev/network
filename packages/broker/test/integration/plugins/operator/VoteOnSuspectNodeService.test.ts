@@ -1,6 +1,6 @@
 import { Provider } from '@ethersproject/abstract-provider'
 import { JsonRpcProvider } from '@ethersproject/providers'
-import { config as CHAIN_CONFIG } from "@streamr/config"
+import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrEnvDeployer, TestToken } from '@streamr/network-contracts'
 import { Logger, wait, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'

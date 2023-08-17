@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
 
-import { WebSocketServer } from "../../src/connection/WebSocket/WebSocketServer"
-import { IConnection } from "../../src/connection/IConnection"
-import { ClientWebSocket } from "../../src/connection/WebSocket/ClientWebSocket"
-import { Logger } from "@streamr/utils"
+import { WebSocketServer } from '../../src/connection/WebSocket/WebSocketServer'
+import { IConnection } from '../../src/connection/IConnection'
+import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
@@ -30,7 +30,7 @@ describe('WebSocket', () => {
                 const time = Date.now()
                 logger.info('server side receiving message at ' + time)
 
-                logger.info("server received:" + JSON.stringify(bytes))
+                logger.info('server received:' + JSON.stringify(bytes))
                
                 expect(bytes.toString()).toBe('1,2,3,4')
                 logger.info('calling done()')
@@ -46,7 +46,7 @@ describe('WebSocket', () => {
                 const time = Date.now()
                 logger.info('client side receiving message at ' + time)
 
-                logger.info("client received: " + JSON.stringify(bytes))
+                logger.info('client received: ' + JSON.stringify(bytes))
                 expect(bytes.toString()).toBe('1,2,3,4')
                 
                 const time2 = Date.now()

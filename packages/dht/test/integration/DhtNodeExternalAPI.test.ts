@@ -1,9 +1,9 @@
-import { DhtNode } from "../../src/dht/DhtNode"
-import { LatencyType, Simulator } from "../../src/connection/Simulator/Simulator"
-import { createMockConnectionDhtNode } from "../utils/utils"
-import { Any } from "../../src/proto/google/protobuf/any"
-import { PeerDescriptor } from "../../src/proto/packages/dht/protos/DhtRpc"
-import { PeerID } from "../../src/helpers/PeerID"
+import { DhtNode } from '../../src/dht/DhtNode'
+import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
+import { createMockConnectionDhtNode } from '../utils/utils'
+import { Any } from '../../src/proto/google/protobuf/any'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerID } from '../../src/helpers/PeerID'
 
 describe('DhtNodeExternalApi', () => {
 
@@ -15,7 +15,7 @@ describe('DhtNodeExternalApi', () => {
         simulator = new Simulator(LatencyType.NONE)
         dhtNode1 = await createMockConnectionDhtNode('node1', simulator)
         remote = await createMockConnectionDhtNode('remote', simulator)
-        await dhtNode1.joinDht(dhtNode1.getPeerDescriptor())
+        await dhtNode1.joinDht([dhtNode1.getPeerDescriptor()])
     })
 
     afterEach(async () => {

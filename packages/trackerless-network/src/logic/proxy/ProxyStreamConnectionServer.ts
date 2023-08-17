@@ -1,12 +1,12 @@
-import { ServerCallContext } from "@protobuf-ts/runtime-rpc"
-import { ProxyConnectionRequest, ProxyConnectionResponse, ProxyDirection } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
-import { IProxyConnectionRpc } from "../../proto/packages/trackerless-network/protos/NetworkRpc.server"
-import { RemoteRandomGraphNode } from "../RemoteRandomGraphNode"
-import { ListeningRpcCommunicator, PeerDescriptor, PeerIDKey } from "@streamr/dht"
-import { toProtoRpcClient } from "@streamr/proto-rpc"
-import { NetworkRpcClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
-import { EventEmitter } from "eventemitter3"
-import { Logger } from "@streamr/utils"
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { ProxyConnectionRequest, ProxyConnectionResponse, ProxyDirection } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
+import { ListeningRpcCommunicator, PeerDescriptor, PeerIDKey } from '@streamr/dht'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { EventEmitter } from 'eventemitter3'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 

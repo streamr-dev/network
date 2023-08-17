@@ -48,7 +48,7 @@ describe('Network RPC', () => {
 
     it('sends Data', async () => {
         const content: ContentMessage = {
-            body: JSON.stringify({ hello: "WORLD" })
+            body: JSON.stringify({ hello: 'WORLD' })
         }
         const msg = createStreamMessage(
             content,

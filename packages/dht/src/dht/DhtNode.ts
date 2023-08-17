@@ -373,7 +373,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             logger.trace('new connection not set to connections, there is already a connection with the peer ID')
         }
         if (this.ownPeerDescriptor!.nodeName === 'entrypoint') {
-            logger.trace("connected: " + this.ownPeerDescriptor!.nodeName + ", " + peerDescriptor.nodeName + ' ' + this.connections.size)
+            logger.trace('connected: ' + this.ownPeerDescriptor!.nodeName + ', ' + peerDescriptor.nodeName + ' ' + this.connections.size)
         }
         this.emit('connected', peerDescriptor)
     }
@@ -471,7 +471,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             && this.config.entryPoints.length > 0
         ) {
             setImmediate(async () => {
-                await this.peerDiscovery!.rejoinDht(this.config.entryPoints![0])
+                await Promise.all(this.config.entryPoints!.map((entryPoint) => 
+                    this.peerDiscovery!.rejoinDht(entryPoint)
+                )) 
             })
         }
     }
@@ -607,11 +609,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         await this.router!.send(msg, reachableThrough)
     }
 
-    public async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin?: boolean): Promise<void> {
+    public async joinDht(entryPointDescriptors: PeerDescriptor[], doRandomJoin?: boolean): Promise<void> {
         if (!this.started) {
             throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
-        await this.peerDiscovery!.joinDht(entryPointDescriptor, doRandomJoin)
+        await Promise.all(entryPointDescriptors.map((entryPoint) => 
+            this.peerDiscovery!.joinDht(entryPoint, doRandomJoin)
+        ))
     }
 
     public async startRecursiveFind(idToFind: Uint8Array, findMode?: FindMode, excludedPeer?: PeerDescriptor): Promise<RecursiveFindResult> {

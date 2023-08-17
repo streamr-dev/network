@@ -1,8 +1,8 @@
-import { Message, MessageType, PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
-import { v4 } from "uuid"
-import { RpcCommunicator, RpcCommunicatorConfig } from "@streamr/proto-rpc"
-import { DhtCallContext } from "../rpc-protocol/DhtCallContext"
-import { RpcMessage } from "../proto/packages/proto-rpc/protos/ProtoRpc"
+import { Message, MessageType, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { v4 } from 'uuid'
+import { RpcCommunicator, RpcCommunicatorConfig } from '@streamr/proto-rpc'
+import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
+import { RpcMessage } from '../proto/packages/proto-rpc/protos/ProtoRpc'
 
 export class RoutingRpcCommunicator extends RpcCommunicator {
     private ownServiceId: string

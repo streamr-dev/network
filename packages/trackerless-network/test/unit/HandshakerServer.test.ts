@@ -1,7 +1,7 @@
-import { PeerID } from "@streamr/dht"
-import { HandshakerServer } from "../../src/logic/neighbor-discovery/HandshakerServer"
-import { PeerList } from "../../src/logic/PeerList"
-import { InterleaveNotice, StreamHandshakeRequest } from "../../src/proto/packages/trackerless-network/protos/NetworkRpc"
+import { PeerID } from '@streamr/dht'
+import { HandshakerServer } from '../../src/logic/neighbor-discovery/HandshakerServer'
+import { PeerList } from '../../src/logic/PeerList'
+import { InterleaveNotice, StreamHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockRemoteHandshaker, createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
 
 describe('HandshakerServer', () => {

@@ -34,7 +34,7 @@ describe('Scaling down a Dht network', () => {
             const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, nodeId, MAX_CONNECTIONS)
             nodes.push(node)
         }
-        await Promise.all(nodes.map((node) => node.joinDht(entrypointDescriptor)))
+        await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
     }, 60000)
 
     afterEach(async () => {

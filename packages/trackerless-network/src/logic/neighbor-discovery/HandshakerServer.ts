@@ -1,11 +1,11 @@
-import { Empty } from "../../proto/google/protobuf/empty"
-import { InterleaveNotice, StreamHandshakeRequest, StreamHandshakeResponse } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
+import { Empty } from '../../proto/google/protobuf/empty'
+import { InterleaveNotice, StreamHandshakeRequest, StreamHandshakeResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { PeerList } from "../PeerList"
-import { ConnectionLocker, keyFromPeerDescriptor, PeerDescriptor } from "@streamr/dht"
-import { IHandshakeRpc } from "../../proto/packages/trackerless-network/protos/NetworkRpc.server"
-import { RemoteHandshaker } from "./RemoteHandshaker"
-import { RemoteRandomGraphNode } from "../RemoteRandomGraphNode"
+import { PeerList } from '../PeerList'
+import { ConnectionLocker, keyFromPeerDescriptor, PeerDescriptor } from '@streamr/dht'
+import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { RemoteHandshaker } from './RemoteHandshaker'
+import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 
 interface HandshakerServerConfig {
     randomGraphId: string

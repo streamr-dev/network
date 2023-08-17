@@ -1,4 +1,4 @@
-import { Node, create } from "yallist"
+import { Node, create } from 'yallist'
 
 interface Item<K, V> {
     value: V

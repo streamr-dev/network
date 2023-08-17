@@ -1,5 +1,5 @@
-import { IRouter } from "../../../src/dht/routing/Router"
-import { RoutingSession, RoutingMode } from "../../../src/dht/routing/RoutingSession"
+import { IRouter } from '../../../src/dht/routing/Router'
+import { RoutingSession, RoutingMode } from '../../../src/dht/routing/RoutingSession'
 import { PeerDescriptor, Message, RouteMessageAck, RouteMessageWrapper } from '../../../src/proto/packages/dht/protos/DhtRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 

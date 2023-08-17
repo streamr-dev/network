@@ -1,8 +1,8 @@
-import EventEmitter from "eventemitter3"
-import { WebRtcConnectionEvents, IWebRtcConnection, RtcDescription } from "./IWebRtcConnection"
-import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from "../IConnection"
+import EventEmitter from 'eventemitter3'
+import { WebRtcConnectionEvents, IWebRtcConnection, RtcDescription } from './IWebRtcConnection'
+import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
 import { Logger } from '@streamr/utils'
-import { DisconnectionType } from "../../transport/ITransport"
+import { DisconnectionType } from '../../transport/ITransport'
 
 const logger = new Logger(module)
 
@@ -84,7 +84,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
 
     public async setRemoteDescription(description: string, type: string): Promise<void> {
         const offerCollision = (type.toLowerCase() === RtcDescription.OFFER) && (this.makingOffer || !this.peerConnection ||
-            this.peerConnection.signalingState != "stable")
+            this.peerConnection.signalingState != 'stable')
 
         const ignoreOffer = this.isOffering && offerCollision
         if (ignoreOffer) {

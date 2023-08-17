@@ -1,20 +1,20 @@
-import { Provider } from "@ethersproject/providers"
-import { config as CHAIN_CONFIG } from "@streamr/config"
-import { Wallet } from "@ethersproject/wallet"
-import { parseEther } from "@ethersproject/units"
+import { Provider } from '@ethersproject/providers'
+import { config as CHAIN_CONFIG } from '@streamr/config'
+import { Wallet } from '@ethersproject/wallet'
+import { parseEther } from '@ethersproject/units'
 import { Logger, waitForCondition } from '@streamr/utils'
 
-import type { TestToken, Operator } from "@streamr/network-contracts"
+import type { TestToken, Operator } from '@streamr/network-contracts'
 
-import { tokenABI } from "@streamr/network-contracts"
-import { Contract } from "@ethersproject/contracts"
+import { tokenABI } from '@streamr/network-contracts'
+import { Contract } from '@ethersproject/contracts'
 
-import { deploySponsorship } from "./deploySponsorshipContract"
-import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
-import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
-import { getProvider } from "./smartContractUtils"
-import { createClient } from "../../../utils"
-import { setupOperatorContract } from "./setupOperatorContract"
+import { deploySponsorship } from './deploySponsorshipContract'
+import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
+import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
+import { getProvider } from './smartContractUtils'
+import { createClient } from '../../../utils'
+import { setupOperatorContract } from './setupOperatorContract'
 
 const chainConfig = CHAIN_CONFIG.dev2
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
@@ -24,10 +24,10 @@ const logger = new Logger(module)
 const SPONSOR_AMOUNT = 250
 const STAKE_AMOUNT = 100
 
-const STREAM_CREATION_KEY = "0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7"
+const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
 
 // test is outdated, is completely rewritten and will be merged with PR #1629 
-describe.skip("MaintainOperatorValueService", () => {
+describe.skip('MaintainOperatorValueService', () => {
     let provider: Provider
     let operatorWallet: Wallet
     let operatorContract: Operator
@@ -56,7 +56,7 @@ describe.skip("MaintainOperatorValueService", () => {
 
     beforeEach(async () => {
         provider = getProvider()
-        logger.debug("Connected to: ", await provider.getNetwork())
+        logger.debug('Connected to: ', await provider.getNetwork())
 
         token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
 
@@ -71,15 +71,15 @@ describe.skip("MaintainOperatorValueService", () => {
         ).wait()
         for (const streamId of [streamId1, streamId2]) {
             const sponsorship = await deploySponsorship(chainConfig, operatorWallet, { streamId })
-            await (await token.connect(operatorWallet).transferAndCall(sponsorship.address, parseEther(`${SPONSOR_AMOUNT}`), "0x")).wait()
+            await (await token.connect(operatorWallet).transferAndCall(sponsorship.address, parseEther(`${SPONSOR_AMOUNT}`), '0x')).wait()
             await (await operatorContract.stake(sponsorship.address, parseEther(`${STAKE_AMOUNT}`))).wait()
         }
     }, 60 * 1000)
 
     // TODO: split into two test, where one verifies that not all sponsorships are used to update
     // .each([parseEther("0.001"),]
-    test("updates only some (1) of the sponsorships to get under the threshold", async () => {
-        const penaltyFraction = parseEther("0.001")
+    test('updates only some (1) of the sponsorships to get under the threshold', async () => {
+        const penaltyFraction = parseEther('0.001')
         const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig, penaltyFraction.toBigInt())
 
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
@@ -92,7 +92,7 @@ describe.skip("MaintainOperatorValueService", () => {
         await waitForCondition(async () => {
             const diff = await getDiffBetweenApproxAndRealValues()
             const poolValue = await operatorContract.totalValueInSponsorshipsWei()
-            const threshold = penaltyFraction.mul(poolValue).div(parseEther("1")).toBigInt()
+            const threshold = penaltyFraction.mul(poolValue).div(parseEther('1')).toBigInt()
             logger.debug(`diff: ${diff}, threshold: ${threshold}`)
             return diff > threshold 
         }, 10000, 1000)
@@ -104,7 +104,7 @@ describe.skip("MaintainOperatorValueService", () => {
         const diff = await getDiffBetweenApproxAndRealValues()
 
         const poolValue = await operatorContract.totalValueInSponsorshipsWei()
-        const threshold = penaltyFraction.mul(poolValue).div(parseEther("1")).toBigInt()
+        const threshold = penaltyFraction.mul(poolValue).div(parseEther('1')).toBigInt()
 
         expect((await operatorContract.totalValueInSponsorshipsWei()).toBigInt()).toBeGreaterThan(totalValueInSponsorshipsBefore.toBigInt())
         logger.debug(`at end diff: ${diff}, threshold: ${threshold}`)

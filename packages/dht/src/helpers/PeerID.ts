@@ -1,7 +1,7 @@
-import { BrandedString } from "@streamr/utils"
-import { UUID } from "./UUID"
+import { BrandedString } from '@streamr/utils'
+import { UUID } from './UUID'
 import { IllegalArguments } from './errors'
-import crypto from "crypto"
+import crypto from 'crypto'
 
 export type PeerIDKey = BrandedString<'PeerIDKey'>
 

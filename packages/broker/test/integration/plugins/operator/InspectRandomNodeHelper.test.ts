@@ -1,26 +1,26 @@
-import { Contract } from "@ethersproject/contracts"
-import { JsonRpcProvider, Provider } from "@ethersproject/providers"
-import { parseEther } from "@ethersproject/units"
-import { Wallet } from "@ethersproject/wallet"
-import { config } from "@streamr/config"
-import type { TestToken } from "@streamr/network-contracts"
-import { tokenABI } from "@streamr/network-contracts"
+import { Contract } from '@ethersproject/contracts'
+import { JsonRpcProvider, Provider } from '@ethersproject/providers'
+import { parseEther } from '@ethersproject/units'
+import { Wallet } from '@ethersproject/wallet'
+import { config } from '@streamr/config'
+import type { TestToken } from '@streamr/network-contracts'
+import { tokenABI } from '@streamr/network-contracts'
 import { Logger, TheGraphClient, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import fetch from 'node-fetch'
-import { InspectRandomNodeHelper } from "../../../../src/plugins/operator/InspectRandomNodeHelper"
+import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { createClient } from '../../../utils'
-import { deploySponsorship } from "./deploySponsorshipContract"
-import { setupOperatorContract } from "./setupOperatorContract"
+import { deploySponsorship } from './deploySponsorshipContract'
+import { setupOperatorContract } from './setupOperatorContract'
 
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
 const chainConfig = config.dev2
-const STREAM_CREATION_KEY = "0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7"
+const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
 
 jest.setTimeout(600 * 1000)
 
-describe("InspectRandomNodeHelper", () => {
+describe('InspectRandomNodeHelper', () => {
     const chainURL = chainConfig.rpcEndpoints[0]
 
     let provider: Provider
@@ -32,7 +32,7 @@ describe("InspectRandomNodeHelper", () => {
 
     beforeAll(async () => {
         provider = new JsonRpcProvider(chainURL)
-        logger.debug("Connected to: ", await provider.getNetwork())
+        logger.debug('Connected to: ', await provider.getNetwork())
 
         adminWallet = new Wallet(STREAM_CREATION_KEY, provider)
 
@@ -50,14 +50,14 @@ describe("InspectRandomNodeHelper", () => {
         })
     })
 
-    it("getSponsorshipsOfOperator, getOperatorsInSponsorship", async () => {
+    it('getSponsorshipsOfOperator, getOperatorsInSponsorship', async () => {
         const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract(
             { chainConfig, provider, theGraphUrl },
         )
-        logger.debug("Deployed OperatorContract at: " + operatorContract.address)
+        logger.debug('Deployed OperatorContract at: ' + operatorContract.address)
         const inspectRandomNodeHelper = new InspectRandomNodeHelper(operatorConfig)
             
-        logger.debug("Added OperatorClient listeners, deploying Sponsorship contract...")
+        logger.debug('Added OperatorClient listeners, deploying Sponsorship contract...')
         const sponsorship = await deploySponsorship(chainConfig, operatorWallet, {
             streamId: streamId1 })
         const sponsorship2 = await deploySponsorship(chainConfig, operatorWallet, {
@@ -66,12 +66,12 @@ describe("InspectRandomNodeHelper", () => {
 
         logger.debug(`Sponsorship1 deployed at ${sponsorship.address}`)
         logger.debug(`Sponsorship2 deployed at ${sponsorship2.address}`)
-        await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
+        await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
 
-        logger.debug("Staking to sponsorship...")
-        await (await operatorContract.stake(sponsorship.address, parseEther("100"))).wait()
+        logger.debug('Staking to sponsorship...')
+        await (await operatorContract.stake(sponsorship.address, parseEther('100'))).wait()
         logger.debug(`staked on sponsorship ${sponsorship.address}`)
-        await (await operatorContract.stake(sponsorship2.address, parseEther("100"))).wait()
+        await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
         logger.debug(`staked on sponsorship ${sponsorship2.address}`)
 
         await waitForCondition(async (): Promise<boolean> => {
@@ -86,7 +86,7 @@ describe("InspectRandomNodeHelper", () => {
         expect(operators).toEqual([toEthereumAddress(operatorContract.address)])
     })
 
-    it("works to flag through the inspectRandomNodeHelper", async () => {
+    it('works to flag through the inspectRandomNodeHelper', async () => {
         const flagger = await setupOperatorContract({ chainConfig, provider, theGraphUrl })
         logger.trace('deployed flagger contract ' + flagger.operatorConfig.operatorContractAddress)
         const target = await setupOperatorContract({ chainConfig, provider, theGraphUrl })

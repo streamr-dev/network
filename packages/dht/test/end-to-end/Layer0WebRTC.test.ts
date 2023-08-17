@@ -24,7 +24,7 @@ describe('Layer0 with WebRTC connections', () => {
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor, nodeName: 'entrypoint', numberOfNodesPerKBucket: 8 })
         await epDhtNode.start()
 
-        await epDhtNode.joinDht(epPeerDescriptor)
+        await epDhtNode.joinDht([epPeerDescriptor])
 
         node1 = new DhtNode({ peerIdString: 'Peer0', nodeName: 'Peer0', entryPoints: [epPeerDescriptor] })
         node2 = new DhtNode({ peerIdString: 'Peer1', nodeName: 'Peer1', entryPoints: [epPeerDescriptor] })
@@ -38,7 +38,7 @@ describe('Layer0 with WebRTC connections', () => {
             node4.start()
         ])
 
-        await epDhtNode.joinDht(epPeerDescriptor)
+        await epDhtNode.joinDht([epPeerDescriptor])
     })
 
     afterEach(async () => {
@@ -67,8 +67,8 @@ describe('Layer0 with WebRTC connections', () => {
     it('Happy path two peers', async () => {
 
         await Promise.all([waitForEvent(new Peer0Listener(node2), 'peer0connected', 20000),
-            node2.joinDht(epPeerDescriptor),
-            node1.joinDht(epPeerDescriptor)
+            node2.joinDht([epPeerDescriptor]),
+            node1.joinDht([epPeerDescriptor])
         ])
 
         expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getPeerDescriptor())).toEqual(true)
@@ -82,10 +82,10 @@ describe('Layer0 with WebRTC connections', () => {
 
     it('Happy path simultaneous joins', async () => {
         await Promise.all([
-            node1.joinDht(epPeerDescriptor),
-            node2.joinDht(epPeerDescriptor),
-            node3.joinDht(epPeerDescriptor),
-            node4.joinDht(epPeerDescriptor)
+            node1.joinDht([epPeerDescriptor]),
+            node2.joinDht([epPeerDescriptor]),
+            node3.joinDht([epPeerDescriptor]),
+            node4.joinDht([epPeerDescriptor])
         ])
 
         expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getPeerDescriptor())).toEqual(true)

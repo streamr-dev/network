@@ -1,12 +1,12 @@
-import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from "./IConnection"
+import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from './IConnection'
 import * as Err from '../helpers/errors'
-import { Handshaker } from "./Handshaker"
-import { PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
-import { Logger, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from "@streamr/utils"
-import EventEmitter from "eventemitter3"
-import { PeerIDKey } from "../helpers/PeerID"
+import { Handshaker } from './Handshaker'
+import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { Logger, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
+import EventEmitter from 'eventemitter3'
+import { PeerIDKey } from '../helpers/PeerID'
 import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
-import { DisconnectionType } from "../transport/ITransport"
+import { DisconnectionType } from '../transport/ITransport'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
@@ -304,7 +304,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public reportBufferSentByOtherConnection(): void {
-        logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + " reportBufferSentByOtherConnection")
+        logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' reportBufferSentByOtherConnection')
         if (this.handshaker) {
             this.handshaker.removeAllListeners()
         }
