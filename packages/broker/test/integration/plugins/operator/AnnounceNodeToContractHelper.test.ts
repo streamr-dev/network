@@ -3,7 +3,7 @@ import { setupOperatorContract } from './setupOperatorContract'
 import { getProvider } from './smartContractUtils'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { Wallet } from 'ethers'
-import type { Operator } from "@streamr/network-contracts"
+import type { Operator } from '@streamr/network-contracts'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
