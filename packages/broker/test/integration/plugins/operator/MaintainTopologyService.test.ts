@@ -13,14 +13,14 @@ import {
     getTokenContract
 } from './smartContractUtils'
 import { StreamPartID, toStreamID } from '@streamr/protocol'
-import { createClient } from '../../../utils'
+import { createClient, createTestStream } from '../../../utils'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
     const client = createClient(privateKey)
-    const s1 = await client.createStream({ id: '/test1/' + Date.now(), partitions: 1 })
-    const s2 = await client.createStream({ id: '/test2/' + Date.now(), partitions: 3 })
+    const s1 = await createTestStream(client, module, { partitions: 1 })
+    const s2 = await createTestStream(client, module, { partitions: 3 })
     await client.destroy()
     return [s1, s2]
 }

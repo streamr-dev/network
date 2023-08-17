@@ -8,7 +8,7 @@ import { tokenABI } from '@streamr/network-contracts'
 import { Logger, TheGraphClient, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import fetch from 'node-fetch'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
-import { createClient } from '../../../utils'
+import { createClient, createTestStream } from '../../../utils'
 import { deploySponsorship } from './deploySponsorshipContract'
 import { setupOperatorContract } from './setupOperatorContract'
 
@@ -39,8 +39,8 @@ describe('InspectRandomNodeHelper', () => {
         token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
 
         const client = createClient(STREAM_CREATION_KEY)
-        streamId1 = (await client.createStream(`/operatorvalueservicetest-1-${Date.now()}`)).id
-        streamId2 = (await client.createStream(`/operatorvalueservicetest-2-${Date.now()}`)).id
+        streamId1 = (await createTestStream(client, module)).id
+        streamId2 = (await createTestStream(client, module)).id
         await client.destroy()
 
         graphClient = new TheGraphClient({

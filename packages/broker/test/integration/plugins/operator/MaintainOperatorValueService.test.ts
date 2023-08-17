@@ -13,7 +13,7 @@ import { deploySponsorship } from './deploySponsorshipContract'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { getProvider } from './smartContractUtils'
-import { createClient } from '../../../utils'
+import { createClient, createTestStream } from '../../../utils'
 import { setupOperatorContract } from './setupOperatorContract'
 
 const chainConfig = CHAIN_CONFIG.dev2
@@ -49,8 +49,8 @@ describe.skip('MaintainOperatorValueService', () => {
 
     beforeAll(async () => {
         const client = createClient(STREAM_CREATION_KEY)
-        streamId1 = (await client.createStream(`/operatorvalueservicetest-1-${Date.now()}`)).id
-        streamId2 = (await client.createStream(`/operatorvalueservicetest-2-${Date.now()}`)).id
+        streamId1 = (await createTestStream(client, module)).id
+        streamId2 = (await createTestStream(client, module)).id
         await client.destroy()
     })
 
