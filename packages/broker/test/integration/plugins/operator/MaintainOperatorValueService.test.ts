@@ -62,7 +62,7 @@ describe('MaintainOperatorValueService', () => {
         logger.debug('Creating stream for the test')
         const createStreamReceipt = await (await streamRegistry.createStream(
             `/operatorvaluewatchertest-${Date.now()}`,
-            '{\'partitions\':1}')
+            '{"partitions":1}')
         ).wait()
         streamId = createStreamReceipt.events?.find((e) => e.event === 'StreamCreated')?.args?.id
         const streamExists = await streamRegistry.exists(streamId)

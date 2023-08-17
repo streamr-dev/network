@@ -21,12 +21,12 @@ export class MaintainOperatorValueService {
     }
 
     async checkMyUnwithdrawnEarnings(): Promise<void> {
-        logger.info("Check unwithdrawn earnings % of total value, and check if it's above the safe threshold")
+        logger.info('Check unwithdrawn earnings % of total value, and check if it\'s above the safe threshold')
         const { fraction, sponsorshipAddresses } = await this.helper.getMyUnwithdrawnEarnings()
         const safeUnwithdrawnEarningsFraction = this.penaltyLimitFraction! * this.withdrawLimitSafetyFraction / BigInt(1e18)
         logger.info(` -> is ${fraction / BigInt(1e16)}% > ${safeUnwithdrawnEarningsFraction / BigInt(1e16)}% ?`)
         if (fraction > safeUnwithdrawnEarningsFraction) {
-            logger.info("Withdrawing earnings from sponsorships", { sponsorshipAddresses })
+            logger.info('Withdrawing earnings from sponsorships', { sponsorshipAddresses })
             await this.helper.withdrawMyEarningsFromSponsorships(sponsorshipAddresses)
         }
     }

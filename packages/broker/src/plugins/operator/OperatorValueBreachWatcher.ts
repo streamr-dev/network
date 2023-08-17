@@ -19,7 +19,7 @@ export class OperatorValueBreachWatcher {
 
     async checkRandomUnwithdrawnEarnings(): Promise<void> {
         const randomOperatorAddress = await this.helper.getRandomOperator()
-        logger.info("Checking unwithdrawn earnings", { randomOperatorAddress })
+        logger.info('Checking unwithdrawn earnings', { randomOperatorAddress })
         return this.checkUnwithdrawnEarningsOf(randomOperatorAddress)
     }
 
@@ -29,7 +29,7 @@ export class OperatorValueBreachWatcher {
         const limit = await this.getPenaltyLimitFraction()
         logger.info(` -> is ${fraction} > ${limit}?`)
         if (fraction > limit) {
-            logger.info("Withdrawing earnings from sponsorships", { sponsorshipAddresses })
+            logger.info('Withdrawing earnings from sponsorships', { sponsorshipAddresses })
             await this.helper.triggerWithdraw(targetOperatorAddress, sponsorshipAddresses)
         }
     }
