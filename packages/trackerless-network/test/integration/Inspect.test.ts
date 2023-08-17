@@ -65,7 +65,7 @@ describe('inspect', () => {
             ...inspectedNodes.map((node) => node.getStreamrNode().waitForJoinAndSubscribe(streamId, 5000, 4))
         ])
         sequenceNumber = 0
-    })
+    }, 30000)
 
     afterEach(async () => {
         clearInterval(publishInterval)
