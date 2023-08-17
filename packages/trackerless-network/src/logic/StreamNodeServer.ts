@@ -1,8 +1,12 @@
-import { keyFromPeerDescriptor, ListeningRpcCommunicator, PeerDescriptor, DhtCallContext } from "@streamr/dht"
-import { Empty } from "../proto/google/protobuf/empty"
-import { LeaveStreamNotice, MessageRef, StreamMessage } from "../proto/packages/trackerless-network/protos/NetworkRpc"
-import { INetworkRpc } from "../proto/packages/trackerless-network/protos/NetworkRpc.server"
-import { ServerCallContext } from "@protobuf-ts/runtime-rpc"
+import { keyFromPeerDescriptor, ListeningRpcCommunicator, PeerDescriptor, DhtCallContext, PeerIDKey } from '@streamr/dht'
+import { Empty } from '../proto/google/protobuf/empty'
+import {
+    LeaveStreamNotice,
+    MessageRef,
+    StreamMessage
+} from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 export interface StreamNodeServerConfig {
     ownPeerDescriptor: PeerDescriptor
@@ -10,6 +14,7 @@ export interface StreamNodeServerConfig {
     markAndCheckDuplicate: (messageRef: MessageRef, previousMessageRef?: MessageRef) => boolean
     broadcast: (message: StreamMessage, previousPeer?: string) => void
     onLeaveNotice(notice: LeaveStreamNotice): void
+    markForInspection(senderId: PeerIDKey, messageRef: MessageRef): void
     rpcCommunicator: ListeningRpcCommunicator
 }
 
@@ -22,8 +27,9 @@ export class StreamNodeServer implements INetworkRpc {
     }
 
     async sendData(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
+        const previousPeer = keyFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
+        this.config.markForInspection(previousPeer, message.messageRef!)
         if (this.config.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
-            const previousPeer = keyFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
             this.config.broadcast(message, previousPeer)
         }
         return Empty

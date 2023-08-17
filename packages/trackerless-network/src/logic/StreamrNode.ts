@@ -217,7 +217,7 @@ export class StreamrNode extends EventEmitter<Events> {
             forwardingPeer
         )
         entryPoints = knownEntryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await Promise.all(sampleSize(entryPoints, 4).map((entryPoint) => layer1.joinDht(entryPoint)))
+        await layer1.joinDht(sampleSize(entryPoints, 4))
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
             discoveryResult.joiningEmptyStream,
@@ -343,6 +343,14 @@ export class StreamrNode extends EventEmitter<Events> {
             nodeName: this.config.nodeName,
             userId: userId
         })
+    }
+
+    async inspect(peerDescriptor: PeerDescriptor, streamPartId: string): Promise<boolean> {
+        if (this.streams.get(streamPartId)?.type === StreamNodeType.RANDOM_GRAPH) {
+            const streamNode = this.streams.get(streamPartId)!.layer2 as RandomGraphNode
+            return streamNode.inspect(peerDescriptor)
+        }
+        return false
     }
 
     setStreamPartEntryPoints(streamPartId: string, entryPoints: PeerDescriptor[]): void {

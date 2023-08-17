@@ -1,5 +1,6 @@
 import { Provider } from '@ethersproject/abstract-provider'
 import { JsonRpcProvider } from '@ethersproject/providers'
+import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrEnvDeployer, TestToken } from '@streamr/network-contracts'
 import { Logger, wait, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
@@ -7,15 +8,14 @@ import { parseEther } from 'ethers/lib/utils'
 import { mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
 import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
-import { STREAMR_DOCKER_DEV_HOST, createClient, createTestStream } from '../../../utils'
+import { createClient, createTestStream } from '../../../utils'
 import { deploySponsorship } from './deploySponsorshipContract'
 import { setupOperatorContract } from './setupOperatorContract'
 
-const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`
+const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 const TIMEOUT = 1000 * 60 * 10
-const ADMIN_PRIV_KEY = "0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0" // sidechain
-// const ADMIN_PRIV_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" // fastChain
+const ADMIN_PRIV_KEY = CHAIN_CONFIG.dev2.adminPrivateKey
 
 const logger = new Logger(module)
 
@@ -27,8 +27,7 @@ describe('VoteOnSuspectNodeService', () => {
     let streamrEnvDeployer: StreamrEnvDeployer
     let chainConfig: any
 
-    // const chainURL = "http://127.0.0.1:8545"
-    const chainURL = `http://${STREAMR_DOCKER_DEV_HOST}:8546`
+    const chainURL = CHAIN_CONFIG.dev2.rpcEndpoints[0].url
 
     beforeAll(async () => {
         streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, chainURL)

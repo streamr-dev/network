@@ -24,6 +24,10 @@ service NeighborUpdateRpc {
   rpc neighborUpdate (NeighborUpdate) returns (NeighborUpdate);
 }
 
+service TemporaryConnectionRpc {
+  rpc openConnection (TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
+}
+
 message MessageRef {
   int64 timestamp = 1;
   int32 sequenceNumber = 2;
@@ -141,6 +145,14 @@ message ProxyConnectionResponse {
   uint32 streamPartition = 3;
   ProxyDirection direction = 4;  
   bool accepted = 5;
+}
+
+message TemporaryConnectionRequest {
+  string senderId = 1;
+}
+
+message TemporaryConnectionResponse {
+  bool accepted = 1;
 }
 
 enum ProxyDirection {

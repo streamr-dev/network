@@ -1,8 +1,8 @@
-import { NodeType, PeerDescriptor, PeerID, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from "@streamr/dht"
-import { ProxyDirection } from "../../src/proto/packages/trackerless-network/protos/NetworkRpc"
-import { EthereumAddress, waitForCondition, waitForEvent3 } from "@streamr/utils"
-import { NetworkNode } from "../../src/NetworkNode"
-import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from "@streamr/protocol"
+import { NodeType, PeerDescriptor, PeerID, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { EthereumAddress, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { NetworkNode } from '../../src/NetworkNode'
+import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
 
 describe('Proxy connections', () => {
 

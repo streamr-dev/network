@@ -2,12 +2,12 @@ import { Wallet } from '@ethersproject/wallet'
 import { EthereumAddress, toEthereumAddress, waitForCondition, waitForEvent } from '@streamr/utils'
 import cors from 'cors'
 import crypto from 'crypto'
-import { EventEmitter, once } from "events"
+import { EventEmitter, once } from 'events'
 import express, { Request, Response } from 'express'
 import http from 'http'
 import { AddressInfo } from 'net'
 import fetch from 'node-fetch'
-import { Readable } from "stream"
+import { Readable } from 'stream'
 
 export type Event = string
 

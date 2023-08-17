@@ -5,22 +5,22 @@ import {
     PeerIDKey,
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
-} from "@streamr/dht"
-import { LeaveStreamNotice, MessageRef, ProxyDirection, StreamMessage } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
-import { IStreamNode } from "../IStreamNode"
+} from '@streamr/dht'
+import { LeaveStreamNotice, MessageRef, ProxyDirection, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { IStreamNode } from '../IStreamNode'
 import { EventEmitter } from 'eventemitter3'
-import { ConnectionLocker } from "@streamr/dht/src/exports"
-import { StreamNodeServer } from "../StreamNodeServer"
-import { Logger, wait } from "@streamr/utils"
-import { DuplicateMessageDetector } from "../DuplicateMessageDetector"
-import { PeerList } from "../PeerList"
-import { Propagation } from "../propagation/Propagation"
+import { ConnectionLocker } from '@streamr/dht/src/exports'
+import { StreamNodeServer } from '../StreamNodeServer'
+import { Logger, wait } from '@streamr/utils'
+import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
+import { PeerList } from '../PeerList'
+import { Propagation } from '../propagation/Propagation'
 import { sampleSize } from 'lodash'
-import { RemoteProxyServer } from "./RemoteProxyServer"
-import { NetworkRpcClient, ProxyConnectionRpcClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
-import { toProtoRpcClient } from "@streamr/proto-rpc"
-import { RemoteRandomGraphNode } from "../RemoteRandomGraphNode"
-import { markAndCheckDuplicate } from "../utils"
+import { RemoteProxyServer } from './RemoteProxyServer'
+import { NetworkRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
+import { markAndCheckDuplicate } from '../utils'
 
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
     // eslint-disable-next-line no-constant-condition
@@ -84,7 +84,8 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
                     setImmediate(() => this.onPeerDisconnected(contact.getPeerDescriptor()))
                 }
             },
-            rpcCommunicator: this.rpcCommunicator
+            rpcCommunicator: this.rpcCommunicator,
+            markForInspection: (_senderId: PeerIDKey, _messageRef: MessageRef) => {}
         })
         this.propagation = new Propagation({
             minPropagationTargets: 2,

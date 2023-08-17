@@ -8,12 +8,14 @@ import { Propagation } from './propagation/Propagation'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { MarkOptional } from 'ts-essentials'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
+import { Inspector } from './inspect/Inspector'
+import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
-    "nearbyContactPool" | "randomContactPool" | "targetNeighbors" | "propagation"
-    | "handshaker" | "neighborFinder" | "neighborUpdateManager" | "name" | "numOfTargetNeighbors"
-    | "maxNumberOfContacts" | "minPropagationTargets" | "rpcCommunicator" | "peerViewSize" | "acceptProxyConnections"
-    | "neighborUpdateInterval">
+    'nearbyContactPool' | 'randomContactPool' | 'targetNeighbors' | 'propagation'
+    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'name' | 'numOfTargetNeighbors'
+    | 'maxNumberOfContacts' | 'minPropagationTargets' | 'rpcCommunicator' | 'peerViewSize' | 'acceptProxyConnections'
+    | 'neighborUpdateInterval' | 'inspector' | 'temporaryConnectionServer'>
 
 const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
     const peerId = peerIdFromPeerDescriptor(config.ownPeerDescriptor)
@@ -27,6 +29,12 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const nearbyContactPool = config.nearbyContactPool ?? new PeerList(peerId, numOfTargetNeighbors + 1)
     const randomContactPool = config.randomContactPool ?? new PeerList(peerId, maxNumberOfContacts)
     const targetNeighbors = config.targetNeighbors ?? new PeerList(peerId, maxNumberOfContacts)
+
+    const temporaryConnectionServer = new TemporaryConnectionRpcServer({
+        randomGraphId: config.randomGraphId,
+        rpcCommunicator,
+        ownPeerId: peerId
+    })
     const proxyConnectionServer = acceptProxyConnections ? new ProxyStreamConnectionServer({
         ownPeerDescriptor: config.ownPeerDescriptor,
         streamPartId: config.randomGraphId,
@@ -35,7 +43,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const propagation = config.propagation ?? new Propagation({
         minPropagationTargets,
         sendToNeighbor: async (neighborId: string, msg: StreamMessage): Promise<void> => {
-            const remote = targetNeighbors.getNeighborById(neighborId)
+            const remote = targetNeighbors.getNeighborById(neighborId) ?? temporaryConnectionServer.getPeers().getNeighborById(neighborId)
             const proxyConnection = proxyConnectionServer?.getConnection(neighborId as PeerIDKey)
             if (remote) {
                 await remote.sendData(config.ownPeerDescriptor, msg)
@@ -72,6 +80,12 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         rpcCommunicator,
         neighborUpdateInterval
     })
+    const inspector = config.inspector ?? new Inspector({
+        ownPeerDescriptor: config.ownPeerDescriptor,
+        rpcCommunicator,
+        graphId: config.randomGraphId,
+        connectionLocker: config.connectionLocker
+    })
     return {
         ...config,
         nearbyContactPool,
@@ -89,7 +103,9 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         peerViewSize: maxNumberOfContacts,
         acceptProxyConnections,
         proxyConnectionServer,
-        neighborUpdateInterval
+        neighborUpdateInterval,
+        inspector,
+        temporaryConnectionServer
     }
 }
 

@@ -6,7 +6,7 @@ import {
     createTestStream,
     startStorageNode
 } from '../../../utils'
-import { Broker } from "../../../../src/broker"
+import { Broker } from '../../../../src/broker'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 

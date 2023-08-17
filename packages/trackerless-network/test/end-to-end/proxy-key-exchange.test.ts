@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor, PeerID } from "@streamr/dht"
+import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
 import { 
     EncryptionType,
     GroupKeyRequest,
@@ -9,10 +9,10 @@ import {
     StreamPartIDUtils,
     toStreamID,
     toStreamPartID
-} from "@streamr/protocol"
-import { NetworkNode } from "../../src/NetworkNode"
-import { ProxyDirection } from "../../src/proto/packages/trackerless-network/protos/NetworkRpc"
-import { toEthereumAddress, waitForEvent3 } from "@streamr/utils"
+} from '@streamr/protocol'
+import { NetworkNode } from '../../src/NetworkNode'
+import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { toEthereumAddress, waitForEvent3 } from '@streamr/utils'
 
 describe('proxy group key exchange', () => {
     const proxyNodeDescriptor: PeerDescriptor = {

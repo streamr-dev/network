@@ -1,12 +1,12 @@
-import { keyFromPeerDescriptor, ListeningRpcCommunicator } from "@streamr/dht"
-import { NeighborUpdate } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
-import { INeighborUpdateRpc } from "../../proto/packages/trackerless-network/protos/NetworkRpc.server"
-import { PeerList } from "../PeerList"
-import { INeighborFinder } from "./NeighborFinder"
+import { keyFromPeerDescriptor, ListeningRpcCommunicator } from '@streamr/dht'
+import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { PeerList } from '../PeerList'
+import { INeighborFinder } from './NeighborFinder'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { toProtoRpcClient } from "@streamr/proto-rpc"
-import { NetworkRpcClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
-import { RemoteRandomGraphNode } from "../RemoteRandomGraphNode"
+import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 
 interface NeighborUpdateManagerConfig {
     ownStringId: string

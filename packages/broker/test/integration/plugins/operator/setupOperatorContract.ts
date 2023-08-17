@@ -1,17 +1,17 @@
-import { Wallet } from "ethers"
-import { Provider } from "@ethersproject/providers"
+import { Wallet } from 'ethers'
+import { Provider } from '@ethersproject/providers'
 
-import type { Operator } from "@streamr/network-contracts"
-import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
-import { generateWalletWithGasAndTokens } from "./smartContractUtils"
-import { EthereumAddress, toEthereumAddress } from "@streamr/utils"
-import { deployOperatorContract } from "./deployOperatorContract"
+import type { Operator } from '@streamr/network-contracts'
+import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
+import { generateWalletWithGasAndTokens } from './smartContractUtils'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { deployOperatorContract } from './deployOperatorContract'
 
 export interface SetupOperatorOpts {
     nodeAddresses?: EthereumAddress[]
     provider: Provider
     // eslint-disable-next-line max-len
-    chainConfig: { contracts: { DATA?: string, LINK?: string, OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
+    chainConfig: { contracts: { DATA: string, OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
     theGraphUrl: string
     adminKey?: string
 }

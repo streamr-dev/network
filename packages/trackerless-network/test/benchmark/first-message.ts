@@ -72,7 +72,7 @@ const measureJoiningTime = async (count: number) => {
         region: getRandomRegion(),
         nodeName: `${count}`
     }
-    console.log("starting node with id ", nodeId.toKey())
+    console.log('starting node with id ', nodeId.toKey())
 
     // start publishing ons stream
     const stream = Array.from(streams.keys())[Math.floor(Math.random() * streams.size)]

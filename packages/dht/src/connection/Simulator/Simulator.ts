@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/parameter-properties */
-import EventEmitter from "eventemitter3"
-import { PeerIDKey } from "../../helpers/PeerID"
-import { PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc"
-import { ConnectionSourceEvents } from "../IConnectionSource"
-import { SimulatorConnector } from "./SimulatorConnector"
-import { SimulatorConnection } from "./SimulatorConnection"
-import { ConnectionID } from "../IConnection"
-import { Logger } from "@streamr/utils"
-import { getRegionDelayMatrix } from "./pings"
+import EventEmitter from 'eventemitter3'
+import { PeerIDKey } from '../../helpers/PeerID'
+import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { ConnectionSourceEvents } from '../IConnectionSource'
+import { SimulatorConnector } from './SimulatorConnector'
+import { SimulatorConnection } from './SimulatorConnection'
+import { ConnectionID } from '../IConnection'
+import { Logger } from '@streamr/utils'
+import { getRegionDelayMatrix } from './pings'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import Heap from 'heap'
-import { debugVars } from "../../helpers/debugHelpers"
+import { debugVars } from '../../helpers/debugHelpers'
 import * as sinon from 'sinon'
 
 const logger = new Logger(module)

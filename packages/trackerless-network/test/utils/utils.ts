@@ -41,15 +41,20 @@ export const createMockRandomGraphNodeAndDhtNode = (
     return [dhtNode, randomGraphNode]
 }
 
-export const createStreamMessage = (content: ContentMessage, streamId: string, publisherId: string): StreamMessage => {
+export const createStreamMessage = (
+    content: ContentMessage,
+    streamId: string,
+    publisherId: string,
+    timestamp?: number,
+    sequenceNumber?: number
+): StreamMessage => {
     const messageRef: MessageRef = {
         streamId,
         messageChainId: 'messageChain0',
         streamPartition: 0,
-        sequenceNumber: 0,
-        timestamp: Date.now(),
+        sequenceNumber: sequenceNumber || 0,
+        timestamp: timestamp || Date.now(),
         publisherId
-
     }
     const msg: StreamMessage = {
         messageType: StreamMessageType.MESSAGE,
@@ -60,12 +65,12 @@ export const createStreamMessage = (content: ContentMessage, streamId: string, p
     return msg
 }
 
-export const createMockRemotePeer = (): RemoteRandomGraphNode => {
+export const createMockRemotePeer = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
     const mockPeer: PeerDescriptor = {
         kademliaId: PeerID.fromString(new UUID().toString()).value,
         type: 0
     }
-    return new RemoteRandomGraphNode(mockPeer, 'mock', {} as any)
+    return new RemoteRandomGraphNode(peerDescriptor || mockPeer, 'mock', {} as any)
 }
 
 export const createMockRemoteHandshaker = (): RemoteHandshaker => {

@@ -1,5 +1,5 @@
 import { Logger, scheduleAtInterval } from '@streamr/utils'
-import { MaintainOperatorValueHelper } from "./MaintainOperatorValueHelper"
+import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
 import { OperatorServiceConfig } from './OperatorPlugin'
 
 const logger = new Logger(module)

@@ -194,7 +194,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const disconnectionCandidates = new SortedContactList(peerIdFromPeerDescriptor(this.ownPeerDescriptor!), 100000)
         this.connections.forEach((connection) => {
             if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
-                logger.trace("disconnecting in timeout interval: " + this.config.nodeName + ', '
+                logger.trace('disconnecting in timeout interval: ' + this.config.nodeName + ', '
                     + connection.getPeerDescriptor()?.nodeName + ' ')
                 disconnectionCandidates.addContact(new Contact(connection.getPeerDescriptor()!))
             }
@@ -473,16 +473,16 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private acceptIncomingConnection(newConnection: ManagedConnection): boolean {
-        logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' acceptIncomingConnection()')
+        logger.trace(' ' + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' acceptIncomingConnection()')
         const newPeerID = peerIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         const hexKey = keyFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         if (this.connections.has(hexKey)) {
             if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.ownPeerDescriptor!))) {
-                logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
+                logger.trace(' ' + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
                     ' acceptIncomingConnection() replace current connection')
                 // replace the current connection
                 const oldConnection = this.connections.get(newPeerID.toKey())!
-                logger.trace("replaced: " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' ')
+                logger.trace('replaced: ' + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' ')
                 const buffer = oldConnection!.stealOutputBuffer()
                 
                 for (const data of buffer) {
@@ -513,7 +513,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 'closeConnection() this.connections had the id')
             logger.trace(`Closeconnection called to Peer ${id}${reason ? `: ${reason}` : ''}`)
             const connectionToClose = this.connections.get(id)!
-            logger.trace("disconnecting: " + this.config.nodeName + ", " + connectionToClose.getPeerDescriptor()?.nodeName)
+            logger.trace('disconnecting: ' + this.config.nodeName + ', ' + connectionToClose.getPeerDescriptor()?.nodeName)
             logger.trace(' ' + this.ownPeerDescriptor?.nodeName + ', ' + peerDescriptor.nodeName + ' ' +
                 'closeConnection() calling connection.close()')
             await connectionToClose.close(disconnectionType)

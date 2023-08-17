@@ -13,14 +13,14 @@ import {
     getTokenContract
 } from './smartContractUtils'
 import { StreamPartID, toStreamID } from '@streamr/protocol'
-import { createClient } from '../../../utils'
+import { createClient, createTestStream } from '../../../utils'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
     const client = createClient(privateKey)
-    const s1 = await client.createStream({ id: '/test1/' + Date.now(), partitions: 1 })
-    const s2 = await client.createStream({ id: '/test2/' + Date.now(), partitions: 3 })
+    const s1 = await createTestStream(client, module, { partitions: 1 })
+    const s2 = await createTestStream(client, module, { partitions: 3 })
     await client.destroy()
     return [s1, s2]
 }
@@ -68,14 +68,14 @@ describe('MaintainTopologyService', () => {
         const sponsorship2 = await deploySponsorship(stream2.id, operatorWallet)
         const operatorContract = await deployOperatorContract(operatorWallet)
         const token = getTokenContract()
-        await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
-        await (await operatorContract.stake(sponsorship1.address, parseEther("100"))).wait()
+        await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
+        await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
 
         const serviceHelperConfig = {
             provider,
             signer: operatorWallet,
             operatorContractAddress: toEthereumAddress(operatorContract.address),
-            theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
+            theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`,
         }
 
         operatorFleetState = new OperatorFleetState(client, toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress))
@@ -90,7 +90,7 @@ describe('MaintainTopologyService', () => {
             return containsAll(await getSubscribedStreamPartIds(client), stream1.getStreamParts())
         }, 10000, 1000)
 
-        await (await operatorContract.stake(sponsorship2.address, parseEther("100"))).wait()
+        await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
         await waitForCondition(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), [
                 ...stream1.getStreamParts(),

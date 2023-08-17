@@ -363,7 +363,7 @@ export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStrea
 export const validateConfig = (data: unknown): StrictStreamrClientConfig | never => {
     if (!validate(data)) {
         throw new Error((validate as any).errors!.map((e: any) => {
-            let text = e.instancePath + " " + e.message
+            let text = e.instancePath + ' ' + e.message
             if (e.params.additionalProperty) {
                 text += `: ${e.params.additionalProperty}`
             }
