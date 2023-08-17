@@ -1,5 +1,5 @@
-import { StreamPartID, InstructionMessage } from "@streamr/protocol"
-import { Logger } from "@streamr/utils"
+import { StreamPartID, InstructionMessage } from '@streamr/protocol'
+import { Logger } from '@streamr/utils'
 import { TrackerId } from '../identifiers'
 
 type HandleFn = (

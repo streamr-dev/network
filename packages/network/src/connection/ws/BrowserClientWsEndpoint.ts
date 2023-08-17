@@ -1,8 +1,8 @@
 import { IMessageEvent, w3cwebsocket } from 'websocket'
 import { PeerId, PeerInfo } from '../PeerInfo'
-import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
+import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
 import { BrowserClientWsConnection, BrowserWebSocketConnectionFactory } from './BrowserClientWsConnection'
-import { AbstractClientWsEndpoint, HandshakeValues } from "./AbstractClientWsEndpoint"
+import { AbstractClientWsEndpoint, HandshakeValues } from './AbstractClientWsEndpoint'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)

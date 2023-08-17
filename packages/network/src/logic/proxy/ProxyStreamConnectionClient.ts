@@ -8,10 +8,10 @@ import {
     ProxyDirection,
     StreamPartID
 } from '@streamr/protocol'
-import { Logger, wait, waitForEvent, withTimeout } from "@streamr/utils"
+import { Logger, wait, waitForEvent, withTimeout } from '@streamr/utils'
 import { Propagation } from '../propagation/Propagation'
 import sampleSize from 'lodash/sampleSize'
-import { EventEmitter } from "events"
+import { EventEmitter } from 'events'
 
 const logger = new Logger(module)
 

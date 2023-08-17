@@ -1,7 +1,7 @@
 /* eslint-disable no-prototype-builtins */
 import { Simulator } from './Simulator'
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
-import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from "../connection/ws/AbstractWsEndpoint"
+import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from '../connection/ws/AbstractWsEndpoint'
 import { staticLogger, ServerWsConnection } from './ServerWsConnection_simulator'
 import fs from 'fs'
 import net from 'net'
@@ -39,7 +39,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
         super(peerInfo, pingInterval)
         this.httpServer = httpServer
         const protocol = sslEnabled ? 'wss' : 'ws'
-        if (typeof listen !== "string") {
+        if (typeof listen !== 'string') {
             this.serverUrl = `${protocol}://${listen.hostname}:${listen.port}`
         } else {
             this.serverUrl = `${protocol}+unix://${listen}`
@@ -80,7 +80,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
                         Simulator.instance().wsDisconnect(this.ownAddress, this.peerInfo, fromAddress, DisconnectionCode.DUPLICATE_SOCKET, 
                             failedMessage)
 
-                        logger.warn(failedMessage + " " + data)
+                        logger.warn(failedMessage + ' ' + data)
                     }
                 } else {
                     logger.trace('Expected a handshake message got: ' + data.toString())
@@ -319,7 +319,7 @@ export async function startHttpServer(
         staticLogger.info(`listening on ${JSON.stringify(config)}`)
     } catch (err) {
         // Kill process if started on host/port, else wait for Unix Socket to be cleaned up
-        if (typeof config !== "string") {
+        if (typeof config !== 'string') {
             staticLogger.error(err)
             process.exit(1)
         } else {

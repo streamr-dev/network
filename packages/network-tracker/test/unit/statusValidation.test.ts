@@ -1,4 +1,4 @@
-import { StatusMessage } from "@streamr/protocol"
+import { StatusMessage } from '@streamr/protocol'
 import { StatusValidator } from '../../src/helpers/SchemaValidators'
 
 describe('statusValidation', () => {

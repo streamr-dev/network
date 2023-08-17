@@ -1,4 +1,4 @@
-import Yallist from "yallist"
+import Yallist from 'yallist'
 
 interface Item<K, V> {
     value: V

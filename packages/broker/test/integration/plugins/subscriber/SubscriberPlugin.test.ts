@@ -19,15 +19,15 @@ const createMockPlugin = async (streamrClient: StreamrClient) => {
             subscriber: {
                 streams: [
                     {
-                        streamId: "stream-0",
+                        streamId: 'stream-0',
                         streamPartition: 0
                     },
                     {
-                        streamId: "stream-0",
+                        streamId: 'stream-0',
                         streamPartition: 1
                     },
                     {
-                        streamId: "stream-1",
+                        streamId: 'stream-1',
                         streamPartition: 0
                     }
                 ]
@@ -65,9 +65,9 @@ describe('Subscriber Plugin', () => {
         const nodeId = (await client.getNode()).getNodeId()
         await waitForCondition(() => {
             const overlays = tracker.getOverlayPerStreamPart() as any
-            return (overlays["stream-0#0"]?.nodes[nodeId] !== undefined)
-                && (overlays["stream-0#1"]?.nodes[nodeId] !== undefined)
-                && (overlays["stream-1#0"]?.nodes[nodeId] !== undefined)
+            return (overlays['stream-0#0']?.nodes[nodeId] !== undefined)
+                && (overlays['stream-0#1']?.nodes[nodeId] !== undefined)
+                && (overlays['stream-1#0']?.nodes[nodeId] !== undefined)
         })
         // If waitForCondition succeeds we are okay
         expect(true).toEqual(true)

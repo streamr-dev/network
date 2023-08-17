@@ -1,5 +1,5 @@
 import { PeerId, PeerInfo } from '../PeerInfo'
-import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from "./AbstractWsEndpoint"
+import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from './AbstractWsEndpoint'
 import { ServerWsConnection } from './ServerWsConnection'
 import fs from 'fs'
 import net from 'net'
@@ -8,7 +8,7 @@ import http from 'http'
 import WebSocket from 'ws'
 import { once } from 'events'
 import { v4 } from 'uuid'
-import { Duplex } from "stream"
+import { Duplex } from 'stream'
 import { Logger } from '@streamr/utils'
 
 interface HostPort {
@@ -36,7 +36,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
 
         this.httpServer = httpServer
         const protocol = sslEnabled ? 'wss' : 'ws'
-        if (typeof listen !== "string") {
+        if (typeof listen !== 'string') {
             this.serverUrl = `${protocol}://${listen.hostname}:${listen.port}`
         } else {
             this.serverUrl = `${protocol}+unix://${listen}`
@@ -244,7 +244,7 @@ export async function startHttpServer(
         logger.info('Listen', { details: JSON.stringify(config) })
     } catch (err) {
         // Kill process if started on host/port, else wait for Unix Socket to be cleaned up
-        if (typeof config !== "string") {
+        if (typeof config !== 'string') {
             logger.error('Failed to start httpServer', err)
             process.exit(1)
         } else {

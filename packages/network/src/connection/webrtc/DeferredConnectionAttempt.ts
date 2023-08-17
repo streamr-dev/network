@@ -1,4 +1,4 @@
-import EventEmitter from "events"
+import EventEmitter from 'events'
 import { PeerId } from '../PeerInfo'
 
 export class DeferredConnectionAttempt {

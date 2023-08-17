@@ -4,9 +4,9 @@ import { MetricsContext } from '@streamr/utils'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { Tracker } from '@streamr/network-tracker'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
-import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
-import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
-import { MessageID, StreamMessage, toStreamID } from "@streamr/protocol"
+import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
+import { Event as ntnEvent, NodeToNode } from '../../src/protocol/NodeToNode'
+import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'

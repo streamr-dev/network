@@ -1,7 +1,7 @@
 import { ReadyState, AbstractWsConnection } from '../connection/ws/AbstractWsConnection'
 import { PeerInfo } from '../connection/PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from '../connection/ws/AbstractWsEndpoint'
-import { Logger } from "@streamr/utils"
+import { Logger } from '@streamr/utils'
 
 import { Simulator } from './Simulator'
 
@@ -46,7 +46,7 @@ export class ServerWsConnection extends AbstractWsConnection {
     }
 
     sendPing(): void {
-        Simulator.instance().wsSend(this.ownAddress, this.ownPeerInfo, this.remoteAddress, "ping").then(() => {
+        Simulator.instance().wsSend(this.ownAddress, this.ownPeerInfo, this.remoteAddress, 'ping').then(() => {
             return
         }).catch(() => {
         })

@@ -1,4 +1,4 @@
-import { PeerId, PeerInfo } from "./PeerInfo"
+import { PeerId, PeerInfo } from './PeerInfo'
 import { ControlMessage, StreamMessage } from '@streamr/protocol'
 
 const defaultControlLayerVersions = ControlMessage.getSupportedVersions()

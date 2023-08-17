@@ -9,14 +9,14 @@ import {
     StatusMessage,
     TrackerMessage
 } from '@streamr/protocol'
-import { Logger } from "@streamr/utils"
+import { Logger } from '@streamr/utils'
 import { decode } from './utils'
 import { Status, NodeId, TrackerId } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { NameDirectory } from '../NameDirectory'
-import { DisconnectionReason, Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
-import { AbstractClientWsEndpoint } from "../connection/ws/AbstractClientWsEndpoint"
-import { AbstractWsConnection } from "../connection/ws/AbstractWsConnection"
+import { DisconnectionReason, Event as WsEndpointEvent } from '../connection/ws/AbstractWsEndpoint'
+import { AbstractClientWsEndpoint } from '../connection/ws/AbstractClientWsEndpoint'
+import { AbstractWsConnection } from '../connection/ws/AbstractWsConnection'
 
 export enum Event {
     CONNECTED_TO_TRACKER = 'streamr:tracker-node:send-status',

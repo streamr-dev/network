@@ -1,8 +1,8 @@
 import { ConstructorOptions, WebRtcConnection } from '../connection/webrtc/WebRtcConnection'
-import { Logger } from "@streamr/utils"
-import { NameDirectory } from "../NameDirectory"
-import { WebRtcConnectionFactory } from "../connection/webrtc/WebRtcEndpoint"
-import { Simulator } from "./Simulator"
+import { Logger } from '@streamr/utils'
+import { NameDirectory } from '../NameDirectory'
+import { WebRtcConnectionFactory } from '../connection/webrtc/WebRtcEndpoint'
+import { Simulator } from './Simulator'
 import { DescriptionType } from 'node-datachannel'
 
 /* eslint-disable class-methods-use-this */
@@ -41,16 +41,16 @@ export class NodeWebRtcConnection extends WebRtcConnection {
 
     protected doConnect(): void {
         if (this.isOffering()) {
-            this.emitLocalDescription("ICE description from " + this.selfId, "ICE Description")
-            this.emitLocalCandidate("ICE candidate from " + this.selfId, "abcdefg")
+            this.emitLocalDescription('ICE description from ' + this.selfId, 'ICE Description')
+            this.emitLocalCandidate('ICE candidate from ' + this.selfId, 'abcdefg')
         }
     }
 
     setRemoteDescription(_udescription: string, _utype: DescriptionType): void {
         this.remoteDescriptionSet = true
         if (!this.isOffering()) {
-            this.emitLocalDescription("ICE description from " + this.selfId, "ICE Description")
-            this.emitLocalCandidate("ICE candidate from " + this.selfId, "abcdefg")
+            this.emitLocalDescription('ICE description from ' + this.selfId, 'ICE Description')
+            this.emitLocalCandidate('ICE candidate from ' + this.selfId, 'abcdefg')
         }
     }
 
@@ -58,7 +58,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         if (this.remoteDescriptionSet) {
             Simulator.instance().webRtcConnect(this.selfId, this.getPeerId())
         } else {
-            this.logger.warn("Tried setting remoteCandidate before remote description, closing")
+            this.logger.warn('Tried setting remoteCandidate before remote description, closing')
             this.close(new Error('Tried setting remoteCandidate before remote description, closing'))
         }
     }

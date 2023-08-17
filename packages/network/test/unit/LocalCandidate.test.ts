@@ -1,4 +1,4 @@
-import { CandidateType, ParsedLocalCandidate } from "../../src/connection/webrtc/ParsedLocalCandidate"
+import { CandidateType, ParsedLocalCandidate } from '../../src/connection/webrtc/ParsedLocalCandidate'
 
 describe('ParsedLocalCandidate', () => {
     const hostCandidate = 'a=candidate:1 1 UDP 132 127.0.0.1 55193 typ host'

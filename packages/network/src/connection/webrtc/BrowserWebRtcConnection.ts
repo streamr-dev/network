@@ -1,7 +1,7 @@
-import { ConstructorOptions, WebRtcConnection } from "./WebRtcConnection"
-import { Logger } from "@streamr/utils"
-import { NameDirectory } from "../../NameDirectory"
-import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
+import { ConstructorOptions, WebRtcConnection } from './WebRtcConnection'
+import { Logger } from '@streamr/utils'
+import { NameDirectory } from '../../NameDirectory'
+import { WebRtcConnectionFactory } from './WebRtcEndpoint'
 
 /* eslint-disable class-methods-use-this */
 export const webRtcConnectionFactory = new class implements WebRtcConnectionFactory {
@@ -109,7 +109,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
     }
 
     private async doSetRemoteDescription(description: string, type: string) {
-        const offerCollision = (type == "offer") && (this.makingOffer || !this.peerConnection || this.peerConnection.signalingState != "stable")
+        const offerCollision = (type == 'offer') && (this.makingOffer || !this.peerConnection || this.peerConnection.signalingState != 'stable')
 
         const ignoreOffer = this.isOffering() && offerCollision
         if (ignoreOffer) {
@@ -121,7 +121,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
             this.logger.warn('Failed to set remote description', err)
         }
 
-        if (type == "offer" && this.peerConnection) {
+        if (type == 'offer' && this.peerConnection) {
             try {
                 await this.peerConnection.setLocalDescription()
             } catch (err) {
@@ -163,7 +163,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 
     isOpen(): boolean {
 
-        if (!this.peerConnection || !this.dataChannel || this.dataChannel.readyState != "open") {
+        if (!this.peerConnection || !this.dataChannel || this.dataChannel.readyState != 'open') {
             return false
         }
 

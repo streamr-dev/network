@@ -1,8 +1,8 @@
-import { EventEmitter } from "events"
-import { Logger } from "@streamr/utils"
-import { PeerId, PeerInfo } from "../PeerInfo"
-import { Rtts } from "../../identifiers"
-import { PingPongWs } from "./PingPongWs"
+import { EventEmitter } from 'events'
+import { Logger } from '@streamr/utils'
+import { PeerId, PeerInfo } from '../PeerInfo'
+import { Rtts } from '../../identifiers'
+import { PingPongWs } from './PingPongWs'
 import { AbstractWsConnection } from './AbstractWsConnection'
 
 export enum Event {

@@ -12,7 +12,7 @@ import { NodeToTracker } from '../protocol/NodeToTracker'
 import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import { StreamPartManager } from './StreamPartManager'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
-import { Logger, withTimeout } from "@streamr/utils"
+import { Logger, withTimeout } from '@streamr/utils'
 import { PeerInfo } from '../connection/PeerInfo'
 import type { NodeId, TrackerId } from '../identifiers'
 import { DEFAULT_MAX_NEIGHBOR_COUNT } from '../constants'
@@ -165,7 +165,7 @@ export class Node extends EventEmitter {
                 location: this.peerInfo.location,
                 extra: this.extraMetadata,
                 rtts: includeRtt ? this.nodeToNode.getRtts() : null,
-                version: "brubeck-1.0"
+                version: 'brubeck-1.0'
             }),
             {
                 subscribeToStreamPartOnNodes: this.subscribeToStreamPartOnNodes.bind(this),

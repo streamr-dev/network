@@ -1,8 +1,8 @@
 import WebSocket from 'ws'
 import { PeerId, PeerInfo } from '../PeerInfo'
-import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
+import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
 import { NodeClientWsConnection, NodeWebSocketConnectionFactory } from './NodeClientWsConnection'
-import { AbstractClientWsEndpoint, HandshakeValues, ServerUrl } from "./AbstractClientWsEndpoint"
+import { AbstractClientWsEndpoint, HandshakeValues, ServerUrl } from './AbstractClientWsEndpoint'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
