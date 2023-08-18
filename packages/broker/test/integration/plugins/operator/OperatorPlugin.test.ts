@@ -23,7 +23,7 @@ describe('OperatorPlugin', () => {
             privateKey: brokerWallet.privateKey,
             extraPlugins: {
                 operator: {
-                    operatorContractAddress: '0x4A5C0EC07F7ddBd4B6050181638e24b0153991b2'
+                    operatorContractAddress: '0xb3b557d705c07a605d24fa7e4caaa468fc25a596'
                 }
             }
         })
