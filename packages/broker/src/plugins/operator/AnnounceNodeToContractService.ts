@@ -2,6 +2,7 @@ import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { OperatorFleetState } from './OperatorFleetState'
 import StreamrClient from 'streamr-client'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
+import { createIsLeaderFn } from './createIsLeaderFn'
 
 const logger = new Logger(module)
 
@@ -29,8 +30,9 @@ export class AnnounceNodeToContractService {
 
     async start(): Promise<void> {
         await this.operatorFleetState.waitUntilReady()
+        const isLeader = await createIsLeaderFn(this.streamrClient, this.operatorFleetState, logger)
         await scheduleAtInterval(async () => {
-            if (await this.isHeartbeatStale() && await this.isLeader()) {
+            if (isLeader() && await this.isHeartbeatStale()) {
                 await this.writeHeartbeat()
             }
         }, this.pollIntervalInMs, true, this.abortController.signal)
@@ -54,14 +56,6 @@ export class AnnounceNodeToContractService {
         const stale = lastHeartbeatTs !== undefined ? lastHeartbeatTs + this.writeIntervalInMs <= Date.now() : true
         logger.debug('Polled last heartbeat timestamp', { lastHeartbeatTs, stale })
         return stale
-    }
-
-    private async isLeader(): Promise<boolean> {
-        const myNodeId = (await this.streamrClient.getNode()).getNodeId()
-        const leaderNodeId = this.operatorFleetState.getLeaderNodeId()
-        const isLeader = myNodeId === leaderNodeId
-        logger.debug('Check if leader', { isLeader, leaderNodeId, myNodeId })
-        return isLeader
     }
 
     private async writeHeartbeat(): Promise<void> {
