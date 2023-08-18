@@ -11,7 +11,7 @@ interface InspectSessionConfig {
 }
 
 const createMessageKey = (messageRef: MessageRef): string => {
-    return `${messageRef.publisherId}:${messageRef.messageChainId}:${messageRef.timestamp}:${messageRef.sequenceNumber}`
+    return `${new TextDecoder().decode(messageRef.publisherId)}:${messageRef.messageChainId}:${messageRef.timestamp}:${messageRef.sequenceNumber}`
 }
 export class InspectSession extends EventEmitter<Events> {
     
