@@ -10,7 +10,7 @@ import { waitForCondition } from '@streamr/utils'
 
 const provider = getProvider()
 const chainConfig = CHAIN_CONFIG['dev2']
-const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
+
 
 describe(AnnounceNodeToContractHelper, () => {
     let operatorContract: Operator

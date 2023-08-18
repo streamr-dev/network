@@ -11,8 +11,7 @@ import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteO
 import { createClient, createTestStream } from '../../../utils'
 import { deploySponsorship } from './deploySponsorshipContract'
 import { setupOperatorContract } from './setupOperatorContract'
-
-const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
+import { THE_GRAPH_URL } from './smartContractUtils'
 
 const TIMEOUT = 1000 * 60 * 10
 const ADMIN_PRIV_KEY = CHAIN_CONFIG.dev2.adminPrivateKey
@@ -59,11 +58,11 @@ describe('VoteOnSuspectNodeService', () => {
     }, TIMEOUT)
     
     it('allows to flag an operator as malicious', async () => {
-        const flagger = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
+        const flagger = await setupOperatorContract({ provider, chainConfig, theGraphUrl: THE_GRAPH_URL, adminKey: ADMIN_PRIV_KEY })
         logger.trace('deployed flagger contract ' + flagger.operatorConfig.operatorContractAddress)
-        const target = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
+        const target = await setupOperatorContract({ provider, chainConfig, theGraphUrl: THE_GRAPH_URL, adminKey: ADMIN_PRIV_KEY })
         logger.trace('deployed target contract ' + target.operatorConfig.operatorContractAddress)
-        const voter = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
+        const voter = await setupOperatorContract({ provider, chainConfig, theGraphUrl: THE_GRAPH_URL, adminKey: ADMIN_PRIV_KEY })
         logger.trace('deployed voter contract ' + voter.operatorConfig.operatorContractAddress)
 
         await wait(5000) // wait for events to be processed // wait for events to be processed

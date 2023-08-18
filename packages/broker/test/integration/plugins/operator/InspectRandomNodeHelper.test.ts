@@ -11,8 +11,7 @@ import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/Inspec
 import { createClient, createTestStream } from '../../../utils'
 import { deploySponsorship } from './deploySponsorshipContract'
 import { setupOperatorContract } from './setupOperatorContract'
-
-const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
+import { THE_GRAPH_URL } from './smartContractUtils'
 
 const logger = new Logger(module)
 const chainConfig = config.dev2
@@ -44,7 +43,7 @@ describe('InspectRandomNodeHelper', () => {
         await client.destroy()
 
         graphClient = new TheGraphClient({
-            serverUrl: theGraphUrl,
+            serverUrl: THE_GRAPH_URL,
             fetch,
             logger: logger
         })
@@ -52,7 +51,7 @@ describe('InspectRandomNodeHelper', () => {
 
     it('getSponsorshipsOfOperator, getOperatorsInSponsorship', async () => {
         const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract(
-            { chainConfig, provider, theGraphUrl },
+            { chainConfig, provider, theGraphUrl: THE_GRAPH_URL },
         )
         logger.debug('Deployed OperatorContract at: ' + operatorContract.address)
         const inspectRandomNodeHelper = new InspectRandomNodeHelper(operatorConfig)

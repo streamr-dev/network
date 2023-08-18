@@ -9,6 +9,8 @@ import { deployOperatorContract as _deployOperatorContract } from './deployOpera
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
 const TEST_CHAIN = 'dev2'
+// TODO read from config when https://github.com/streamr-dev/network-contracts/pull/604 
+export const THE_GRAPH_URL = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 export function getProvider(): Provider {
     return new JsonRpcProvider(CHAIN_CONFIG[TEST_CHAIN].rpcEndpoints[0].url)

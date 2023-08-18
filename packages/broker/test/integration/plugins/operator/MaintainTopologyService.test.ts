@@ -10,7 +10,8 @@ import {
     deployOperatorContract,
     generateWalletWithGasAndTokens,
     getProvider,
-    getTokenContract
+    getTokenContract,
+    THE_GRAPH_URL
 } from './smartContractUtils'
 import { StreamPartID, toStreamID } from '@streamr/protocol'
 import { createClient, createTestStream } from '../../../utils'
@@ -75,7 +76,7 @@ describe('MaintainTopologyService', () => {
             provider,
             signer: operatorWallet,
             operatorContractAddress: toEthereumAddress(operatorContract.address),
-            theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`,
+            theGraphUrl: THE_GRAPH_URL
         }
 
         operatorFleetState = new OperatorFleetState(client, toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress))

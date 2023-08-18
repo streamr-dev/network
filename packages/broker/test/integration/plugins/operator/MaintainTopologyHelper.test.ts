@@ -12,9 +12,9 @@ import { OperatorServiceConfig } from '../../../../src/plugins/operator/Operator
 import { createClient, createTestStream } from '../../../utils'
 import { deploySponsorship } from './deploySponsorshipContract'
 import { setupOperatorContract } from './setupOperatorContract'
+import { THE_GRAPH_URL } from './smartContractUtils'
 
 const chainConfig = CHAIN_CONFIG.dev2
-const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
 
@@ -52,7 +52,7 @@ describe('MaintainTopologyHelper', () => {
             ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({
                 provider, 
                 chainConfig, 
-                theGraphUrl
+                theGraphUrl: THE_GRAPH_URL
             }))
         })
 
@@ -150,7 +150,7 @@ describe('MaintainTopologyHelper', () => {
             ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({
                 provider, 
                 chainConfig, 
-                theGraphUrl
+                theGraphUrl: THE_GRAPH_URL
             }))
         })
 
