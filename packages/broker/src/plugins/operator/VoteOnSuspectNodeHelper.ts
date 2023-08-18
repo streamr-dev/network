@@ -13,20 +13,17 @@ const logger = new Logger(module)
 export class VoteOnSuspectNodeHelper {
     private readonly nodeWallet: Wallet
     private readonly contract: Operator
-    private readonly callback: (sponsorship: string, operatorContractAddress: string) => void
 
-    constructor(config: OperatorServiceConfig,
-        callback: (sponsorship: string, operatorContractAddress: string) => void) {
-        this.callback = callback
+    constructor(config: OperatorServiceConfig) {
         this.nodeWallet = config.nodeWallet
         this.contract = new Contract(config.operatorContractAddress, operatorABI, this.nodeWallet) as unknown as Operator
     }
 
-    async start(): Promise<void> {
+    async start(reviewRequestCallback: (sponsorship: string, targetOperator: string) => void): Promise<void> {
         logger.debug('Starting')
         this.contract.on('ReviewRequest', async (sponsorship: string, targetOperator: string) => {
             logger.debug('Receive review request', { address: this.contract.address, sponsorship, targetOperator })
-            this.callback(sponsorship, targetOperator)
+            reviewRequestCallback(sponsorship, targetOperator)
         })
     }
 
@@ -36,7 +33,6 @@ export class VoteOnSuspectNodeHelper {
     }
 
     stop(): void {
-        // TODO: remove only the listener added by this class
-        this.nodeWallet.provider.removeAllListeners()
+        this.contract.removeAllListeners()
     }
 }

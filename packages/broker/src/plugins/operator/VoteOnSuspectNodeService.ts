@@ -1,36 +1,44 @@
 import { Logger } from '@streamr/utils'
 import StreamrClient from 'streamr-client'
-import { OperatorServiceConfig } from './OperatorPlugin'
 import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
+import { OperatorFleetState } from './OperatorFleetState'
+import { createIsLeaderFn } from './createIsLeaderFn'
 
 const logger = new Logger(module)
 export class VoteOnSuspectNodeService {
-    private readonly streamrClient: StreamrClient
     private readonly voteOnSuspectNodeHelper: VoteOnSuspectNodeHelper
+    private readonly streamrClient: StreamrClient
+    private readonly operatorFleetState: OperatorFleetState
+    private isLeader?: () => boolean
 
-    constructor(streamrClient: StreamrClient, serviceConfig: OperatorServiceConfig) {
+    constructor(
+        helper: VoteOnSuspectNodeHelper,
+        streamrClient: StreamrClient,
+        operatorFleetState: OperatorFleetState
+    ) {
+        this.voteOnSuspectNodeHelper = helper
         this.streamrClient = streamrClient
-        this.voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(
-            serviceConfig,
-            this.handleNodeInspectionRequest.bind(this)
-        )
+        this.operatorFleetState = operatorFleetState
     }
 
     async start(): Promise<void> {
-        await this.voteOnSuspectNodeHelper.start()
+        await this.operatorFleetState.waitUntilReady()
+        this.isLeader = await createIsLeaderFn(this.streamrClient, this.operatorFleetState, logger)
+        await this.voteOnSuspectNodeHelper.start(this.handleNodeInspectionRequest)
     }
 
-    async stop(): Promise<void> {
+    stop(): void {
         this.voteOnSuspectNodeHelper.stop()
     }
 
-    handleNodeInspectionRequest(sponsorship: string, targetOperator: string): void {
+    private handleNodeInspectionRequest = (sponsorship: string, targetOperator: string): void => {
         logger.info('Received inspection request', { targetOperator, sponsorship })
-        //const operatorIsMalicious = this.streamrClient.inspectNodes(sponsorship, targetOperato)
-        const operatorIsMalicious = true
-        logger.info(`Vote on inspection request', ${{ sponsorship, targetOperator, kick: operatorIsMalicious }}`)
-        this.voteOnSuspectNodeHelper.voteOnFlag(sponsorship, targetOperator, operatorIsMalicious).catch((err) => {
-            logger.warn('Encountered error while trying to vote on flag', { err })
-        })
+        if (this.isLeader!()) {
+            const kick = true
+            logger.info('Vote on inspection request', { sponsorship, targetOperator, kick })
+            this.voteOnSuspectNodeHelper.voteOnFlag(sponsorship, targetOperator, kick).catch((err) => {
+                logger.warn('Encountered error when trying to vote on flag', { err })
+            })
+        }
     }
 }

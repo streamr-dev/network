@@ -16,6 +16,7 @@ import { OperatorValueBreachWatcher } from './OperatorValueBreachWatcher'
 import { OperatorFleetState } from './OperatorFleetState'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
@@ -76,10 +77,10 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         this.maintainOperatorValueService = new MaintainOperatorValueService(this.serviceConfig)
         this.operatorValueBreachWatcher = new OperatorValueBreachWatcher(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
+            new VoteOnSuspectNodeHelper(this.serviceConfig),
             this.streamrClient,
-            this.serviceConfig
+            this.fleetState
         )
-
     }
 
     async start(): Promise<void> {
@@ -94,13 +95,14 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.maintainOperatorContractService.start()
         await this.maintainOperatorValueService.start()
         await this.maintainTopologyService.start()
-        await this.voteOnSuspectNodeService.start()
+
         await this.operatorValueBreachWatcher.start()
         await this.fleetState.start()
         this.announceNodeToContractService.start().catch((err) => {
             logger.fatal('Encountered fatal error in announceNodeToContractService', { err })
             process.exit(1)
         })
+        await this.voteOnSuspectNodeService.start()
     }
 
     async stop(): Promise<void> {
