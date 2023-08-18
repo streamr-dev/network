@@ -51,7 +51,7 @@ function parseIntIfExists(x: string | undefined): number | undefined {
     return x === undefined ? undefined : parseInt(x)
 }
 
-const sendSuccess = (data: Readable, format: Format, version: number | undefined, streamId: string, res: Response) => {
+const sendSuccess = (data: Readable, format: Format, streamId: string, res: Response) => {
     data.once('data', () => {
         res.writeHead(200, {
             'Content-Type': format.contentType
@@ -129,7 +129,7 @@ const handleLast = (
         partition,
         count!,
     )
-    sendSuccess(data, format, version, streamId, res)
+    sendSuccess(data, format, streamId, res)
 }
 
 const handleFrom = (
@@ -161,7 +161,7 @@ const handleFrom = (
         fromSequenceNumber,
         publisherId
     )
-    sendSuccess(data, format, version, streamId, res)
+    sendSuccess(data, format, streamId, res)
 }
 
 const handleRange = (
@@ -215,7 +215,7 @@ const handleRange = (
         publisherId,
         msgChainId
     )
-    sendSuccess(data, format, version, streamId, res)
+    sendSuccess(data, format, streamId, res)
 }
 
 const createHandler = (storage: Storage, metrics: MetricsDefinition): RequestHandler => {
