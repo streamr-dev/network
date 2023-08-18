@@ -34,12 +34,8 @@ describe('VoteOnSuspectNodeService', () => {
         await streamrEnvDeployer.deployEvironment()
         const { contracts } = streamrEnvDeployer
         chainConfig = { contracts: streamrEnvDeployer.addresses } as any
-
         provider = new JsonRpcProvider(chainURL)
-        logger.trace('Connected', { networkInfo: await provider.getNetwork() })
-
         adminWallet = new Wallet(ADMIN_PRIV_KEY, provider)
-    
         token = contracts.DATA as unknown as TestToken
         const client = createClient(ADMIN_PRIV_KEY, { 
             contracts: { 
