@@ -58,68 +58,36 @@ describe('VoteOnSuspectNodeService', () => {
 
     }, TIMEOUT)
     
-    it('allows to flag an operator as malicious', async () => {
+    it('votes on suspected node when review requested', async () => {
         const flagger = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
-        logger.trace('deployed flagger contract ' + flagger.operatorConfig.operatorContractAddress)
         const target = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
-        logger.trace('deployed target contract ' + target.operatorConfig.operatorContractAddress)
         const voter = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
-        logger.trace('deployed voter contract ' + voter.operatorConfig.operatorContractAddress)
 
-        await wait(5000) // wait for events to be processed // wait for events to be processed
-        const flaggerClient = createClient(flagger.operatorWallet.privateKey)
-        const flaggerVoteService = new VoteOnSuspectNodeService(flaggerClient, flagger.operatorConfig)
-        await flaggerVoteService.start()
+        const sponsorship = await deploySponsorship(chainConfig, adminWallet, {
+            streamId: streamId1 })
+        await (await token.connect(flagger.operatorWallet).approve(sponsorship.address, parseEther('500'))).wait()
+        await (await sponsorship.connect(flagger.operatorWallet).sponsor(parseEther('500'))).wait()
 
-        const targetClient = createClient(target.operatorWallet.privateKey)
-        const targetVoteService = new VoteOnSuspectNodeService(targetClient, target.operatorConfig)
-        await targetVoteService.start()
+        await (await token.connect(flagger.operatorWallet).transferAndCall(flagger.operatorContract.address,
+            parseEther('200'), flagger.operatorWallet.address)).wait()
+        await (await token.connect(target.operatorWallet).transferAndCall(target.operatorContract.address,
+            parseEther('200'), target.operatorWallet.address)).wait()
+        await (await token.connect(voter.operatorWallet).transferAndCall(voter.operatorContract.address,
+            parseEther('200'), voter.operatorWallet.address)).wait()
+        
+        await (await flagger.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
+        await (await target.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
+        await (await voter.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
+
+        await (await flagger.operatorContract.setNodeAddresses([await flagger.operatorContract.owner()])).wait()
 
         const voterClient = createClient(voter.operatorWallet.privateKey)
         const voterVoteService = new VoteOnSuspectNodeService(voterClient, voter.operatorConfig)
         await voterVoteService.start()
 
-        logger.trace('deploying sponsorship contract')
-        const sponsorship = await deploySponsorship(chainConfig, adminWallet, {
-            streamId: streamId1 })
-        logger.trace('sponsoring sponsorship contract')
-        await (await token.connect(flagger.operatorWallet).approve(sponsorship.address, parseEther('500'))).wait()
-        await (await sponsorship.connect(flagger.operatorWallet).sponsor(parseEther('500'))).wait()
-
-        logger.trace('each operator delegates to its operactor contract')
-        logger.trace('delegating from flagger: ' + flagger.operatorWallet.address)
-        await (await token.connect(flagger.operatorWallet).transferAndCall(flagger.operatorContract.address,
-            parseEther('200'), flagger.operatorWallet.address)).wait()
-        logger.trace('delegating from target: ' + target.operatorWallet.address)
-        await (await token.connect(target.operatorWallet).transferAndCall(target.operatorContract.address,
-            parseEther('200'), target.operatorWallet.address)).wait()
-        logger.trace('delegating from voter: ' + voter.operatorWallet.address)
-        await (await token.connect(voter.operatorWallet).transferAndCall(voter.operatorContract.address,
-            parseEther('200'), voter.operatorWallet.address)).wait()
-        
-        await wait(3000) // sometimes these stake fail, possibly when they end up in the same block
-        logger.trace('staking to sponsorship contract from flagger and target and voter')
-        logger.trace('staking from flagger: ' + flagger.operatorContract.address)
-        await (await flagger.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
-        await wait(3000)
-        logger.trace('staking from target: ' + target.operatorContract.address)
-        await (await target.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
-        await wait(3000)
-        logger.trace('staking from voter: ' + voter.operatorContract.address)
-        await (await voter.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
-
-        logger.trace('registering node addresses')
-        await (await flagger.operatorContract.setNodeAddresses([await flagger.operatorContract.owner()])).wait()
-
-        logger.trace('flagging target operator')
         // TODO: replace mock voting with real voting down the line to make this a e2e test in the true sense
         const mockVoteOnSuspectNodeHelper = mock<VoteOnSuspectNodeHelper>()
-        mockVoteOnSuspectNodeHelper.voteOnFlag.mockImplementation(async (operatorAddress, suspectAddress, flag) => {
-            logger.trace('mockVoteOnSuspectNodeHelper.voteOnFlag called')
-            logger.trace('operatorAddress: ' + operatorAddress)
-            logger.trace('suspectAddress: ' + suspectAddress)
-            logger.trace('flag: ' + flag)
-        })
+        mockVoteOnSuspectNodeHelper.voteOnFlag.mockResolvedValue(undefined)
         // @ts-expect-error mock
         voterVoteService.voteOnSuspectNodeHelper = mockVoteOnSuspectNodeHelper
         await (await flagger.operatorContract.flag(sponsorship.address, target.operatorContract.address)).wait()
@@ -127,6 +95,6 @@ describe('VoteOnSuspectNodeService', () => {
         await waitForCondition(() => mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls.length > 0, 10000)
         expect(mockVoteOnSuspectNodeHelper.voteOnFlag).toHaveBeenCalledTimes(1)
         expect(mockVoteOnSuspectNodeHelper.voteOnFlag).toHaveBeenCalledWith(sponsorship.address, target.operatorContract.address, true)
-        await flaggerVoteService.stop()
+        await voterVoteService.stop()
     }, TIMEOUT)
 })
