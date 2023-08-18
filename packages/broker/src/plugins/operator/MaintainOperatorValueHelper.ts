@@ -99,11 +99,6 @@ export class MaintainOperatorValueHelper {
                         operators${queryFilter} {
                             id
                         }
-                        _meta {
-                            block {
-                            number
-                            }
-                        }
                     }
                     `
             }
