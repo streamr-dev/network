@@ -70,7 +70,7 @@ export class MaintainOperatorValueHelper {
             .filter((sponsorship) => sponsorship.earnings.gte(minSponsorshipEarningsWei))
             .sort((a, b) => Number(b.earnings.sub(a.earnings).toBigInt())) // TODO: after Node 20, use .toSorted() instead
             .slice(0, this.config.maxSponsorshipsCount) // take all if maxSponsorshipsCount is undefined
-        const sponsorshipAddresses = sponsorships.map((sponsorship) => sponsorship.address as EthereumAddress)
+        const sponsorshipAddresses = sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address))
 
         const approxPoolValue = (await operator.totalValueInSponsorshipsWei()).toBigInt()
         const sumDataWei = sponsorships.reduce((sum, sponsorship) => sum.add(sponsorship.earnings), BigNumber.from(0)).toBigInt()
