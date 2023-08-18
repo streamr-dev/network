@@ -5,8 +5,8 @@ import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedG
 import MessageID from '../../../../src/protocol/message_layer/MessageID'
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 import StreamMessage, { ContentType, EncryptionType, StreamMessageType } from '../../../../src/protocol/message_layer/StreamMessage'
-import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/StreamMessageSerializerV32'
 import { toStreamID } from '../../../../src/utils/StreamID'
+import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/streamMessageSerialization'
 
 const VERSION = 32
 
@@ -38,7 +38,7 @@ const serializedMessage = JSON.stringify([
     'signature'
 ])
 
-describe('StreamMessageSerializerV32', () => {
+describe('streamMessageSerialization', () => {
 
     describe('deserialize', () => {
 
@@ -67,7 +67,7 @@ describe('StreamMessageSerializerV32', () => {
     describe('serialize', () => {
 
         it('correctly serializes messages', () => {
-            assert.deepStrictEqual(message.serialize(VERSION), serializedMessage)
+            assert.deepStrictEqual(message.serialize(), serializedMessage)
         })
     })
 })

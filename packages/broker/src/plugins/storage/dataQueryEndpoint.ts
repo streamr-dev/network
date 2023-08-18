@@ -18,15 +18,13 @@ export const MAX_SEQUENCE_NUMBER_VALUE = 2147483647
 class ResponseTransform extends Transform {
 
     format: Format
-    version: number | undefined
     firstMessage = true
 
-    constructor(format: Format, version: number | undefined) {
+    constructor(format: Format) {
         super({
             writableObjectMode: true
         })
         this.format = format
-        this.version = version
     }
 
     override _transform(input: StreamMessage, _encoding: string, done: () => void) {
@@ -36,7 +34,7 @@ class ResponseTransform extends Transform {
         } else {
             this.push(this.format.delimiter)
         }
-        this.push(this.format.getMessageAsString(input, this.version))
+        this.push(this.format.getMessageAsString(input))
         done()
     }
 
@@ -68,7 +66,7 @@ const sendSuccess = (data: Readable, format: Format, version: number | undefined
     })
     pipeline(
         data,
-        new ResponseTransform(format, version),
+        new ResponseTransform(format),
         res,
         (err) => {
             if ((err !== undefined) && (err !== null)) {
