@@ -63,8 +63,7 @@ describe('VoteOnSuspectNodeService', () => {
         const target = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         const voter = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
 
-        const sponsorship = await deploySponsorship(chainConfig, adminWallet, {
-            streamId: streamId1 })
+        const sponsorship = await deploySponsorship(chainConfig, adminWallet, { streamId: streamId1 })
         await (await token.connect(flagger.operatorWallet).approve(sponsorship.address, parseEther('500'))).wait()
         await (await sponsorship.connect(flagger.operatorWallet).sponsor(parseEther('500'))).wait()
 
