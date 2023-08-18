@@ -30,12 +30,12 @@ export class MaintainOperatorValueHelper {
         })
     }
 
-    async getRandomOperator(): Promise<EthereumAddress> {
+    async getRandomOperator(): Promise<EthereumAddress | undefined> {
         const latestBlock = await this.operator.provider.getBlockNumber()
         const queryFilter = '' // e.g. (first: 10, orderBy: poolValue, orderDirection: desc)
         const operators = await this.getOperatorAddresses(latestBlock, queryFilter)
         // filter out my own operator
-        const operatorAddresses = operators.filter((id) => id !== this.config.operatorContractAddress)
+        const operatorAddresses = operators.filter((id) => toEthereumAddress(id) !== toEthereumAddress(this.config.operatorContractAddress))
         logger.info(`Found ${operatorAddresses.length} operators`, { operatorAddresses })
         const randomIndex = Math.floor(Math.random() * operatorAddresses.length)
         return operatorAddresses[randomIndex]
@@ -74,7 +74,9 @@ export class MaintainOperatorValueHelper {
 
         const approxPoolValue = (await operator.totalValueInSponsorshipsWei()).toBigInt()
         const sumDataWei = sponsorships.reduce((sum, sponsorship) => sum.add(sponsorship.earnings), BigNumber.from(0)).toBigInt()
-        const fraction = sumDataWei * ONE_ETHER / approxPoolValue
+        const fraction = approxPoolValue > 0
+            ? sumDataWei * ONE_ETHER / approxPoolValue
+            : BigInt(0)
 
         return { sumDataWei, fraction, sponsorshipAddresses }
     }
