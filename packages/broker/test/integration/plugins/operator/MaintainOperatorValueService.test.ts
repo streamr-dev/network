@@ -1,9 +1,8 @@
 import { Contract } from '@ethersproject/contracts'
-import { Wallet } from '@ethersproject/wallet'
 import { JsonRpcProvider, Provider } from '@ethersproject/providers'
 import { formatEther, parseEther } from '@ethersproject/units'
 
-import { Operator, streamRegistryABI, StreamRegistry, TestToken, tokenABI } from '@streamr/network-contracts'
+import { Operator, TestToken, tokenABI } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
@@ -11,7 +10,7 @@ import { deployOperatorContract } from './deployOperatorContract'
 import { deploySponsorship } from './deploySponsorshipContract'
 import { generateWalletWithGasAndTokens } from './smartContractUtils'
 
-import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { STREAMR_DOCKER_DEV_HOST, createClient, createTestStream } from '../../../utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 
 const chainConfig = CHAIN_CONFIG.dev2
@@ -56,21 +55,10 @@ describe('MaintainOperatorValueService', () => {
         provider = new JsonRpcProvider(`http://${STREAMR_DOCKER_DEV_HOST}:8547`)
         logger.debug('Connected to: ', await provider.getNetwork())
 
-        const adminWallet = new Wallet(STREAM_CREATION_KEY, provider)
-        const streamRegistry = new Contract(chainConfig.contracts.StreamRegistry, streamRegistryABI, adminWallet) as unknown as StreamRegistry
-        
         logger.debug('Creating stream for the test')
-        const createStreamReceipt = await (await streamRegistry.createStream(
-            `/operatorvaluewatchertest-${Date.now()}`,
-            '{"partitions":1}')
-        ).wait()
-        streamId = createStreamReceipt.events?.find((e) => e.event === 'StreamCreated')?.args?.id
-        const streamExists = await streamRegistry.exists(streamId)
-        logger.debug('Stream created:', { streamId, streamExists })
-        // TODO: use createClient once configs allow it. For now I'm creating the stream directly using the contract
-        // const client = createClient(STREAM_CREATION_KEY)
-        // streamId = (await createTestStream(client, module)).id
-        // await client.destroy()
+        const client = createClient(STREAM_CREATION_KEY)
+        streamId = (await createTestStream(client, module)).id
+        await client.destroy()
 
         token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
     }, 60 * 1000)
