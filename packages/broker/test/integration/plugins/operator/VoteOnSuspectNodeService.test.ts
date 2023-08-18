@@ -68,16 +68,14 @@ describe('VoteOnSuspectNodeService', () => {
         await (await token.connect(flagger.operatorWallet).approve(sponsorship.address, parseEther('500'))).wait()
         await (await sponsorship.connect(flagger.operatorWallet).sponsor(parseEther('500'))).wait()
 
-        await (await token.connect(flagger.operatorWallet).transferAndCall(flagger.operatorContract.address,
-            parseEther('200'), flagger.operatorWallet.address)).wait()
-        await (await token.connect(target.operatorWallet).transferAndCall(target.operatorContract.address,
-            parseEther('200'), target.operatorWallet.address)).wait()
-        await (await token.connect(voter.operatorWallet).transferAndCall(voter.operatorContract.address,
-            parseEther('200'), voter.operatorWallet.address)).wait()
-        
-        await (await flagger.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
-        await (await target.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
-        await (await voter.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
+        for (const actor of [flagger, target, voter]) {
+            await (await token.connect(flagger.operatorWallet).transferAndCall(
+                actor.operatorContract.address,
+                parseEther('200'), 
+                actor.operatorWallet.address
+            )).wait()
+            await (await actor.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
+        }
 
         await (await flagger.operatorContract.setNodeAddresses([await flagger.operatorContract.owner()])).wait()
 
