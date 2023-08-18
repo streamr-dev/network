@@ -11,6 +11,7 @@ import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteO
 import { createClient, createTestStream } from '../../../utils'
 import { deploySponsorship } from './deploySponsorshipContract'
 import { setupOperatorContract } from './setupOperatorContract'
+import { generateWalletWithGasAndTokens } from './smartContractUtils'
 
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
@@ -58,10 +59,11 @@ describe('VoteOnSuspectNodeService', () => {
         const flagger = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         const target = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         const voter = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
+        const sponsor = await generateWalletWithGasAndTokens(provider, chainConfig, ADMIN_PRIV_KEY)
 
         const sponsorship = await deploySponsorship(chainConfig, adminWallet, { streamId: streamId1 })
-        await (await token.connect(flagger.operatorWallet).approve(sponsorship.address, parseEther('500'))).wait()
-        await (await sponsorship.connect(flagger.operatorWallet).sponsor(parseEther('500'))).wait()
+        await (await token.connect(sponsor).approve(sponsorship.address, parseEther('500'))).wait()
+        await (await sponsorship.connect(sponsor).sponsor(parseEther('500'))).wait()
 
         for (const actor of [flagger, target, voter]) {
             await (await token.connect(flagger.operatorWallet).transferAndCall(
