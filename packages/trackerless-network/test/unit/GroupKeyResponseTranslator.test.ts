@@ -9,7 +9,6 @@ import { EncryptedGroupKey, GroupKeyResponse } from '../../src/proto/packages/tr
 describe('GroupKeyResponseTranslator', () => {
 
     const textEncoder = new TextEncoder()
-    const textDecoder = new TextDecoder()
     const oldGroupKeyResponse = new OldGroupKeyResponse({
         requestId: 'request',
         recipient: 'recipient' as EthereumAddress,

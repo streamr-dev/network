@@ -4,7 +4,6 @@ import {
     Simulator,
     SimulatorTransport,
     NodeType,
-    keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '@streamr/dht'
 import { StreamrNode, Events } from '../../src/logic/StreamrNode'
