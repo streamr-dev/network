@@ -6,7 +6,8 @@ export const markAndCheckDuplicate = (
     currentMessageRef: MessageRef, 
     previousMessageRef?: MessageRef
 ): boolean => {
-    const detectorKey = `${currentMessageRef.publisherId}-${currentMessageRef.messageChainId}`
+    const textDecoder = new TextDecoder()
+    const detectorKey = `${textDecoder.decode(currentMessageRef.publisherId)}-${currentMessageRef.messageChainId}`
     const previousNumberPair = previousMessageRef ?
         new NumberPair(Number(previousMessageRef!.timestamp), previousMessageRef!.sequenceNumber) : null
     const currentNumberPair = new NumberPair(Number(currentMessageRef.timestamp), currentMessageRef.sequenceNumber)
