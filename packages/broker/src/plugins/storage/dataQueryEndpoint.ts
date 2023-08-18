@@ -113,7 +113,6 @@ const handleLast = (
     streamId: string,
     partition: number,
     format: Format,
-    version: number | undefined,
     res: Response,
     storage: Storage,
     metrics: MetricsDefinition
@@ -137,7 +136,6 @@ const handleFrom = (
     streamId: string,
     partition: number,
     format: Format,
-    version: number | undefined,
     res: Response,
     storage: Storage,
     metrics: MetricsDefinition
@@ -169,7 +167,6 @@ const handleRange = (
     streamId: string,
     partition: number,
     format: Format,
-    version: number | undefined,
     res: Response,
     storage: Storage,
     metrics: MetricsDefinition
@@ -231,16 +228,15 @@ const createHandler = (storage: Storage, metrics: MetricsDefinition): RequestHan
         }
         const streamId = req.params.id
         const partition = parseInt(req.params.partition)
-        const version = parseIntIfExists(req.query.version as string)
         switch (req.params.resendType) {
             case 'last':
-                handleLast(req, streamId, partition, format, version, res, storage, metrics)
+                handleLast(req, streamId, partition, format, res, storage, metrics)
                 break
             case 'from':
-                handleFrom(req, streamId, partition, format, version, res, storage, metrics)
+                handleFrom(req, streamId, partition, format, res, storage, metrics)
                 break
             case 'range':
-                handleRange(req, streamId, partition, format, version, res, storage, metrics)
+                handleRange(req, streamId, partition, format, res, storage, metrics)
                 break
             default: 
                 sendError('Unknown resend type', res)
