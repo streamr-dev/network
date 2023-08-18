@@ -1,6 +1,6 @@
 import { ListeningRpcCommunicator, PeerDescriptor, PeerID } from '@streamr/dht'
 import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
-import { ContentMessage, LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/Transport'
 import { createStreamMessage } from '../utils/utils'
 
@@ -17,10 +17,11 @@ describe('StreamNodeServer', () => {
         type: 0
     }
 
-    const content: ContentMessage = {
-        body: JSON.stringify({ hello: 'WORLD' })
-    }
-    const message = createStreamMessage(content, 'random-graph', 'publisher')
+    const message = createStreamMessage(
+        JSON.stringify({ hello: 'WORLD' }),
+        'random-graph',
+        new TextEncoder().encode('publisher')
+    )
 
     let mockBroadcast: jest.Mock
     let mockDuplicateCheck: jest.Mock

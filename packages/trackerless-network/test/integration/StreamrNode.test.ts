@@ -4,10 +4,10 @@ import {
     Simulator,
     SimulatorTransport,
     NodeType,
-    keyFromPeerDescriptor
+    keyFromPeerDescriptor,
+    peerIdFromPeerDescriptor
 } from '@streamr/dht'
 import { StreamrNode, Events } from '../../src/logic/StreamrNode'
-import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent3, waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils/utils'
 
@@ -30,13 +30,10 @@ describe('StreamrNode', () => {
     }
     const STREAM_ID = 'test'
 
-    const content: ContentMessage = {
-        body: JSON.stringify({ hello: 'WORLD' })
-    }
     const msg = createStreamMessage(
-        content,
+        JSON.stringify({ hello: 'WORLD' }),
         STREAM_ID,
-        keyFromPeerDescriptor(peer2)
+        peerIdFromPeerDescriptor(peer2).value
     )
 
     afterEach(async () => {
@@ -119,9 +116,9 @@ describe('StreamrNode', () => {
             waitForCondition(() => node2.getStream(stream2)!.layer2.getTargetNeighborStringIds().length === 1)
         ])
         const msg2 = createStreamMessage(
-            content,
+            JSON.stringify({ hello: 'WORLD' }),
             stream2,
-            keyFromPeerDescriptor(peer1)
+            peerIdFromPeerDescriptor(peer1).value
         )
         await Promise.all([
             waitForEvent3<Events>(node1, 'newMessage'),

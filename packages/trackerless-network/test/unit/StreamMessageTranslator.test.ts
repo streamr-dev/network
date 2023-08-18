@@ -1,5 +1,5 @@
 import { createStreamMessage } from '../utils/utils'
-import { ContentMessage, StreamMessageType } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamMessageType } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { StreamMessageTranslator } from '../../src/logic/protocol-integration/stream-message/StreamMessageTranslator'
 import {
     EncryptionType,
@@ -12,11 +12,11 @@ import { EthereumAddress } from '@streamr/utils'
 
 describe('StreamMessageTranslator', () => {
 
-    const content: ContentMessage = {
-        body: JSON.stringify({ hello: 'WORLD' })
-    }
-    const protobufMsg = createStreamMessage(content, 'TEST', 'publisher')
-
+    const protobufMsg = createStreamMessage(
+        JSON.stringify({ hello: 'WORLD' }),
+        'TEST',
+        new TextEncoder().encode('publisher')
+    )
     const messageId = new MessageID(
         'TEST' as StreamID,
         0,
@@ -25,7 +25,6 @@ describe('StreamMessageTranslator', () => {
         'publisher' as EthereumAddress,
         'test',
     )
-
     const oldProtocolMsg = new OldStreamMessage({
         messageId,
         prevMsgRef: null,
@@ -35,18 +34,20 @@ describe('StreamMessageTranslator', () => {
         signature: 'signature',
     })
 
+    const textDecoder = new TextDecoder()
+
     it('translates old protocol to protobuf', () => {
         const translated = StreamMessageTranslator.toProtobuf(oldProtocolMsg)
         expect(translated.messageRef!.timestamp).toBeGreaterThanOrEqual(0)
         expect(translated.messageRef!.sequenceNumber).toEqual(0)
         expect(translated.messageRef!.streamId).toEqual('TEST')
         expect(translated.messageRef!.streamPartition).toEqual(0)
-        expect(translated.messageRef!.publisherId).toEqual('publisher')
+        expect(textDecoder.decode(translated.messageRef!.publisherId)).toEqual('publisher')
         expect(translated.previousMessageRef).toEqual(undefined)
         expect(translated.messageType).toEqual(StreamMessageType.MESSAGE)
         expect(translated.groupKeyId).toEqual(undefined)
-        expect(translated.signature).toEqual('signature')
-        expect(JSON.parse(ContentMessage.fromBinary(translated.content).body)).toEqual({ hello: 'WORLD' })
+        expect(textDecoder.decode(translated.signature)).toEqual('signature')
+        expect(JSON.parse(new TextDecoder().decode(translated.content))).toEqual({ hello: 'WORLD' })
 
     })
 

@@ -1,4 +1,6 @@
 import {
+    ContentType,
+    EncryptionType,
     MessageRef,
     StreamMessage,
     StreamMessageType,
@@ -9,18 +11,21 @@ import { toEthereumAddress, wait } from '@streamr/utils'
 const PUBLISHER_ID = toEthereumAddress('0x1111111111111111111111111111111111111111')
 
 function makeMsg(streamId: string, partition: number, ts: number, msgNo: number): StreamMessage {
+    const textEncoder = new TextEncoder()
     const ref: MessageRef = {
         streamId,
         streamPartition: partition,
         timestamp: ts,
         sequenceNumber: msgNo,
         messageChainId: 'msgChain',
-        publisherId: PUBLISHER_ID
+        publisherId: textEncoder.encode(PUBLISHER_ID)
     }
     return {
         messageRef: ref,
         content: new Uint8Array([1]),
-        signature: 'signature',
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE,
+        signature: textEncoder.encode('signature'),
         messageType: StreamMessageType.MESSAGE
     }
 }

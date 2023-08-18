@@ -5,10 +5,7 @@ import {
     toProtoRpcClient
 } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import {
-    StreamMessage,
-    ContentMessage
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForCondition } from '@streamr/utils'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -47,13 +44,10 @@ describe('Network RPC', () => {
     })
 
     it('sends Data', async () => {
-        const content: ContentMessage = {
-            body: JSON.stringify({ hello: 'WORLD' })
-        }
         const msg = createStreamMessage(
-            content,
+            JSON.stringify({ hello: 'WORLD' }),
             'testStream',
-            'peer1'
+            new TextEncoder().encode('peer1')
         )
         await client.sendData(msg)
         await waitForCondition(() => recvCounter === 1)

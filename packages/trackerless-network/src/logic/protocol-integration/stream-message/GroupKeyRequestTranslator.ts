@@ -5,11 +5,14 @@ import { EthereumAddress } from '@streamr/utils'
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class GroupKeyRequestTranslator {
 
+    private static readonly textEncoder = new TextEncoder() 
+    private static readonly textDecoder = new TextDecoder()
+
     static toProtobuf(msg: OldGroupKeyRequest): GroupKeyRequest {
         const translated: GroupKeyRequest = {
-            recipient: msg.recipient,
+            recipient: this.textEncoder.encode(msg.recipient),
             requestId: msg.requestId,
-            rsaPublicKey: msg.rsaPublicKey,
+            rsaPublicKey: this.textEncoder.encode(msg.rsaPublicKey),
             groupKeyIds: msg.groupKeyIds
         }
         return translated
@@ -17,9 +20,9 @@ export class GroupKeyRequestTranslator {
 
     static toClientProtocol(msg: GroupKeyRequest): OldGroupKeyRequest {
         const translated = new OldGroupKeyRequest({
-            recipient: msg.recipient as EthereumAddress,
+            recipient: this.textDecoder.decode(msg.recipient) as EthereumAddress,
             requestId: msg.requestId,
-            rsaPublicKey: msg.rsaPublicKey,
+            rsaPublicKey: this.textDecoder.decode(msg.rsaPublicKey),
             groupKeyIds: msg.groupKeyIds
         })
         return translated

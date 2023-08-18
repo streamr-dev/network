@@ -12,6 +12,8 @@ describe('Inspector', () => {
         type: NodeType.NODEJS
     }
 
+    const textEncoder = new TextEncoder() 
+
     const inspectedDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('inspected').value,
         type: NodeType.NODEJS
@@ -26,7 +28,7 @@ describe('Inspector', () => {
         streamPartition: 0,
         sequenceNumber: 0,
         timestamp: 12345,
-        publisherId: 'publisher'
+        publisherId: textEncoder.encode('publisher')
     }
 
     beforeEach(() => {

@@ -2,7 +2,6 @@ import { DhtNode, PeerDescriptor, Simulator, PeerID, UUID, peerIdFromPeerDescrip
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils/utils'
 import { range } from 'lodash'
-import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForCondition } from '@streamr/utils'
 
 describe('Propagation', () => {
@@ -65,13 +64,10 @@ describe('Propagation', () => {
             }, 0) / randomGraphNodes.length
             return avg >= 4
         }, 20000)
-        const content: ContentMessage = {
-            body: JSON.stringify({ hello: 'WORLD' })
-        }
         const msg = createStreamMessage(
-            content,
+            JSON.stringify({ hello: 'WORLD' }),
             STREAM_ID,
-            peerIdFromPeerDescriptor(dhtNodes[0].getPeerDescriptor()).toString()
+            peerIdFromPeerDescriptor(dhtNodes[0].getPeerDescriptor()).value
         )
         randomGraphNodes[0].broadcast(msg)
         await waitForCondition(() => totalReceived >= NUM_OF_NODES, 10000)

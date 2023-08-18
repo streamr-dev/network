@@ -1,7 +1,8 @@
 import { ConnectionLocker, DhtNode, PeerDescriptor, PeerID, Simulator, SimulatorTransport, UUID } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import {
-    ContentMessage,
+    ContentType,
+    EncryptionType,
     MessageRef,
     StreamMessage,
     StreamMessageType
@@ -42,12 +43,13 @@ export const createMockRandomGraphNodeAndDhtNode = (
 }
 
 export const createStreamMessage = (
-    content: ContentMessage,
+    content: string,
     streamId: string,
-    publisherId: string,
+    publisherId: Uint8Array,
     timestamp?: number,
     sequenceNumber?: number
 ): StreamMessage => {
+    const encoder = new TextEncoder()
     const messageRef: MessageRef = {
         streamId,
         messageChainId: 'messageChain0',
@@ -58,9 +60,11 @@ export const createStreamMessage = (
     }
     const msg: StreamMessage = {
         messageType: StreamMessageType.MESSAGE,
-        content: ContentMessage.toBinary(content),
+        encryptionType: EncryptionType.NONE,
+        content: encoder.encode(content),
+        contentType: ContentType.JSON,
         messageRef,
-        signature: 'signature'
+        signature: encoder.encode('signature')
     }
     return msg
 }

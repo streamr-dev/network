@@ -8,6 +8,8 @@ import { EncryptedGroupKey, GroupKeyResponse } from '../../src/proto/packages/tr
 
 describe('GroupKeyResponseTranslator', () => {
 
+    const textEncoder = new TextEncoder()
+    const textDecoder = new TextDecoder()
     const oldGroupKeyResponse = new OldGroupKeyResponse({
         requestId: 'request',
         recipient: 'recipient' as EthereumAddress,
@@ -15,17 +17,17 @@ describe('GroupKeyResponseTranslator', () => {
     })
     const newEncryptedGroupKey: EncryptedGroupKey = {
         groupKeyId: 'id',
-        encryptedGroupKeyHex: '0000'
+        data: textEncoder.encode('0000')
     }
     const newGroupKeyResponse: GroupKeyResponse = {
         requestId: 'request',
-        recipient: 'recipient',
-        encryptedGroupKeys: [ newEncryptedGroupKey ]
+        recipient: textEncoder.encode('recipient'),
+        groupKeys: [ newEncryptedGroupKey ]
     }
 
     it('translates old protocol to protobuf', () => {
         const translated = GroupKeyResponseTranslator.toProtobuf(oldGroupKeyResponse)
-        expect(translated.encryptedGroupKeys).toEqual(newGroupKeyResponse.encryptedGroupKeys)
+        expect(translated.groupKeys).toEqual(newGroupKeyResponse.groupKeys)
         expect(translated.recipient).toEqual(newGroupKeyResponse.recipient)
         expect(translated.requestId).toEqual(newGroupKeyResponse.requestId)
     })

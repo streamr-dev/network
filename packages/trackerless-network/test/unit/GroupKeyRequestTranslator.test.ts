@@ -5,6 +5,7 @@ import { GroupKeyRequestTranslator } from '../../src/logic/protocol-integration/
 
 describe('GroupKeyRequestTranslator', () => {
 
+    const textEncoder = new TextEncoder()
     const oldGroupKeyRequest = new OldGroupKeyRequest({
         rsaPublicKey: 'aaaaaaaa',
         recipient: 'recipient' as EthereumAddress,
@@ -12,8 +13,8 @@ describe('GroupKeyRequestTranslator', () => {
         groupKeyIds: ['id1', 'id2', 'id3']
     })
     const newGroupKeyRequest: GroupKeyRequest = {
-        rsaPublicKey: 'aaaaaaaa',
-        recipient: 'recipient',
+        rsaPublicKey: textEncoder.encode('aaaaaaaa'),
+        recipient: textEncoder.encode('recipient'),
         requestId: 'request',
         groupKeyIds: ['id1', 'id2', 'id3']
     }

@@ -261,9 +261,9 @@ export interface ProxyConnectionRequest {
      */
     direction: ProxyDirection;
     /**
-     * @generated from protobuf field: bytes userId = 5;
+     * @generated from protobuf field: string userId = 5;
      */
-    userId: Uint8Array;
+    userId: string;
     /**
      * @generated from protobuf field: dht.PeerDescriptor senderDescriptor = 6;
      */
@@ -542,7 +542,7 @@ class ProxyConnectionRequest$Type extends MessageType<ProxyConnectionRequest> {
             { no: 2, name: "streamId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "streamPartition", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 4, name: "direction", kind: "enum", T: () => ["ProxyDirection", ProxyDirection] },
-            { no: 5, name: "userId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 5, name: "userId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 6, name: "senderDescriptor", kind: "message", T: () => PeerDescriptor }
         ]);
     }

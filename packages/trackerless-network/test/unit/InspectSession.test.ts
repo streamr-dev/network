@@ -9,13 +9,14 @@ describe('InspectSession', () => {
     let inspectedPeer: PeerIDKey
     let anotherPeer: PeerIDKey
 
+    const publisherId = new TextEncoder().encode('publisherId')
     const messageRef1: MessageRef = {
         streamId: 'stream',
         messageChainId: 'messageChain0',
         streamPartition: 0,
         sequenceNumber: 0,
         timestamp: 12345,
-        publisherId: 'publisher'
+        publisherId
     }
 
     const messageRef2: MessageRef = {
@@ -24,7 +25,7 @@ describe('InspectSession', () => {
         streamPartition: 0,
         sequenceNumber: 0,
         timestamp: 12345,
-        publisherId: 'publisher'
+        publisherId
     }
 
     beforeEach(() => {
