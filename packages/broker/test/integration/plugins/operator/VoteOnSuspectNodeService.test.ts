@@ -18,14 +18,12 @@ const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.
 const TIMEOUT = 1000 * 60 * 10
 const ADMIN_PRIV_KEY = CHAIN_CONFIG.dev2.adminPrivateKey
 
-const logger = new Logger(module)
-
 describe('VoteOnSuspectNodeService', () => {
     let provider: Provider
     let adminWallet: Wallet
     let token: TestToken
-    let streamId1: string
-    let streamIdeployer: StreamrEnvDeployer
+    let streamId: string
+    let streamrEnvDeployer: StreamrEnvDeployer
     let chainConfig: any
 
     const chainURL = CHAIN_CONFIG.dev2.rpcEndpoints[0].url
@@ -33,7 +31,7 @@ describe('VoteOnSuspectNodeService', () => {
     beforeAll(async () => {
         streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, chainURL)
         await streamrEnvDeployer.deployEvironment()
-        streamIdtracts } = streamrEnvDeployer
+        const { contracts } = streamrEnvDeployer
         chainConfig = { contracts: streamrEnvDeployer.addresses } as any
         provider = new JsonRpcProvider(chainURL)
         adminWallet = new Wallet(ADMIN_PRIV_KEY, provider)
@@ -43,13 +41,13 @@ describe('VoteOnSuspectNodeService', () => {
                 streamRegistryChainAddress: chainConfig.contracts.StreamRegistry,
                 streamRegistryChainRPCs: {
                     chainId: 0,  // some chain id
-                    rpcs: [{streamId
+                    rpcs: [{
                         url: chainURL
                     }]
                 }
             }
         })
-        streamId1 = (await createTestStream(client, module)).id
+        streamId = (await createTestStream(client, module)).id
         await createTestStream(client, module)
         await client.destroy()
 
@@ -59,11 +57,11 @@ describe('VoteOnSuspectNodeService', () => {
         const flagger = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         const target = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         const voter = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
-        const sponsor = await generateWalletWithGasAndTokens(prochainConfig: streamIdnConfig, ADMIN_PRIV_KEY)
-chainConfig: streamId
-        const sponsorship = await deploySponsorship(chainConfichainConfig: streamIdlet, { streamId: streamId1 })
+        const sponsor = await generateWalletWithGasAndTokens(provider, chainConfig, ADMIN_PRIV_KEY)
+
+        const sponsorship = await deploySponsorship(chainConfig, adminWallet, { streamId: streamId })
         await (await token.connect(sponsor).approve(sponsorship.address, parseEther('500'))).wait()
-        await (await sponsorship.connect(sponsor).spstreamIdEther('500'))).wait()
+        await (await sponsorship.connect(sponsor).sponsor(parseEther('500'))).wait()
 
         for (const actor of [flagger, target, voter]) {
             await (await token.connect(flagger.operatorWallet).transferAndCall(
