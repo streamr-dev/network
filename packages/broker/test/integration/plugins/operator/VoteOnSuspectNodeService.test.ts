@@ -25,7 +25,7 @@ describe('VoteOnSuspectNodeService', () => {
     let adminWallet: Wallet
     let token: TestToken
     let streamId1: string
-    let streamrEnvDeployer: StreamrEnvDeployer
+    let streamIdeployer: StreamrEnvDeployer
     let chainConfig: any
 
     const chainURL = CHAIN_CONFIG.dev2.rpcEndpoints[0].url
@@ -33,7 +33,7 @@ describe('VoteOnSuspectNodeService', () => {
     beforeAll(async () => {
         streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, chainURL)
         await streamrEnvDeployer.deployEvironment()
-        const { contracts } = streamrEnvDeployer
+        streamIdtracts } = streamrEnvDeployer
         chainConfig = { contracts: streamrEnvDeployer.addresses } as any
         provider = new JsonRpcProvider(chainURL)
         adminWallet = new Wallet(ADMIN_PRIV_KEY, provider)
@@ -43,7 +43,7 @@ describe('VoteOnSuspectNodeService', () => {
                 streamRegistryChainAddress: chainConfig.contracts.StreamRegistry,
                 streamRegistryChainRPCs: {
                     chainId: 0,  // some chain id
-                    rpcs: [{
+                    rpcs: [{streamId
                         url: chainURL
                     }]
                 }
@@ -59,11 +59,11 @@ describe('VoteOnSuspectNodeService', () => {
         const flagger = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         const target = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
         const voter = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
-        const sponsor = await generateWalletWithGasAndTokens(provider, chainConfig, ADMIN_PRIV_KEY)
-
-        const sponsorship = await deploySponsorship(chainConfig, adminWallet, { streamId: streamId1 })
+        const sponsor = await generateWalletWithGasAndTokens(prochainConfig: streamIdnConfig, ADMIN_PRIV_KEY)
+chainConfig: streamId
+        const sponsorship = await deploySponsorship(chainConfichainConfig: streamIdlet, { streamId: streamId1 })
         await (await token.connect(sponsor).approve(sponsorship.address, parseEther('500'))).wait()
-        await (await sponsorship.connect(sponsor).sponsor(parseEther('500'))).wait()
+        await (await sponsorship.connect(sponsor).spstreamIdEther('500'))).wait()
 
         for (const actor of [flagger, target, voter]) {
             await (await token.connect(flagger.operatorWallet).transferAndCall(
