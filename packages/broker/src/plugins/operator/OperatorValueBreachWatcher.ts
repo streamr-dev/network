@@ -50,7 +50,7 @@ export class OperatorValueBreachWatcher {
         }
     }
 
-    async getPenaltyLimitFraction(): Promise<bigint> {
+    private async getPenaltyLimitFraction(): Promise<bigint> {
         if (!this.penaltyLimitFractionCached) {
             this.penaltyLimitFractionCached = await this.helper.getPenaltyLimitFraction()
         }
