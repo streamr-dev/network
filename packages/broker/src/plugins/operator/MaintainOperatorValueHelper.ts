@@ -32,8 +32,7 @@ export class MaintainOperatorValueHelper {
 
     async getRandomOperator(): Promise<EthereumAddress | undefined> {
         const latestBlock = await this.operator.provider.getBlockNumber()
-        const queryFilter = '' // e.g. (first: 10, orderBy: poolValue, orderDirection: desc)
-        const operators = await this.getOperatorAddresses(latestBlock, queryFilter)
+        const operators = await this.getOperatorAddresses(latestBlock)
         // filter out my own operator
         const operatorAddresses = operators.filter((id) => toEthereumAddress(id) !== toEthereumAddress(this.config.operatorContractAddress))
         logger.debug(`Found ${operatorAddresses.length} operators`, { operatorAddresses })
@@ -93,12 +92,12 @@ export class MaintainOperatorValueHelper {
         await (await this.operator.triggerAnotherOperatorWithdraw(targetOperatorAddress, sponsorshipAddresses)).wait()
     }
 
-    private async getOperatorAddresses(requiredBlockNumber: number, queryFilter: string): Promise<EthereumAddress[]> {
+    private async getOperatorAddresses(requiredBlockNumber: number): Promise<EthereumAddress[]> {
         const createQuery = () => {
             return {
                 query: `
                     {
-                        operators${queryFilter} {
+                        operators {
                             id
                         }
                     }
