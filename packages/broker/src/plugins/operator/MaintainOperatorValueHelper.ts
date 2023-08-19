@@ -106,7 +106,6 @@ export class MaintainOperatorValueHelper {
         }
         const parseItems = (response: any) => {
             if (!response.operators) {
-                logger.error('Unable to find operators in The Graph')
                 return []
             }
             return response.operators
