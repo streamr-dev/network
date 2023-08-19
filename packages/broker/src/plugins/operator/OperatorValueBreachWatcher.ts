@@ -21,7 +21,7 @@ export class OperatorValueBreachWatcher {
     async start(): Promise<void> {
         await scheduleAtInterval(
             () => this.checkRandomUnwithdrawnEarnings().catch((err) => {
-                logger.warn('Encountered error while watching operators', { err })
+                logger.warn('Encountered error', { err })
             }),
             CHECK_VALUE_INTERVAL,
             true,
