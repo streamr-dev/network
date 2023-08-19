@@ -9,10 +9,10 @@ import {
 } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { createClient, createTestStream } from '../../../utils'
+import { deployOperatorContract } from './deployOperatorContract'
 import { deploySponsorship } from './deploySponsorshipContract'
 import {
     THE_GRAPH_URL,
-    deployOperatorContract,
     generateWalletWithGasAndTokens,
     getProvider,
     getTokenContract
@@ -68,7 +68,7 @@ describe('MaintainTopologyService', () => {
         const [stream1, stream2] = await setUpStreams()
         const sponsorship1 = await deploySponsorship({ chainConfig: CHAIN_CONFIG.dev2, deployer: operatorWallet, streamId: stream1.id })
         const sponsorship2 = await deploySponsorship({ chainConfig: CHAIN_CONFIG.dev2, deployer: operatorWallet, streamId: stream2.id })
-        const operatorContract = await deployOperatorContract(operatorWallet)
+        const operatorContract = await deployOperatorContract({ chainConfig: CHAIN_CONFIG.dev2, deployer: operatorWallet })
         const token = getTokenContract()
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
         await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
