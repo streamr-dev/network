@@ -39,7 +39,7 @@ export class OperatorValueBreachWatcher {
         return this.checkUnwithdrawnEarningsOf(randomOperatorAddress)
     }
 
-    async checkUnwithdrawnEarningsOf(targetOperatorAddress: EthereumAddress): Promise<void> {
+    private async checkUnwithdrawnEarningsOf(targetOperatorAddress: EthereumAddress): Promise<void> {
         logger.info('Check unwithdrawn earnings and check if they are above the safe threshold')
         const { fraction, sponsorshipAddresses } = await this.helper.getUnwithdrawnEarningsOf(targetOperatorAddress)
         const limit = await this.getPenaltyLimitFraction()
