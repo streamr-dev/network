@@ -8,7 +8,8 @@ const { parseEther } = utils
 export async function deploySponsorship(
     // eslint-disable-next-line max-len
     chainConfig: { contracts: { SponsorshipFactory: string, SponsorshipStakeWeightedAllocationPolicy: string, SponsorshipDefaultLeavePolicy: string, SponsorshipVoteKickPolicy: string } },
-    deployer: Wallet, {
+    deployer: Wallet, 
+    {
         streamId = `Stream-${Date.now()}`,
         metadata = '{}',
         minimumStakeWei = parseEther('60'),
@@ -16,11 +17,8 @@ export async function deploySponsorship(
         minOperatorCount = 1,
     } = {},
 ): Promise<Sponsorship> {
-
-    // console.log("Chain config: %o", chainConfig)
     const sponsorshipFactory =
         new Contract(chainConfig.contracts.SponsorshipFactory, sponsorshipFactoryABI, deployer) as unknown as SponsorshipFactory
-    // console.log("deployer balance", await deployer.getBalance())
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
         minimumStakeWei.toString(),
         minHorizonSeconds.toString(),
@@ -41,6 +39,5 @@ export async function deploySponsorship(
     const newSponsorshipEvent = sponsorshipDeployReceipt.events?.find((e) => e.event === 'NewSponsorship')
     const newSponsorshipAddress = newSponsorshipEvent?.args?.sponsorshipContract
     const newSponsorship = new Contract(newSponsorshipAddress, sponsorshipABI, deployer) as unknown as Sponsorship
-
     return newSponsorship
 }
