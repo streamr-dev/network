@@ -19,7 +19,6 @@ export async function setupOperatorContract(
     opts: SetupOperatorContractOpts
 ): Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig }> {
     const operatorWallet = await generateWalletWithGasAndTokens(opts.provider, opts.chainConfig, opts.adminKey)
-
     const operatorContract = await deployOperatorContract({ chainConfig: opts.chainConfig, deployer: operatorWallet })
     const operatorConfig = {
         operatorContractAddress: toEthereumAddress(operatorContract.address),
