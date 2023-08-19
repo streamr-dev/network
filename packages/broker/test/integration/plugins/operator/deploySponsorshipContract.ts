@@ -2,32 +2,34 @@
 import { parseEther } from '@ethersproject/units'
 import type { Sponsorship, SponsorshipFactory } from '@streamr/network-contracts'
 import { sponsorshipABI, sponsorshipFactoryABI } from '@streamr/network-contracts'
-import { Contract, ContractReceipt, Wallet } from 'ethers'
+import { BigNumber, Contract, ContractReceipt, Wallet } from 'ethers'
+
+export interface DeploySponsorshipOpts {
+    // eslint-disable-next-line max-len
+    chainConfig: { contracts: { SponsorshipFactory: string, SponsorshipStakeWeightedAllocationPolicy: string, SponsorshipDefaultLeavePolicy: string, SponsorshipVoteKickPolicy: string } }
+    deployer: Wallet
+    streamId?: string
+    metadata?: string
+    minimumStakeWei?: BigNumber
+    minHorizonSeconds?: number
+    minOperatorCount?: number
+}
 
 export async function deploySponsorship(
-    // eslint-disable-next-line max-len
-    chainConfig: { contracts: { SponsorshipFactory: string, SponsorshipStakeWeightedAllocationPolicy: string, SponsorshipDefaultLeavePolicy: string, SponsorshipVoteKickPolicy: string } },
-    deployer: Wallet, 
-    {
-        streamId = `Stream-${Date.now()}`,
-        metadata = '{}',
-        minimumStakeWei = parseEther('60'),
-        minHorizonSeconds = 0,
-        minOperatorCount = 1,
-    } = {},
+    opts: DeploySponsorshipOpts
 ): Promise<Sponsorship> {
     const sponsorshipFactory =
-        new Contract(chainConfig.contracts.SponsorshipFactory, sponsorshipFactoryABI, deployer) as unknown as SponsorshipFactory
+        new Contract(opts.chainConfig.contracts.SponsorshipFactory, sponsorshipFactoryABI, opts.deployer) as unknown as SponsorshipFactory
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
-        minimumStakeWei.toString(),
-        minHorizonSeconds.toString(),
-        minOperatorCount.toString(),
-        streamId,
-        metadata,
+        (opts.minimumStakeWei ?? parseEther('60')).toString(),
+        (opts.minHorizonSeconds ?? 0).toString(),
+        (opts.minOperatorCount ?? 1).toString(),
+        opts.streamId ?? `Stream-${Date.now()}`,
+        opts.metadata ?? '{}',
         [
-            chainConfig.contracts.SponsorshipStakeWeightedAllocationPolicy,
-            chainConfig.contracts.SponsorshipDefaultLeavePolicy,
-            chainConfig.contracts.SponsorshipVoteKickPolicy,
+            opts.chainConfig.contracts.SponsorshipStakeWeightedAllocationPolicy,
+            opts.chainConfig.contracts.SponsorshipDefaultLeavePolicy,
+            opts.chainConfig.contracts.SponsorshipVoteKickPolicy,
         ], [
             parseEther('0.01'),
             '0',
@@ -37,6 +39,6 @@ export async function deploySponsorship(
     const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait() as ContractReceipt
     const newSponsorshipEvent = sponsorshipDeployReceipt.events?.find((e) => e.event === 'NewSponsorship')
     const newSponsorshipAddress = newSponsorshipEvent?.args?.sponsorshipContract
-    const newSponsorship = new Contract(newSponsorshipAddress, sponsorshipABI, deployer) as unknown as Sponsorship
+    const newSponsorship = new Contract(newSponsorshipAddress, sponsorshipABI, opts.deployer) as unknown as Sponsorship
     return newSponsorship
 }

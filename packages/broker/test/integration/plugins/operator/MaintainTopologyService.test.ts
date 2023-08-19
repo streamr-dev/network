@@ -1,4 +1,5 @@
 import { parseEther } from '@ethersproject/units'
+import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamPartID, toStreamID } from '@streamr/protocol'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
@@ -8,10 +9,10 @@ import {
 } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { createClient, createTestStream } from '../../../utils'
+import { deploySponsorship } from './deploySponsorshipContract'
 import {
     THE_GRAPH_URL,
     deployOperatorContract,
-    deploySponsorship,
     generateWalletWithGasAndTokens,
     getProvider,
     getTokenContract
@@ -65,8 +66,8 @@ describe('MaintainTopologyService', () => {
         const provider = getProvider()
         const operatorWallet = await generateWalletWithGasAndTokens(provider)
         const [stream1, stream2] = await setUpStreams()
-        const sponsorship1 = await deploySponsorship(stream1.id, operatorWallet)
-        const sponsorship2 = await deploySponsorship(stream2.id, operatorWallet)
+        const sponsorship1 = await deploySponsorship({ chainConfig: CHAIN_CONFIG.dev2, deployer: operatorWallet, streamId: stream1.id })
+        const sponsorship2 = await deploySponsorship({ chainConfig: CHAIN_CONFIG.dev2, deployer: operatorWallet, streamId: stream2.id })
         const operatorContract = await deployOperatorContract(operatorWallet)
         const token = getTokenContract()
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()

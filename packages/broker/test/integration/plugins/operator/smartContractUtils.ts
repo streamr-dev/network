@@ -2,11 +2,10 @@ import { Contract } from '@ethersproject/contracts'
 import { JsonRpcProvider, Provider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { Operator, Sponsorship, TestToken, tokenABI } from '@streamr/network-contracts'
+import { Operator, TestToken, tokenABI } from '@streamr/network-contracts'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { Wallet } from 'ethers'
 import { deployOperatorContract as _deployOperatorContract } from './deployOperatorContract'
-import { deploySponsorship as _deploySponsorship } from './deploySponsorshipContract'
 
 const TEST_CHAIN = 'dev2'
 // TODO read from config when https://github.com/streamr-dev/network-contracts/pull/604 
@@ -38,10 +37,6 @@ export async function generateWalletWithGasAndTokens(
         value: parseEther('1')
     })).wait()
     return newWallet.connect(provider)
-}
-
-export async function deploySponsorship(streamId: string, operatorWallet: Wallet): Promise<Sponsorship> {
-    return await _deploySponsorship(CHAIN_CONFIG[TEST_CHAIN], operatorWallet, { streamId })
 }
 
 export async function deployOperatorContract(operatorWallet: Wallet): Promise<Operator> {

@@ -65,7 +65,7 @@ describe.skip('MaintainOperatorValueService', () => {
             await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther(`${STAKE_AMOUNT * 2}`), operatorWallet.address)
         ).wait()
         for (const streamId of [streamId1, streamId2]) {
-            const sponsorship = await deploySponsorship(chainConfig, operatorWallet, { streamId })
+            const sponsorship = await deploySponsorship({ chainConfig, deployer: operatorWallet, streamId })
             await (await token.connect(operatorWallet).transferAndCall(sponsorship.address, parseEther(`${SPONSOR_AMOUNT}`), '0x')).wait()
             await (await operatorContract.stake(sponsorship.address, parseEther(`${STAKE_AMOUNT}`))).wait()
         }
