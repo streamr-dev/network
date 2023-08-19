@@ -36,7 +36,7 @@ export class MaintainOperatorValueHelper {
         const operators = await this.getOperatorAddresses(latestBlock, queryFilter)
         // filter out my own operator
         const operatorAddresses = operators.filter((id) => toEthereumAddress(id) !== toEthereumAddress(this.config.operatorContractAddress))
-        logger.info(`Found ${operatorAddresses.length} operators`, { operatorAddresses })
+        logger.debug(`Found ${operatorAddresses.length} operators`, { operatorAddresses })
         const randomIndex = Math.floor(Math.random() * operatorAddresses.length)
         return operatorAddresses[randomIndex]
     }
