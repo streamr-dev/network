@@ -11,13 +11,13 @@ export class MaintainOperatorValueService {
     private penaltyLimitFraction?: bigint
     private readonly helper: MaintainOperatorValueHelper
     private readonly abortController: AbortController
-    private readonly checkIntervalMs: number
+    private readonly checkIntervalInMs: number
 
     constructor(config: OperatorServiceConfig, withdrawLimitSafetyFraction = 0.5, checkValueIntervalMs = DEFAULT_CHECK_VALUE_INTERVAL_MS) {
         this.withdrawLimitSafetyFraction = BigInt(withdrawLimitSafetyFraction * 1e18)
         this.helper = new MaintainOperatorValueHelper(config)
         this.abortController = new AbortController()
-        this.checkIntervalMs = checkValueIntervalMs
+        this.checkIntervalInMs = checkValueIntervalMs
     }
 
     async checkMyUnwithdrawnEarnings(): Promise<void> {
@@ -38,7 +38,7 @@ export class MaintainOperatorValueService {
             () => this.checkMyUnwithdrawnEarnings().catch((err) => {
                 logger.error('Encountered error while checking unwithdrawn earnings', { err })
             }),
-            this.checkIntervalMs,
+            this.checkIntervalInMs,
             true,
             this.abortController.signal
         )
