@@ -29,7 +29,7 @@ export class OperatorValueBreachWatcher {
         )
     }
 
-    async checkRandomUnwithdrawnEarnings(): Promise<void> {
+    private async checkRandomUnwithdrawnEarnings(): Promise<void> {
         const randomOperatorAddress = await this.helper.getRandomOperator()
         if (randomOperatorAddress === undefined) {
             logger.info('No operators found')
