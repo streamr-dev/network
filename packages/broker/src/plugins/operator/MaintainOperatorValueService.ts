@@ -20,7 +20,7 @@ export class MaintainOperatorValueService {
         this.checkIntervalInMs = checkValueIntervalMs
     }
 
-    async checkMyUnwithdrawnEarnings(): Promise<void> {
+    private async checkMyUnwithdrawnEarnings(): Promise<void> {
         logger.info('Check unwithdrawn earnings % of total value, and check if it\'s above the safe threshold')
         const { fraction, sponsorshipAddresses } = await this.helper.getMyUnwithdrawnEarnings()
         const safeUnwithdrawnEarningsFraction = this.penaltyLimitFraction! * this.withdrawLimitSafetyFraction / BigInt(1e18)
