@@ -1,32 +1,27 @@
 import { Contract } from '@ethersproject/contracts'
-import { JsonRpcProvider, Provider } from '@ethersproject/providers'
+import { Provider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
 import { Wallet } from '@ethersproject/wallet'
-import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, TestToken } from '@streamr/network-contracts'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, wait, waitForCondition } from '@streamr/utils'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, getTokenContract, setupOperatorContract } from './contractUtils'
-
-const chainConfig = CHAIN_CONFIG.dev2
+import { deploySponsorshipContract, getProvider, getTokenContract, setupOperatorContract } from './contractUtils'
 
 const logger = new Logger(module)
 
 jest.setTimeout(60 * 1000)
 
 describe('MaintainTopologyHelper', () => {
-    const chainURL = chainConfig.rpcEndpoints[0].url
-
     let provider: Provider
     let token: TestToken
     let streamId1: string
     let streamId2: string
 
     beforeAll(async () => {
-        provider = new JsonRpcProvider(chainURL)
+        provider = getProvider()
         logger.debug('Connected to: ', await provider.getNetwork())
 
         token = getTokenContract()

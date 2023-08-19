@@ -1,5 +1,4 @@
 import { Provider } from '@ethersproject/abstract-provider'
-import { JsonRpcProvider } from '@ethersproject/providers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrEnvDeployer, TestToken } from '@streamr/network-contracts'
 import { waitForCondition } from '@streamr/utils'
@@ -9,10 +8,11 @@ import { mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
 import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract } from './contractUtils'
+import { deploySponsorshipContract, generateWalletWithGasAndTokens, getProvider, setupOperatorContract } from './contractUtils'
 
 const TIMEOUT = 1000 * 60 * 10
 const ADMIN_PRIV_KEY = CHAIN_CONFIG.dev2.adminPrivateKey
+const CHAIN_URL = CHAIN_CONFIG.dev2.rpcEndpoints[0].url
 
 describe('VoteOnSuspectNodeService', () => {
     let provider: Provider
@@ -22,14 +22,12 @@ describe('VoteOnSuspectNodeService', () => {
     let streamrEnvDeployer: StreamrEnvDeployer
     let chainConfig: any
 
-    const chainURL = CHAIN_CONFIG.dev2.rpcEndpoints[0].url
-
     beforeAll(async () => {
-        streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, chainURL)
+        streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, CHAIN_URL)
         await streamrEnvDeployer.deployEvironment()
         const { contracts } = streamrEnvDeployer
         chainConfig = { contracts: streamrEnvDeployer.addresses } as any
-        provider = new JsonRpcProvider(chainURL)
+        provider = getProvider()
         adminWallet = new Wallet(ADMIN_PRIV_KEY, provider)
         token = contracts.DATA as unknown as TestToken
         const client = createClient(ADMIN_PRIV_KEY, { 
@@ -38,7 +36,7 @@ describe('VoteOnSuspectNodeService', () => {
                 streamRegistryChainRPCs: {
                     chainId: 0,  // some chain id
                     rpcs: [{
-                        url: chainURL
+                        url: CHAIN_URL
                     }]
                 }
             }

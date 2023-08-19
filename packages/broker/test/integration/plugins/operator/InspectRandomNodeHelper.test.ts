@@ -1,23 +1,19 @@
-import { JsonRpcProvider, Provider } from '@ethersproject/providers'
+import { Provider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
 import { Wallet } from '@ethersproject/wallet'
-import { config } from '@streamr/config'
 import type { TestToken } from '@streamr/network-contracts'
 import { Logger, TheGraphClient, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import fetch from 'node-fetch'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { createClient, createTestStream } from '../../../utils'
-import { THE_GRAPH_URL, deploySponsorshipContract, getTokenContract, setupOperatorContract } from './contractUtils'
+import { THE_GRAPH_URL, deploySponsorshipContract, getProvider, getTokenContract, setupOperatorContract } from './contractUtils'
 
 const logger = new Logger(module)
-const chainConfig = config.dev2
 const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
 
 jest.setTimeout(600 * 1000)
 
 describe('InspectRandomNodeHelper', () => {
-    const chainURL = chainConfig.rpcEndpoints[0]
-
     let provider: Provider
     let token: TestToken
     let adminWallet: Wallet
@@ -26,7 +22,7 @@ describe('InspectRandomNodeHelper', () => {
     let graphClient: TheGraphClient
 
     beforeAll(async () => {
-        provider = new JsonRpcProvider(chainURL)
+        provider = getProvider()
         logger.debug('Connected to: ', await provider.getNetwork())
 
         adminWallet = new Wallet(STREAM_CREATION_KEY, provider)
