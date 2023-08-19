@@ -41,6 +41,8 @@ export class MaintainOperatorValueService {
         if (fraction > safeUnwithdrawnEarningsFraction) {
             logger.info('Withdrawing earnings from sponsorships', { sponsorshipAddresses })
             await this.helper.withdrawMyEarningsFromSponsorships(sponsorshipAddresses)
+        } else {
+            logger.info('Skip withdrawing earnings', { fraction, safeUnwithdrawnEarningsFraction })
         }
     }
 
