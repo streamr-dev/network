@@ -1,15 +1,13 @@
-import { Contract } from '@ethersproject/contracts'
 import { JsonRpcProvider, Provider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
 import { Wallet } from '@ethersproject/wallet'
 import { config } from '@streamr/config'
 import type { TestToken } from '@streamr/network-contracts'
-import { tokenABI } from '@streamr/network-contracts'
 import { Logger, TheGraphClient, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import fetch from 'node-fetch'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { createClient, createTestStream } from '../../../utils'
-import { THE_GRAPH_URL, deploySponsorshipContract, setupOperatorContract } from './contractUtils'
+import { THE_GRAPH_URL, deploySponsorshipContract, getTokenContract, setupOperatorContract } from './contractUtils'
 
 const logger = new Logger(module)
 const chainConfig = config.dev2
@@ -33,7 +31,7 @@ describe('InspectRandomNodeHelper', () => {
 
         adminWallet = new Wallet(STREAM_CREATION_KEY, provider)
 
-        token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
+        token = getTokenContract()
 
         const client = createClient(STREAM_CREATION_KEY)
         streamId1 = (await createTestStream(client, module)).id

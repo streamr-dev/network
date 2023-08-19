@@ -4,13 +4,12 @@ import { parseEther } from '@ethersproject/units'
 import { Wallet } from '@ethersproject/wallet'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, TestToken } from '@streamr/network-contracts'
-import { tokenABI } from '@streamr/network-contracts'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, wait, waitForCondition } from '@streamr/utils'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, setupOperatorContract } from './contractUtils'
+import { deploySponsorshipContract, getTokenContract, setupOperatorContract } from './contractUtils'
 
 const chainConfig = CHAIN_CONFIG.dev2
 
@@ -30,7 +29,7 @@ describe('MaintainTopologyHelper', () => {
         provider = new JsonRpcProvider(chainURL)
         logger.debug('Connected to: ', await provider.getNetwork())
 
-        token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
+        token = getTokenContract()
         const client = createClient(await fetchPrivateKeyWithGas())
         streamId1 = (await createTestStream(client, module)).id
         streamId2 = (await createTestStream(client, module)).id

@@ -1,17 +1,12 @@
-import { Contract } from '@ethersproject/contracts'
 import { Provider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
 import { Wallet } from '@ethersproject/wallet'
-import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, TestToken } from '@streamr/network-contracts'
-import { tokenABI } from '@streamr/network-contracts'
 import { Logger, waitForCondition } from '@streamr/utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, getProvider, setupOperatorContract } from './contractUtils'
-
-const chainConfig = CHAIN_CONFIG.dev2
+import { deploySponsorshipContract, getProvider, getTokenContract, setupOperatorContract } from './contractUtils'
 
 const logger = new Logger(module)
 
@@ -52,9 +47,9 @@ describe.skip('MaintainOperatorValueService', () => {
         provider = getProvider()
         logger.debug('Connected to: ', await provider.getNetwork())
 
-        token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
+        token = getTokenContract()
 
-        ({ operatorWallet, operatorContract } = await setupOperatorContract({ provider }))
+        ;({ operatorWallet, operatorContract } = await setupOperatorContract({ provider }))
 
         await (
             await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther(`${STAKE_AMOUNT * 2}`), operatorWallet.address)
