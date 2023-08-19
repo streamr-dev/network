@@ -86,9 +86,9 @@ describe('InspectRandomNodeHelper', () => {
     })
 
     it('works to flag through the inspectRandomNodeHelper', async () => {
-        const flagger = await setupOperatorContract({ chainConfig, provider, theGraphUrl })
+        const flagger = await setupOperatorContract({ chainConfig, provider, theGraphUrl: THE_GRAPH_URL })
         logger.trace('deployed flagger contract ' + flagger.operatorConfig.operatorContractAddress)
-        const target = await setupOperatorContract({ chainConfig, provider, theGraphUrl })
+        const target = await setupOperatorContract({ chainConfig, provider, theGraphUrl: THE_GRAPH_URL })
         logger.trace('deployed target contract ' + target.operatorConfig.operatorContractAddress)
 
         logger.trace('deploying sponsorship contract')

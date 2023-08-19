@@ -11,9 +11,7 @@ import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteO
 import { createClient, createTestStream } from '../../../utils'
 import { deploySponsorship } from './deploySponsorshipContract'
 import { setupOperatorContract } from './setupOperatorContract'
-import { generateWalletWithGasAndTokens } from './smartContractUtils'
-
-const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
+import { THE_GRAPH_URL, generateWalletWithGasAndTokens } from './smartContractUtils'
 
 const TIMEOUT = 1000 * 60 * 10
 const ADMIN_PRIV_KEY = CHAIN_CONFIG.dev2.adminPrivateKey
@@ -54,9 +52,9 @@ describe('VoteOnSuspectNodeService', () => {
     }, TIMEOUT)
     
     it('votes on suspected node when review requested', async () => {
-        const flagger = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
-        const target = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
-        const voter = await setupOperatorContract({ provider, chainConfig, theGraphUrl, adminKey: ADMIN_PRIV_KEY })
+        const flagger = await setupOperatorContract({ provider, chainConfig, theGraphUrl: THE_GRAPH_URL, adminKey: ADMIN_PRIV_KEY })
+        const target = await setupOperatorContract({ provider, chainConfig, theGraphUrl: THE_GRAPH_URL, adminKey: ADMIN_PRIV_KEY })
+        const voter = await setupOperatorContract({ provider, chainConfig, theGraphUrl: THE_GRAPH_URL, adminKey: ADMIN_PRIV_KEY })
         const sponsor = await generateWalletWithGasAndTokens(provider, chainConfig, ADMIN_PRIV_KEY)
 
         const sponsorship = await deploySponsorship(chainConfig, adminWallet, { streamId: streamId })

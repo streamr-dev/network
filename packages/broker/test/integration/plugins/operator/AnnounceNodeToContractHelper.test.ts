@@ -1,6 +1,6 @@
 import { AnnounceNodeToContractHelper } from '../../../../src/plugins/operator/AnnounceNodeToContractHelper'
 import { setupOperatorContract } from './setupOperatorContract'
-import { getProvider } from './smartContractUtils'
+import { THE_GRAPH_URL, getProvider } from './smartContractUtils'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { Wallet } from 'ethers'
 import type { Operator } from '@streamr/network-contracts'
@@ -10,7 +10,6 @@ import { waitForCondition } from '@streamr/utils'
 
 const provider = getProvider()
 const chainConfig = CHAIN_CONFIG['dev2']
-
 
 describe(AnnounceNodeToContractHelper, () => {
     let operatorContract: Operator
@@ -22,7 +21,7 @@ describe(AnnounceNodeToContractHelper, () => {
         ;({ operatorContract, operatorConfig } = await setupOperatorContract({
             provider,
             chainConfig,
-            theGraphUrl
+            theGraphUrl: THE_GRAPH_URL
         }))
         await (await operatorContract.setNodeAddresses([nodeWallet.address])).wait() // TODO: use setupOperatorContract instead
         helper = new AnnounceNodeToContractHelper({
