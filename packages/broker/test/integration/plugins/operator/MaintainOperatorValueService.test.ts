@@ -9,7 +9,7 @@ import { Logger, waitForCondition } from '@streamr/utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorship } from './deploySponsorshipContract'
+import { deploySponsorshipContract } from './deploySponsorshipContract'
 import { setupOperatorContract } from './setupOperatorContract'
 import { getProvider } from './smartContractUtils'
 
@@ -65,7 +65,7 @@ describe.skip('MaintainOperatorValueService', () => {
             await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther(`${STAKE_AMOUNT * 2}`), operatorWallet.address)
         ).wait()
         for (const streamId of [streamId1, streamId2]) {
-            const sponsorship = await deploySponsorship({ chainConfig, deployer: operatorWallet, streamId })
+            const sponsorship = await deploySponsorshipContract({ chainConfig, deployer: operatorWallet, streamId })
             await (await token.connect(operatorWallet).transferAndCall(sponsorship.address, parseEther(`${SPONSOR_AMOUNT}`), '0x')).wait()
             await (await operatorContract.stake(sponsorship.address, parseEther(`${STAKE_AMOUNT}`))).wait()
         }

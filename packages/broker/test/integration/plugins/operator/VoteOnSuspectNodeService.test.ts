@@ -9,7 +9,7 @@ import { mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
 import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorship } from './deploySponsorshipContract'
+import { deploySponsorshipContract } from './deploySponsorshipContract'
 import { setupOperatorContract } from './setupOperatorContract'
 import { generateWalletWithGasAndTokens } from './smartContractUtils'
 
@@ -57,7 +57,7 @@ describe('VoteOnSuspectNodeService', () => {
         const voter = await setupOperatorContract({ provider, chainConfig, adminKey: ADMIN_PRIV_KEY })
         const sponsor = await generateWalletWithGasAndTokens(provider, chainConfig, ADMIN_PRIV_KEY)
 
-        const sponsorship = await deploySponsorship({ chainConfig, deployer: adminWallet, streamId: streamId })
+        const sponsorship = await deploySponsorshipContract({ chainConfig, deployer: adminWallet, streamId: streamId })
         await (await token.connect(sponsor).approve(sponsorship.address, parseEther('500'))).wait()
         await (await sponsorship.connect(sponsor).sponsor(parseEther('500'))).wait()
 

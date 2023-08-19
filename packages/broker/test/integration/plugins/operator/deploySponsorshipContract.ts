@@ -4,7 +4,7 @@ import type { Sponsorship, SponsorshipFactory } from '@streamr/network-contracts
 import { sponsorshipABI, sponsorshipFactoryABI } from '@streamr/network-contracts'
 import { BigNumber, Contract, ContractReceipt, Wallet } from 'ethers'
 
-export interface DeploySponsorshipOpts {
+export interface DeploySponsorshipContractOpts {
     // eslint-disable-next-line max-len
     chainConfig: { contracts: { SponsorshipFactory: string, SponsorshipStakeWeightedAllocationPolicy: string, SponsorshipDefaultLeavePolicy: string, SponsorshipVoteKickPolicy: string } }
     deployer: Wallet
@@ -15,8 +15,8 @@ export interface DeploySponsorshipOpts {
     minOperatorCount?: number
 }
 
-export async function deploySponsorship(
-    opts: DeploySponsorshipOpts
+export async function deploySponsorshipContract(
+    opts: DeploySponsorshipContractOpts
 ): Promise<Sponsorship> {
     const sponsorshipFactory =
         new Contract(opts.chainConfig.contracts.SponsorshipFactory, sponsorshipFactoryABI, opts.deployer) as unknown as SponsorshipFactory
