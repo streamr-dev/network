@@ -37,6 +37,7 @@ export async function setupOperatorContract(
 }
 
 interface DeployOperatorContractOpts {
+    // eslint-disable-next-line max-len
     chainConfig?: { contracts: { OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
     deployer: Wallet
     minOperatorStakePercent?: number
