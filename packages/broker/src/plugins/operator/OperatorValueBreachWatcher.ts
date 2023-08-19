@@ -40,7 +40,6 @@ export class OperatorValueBreachWatcher {
     }
 
     private async checkUnwithdrawnEarningsOf(targetOperatorAddress: EthereumAddress): Promise<void> {
-        logger.info('Check unwithdrawn earnings and check if they are above the safe threshold')
         const { fraction, sponsorshipAddresses } = await this.helper.getUnwithdrawnEarningsOf(targetOperatorAddress)
         const limit = await this.getPenaltyLimitFraction()
         logger.trace(` -> is ${fraction} > ${limit}?`)
