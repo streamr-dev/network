@@ -44,7 +44,8 @@ export class OperatorValueBreachWatcher {
         const limit = await this.getPenaltyLimitFraction()
         logger.trace(` -> is ${fraction} > ${limit}?`)
         if (fraction > limit) {
-            logger.info('Withdraw earnings from sponsorships', { sponsorshipAddresses })
+            logger.info('Withdraw earnings from sponsorships (target operator value in breach)',
+                { targetOperatorAddress, sponsorshipAddresses, fraction, limit })
             await this.helper.triggerWithdraw(targetOperatorAddress, sponsorshipAddresses)
         }
     }
