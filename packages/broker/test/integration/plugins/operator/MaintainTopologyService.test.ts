@@ -9,11 +9,8 @@ import {
 } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { createClient, createTestStream } from '../../../utils'
-import { deployOperatorContract } from './deployOperatorContract'
-import { deploySponsorshipContract } from './deploySponsorshipContract'
 import {
-    THE_GRAPH_URL,
-    generateWalletWithGasAndTokens,
+    THE_GRAPH_URL, deployOperatorContract, deploySponsorshipContract, generateWalletWithGasAndTokens,
     getProvider,
     getTokenContract
 } from './smartContractUtils'

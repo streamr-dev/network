@@ -9,9 +9,7 @@ import { Logger, TheGraphClient, toEthereumAddress, wait, waitForCondition } fro
 import fetch from 'node-fetch'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract } from './deploySponsorshipContract'
-import { setupOperatorContract } from './setupOperatorContract'
-import { THE_GRAPH_URL } from './smartContractUtils'
+import { THE_GRAPH_URL, deploySponsorshipContract, setupOperatorContract } from './smartContractUtils'
 
 const logger = new Logger(module)
 const chainConfig = config.dev2

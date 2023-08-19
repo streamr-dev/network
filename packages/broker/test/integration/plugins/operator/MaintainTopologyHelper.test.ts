@@ -10,8 +10,7 @@ import { Logger, wait, waitForCondition } from '@streamr/utils'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract } from './deploySponsorshipContract'
-import { setupOperatorContract } from './setupOperatorContract'
+import { deploySponsorshipContract, setupOperatorContract } from './smartContractUtils'
 
 const chainConfig = CHAIN_CONFIG.dev2
 
