@@ -1,6 +1,5 @@
-import { Wallet } from 'ethers'
 import { fastWallet } from '@streamr/test-utils'
-
+import { Wallet } from 'ethers'
 import { Broker } from '../../../../src/broker'
 import { startBroker } from '../../../utils'
 

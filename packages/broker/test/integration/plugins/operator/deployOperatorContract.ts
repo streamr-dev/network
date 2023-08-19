@@ -1,9 +1,8 @@
 // TODO: copy-paste from network-contracts, import from there?
-import { Wallet, ContractReceipt, Contract, utils } from 'ethers'
 import { AddressZero } from '@ethersproject/constants'
-
-import { operatorABI, operatorFactoryABI } from '@streamr/network-contracts'
 import type { Operator, OperatorFactory } from '@streamr/network-contracts'
+import { operatorABI, operatorFactoryABI } from '@streamr/network-contracts'
+import { Contract, ContractReceipt, Wallet, utils } from 'ethers'
 
 const { parseEther } = utils
 

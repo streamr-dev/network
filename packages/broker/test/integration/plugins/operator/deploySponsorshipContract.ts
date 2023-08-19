@@ -1,8 +1,7 @@
 // TODO: copy-paste from network-contracts, import from there?
-import { utils, Wallet, Contract, ContractReceipt } from 'ethers'
-
-import { sponsorshipABI, sponsorshipFactoryABI } from '@streamr/network-contracts'
 import type { Sponsorship, SponsorshipFactory } from '@streamr/network-contracts'
+import { sponsorshipABI, sponsorshipFactoryABI } from '@streamr/network-contracts'
+import { Contract, ContractReceipt, Wallet, utils } from 'ethers'
 
 const { parseEther } = utils
 

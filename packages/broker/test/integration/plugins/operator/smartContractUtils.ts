@@ -1,12 +1,12 @@
-import { TestToken, Operator, Sponsorship, tokenABI } from '@streamr/network-contracts'
 import { Contract } from '@ethersproject/contracts'
-import { Provider, JsonRpcProvider } from '@ethersproject/providers'
-import { Wallet } from 'ethers'
-import { fastPrivateKey } from '@streamr/test-utils'
+import { JsonRpcProvider, Provider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
-import { deploySponsorship as _deploySponsorship } from './deploySponsorshipContract'
-import { deployOperatorContract as _deployOperatorContract } from './deployOperatorContract'
 import { config as CHAIN_CONFIG } from '@streamr/config'
+import { Operator, Sponsorship, TestToken, tokenABI } from '@streamr/network-contracts'
+import { fastPrivateKey } from '@streamr/test-utils'
+import { Wallet } from 'ethers'
+import { deployOperatorContract as _deployOperatorContract } from './deployOperatorContract'
+import { deploySponsorship as _deploySponsorship } from './deploySponsorshipContract'
 
 const TEST_CHAIN = 'dev2'
 // TODO read from config when https://github.com/streamr-dev/network-contracts/pull/604 

@@ -1,20 +1,17 @@
-import { Provider } from '@ethersproject/providers'
-import { config as CHAIN_CONFIG } from '@streamr/config'
-import { Wallet } from '@ethersproject/wallet'
-import { parseEther } from '@ethersproject/units'
-import { Logger, waitForCondition } from '@streamr/utils'
-
-import type { TestToken, Operator } from '@streamr/network-contracts'
-
-import { tokenABI } from '@streamr/network-contracts'
 import { Contract } from '@ethersproject/contracts'
-
-import { deploySponsorship } from './deploySponsorshipContract'
+import { Provider } from '@ethersproject/providers'
+import { parseEther } from '@ethersproject/units'
+import { Wallet } from '@ethersproject/wallet'
+import { config as CHAIN_CONFIG } from '@streamr/config'
+import type { Operator, TestToken } from '@streamr/network-contracts'
+import { tokenABI } from '@streamr/network-contracts'
+import { Logger, waitForCondition } from '@streamr/utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
-import { THE_GRAPH_URL, getProvider } from './smartContractUtils'
 import { createClient, createTestStream } from '../../../utils'
+import { deploySponsorship } from './deploySponsorshipContract'
 import { setupOperatorContract } from './setupOperatorContract'
+import { getProvider } from './smartContractUtils'
 
 const chainConfig = CHAIN_CONFIG.dev2
 
@@ -61,8 +58,7 @@ describe.skip('MaintainOperatorValueService', () => {
 
         ({ operatorWallet, operatorContract } = await setupOperatorContract({
             provider,
-            chainConfig,
-            theGraphUrl: THE_GRAPH_URL
+            chainConfig
         }))
 
         await (

@@ -12,7 +12,6 @@ import { OperatorServiceConfig } from '../../../../src/plugins/operator/Operator
 import { createClient, createTestStream } from '../../../utils'
 import { deploySponsorship } from './deploySponsorshipContract'
 import { setupOperatorContract } from './setupOperatorContract'
-import { THE_GRAPH_URL } from './smartContractUtils'
 
 const chainConfig = CHAIN_CONFIG.dev2
 
@@ -50,9 +49,8 @@ describe('MaintainTopologyHelper', () => {
 
         beforeAll(async () => {
             ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({
-                provider, 
-                chainConfig, 
-                theGraphUrl: THE_GRAPH_URL
+                provider,
+                chainConfig,
             }))
         })
 
@@ -72,7 +70,7 @@ describe('MaintainTopologyHelper', () => {
                 logger.debug(`got removeStakedStream event for stream ${streamid}`)
             })
             await topologyHelper.start()
-            
+
             logger.debug('Added OperatorClient listeners, deploying Sponsorship contract...')
             sponsorship1 = await deploySponsorship(chainConfig, operatorWallet, {
                 streamId: streamId1 })
@@ -148,9 +146,8 @@ describe('MaintainTopologyHelper', () => {
 
         beforeAll(async () => {
             ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({
-                provider, 
-                chainConfig, 
-                theGraphUrl: THE_GRAPH_URL
+                provider,
+                chainConfig,
             }))
         })
 

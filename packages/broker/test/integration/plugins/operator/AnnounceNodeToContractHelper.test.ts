@@ -1,12 +1,12 @@
-import { AnnounceNodeToContractHelper } from '../../../../src/plugins/operator/AnnounceNodeToContractHelper'
-import { setupOperatorContract } from './setupOperatorContract'
-import { THE_GRAPH_URL, getProvider } from './smartContractUtils'
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { Wallet } from 'ethers'
 import type { Operator } from '@streamr/network-contracts'
-import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
+import { Wallet } from 'ethers'
+import { AnnounceNodeToContractHelper } from '../../../../src/plugins/operator/AnnounceNodeToContractHelper'
+import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
+import { setupOperatorContract } from './setupOperatorContract'
+import { getProvider } from './smartContractUtils'
 
 const provider = getProvider()
 const chainConfig = CHAIN_CONFIG['dev2']
@@ -20,8 +20,7 @@ describe(AnnounceNodeToContractHelper, () => {
         const nodeWallet = new Wallet(await fetchPrivateKeyWithGas())
         ;({ operatorContract, operatorConfig } = await setupOperatorContract({
             provider,
-            chainConfig,
-            theGraphUrl: THE_GRAPH_URL
+            chainConfig
         }))
         await (await operatorContract.setNodeAddresses([nodeWallet.address])).wait() // TODO: use setupOperatorContract instead
         helper = new AnnounceNodeToContractHelper({

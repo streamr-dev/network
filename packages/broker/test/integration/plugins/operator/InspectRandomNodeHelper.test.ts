@@ -51,11 +51,11 @@ describe('InspectRandomNodeHelper', () => {
 
     it('getSponsorshipsOfOperator, getOperatorsInSponsorship', async () => {
         const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract(
-            { chainConfig, provider, theGraphUrl: THE_GRAPH_URL },
+            { chainConfig, provider },
         )
         logger.debug('Deployed OperatorContract at: ' + operatorContract.address)
         const inspectRandomNodeHelper = new InspectRandomNodeHelper(operatorConfig)
-            
+
         logger.debug('Added OperatorClient listeners, deploying Sponsorship contract...')
         const sponsorship = await deploySponsorship(chainConfig, operatorWallet, {
             streamId: streamId1 })
@@ -80,15 +80,15 @@ describe('InspectRandomNodeHelper', () => {
 
         const sponsorships = await inspectRandomNodeHelper.getSponsorshipsOfOperator(toEthereumAddress(operatorContract.address), 0)
         expect(sponsorships).toEqual(expect.arrayContaining([toEthereumAddress(sponsorship.address), toEthereumAddress(sponsorship2.address)]))
-        
+
         const operators = await inspectRandomNodeHelper.getOperatorsInSponsorship(toEthereumAddress(sponsorship.address), 0)
         expect(operators).toEqual([toEthereumAddress(operatorContract.address)])
     })
 
     it('works to flag through the inspectRandomNodeHelper', async () => {
-        const flagger = await setupOperatorContract({ chainConfig, provider, theGraphUrl: THE_GRAPH_URL })
+        const flagger = await setupOperatorContract({ chainConfig, provider })
         logger.trace('deployed flagger contract ' + flagger.operatorConfig.operatorContractAddress)
-        const target = await setupOperatorContract({ chainConfig, provider, theGraphUrl: THE_GRAPH_URL })
+        const target = await setupOperatorContract({ chainConfig, provider })
         logger.trace('deployed target contract ' + target.operatorConfig.operatorContractAddress)
 
         logger.trace('deploying sponsorship contract')
@@ -101,11 +101,11 @@ describe('InspectRandomNodeHelper', () => {
         logger.trace('each operator delegates to its operactor contract')
         logger.trace('delegating from flagger: ' + flagger.operatorWallet.address)
         await (await token.connect(flagger.operatorWallet).transferAndCall(flagger.operatorContract.address,
-            parseEther('200'), flagger.operatorWallet.address)).wait() 
+            parseEther('200'), flagger.operatorWallet.address)).wait()
         logger.trace('delegating from target: ' + target.operatorWallet.address)
         await (await token.connect(target.operatorWallet).transferAndCall(target.operatorContract.address,
             parseEther('300'), target.operatorWallet.address)).wait()
-        
+
         await wait(3000) // sometimes these stake fail, possibly when they end up in the same block
         logger.trace('staking to sponsorship contract from flagger and target and voter')
         logger.trace('staking from flagger: ' + flagger.operatorContract.address)

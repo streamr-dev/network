@@ -1,21 +1,21 @@
+import { parseEther } from '@ethersproject/units'
+import { StreamPartID, toStreamID } from '@streamr/protocol'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { toEthereumAddress, waitForCondition } from '@streamr/utils'
+import StreamrClient, { Stream } from 'streamr-client'
 import {
     setUpAndStartMaintainTopologyService
 } from '../../../../src/plugins/operator/MaintainTopologyService'
-import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { parseEther } from '@ethersproject/units'
-import StreamrClient, { Stream } from 'streamr-client'
+import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
+import { createClient, createTestStream } from '../../../utils'
 import {
-    deploySponsorship,
+    THE_GRAPH_URL,
     deployOperatorContract,
+    deploySponsorship,
     generateWalletWithGasAndTokens,
     getProvider,
-    getTokenContract,
-    THE_GRAPH_URL
+    getTokenContract
 } from './smartContractUtils'
-import { StreamPartID, toStreamID } from '@streamr/protocol'
-import { createClient, createTestStream } from '../../../utils'
-import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
