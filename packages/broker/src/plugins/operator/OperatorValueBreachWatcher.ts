@@ -35,7 +35,7 @@ export class OperatorValueBreachWatcher {
             logger.info('No operators found')
             return
         }
-        logger.info('Checking unwithdrawn earnings', { randomOperatorAddress })
+        logger.info('Check unwithdrawn earnings', { randomOperatorAddress })
         return this.checkUnwithdrawnEarningsOf(randomOperatorAddress)
     }
 
