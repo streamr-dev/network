@@ -1,4 +1,3 @@
-import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator } from '@streamr/network-contracts'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
@@ -8,7 +7,6 @@ import { OperatorServiceConfig } from '../../../../src/plugins/operator/Operator
 import { getProvider, setupOperatorContract } from './contractUtils'
 
 const provider = getProvider()
-const chainConfig = CHAIN_CONFIG['dev2']
 
 describe(AnnounceNodeToContractHelper, () => {
     let operatorContract: Operator
@@ -17,10 +15,7 @@ describe(AnnounceNodeToContractHelper, () => {
 
     beforeEach(async () => {
         const nodeWallet = new Wallet(await fetchPrivateKeyWithGas())
-        ;({ operatorContract, operatorConfig } = await setupOperatorContract({
-            provider,
-            chainConfig
-        }))
+        ;({ operatorContract, operatorConfig } = await setupOperatorContract({ provider }))
         await (await operatorContract.setNodeAddresses([nodeWallet.address])).wait() // TODO: use setupOperatorContract instead
         helper = new AnnounceNodeToContractHelper({
             ...operatorConfig,

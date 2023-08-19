@@ -54,10 +54,7 @@ describe.skip('MaintainOperatorValueService', () => {
 
         token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
 
-        ({ operatorWallet, operatorContract } = await setupOperatorContract({
-            provider,
-            chainConfig
-        }))
+        ({ operatorWallet, operatorContract } = await setupOperatorContract({ provider }))
 
         await (
             await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther(`${STAKE_AMOUNT * 2}`), operatorWallet.address)

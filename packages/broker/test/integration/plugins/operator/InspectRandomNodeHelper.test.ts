@@ -48,9 +48,7 @@ describe('InspectRandomNodeHelper', () => {
     })
 
     it('getSponsorshipsOfOperator, getOperatorsInSponsorship', async () => {
-        const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract(
-            { chainConfig, provider },
-        )
+        const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({ provider })
         logger.debug('Deployed OperatorContract at: ' + operatorContract.address)
         const inspectRandomNodeHelper = new InspectRandomNodeHelper(operatorConfig)
 
@@ -81,9 +79,9 @@ describe('InspectRandomNodeHelper', () => {
     })
 
     it('works to flag through the inspectRandomNodeHelper', async () => {
-        const flagger = await setupOperatorContract({ chainConfig, provider })
+        const flagger = await setupOperatorContract({ provider })
         logger.trace('deployed flagger contract ' + flagger.operatorConfig.operatorContractAddress)
-        const target = await setupOperatorContract({ chainConfig, provider })
+        const target = await setupOperatorContract({ provider })
         logger.trace('deployed target contract ' + target.operatorConfig.operatorContractAddress)
 
         logger.trace('deploying sponsorship contract')
