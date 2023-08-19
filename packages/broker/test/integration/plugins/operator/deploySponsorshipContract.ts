@@ -8,7 +8,7 @@ export interface DeploySponsorshipOpts {
     // eslint-disable-next-line max-len
     chainConfig: { contracts: { SponsorshipFactory: string, SponsorshipStakeWeightedAllocationPolicy: string, SponsorshipDefaultLeavePolicy: string, SponsorshipVoteKickPolicy: string } }
     deployer: Wallet
-    streamId?: string
+    streamId: string
     metadata?: string
     minimumStakeWei?: BigNumber
     minHorizonSeconds?: number
@@ -24,7 +24,7 @@ export async function deploySponsorship(
         (opts.minimumStakeWei ?? parseEther('60')).toString(),
         (opts.minHorizonSeconds ?? 0).toString(),
         (opts.minOperatorCount ?? 1).toString(),
-        opts.streamId ?? `Stream-${Date.now()}`,
+        opts.streamId,
         opts.metadata ?? '{}',
         [
             opts.chainConfig.contracts.SponsorshipStakeWeightedAllocationPolicy,
