@@ -45,7 +45,6 @@ export class MaintainOperatorValueService {
     }
 
     async stop(): Promise<void> {
-        logger.info('Stop')
         this.abortController.abort()
     }
 }
