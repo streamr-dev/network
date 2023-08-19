@@ -39,7 +39,7 @@ export class MaintainOperatorValueService {
         const safeUnwithdrawnEarningsFraction = this.penaltyLimitFraction! * this.withdrawLimitSafetyFraction / BigInt(1e18)
         logger.trace(` -> is ${fraction / BigInt(1e16)}% > ${safeUnwithdrawnEarningsFraction / BigInt(1e16)}% ?`)
         if (fraction > safeUnwithdrawnEarningsFraction) {
-            logger.info('Withdrawing earnings from sponsorships', { sponsorshipAddresses })
+            logger.info('Withdraw earnings from sponsorships', { sponsorshipAddresses })
             await this.helper.withdrawMyEarningsFromSponsorships(sponsorshipAddresses)
         } else {
             logger.info('Skip withdrawing earnings', { fraction, safeUnwithdrawnEarningsFraction })
