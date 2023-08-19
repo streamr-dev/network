@@ -51,8 +51,8 @@ describe('InspectRandomNodeHelper', () => {
         const inspectRandomNodeHelper = new InspectRandomNodeHelper(operatorConfig)
 
         logger.debug('Added OperatorClient listeners, deploying Sponsorship contract...')
-        const sponsorship = await deploySponsorshipContract({ chainConfig, deployer: operatorWallet, streamId: streamId1 })
-        const sponsorship2 = await deploySponsorshipContract({ chainConfig, deployer: operatorWallet, streamId: streamId2 })
+        const sponsorship = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
+        const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId2 })
 
         logger.debug(`Sponsorship1 deployed at ${sponsorship.address}`)
         logger.debug(`Sponsorship2 deployed at ${sponsorship2.address}`)
@@ -83,7 +83,7 @@ describe('InspectRandomNodeHelper', () => {
         logger.trace('deployed target contract ' + target.operatorConfig.operatorContractAddress)
 
         logger.trace('deploying sponsorship contract')
-        const sponsorship = await deploySponsorshipContract({ chainConfig, deployer: adminWallet, streamId: streamId1 })
+        const sponsorship = await deploySponsorshipContract({ deployer: adminWallet, streamId: streamId1 })
         logger.trace('sponsoring sponsorship contract')
         await (await token.connect(flagger.operatorWallet).approve(sponsorship.address, parseEther('500'))).wait()
         await (await sponsorship.connect(flagger.operatorWallet).sponsor(parseEther('500'))).wait()

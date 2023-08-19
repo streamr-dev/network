@@ -67,8 +67,8 @@ describe('MaintainTopologyHelper', () => {
             await topologyHelper.start()
 
             logger.debug('Added OperatorClient listeners, deploying Sponsorship contract...')
-            sponsorship1 = await deploySponsorshipContract({ chainConfig, deployer: operatorWallet, streamId: streamId1 })
-            sponsorship2 = await deploySponsorshipContract({ chainConfig, deployer: operatorWallet, streamId: streamId2 })
+            sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
+            sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId2 })
 
             logger.debug(`Sponsorship deployed at ${sponsorship1.address}, delegating...`)
             await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
@@ -160,8 +160,8 @@ describe('MaintainTopologyHelper', () => {
             await topologyHelper.start()
 
             logger.debug('Added OperatorClient listeners, deploying Sponsorship contract...')
-            sponsorship1 = await deploySponsorshipContract({ chainConfig, deployer: operatorWallet, streamId: streamId1 })
-            sponsorship2 = await deploySponsorshipContract({ chainConfig, deployer: operatorWallet, streamId: streamId1 })
+            sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
+            sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
 
             logger.debug(`Sponsorship deployed at ${sponsorship1.address}, delegating...`)
             await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()

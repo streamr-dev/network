@@ -81,7 +81,7 @@ export async function deployOperatorContract(
 
 export interface DeploySponsorshipContractOpts {
     // eslint-disable-next-line max-len
-    chainConfig: { contracts: { SponsorshipFactory: string, SponsorshipStakeWeightedAllocationPolicy: string, SponsorshipDefaultLeavePolicy: string, SponsorshipVoteKickPolicy: string } }
+    chainConfig?: { contracts: { SponsorshipFactory: string, SponsorshipStakeWeightedAllocationPolicy: string, SponsorshipDefaultLeavePolicy: string, SponsorshipVoteKickPolicy: string } }
     deployer: Wallet
     streamId: string
     metadata?: string
@@ -93,8 +93,9 @@ export interface DeploySponsorshipContractOpts {
 export async function deploySponsorshipContract(
     opts: DeploySponsorshipContractOpts
 ): Promise<Sponsorship> {
+    const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
     const sponsorshipFactory =
-        new Contract(opts.chainConfig.contracts.SponsorshipFactory, sponsorshipFactoryABI, opts.deployer) as unknown as SponsorshipFactory
+        new Contract(chainConfig.contracts.SponsorshipFactory, sponsorshipFactoryABI, opts.deployer) as unknown as SponsorshipFactory
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
         (opts.minimumStakeWei ?? parseEther('60')).toString(),
         (opts.minHorizonSeconds ?? 0).toString(),
@@ -102,9 +103,9 @@ export async function deploySponsorshipContract(
         opts.streamId,
         opts.metadata ?? '{}',
         [
-            opts.chainConfig.contracts.SponsorshipStakeWeightedAllocationPolicy,
-            opts.chainConfig.contracts.SponsorshipDefaultLeavePolicy,
-            opts.chainConfig.contracts.SponsorshipVoteKickPolicy,
+            chainConfig.contracts.SponsorshipStakeWeightedAllocationPolicy,
+            chainConfig.contracts.SponsorshipDefaultLeavePolicy,
+            chainConfig.contracts.SponsorshipVoteKickPolicy,
         ], [
             parseEther('0.01'),
             '0',
