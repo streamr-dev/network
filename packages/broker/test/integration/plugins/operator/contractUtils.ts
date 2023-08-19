@@ -94,8 +94,11 @@ export async function deploySponsorshipContract(
     opts: DeploySponsorshipContractOpts
 ): Promise<Sponsorship> {
     const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
-    const sponsorshipFactory =
-        new Contract(chainConfig.contracts.SponsorshipFactory, sponsorshipFactoryABI, opts.deployer) as unknown as SponsorshipFactory
+    const sponsorshipFactory = new Contract(
+        chainConfig.contracts.SponsorshipFactory, 
+        sponsorshipFactoryABI,
+        opts.deployer
+    ) as unknown as SponsorshipFactory
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
         (opts.minimumStakeWei ?? parseEther('60')).toString(),
         (opts.minHorizonSeconds ?? 0).toString(),
