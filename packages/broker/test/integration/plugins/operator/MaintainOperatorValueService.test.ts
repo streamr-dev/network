@@ -12,12 +12,11 @@ import { Contract } from '@ethersproject/contracts'
 import { deploySponsorship } from './deploySponsorshipContract'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
-import { getProvider } from './smartContractUtils'
+import { THE_GRAPH_URL, getProvider } from './smartContractUtils'
 import { createClient, createTestStream } from '../../../utils'
 import { setupOperatorContract } from './setupOperatorContract'
 
 const chainConfig = CHAIN_CONFIG.dev2
-const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
 
@@ -63,7 +62,7 @@ describe.skip('MaintainOperatorValueService', () => {
         ({ operatorWallet, operatorContract } = await setupOperatorContract({
             provider,
             chainConfig,
-            theGraphUrl
+            theGraphUrl: THE_GRAPH_URL
         }))
 
         await (
