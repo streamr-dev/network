@@ -47,7 +47,7 @@ interface DeployOperatorContractOpts {
 }
 
 /**
- * @param deployer should be the operator's Wallet
+ * @param opts.deployer should be the operator's Wallet
  * @returns Operator
  */
 export async function deployOperatorContract(
