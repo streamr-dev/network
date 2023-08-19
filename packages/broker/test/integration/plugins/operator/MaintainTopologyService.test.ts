@@ -1,5 +1,4 @@
 import { parseEther } from '@ethersproject/units'
-import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamPartID, toStreamID } from '@streamr/protocol'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
@@ -65,7 +64,7 @@ describe('MaintainTopologyService', () => {
         const [stream1, stream2] = await setUpStreams()
         const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
-        const operatorContract = await deployOperatorContract({ chainConfig: CHAIN_CONFIG.dev2, deployer: operatorWallet })
+        const operatorContract = await deployOperatorContract({ deployer: operatorWallet })
         const token = getTokenContract()
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
         await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()

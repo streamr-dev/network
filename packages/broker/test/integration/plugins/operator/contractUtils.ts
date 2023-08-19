@@ -37,8 +37,7 @@ export async function setupOperatorContract(
 }
 
 interface DeployOperatorContractOpts {
-    // eslint-disable-next-line max-len
-    chainConfig: { contracts: { OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
+    chainConfig?: { contracts: { OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
     deployer: Wallet
     minOperatorStakePercent?: number
     operatorSharePercent?: number
@@ -54,7 +53,8 @@ export async function deployOperatorContract(
     opts: DeployOperatorContractOpts
 ): Promise<Operator> {
     const abi = operatorFactoryABI
-    const operatorFactory = new Contract(opts.chainConfig.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactory
+    const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
+    const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactory
     const contractAddress = await operatorFactory.operators(opts.deployer.address)
     if (contractAddress !== AddressZero) {
         throw new Error('Operator already has a contract')
@@ -62,9 +62,9 @@ export async function deployOperatorContract(
     const operatorReceipt = await (await operatorFactory.deployOperator(
         [ opts.poolTokenName ?? `Pool-${Date.now()}`, opts.operatorMetadata ?? '{}' ],
         [
-            opts.chainConfig.contracts.OperatorDefaultDelegationPolicy,
-            opts.chainConfig.contracts.OperatorDefaultPoolYieldPolicy,
-            opts.chainConfig.contracts.OperatorDefaultUndelegationPolicy,
+            chainConfig.contracts.OperatorDefaultDelegationPolicy,
+            chainConfig.contracts.OperatorDefaultPoolYieldPolicy,
+            chainConfig.contracts.OperatorDefaultUndelegationPolicy,
         ], [
             0,
             parseEther('1').mul(opts.minOperatorStakePercent ?? 0).div(100),
