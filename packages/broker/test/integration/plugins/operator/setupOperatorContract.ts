@@ -7,7 +7,7 @@ import { OperatorServiceConfig } from '../../../../src/plugins/operator/Operator
 import { deployOperatorContract } from './deployOperatorContract'
 import { THE_GRAPH_URL, generateWalletWithGasAndTokens } from './smartContractUtils'
 
-export interface SetupOperatorOpts {
+export interface SetupOperatorContractOpts {
     nodeAddresses?: EthereumAddress[]
     provider: Provider
     // eslint-disable-next-line max-len
@@ -16,7 +16,7 @@ export interface SetupOperatorOpts {
 }
 
 export async function setupOperatorContract(
-    opts: SetupOperatorOpts
+    opts: SetupOperatorContractOpts
 ): Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig }> {
     const operatorWallet = await generateWalletWithGasAndTokens(opts.provider, opts.chainConfig, opts.adminKey)
 
