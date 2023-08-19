@@ -36,7 +36,7 @@ export class MaintainOperatorValueService {
 
         await scheduleAtInterval(
             () => this.checkMyUnwithdrawnEarnings().catch((err) => {
-                logger.warn('Encountered error during checkUnwithdrawnEarnings', { err })
+                logger.error('Encountered error while checking unwithdrawn earnings', { err })
             }),
             this.checkIntervalMs,
             true,
