@@ -10,6 +10,7 @@ export class OperatorValueBreachWatcher {
     private penaltyLimitFractionCached?: bigint
     private readonly abortController: AbortController
     
+    // public access modifier for tests 
     readonly helper: MaintainOperatorValueHelper
 
     constructor(config: OperatorServiceConfig) {
