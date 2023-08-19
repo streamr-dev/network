@@ -27,16 +27,9 @@ export async function deployOperatorContract(
     const operatorFactory = new Contract(opts.chainConfig.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactory
 
     const contractAddress = await operatorFactory.operators(opts.deployer.address)
-    // if (await operatorFactory.operators(contractAddress) === deployer.address)) {
     if (contractAddress !== AddressZero) {
         throw new Error('Operator already has a contract')
     }
-    /**
-     * policies: [0] delegation, [1] yield, [2] undelegation policy
-     * uint params: [0] initialMargin, [1] minimumMarginFraction, [2] yieldPolicyParam, [3] undelegationPolicyParam,
-     *      [4] initialMinimumDelegationWei, [5] operatorsShareFraction
-     */
-
     const operatorReceipt = await (await operatorFactory.deployOperator(
         [ opts.poolTokenName ?? `Pool-${Date.now()}`, opts.operatorMetadata ?? '{}' ],
         [
