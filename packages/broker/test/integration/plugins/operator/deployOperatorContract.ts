@@ -1,10 +1,9 @@
 // TODO: copy-paste from network-contracts, import from there?
 import { AddressZero } from '@ethersproject/constants'
+import { parseEther } from '@ethersproject/units'
 import type { Operator, OperatorFactory } from '@streamr/network-contracts'
 import { operatorABI, operatorFactoryABI } from '@streamr/network-contracts'
-import { Contract, ContractReceipt, Wallet, utils } from 'ethers'
-
-const { parseEther } = utils
+import { Contract, ContractReceipt, Wallet } from 'ethers'
 
 /**
  * @param deployer should be the operator's Wallet
