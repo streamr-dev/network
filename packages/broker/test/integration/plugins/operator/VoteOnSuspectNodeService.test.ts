@@ -9,7 +9,7 @@ import { mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
 import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract } from './smartContractUtils'
+import { deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract } from './contractUtils'
 
 const TIMEOUT = 1000 * 60 * 10
 const ADMIN_PRIV_KEY = CHAIN_CONFIG.dev2.adminPrivateKey

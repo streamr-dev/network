@@ -9,7 +9,7 @@ import { Logger, waitForCondition } from '@streamr/utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, getProvider, setupOperatorContract } from './smartContractUtils'
+import { deploySponsorshipContract, getProvider, setupOperatorContract } from './contractUtils'
 
 const chainConfig = CHAIN_CONFIG.dev2
 

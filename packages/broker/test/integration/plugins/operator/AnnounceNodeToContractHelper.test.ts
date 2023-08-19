@@ -5,7 +5,7 @@ import { waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { AnnounceNodeToContractHelper } from '../../../../src/plugins/operator/AnnounceNodeToContractHelper'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
-import { getProvider, setupOperatorContract } from './smartContractUtils'
+import { getProvider, setupOperatorContract } from './contractUtils'
 
 const provider = getProvider()
 const chainConfig = CHAIN_CONFIG['dev2']

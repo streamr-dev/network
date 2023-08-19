@@ -13,7 +13,7 @@ import {
     THE_GRAPH_URL, deployOperatorContract, deploySponsorshipContract, generateWalletWithGasAndTokens,
     getProvider,
     getTokenContract
-} from './smartContractUtils'
+} from './contractUtils'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
