@@ -18,6 +18,17 @@ export class OperatorValueBreachWatcher {
         this.abortController = new AbortController()
     }
 
+    async start(): Promise<void> {
+        await scheduleAtInterval(
+            () => this.checkRandomUnwithdrawnEarnings().catch((err) => {
+                logger.warn('Encountered error while watching operators', { err })
+            }),
+            CHECK_VALUE_INTERVAL,
+            true,
+            this.abortController.signal
+        )
+    }
+
     async checkRandomUnwithdrawnEarnings(): Promise<void> {
         const randomOperatorAddress = await this.helper.getRandomOperator()
         if (randomOperatorAddress === undefined) {
@@ -44,17 +55,6 @@ export class OperatorValueBreachWatcher {
             this.penaltyLimitFractionCached = await this.helper.getPenaltyLimitFraction()
         }
         return this.penaltyLimitFractionCached
-    }
-
-    async start(): Promise<void> {
-        await scheduleAtInterval(
-            () => this.checkRandomUnwithdrawnEarnings().catch((err) => {
-                logger.warn('Encountered error while watching operators', { err })
-            }),
-            CHECK_VALUE_INTERVAL,
-            true,
-            this.abortController.signal
-        )
     }
 
     async stop(): Promise<void> {
