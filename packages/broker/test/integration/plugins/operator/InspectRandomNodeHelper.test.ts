@@ -7,6 +7,7 @@ import fetch from 'node-fetch'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { createClient, createTestStream } from '../../../utils'
 import { THE_GRAPH_URL, deploySponsorshipContract, getProvider, getTokenContract, setupOperatorContract } from './contractUtils'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 
 const logger = new Logger(module)
 const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
@@ -29,7 +30,7 @@ describe('InspectRandomNodeHelper', () => {
 
         token = getTokenContract()
 
-        const client = createClient(STREAM_CREATION_KEY)
+        const client = createClient(await fetchPrivateKeyWithGas())
         streamId1 = (await createTestStream(client, module)).id
         streamId2 = (await createTestStream(client, module)).id
         await client.destroy()

@@ -7,13 +7,12 @@ import { MaintainOperatorValueService } from '../../../../src/plugins/operator/M
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
 import { deploySponsorshipContract, getProvider, getTokenContract, setupOperatorContract } from './contractUtils'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 
 const logger = new Logger(module)
 
 const SPONSOR_AMOUNT = 250
 const STAKE_AMOUNT = 100
-
-const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
 
 // test is outdated, is completely rewritten and will be merged with PR #1629 
 describe.skip('MaintainOperatorValueService', () => {
@@ -37,7 +36,7 @@ describe.skip('MaintainOperatorValueService', () => {
     }
 
     beforeAll(async () => {
-        const client = createClient(STREAM_CREATION_KEY)
+        const client = createClient(await fetchPrivateKeyWithGas())
         streamId1 = (await createTestStream(client, module)).id
         streamId2 = (await createTestStream(client, module)).id
         await client.destroy()
