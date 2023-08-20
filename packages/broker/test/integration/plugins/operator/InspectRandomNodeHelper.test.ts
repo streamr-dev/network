@@ -41,12 +41,12 @@ describe('InspectRandomNodeHelper', () => {
         const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract()
         const inspectRandomNodeHelper = new InspectRandomNodeHelper(operatorConfig)
 
-        const sponsorship = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
+        const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId2 })
 
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
 
-        await (await operatorContract.stake(sponsorship.address, parseEther('100'))).wait()
+        await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
         await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
 
         await waitForCondition(async (): Promise<boolean> => {
@@ -55,9 +55,9 @@ describe('InspectRandomNodeHelper', () => {
         }, 10000, 1000)
 
         const sponsorships = await inspectRandomNodeHelper.getSponsorshipsOfOperator(toEthereumAddress(operatorContract.address), 0)
-        expect(sponsorships).toEqual(expect.arrayContaining([toEthereumAddress(sponsorship.address), toEthereumAddress(sponsorship2.address)]))
+        expect(sponsorships).toEqual(expect.arrayContaining([toEthereumAddress(sponsorship1.address), toEthereumAddress(sponsorship2.address)]))
 
-        const operators = await inspectRandomNodeHelper.getOperatorsInSponsorship(toEthereumAddress(sponsorship.address), 0)
+        const operators = await inspectRandomNodeHelper.getOperatorsInSponsorship(toEthereumAddress(sponsorship1.address), 0)
         expect(operators).toEqual([toEthereumAddress(operatorContract.address)])
     })
 
