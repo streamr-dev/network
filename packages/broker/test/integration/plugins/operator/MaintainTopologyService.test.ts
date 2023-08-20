@@ -59,7 +59,6 @@ describe('MaintainTopologyService', () => {
     })
 
     it('happy path', async () => {
-        const provider = getProvider()
         const operatorWallet = await generateWalletWithGasAndTokens()
         const [stream1, stream2] = await setUpStreams()
         const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
@@ -70,7 +69,7 @@ describe('MaintainTopologyService', () => {
         await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
 
         const serviceHelperConfig = {
-            provider,
+            provider: getProvider(),
             signer: operatorWallet,
             operatorContractAddress: toEthereumAddress(operatorContract.address),
             theGraphUrl: THE_GRAPH_URL

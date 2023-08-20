@@ -16,25 +16,26 @@ export const THE_GRAPH_URL = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '1
 
 export interface SetupOperatorContractOpts {
     nodeAddresses?: EthereumAddress[]
-    provider: Provider
+    provider?: Provider
     // eslint-disable-next-line max-len
     chainConfig?: { contracts: { DATA: string, OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
     adminKey?: string
 }
 
 export async function setupOperatorContract(
-    opts: SetupOperatorContractOpts
+    opts?: SetupOperatorContractOpts
 ): Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig }> {
+    const provider = opts?.provider ?? getProvider()
     const operatorWallet = await generateWalletWithGasAndTokens({
-        provider: opts.provider,
-        chainConfig: opts.chainConfig,
-        adminKey: opts.adminKey
+        provider: opts?.provider,
+        chainConfig: opts?.chainConfig,
+        adminKey: opts?.adminKey
     })
-    const operatorContract = await deployOperatorContract({ chainConfig: opts.chainConfig ?? CHAIN_CONFIG[TEST_CHAIN], deployer: operatorWallet })
+    const operatorContract = await deployOperatorContract({ chainConfig: opts?.chainConfig ?? CHAIN_CONFIG[TEST_CHAIN], deployer: operatorWallet })
     const operatorConfig = {
         operatorContractAddress: toEthereumAddress(operatorContract.address),
         signer: operatorWallet,
-        provider: opts.provider,
+        provider: provider,
         theGraphUrl: THE_GRAPH_URL
     }
     return { operatorWallet, operatorContract, operatorConfig }

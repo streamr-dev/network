@@ -4,9 +4,7 @@ import { waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { AnnounceNodeToContractHelper } from '../../../../src/plugins/operator/AnnounceNodeToContractHelper'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
-import { getProvider, setupOperatorContract } from './contractUtils'
-
-const provider = getProvider()
+import { setupOperatorContract } from './contractUtils'
 
 describe(AnnounceNodeToContractHelper, () => {
     let operatorContract: Operator
@@ -15,7 +13,7 @@ describe(AnnounceNodeToContractHelper, () => {
 
     beforeEach(async () => {
         const nodeWallet = new Wallet(await fetchPrivateKeyWithGas())
-        ;({ operatorContract, operatorConfig } = await setupOperatorContract({ provider }))
+        ;({ operatorContract, operatorConfig } = await setupOperatorContract())
         await (await operatorContract.setNodeAddresses([nodeWallet.address])).wait() // TODO: use setupOperatorContract instead
         helper = new AnnounceNodeToContractHelper({
             ...operatorConfig,

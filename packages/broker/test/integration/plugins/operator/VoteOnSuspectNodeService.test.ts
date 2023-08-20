@@ -1,4 +1,3 @@
-import { Provider } from '@ethersproject/abstract-provider'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrEnvDeployer, TestToken } from '@streamr/network-contracts'
 import { waitForCondition } from '@streamr/utils'
@@ -15,7 +14,6 @@ const ADMIN_PRIV_KEY = CHAIN_CONFIG.dev2.adminPrivateKey
 const CHAIN_URL = CHAIN_CONFIG.dev2.rpcEndpoints[0].url
 
 describe('VoteOnSuspectNodeService', () => {
-    let provider: Provider
     let adminWallet: Wallet
     let token: TestToken
     let streamId: string
@@ -27,8 +25,7 @@ describe('VoteOnSuspectNodeService', () => {
         await streamrEnvDeployer.deployEvironment()
         const { contracts } = streamrEnvDeployer
         chainConfig = { contracts: streamrEnvDeployer.addresses } as any
-        provider = getProvider()
-        adminWallet = new Wallet(ADMIN_PRIV_KEY, provider)
+        adminWallet = new Wallet(ADMIN_PRIV_KEY, getProvider())
         token = contracts.DATA as unknown as TestToken
         const client = createClient(ADMIN_PRIV_KEY, { 
             contracts: { 
@@ -48,9 +45,9 @@ describe('VoteOnSuspectNodeService', () => {
     }, TIMEOUT)
     
     it('votes on suspected node when review requested', async () => {
-        const flagger = await setupOperatorContract({ provider, chainConfig, adminKey: ADMIN_PRIV_KEY })
-        const target = await setupOperatorContract({ provider, chainConfig, adminKey: ADMIN_PRIV_KEY })
-        const voter = await setupOperatorContract({ provider, chainConfig, adminKey: ADMIN_PRIV_KEY })
+        const flagger = await setupOperatorContract({ chainConfig, adminKey: ADMIN_PRIV_KEY })
+        const target = await setupOperatorContract({ chainConfig, adminKey: ADMIN_PRIV_KEY })
+        const voter = await setupOperatorContract({ chainConfig, adminKey: ADMIN_PRIV_KEY })
         const sponsor = await generateWalletWithGasAndTokens({ chainConfig, adminKey: ADMIN_PRIV_KEY })
 
         const sponsorship = await deploySponsorshipContract({ chainConfig, deployer: adminWallet, streamId: streamId })

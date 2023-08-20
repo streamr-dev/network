@@ -1,4 +1,3 @@
-import { Provider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
 import type { TestToken } from '@streamr/network-contracts'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
@@ -10,7 +9,6 @@ import {
     THE_GRAPH_URL,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
-    getProvider,
     getTokenContract,
     setupOperatorContract
 } from './contractUtils'
@@ -20,16 +18,12 @@ const logger = new Logger(module)
 jest.setTimeout(600 * 1000)
 
 describe('InspectRandomNodeHelper', () => {
-    let provider: Provider
     let token: TestToken
     let streamId1: string
     let streamId2: string
     let graphClient: TheGraphClient
 
     beforeAll(async () => {
-        provider = getProvider()
-        logger.debug('Connected to: ', await provider.getNetwork())
-
         token = getTokenContract()
 
         const client = createClient(await fetchPrivateKeyWithGas())
@@ -45,7 +39,7 @@ describe('InspectRandomNodeHelper', () => {
     })
 
     it('getSponsorshipsOfOperator, getOperatorsInSponsorship', async () => {
-        const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({ provider })
+        const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract()
         logger.debug('Deployed OperatorContract at: ' + operatorContract.address)
         const inspectRandomNodeHelper = new InspectRandomNodeHelper(operatorConfig)
 
@@ -76,9 +70,9 @@ describe('InspectRandomNodeHelper', () => {
     })
 
     it('works to flag through the inspectRandomNodeHelper', async () => {
-        const flagger = await setupOperatorContract({ provider })
+        const flagger = await setupOperatorContract()
         logger.trace('deployed flagger contract ' + flagger.operatorConfig.operatorContractAddress)
-        const target = await setupOperatorContract({ provider })
+        const target = await setupOperatorContract()
         logger.trace('deployed target contract ' + target.operatorConfig.operatorContractAddress)
 
         logger.trace('deploying sponsorship contract')

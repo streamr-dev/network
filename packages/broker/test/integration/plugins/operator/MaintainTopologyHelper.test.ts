@@ -1,5 +1,4 @@
 import { Contract } from '@ethersproject/contracts'
-import { Provider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
 import { Wallet } from '@ethersproject/wallet'
 import type { Operator, TestToken } from '@streamr/network-contracts'
@@ -8,22 +7,18 @@ import { Logger, wait, waitForCondition } from '@streamr/utils'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, getProvider, getTokenContract, setupOperatorContract } from './contractUtils'
+import { deploySponsorshipContract, getTokenContract, setupOperatorContract } from './contractUtils'
 
 const logger = new Logger(module)
 
 jest.setTimeout(60 * 1000)
 
 describe('MaintainTopologyHelper', () => {
-    let provider: Provider
     let token: TestToken
     let streamId1: string
     let streamId2: string
 
     beforeAll(async () => {
-        provider = getProvider()
-        logger.debug('Connected to: ', await provider.getNetwork())
-
         token = getTokenContract()
         const client = createClient(await fetchPrivateKeyWithGas())
         streamId1 = (await createTestStream(client, module)).id
@@ -41,7 +36,7 @@ describe('MaintainTopologyHelper', () => {
         let topologyHelper: MaintainTopologyHelper
 
         beforeAll(async () => {
-            ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({ provider }))
+            ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract())
         })
 
         afterEach(async () => {
@@ -132,7 +127,7 @@ describe('MaintainTopologyHelper', () => {
         let topologyHelper: MaintainTopologyHelper
 
         beforeAll(async () => {
-            ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({ provider }))
+            ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract())
         })
 
         afterEach(async () => {

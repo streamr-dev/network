@@ -1,13 +1,12 @@
-import { Provider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
 import { Wallet } from '@ethersproject/wallet'
 import type { Operator, TestToken } from '@streamr/network-contracts'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, waitForCondition } from '@streamr/utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, getProvider, getTokenContract, setupOperatorContract } from './contractUtils'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { deploySponsorshipContract, getTokenContract, setupOperatorContract } from './contractUtils'
 
 const logger = new Logger(module)
 
@@ -16,7 +15,6 @@ const STAKE_AMOUNT = 100
 
 // test is outdated, is completely rewritten and will be merged with PR #1629 
 describe.skip('MaintainOperatorValueService', () => {
-    let provider: Provider
     let operatorWallet: Wallet
     let operatorContract: Operator
     let token: TestToken
@@ -43,12 +41,9 @@ describe.skip('MaintainOperatorValueService', () => {
     })
 
     beforeEach(async () => {
-        provider = getProvider()
-        logger.debug('Connected to: ', await provider.getNetwork())
-
         token = getTokenContract()
 
-        ;({ operatorWallet, operatorContract } = await setupOperatorContract({ provider }))
+        ;({ operatorWallet, operatorContract } = await setupOperatorContract())
 
         await (
             await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther(`${STAKE_AMOUNT * 2}`), operatorWallet.address)
