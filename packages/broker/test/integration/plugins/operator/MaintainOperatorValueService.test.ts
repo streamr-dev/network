@@ -2,13 +2,11 @@ import { parseEther } from '@ethersproject/units'
 import { Wallet } from '@ethersproject/wallet'
 import type { Operator, TestToken } from '@streamr/network-contracts'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, waitForCondition } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
 import { deploySponsorshipContract, getTokenContract, setupOperatorContract } from './contractUtils'
-
-const logger = new Logger(module)
 
 const SPONSOR_AMOUNT = 250
 const STAKE_AMOUNT = 100
@@ -65,15 +63,11 @@ describe.skip('MaintainOperatorValueService', () => {
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
 
         const approxValuesBefore = (await operatorContract.getApproximatePoolValuesPerSponsorship()).approxValues
-        for (const approxValue of approxValuesBefore) {
-            logger.debug(`approxValue: ${approxValue.toString()}`)
-        }
 
         await waitForCondition(async () => {
             const diff = await getDiffBetweenApproxAndRealValues()
             const poolValue = await operatorContract.totalValueInSponsorshipsWei()
             const threshold = penaltyFraction.mul(poolValue).div(parseEther('1')).toBigInt()
-            logger.debug(`diff: ${diff}, threshold: ${threshold}`)
             return diff > threshold 
         }, 10000, 1000)
 
@@ -87,12 +81,8 @@ describe.skip('MaintainOperatorValueService', () => {
         const threshold = penaltyFraction.mul(poolValue).div(parseEther('1')).toBigInt()
 
         expect((await operatorContract.totalValueInSponsorshipsWei()).toBigInt()).toBeGreaterThan(totalValueInSponsorshipsBefore.toBigInt())
-        logger.debug(`at end diff: ${diff}, threshold: ${threshold}`)
         expect(diff).toBeLessThan(threshold)
         const approxValuesAfter = (await operatorContract.getApproximatePoolValuesPerSponsorship()).approxValues
-        for (const approxValue of approxValuesAfter) {
-            logger.debug(`approxValue: ${approxValue.toString()}`)
-        }
         // one of the values should have increased, but not both
         expect((approxValuesAfter[0].toBigInt() > approxValuesBefore[0].toBigInt()
             || approxValuesAfter[1].toBigInt() > approxValuesBefore[1].toBigInt())
