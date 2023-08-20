@@ -1,23 +1,27 @@
 import { Provider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
-import { Wallet } from '@ethersproject/wallet'
 import type { TestToken } from '@streamr/network-contracts'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import fetch from 'node-fetch'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { createClient, createTestStream } from '../../../utils'
-import { THE_GRAPH_URL, deploySponsorshipContract, getProvider, getTokenContract, setupOperatorContract } from './contractUtils'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import {
+    THE_GRAPH_URL,
+    deploySponsorshipContract,
+    generateWalletWithGasAndTokens,
+    getProvider,
+    getTokenContract,
+    setupOperatorContract
+} from './contractUtils'
 
 const logger = new Logger(module)
-const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
 
 jest.setTimeout(600 * 1000)
 
 describe('InspectRandomNodeHelper', () => {
     let provider: Provider
     let token: TestToken
-    let adminWallet: Wallet
     let streamId1: string
     let streamId2: string
     let graphClient: TheGraphClient
@@ -25,8 +29,6 @@ describe('InspectRandomNodeHelper', () => {
     beforeAll(async () => {
         provider = getProvider()
         logger.debug('Connected to: ', await provider.getNetwork())
-
-        adminWallet = new Wallet(STREAM_CREATION_KEY, provider)
 
         token = getTokenContract()
 
@@ -80,7 +82,10 @@ describe('InspectRandomNodeHelper', () => {
         logger.trace('deployed target contract ' + target.operatorConfig.operatorContractAddress)
 
         logger.trace('deploying sponsorship contract')
-        const sponsorship = await deploySponsorshipContract({ deployer: adminWallet, streamId: streamId1 })
+        const sponsorship = await deploySponsorshipContract({
+            deployer: await generateWalletWithGasAndTokens(provider),
+            streamId: streamId1
+        })
         logger.trace('sponsoring sponsorship contract')
         await (await token.connect(flagger.operatorWallet).approve(sponsorship.address, parseEther('500'))).wait()
         await (await sponsorship.connect(flagger.operatorWallet).sponsor(parseEther('500'))).wait()
@@ -117,7 +122,7 @@ describe('InspectRandomNodeHelper', () => {
                         flagsOpened {
                             id
                         }
-                      }
+                    }
                 }
                 `
             })
