@@ -60,7 +60,7 @@ describe('MaintainTopologyService', () => {
 
     it('happy path', async () => {
         const provider = getProvider()
-        const operatorWallet = await generateWalletWithGasAndTokens(provider)
+        const operatorWallet = await generateWalletWithGasAndTokens()
         const [stream1, stream2] = await setUpStreams()
         const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })

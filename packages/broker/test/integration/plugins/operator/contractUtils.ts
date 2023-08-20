@@ -132,7 +132,7 @@ export function getTokenContract(): TestToken {
 }
 
 export async function generateWalletWithGasAndTokens(
-    provider: Provider,
+    provider: Provider = getProvider(),
     config?: { contracts: { DATA: string } },
     adminKey?: string
 ): Promise<Wallet> {

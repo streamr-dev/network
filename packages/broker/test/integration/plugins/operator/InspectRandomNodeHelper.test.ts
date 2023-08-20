@@ -83,7 +83,7 @@ describe('InspectRandomNodeHelper', () => {
 
         logger.trace('deploying sponsorship contract')
         const sponsorship = await deploySponsorshipContract({
-            deployer: await generateWalletWithGasAndTokens(provider),
+            deployer: await generateWalletWithGasAndTokens(),
             streamId: streamId1
         })
         logger.trace('sponsoring sponsorship contract')

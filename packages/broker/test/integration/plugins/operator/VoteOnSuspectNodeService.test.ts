@@ -51,7 +51,7 @@ describe('VoteOnSuspectNodeService', () => {
         const flagger = await setupOperatorContract({ provider, chainConfig, adminKey: ADMIN_PRIV_KEY })
         const target = await setupOperatorContract({ provider, chainConfig, adminKey: ADMIN_PRIV_KEY })
         const voter = await setupOperatorContract({ provider, chainConfig, adminKey: ADMIN_PRIV_KEY })
-        const sponsor = await generateWalletWithGasAndTokens(provider, chainConfig, ADMIN_PRIV_KEY)
+        const sponsor = await generateWalletWithGasAndTokens(undefined, chainConfig, ADMIN_PRIV_KEY)
 
         const sponsorship = await deploySponsorshipContract({ chainConfig, deployer: adminWallet, streamId: streamId })
         await (await token.connect(sponsor).approve(sponsorship.address, parseEther('500'))).wait()
