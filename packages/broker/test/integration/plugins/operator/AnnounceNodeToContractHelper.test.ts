@@ -7,6 +7,7 @@ import { OperatorServiceConfig } from '../../../../src/plugins/operator/Operator
 import { setupOperatorContract } from './contractUtils'
 
 describe(AnnounceNodeToContractHelper, () => {
+
     let operatorContract: Operator
     let operatorConfig: OperatorServiceConfig
     let helper: AnnounceNodeToContractHelper

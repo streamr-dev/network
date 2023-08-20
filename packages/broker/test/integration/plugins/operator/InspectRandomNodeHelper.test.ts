@@ -18,6 +18,7 @@ const logger = new Logger(module)
 jest.setTimeout(600 * 1000)
 
 describe('InspectRandomNodeHelper', () => {
+
     let token: TestToken
     let streamId1: string
     let streamId2: string

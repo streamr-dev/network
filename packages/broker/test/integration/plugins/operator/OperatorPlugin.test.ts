@@ -4,6 +4,7 @@ import { Broker } from '../../../../src/broker'
 import { startBroker } from '../../../utils'
 
 describe('OperatorPlugin', () => {
+
     let brokerWallet: Wallet
     let broker: Broker
 

@@ -15,6 +15,7 @@ const STAKE_AMOUNT = 100
 
 // test is outdated, is completely rewritten and will be merged with PR #1629 
 describe.skip('MaintainOperatorValueService', () => {
+
     let operatorWallet: Wallet
     let operatorContract: Operator
     let token: TestToken

@@ -14,6 +14,7 @@ const ADMIN_PRIV_KEY = CHAIN_CONFIG.dev2.adminPrivateKey
 const CHAIN_URL = CHAIN_CONFIG.dev2.rpcEndpoints[0].url
 
 describe('VoteOnSuspectNodeService', () => {
+
     let adminWallet: Wallet
     let token: TestToken
     let streamId: string

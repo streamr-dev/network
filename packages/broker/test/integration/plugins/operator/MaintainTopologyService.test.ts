@@ -47,6 +47,7 @@ function doesNotContainAny(arr: StreamPartID[], notToInclude: StreamPartID[]): b
 }
 
 describe('MaintainTopologyService', () => {
+
     let client: StreamrClient
     let operatorFleetState: OperatorFleetState
 

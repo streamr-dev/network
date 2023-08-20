@@ -14,6 +14,7 @@ const logger = new Logger(module)
 jest.setTimeout(60 * 1000)
 
 describe('MaintainTopologyHelper', () => {
+
     let token: TestToken
     let streamId1: string
     let streamId2: string
