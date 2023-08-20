@@ -25,7 +25,11 @@ export interface SetupOperatorContractOpts {
 export async function setupOperatorContract(
     opts: SetupOperatorContractOpts
 ): Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig }> {
-    const operatorWallet = await generateWalletWithGasAndTokens(opts.provider, opts.chainConfig, opts.adminKey)
+    const operatorWallet = await generateWalletWithGasAndTokens({
+        provider: opts.provider,
+        chainConfig: opts.chainConfig,
+        adminKey: opts.adminKey
+    })
     const operatorContract = await deployOperatorContract({ chainConfig: opts.chainConfig ?? CHAIN_CONFIG[TEST_CHAIN], deployer: operatorWallet })
     const operatorConfig = {
         operatorContractAddress: toEthereumAddress(operatorContract.address),
@@ -50,9 +54,7 @@ interface DeployOperatorContractOpts {
  * @param opts.deployer should be the operator's Wallet
  * @returns Operator
  */
-export async function deployOperatorContract(
-    opts: DeployOperatorContractOpts
-): Promise<Operator> {
+export async function deployOperatorContract(opts: DeployOperatorContractOpts): Promise<Operator> {
     const abi = operatorFactoryABI
     const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
     const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactory
@@ -91,9 +93,7 @@ export interface DeploySponsorshipContractOpts {
     minOperatorCount?: number
 }
 
-export async function deploySponsorshipContract(
-    opts: DeploySponsorshipContractOpts
-): Promise<Sponsorship> {
+export async function deploySponsorshipContract(opts: DeploySponsorshipContractOpts): Promise<Sponsorship> {
     const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
     const sponsorshipFactory = new Contract(
         chainConfig.contracts.SponsorshipFactory, 
@@ -131,15 +131,18 @@ export function getTokenContract(): TestToken {
     return new Contract(CHAIN_CONFIG[TEST_CHAIN].contracts.DATA, tokenABI) as unknown as TestToken
 }
 
-export async function generateWalletWithGasAndTokens(
-    provider: Provider = getProvider(),
-    config?: { contracts: { DATA: string } },
+interface GenerateWalletWithGasAndTokensOpts {
+    provider?: Provider
+    chainConfig?: { contracts: { DATA: string } }
     adminKey?: string
-): Promise<Wallet> {
+}
+
+export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGasAndTokensOpts): Promise<Wallet> {
+    const provider = opts?.provider ?? getProvider()
     const newWallet = new Wallet(fastPrivateKey())
-    const adminWallet = new Wallet(adminKey ?? CHAIN_CONFIG[TEST_CHAIN].adminPrivateKey).connect(provider)
-    const token = (config !== undefined) 
-        ? new Contract(config.contracts.DATA!, tokenABI, adminWallet) as unknown as TestToken
+    const adminWallet = new Wallet(opts?.adminKey ?? CHAIN_CONFIG[TEST_CHAIN].adminPrivateKey).connect(provider)
+    const token = (opts?.chainConfig !== undefined) 
+        ? new Contract(opts.chainConfig.contracts.DATA!, tokenABI, adminWallet) as unknown as TestToken
         : getTokenContract().connect(adminWallet)
     await (await token.mint(newWallet.address, parseEther('1000000'), {
         nonce: await adminWallet.getTransactionCount()
