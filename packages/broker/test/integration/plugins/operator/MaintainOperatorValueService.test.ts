@@ -19,7 +19,6 @@ describe.skip('MaintainOperatorValueService', () => {
     let token: TestToken
     let streamId1: string
     let streamId2: string
-
     let operatorConfig: OperatorServiceConfig
 
     const getDiffBetweenApproxAndRealValues = async (): Promise<bigint> => {
