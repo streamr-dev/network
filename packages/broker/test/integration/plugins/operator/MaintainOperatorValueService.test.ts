@@ -6,7 +6,7 @@ import { waitForCondition } from '@streamr/utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, getTokenContract, setupOperatorContract } from './contractUtils'
+import { deploySponsorshipContract, getTokenContract, setupOperatorContract, transferTokens } from './contractUtils'
 
 const SPONSOR_AMOUNT = 250
 const STAKE_AMOUNT = 100
@@ -43,12 +43,10 @@ describe.skip('MaintainOperatorValueService', () => {
 
         ;({ operatorWallet, operatorContract } = await setupOperatorContract())
 
-        await (
-            await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther(`${STAKE_AMOUNT * 2}`), operatorWallet.address)
-        ).wait()
+        await transferTokens(operatorWallet, operatorContract.address, STAKE_AMOUNT * 2, operatorWallet.address)
         for (const streamId of [streamId1, streamId2]) {
             const sponsorship = await deploySponsorshipContract({ deployer: operatorWallet, streamId })
-            await (await token.connect(operatorWallet).transferAndCall(sponsorship.address, parseEther(`${SPONSOR_AMOUNT}`), '0x')).wait()
+            await transferTokens(operatorWallet, sponsorship.address, SPONSOR_AMOUNT, '0x')
             await (await operatorContract.stake(sponsorship.address, parseEther(`${STAKE_AMOUNT}`))).wait()
         }
     }, 60 * 1000)

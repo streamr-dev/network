@@ -154,3 +154,8 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
     })).wait()
     return newWallet.connect(provider)
 }
+
+export const transferTokens = async (from: Wallet, to: string, amount: number, data: string, token?: TestToken): Promise<void> => {
+    const tx = await ((token ?? getTokenContract()).connect(from).transferAndCall(to, parseEther(amount.toString()), data))
+    await tx.wait()
+}

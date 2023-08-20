@@ -10,7 +10,8 @@ import {
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
     getTokenContract,
-    setupOperatorContract
+    setupOperatorContract,
+    transferTokens
 } from './contractUtils'
 
 jest.setTimeout(600 * 1000)
@@ -44,7 +45,7 @@ describe('InspectRandomNodeHelper', () => {
         const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId2 })
 
-        await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
+        await transferTokens(operatorWallet, operatorContract.address, 200, operatorWallet.address)
 
         await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
         await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
@@ -73,10 +74,8 @@ describe('InspectRandomNodeHelper', () => {
         await (await sponsorship.connect(flagger.operatorWallet).sponsor(parseEther('500'))).wait()
 
         // each operator delegates to its operactor contract
-        await (await token.connect(flagger.operatorWallet).transferAndCall(flagger.operatorContract.address,
-            parseEther('200'), flagger.operatorWallet.address)).wait()
-        await (await token.connect(target.operatorWallet).transferAndCall(target.operatorContract.address,
-            parseEther('300'), target.operatorWallet.address)).wait()
+        await transferTokens(flagger.operatorWallet, flagger.operatorContract.address, 200, flagger.operatorWallet.address)
+        await transferTokens(target.operatorWallet, target.operatorContract.address, 300, target.operatorWallet.address)
 
         await wait(3000) // sometimes these stake fail, possibly when they end up in the same block
         await (await flagger.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()

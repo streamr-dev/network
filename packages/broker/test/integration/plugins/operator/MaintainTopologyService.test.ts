@@ -11,7 +11,8 @@ import { createClient, createTestStream } from '../../../utils'
 import {
     THE_GRAPH_URL, deployOperatorContract, deploySponsorshipContract, generateWalletWithGasAndTokens,
     getProvider,
-    getTokenContract
+    getTokenContract,
+    transferTokens
 } from './contractUtils'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
@@ -65,8 +66,7 @@ describe('MaintainTopologyService', () => {
         const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
         const operatorContract = await deployOperatorContract({ deployer: operatorWallet })
-        const token = getTokenContract()
-        await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
+        await transferTokens(operatorWallet, operatorContract.address, 200, operatorWallet.address)
         await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
 
         const serviceHelperConfig = {

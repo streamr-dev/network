@@ -7,7 +7,7 @@ import { mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
 import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, generateWalletWithGasAndTokens, getProvider, setupOperatorContract } from './contractUtils'
+import { deploySponsorshipContract, generateWalletWithGasAndTokens, getProvider, setupOperatorContract, transferTokens } from './contractUtils'
 
 const TIMEOUT = 1000 * 60 * 10
 const ADMIN_PRIV_KEY = CHAIN_CONFIG.dev2.adminPrivateKey
@@ -28,8 +28,8 @@ describe('VoteOnSuspectNodeService', () => {
         chainConfig = { contracts: streamrEnvDeployer.addresses } as any
         adminWallet = new Wallet(ADMIN_PRIV_KEY, getProvider())
         token = contracts.DATA as unknown as TestToken
-        const client = createClient(ADMIN_PRIV_KEY, { 
-            contracts: { 
+        const client = createClient(ADMIN_PRIV_KEY, {
+            contracts: {
                 streamRegistryChainAddress: chainConfig.contracts.StreamRegistry,
                 streamRegistryChainRPCs: {
                     chainId: 0,  // some chain id
@@ -44,7 +44,7 @@ describe('VoteOnSuspectNodeService', () => {
         await client.destroy()
 
     }, TIMEOUT)
-    
+
     it('votes on suspected node when review requested', async () => {
         const flagger = await setupOperatorContract({ chainConfig, adminKey: ADMIN_PRIV_KEY })
         const target = await setupOperatorContract({ chainConfig, adminKey: ADMIN_PRIV_KEY })
@@ -56,11 +56,13 @@ describe('VoteOnSuspectNodeService', () => {
         await (await sponsorship.connect(sponsor).sponsor(parseEther('500'))).wait()
 
         for (const actor of [flagger, target, voter]) {
-            await (await token.connect(flagger.operatorWallet).transferAndCall(
+            await transferTokens(
+                flagger.operatorWallet,
                 actor.operatorContract.address,
-                parseEther('200'), 
-                actor.operatorWallet.address
-            )).wait()
+                200,
+                actor.operatorWallet.address,
+                token
+            )
             await (await actor.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
         }
 
