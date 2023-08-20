@@ -11,7 +11,6 @@ import { createClient, createTestStream } from '../../../utils'
 import {
     THE_GRAPH_URL, deployOperatorContract, deploySponsorshipContract, generateWalletWithGasAndTokens,
     getProvider,
-    getTokenContract,
     transferTokens
 } from './contractUtils'
 

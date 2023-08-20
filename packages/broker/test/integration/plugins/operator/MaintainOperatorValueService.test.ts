@@ -1,12 +1,12 @@
 import { parseEther } from '@ethersproject/units'
 import { Wallet } from '@ethersproject/wallet'
-import type { Operator, TestToken } from '@streamr/network-contracts'
+import type { Operator } from '@streamr/network-contracts'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, getTokenContract, setupOperatorContract, transferTokens } from './contractUtils'
+import { deploySponsorshipContract, setupOperatorContract, transferTokens } from './contractUtils'
 
 const SPONSOR_AMOUNT = 250
 const STAKE_AMOUNT = 100
@@ -16,7 +16,6 @@ describe.skip('MaintainOperatorValueService', () => {
 
     let operatorWallet: Wallet
     let operatorContract: Operator
-    let token: TestToken
     let streamId1: string
     let streamId2: string
     let operatorConfig: OperatorServiceConfig
@@ -39,9 +38,7 @@ describe.skip('MaintainOperatorValueService', () => {
     })
 
     beforeEach(async () => {
-        token = getTokenContract()
-
-        ;({ operatorWallet, operatorContract } = await setupOperatorContract())
+        ({ operatorWallet, operatorContract } = await setupOperatorContract())
 
         await transferTokens(operatorWallet, operatorContract.address, STAKE_AMOUNT * 2, operatorWallet.address)
         for (const streamId of [streamId1, streamId2]) {

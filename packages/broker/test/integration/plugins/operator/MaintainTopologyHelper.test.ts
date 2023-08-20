@@ -1,24 +1,22 @@
 import { Contract } from '@ethersproject/contracts'
 import { parseEther } from '@ethersproject/units'
 import { Wallet } from '@ethersproject/wallet'
-import type { Operator, TestToken } from '@streamr/network-contracts'
+import type { Operator } from '@streamr/network-contracts'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, getTokenContract, setupOperatorContract, transferTokens } from './contractUtils'
+import { deploySponsorshipContract, setupOperatorContract, transferTokens } from './contractUtils'
 
 jest.setTimeout(60 * 1000)
 
 describe('MaintainTopologyHelper', () => {
 
-    let token: TestToken
     let streamId1: string
     let streamId2: string
 
     beforeAll(async () => {
-        token = getTokenContract()
         const client = createClient(await fetchPrivateKeyWithGas())
         streamId1 = (await createTestStream(client, module)).id
         streamId2 = (await createTestStream(client, module)).id
