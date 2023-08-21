@@ -68,8 +68,8 @@ describe('OperatorValueBreachWatcher', () => {
         // check it's a valid operator, deployed by the OperatorFactory
         const adminWallet = new Wallet(STREAM_CREATION_KEY, provider)
         const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, operatorFactoryABI, adminWallet) as unknown as OperatorFactory
-        const isDeployedByFactory = await operatorFactory.deploymentTimestamp(randomOperatorAddress)
-        expect(isDeployedByFactory).not.toEqual(0)
+        const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress)).gt(0)
+        expect(isDeployedByFactory).toBeTrue()
         // check it's not my operator
         expect(randomOperatorAddress).not.toEqual(operatorContract.address)
     })
