@@ -32,6 +32,9 @@ export async function setupOperatorContract(
         adminKey: opts?.adminKey
     })
     const operatorContract = await deployOperatorContract({ chainConfig: opts?.chainConfig ?? CHAIN_CONFIG[TEST_CHAIN], deployer: operatorWallet })
+    if (opts?.nodeAddresses !== undefined) {
+        await (await operatorContract.setNodeAddresses(opts?.nodeAddresses)).wait()
+    }
     const operatorConfig = {
         operatorContractAddress: toEthereumAddress(operatorContract.address),
         signer: operatorWallet,
