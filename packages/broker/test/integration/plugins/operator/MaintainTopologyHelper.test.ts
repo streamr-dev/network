@@ -7,7 +7,7 @@ import { wait, waitForCondition } from '@streamr/utils'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, setupOperatorContract, transferTokens } from './contractUtils'
+import { delegate, deploySponsorshipContract, setupOperatorContract } from './contractUtils'
 
 jest.setTimeout(60 * 1000)
 
@@ -52,8 +52,7 @@ describe('MaintainTopologyHelper', () => {
             sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
             sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId2 })
 
-            // delegating
-            await transferTokens(operatorWallet, operatorContract.address, 200, operatorWallet.address)
+            await delegate(operatorWallet, operatorContract.address, 200)
 
             await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
             await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
@@ -128,7 +127,7 @@ describe('MaintainTopologyHelper', () => {
             sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
             sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
 
-            await transferTokens(operatorWallet, operatorContract.address, 200, operatorWallet.address)
+            await delegate(operatorWallet, operatorContract.address, 200)
 
             await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
             await waitForCondition(() => receivedAddStreams === 1, 10000, 1000)

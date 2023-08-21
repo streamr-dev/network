@@ -6,9 +6,8 @@ import { waitForCondition } from '@streamr/utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { deploySponsorshipContract, setupOperatorContract, transferTokens } from './contractUtils'
+import { delegate, deploySponsorshipContract, setupOperatorContract, stake } from './contractUtils'
 
-const SPONSOR_AMOUNT = 250
 const STAKE_AMOUNT = 100
 
 // test is outdated, is completely rewritten and will be merged with PR #1629 
@@ -40,11 +39,10 @@ describe.skip('MaintainOperatorValueService', () => {
     beforeEach(async () => {
         ({ operatorWallet, operatorContract } = await setupOperatorContract())
 
-        await transferTokens(operatorWallet, operatorContract.address, STAKE_AMOUNT * 2, operatorWallet.address)
+        await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT * 2)
         for (const streamId of [streamId1, streamId2]) {
             const sponsorship = await deploySponsorshipContract({ deployer: operatorWallet, streamId })
-            await transferTokens(operatorWallet, sponsorship.address, SPONSOR_AMOUNT, '0x')
-            await (await operatorContract.stake(sponsorship.address, parseEther(`${STAKE_AMOUNT}`))).wait()
+            await stake(operatorWallet, sponsorship.address, STAKE_AMOUNT)
         }
     }, 60 * 1000)
 
