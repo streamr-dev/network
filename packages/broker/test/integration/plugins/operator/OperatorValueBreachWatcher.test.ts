@@ -1,19 +1,17 @@
-import { Wallet } from 'ethers'
 import { Contract } from '@ethersproject/contracts'
 import { Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
 
-import { tokenABI, TestToken, operatorFactoryABI, OperatorFactory } from '@streamr/network-contracts'
+import { tokenABI, TestToken } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { config } from '@streamr/config'
 
-import { deployOperatorContract } from './deployOperatorContract'
 import { deploySponsorship } from './deploySponsorshipContract'
 import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
-import { generateWalletWithGasAndTokens } from './smartContractUtils'
 
 import { OperatorValueBreachWatcher } from '../../../../src/plugins/operator/OperatorValueBreachWatcher'
 import { STREAMR_DOCKER_DEV_HOST, createClient, createTestStream } from '../../../utils'
+import { setupOperatorContract, SetupOperatorOpts } from './setupOperatorContract'
 
 const chainConfig = config.dev2
 const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8800/subgraphs/name/streamr-dev/network-subgraphs`
@@ -26,22 +24,7 @@ describe('OperatorValueBreachWatcher', () => {
     let provider: Provider
     let token: TestToken
     let streamId: string
-
-    const deployNewOperator = async () => {
-        const operatorWallet = await generateWalletWithGasAndTokens(provider, chainConfig)
-        logger.debug('Deploying operator contract')
-        const operatorContract = await deployOperatorContract(chainConfig, operatorWallet, { operatorSharePercent: 10 })
-        logger.debug(`Operator deployed at ${operatorContract.address}`)
-        const operatorConfig = {
-            operatorContractAddress: toEthereumAddress(operatorContract.address),
-            provider,
-            theGraphUrl,
-            signer: operatorWallet,
-            maxSponsorshipsInWithdraw: 20,
-            minSponsorshipEarningsInWithdraw: 1 // full tokens
-        }
-        return { operatorWallet, operatorContract, operatorConfig }
-    }
+    let deployConfig: SetupOperatorOpts
 
     beforeAll(async () => {
         provider = new JsonRpcProvider(`${chainConfig.rpcEndpoints[0].url}`)
@@ -53,30 +36,19 @@ describe('OperatorValueBreachWatcher', () => {
         await client.destroy()
 
         token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
+        deployConfig = {
+            provider,
+            chainConfig,
+            theGraphUrl,
+            operatorSettings: {
+                operatorSharePercent: 10
+            }
+        }
     }, 60 * 1000)
 
-    it('can find a random operator, excluding himself', async () => {
-        const { operatorContract, operatorConfig } = await deployNewOperator()
-        // deploy another operator to make sure there are at least 2 operators
-        await deployNewOperator()
-
-        const operatorValueBreachWatcher = new OperatorValueBreachWatcher(operatorConfig)
-        const randomOperatorAddress = await operatorValueBreachWatcher.helper.getRandomOperator()
-        if (randomOperatorAddress === undefined) {
-            throw new Error('No random operator found')
-        }
-        // check it's a valid operator, deployed by the OperatorFactory
-        const adminWallet = new Wallet(STREAM_CREATION_KEY, provider)
-        const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, operatorFactoryABI, adminWallet) as unknown as OperatorFactory
-        const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress)).gt(0)
-        expect(isDeployedByFactory).toBeTrue()
-        // check it's not my operator
-        expect(randomOperatorAddress).not.toEqual(operatorContract.address)
-    })
-
     it('withdraws the other Operators earnings when they are above the penalty limit', async () => {
-        const { operatorConfig: watcherConfig } = await deployNewOperator()
-        const { operatorWallet, operatorContract } = await deployNewOperator()
+        const { operatorConfig: watcherConfig } = await setupOperatorContract(deployConfig)
+        const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         
         const sponsorship1 = await deploySponsorship(chainConfig, operatorWallet, { streamId, earningsPerSecond: parseEther('1') })
         await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther('250'), '0x')).wait()

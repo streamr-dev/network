@@ -11,7 +11,20 @@ export interface SetupOperatorOpts {
     nodeAddresses?: EthereumAddress[]
     provider: Provider
     // eslint-disable-next-line max-len
-    chainConfig: { contracts: { DATA: string, OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
+    chainConfig: {
+        contracts: {
+            DATA: string
+            OperatorFactory: string
+            OperatorDefaultDelegationPolicy: string
+            OperatorDefaultPoolYieldPolicy: string
+            OperatorDefaultUndelegationPolicy: string
+        }
+    }
+    operatorSettings?: {
+        minOperatorStakePercent?: number
+        operatorSharePercent?: number
+        operatorMetadata?: string
+    }
     theGraphUrl: string
     adminKey?: string
 }
@@ -21,7 +34,7 @@ export async function setupOperatorContract(
 ): Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig }> {
     const operatorWallet = await generateWalletWithGasAndTokens(opts.provider, opts.chainConfig, opts.adminKey)
 
-    const operatorContract = await deployOperatorContract(opts.chainConfig, operatorWallet)
+    const operatorContract = await deployOperatorContract(opts.chainConfig, operatorWallet, opts.operatorSettings)
     const operatorConfig = {
         operatorContractAddress: toEthereumAddress(operatorContract.address),
         signer: operatorWallet,
