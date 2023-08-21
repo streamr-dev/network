@@ -59,7 +59,7 @@ describe('InspectRandomNodeHelper', () => {
     })
 
     it('works to flag through the inspectRandomNodeHelper', async () => {
-        const flagger = await setupOperatorContract({ nodeCount: 1})
+        const flagger = await setupOperatorContract({ nodeCount: 1 })
         const target = await setupOperatorContract()
 
         const sponsorship = await deploySponsorshipContract({ streamId: streamId1, deployer: await generateWalletWithGasAndTokens() })

@@ -33,9 +33,9 @@ export async function setupOperatorContract(
         adminKey: opts?.adminKey
     })
     const operatorContract = await deployOperatorContract({ chainConfig: opts?.chainConfig ?? CHAIN_CONFIG[TEST_CHAIN], deployer: operatorWallet })
-    let nodeWallets: Wallet[] = []
+    const nodeWallets: Wallet[] = []
     if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
-        for (const i of range(opts.nodeCount)) {
+        for (const _ of range(opts.nodeCount)) {
             nodeWallets.push(await generateWalletWithGasAndTokens({
                 provider: opts?.provider,
                 chainConfig: opts?.chainConfig,
