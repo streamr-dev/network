@@ -3,17 +3,15 @@ import { JsonRpcProvider, Provider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
 
 import { TestToken, tokenABI } from '@streamr/network-contracts'
-import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Logger, waitForCondition } from '@streamr/utils'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
-import { deployOperatorContract } from './deployOperatorContract'
 import { deploySponsorship } from './deploySponsorshipContract'
 import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
-import { generateWalletWithGasAndTokens } from './smartContractUtils'
 
 import { STREAMR_DOCKER_DEV_HOST, createClient, createTestStream } from '../../../utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
-import { DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW, DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW } from '../../../../src/plugins/operator/OperatorPlugin'
+import { setupOperatorContract } from './setupOperatorContract'
 
 const chainConfig = CHAIN_CONFIG.dev2
 
@@ -26,22 +24,6 @@ describe('MaintainOperatorValueService', () => {
     let provider: Provider
     let token: TestToken
     let streamId: string
-
-    const deployNewOperator = async () => {
-        const operatorWallet = await generateWalletWithGasAndTokens(provider, chainConfig)
-        logger.debug('Deploying operator contract')
-        const operatorContract = await deployOperatorContract(chainConfig, operatorWallet, { operatorSharePercent: 10 })
-        logger.debug(`Operator deployed at ${operatorContract.address}`)
-        const operatorConfig = {
-            operatorContractAddress: toEthereumAddress(operatorContract.address),
-            provider,
-            theGraphUrl,
-            signer: operatorWallet,
-            maxSponsorshipsInWithdraw: DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW,
-            minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW // full tokens
-        }
-        return { operatorWallet, operatorContract, operatorConfig }
-    }
 
     beforeAll(async () => {
         provider = new JsonRpcProvider(`${chainConfig.rpcEndpoints[0].url}`)
@@ -56,7 +38,14 @@ describe('MaintainOperatorValueService', () => {
     }, 60 * 1000)
 
     it('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
-        const { operatorWallet, operatorContract, operatorConfig } = await deployNewOperator()
+        const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({
+            provider,
+            chainConfig,
+            theGraphUrl,
+            operatorSettings: {
+                operatorSharePercent: 10
+            }
+        })
 
         const sponsorship1 = await deploySponsorship(chainConfig, operatorWallet, { streamId, earningsPerSecond: parseEther('1') })
         await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther('250'), '0x')).wait()
@@ -87,4 +76,3 @@ describe('MaintainOperatorValueService', () => {
         await service.stop()
     }, 60 * 1000)
 })
-
