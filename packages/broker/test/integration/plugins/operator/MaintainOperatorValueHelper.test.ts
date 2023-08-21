@@ -15,7 +15,7 @@ const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8800/subgraphs/name/strea
 
 const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
 
-describe('OperatorValueBreachWatcher', () => {
+describe('MaintainOperatorValueHelper', () => {
     let provider: Provider
     let deployConfig: SetupOperatorOpts
 
