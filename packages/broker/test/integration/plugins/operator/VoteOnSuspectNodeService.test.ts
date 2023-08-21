@@ -18,11 +18,10 @@ describe('VoteOnSuspectNodeService', () => {
     let adminWallet: Wallet
     let token: TestToken
     let streamId: string
-    let streamrEnvDeployer: StreamrEnvDeployer
     let chainConfig: any
 
     beforeAll(async () => {
-        streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, CHAIN_URL)
+        const streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, CHAIN_URL)
         await streamrEnvDeployer.deployEvironment()
         const { contracts } = streamrEnvDeployer
         chainConfig = { contracts: streamrEnvDeployer.addresses } as any
