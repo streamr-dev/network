@@ -1,14 +1,15 @@
 import { Wallet } from 'ethers'
 import { Contract } from '@ethersproject/contracts'
 import { Provider, JsonRpcProvider } from '@ethersproject/providers'
-import { parseEther, formatEther } from '@ethersproject/units'
+import { parseEther } from '@ethersproject/units'
 
-import { tokenABI, TestToken, Operator, operatorFactoryABI, OperatorFactory } from '@streamr/network-contracts'
+import { tokenABI, TestToken, operatorFactoryABI, OperatorFactory } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { config } from '@streamr/config'
 
 import { deployOperatorContract } from './deployOperatorContract'
 import { deploySponsorship } from './deploySponsorshipContract'
+import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
 import { generateWalletWithGasAndTokens } from './smartContractUtils'
 
 import { OperatorValueBreachWatcher } from '../../../../src/plugins/operator/OperatorValueBreachWatcher'
@@ -20,16 +21,6 @@ const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8800/subgraphs/name/strea
 const logger = new Logger(module)
 
 const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
-
-async function getTotalUnwithdrawnEarnings(operatorContract: Operator): Promise<bigint> {
-    const { earnings } = await operatorContract.getEarningsFromSponsorships()
-    let unwithdrawnEarnings = BigInt(0)
-    for (const e of earnings) {
-        unwithdrawnEarnings += e.toBigInt()
-    }
-    logger.debug(`Total unwithdrawn earnings: ${formatEther(unwithdrawnEarnings.toString())} (t = ${Date.now()})`)
-    return unwithdrawnEarnings
-}
 
 describe('OperatorValueBreachWatcher', () => {
     let provider: Provider
