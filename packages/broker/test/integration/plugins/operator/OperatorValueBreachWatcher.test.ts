@@ -15,7 +15,7 @@ import { generateWalletWithGasAndTokens } from './smartContractUtils'
 import { OperatorValueBreachWatcher } from '../../../../src/plugins/operator/OperatorValueBreachWatcher'
 import { STREAMR_DOCKER_DEV_HOST, createClient, createTestStream } from '../../../utils'
 
-const fastChainConfig = config.dev2
+const chainConfig = config.dev2
 const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
@@ -28,9 +28,9 @@ describe('OperatorValueBreachWatcher', () => {
     let streamId: string
 
     const deployNewOperator = async () => {
-        const operatorWallet = await generateWalletWithGasAndTokens(provider, fastChainConfig)
+        const operatorWallet = await generateWalletWithGasAndTokens(provider, chainConfig)
         logger.debug('Deploying operator contract')
-        const operatorContract = await deployOperatorContract(fastChainConfig, operatorWallet, { operatorSharePercent: 10 })
+        const operatorContract = await deployOperatorContract(chainConfig, operatorWallet, { operatorSharePercent: 10 })
         logger.debug(`Operator deployed at ${operatorContract.address}`)
         const operatorConfig = {
             operatorContractAddress: toEthereumAddress(operatorContract.address),
@@ -44,7 +44,7 @@ describe('OperatorValueBreachWatcher', () => {
     }
 
     beforeAll(async () => {
-        provider = new JsonRpcProvider(`http://${STREAMR_DOCKER_DEV_HOST}:8547`)
+        provider = new JsonRpcProvider(`${chainConfig.rpcEndpoints[0].url}`)
         logger.debug('Connected to: ', await provider.getNetwork())
 
         logger.debug('Creating stream for the test')
@@ -52,7 +52,7 @@ describe('OperatorValueBreachWatcher', () => {
         streamId = (await createTestStream(client, module)).id
         await client.destroy()
 
-        token = new Contract(fastChainConfig.contracts.DATA, tokenABI) as unknown as TestToken
+        token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
     }, 60 * 1000)
 
     it('can find a random operator, excluding himself', async () => {
@@ -67,7 +67,7 @@ describe('OperatorValueBreachWatcher', () => {
         }
         // check it's a valid operator, deployed by the OperatorFactory
         const adminWallet = new Wallet(STREAM_CREATION_KEY, provider)
-        const operatorFactory = new Contract(fastChainConfig.contracts.OperatorFactory, operatorFactoryABI, adminWallet) as unknown as OperatorFactory
+        const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, operatorFactoryABI, adminWallet) as unknown as OperatorFactory
         const isDeployedByFactory = await operatorFactory.deploymentTimestamp(randomOperatorAddress)
         expect(isDeployedByFactory).not.toEqual(0)
         // check it's not my operator
@@ -78,12 +78,12 @@ describe('OperatorValueBreachWatcher', () => {
         const { operatorConfig: watcherConfig } = await deployNewOperator()
         const { operatorWallet, operatorContract } = await deployNewOperator()
         
-        const sponsorship1 = await deploySponsorship(fastChainConfig, operatorWallet, { streamId, earningsPerSecond: parseEther('1') })
+        const sponsorship1 = await deploySponsorship(chainConfig, operatorWallet, { streamId, earningsPerSecond: parseEther('1') })
         await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther('250'), '0x')).wait()
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
         await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
 
-        const sponsorship2 = await deploySponsorship(fastChainConfig, operatorWallet, { streamId, earningsPerSecond: parseEther('2') })
+        const sponsorship2 = await deploySponsorship(chainConfig, operatorWallet, { streamId, earningsPerSecond: parseEther('2') })
         await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther('250'), '0x')).wait()
         await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
 

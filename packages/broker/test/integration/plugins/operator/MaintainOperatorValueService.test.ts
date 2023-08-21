@@ -44,7 +44,7 @@ describe('MaintainOperatorValueService', () => {
     }
 
     beforeAll(async () => {
-        provider = new JsonRpcProvider(`http://${STREAMR_DOCKER_DEV_HOST}:8547`)
+        provider = new JsonRpcProvider(`${chainConfig.rpcEndpoints[0].url}`)
         logger.debug('Connected to: ', await provider.getNetwork())
 
         logger.debug('Creating stream for the test')
