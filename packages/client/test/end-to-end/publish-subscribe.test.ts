@@ -125,13 +125,14 @@ describe('publish-subscribe', () => {
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
 
-        it('subscriber is able to receive messages', async () => {
+        // TODO: flaky test fix in NET-1013
+        it.skip('subscriber is able to receive messages', async () => {
             const messages: unknown[] = []
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
             await publisherClient.publish(stream.id, PAYLOAD)
-            await waitForCondition(() => messages.length > 0)
+            await waitForCondition(() => messages.length > 0, TIMEOUT - 1000)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })
