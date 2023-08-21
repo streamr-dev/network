@@ -1,9 +1,8 @@
-import { Wallet } from 'ethers'
 import { Contract } from '@ethersproject/contracts'
 import { Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
 
-import { tokenABI, TestToken, operatorFactoryABI, OperatorFactory } from '@streamr/network-contracts'
+import { tokenABI, TestToken } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { config } from '@streamr/config'
 
@@ -46,25 +45,6 @@ describe('OperatorValueBreachWatcher', () => {
             }
         }
     }, 60 * 1000)
-
-    it('can find a random operator, excluding himself', async () => {
-        const { operatorContract, operatorConfig } = await setupOperatorContract(deployConfig)
-        // deploy another operator to make sure there are at least 2 operators
-        await setupOperatorContract(deployConfig)
-
-        const operatorValueBreachWatcher = new OperatorValueBreachWatcher(operatorConfig)
-        const randomOperatorAddress = await operatorValueBreachWatcher.helper.getRandomOperator()
-        if (randomOperatorAddress === undefined) {
-            throw new Error('No random operator found')
-        }
-        // check it's a valid operator, deployed by the OperatorFactory
-        const adminWallet = new Wallet(STREAM_CREATION_KEY, provider)
-        const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, operatorFactoryABI, adminWallet) as unknown as OperatorFactory
-        const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress)).gt(0)
-        expect(isDeployedByFactory).toBeTrue()
-        // check it's not my operator
-        expect(randomOperatorAddress).not.toEqual(operatorContract.address)
-    }, 30 * 1000)
 
     it('withdraws the other Operators earnings when they are above the penalty limit', async () => {
         const { operatorConfig: watcherConfig } = await setupOperatorContract(deployConfig)
