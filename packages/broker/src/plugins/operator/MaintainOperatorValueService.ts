@@ -5,6 +5,7 @@ import { OperatorServiceConfig } from './OperatorPlugin'
 const logger = new Logger(module)
 
 const DEFAULT_CHECK_VALUE_INTERVAL_MS = 1000 * 60 * 60 * 24 // 1 day
+const DEFAULT_WITHDRAW_LIMIT_SAFETY_FRACTION = 0.5 // 50%
 const ONE_ETHER = 1e18
 
 export class MaintainOperatorValueService {
@@ -14,7 +15,11 @@ export class MaintainOperatorValueService {
     private readonly abortController: AbortController
     private readonly checkIntervalInMs: number
 
-    constructor(config: OperatorServiceConfig, withdrawLimitSafetyFraction = 0.5, checkValueIntervalMs = DEFAULT_CHECK_VALUE_INTERVAL_MS) {
+    constructor(
+        config: OperatorServiceConfig,
+        withdrawLimitSafetyFraction = DEFAULT_WITHDRAW_LIMIT_SAFETY_FRACTION,
+        checkValueIntervalMs = DEFAULT_CHECK_VALUE_INTERVAL_MS
+    ) {
         this.withdrawLimitSafetyFraction = BigInt(withdrawLimitSafetyFraction * ONE_ETHER)
         this.helper = new MaintainOperatorValueHelper(config)
         this.abortController = new AbortController()
