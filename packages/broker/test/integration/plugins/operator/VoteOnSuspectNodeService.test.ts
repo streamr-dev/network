@@ -50,17 +50,11 @@ describe('VoteOnSuspectNodeService', () => {
         const target = await setupOperatorContract({ chainConfig, adminKey: ADMIN_PRIV_KEY })
         const voter = await setupOperatorContract({ chainConfig, adminKey: ADMIN_PRIV_KEY })
         const sponsorer = await generateWalletWithGasAndTokens({ chainConfig, adminKey: ADMIN_PRIV_KEY })
-
         const sponsorship = await deploySponsorshipContract({ chainConfig, deployer: adminWallet, streamId: streamId })
+        
         await sponsor(sponsorer, sponsorship.address, 500, token)
-
         for (const actor of [flagger, target, voter]) {
-            await delegate(
-                actor.operatorWallet,
-                actor.operatorContract.address,
-                200,
-                token
-            )
+            await delegate(actor.operatorWallet, actor.operatorContract.address, 200, token)
             await (await actor.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
         }
 
