@@ -5,6 +5,7 @@ import { OperatorServiceConfig } from './OperatorPlugin'
 const logger = new Logger(module)
 
 const DEFAULT_CHECK_VALUE_INTERVAL_MS = 1000 * 60 * 60 * 24 // 1 day
+const ONE_ETHER = 1e18
 
 export class MaintainOperatorValueService {
     private readonly withdrawLimitSafetyFraction: bigint
@@ -14,7 +15,7 @@ export class MaintainOperatorValueService {
     private readonly checkIntervalInMs: number
 
     constructor(config: OperatorServiceConfig, withdrawLimitSafetyFraction = 0.5, checkValueIntervalMs = DEFAULT_CHECK_VALUE_INTERVAL_MS) {
-        this.withdrawLimitSafetyFraction = BigInt(withdrawLimitSafetyFraction * 1e18)
+        this.withdrawLimitSafetyFraction = BigInt(withdrawLimitSafetyFraction * ONE_ETHER)
         this.helper = new MaintainOperatorValueHelper(config)
         this.abortController = new AbortController()
         this.checkIntervalInMs = checkValueIntervalMs
@@ -36,7 +37,7 @@ export class MaintainOperatorValueService {
     private async checkMyUnwithdrawnEarnings(): Promise<void> {
         logger.info('Check whether it is time to withdraw my earnings')
         const { fraction, sponsorshipAddresses } = await this.helper.getMyUnwithdrawnEarnings()
-        const safeUnwithdrawnEarningsFraction = this.penaltyLimitFraction! * this.withdrawLimitSafetyFraction / BigInt(1e18)
+        const safeUnwithdrawnEarningsFraction = this.penaltyLimitFraction! * this.withdrawLimitSafetyFraction / BigInt(ONE_ETHER)
         logger.trace(` -> is ${fraction / BigInt(1e16)}% > ${safeUnwithdrawnEarningsFraction / BigInt(1e16)}% ?`)
         if (fraction > safeUnwithdrawnEarningsFraction) {
             logger.info('Withdraw earnings from sponsorships', { sponsorshipAddresses })
