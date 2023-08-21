@@ -37,8 +37,8 @@ describe('OperatorValueBreachWatcher', () => {
             provider,
             theGraphUrl,
             signer: operatorWallet,
-            maxSponsorshipsCount: 20,
-            minSponsorshipEarnings: 1 // full tokens
+            maxSponsorshipsInWithdraw: 20,
+            minSponsorshipEarningsInWithdraw: 1 // full tokens
         }
         return { operatorWallet, operatorContract, operatorConfig }
     }

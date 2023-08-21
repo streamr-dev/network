@@ -18,8 +18,8 @@ import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { CONFIG_TEST } from 'streamr-client'
 
-export const DEFAULT_MAX_SPONSORSHIP_COUNT = 20 // max number of sponsorships to loop over before tx reverts
-export const DEFAULT_MIN_SPONSORSHIP_EARNINGS = 1 // token value, not wei
+export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number of sponsorships to loop over before tx reverts
+export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -31,8 +31,8 @@ export interface OperatorServiceConfig {
     signer: Signer
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
-    maxSponsorshipsCount?: number
-    minSponsorshipEarnings?: number
+    maxSponsorshipsInWithdraw?: number
+    minSponsorshipEarningsInWithdraw?: number
 }
 
 const logger = new Logger(module)
@@ -58,8 +58,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             // TODO read from client, as we need to use production value in production environment (not ConfigTest)
             theGraphUrl: CONFIG_TEST.contracts!.theGraphUrl!,
             signer: Wallet.createRandom().connect(provider),
-            maxSponsorshipsCount: DEFAULT_MAX_SPONSORSHIP_COUNT,
-            minSponsorshipEarnings: DEFAULT_MIN_SPONSORSHIP_EARNINGS
+            maxSponsorshipsInWithdraw: DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW,
+            minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
         }
         this.announceNodeToStreamService = new AnnounceNodeToStreamService(
             this.streamrClient,

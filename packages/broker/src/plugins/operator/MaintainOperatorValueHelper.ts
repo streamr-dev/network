@@ -55,20 +55,20 @@ export class MaintainOperatorValueHelper {
     /**
      * Find the sum of unwithdrawn earnings in Sponsorships (that the Operator must withdraw before the sum reaches a limit),
      * SUBJECT TO the constraints, set in the OperatorServiceConfig:
-     *  - only take at most maxSponsorshipsCount addresses (those with most earnings), or all if undefined
-     *  - only take sponsorships that have more than minSponsorshipEarnings, or all if undefined
+     *  - only take at most maxSponsorshipsInWithdraw addresses (those with most earnings), or all if undefined
+     *  - only take sponsorships that have more than minSponsorshipEarningsInWithdraw, or all if undefined
      * @param operatorContractAddress
      */
     async getUnwithdrawnEarningsOf(operatorContractAddress: EthereumAddress): Promise<UnwithdrawnEarningsData> {
         const operator = new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
-        const minSponsorshipEarningsWei = BigNumber.from(this.config.minSponsorshipEarnings ?? 0)
+        const minSponsorshipEarningsInWithdrawWei = BigNumber.from(this.config.minSponsorshipEarningsInWithdraw ?? 0)
         const { sponsorshipAddresses: allSponsorshipAddresses, earnings } = await operator.getEarningsFromSponsorships()
 
         const sponsorships = allSponsorshipAddresses
             .map((address, i) => ({ address, earnings: earnings[i] }))
-            .filter((sponsorship) => sponsorship.earnings.gte(minSponsorshipEarningsWei))
+            .filter((sponsorship) => sponsorship.earnings.gte(minSponsorshipEarningsInWithdrawWei))
             .sort((a, b) => Number(b.earnings.sub(a.earnings).toBigInt())) // TODO: after Node 20, use .toSorted() instead
-            .slice(0, this.config.maxSponsorshipsCount) // take all if maxSponsorshipsCount is undefined
+            .slice(0, this.config.maxSponsorshipsInWithdraw) // take all if maxSponsorshipsInWithdraw is undefined
         const sponsorshipAddresses = sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address))
 
         const approxPoolValue = (await operator.totalValueInSponsorshipsWei()).toBigInt()
