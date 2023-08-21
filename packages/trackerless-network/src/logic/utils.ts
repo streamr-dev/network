@@ -16,6 +16,7 @@ export const markAndCheckDuplicate = (
     return duplicateDetectors.get(detectorKey)!.markAndCheck(previousNumberPair, currentNumberPair)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class BinaryTranslator {
 
     private static readonly textEncoder = new TextEncoder() 
