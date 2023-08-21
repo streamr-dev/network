@@ -1,5 +1,4 @@
 import { parseEther } from '@ethersproject/units'
-import type { TestToken } from '@streamr/network-contracts'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import fetch from 'node-fetch'
@@ -9,8 +8,8 @@ import {
     THE_GRAPH_URL,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
-    getTokenContract,
     setupOperatorContract,
+    sponsor,
     stake,
     transferTokens
 } from './contractUtils'
@@ -19,14 +18,11 @@ jest.setTimeout(600 * 1000)
 
 describe('InspectRandomNodeHelper', () => {
 
-    let token: TestToken
     let streamId1: string
     let streamId2: string
     let graphClient: TheGraphClient
 
     beforeAll(async () => {
-        token = getTokenContract()
-
         const client = createClient(await fetchPrivateKeyWithGas())
         streamId1 = (await createTestStream(client, module)).id
         streamId2 = (await createTestStream(client, module)).id
@@ -70,8 +66,7 @@ describe('InspectRandomNodeHelper', () => {
             deployer: await generateWalletWithGasAndTokens(),
             streamId: streamId1
         })
-        await (await token.connect(flagger.operatorWallet).approve(sponsorship.address, parseEther('500'))).wait()
-        await (await sponsorship.connect(flagger.operatorWallet).sponsor(parseEther('500'))).wait()
+        await sponsor(flagger.operatorWallet, sponsorship.address, 500)
 
         // each operator delegates to its operactor contract
         await transferTokens(flagger.operatorWallet, flagger.operatorContract.address, 200, flagger.operatorWallet.address)

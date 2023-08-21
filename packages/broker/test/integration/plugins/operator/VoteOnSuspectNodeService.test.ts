@@ -7,7 +7,7 @@ import { mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
 import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
 import { createClient, createTestStream } from '../../../utils'
-import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, getProvider, setupOperatorContract } from './contractUtils'
+import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, getProvider, setupOperatorContract, sponsor } from './contractUtils'
 
 const TIMEOUT = 1000 * 60 * 10
 const ADMIN_PRIV_KEY = CHAIN_CONFIG.dev2.adminPrivateKey
@@ -49,11 +49,10 @@ describe('VoteOnSuspectNodeService', () => {
         const flagger = await setupOperatorContract({ chainConfig, adminKey: ADMIN_PRIV_KEY })
         const target = await setupOperatorContract({ chainConfig, adminKey: ADMIN_PRIV_KEY })
         const voter = await setupOperatorContract({ chainConfig, adminKey: ADMIN_PRIV_KEY })
-        const sponsor = await generateWalletWithGasAndTokens({ chainConfig, adminKey: ADMIN_PRIV_KEY })
+        const sponsorer = await generateWalletWithGasAndTokens({ chainConfig, adminKey: ADMIN_PRIV_KEY })
 
         const sponsorship = await deploySponsorshipContract({ chainConfig, deployer: adminWallet, streamId: streamId })
-        await (await token.connect(sponsor).approve(sponsorship.address, parseEther('500'))).wait()
-        await (await sponsorship.connect(sponsor).sponsor(parseEther('500'))).wait()
+        await sponsor(sponsorer, sponsorship.address, 500, token)
 
         for (const actor of [flagger, target, voter]) {
             await delegate(
