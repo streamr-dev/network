@@ -6,7 +6,7 @@ export const markAndCheckDuplicate = (
     currentMessageRef: MessageRef, 
     previousMessageRef?: MessageRef
 ): boolean => {
-    const detectorKey = `${BinaryTranslator.toUTF8(currentMessageRef.publisherId)}-${currentMessageRef.messageChainId}`
+    const detectorKey = `${toUTF8(currentMessageRef.publisherId)}-${currentMessageRef.messageChainId}`
     const previousNumberPair = previousMessageRef ?
         new NumberPair(Number(previousMessageRef!.timestamp), previousMessageRef!.sequenceNumber) : null
     const currentNumberPair = new NumberPair(Number(currentMessageRef.timestamp), currentMessageRef.sequenceNumber)
@@ -16,17 +16,13 @@ export const markAndCheckDuplicate = (
     return duplicateDetectors.get(detectorKey)!.markAndCheck(previousNumberPair, currentNumberPair)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
-export class BinaryTranslator {
+const textEncoder = new TextEncoder()
+const textDecoder = new TextDecoder()
 
-    private static readonly textEncoder = new TextEncoder() 
-    private static readonly textDecoder = new TextDecoder()
+export const toUTF8 = (bytes: Uint8Array): string => {
+    return textDecoder.decode(bytes)
+}
 
-    static toUTF8(bytes: Uint8Array): string {
-        return this.textDecoder.decode(bytes)
-    }
-
-    static toBinary(utf8: string): Uint8Array {
-        return this.textEncoder.encode(utf8)
-    }
+export const toBinary = (utf8: string): Uint8Array => {
+    return textEncoder.encode(utf8)
 }

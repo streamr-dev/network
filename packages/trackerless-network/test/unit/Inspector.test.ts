@@ -2,7 +2,7 @@ import { ListeningRpcCommunicator, NodeType, PeerDescriptor, PeerID, keyFromPeer
 import { Inspector } from '../../src/logic/inspect/Inspector'
 import { mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
-import { BinaryTranslator } from '../../src/logic/utils'
+import { toBinary } from '../../src/logic/utils'
 
 describe('Inspector', () => {
     
@@ -27,7 +27,7 @@ describe('Inspector', () => {
         streamPartition: 0,
         sequenceNumber: 0,
         timestamp: 12345,
-        publisherId: BinaryTranslator.toBinary('publisher')
+        publisherId: toBinary('publisher')
     }
 
     beforeEach(() => {

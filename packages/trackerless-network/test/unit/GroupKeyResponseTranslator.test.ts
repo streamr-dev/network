@@ -5,7 +5,7 @@ import {
 } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
 import { EncryptedGroupKey, GroupKeyResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { BinaryTranslator } from '../../src/logic/utils'
+import { toBinary } from '../../src/logic/utils'
 
 describe('GroupKeyResponseTranslator', () => {
 
@@ -16,11 +16,11 @@ describe('GroupKeyResponseTranslator', () => {
     })
     const newEncryptedGroupKey: EncryptedGroupKey = {
         groupKeyId: 'id',
-        data: BinaryTranslator.toBinary('0000')
+        data: toBinary('0000')
     }
     const newGroupKeyResponse: GroupKeyResponse = {
         requestId: 'request',
-        recipient: BinaryTranslator.toBinary('recipient'),
+        recipient: toBinary('recipient'),
         groupKeys: [ newEncryptedGroupKey ]
     }
 
