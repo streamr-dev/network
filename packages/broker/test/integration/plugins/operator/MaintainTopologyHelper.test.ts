@@ -48,8 +48,8 @@ describe('MaintainTopologyHelper', () => {
             })
             await topologyHelper.start()
 
-            sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
-            sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId2 })
+            sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
+            sponsorship2 = await deploySponsorshipContract({ streamId: streamId2, deployer: operatorWallet })
 
             await delegate(operatorWallet, operatorContract.address, 200)
             await stake(operatorContract, sponsorship1.address, 100)
@@ -122,8 +122,8 @@ describe('MaintainTopologyHelper', () => {
             await wait(2000)
             await topologyHelper.start()
 
-            sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
-            sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
+            sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
+            sponsorship2 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
 
             await delegate(operatorWallet, operatorContract.address, 200)
 

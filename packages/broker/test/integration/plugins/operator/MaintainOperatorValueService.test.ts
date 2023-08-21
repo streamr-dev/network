@@ -42,7 +42,7 @@ describe.skip('MaintainOperatorValueService', () => {
 
         await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT * 2)
         for (const streamId of [streamId1, streamId2]) {
-            const sponsorship = await deploySponsorshipContract({ deployer: operatorWallet, streamId })
+            const sponsorship = await deploySponsorshipContract({ streamId, deployer: operatorWallet })
             // TODO separate sponsor wallet?
             await sponsor(operatorWallet, sponsorship.address, SPONSOR_AMOUNT)
             await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)

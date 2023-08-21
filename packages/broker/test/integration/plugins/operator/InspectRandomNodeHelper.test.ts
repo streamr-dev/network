@@ -39,8 +39,8 @@ describe('InspectRandomNodeHelper', () => {
         const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract()
         const inspectRandomNodeHelper = new InspectRandomNodeHelper(operatorConfig)
 
-        const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId1 })
-        const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId2 })
+        const sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
+        const sponsorship2 = await deploySponsorshipContract({ streamId: streamId2, deployer: operatorWallet })
 
         await transferTokens(operatorWallet, operatorContract.address, 200, operatorWallet.address)
         await stake(operatorContract, sponsorship1.address, 100)
@@ -62,10 +62,7 @@ describe('InspectRandomNodeHelper', () => {
         const flagger = await setupOperatorContract()
         const target = await setupOperatorContract()
 
-        const sponsorship = await deploySponsorshipContract({
-            deployer: await generateWalletWithGasAndTokens(),
-            streamId: streamId1
-        })
+        const sponsorship = await deploySponsorshipContract({ streamId: streamId1, deployer: await generateWalletWithGasAndTokens() })
         await sponsor(flagger.operatorWallet, sponsorship.address, 500)
 
         // each operator delegates to its operactor contract

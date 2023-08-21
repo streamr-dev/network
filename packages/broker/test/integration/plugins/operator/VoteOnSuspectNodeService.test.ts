@@ -46,11 +46,11 @@ describe('VoteOnSuspectNodeService', () => {
     }, TIMEOUT)
 
     it('votes on suspected node when review requested', async () => {
-        const flagger = await setupOperatorContract({ chainConfig, adminKey: ADMIN_PRIV_KEY })
-        const target = await setupOperatorContract({ chainConfig, adminKey: ADMIN_PRIV_KEY })
-        const voter = await setupOperatorContract({ chainConfig, adminKey: ADMIN_PRIV_KEY })
-        const sponsorer = await generateWalletWithGasAndTokens({ chainConfig, adminKey: ADMIN_PRIV_KEY })
-        const sponsorship = await deploySponsorshipContract({ chainConfig, deployer: adminWallet, streamId: streamId })
+        const flagger = await setupOperatorContract({ adminKey: ADMIN_PRIV_KEY, chainConfig })
+        const target = await setupOperatorContract({ adminKey: ADMIN_PRIV_KEY, chainConfig })
+        const voter = await setupOperatorContract({ adminKey: ADMIN_PRIV_KEY, chainConfig })
+        const sponsorer = await generateWalletWithGasAndTokens({ adminKey: ADMIN_PRIV_KEY, chainConfig })
+        const sponsorship = await deploySponsorshipContract({ streamId: streamId, deployer: adminWallet, chainConfig })
         
         await sponsor(sponsorer, sponsorship.address, 500, token)
         for (const actor of [flagger, target, voter]) {
