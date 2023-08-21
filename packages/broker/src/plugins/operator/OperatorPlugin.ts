@@ -18,6 +18,9 @@ import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { CONFIG_TEST } from 'streamr-client'
 
+export const DEFAULT_MAX_SPONSORSHIP_COUNT = 20 // max number of sponsorships to loop over before tx reverts
+export const DEFAULT_MIN_SPONSORSHIP_EARNINGS = 1 // token value, not wei
+
 export interface OperatorPluginConfig {
     operatorContractAddress: string
     replicationFactor: number
@@ -55,8 +58,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             // TODO read from client, as we need to use production value in production environment (not ConfigTest)
             theGraphUrl: CONFIG_TEST.contracts!.theGraphUrl!,
             signer: Wallet.createRandom().connect(provider),
-            maxSponsorshipsCount: 20, // max number of sponsorships to loop over before tx reverts
-            minSponsorshipEarnings: 1 // token value, not wei
+            maxSponsorshipsCount: DEFAULT_MAX_SPONSORSHIP_COUNT,
+            minSponsorshipEarnings: DEFAULT_MIN_SPONSORSHIP_EARNINGS
         }
         this.announceNodeToStreamService = new AnnounceNodeToStreamService(
             this.streamrClient,

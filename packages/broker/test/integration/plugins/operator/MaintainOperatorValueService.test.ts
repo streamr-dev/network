@@ -13,6 +13,7 @@ import { generateWalletWithGasAndTokens } from './smartContractUtils'
 
 import { STREAMR_DOCKER_DEV_HOST, createClient, createTestStream } from '../../../utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
+import { DEFAULT_MAX_SPONSORSHIP_COUNT, DEFAULT_MIN_SPONSORSHIP_EARNINGS } from '../../../../src/plugins/operator/OperatorPlugin'
 
 const chainConfig = CHAIN_CONFIG.dev2
 
@@ -36,8 +37,8 @@ describe('MaintainOperatorValueService', () => {
             provider,
             theGraphUrl,
             signer: operatorWallet,
-            maxSponsorshipsCount: 20,
-            minSponsorshipEarnings: 1 // full tokens
+            maxSponsorshipsCount: DEFAULT_MAX_SPONSORSHIP_COUNT,
+            minSponsorshipEarnings: DEFAULT_MIN_SPONSORSHIP_EARNINGS // full tokens
         }
         return { operatorWallet, operatorContract, operatorConfig }
     }
