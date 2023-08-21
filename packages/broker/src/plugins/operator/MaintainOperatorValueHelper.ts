@@ -4,6 +4,7 @@ import { OperatorServiceConfig } from './OperatorPlugin'
 import { EthereumAddress } from 'streamr-client'
 import { Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import fetch from 'node-fetch'
+import sample from 'lodash/sample'
 
 const logger = new Logger(module)
 
@@ -36,8 +37,7 @@ export class MaintainOperatorValueHelper {
         // filter out my own operator
         const operatorAddresses = operators.filter((id) => id !== this.config.operatorContractAddress)
         logger.debug(`Found ${operatorAddresses.length} operators`, { operatorAddresses })
-        const randomIndex = Math.floor(Math.random() * operatorAddresses.length)
-        return operatorAddresses[randomIndex]
+        return sample(operatorAddresses)
     }
 
     /**
