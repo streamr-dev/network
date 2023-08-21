@@ -181,7 +181,7 @@ export const stake = async (operatorContract: Operator, sponsorshipContractAddre
 export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddresses: string, amount: number, token?: TestToken): Promise<void> => {
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L139
-    await transferTokens(sponsorer, sponsorshipContractAddresses, amount, '', token)
+    await transferTokens(sponsorer, sponsorshipContractAddresses, amount, '0x', token)
 }
 
 export const transferTokens = async (from: Wallet, to: string, amount: number, data?: string, token?: TestToken): Promise<void> => {
