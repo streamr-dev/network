@@ -159,7 +159,7 @@ export const delegate = async (delegator: Wallet, operatorContractAddress: strin
     // onTokenTransfer: the tokens are delegated on behalf of the given data address
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L233
-    transferTokens(delegator, operatorContractAddress, amount, delegator.address, token)
+    await transferTokens(delegator, operatorContractAddress, amount, delegator.address, token)
 }
 
 export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddresses: string, amount: number): Promise<void> => {
