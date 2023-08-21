@@ -57,7 +57,7 @@ describe('VoteOnSuspectNodeService', () => {
 
         for (const actor of [flagger, target, voter]) {
             await delegate(
-                flagger.operatorWallet,
+                actor.operatorWallet,
                 actor.operatorContract.address,
                 200,
                 token
