@@ -11,6 +11,7 @@ import {
     generateWalletWithGasAndTokens,
     getTokenContract,
     setupOperatorContract,
+    stake,
     transferTokens
 } from './contractUtils'
 
@@ -46,9 +47,8 @@ describe('InspectRandomNodeHelper', () => {
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId2 })
 
         await transferTokens(operatorWallet, operatorContract.address, 200, operatorWallet.address)
-
-        await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
-        await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
+        await stake(operatorContract, sponsorship1.address, 100)
+        await stake(operatorContract, sponsorship2.address, 100)
 
         await waitForCondition(async (): Promise<boolean> => {
             const res = await inspectRandomNodeHelper.getSponsorshipsOfOperator(toEthereumAddress(operatorContract.address), 0)

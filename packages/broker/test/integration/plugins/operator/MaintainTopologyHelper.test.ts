@@ -1,5 +1,4 @@
 import { Contract } from '@ethersproject/contracts'
-import { parseEther } from '@ethersproject/units'
 import { Wallet } from '@ethersproject/wallet'
 import type { Operator } from '@streamr/network-contracts'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
@@ -7,7 +6,7 @@ import { wait, waitForCondition } from '@streamr/utils'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { delegate, deploySponsorshipContract, setupOperatorContract } from './contractUtils'
+import { delegate, deploySponsorshipContract, setupOperatorContract, stake } from './contractUtils'
 
 jest.setTimeout(60 * 1000)
 
@@ -53,9 +52,8 @@ describe('MaintainTopologyHelper', () => {
             sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: streamId2 })
 
             await delegate(operatorWallet, operatorContract.address, 200)
-
-            await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
-            await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
+            await stake(operatorContract, sponsorship1.address, 100)
+            await stake(operatorContract, sponsorship2.address, 100)
 
             await waitForCondition(() => eventcount === 2, 10000, 1000)
 
@@ -129,9 +127,9 @@ describe('MaintainTopologyHelper', () => {
 
             await delegate(operatorWallet, operatorContract.address, 200)
 
-            await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
+            await stake(operatorContract, sponsorship1.address, 100)
             await waitForCondition(() => receivedAddStreams === 1, 10000, 1000)
-            await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
+            await stake(operatorContract, sponsorship2.address, 100)
             await waitForCondition(() => receivedAddStreams === 1, 10000, 1000)
 
             await wait(10000) // wait for events to be processed

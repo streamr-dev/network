@@ -162,6 +162,10 @@ export const delegate = async (delegator: Wallet, operatorContractAddress: strin
     await transferTokens(delegator, operatorContractAddress, amount, delegator.address, token)
 }
 
+export const stake = async (operatorContract: Operator, sponsorshipContractAddresses: string, amount: number): Promise<void> => {
+    await (await operatorContract.stake(sponsorshipContractAddresses, parseEther(amount.toString()))).wait()
+}
+
 export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddresses: string, amount: number): Promise<void> => {
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L139

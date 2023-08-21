@@ -1,4 +1,3 @@
-import { parseEther } from '@ethersproject/units'
 import { StreamPartID, toStreamID } from '@streamr/protocol'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
@@ -10,7 +9,8 @@ import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFle
 import { createClient, createTestStream } from '../../../utils'
 import {
     THE_GRAPH_URL, delegate, deployOperatorContract, deploySponsorshipContract, generateWalletWithGasAndTokens,
-    getProvider
+    getProvider,
+    stake
 } from './contractUtils'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
@@ -65,7 +65,7 @@ describe('MaintainTopologyService', () => {
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
         const operatorContract = await deployOperatorContract({ deployer: operatorWallet })
         await delegate(operatorWallet, operatorContract.address, 200)
-        await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
+        await stake(operatorContract, sponsorship1.address, 100)
 
         const serviceHelperConfig = {
             provider: getProvider(),
@@ -86,7 +86,7 @@ describe('MaintainTopologyService', () => {
             return containsAll(await getSubscribedStreamPartIds(client), stream1.getStreamParts())
         }, 10000, 1000)
 
-        await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
+        await stake(operatorContract, sponsorship2.address, 100)
         await waitForCondition(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), [
                 ...stream1.getStreamParts(),
