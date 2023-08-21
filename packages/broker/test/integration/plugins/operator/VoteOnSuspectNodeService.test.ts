@@ -46,21 +46,19 @@ describe('VoteOnSuspectNodeService', () => {
     }, TIMEOUT)
 
     it('votes on suspected node when review requested', async () => {
-        const flagger = await setupOperatorContract({ adminKey: ADMIN_PRIV_KEY, chainConfig })
+        const flagger = await setupOperatorContract({ nodeCount: 1, adminKey: ADMIN_PRIV_KEY, chainConfig })
         const target = await setupOperatorContract({ adminKey: ADMIN_PRIV_KEY, chainConfig })
-        const voter = await setupOperatorContract({ adminKey: ADMIN_PRIV_KEY, chainConfig })
+        const voter = await setupOperatorContract({ nodeCount: 1, adminKey: ADMIN_PRIV_KEY, chainConfig })
         const sponsorer = await generateWalletWithGasAndTokens({ adminKey: ADMIN_PRIV_KEY, chainConfig })
         const sponsorship = await deploySponsorshipContract({ streamId: streamId, deployer: adminWallet, chainConfig })
         
         await sponsor(sponsorer, sponsorship.address, 500, token)
-        for (const actor of [flagger, target, voter]) {
+        for (const actor of [flagger, target]) {
             await delegate(actor.operatorWallet, actor.operatorContract.address, 200, token)
             await (await actor.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
         }
-
-        await (await flagger.operatorContract.setNodeAddresses([await flagger.operatorContract.owner()])).wait()
-
-        const voterClient = createClient(voter.operatorWallet.privateKey)
+        
+        const voterClient = createClient(voter.nodeWallets[0].privateKey)
         const voterVoteService = new VoteOnSuspectNodeService(voterClient, voter.operatorConfig)
         await voterVoteService.start()
 
@@ -69,7 +67,7 @@ describe('VoteOnSuspectNodeService', () => {
         mockVoteOnSuspectNodeHelper.voteOnFlag.mockResolvedValue(undefined)
         // @ts-expect-error mock
         voterVoteService.voteOnSuspectNodeHelper = mockVoteOnSuspectNodeHelper
-        await (await flagger.operatorContract.flag(sponsorship.address, target.operatorContract.address)).wait()
+        await (await flagger.operatorContract.connect(flagger.nodeWallets[0]).flag(sponsorship.address, target.operatorContract.address)).wait()
         // check that voter votes
         await waitForCondition(() => mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls.length > 0, 10000)
         expect(mockVoteOnSuspectNodeHelper.voteOnFlag).toHaveBeenCalledTimes(1)

@@ -6,16 +6,17 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from '@streamr/network-contracts'
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts'
 import { fastPrivateKey } from '@streamr/test-utils'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { toEthereumAddress } from '@streamr/utils'
 import { BigNumber, ContractReceipt, Wallet } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
+import { range } from 'lodash'
 
 const TEST_CHAIN = 'dev2'
 // TODO read from config when https://github.com/streamr-dev/network-contracts/pull/604 
 export const THE_GRAPH_URL = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 export interface SetupOperatorContractOpts {
-    nodeAddresses?: EthereumAddress[]
+    nodeCount?: number
     adminKey?: string
     provider?: Provider
     // eslint-disable-next-line max-len
@@ -24,7 +25,7 @@ export interface SetupOperatorContractOpts {
 
 export async function setupOperatorContract(
     opts?: SetupOperatorContractOpts
-): Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig }> {
+): Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig, nodeWallets: Wallet[] }> {
     const provider = opts?.provider ?? getProvider()
     const operatorWallet = await generateWalletWithGasAndTokens({
         provider: opts?.provider,
@@ -32,16 +33,24 @@ export async function setupOperatorContract(
         adminKey: opts?.adminKey
     })
     const operatorContract = await deployOperatorContract({ chainConfig: opts?.chainConfig ?? CHAIN_CONFIG[TEST_CHAIN], deployer: operatorWallet })
-    if (opts?.nodeAddresses !== undefined) {
-        await (await operatorContract.setNodeAddresses(opts?.nodeAddresses)).wait()
+    let nodeWallets: Wallet[] = []
+    if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
+        for (const i of range(opts.nodeCount)) {
+            nodeWallets.push(await generateWalletWithGasAndTokens({
+                provider: opts?.provider,
+                chainConfig: opts?.chainConfig,
+                adminKey: opts?.adminKey
+            }))
+        }
+        await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
     }
     const operatorConfig = {
         operatorContractAddress: toEthereumAddress(operatorContract.address),
-        signer: operatorWallet,
+        signer: operatorWallet, // TODO remove
         provider: provider,
-        theGraphUrl: THE_GRAPH_URL
+        theGraphUrl: THE_GRAPH_URL,
     }
-    return { operatorWallet, operatorContract, operatorConfig }
+    return { operatorWallet, operatorContract, operatorConfig, nodeWallets }
 }
 
 interface DeployOperatorContractOpts {

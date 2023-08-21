@@ -59,7 +59,7 @@ describe('InspectRandomNodeHelper', () => {
     })
 
     it('works to flag through the inspectRandomNodeHelper', async () => {
-        const flagger = await setupOperatorContract()
+        const flagger = await setupOperatorContract({ nodeCount: 1})
         const target = await setupOperatorContract()
 
         const sponsorship = await deploySponsorshipContract({ streamId: streamId1, deployer: await generateWalletWithGasAndTokens() })
@@ -75,9 +75,10 @@ describe('InspectRandomNodeHelper', () => {
         await (await target.operatorContract.stake(sponsorship.address, parseEther('250'))).wait()
         await wait(3000)
 
-        await (await flagger.operatorContract.setNodeAddresses([await flagger.operatorContract.owner()])).wait()
-
-        const inspectRandomNodeHelper = new InspectRandomNodeHelper(flagger.operatorConfig)
+        const inspectRandomNodeHelper = new InspectRandomNodeHelper({
+            ...flagger.operatorConfig,
+            signer: flagger.nodeWallets[0]
+        })
         await inspectRandomNodeHelper.flag(toEthereumAddress(sponsorship.address), toEthereumAddress(target.operatorContract.address))
 
         waitForCondition(async (): Promise<boolean> => {

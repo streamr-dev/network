@@ -7,17 +7,17 @@ import { setupOperatorContract } from './contractUtils'
 
 describe(AnnounceNodeToContractHelper, () => {
 
+    let nodeWallets: Wallet[]
     let operatorConfig: OperatorServiceConfig
     let helper: AnnounceNodeToContractHelper
 
     beforeEach(async () => {
-        const nodeWallet = new Wallet(await fetchPrivateKeyWithGas())
-        ;({ operatorConfig } = await setupOperatorContract({
-            nodeAddresses: [toEthereumAddress(nodeWallet.address)]
+        ;({ operatorConfig, nodeWallets } = await setupOperatorContract({
+            nodeCount: 1
         }))
         helper = new AnnounceNodeToContractHelper({
             ...operatorConfig,
-            signer: nodeWallet.connect(operatorConfig.provider)
+            signer: nodeWallets[0].connect(operatorConfig.provider)
         })
     })
 
