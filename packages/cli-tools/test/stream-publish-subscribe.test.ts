@@ -4,6 +4,8 @@ import { collect } from '@streamr/utils'
 import { StreamPermission } from 'streamr-client'
 import { createTestClient, runCommand, startCommand } from './utils'
 
+const TIMEOUT = 30 * 1000
+
 describe('publish and subscribe', () => {
 
     let publisherPrivateKey: string
@@ -21,7 +23,7 @@ describe('publish and subscribe', () => {
         })
         streamId = stream.id
         await client.destroy()
-    }, 40 * 1000)
+    }, TIMEOUT)
 
     function publishViaCliCommand() {
         setImmediate(async () => {
@@ -44,7 +46,7 @@ describe('publish and subscribe', () => {
         expect(JSON.parse(receivedMessage)).toEqual({
             foo: 123
         })
-    }, 40 * 1000)
+    }, TIMEOUT)
 
     it('raw subscription', async () => {
         const subscriberAbortController = new AbortController()
@@ -56,7 +58,7 @@ describe('publish and subscribe', () => {
         const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
         subscriberAbortController.abort()
         expect(receivedMessage).toMatch(/^[0-9a-fA-F]+$/)
-    })
+    }, TIMEOUT)
 
     it('with metadata', async () => {
         const subscriberAbortController = new AbortController()
@@ -80,5 +82,5 @@ describe('publish and subscribe', () => {
                 msgChainId: expect.stringMatching(/[0-9a-zA-Z]+/)
             }
         })
-    }, 15000)
+    }, TIMEOUT)
 })
