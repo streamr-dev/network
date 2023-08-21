@@ -2,6 +2,7 @@ import { ListeningRpcCommunicator, NodeType, PeerDescriptor, PeerID, keyFromPeer
 import { Inspector } from '../../src/logic/inspect/Inspector'
 import { mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
+import { BinaryTranslator } from '../../src/logic/utils'
 
 describe('Inspector', () => {
     
@@ -11,8 +12,6 @@ describe('Inspector', () => {
         kademliaId: inspectorPeerId.value,
         type: NodeType.NODEJS
     }
-
-    const textEncoder = new TextEncoder() 
 
     const inspectedDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('inspected').value,
@@ -28,7 +27,7 @@ describe('Inspector', () => {
         streamPartition: 0,
         sequenceNumber: 0,
         timestamp: 12345,
-        publisherId: textEncoder.encode('publisher')
+        publisherId: BinaryTranslator.toBinary('publisher')
     }
 
     beforeEach(() => {

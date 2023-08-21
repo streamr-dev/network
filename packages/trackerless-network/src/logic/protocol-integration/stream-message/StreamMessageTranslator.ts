@@ -23,6 +23,7 @@ import {
 import { EthereumAddress } from '@streamr/utils'
 import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
 import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
+import { BinaryTranslator } from '../../utils'
 
 const oldEnryptionTypeTranslator = (type: OldEncryptionType): EncryptionType => {
     if (type === OldEncryptionType.AES) {
@@ -61,15 +62,12 @@ const newContentTypeTranslator = (type: ContentType): OldContentType => {
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class StreamMessageTranslator {
 
-    private static readonly textEncoder = new TextEncoder() 
-    private static readonly textDecoder = new TextDecoder()
-
     static toProtobuf(msg: OldStreamMessage): StreamMessage {
         let content: Uint8Array
         let messageType: StreamMessageType
         const contentType = msg.contentType
         if (msg.messageType === OldStreamMessageType.MESSAGE) {
-            content = this.textEncoder.encode(msg.serializedContent)
+            content = BinaryTranslator.toBinary(msg.serializedContent)
             messageType = StreamMessageType.MESSAGE
         } else if (msg.messageType === OldStreamMessageType.GROUP_KEY_REQUEST) {
             content = GroupKeyRequest.toBinary(
@@ -97,7 +95,7 @@ export class StreamMessageTranslator {
             sequenceNumber: msg.getSequenceNumber(),
             streamId: msg.getStreamId() as string,
             streamPartition: msg.getStreamPartition(),
-            publisherId: this.textEncoder.encode(msg.getPublisherId()),
+            publisherId: BinaryTranslator.toBinary(msg.getPublisherId()),
             messageChainId: msg.getMsgChainId()
         }
         let previousMessageRef: MessageRef | undefined = undefined
@@ -107,14 +105,14 @@ export class StreamMessageTranslator {
                 sequenceNumber: msg.getPreviousMessageRef()!.sequenceNumber,
                 streamId: msg.getStreamId() as string,
                 streamPartition: msg.getStreamPartition(),
-                publisherId: this.textEncoder.encode(msg.getPublisherId()),
+                publisherId: BinaryTranslator.toBinary(msg.getPublisherId()),
                 messageChainId: msg.getMsgChainId()
             }
         }
         let newGroupKey: EncryptedGroupKey | undefined = undefined
         if (msg.getNewGroupKey()) {
             newGroupKey = {
-                data: this.textEncoder.encode(msg.getNewGroupKey()!.encryptedGroupKeyHex),
+                data: BinaryTranslator.toBinary(msg.getNewGroupKey()!.encryptedGroupKeyHex),
                 groupKeyId: msg.getNewGroupKey()!.groupKeyId
             }
         }
@@ -125,7 +123,7 @@ export class StreamMessageTranslator {
             messageRef: messageRef,
             previousMessageRef,
             messageType,
-            signature: this.textEncoder.encode(msg.signature),
+            signature: BinaryTranslator.toBinary(msg.signature),
             groupKeyId: msg.groupKeyId ?? undefined,
             newGroupKey,
         }
@@ -138,7 +136,7 @@ export class StreamMessageTranslator {
         let messageType: OldStreamMessageType
         if (msg.messageType === StreamMessageType.MESSAGE) {
             messageType = OldStreamMessageType.MESSAGE
-            content = this.textDecoder.decode(msg.content)
+            content = BinaryTranslator.toUTF8(msg.content)
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             messageType = OldStreamMessageType.GROUP_KEY_REQUEST
             content = GroupKeyRequestTranslator.toClientProtocol(GroupKeyRequest.fromBinary(msg.content)).serialize()
@@ -153,7 +151,7 @@ export class StreamMessageTranslator {
             msg.messageRef!.streamPartition,
             Number(msg.messageRef!.timestamp),
             msg.messageRef!.sequenceNumber,
-            this.textDecoder.decode(msg.messageRef!.publisherId) as EthereumAddress,
+            BinaryTranslator.toUTF8(msg.messageRef!.publisherId) as EthereumAddress,
             msg.messageRef!.messageChainId
         )
         let prevMsgRef: OldMessageRef | undefined = undefined
@@ -164,11 +162,11 @@ export class StreamMessageTranslator {
         if (msg.newGroupKey) {
             newGroupKey = new OldEncryptedGroupKey(
                 msg.newGroupKey!.groupKeyId,
-                this.textDecoder.decode(msg.newGroupKey!.data),
+                BinaryTranslator.toUTF8(msg.newGroupKey!.data),
             )
         }
         const translated = new OldStreamMessage<T>({
-            signature: this.textDecoder.decode(msg.signature),
+            signature: BinaryTranslator.toUTF8(msg.signature),
             newGroupKey,
             groupKeyId: msg.groupKeyId,
             content,

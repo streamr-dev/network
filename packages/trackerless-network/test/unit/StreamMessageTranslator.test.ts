@@ -9,13 +9,14 @@ import {
     StreamMessageType as OldStreamMessageType
 } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
+import { BinaryTranslator } from '../../src/logic/utils'
 
 describe('StreamMessageTranslator', () => {
 
     const protobufMsg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         'TEST',
-        new TextEncoder().encode('publisher')
+        BinaryTranslator.toBinary('publisher')
     )
     const messageId = new MessageID(
         'TEST' as StreamID,
@@ -34,20 +35,18 @@ describe('StreamMessageTranslator', () => {
         signature: 'signature',
     })
 
-    const textDecoder = new TextDecoder()
-
     it('translates old protocol to protobuf', () => {
         const translated = StreamMessageTranslator.toProtobuf(oldProtocolMsg)
         expect(translated.messageRef!.timestamp).toBeGreaterThanOrEqual(0)
         expect(translated.messageRef!.sequenceNumber).toEqual(0)
         expect(translated.messageRef!.streamId).toEqual('TEST')
         expect(translated.messageRef!.streamPartition).toEqual(0)
-        expect(textDecoder.decode(translated.messageRef!.publisherId)).toEqual('publisher')
+        expect(BinaryTranslator.toUTF8(translated.messageRef!.publisherId)).toEqual('publisher')
         expect(translated.previousMessageRef).toEqual(undefined)
         expect(translated.messageType).toEqual(StreamMessageType.MESSAGE)
         expect(translated.groupKeyId).toEqual(undefined)
-        expect(textDecoder.decode(translated.signature)).toEqual('signature')
-        expect(JSON.parse(new TextDecoder().decode(translated.content))).toEqual({ hello: 'WORLD' })
+        expect(BinaryTranslator.toUTF8(translated.signature)).toEqual('signature')
+        expect(JSON.parse(BinaryTranslator.toUTF8(translated.content))).toEqual({ hello: 'WORLD' })
 
     })
 

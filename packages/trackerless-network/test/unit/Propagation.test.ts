@@ -7,25 +7,25 @@ import {
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Propagation } from '../../src/logic/propagation/Propagation'
 import { toEthereumAddress, wait } from '@streamr/utils'
+import { BinaryTranslator } from '../../src/logic/utils'
 
 const PUBLISHER_ID = toEthereumAddress('0x1111111111111111111111111111111111111111')
 
 function makeMsg(streamId: string, partition: number, ts: number, msgNo: number): StreamMessage {
-    const textEncoder = new TextEncoder()
     const ref: MessageRef = {
         streamId,
         streamPartition: partition,
         timestamp: ts,
         sequenceNumber: msgNo,
         messageChainId: 'msgChain',
-        publisherId: textEncoder.encode(PUBLISHER_ID)
+        publisherId: BinaryTranslator.toBinary(PUBLISHER_ID)
     }
     return {
         messageRef: ref,
         content: new Uint8Array([1]),
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-        signature: textEncoder.encode('signature'),
+        signature: BinaryTranslator.toBinary('signature'),
         messageType: StreamMessageType.MESSAGE
     }
 }

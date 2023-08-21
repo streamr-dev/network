@@ -2,6 +2,7 @@ import { PeerIDKey, PeerID } from '@streamr/dht'
 import { InspectSession, Events } from '../../src/logic/inspect/InspectSession'
 import { MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent3 } from '../../../utils/dist/src/waitForEvent3'
+import { BinaryTranslator } from '../../src/logic/utils'
 
 describe('InspectSession', () => {
 
@@ -9,7 +10,7 @@ describe('InspectSession', () => {
     let inspectedPeer: PeerIDKey
     let anotherPeer: PeerIDKey
 
-    const publisherId = new TextEncoder().encode('publisherId')
+    const publisherId = BinaryTranslator.toBinary('publisherId')
     const messageRef1: MessageRef = {
         streamId: 'stream',
         messageChainId: 'messageChain0',

@@ -34,7 +34,7 @@ import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 import { IInspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
-import { markAndCheckDuplicate } from './utils'
+import { BinaryTranslator, markAndCheckDuplicate } from './utils'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -74,7 +74,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     private stopped = false
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
-    private readonly decoder = new TextDecoder()
     private config: StrictRandomGraphNodeConfig
     private readonly server: INetworkRpc
 
@@ -270,7 +269,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         let propagationTargets = this.config.targetNeighbors.getStringIds()
         if (this.config.proxyConnectionServer) {
             const proxyTargets = (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST)
-                ? this.config.proxyConnectionServer.getPeerKeysForUserId(this.decoder.decode(GroupKeyRequest.fromBinary(msg.content).recipient))
+                ? this.config.proxyConnectionServer.getPeerKeysForUserId(BinaryTranslator.toUTF8(GroupKeyRequest.fromBinary(msg.content).recipient))
                 : this.config.proxyConnectionServer.getSubscribers()
             propagationTargets = propagationTargets.concat(proxyTargets)
         }
