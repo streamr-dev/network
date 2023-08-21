@@ -8,8 +8,10 @@ import {
     GroupKeyResponse as OldGroupKeyResponse,
     StreamID,
     EncryptionType as OldEncryptionType,
+    ContentType as OldContentType
 } from '@streamr/protocol'
 import {
+    ContentType,
     EncryptedGroupKey,
     EncryptionType,
     GroupKeyRequest,
@@ -22,11 +24,38 @@ import { EthereumAddress } from '@streamr/utils'
 import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
 import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
 
-const oldEnryptionTypeTranslator = (encryptionType: OldEncryptionType): EncryptionType => {
-    if (encryptionType === OldEncryptionType.AES) {
+const oldEnryptionTypeTranslator = (type: OldEncryptionType): EncryptionType => {
+    if (type === OldEncryptionType.AES) {
         return EncryptionType.AES
     }
     return EncryptionType.NONE
+}
+
+const newEncryptionTypeTranslator = (type: EncryptionType): OldEncryptionType => {
+    if (type === EncryptionType.AES) {
+        return OldEncryptionType.AES
+    }
+    return OldEncryptionType.NONE
+}
+
+const oldContentTypeTranslator = (type: OldContentType): ContentType => {
+    if (type === OldContentType.JSON) {
+        return ContentType.JSON
+    }
+    // else if (OldContentType.BINARY) {
+    //     return ContentType.BINARY
+    // }
+    return ContentType.JSON
+}
+
+const newContentTypeTranslator = (type: ContentType): OldContentType => {
+    if (type === ContentType.JSON) {
+        return OldContentType.JSON
+    }
+    // else if (ContentType.BINARY) {
+    //     return OldContentType.BINARY
+    // }
+    return OldContentType.JSON
 }
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -86,16 +115,16 @@ export class StreamMessageTranslator {
         if (msg.getNewGroupKey()) {
             newGroupKey = {
                 data: this.textEncoder.encode(msg.getNewGroupKey()!.encryptedGroupKeyHex),
-                groupKeyId: msg.getNewGroupKey()!.groupKeyId,
+                groupKeyId: msg.getNewGroupKey()!.groupKeyId
             }
         }
         const translated: StreamMessage = {
             content,
-            contentType,
+            contentType: oldContentTypeTranslator(contentType),
             encryptionType: oldEnryptionTypeTranslator(msg.encryptionType),
             messageRef: messageRef,
             previousMessageRef,
-            messageType: messageType,
+            messageType,
             signature: this.textEncoder.encode(msg.signature),
             groupKeyId: msg.groupKeyId ?? undefined,
             newGroupKey,
@@ -105,15 +134,16 @@ export class StreamMessageTranslator {
 
     static toClientProtocol<T>(msg: StreamMessage): OldStreamMessage<T> {
         let content: string
-        let contentType: OldStreamMessageType
+        const contentType = msg.contentType
+        let messageType: OldStreamMessageType
         if (msg.messageType === StreamMessageType.MESSAGE) {
-            contentType = OldStreamMessageType.MESSAGE
+            messageType = OldStreamMessageType.MESSAGE
             content = this.textDecoder.decode(msg.content)
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
-            contentType = OldStreamMessageType.GROUP_KEY_REQUEST
+            messageType = OldStreamMessageType.GROUP_KEY_REQUEST
             content = GroupKeyRequestTranslator.toClientProtocol(GroupKeyRequest.fromBinary(msg.content)).serialize()
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_RESPONSE) {
-            contentType = OldStreamMessageType.GROUP_KEY_RESPONSE
+            messageType = OldStreamMessageType.GROUP_KEY_RESPONSE
             content = GroupKeyResponseTranslator.toClientProtocol(GroupKeyResponse.fromBinary(msg.content)).serialize()
         } else {
             throw new Error('invalid message type')
@@ -142,8 +172,9 @@ export class StreamMessageTranslator {
             newGroupKey,
             groupKeyId: msg.groupKeyId,
             content,
-            messageType: contentType,
-            encryptionType: msg.encryptionType,
+            contentType: newContentTypeTranslator(contentType),
+            messageType,
+            encryptionType: newEncryptionTypeTranslator(msg.encryptionType),
             messageId,
             prevMsgRef
         })
