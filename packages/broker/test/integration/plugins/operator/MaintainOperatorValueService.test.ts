@@ -72,7 +72,9 @@ describe('MaintainOperatorValueService', () => {
 
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
 
-        // safe threshold is 5 DATA, that's when withdraw happens
+        // 5 DATA = 50% of 10 DATA, 50% is the "safe threshold" (we don't want to wait all the way to the limit, lest we be late)
+        // 10 DATA = 10% of 100 DATA, 10% is the penalty limit (sum of unwithdrawn earnings may not exceed it)
+        // 100 DATA = pool value
         await service.start()
 
         // wait until we see the withdraw happened: first we go above a sum (that must be < safe threshold), then below
