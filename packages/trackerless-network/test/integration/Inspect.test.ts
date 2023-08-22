@@ -2,7 +2,7 @@ import { LatencyType, NodeType, PeerDescriptor, PeerID, Simulator, SimulatorTran
 import { NetworkStack } from '../../src/NetworkStack'
 import { range } from 'lodash'
 import { createStreamMessage } from '../utils/utils'
-import { toBinary } from '../../src/logic/utils'
+import { utf8ToBinary } from '../../src/logic/utils'
 
 describe('inspect', () => {
 
@@ -82,7 +82,7 @@ describe('inspect', () => {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
                 'stream',
-                toBinary('publisher'),
+                utf8ToBinary('publisher'),
                 123123,
                 sequenceNumber
             )

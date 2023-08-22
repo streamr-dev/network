@@ -101,7 +101,7 @@ describe('proxy group key exchange', () => {
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             encryptionType: EncryptionType.NONE,
             content: requestContent,
-            signature: 'signature'
+            signature: '1234'
         })
 
         await Promise.all([
@@ -131,7 +131,7 @@ describe('proxy group key exchange', () => {
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.RSA,
             content: responseContent,
-            signature: 'signature'
+            signature: '1234'
         })
 
         await Promise.all([

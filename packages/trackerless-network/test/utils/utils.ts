@@ -11,6 +11,7 @@ import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
 import { NetworkNode } from '../../src/NetworkNode'
+import { hexToBinary, utf8ToBinary } from '../../src/logic/utils'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -49,7 +50,6 @@ export const createStreamMessage = (
     timestamp?: number,
     sequenceNumber?: number
 ): StreamMessage => {
-    const encoder = new TextEncoder()
     const messageId: MessageID = {
         streamId,
         messageChainId: 'messageChain0',
@@ -61,10 +61,10 @@ export const createStreamMessage = (
     const msg: StreamMessage = {
         messageType: StreamMessageType.MESSAGE,
         encryptionType: EncryptionType.NONE,
-        content: encoder.encode(content),
+        content: utf8ToBinary(content),
         contentType: ContentType.JSON,
         messageId,
-        signature: encoder.encode('signature')
+        signature: hexToBinary('1234')
     }
     return msg
 }

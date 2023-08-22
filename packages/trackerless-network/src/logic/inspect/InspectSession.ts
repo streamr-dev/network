@@ -1,7 +1,7 @@
 import { EventEmitter } from 'eventemitter3'
 import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { PeerIDKey } from '@streamr/dht'
-import { toUTF8 } from '../utils'
+import { binaryToHex } from '../utils'
 
 export interface Events {
     done: () => void
@@ -12,7 +12,7 @@ interface InspectSessionConfig {
 }
 
 const createMessageKey = (messageId: MessageID): string => {
-    return `${toUTF8(messageId.publisherId)}:${messageId.messageChainId}:${messageId.timestamp}:${messageId.sequenceNumber}`
+    return `${binaryToHex(messageId.publisherId)}:${messageId.messageChainId}:${messageId.timestamp}:${messageId.sequenceNumber}`
 }
 export class InspectSession extends EventEmitter<Events> {
     

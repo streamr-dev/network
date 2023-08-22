@@ -9,14 +9,15 @@ import {
     StreamMessageType as OldStreamMessageType
 } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
-import { toBinary, toUTF8 } from '../../src/logic/utils'
+import { binaryToHex, binaryToUtf8, hexToBinary } from '../../src/logic/utils'
 
 describe('StreamMessageTranslator', () => {
 
+    const signature = '1234'
     const protobufMsg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         'TEST',
-        toBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
     )
     const messageId = new MessageID(
         'TEST' as StreamID,
@@ -32,7 +33,7 @@ describe('StreamMessageTranslator', () => {
         content: { hello: 'WORLD' },
         messageType: OldStreamMessageType.MESSAGE,
         encryptionType: EncryptionType.NONE,
-        signature: 'signature',
+        signature,
     })
 
     it('translates old protocol to protobuf', () => {
@@ -41,12 +42,12 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId!.sequenceNumber).toEqual(0)
         expect(translated.messageId!.streamId).toEqual('TEST')
         expect(translated.messageId!.streamPartition).toEqual(0)
-        expect(toUTF8(translated.messageId!.publisherId)).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        expect(binaryToHex(translated.messageId!.publisherId, true)).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
         expect(translated.previousMessageRef).toEqual(undefined)
         expect(translated.messageType).toEqual(StreamMessageType.MESSAGE)
         expect(translated.groupKeyId).toEqual(undefined)
-        expect(toUTF8(translated.signature)).toEqual('signature')
-        expect(JSON.parse(toUTF8(translated.content))).toEqual({ hello: 'WORLD' })
+        expect(binaryToHex(translated.signature)).toEqual(signature)
+        expect(JSON.parse(binaryToUtf8(translated.content))).toEqual({ hello: 'WORLD' })
 
     })
 
@@ -61,7 +62,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageType).toEqual(OldStreamMessageType.MESSAGE)
         expect(translated.contentType).toEqual(0)
         expect(translated.groupKeyId).toEqual(null)
-        expect(translated.signature).toEqual('signature')
+        expect(translated.signature).toEqual(signature)
         expect(translated.getParsedContent()).toEqual({ hello: 'WORLD' })
     })
 })

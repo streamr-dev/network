@@ -12,7 +12,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { createStreamMessage } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Simulator } from '@streamr/dht'
-import { toBinary } from '../../src/logic/utils'
+import { utf8ToBinary } from '../../src/logic/utils'
 
 describe('Network RPC', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -48,7 +48,7 @@ describe('Network RPC', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             'testStream',
-            toBinary('peer1')
+            utf8ToBinary('peer1')
         )
         await client.sendData(msg)
         await waitForCondition(() => recvCounter === 1)

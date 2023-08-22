@@ -3,7 +3,7 @@ import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
 import { LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/Transport'
 import { createStreamMessage } from '../utils/utils'
-import { toBinary } from '../../src/logic/utils'
+import { utf8ToBinary } from '../../src/logic/utils'
 
 describe('StreamNodeServer', () => {
 
@@ -21,7 +21,7 @@ describe('StreamNodeServer', () => {
     const message = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         'random-graph',
-        toBinary('publisher')
+        utf8ToBinary('publisher')
     )
 
     let mockBroadcast: jest.Mock

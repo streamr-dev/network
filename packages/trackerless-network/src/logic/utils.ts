@@ -6,7 +6,7 @@ export const markAndCheckDuplicate = (
     currentMessage: MessageID, 
     previousMessageRef?: MessageRef
 ): boolean => {
-    const detectorKey = `${toUTF8(currentMessage.publisherId)}-${currentMessage.messageChainId}`
+    const detectorKey = `${binaryToHex(currentMessage.publisherId)}-${currentMessage.messageChainId}`
     const previousNumberPair = previousMessageRef ?
         new NumberPair(Number(previousMessageRef!.timestamp), previousMessageRef!.sequenceNumber) : null
     const currentNumberPair = new NumberPair(Number(currentMessage.timestamp), currentMessage.sequenceNumber)
@@ -19,10 +19,24 @@ export const markAndCheckDuplicate = (
 const textEncoder = new TextEncoder()
 const textDecoder = new TextDecoder()
 
-export const toUTF8 = (bytes: Uint8Array): string => {
+export const binaryToUtf8 = (bytes: Uint8Array): string => {
     return textDecoder.decode(bytes)
 }
 
-export const toBinary = (utf8: string): Uint8Array => {
+export const utf8ToBinary = (utf8: string): Uint8Array => {
     return textEncoder.encode(utf8)
+}
+
+export const binaryToHex = (bytes: Uint8Array, addPrefix = false): string => {
+    if (addPrefix) {
+        return `0x${Buffer.from(bytes).toString('hex')}`
+    }
+    return Buffer.from(bytes).toString('hex')
+}
+
+export const hexToBinary = (hex: string): Uint8Array => {
+    if (hex.startsWith('0x')) {
+        hex = hex.slice(2)
+    }
+    return Buffer.from(hex, 'hex')
 }
