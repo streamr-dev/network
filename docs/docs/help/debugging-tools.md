@@ -22,3 +22,15 @@ LOG_LEVEL=trace node your-app.js
 ```
 
 When defining both the environment variable takes precedence. Default logging level is info. Valid logging levels are silent, fatal, error, warn, info, debug, and trace.
+
+# Debugging connections
+Underlying internet connectivity plays a role in how data is propagated through the Streamr Network. Connectivity issues (data loss) may emerge from low bandwidth nodes, heavily firewalled nodes that may not be reachable and excessive node churn (nodes leaving or going offline) in the stream topology.
+
+You can learn more about the underlying network connections with this code:
+
+```ts
+setInterval(() => {
+    const info = await client.getDiagnosticInfo()
+    console.log(JSON.stringify(info))
+}, 10 * 1000) // every 10 sec
+```
