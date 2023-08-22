@@ -11,7 +11,7 @@ import { StreamPartID } from '../../utils/StreamPartID'
 import { EthereumAddress } from '@streamr/utils'
 import { fromArray, toArray } from './streamMessageSerialization'
 
-const LATEST_VERSION = 32
+export const VERSION = 32
 
 export enum StreamMessageType {
     MESSAGE = 27,
@@ -51,8 +51,6 @@ export type StreamMessageAESEncrypted<T = unknown> = StreamMessage<T> & {
 }
 
 export default class StreamMessage<T = unknown> {
-    static LATEST_VERSION = LATEST_VERSION
-
     private static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessageType))
     private static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
     private static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))

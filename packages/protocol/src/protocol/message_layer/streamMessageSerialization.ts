@@ -1,11 +1,10 @@
-import StreamMessage from './StreamMessage'
+import StreamMessage, { VERSION } from './StreamMessage'
 import MessageRef from './MessageRef'
 import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
 
 import ValidationError from '../../errors/ValidationError'
 
-const VERSION = 32
 export const SIGNATURE_TYPE_ETH = 2
 
 export function toArray(streamMessage: StreamMessage): any[] {
