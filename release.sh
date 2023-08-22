@@ -19,6 +19,18 @@ cd packages/protocol
 npm publish --access public --tag $NPM_TAG
 cd ../..
 
+cd packages/proto-rpc
+npm publish --access public --tag $NPM_TAG
+cd ../..
+
+cd packages/dht
+npm publish --access public --tag $NPM_TAG
+cd ../..
+
+cd packages/trackerless-network
+npm publish --access public --tag $NPM_TAG
+cd ../..
+
 # Publishing client is a bit more complicated
 cd packages/client
 npm run build-production
@@ -32,6 +44,10 @@ fi
 cd dist
 npm publish --tag $NPM_TAG
 cd ../../..
+
+cd packages/broker
+npm publish --tag $NPM_TAG --access public
+cd ../..
 
 cd packages/cli-tools
 npm publish --tag $NPM_TAG --access public
