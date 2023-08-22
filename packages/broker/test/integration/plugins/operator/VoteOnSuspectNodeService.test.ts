@@ -52,7 +52,7 @@ describe('VoteOnSuspectNodeService', () => {
         const sponsorship = await deploySponsorshipContract({ streamId, deployer: adminWallet, chainConfig })
         
         await sponsor(sponsorer, sponsorship.address, 500, token)
-        for (const actor of [flagger, target]) {
+        for (const actor of [flagger, target, voter]) {
             await delegate(actor.operatorWallet, actor.operatorContract.address, 200, token)
             await (await actor.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
         }
