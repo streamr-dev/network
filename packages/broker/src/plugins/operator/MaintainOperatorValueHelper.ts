@@ -104,12 +104,7 @@ export class MaintainOperatorValueHelper {
                     `
             }
         }
-        const parseItems = (response: { operators: { id: string }[] }) => {
-            if (!response.operators) {
-                return []
-            }
-            return response.operators
-        }
+        const parseItems = (response: { operators: { id: string }[] }) => response.operators
         this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
         const queryResult = this.theGraphClient.queryEntities<{ id: string }>(createQuery, parseItems)
 
