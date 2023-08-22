@@ -4,11 +4,9 @@ import ValidationError from '../../../../src/errors/ValidationError'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
 import MessageID from '../../../../src/protocol/message_layer/MessageID'
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
-import StreamMessage, { ContentType, EncryptionType, StreamMessageType } from '../../../../src/protocol/message_layer/StreamMessage'
-import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/StreamMessageSerializerV32'
+import StreamMessage, { ContentType, EncryptionType, StreamMessageType, VERSION } from '../../../../src/protocol/message_layer/StreamMessage'
 import { toStreamID } from '../../../../src/utils/StreamID'
-
-const VERSION = 32
+import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/streamMessageSerialization'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -38,7 +36,7 @@ const serializedMessage = JSON.stringify([
     'signature'
 ])
 
-describe('StreamMessageSerializerV32', () => {
+describe('streamMessageSerialization', () => {
 
     describe('deserialize', () => {
 
@@ -67,7 +65,7 @@ describe('StreamMessageSerializerV32', () => {
     describe('serialize', () => {
 
         it('correctly serializes messages', () => {
-            assert.deepStrictEqual(message.serialize(VERSION), serializedMessage)
+            assert.deepStrictEqual(message.serialize(), serializedMessage)
         })
     })
 })
