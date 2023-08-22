@@ -18,7 +18,7 @@ describe(AnnounceNodeToContractHelper, () => {
             ...operatorConfig,
             nodeWallet: nodeWallets[0]
         })
-    }, 20 * 1000)
+    })
 
     it('read empty heartbeat, then write heartbeat then read timestamp', async () => {
         expect(await helper.getTimestampOfLastHeartbeat()).toBeUndefined()
@@ -31,7 +31,7 @@ describe(AnnounceNodeToContractHelper, () => {
 
         // account for (1) the graph to pick up and (2) un-synced time between Docker box and this machine,
         // TODO: why is drift so large?
-        const DELTA = 60 * 60 * 1000
+        const DELTA = 60 * 5 * 1000
 
         expect(await helper.getTimestampOfLastHeartbeat()).toBeWithin(
             approximateWriteTimestamp - DELTA,
