@@ -13,7 +13,7 @@ import { MaintainOperatorValueHelper } from '../../../../src/plugins/operator/Ma
 const chainConfig = config.dev2
 const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
-const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
+const ADMIN_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
 
 describe('MaintainOperatorValueHelper', () => {
     let provider: Provider
@@ -41,7 +41,7 @@ describe('MaintainOperatorValueHelper', () => {
         expect(randomOperatorAddress).toBeDefined()
 
         // check it's a valid operator, deployed by the OperatorFactory
-        const adminWallet = new Wallet(STREAM_CREATION_KEY, provider)
+        const adminWallet = new Wallet(ADMIN_KEY, provider)
         const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, operatorFactoryABI, adminWallet) as unknown as OperatorFactory
         const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)).gt(0)
         expect(isDeployedByFactory).toBeTrue()
