@@ -26,7 +26,7 @@ import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
 import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
 import { toBinary, toUTF8 } from '../../utils'
 
-const oldToNewEnryptionType = (type: OldEncryptionType): EncryptionType => {
+const oldToNewEncryptionType = (type: OldEncryptionType): EncryptionType => {
     if (type === OldEncryptionType.AES) {
         return EncryptionType.AES
     }
@@ -104,7 +104,7 @@ export class StreamMessageTranslator {
         const translated: StreamMessage = {
             content,
             contentType: oldToNewContentType(contentType),
-            encryptionType: oldToNewEnryptionType(msg.encryptionType),
+            encryptionType: oldToNewEncryptionType(msg.encryptionType),
             messageId,
             previousMessageRef,
             messageType,
