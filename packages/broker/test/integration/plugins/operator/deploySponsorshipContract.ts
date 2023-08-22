@@ -3,8 +3,8 @@ import { utils, Wallet, Contract, ContractReceipt } from 'ethers'
 
 import { Logger } from '@streamr/utils'
 
-import { sponsorshipABI, sponsorshipFactoryABI, streamRegistryABI } from '@streamr/network-contracts'
-import type { Sponsorship, SponsorshipFactory, StreamRegistry } from '@streamr/network-contracts'
+import { sponsorshipABI, sponsorshipFactoryABI } from '@streamr/network-contracts'
+import type { Sponsorship, SponsorshipFactory } from '@streamr/network-contracts'
 
 const { parseEther } = utils
 
@@ -26,13 +26,8 @@ export async function deploySponsorship(
     logger.debug('deploySponsorship', { contracts, deployerBalance: await deployer.getBalance() })
 
     const sponsorshipFactory = new Contract(contracts.SponsorshipFactory, sponsorshipFactoryABI, deployer) as unknown as SponsorshipFactory
-    const streamRegistry = new Contract(contracts.StreamRegistry, streamRegistryABI, deployer) as unknown as StreamRegistry
 
-    const streamExists = await streamRegistry.exists(streamId)
-    logger.debug('Stream to be sponsored', { streamId, streamExists })
-
-    if (!streamExists) { throw new Error(`Can't deploy Sponsorship contract for non-existent stream: ${streamId}`) }
-
+    logger.debug('Stream to be sponsored', { streamId })
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
         minimumStakeWei.toString(),
         minHorizonSeconds.toString(),
