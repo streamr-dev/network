@@ -36,7 +36,7 @@ export class OperatorValueBreachWatcher {
             return
         }
         logger.info('Check unwithdrawn earnings', { randomOperatorAddress })
-        return this.checkUnwithdrawnEarningsOf(randomOperatorAddress)
+        await this.checkUnwithdrawnEarningsOf(randomOperatorAddress)
     }
 
     private async checkUnwithdrawnEarningsOf(targetOperatorAddress: EthereumAddress): Promise<void> {
