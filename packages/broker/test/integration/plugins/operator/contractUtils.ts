@@ -19,8 +19,15 @@ export interface SetupOperatorContractOpts {
     nodeCount?: number
     adminKey?: string
     provider?: Provider
-    // eslint-disable-next-line max-len
-    chainConfig?: { contracts: { DATA: string, OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
+    chainConfig?: { 
+        contracts: { 
+            DATA: string
+            OperatorFactory: string
+            OperatorDefaultDelegationPolicy: string
+            OperatorDefaultPoolYieldPolicy: string
+            OperatorDefaultUndelegationPolicy: string
+        }
+    }
 }
 
 export async function setupOperatorContract(
