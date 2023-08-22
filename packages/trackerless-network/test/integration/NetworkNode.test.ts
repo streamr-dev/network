@@ -74,7 +74,7 @@ describe('NetworkNode', () => {
                 0,
                 666,
                 0,
-                'peer2' as EthereumAddress,
+                '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
                 'msgChainId'
             ),
             prevMsgRef: new MessageRef(665, 0),

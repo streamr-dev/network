@@ -8,13 +8,13 @@ describe('GroupKeyRequestTranslator', () => {
 
     const oldGroupKeyRequest = new OldGroupKeyRequest({
         rsaPublicKey: 'aaaaaaaa',
-        recipient: 'recipient' as EthereumAddress,
+        recipient: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
         requestId: 'request',
         groupKeyIds: ['id1', 'id2', 'id3']
     })
     const newGroupKeyRequest: GroupKeyRequest = {
         rsaPublicKey: toBinary('aaaaaaaa'),
-        recipient: toBinary('recipient'),
+        recipient: toBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
         requestId: 'request',
         groupKeyIds: ['id1', 'id2', 'id3']
     }

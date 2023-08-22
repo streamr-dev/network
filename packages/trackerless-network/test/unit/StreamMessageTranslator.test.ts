@@ -16,14 +16,14 @@ describe('StreamMessageTranslator', () => {
     const protobufMsg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         'TEST',
-        toBinary('publisher')
+        toBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
     )
     const messageId = new MessageID(
         'TEST' as StreamID,
         0,
         Date.now(),
         0,
-        'publisher' as EthereumAddress,
+        '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
         'test',
     )
     const oldProtocolMsg = new OldStreamMessage({
@@ -41,7 +41,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId!.sequenceNumber).toEqual(0)
         expect(translated.messageId!.streamId).toEqual('TEST')
         expect(translated.messageId!.streamPartition).toEqual(0)
-        expect(toUTF8(translated.messageId!.publisherId)).toEqual('publisher')
+        expect(toUTF8(translated.messageId!.publisherId)).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
         expect(translated.previousMessageRef).toEqual(undefined)
         expect(translated.messageType).toEqual(StreamMessageType.MESSAGE)
         expect(translated.groupKeyId).toEqual(undefined)
@@ -56,7 +56,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId.sequenceNumber).toEqual(0)
         expect(translated.messageId.streamId).toEqual('TEST')
         expect(translated.messageId.streamPartition).toEqual(0)
-        expect(translated.getPublisherId()).toEqual('publisher')
+        expect(translated.getPublisherId()).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
         expect(translated.prevMsgRef).toEqual(null)
         expect(translated.messageType).toEqual(OldStreamMessageType.MESSAGE)
         expect(translated.contentType).toEqual(0)
