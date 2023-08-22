@@ -21,7 +21,7 @@ import {
     StreamMessageType,
     MessageID
 } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { EthereumAddress } from '@streamr/utils'
+import { toEthereumAddress } from '@streamr/utils'
 import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
 import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
 import { toBinary, toUTF8 } from '../../utils'
@@ -136,7 +136,7 @@ export class StreamMessageTranslator {
             msg.messageId!.streamPartition,
             Number(msg.messageId!.timestamp),
             msg.messageId!.sequenceNumber,
-            toUTF8(msg.messageId!.publisherId) as EthereumAddress,
+            toEthereumAddress(toUTF8(msg.messageId!.publisherId)),
             msg.messageId!.messageChainId
         )
         let prevMsgRef: OldMessageRef | undefined = undefined
