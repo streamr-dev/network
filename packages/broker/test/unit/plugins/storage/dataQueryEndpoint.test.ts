@@ -118,18 +118,13 @@ describe('dataQueryEndpoint', () => {
                     .expect(streamMessages.map((m) => toObject(m)), done)
             })
 
-            it('responds with latest version protocol serialization of messages given format=protocol', (done) => {
+            it('responds with protocol serialization of messages given format=protocol', (done) => {
                 testGetRequest('/streams/streamId/data/partitions/0/last?format=protocol')
                     .expect(streamMessages.map((msg) => msg.serialize()), done)
             })
 
-            it('responds with specific version protocol serialization of messages given format=protocol&version=32', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/last?format=protocol&version=32')
-                    .expect(streamMessages.map((msg) => msg.serialize()), done)
-            })
-
             it('responds with raw format', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/last?count=2&format=raw&version=32')
+                testGetRequest('/streams/streamId/data/partitions/0/last?count=2&format=raw')
                     .expect('Content-Type', 'text/plain')
                     .expect(streamMessages.map((msg) => msg.serialize()).join('\n'), done)
             })
