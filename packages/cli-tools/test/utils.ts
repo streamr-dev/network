@@ -76,11 +76,10 @@ export const createTestClient = (privateKey?: string): StreamrClient => {
 
 export const waitForTheGraphToHaveIndexed = async (stream: Stream, client: StreamrClient): Promise<void> => {
     await waitForCondition(async () => {
-        let count = 0
         // eslint-disable-next-line no-underscore-dangle
         for await (const _msg of client.searchStreams(stream.id, undefined)) {
-            count += 1
+            return true
         }
-        return count > 0
+        return false
     }, 15 * 1000, 600)
 }
