@@ -30,6 +30,6 @@
     "@types/lodash": "^4.14.197",
     "@types/node-fetch": "^2.6.4",
     "express": "^4.17.1",
-    "node-fetch": "^2.6.12"
+    "node-fetch": "^2.6.13"
   }
 }
