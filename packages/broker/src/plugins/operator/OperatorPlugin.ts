@@ -18,7 +18,7 @@ import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { CONFIG_TEST } from 'streamr-client'
 
-export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number of sponsorships to loop over before tx reverts
+export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
 
 export interface OperatorPluginConfig {
