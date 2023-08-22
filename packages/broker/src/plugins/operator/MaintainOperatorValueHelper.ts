@@ -104,7 +104,7 @@ export class MaintainOperatorValueHelper {
                     `
             }
         }
-        const parseItems = (response: any) => {
+        const parseItems = (response: { operators: { id: string }[] }) => {
             if (!response.operators) {
                 return []
             }
