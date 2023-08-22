@@ -37,11 +37,11 @@ describe('StreamMessageTranslator', () => {
 
     it('translates old protocol to protobuf', () => {
         const translated = StreamMessageTranslator.toProtobuf(oldProtocolMsg)
-        expect(translated.messageRef!.timestamp).toBeGreaterThanOrEqual(0)
-        expect(translated.messageRef!.sequenceNumber).toEqual(0)
-        expect(translated.messageRef!.streamId).toEqual('TEST')
-        expect(translated.messageRef!.streamPartition).toEqual(0)
-        expect(toUTF8(translated.messageRef!.publisherId)).toEqual('publisher')
+        expect(translated.messageId!.timestamp).toBeGreaterThanOrEqual(0)
+        expect(translated.messageId!.sequenceNumber).toEqual(0)
+        expect(translated.messageId!.streamId).toEqual('TEST')
+        expect(translated.messageId!.streamPartition).toEqual(0)
+        expect(toUTF8(translated.messageId!.publisherId)).toEqual('publisher')
         expect(translated.previousMessageRef).toEqual(undefined)
         expect(translated.messageType).toEqual(StreamMessageType.MESSAGE)
         expect(translated.groupKeyId).toEqual(undefined)

@@ -28,13 +28,18 @@ service TemporaryConnectionRpc {
   rpc openConnection (TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
 }
 
-message MessageRef {
+message MessageID {
   string streamId = 1;
   int32 streamPartition = 2;
   int64 timestamp = 3;
   int32 sequenceNumber = 4;
   bytes publisherId = 5;
   string messageChainId = 6;
+}
+
+message MessageRef {
+  int64 timestamp = 1;
+  int32 sequenceNumber = 2;
 }
 
 enum StreamMessageType {
@@ -59,7 +64,7 @@ message StreamMessage {
   EncryptionType encryptionType = 3;
   bytes content = 4;
   bytes signature = 5;
-  MessageRef messageRef = 6;
+  MessageID messageId = 6;
   optional MessageRef previousMessageRef = 7;
   optional string groupKeyId = 8;
   optional EncryptedGroupKey newGroupKey = 9;

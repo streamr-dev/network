@@ -1,5 +1,5 @@
 import {
-    MessageID,
+    MessageID as OldMessageID,
     StreamMessage as OldStreamMessage,
     StreamMessageType as OldStreamMessageType,
     MessageRef as OldMessageRef,
@@ -18,7 +18,8 @@ import {
     GroupKeyResponse,
     MessageRef,
     StreamMessage,
-    StreamMessageType
+    StreamMessageType,
+    MessageID
 } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EthereumAddress } from '@streamr/utils'
 import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
@@ -78,7 +79,7 @@ export class StreamMessageTranslator {
         } else {
             throw new Error('invalid message type')
         }
-        const messageRef: MessageRef = {
+        const messageId: MessageID = {
             timestamp: msg.getTimestamp(),
             sequenceNumber: msg.getSequenceNumber(),
             streamId: msg.getStreamId() as string,
@@ -91,10 +92,6 @@ export class StreamMessageTranslator {
             previousMessageRef = {
                 timestamp: msg.getPreviousMessageRef()!.timestamp,
                 sequenceNumber: msg.getPreviousMessageRef()!.sequenceNumber,
-                streamId: msg.getStreamId() as string,
-                streamPartition: msg.getStreamPartition(),
-                publisherId: toBinary(msg.getPublisherId()),
-                messageChainId: msg.getMsgChainId()
             }
         }
         let newGroupKey: EncryptedGroupKey | undefined = undefined
@@ -108,7 +105,7 @@ export class StreamMessageTranslator {
             content,
             contentType: oldToNewContentType(contentType),
             encryptionType: oldToNewEnryptionType(msg.encryptionType),
-            messageRef: messageRef,
+            messageId,
             previousMessageRef,
             messageType,
             signature: toBinary(msg.signature),
@@ -134,13 +131,13 @@ export class StreamMessageTranslator {
         } else {
             throw new Error('invalid message type')
         }
-        const messageId = new MessageID(
-            msg.messageRef!.streamId as StreamID,
-            msg.messageRef!.streamPartition,
-            Number(msg.messageRef!.timestamp),
-            msg.messageRef!.sequenceNumber,
-            toUTF8(msg.messageRef!.publisherId) as EthereumAddress,
-            msg.messageRef!.messageChainId
+        const messageId = new OldMessageID(
+            msg.messageId!.streamId as StreamID,
+            msg.messageId!.streamPartition,
+            Number(msg.messageId!.timestamp),
+            msg.messageId!.sequenceNumber,
+            toUTF8(msg.messageId!.publisherId) as EthereumAddress,
+            msg.messageId!.messageChainId
         )
         let prevMsgRef: OldMessageRef | undefined = undefined
         if (msg.previousMessageRef) {

@@ -6,7 +6,7 @@ import {
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '@streamr/dht'
-import { LeaveStreamNotice, MessageRef, ProxyDirection, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { LeaveStreamNotice, MessageID, MessageRef, ProxyDirection, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IStreamNode } from '../IStreamNode'
 import { EventEmitter } from 'eventemitter3'
 import { ConnectionLocker } from '@streamr/dht/src/exports'
@@ -75,7 +75,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.streamPartId,
-            markAndCheckDuplicate: (msg: MessageRef, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
+            markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousPeer?: string) => this.broadcast(message, previousPeer),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
                 const senderId = notice.senderId
@@ -85,7 +85,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
                 }
             },
             rpcCommunicator: this.rpcCommunicator,
-            markForInspection: (_senderId: PeerIDKey, _messageRef: MessageRef) => {}
+            markForInspection: (_senderId: PeerIDKey, _messageId: MessageID) => {}
         })
         this.propagation = new Propagation({
             minPropagationTargets: 2,
@@ -204,7 +204,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
 
     broadcast(msg: StreamMessage, previousPeer?: string): void {
         if (!previousPeer) {
-            markAndCheckDuplicate(this.duplicateDetectors, msg.messageRef!, msg.previousMessageRef)
+            markAndCheckDuplicate(this.duplicateDetectors, msg.messageId!, msg.previousMessageRef)
         }
         this.emit('message', msg)
         this.propagation.feedUnseenMessage(msg, this.targetNeighbors.getStringIds(), previousPeer ?? null)

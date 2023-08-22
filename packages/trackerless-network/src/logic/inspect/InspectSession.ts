@@ -1,5 +1,5 @@
 import { EventEmitter } from 'eventemitter3'
-import { MessageRef } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { PeerIDKey } from '@streamr/dht'
 import { toUTF8 } from '../utils'
 
@@ -11,8 +11,8 @@ interface InspectSessionConfig {
     inspectedPeer: PeerIDKey
 }
 
-const createMessageKey = (messageRef: MessageRef): string => {
-    return `${toUTF8(messageRef.publisherId)}:${messageRef.messageChainId}:${messageRef.timestamp}:${messageRef.sequenceNumber}`
+const createMessageKey = (messageId: MessageID): string => {
+    return `${toUTF8(messageId.publisherId)}:${messageId.messageChainId}:${messageId.timestamp}:${messageId.sequenceNumber}`
 }
 export class InspectSession extends EventEmitter<Events> {
     
@@ -25,8 +25,8 @@ export class InspectSession extends EventEmitter<Events> {
         this.inspectedPeer = config.inspectedPeer
     }
 
-    markMessage(senderId: PeerIDKey, messageRef: MessageRef): void {
-        const messageKey = createMessageKey(messageRef)
+    markMessage(senderId: PeerIDKey, messageId: MessageID): void {
+        const messageKey = createMessageKey(messageId)
         if (!this.inspectionMessages.has(messageKey)) {
             this.inspectionMessages.set(messageKey, senderId === this.inspectedPeer)
         } else if (this.inspectionMessages.has(messageKey)

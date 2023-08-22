@@ -75,7 +75,7 @@ export class Propagation {
                 // inconsequential at this point, leaving the logic as is.
                 handledNeighbors.add(neighborId)
                 if (handledNeighbors.size >= this.minPropagationTargets) {
-                    this.activeTaskStore.delete(message.messageRef!)
+                    this.activeTaskStore.delete(message.messageId!)
                 }
             })()
         }

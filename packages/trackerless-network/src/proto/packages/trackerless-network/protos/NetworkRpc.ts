@@ -6,9 +6,9 @@ import { ServiceType } from "@protobuf-ts/runtime-rpc";
 import { MessageType } from "@protobuf-ts/runtime";
 import { PeerDescriptor } from "../../dht/protos/DhtRpc";
 /**
- * @generated from protobuf message MessageRef
+ * @generated from protobuf message MessageID
  */
-export interface MessageRef {
+export interface MessageID {
     /**
      * @generated from protobuf field: string streamId = 1;
      */
@@ -35,6 +35,19 @@ export interface MessageRef {
     messageChainId: string;
 }
 /**
+ * @generated from protobuf message MessageRef
+ */
+export interface MessageRef {
+    /**
+     * @generated from protobuf field: int64 timestamp = 1;
+     */
+    timestamp: number;
+    /**
+     * @generated from protobuf field: int32 sequenceNumber = 2;
+     */
+    sequenceNumber: number;
+}
+/**
  * @generated from protobuf message StreamMessage
  */
 export interface StreamMessage {
@@ -59,9 +72,9 @@ export interface StreamMessage {
      */
     signature: Uint8Array;
     /**
-     * @generated from protobuf field: MessageRef messageRef = 6;
+     * @generated from protobuf field: MessageID messageId = 6;
      */
-    messageRef?: MessageRef;
+    messageId?: MessageID;
     /**
      * @generated from protobuf field: optional MessageRef previousMessageRef = 7;
      */
@@ -369,15 +382,28 @@ export enum ProxyDirection {
     SUBSCRIBE = 1
 }
 // @generated message type with reflection information, may provide speed optimized methods
-class MessageRef$Type extends MessageType<MessageRef> {
+class MessageID$Type extends MessageType<MessageID> {
     constructor() {
-        super("MessageRef", [
+        super("MessageID", [
             { no: 1, name: "streamId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "streamPartition", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 3, name: "timestamp", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 2 /*LongType.NUMBER*/ },
             { no: 4, name: "sequenceNumber", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 5, name: "publisherId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 6, name: "messageChainId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message MessageID
+ */
+export const MessageID = new MessageID$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class MessageRef$Type extends MessageType<MessageRef> {
+    constructor() {
+        super("MessageRef", [
+            { no: 1, name: "timestamp", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 2, name: "sequenceNumber", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
         ]);
     }
 }
@@ -394,7 +420,7 @@ class StreamMessage$Type extends MessageType<StreamMessage> {
             { no: 3, name: "encryptionType", kind: "enum", T: () => ["EncryptionType", EncryptionType] },
             { no: 4, name: "content", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 5, name: "signature", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 6, name: "messageRef", kind: "message", T: () => MessageRef },
+            { no: 6, name: "messageId", kind: "message", T: () => MessageID },
             { no: 7, name: "previousMessageRef", kind: "message", T: () => MessageRef },
             { no: 8, name: "groupKeyId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
             { no: 9, name: "newGroupKey", kind: "message", T: () => EncryptedGroupKey }

@@ -17,6 +17,7 @@ import {
     GroupKeyRequest,
     TemporaryConnectionRequest,
     TemporaryConnectionResponse,
+    MessageID,
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { PeerList } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -85,7 +86,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.randomGraphId,
             rpcCommunicator: this.config.rpcCommunicator,
-            markAndCheckDuplicate: (msg: MessageRef, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
+            markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousPeer?: string) => this.broadcast(message, previousPeer),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
                 const senderId = notice.senderId
@@ -103,7 +104,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                     this.config.proxyConnectionServer?.removeConnection(senderId as PeerIDKey)
                 }
             },
-            markForInspection: (senderId: PeerIDKey, messageRef: MessageRef) => this.config.inspector.markMessage(senderId, messageRef)
+            markForInspection: (senderId: PeerIDKey, messageId: MessageID) => this.config.inspector.markMessage(senderId, messageId)
         })
     }
 
@@ -255,7 +256,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
 
     broadcast(msg: StreamMessage, previousPeer?: string): void {
         if (!previousPeer) {
-            markAndCheckDuplicate(this.duplicateDetectors, msg.messageRef!, msg.previousMessageRef)
+            markAndCheckDuplicate(this.duplicateDetectors, msg.messageId!, msg.previousMessageRef)
         }
         this.emit('message', msg)
         this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), previousPeer ?? null)

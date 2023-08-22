@@ -3,7 +3,7 @@ import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import {
     ContentType,
     EncryptionType,
-    MessageRef,
+    MessageID,
     StreamMessage,
     StreamMessageType
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -50,7 +50,7 @@ export const createStreamMessage = (
     sequenceNumber?: number
 ): StreamMessage => {
     const encoder = new TextEncoder()
-    const messageRef: MessageRef = {
+    const messageId: MessageID = {
         streamId,
         messageChainId: 'messageChain0',
         streamPartition: 0,
@@ -63,7 +63,7 @@ export const createStreamMessage = (
         encryptionType: EncryptionType.NONE,
         content: encoder.encode(content),
         contentType: ContentType.JSON,
-        messageRef,
+        messageId,
         signature: encoder.encode('signature')
     }
     return msg
