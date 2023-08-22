@@ -10,29 +10,29 @@ import { PeerDescriptor } from "../../dht/protos/DhtRpc";
  */
 export interface MessageRef {
     /**
-     * @generated from protobuf field: int64 timestamp = 1;
-     */
-    timestamp: number;
-    /**
-     * @generated from protobuf field: int32 sequenceNumber = 2;
-     */
-    sequenceNumber: number;
-    /**
-     * @generated from protobuf field: string messageChainId = 3;
-     */
-    messageChainId: string;
-    /**
-     * @generated from protobuf field: string streamId = 4;
+     * @generated from protobuf field: string streamId = 1;
      */
     streamId: string;
     /**
-     * @generated from protobuf field: int32 streamPartition = 5;
+     * @generated from protobuf field: int32 streamPartition = 2;
      */
     streamPartition: number;
     /**
-     * @generated from protobuf field: bytes publisherId = 6;
+     * @generated from protobuf field: int64 timestamp = 3;
+     */
+    timestamp: number;
+    /**
+     * @generated from protobuf field: int32 sequenceNumber = 4;
+     */
+    sequenceNumber: number;
+    /**
+     * @generated from protobuf field: bytes publisherId = 5;
      */
     publisherId: Uint8Array;
+    /**
+     * @generated from protobuf field: string messageChainId = 6;
+     */
+    messageChainId: string;
 }
 /**
  * @generated from protobuf message StreamMessage
@@ -213,7 +213,7 @@ export interface NeighborUpdate {
     /**
      * @generated from protobuf field: string senderId = 1;
      */
-    senderId: string; // TODO: remove redundant info
+    senderId: string; // TODO: remove redundant info NET-1028
     /**
      * @generated from protobuf field: string randomGraphId = 2;
      */
@@ -247,7 +247,7 @@ export interface ProxyConnectionRequest {
     /**
      * @generated from protobuf field: string senderId = 1;
      */
-    senderId: string; // TODO: remove redundant info
+    senderId: string; // TODO: remove redundant info NET-1028
     /**
      * @generated from protobuf field: string streamId = 2;
      */
@@ -276,7 +276,7 @@ export interface ProxyConnectionResponse {
     /**
      * @generated from protobuf field: string senderId = 1;
      */
-    senderId: string; // TODO: remove redundant info
+    senderId: string; // TODO: remove redundant info NET-1028
     /**
      * @generated from protobuf field: string streamId = 2;
      */
@@ -372,12 +372,12 @@ export enum ProxyDirection {
 class MessageRef$Type extends MessageType<MessageRef> {
     constructor() {
         super("MessageRef", [
-            { no: 1, name: "timestamp", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 2 /*LongType.NUMBER*/ },
-            { no: 2, name: "sequenceNumber", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 3, name: "messageChainId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "streamId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "streamPartition", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 6, name: "publisherId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+            { no: 1, name: "streamId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "streamPartition", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "timestamp", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 4, name: "sequenceNumber", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 5, name: "publisherId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 6, name: "messageChainId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

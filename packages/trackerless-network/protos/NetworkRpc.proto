@@ -29,12 +29,12 @@ service TemporaryConnectionRpc {
 }
 
 message MessageRef {
-  int64 timestamp = 1;
-  int32 sequenceNumber = 2;
-  string messageChainId = 3;
-  string streamId = 4;
-  int32 streamPartition = 5;
-  bytes publisherId = 6;
+  string streamId = 1;
+  int32 streamPartition = 2;
+  int64 timestamp = 3;
+  int32 sequenceNumber = 4;
+  bytes publisherId = 5;
+  string messageChainId = 6;
 }
 
 enum StreamMessageType {
