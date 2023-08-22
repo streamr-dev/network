@@ -1,7 +1,7 @@
-import { collect } from '@streamr/utils'
+import { collect, waitForCondition } from '@streamr/utils'
 import { spawn } from 'child_process'
 import merge2 from 'merge2'
-import { CONFIG_TEST, StreamrClient } from 'streamr-client'
+import { CONFIG_TEST, Stream, StreamrClient } from 'streamr-client'
 
 export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'
 
@@ -72,4 +72,15 @@ export const createTestClient = (privateKey?: string): StreamrClient => {
         ...CONFIG_TEST,
         auth: (privateKey !== undefined) ? { privateKey } : undefined
     })
+}
+
+export const waitForTheGraphToHaveIndexed = async (stream: Stream, client: StreamrClient): Promise<void> => {
+    await waitForCondition(async () => {
+        let count = 0
+        // eslint-disable-next-line no-underscore-dangle
+        for await (const _msg of client.searchStreams(stream.id, undefined)) {
+            count += 1
+        }
+        return count > 0
+    }, 15 * 1000, 600)
 }
