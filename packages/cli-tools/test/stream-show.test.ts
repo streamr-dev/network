@@ -1,6 +1,6 @@
 import { Wallet } from '@ethersproject/wallet'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { createTestClient, runCommand } from './utils'
+import { createTestClient, runCommand, waitForTheGraphToHaveIndexed } from './utils'
 
 describe('show stream', () => {
 
@@ -8,6 +8,7 @@ describe('show stream', () => {
         const creatorPrivateKey = await fetchPrivateKeyWithGas()
         const client = createTestClient(creatorPrivateKey)
         const stream = await client.createStream(`/${Date.now()}`)
+        await waitForTheGraphToHaveIndexed(stream, client)
         await client.destroy()
         const outputLines = await runCommand(`stream show ${stream.id} --include-permissions`)
         const outputJson = JSON.parse(outputLines.join(''))

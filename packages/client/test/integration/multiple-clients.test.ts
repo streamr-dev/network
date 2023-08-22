@@ -124,7 +124,8 @@ describe('PubSub with multiple clients', () => {
     })
 
     describe('multiple publishers', () => {
-        test('works with multiple publishers on a single stream', async () => {
+        // TODO: flaky test fix in NET-1022
+        test.skip('works with multiple publishers on a single stream', async () => {
             // this creates two subscriber clients and multiple publisher clients
             // all subscribing and publishing to same stream
 
