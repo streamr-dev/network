@@ -12,7 +12,7 @@ import {
 } from '@streamr/protocol'
 import {
     ContentType,
-    EncryptedGroupKey,
+    GroupKey,
     EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
@@ -94,11 +94,11 @@ export class StreamMessageTranslator {
                 sequenceNumber: msg.getPreviousMessageRef()!.sequenceNumber,
             }
         }
-        let newGroupKey: EncryptedGroupKey | undefined = undefined
+        let newGroupKey: GroupKey | undefined = undefined
         if (msg.getNewGroupKey()) {
             newGroupKey = {
                 data: toBinary(msg.getNewGroupKey()!.encryptedGroupKeyHex),
-                groupKeyId: msg.getNewGroupKey()!.groupKeyId
+                id: msg.getNewGroupKey()!.groupKeyId
             }
         }
         const translated: StreamMessage = {
@@ -146,7 +146,7 @@ export class StreamMessageTranslator {
         let newGroupKey: OldEncryptedGroupKey | undefined = undefined
         if (msg.newGroupKey) {
             newGroupKey = new OldEncryptedGroupKey(
-                msg.newGroupKey!.groupKeyId,
+                msg.newGroupKey!.id,
                 toUTF8(msg.newGroupKey!.data),
             )
         }

@@ -4,7 +4,7 @@ import {
     EncryptedGroupKey as OldEncryptedGroupKey
 } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
-import { EncryptedGroupKey, GroupKeyResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { GroupKey, GroupKeyResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { toBinary } from '../../src/logic/utils'
 
 describe('GroupKeyResponseTranslator', () => {
@@ -14,14 +14,14 @@ describe('GroupKeyResponseTranslator', () => {
         recipient: 'recipient' as EthereumAddress,
         encryptedGroupKeys: [ new OldEncryptedGroupKey('id', '0000') ]
     })
-    const newEncryptedGroupKey: EncryptedGroupKey = {
-        groupKeyId: 'id',
+    const newGroupKey: GroupKey = {
+        id: 'id',
         data: toBinary('0000')
     }
     const newGroupKeyResponse: GroupKeyResponse = {
         requestId: 'request',
         recipient: toBinary('recipient'),
-        groupKeys: [ newEncryptedGroupKey ]
+        groupKeys: [ newGroupKey ]
     }
 
     it('translates old protocol to protobuf', () => {

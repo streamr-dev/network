@@ -67,7 +67,7 @@ message StreamMessage {
   MessageID messageId = 6;
   optional MessageRef previousMessageRef = 7;
   optional string groupKeyId = 8;
-  optional EncryptedGroupKey newGroupKey = 9;
+  optional GroupKey newGroupKey = 9;
 }
 
 message GroupKeyRequest {
@@ -80,11 +80,11 @@ message GroupKeyRequest {
 message GroupKeyResponse {
   string requestId = 1;
   bytes recipient = 2;
-  repeated EncryptedGroupKey groupKeys = 3;
+  repeated GroupKey groupKeys = 3;
 }
 
-message EncryptedGroupKey {
-  string groupKeyId = 1;
+message GroupKey {
+  string id = 1;
   bytes data = 2;
 }
 

@@ -84,9 +84,9 @@ export interface StreamMessage {
      */
     groupKeyId?: string;
     /**
-     * @generated from protobuf field: optional EncryptedGroupKey newGroupKey = 9;
+     * @generated from protobuf field: optional GroupKey newGroupKey = 9;
      */
-    newGroupKey?: EncryptedGroupKey;
+    newGroupKey?: GroupKey;
 }
 /**
  * @generated from protobuf message GroupKeyRequest
@@ -122,18 +122,18 @@ export interface GroupKeyResponse {
      */
     recipient: Uint8Array;
     /**
-     * @generated from protobuf field: repeated EncryptedGroupKey groupKeys = 3;
+     * @generated from protobuf field: repeated GroupKey groupKeys = 3;
      */
-    groupKeys: EncryptedGroupKey[];
+    groupKeys: GroupKey[];
 }
 /**
- * @generated from protobuf message EncryptedGroupKey
+ * @generated from protobuf message GroupKey
  */
-export interface EncryptedGroupKey {
+export interface GroupKey {
     /**
-     * @generated from protobuf field: string groupKeyId = 1;
+     * @generated from protobuf field: string id = 1;
      */
-    groupKeyId: string;
+    id: string;
     /**
      * @generated from protobuf field: bytes data = 2;
      */
@@ -423,7 +423,7 @@ class StreamMessage$Type extends MessageType<StreamMessage> {
             { no: 6, name: "messageId", kind: "message", T: () => MessageID },
             { no: 7, name: "previousMessageRef", kind: "message", T: () => MessageRef },
             { no: 8, name: "groupKeyId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
-            { no: 9, name: "newGroupKey", kind: "message", T: () => EncryptedGroupKey }
+            { no: 9, name: "newGroupKey", kind: "message", T: () => GroupKey }
         ]);
     }
 }
@@ -452,7 +452,7 @@ class GroupKeyResponse$Type extends MessageType<GroupKeyResponse> {
         super("GroupKeyResponse", [
             { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "recipient", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 3, name: "groupKeys", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => EncryptedGroupKey }
+            { no: 3, name: "groupKeys", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GroupKey }
         ]);
     }
 }
@@ -461,18 +461,18 @@ class GroupKeyResponse$Type extends MessageType<GroupKeyResponse> {
  */
 export const GroupKeyResponse = new GroupKeyResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class EncryptedGroupKey$Type extends MessageType<EncryptedGroupKey> {
+class GroupKey$Type extends MessageType<GroupKey> {
     constructor() {
-        super("EncryptedGroupKey", [
-            { no: 1, name: "groupKeyId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+        super("GroupKey", [
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "data", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message EncryptedGroupKey
+ * @generated MessageType for protobuf message GroupKey
  */
-export const EncryptedGroupKey = new EncryptedGroupKey$Type();
+export const GroupKey = new GroupKey$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class StreamHandshakeRequest$Type extends MessageType<StreamHandshakeRequest> {
     constructor() {
