@@ -2,7 +2,7 @@ import { Contract } from '@ethersproject/contracts'
 import { Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
 
-import { tokenABI, TestToken } from '@streamr/network-contracts'
+import { tokenABI, TestToken, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { config } from '@streamr/config'
 
@@ -19,6 +19,7 @@ const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8800/subgraphs/name/strea
 const logger = new Logger(module)
 
 const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
+const ONE_ETHER = BigInt(1e18)
 
 describe('OperatorValueBreachWatcher', () => {
     let provider: Provider
@@ -62,8 +63,11 @@ describe('OperatorValueBreachWatcher', () => {
         const operatorValueBreachWatcher = new OperatorValueBreachWatcher(watcherConfig)
 
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
-        const allowedDifference = poolValueBeforeWithdraw.div('10').toBigInt()
-
+        const streamrConfigAddress = await operatorContract.streamrConfig()
+        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, provider) as unknown as StreamrConfig
+        const poolValueDriftLimitFraction = await streamrConfig.poolValueDriftLimitFraction()
+        const allowedDifference = poolValueBeforeWithdraw.mul(poolValueDriftLimitFraction).div(ONE_ETHER).toBigInt()
+        
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
         operatorValueBreachWatcher.helper.getRandomOperator = async () => {
             return toEthereumAddress(operatorContract.address)
