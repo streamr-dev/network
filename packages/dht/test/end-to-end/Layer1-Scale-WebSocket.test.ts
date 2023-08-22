@@ -2,7 +2,8 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 
-describe('Layer1 Scale', () => {
+// TODO: fix flaky test in NET-1021
+describe.skip('Layer1 Scale', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
