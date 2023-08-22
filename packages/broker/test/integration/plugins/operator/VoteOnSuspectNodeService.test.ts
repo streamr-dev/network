@@ -2,12 +2,18 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrEnvDeployer, TestToken } from '@streamr/network-contracts'
 import { waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { parseEther } from 'ethers/lib/utils'
 import { mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
 import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
 import { createClient, createTestStream } from '../../../utils'
-import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, getProvider, setupOperatorContract, sponsor } from './contractUtils'
+import { delegate,
+    deploySponsorshipContract,
+    generateWalletWithGasAndTokens,
+    getProvider,
+    setupOperatorContract,
+    sponsor,
+    stake
+} from './contractUtils'
 
 const TIMEOUT = 1000 * 60 * 10
 const ADMIN_PRIV_KEY = CHAIN_CONFIG.dev2.adminPrivateKey
@@ -54,7 +60,7 @@ describe('VoteOnSuspectNodeService', () => {
         await sponsor(sponsorer, sponsorship.address, 500, token)
         for (const actor of [flagger, target, voter]) {
             await delegate(actor.operatorWallet, actor.operatorContract.address, 200, token)
-            await (await actor.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
+            await stake(actor.operatorContract, sponsorship.address, 150)
         }
         
         const voterClient = createClient(voter.nodeWallets[0].privateKey)
