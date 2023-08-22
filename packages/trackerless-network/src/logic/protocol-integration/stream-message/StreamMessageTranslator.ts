@@ -25,37 +25,25 @@ import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
 import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
 import { toBinary, toUTF8 } from '../../utils'
 
-const oldEnryptionTypeTranslator = (type: OldEncryptionType): EncryptionType => {
+const oldToNewEnryptionType = (type: OldEncryptionType): EncryptionType => {
     if (type === OldEncryptionType.AES) {
         return EncryptionType.AES
     }
     return EncryptionType.NONE
 }
 
-const newEncryptionTypeTranslator = (type: EncryptionType): OldEncryptionType => {
+const newToOldEncryptionType = (type: EncryptionType): OldEncryptionType => {
     if (type === EncryptionType.AES) {
         return OldEncryptionType.AES
     }
     return OldEncryptionType.NONE
 }
 
-const oldContentTypeTranslator = (type: OldContentType): ContentType => {
-    if (type === OldContentType.JSON) {
-        return ContentType.JSON
-    }
-    // else if (OldContentType.BINARY) {
-    //     return ContentType.BINARY
-    // }
+const oldToNewContentType = (_type: OldContentType): ContentType => {
     return ContentType.JSON
 }
 
-const newContentTypeTranslator = (type: ContentType): OldContentType => {
-    if (type === ContentType.JSON) {
-        return OldContentType.JSON
-    }
-    // else if (ContentType.BINARY) {
-    //     return OldContentType.BINARY
-    // }
+const newToOldContentType = (_type: ContentType): OldContentType => {
     return OldContentType.JSON
 }
 
@@ -118,8 +106,8 @@ export class StreamMessageTranslator {
         }
         const translated: StreamMessage = {
             content,
-            contentType: oldContentTypeTranslator(contentType),
-            encryptionType: oldEnryptionTypeTranslator(msg.encryptionType),
+            contentType: oldToNewContentType(contentType),
+            encryptionType: oldToNewEnryptionType(msg.encryptionType),
             messageRef: messageRef,
             previousMessageRef,
             messageType,
@@ -170,9 +158,9 @@ export class StreamMessageTranslator {
             newGroupKey,
             groupKeyId: msg.groupKeyId,
             content,
-            contentType: newContentTypeTranslator(contentType),
+            contentType: newToOldContentType(contentType),
             messageType,
-            encryptionType: newEncryptionTypeTranslator(msg.encryptionType),
+            encryptionType: newToOldEncryptionType(msg.encryptionType),
             messageId,
             prevMsgRef
         })
