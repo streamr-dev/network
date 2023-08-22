@@ -1,4 +1,3 @@
-import { parseEther } from '@ethersproject/units'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import fetch from 'node-fetch'
@@ -6,12 +5,12 @@ import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/Inspec
 import { createClient, createTestStream } from '../../../utils'
 import {
     THE_GRAPH_URL,
+    delegate,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
     setupOperatorContract,
     sponsor,
-    stake,
-    transferTokens
+    stake
 } from './contractUtils'
 
 jest.setTimeout(600 * 1000)
@@ -45,7 +44,7 @@ describe('InspectRandomNodeHelper', () => {
         const sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
         const sponsorship2 = await deploySponsorshipContract({ streamId: streamId2, deployer: operatorWallet })
 
-        await transferTokens(operatorWallet, operatorContract.address, 200, operatorWallet.address)
+        await delegate(operatorWallet, operatorContract.address, 200)
         await stake(operatorContract, sponsorship1.address, 100)
         await stake(operatorContract, sponsorship2.address, 100)
 
@@ -68,14 +67,12 @@ describe('InspectRandomNodeHelper', () => {
         const sponsorship = await deploySponsorshipContract({ streamId: streamId1, deployer: await generateWalletWithGasAndTokens() })
         await sponsor(flagger.operatorWallet, sponsorship.address, 500)
 
-        // each operator delegates to its operactor contract
-        await transferTokens(flagger.operatorWallet, flagger.operatorContract.address, 200, flagger.operatorWallet.address)
-        await transferTokens(target.operatorWallet, target.operatorContract.address, 300, target.operatorWallet.address)
-
+        await delegate(flagger.operatorWallet, flagger.operatorContract.address, 200)
+        await delegate(target.operatorWallet, target.operatorContract.address, 300)
         await wait(3000) // sometimes these stake fail, possibly when they end up in the same block
-        await (await flagger.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
+        await stake(flagger.operatorContract, sponsorship.address, 150)
         await wait(3000)
-        await (await target.operatorContract.stake(sponsorship.address, parseEther('250'))).wait()
+        await stake(target.operatorContract, sponsorship.address, 250)
         await wait(3000)
 
         const inspectRandomNodeHelper = new InspectRandomNodeHelper({
