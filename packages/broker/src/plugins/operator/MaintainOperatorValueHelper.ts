@@ -8,13 +8,13 @@ export class MaintainOperatorValueHelper {
 
     constructor(config: OperatorServiceConfig) {
         this.config = config
-        this.operator = new Contract(config.operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
+        this.operator = new Contract(config.operatorContractAddress, operatorABI, this.config.nodeWallet) as unknown as Operator
     }
 
     // returns a wei value (1 ETH means 100%)
     async getPenaltyLimitFraction(): Promise<bigint> {
         const streamrConfigAddress = await this.operator.streamrConfig()
-        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, this.config.provider) as unknown as StreamrConfig
+        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, this.config.nodeWallet) as unknown as StreamrConfig
         return (await streamrConfig.poolValueDriftLimitFraction()).toBigInt()
     }
 

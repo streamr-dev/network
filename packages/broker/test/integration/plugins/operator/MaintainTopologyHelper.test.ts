@@ -32,7 +32,13 @@ describe('MaintainTopologyHelper', () => {
         let topologyHelper: MaintainTopologyHelper
 
         beforeAll(async () => {
-            ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract())
+            const deployment = await setupOperatorContract({ nodeCount: 1 })
+            operatorWallet = deployment.operatorWallet
+            operatorContract = deployment.operatorContract
+            operatorConfig = {
+                ...deployment.operatorConfig,
+                nodeWallet: deployment.nodeWallets[0]
+            }
         })
 
         afterEach(async () => {
@@ -104,7 +110,13 @@ describe('MaintainTopologyHelper', () => {
         let topologyHelper: MaintainTopologyHelper
 
         beforeAll(async () => {
-            ({ operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract())
+            const deployment = await setupOperatorContract({ nodeCount: 1 })
+            operatorWallet = deployment.operatorWallet
+            operatorContract = deployment.operatorContract
+            operatorConfig = {
+                ...deployment.operatorConfig,
+                nodeWallet: deployment.nodeWallets[0]
+            }
         })
 
         afterEach(async () => {

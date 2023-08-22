@@ -69,7 +69,7 @@ describe('MaintainTopologyService', () => {
 
         const serviceHelperConfig = {
             provider: getProvider(),
-            signer: operatorWallet,
+            nodeWallet: operatorWallet,
             operatorContractAddress: toEthereumAddress(operatorContract.address),
             theGraphUrl: THE_GRAPH_URL
         }

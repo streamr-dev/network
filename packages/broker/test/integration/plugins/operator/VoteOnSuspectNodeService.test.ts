@@ -58,7 +58,10 @@ describe('VoteOnSuspectNodeService', () => {
         }
         
         const voterClient = createClient(voter.nodeWallets[0].privateKey)
-        const voterVoteService = new VoteOnSuspectNodeService(voterClient, voter.operatorConfig)
+        const voterVoteService = new VoteOnSuspectNodeService(voterClient, {
+            ...voter.operatorConfig,
+            nodeWallet: voter.nodeWallets[0]
+        })
         await voterVoteService.start()
 
         // TODO: replace mock voting with real voting down the line to make this a e2e test in the true sense

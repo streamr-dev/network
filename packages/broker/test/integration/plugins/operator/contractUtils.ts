@@ -25,8 +25,7 @@ export interface SetupOperatorContractOpts {
 
 export async function setupOperatorContract(
     opts?: SetupOperatorContractOpts
-): Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig, nodeWallets: Wallet[] }> {
-    const provider = opts?.provider ?? getProvider()
+): Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: Omit<OperatorServiceConfig, 'nodeWallet'>, nodeWallets: Wallet[] }> {
     const operatorWallet = await generateWalletWithGasAndTokens({
         provider: opts?.provider,
         chainConfig: opts?.chainConfig,
@@ -46,8 +45,6 @@ export async function setupOperatorContract(
     }
     const operatorConfig = {
         operatorContractAddress: toEthereumAddress(operatorContract.address),
-        signer: operatorWallet, // TODO remove
-        provider: provider,
         theGraphUrl: THE_GRAPH_URL,
     }
     return { operatorWallet, operatorContract, operatorConfig, nodeWallets }

@@ -7,7 +7,7 @@ import { setupOperatorContract } from './contractUtils'
 describe(AnnounceNodeToContractHelper, () => {
 
     let nodeWallets: Wallet[]
-    let operatorConfig: OperatorServiceConfig
+    let operatorConfig: Omit<OperatorServiceConfig, 'nodeWallet'>
     let helper: AnnounceNodeToContractHelper
 
     beforeEach(async () => {
@@ -16,7 +16,7 @@ describe(AnnounceNodeToContractHelper, () => {
         }))
         helper = new AnnounceNodeToContractHelper({
             ...operatorConfig,
-            signer: nodeWallets[0].connect(operatorConfig.provider)
+            nodeWallet: nodeWallets[0]
         })
     })
 
