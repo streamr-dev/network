@@ -111,7 +111,7 @@ message LeaveStreamNotice {
 }
 
 message NeighborUpdate {
-  string senderId = 1; // TODO: remove redundant info
+  string senderId = 1; // TODO: remove redundant info NET-1028
   string randomGraphId = 2;
   bool removeMe = 3;
   repeated dht.PeerDescriptor neighborDescriptors = 4;
@@ -123,7 +123,7 @@ message StreamEntryPoint {
 }
 
 message ProxyConnectionRequest {
-  string senderId = 1; // TODO: remove redundant info
+  string senderId = 1; // TODO: remove redundant info NET-1028
   string streamId = 2;
   uint32 streamPartition = 3; 
   ProxyDirection direction = 4;
@@ -132,7 +132,7 @@ message ProxyConnectionRequest {
 }
 
 message ProxyConnectionResponse {
-  string senderId = 1; // TODO: remove redundant info
+  string senderId = 1; // TODO: remove redundant info NET-1028
   string streamId = 2;
   uint32 streamPartition = 3;
   ProxyDirection direction = 4;  
