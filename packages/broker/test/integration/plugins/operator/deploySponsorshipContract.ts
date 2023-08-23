@@ -12,7 +12,7 @@ const logger = new Logger(module)
 
 export async function deploySponsorship(
     // eslint-disable-next-line max-len
-    chainConfig: { contracts: { SponsorshipFactory: string, SponsorshipStakeWeightedAllocationPolicy: string, SponsorshipDefaultLeavePolicy: string, SponsorshipVoteKickPolicy: string, StreamRegistry: string } },
+    chainConfig: { contracts: { SponsorshipFactory: string, SponsorshipStakeWeightedAllocationPolicy: string, SponsorshipDefaultLeavePolicy: string, SponsorshipVoteKickPolicy: string } },
     deployer: Wallet, {
         streamId = `Stream-${Date.now()}`,
         metadata = '{}',
