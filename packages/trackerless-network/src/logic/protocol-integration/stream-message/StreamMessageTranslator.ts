@@ -151,7 +151,7 @@ export class StreamMessageTranslator {
             )
         }
         const translated = new OldStreamMessage<T>({
-            signature: binaryToHex(msg.signature),
+            signature: binaryToHex(msg.signature, true),
             newGroupKey,
             groupKeyId: msg.groupKeyId,
             content,
