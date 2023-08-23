@@ -14,6 +14,6 @@ export async function getTotalUnwithdrawnEarnings(operatorContract: Operator): P
     for (const e of earnings) {
         unwithdrawnEarnings += e.toBigInt()
     }
-    logger.debug(`Total unwithdrawn earnings: ${formatEther(unwithdrawnEarnings.toString())} (t = ${Date.now()})`)
+    logger.debug(`Total unwithdrawn earnings: ${formatEther(unwithdrawnEarnings.toString())}`)
     return unwithdrawnEarnings
 }
