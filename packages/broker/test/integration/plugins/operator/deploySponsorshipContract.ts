@@ -26,7 +26,6 @@ export async function deploySponsorship(
 
     const sponsorshipFactory = new Contract(contracts.SponsorshipFactory, sponsorshipFactoryABI, deployer) as unknown as SponsorshipFactory
 
-    logger.debug('Stream to be sponsored', { streamId })
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
         minimumStakeWei.toString(),
         minHorizonSeconds.toString(),
