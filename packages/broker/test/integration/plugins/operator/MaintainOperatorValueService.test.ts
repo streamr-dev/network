@@ -1,21 +1,16 @@
 import { Contract } from '@ethersproject/contracts'
 import { JsonRpcProvider, Provider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
-
+import { config as CHAIN_CONFIG } from '@streamr/config'
 import { TestToken, tokenABI } from '@streamr/network-contracts'
 import { Logger, waitForCondition } from '@streamr/utils'
-import { config as CHAIN_CONFIG } from '@streamr/config'
-
-import { deploySponsorship } from './deploySponsorshipContract'
-import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
-
-import { STREAMR_DOCKER_DEV_HOST, createClient, createTestStream } from '../../../utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
-import { setupOperatorContract } from './setupOperatorContract'
+import { createClient, createTestStream } from '../../../utils'
+import { deploySponsorshipContract, setupOperatorContract } from './contractUtils'
+import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
 
 const chainConfig = CHAIN_CONFIG.dev2
 
-const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 const logger = new Logger(module)
 
 const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
@@ -38,26 +33,28 @@ describe('MaintainOperatorValueService', () => {
     }, 60 * 1000)
 
     it('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
-        const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({
+        const { operatorWallet, operatorContract, operatorConfig, nodeWallets } = await setupOperatorContract({
             provider,
             chainConfig,
-            theGraphUrl,
             operatorConfig: {
                 sharePercent: 10
             }
         })
 
-        const sponsorship1 = await deploySponsorship(chainConfig, operatorWallet, { streamId, earningsPerSecond: parseEther('1') })
+        const sponsorship1 = await deploySponsorshipContract({ chainConfig, deployer: operatorWallet, streamId, earningsPerSecond: parseEther('1') })
         await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther('250'), '0x')).wait()
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
         await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
 
-        const sponsorship2 = await deploySponsorship(chainConfig, operatorWallet, { streamId, earningsPerSecond: parseEther('2') })
+        const sponsorship2 = await deploySponsorshipContract({ chainConfig, deployer: operatorWallet, streamId, earningsPerSecond: parseEther('2') })
         await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther('250'), '0x')).wait()
         await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
 
         // 1000 = check every second
-        const service = new MaintainOperatorValueService(operatorConfig, 0.5, 1000)
+        const service = new MaintainOperatorValueService({
+            ...operatorConfig,
+            nodeWallet: nodeWallets[0]
+        }, 0.5, 1000)
 
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
 
