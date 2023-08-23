@@ -13,7 +13,7 @@ import { binaryToHex, binaryToUtf8, hexToBinary } from '../../src/logic/utils'
 
 describe('StreamMessageTranslator', () => {
 
-    const signature = '1234'
+    const signature = '0x1234'
     const protobufMsg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         'TEST',
@@ -46,7 +46,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.previousMessageRef).toEqual(undefined)
         expect(translated.messageType).toEqual(StreamMessageType.MESSAGE)
         expect(translated.groupKeyId).toEqual(undefined)
-        expect(binaryToHex(translated.signature)).toEqual(signature)
+        expect(binaryToHex(translated.signature, true)).toEqual(signature)
         expect(JSON.parse(binaryToUtf8(translated.content))).toEqual({ hello: 'WORLD' })
 
     })
