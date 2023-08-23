@@ -1,14 +1,10 @@
 // TODO: copy-paste from network-contracts, import from there?
 import { utils, Wallet, Contract, ContractReceipt } from 'ethers'
 
-import { Logger } from '@streamr/utils'
-
 import { sponsorshipABI, sponsorshipFactoryABI } from '@streamr/network-contracts'
 import type { Sponsorship, SponsorshipFactory } from '@streamr/network-contracts'
 
 const { parseEther } = utils
-
-const logger = new Logger(module)
 
 export async function deploySponsorship(
     // eslint-disable-next-line max-len
