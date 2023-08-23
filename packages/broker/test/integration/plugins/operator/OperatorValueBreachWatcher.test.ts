@@ -31,7 +31,8 @@ describe('OperatorValueBreachWatcher', () => {
     }, 60 * 1000)
 
     it('withdraws the other Operators earnings when they are above the penalty limit', async () => {
-        const { operatorConfig: watcherConfig, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
+        // eslint-disable-next-line max-len
+        const { operatorConfig: watcherConfig, operatorWallet: watcherOperatorWallet, nodeWallets: _watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         
         const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId, earningsPerSecond: parseEther('1') })
@@ -45,7 +46,7 @@ describe('OperatorValueBreachWatcher', () => {
 
         const operatorValueBreachWatcher = new OperatorValueBreachWatcher({
             ...watcherConfig,
-            nodeWallet: watcherWallets[0]
+            nodeWallet: watcherOperatorWallet // TODO should be _watcherWallets[0] when ETH-579 deployed
         })
 
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
