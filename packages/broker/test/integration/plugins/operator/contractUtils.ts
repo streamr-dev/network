@@ -173,8 +173,8 @@ interface GenerateWalletWithGasAndTokensOpts {
 export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGasAndTokensOpts): Promise<Wallet> {
     const provider = opts?.provider ?? getProvider()
     const newWallet = new Wallet(fastPrivateKey())
-    const adminWallet = getAdminWallet(opts?.adminKey ?? CHAIN_CONFIG[TEST_CHAIN].adminPrivateKey, provider)
-    const token = (opts?.chainConfig !== undefined) 
+    const adminWallet = getAdminWallet(opts?.adminKey, opts?.provider)
+    const token = (opts?.chainConfig !== undefined)
         ? new Contract(opts.chainConfig.contracts.DATA!, tokenABI, adminWallet) as unknown as TestToken
         : getTokenContract().connect(adminWallet)
     await (await token.mint(newWallet.address, parseEther('1000000'), {

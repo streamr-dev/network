@@ -1,10 +1,18 @@
 import { Contract } from '@ethersproject/contracts'
 import { parseEther } from '@ethersproject/units'
-import { StreamrConfig, TestToken, streamrConfigABI } from '@streamr/network-contracts'
+import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { OperatorValueBreachWatcher } from '../../../../src/plugins/operator/OperatorValueBreachWatcher'
 import { createClient, createTestStream } from '../../../utils'
-import { SetupOperatorContractOpts, deploySponsorshipContract, getProvider, getTokenContract, setupOperatorContract } from './contractUtils'
+import {
+    SetupOperatorContractOpts,
+    delegate,
+    deploySponsorshipContract,
+    getProvider,
+    setupOperatorContract,
+    sponsor,
+    stake
+} from './contractUtils'
 import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
 
 const logger = new Logger(module)
@@ -13,12 +21,11 @@ const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35
 const ONE_ETHER = BigInt(1e18)
 
 describe('OperatorValueBreachWatcher', () => {
-    let token: TestToken
+
     let streamId: string
     let deployConfig: SetupOperatorContractOpts
 
     beforeAll(async () => {
-        logger.debug('Creating stream for the test')
         const client = createClient(STREAM_CREATION_KEY)
         streamId = (await createTestStream(client, module)).id
         await client.destroy()
@@ -27,7 +34,6 @@ describe('OperatorValueBreachWatcher', () => {
                 sharePercent: 10
             }
         }
-        token = getTokenContract()
     }, 60 * 1000)
 
     it('withdraws the other Operators earnings when they are above the penalty limit', async () => {
@@ -35,14 +41,14 @@ describe('OperatorValueBreachWatcher', () => {
         const { operatorConfig: watcherConfig, operatorWallet: watcherOperatorWallet, nodeWallets: _watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         
+        await delegate(operatorWallet, operatorContract.address, 200)
+        // TODO add a sponsorer and do the sponsor calls from that account?
         const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId, earningsPerSecond: parseEther('1') })
-        await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther('250'), '0x')).wait()
-        await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
-        await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
-
+        await sponsor(operatorWallet, sponsorship1.address, 250)
+        await stake(operatorContract, sponsorship1.address, 100)
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId, earningsPerSecond: parseEther('2') })
-        await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther('250'), '0x')).wait()
-        await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
+        await sponsor(operatorWallet, sponsorship2.address, 250)
+        await stake(operatorContract, sponsorship2.address, 100)
 
         const operatorValueBreachWatcher = new OperatorValueBreachWatcher({
             ...watcherConfig,

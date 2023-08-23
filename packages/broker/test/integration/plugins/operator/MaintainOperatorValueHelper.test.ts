@@ -1,17 +1,15 @@
 import { Contract } from '@ethersproject/contracts'
-import { Provider } from '@ethersproject/providers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { OperatorFactory, operatorFactoryABI } from '@streamr/network-contracts'
 import { MaintainOperatorValueHelper } from '../../../../src/plugins/operator/MaintainOperatorValueHelper'
 import { SetupOperatorContractOpts, getAdminWallet, setupOperatorContract } from './contractUtils'
 
 describe('MaintainOperatorValueHelper', () => {
-    let provider: Provider
+
     let deployConfig: SetupOperatorContractOpts
 
     beforeAll(async () => {
         deployConfig = {
-            provider,
             operatorConfig: {
                 sharePercent: 10
             }
