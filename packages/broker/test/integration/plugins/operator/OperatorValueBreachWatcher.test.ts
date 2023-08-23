@@ -8,6 +8,7 @@ import {
     SetupOperatorContractOpts,
     delegate,
     deploySponsorshipContract,
+    generateWalletWithGasAndTokens,
     getProvider,
     setupOperatorContract,
     sponsor,
@@ -41,13 +42,13 @@ describe('OperatorValueBreachWatcher', () => {
         const { operatorConfig: watcherConfig, operatorWallet: watcherOperatorWallet, nodeWallets: _watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         
+        const sponsorer = await generateWalletWithGasAndTokens()
         await delegate(operatorWallet, operatorContract.address, 200)
-        // TODO add a sponsorer and do the sponsor calls from that account?
         const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId, earningsPerSecond: parseEther('1') })
-        await sponsor(operatorWallet, sponsorship1.address, 250)
+        await sponsor(sponsorer, sponsorship1.address, 250)
         await stake(operatorContract, sponsorship1.address, 100)
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId, earningsPerSecond: parseEther('2') })
-        await sponsor(operatorWallet, sponsorship2.address, 250)
+        await sponsor(sponsorer, sponsorship2.address, 250)
         await stake(operatorContract, sponsorship2.address, 100)
 
         const operatorValueBreachWatcher = new OperatorValueBreachWatcher({

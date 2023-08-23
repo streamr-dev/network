@@ -3,7 +3,7 @@ import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, waitForCondition } from '@streamr/utils'
 import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { createClient, createTestStream } from '../../../utils'
-import { delegate, deploySponsorshipContract, setupOperatorContract, sponsor, stake } from './contractUtils'
+import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
 import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
 
 const logger = new Logger(module)
@@ -27,13 +27,13 @@ describe('MaintainOperatorValueService', () => {
             }
         })
 
+        const sponsorer = await generateWalletWithGasAndTokens()
         await delegate(operatorWallet, operatorContract.address, 200)
-        // TODO add a sponsorer and do the sponsor calls from that account?
         const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
-        await sponsor(operatorWallet, sponsorship1.address, 250)
+        await sponsor(sponsorer, sponsorship1.address, 250)
         await stake(operatorContract, sponsorship1.address, 100)
         const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: parseEther('2'), streamId, deployer: operatorWallet })
-        await sponsor(operatorWallet, sponsorship2.address, 250)
+        await sponsor(sponsorer, sponsorship2.address, 250)
         await stake(operatorContract, sponsorship2.address, 100)
 
         // 1000 = check every second
