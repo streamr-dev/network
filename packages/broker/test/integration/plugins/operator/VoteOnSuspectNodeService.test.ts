@@ -28,7 +28,7 @@ describe('VoteOnSuspectNodeService', () => {
 
     beforeAll(async () => {
         const streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, CHAIN_URL)
-        await streamrEnvDeployer.deployEvironment()
+        await streamrEnvDeployer.deployEnvironment()
         const { contracts } = streamrEnvDeployer
         chainConfig = { contracts: streamrEnvDeployer.addresses } as any
         adminWallet = new Wallet(ADMIN_PRIV_KEY, getProvider())

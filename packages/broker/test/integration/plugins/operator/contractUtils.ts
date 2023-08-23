@@ -28,6 +28,11 @@ export interface SetupOperatorContractOpts {
             OperatorDefaultUndelegationPolicy: string
         }
     }
+    operatorConfig?: {
+        minStakePercent?: number
+        sharePercent?: number
+        metadata?: string
+    }
 }
 
 export async function setupOperatorContract(
@@ -38,7 +43,13 @@ export async function setupOperatorContract(
         chainConfig: opts?.chainConfig,
         adminKey: opts?.adminKey
     })
-    const operatorContract = await deployOperatorContract({ chainConfig: opts?.chainConfig ?? CHAIN_CONFIG[TEST_CHAIN], deployer: operatorWallet })
+    const operatorContract = await deployOperatorContract({
+        chainConfig: opts?.chainConfig ?? CHAIN_CONFIG[TEST_CHAIN],
+        deployer: operatorWallet,
+        minStakePercent: opts?.operatorConfig?.minStakePercent,
+        sharePercent: opts?.operatorConfig?.sharePercent,
+        metadata: opts?.operatorConfig?.metadata
+    })
     const nodeWallets: Wallet[] = []
     if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
         for (const _ of range(opts.nodeCount)) {
@@ -59,9 +70,9 @@ export async function setupOperatorContract(
 
 interface DeployOperatorContractOpts {
     deployer: Wallet
-    minOperatorStakePercent?: number
-    operatorSharePercent?: number
-    operatorMetadata?: string
+    minStakePercent?: number
+    sharePercent?: number
+    metadata?: string
     poolTokenName?: string 
     // eslint-disable-next-line max-len
     chainConfig?: { contracts: { OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
@@ -80,18 +91,18 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
         throw new Error('Operator already has a contract')
     }
     const operatorReceipt = await (await operatorFactory.deployOperator(
-        [ opts.poolTokenName ?? `Pool-${Date.now()}`, opts.operatorMetadata ?? '{}' ],
+        [ opts.poolTokenName ?? `Pool-${Date.now()}`, opts.metadata ?? '{}' ],
         [
             chainConfig.contracts.OperatorDefaultDelegationPolicy,
             chainConfig.contracts.OperatorDefaultPoolYieldPolicy,
             chainConfig.contracts.OperatorDefaultUndelegationPolicy,
         ], [
             0,
-            parseEther('1').mul(opts.minOperatorStakePercent ?? 0).div(100),
+            parseEther('1').mul(opts.minStakePercent ?? 0).div(100),
             0,
             0,
             0,
-            parseEther('1').mul(opts.operatorSharePercent ?? 0).div(100)
+            parseEther('1').mul(opts.sharePercent ?? 0).div(100)
         ]
     )).wait() as ContractReceipt // TODO: figure out why typechain types produce any from .connect, shouldn't need explicit typing here
     const newOperatorAddress = operatorReceipt.events?.find((e) => e.event === 'NewOperator')?.args?.operatorContractAddress
@@ -106,6 +117,7 @@ export interface DeploySponsorshipContractOpts {
     minimumStakeWei?: BigNumber
     minHorizonSeconds?: number
     minOperatorCount?: number
+    earningsPerSecond?: BigNumber
     // eslint-disable-next-line max-len
     chainConfig?: { contracts: { SponsorshipFactory: string, SponsorshipStakeWeightedAllocationPolicy: string, SponsorshipDefaultLeavePolicy: string, SponsorshipVoteKickPolicy: string } }
 }
@@ -128,7 +140,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
             chainConfig.contracts.SponsorshipDefaultLeavePolicy,
             chainConfig.contracts.SponsorshipVoteKickPolicy,
         ], [
-            parseEther('0.01'),
+            (opts.earningsPerSecond ?? parseEther('0.01')).toString(),
             '0',
             '0'
         ]

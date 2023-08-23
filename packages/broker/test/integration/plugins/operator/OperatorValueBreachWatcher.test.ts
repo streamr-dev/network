@@ -1,29 +1,31 @@
 import { Contract } from '@ethersproject/contracts'
-import { JsonRpcProvider, Provider } from '@ethersproject/providers'
+import { Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
 
-import { TestToken, tokenABI } from '@streamr/network-contracts'
-import { Logger, waitForCondition } from '@streamr/utils'
-import { config as CHAIN_CONFIG } from '@streamr/config'
+import { tokenABI, TestToken, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
+import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { config } from '@streamr/config'
 
 import { deploySponsorship } from './deploySponsorshipContract'
 import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
 
+import { OperatorValueBreachWatcher } from '../../../../src/plugins/operator/OperatorValueBreachWatcher'
 import { STREAMR_DOCKER_DEV_HOST, createClient, createTestStream } from '../../../utils'
-import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
-import { setupOperatorContract } from './setupOperatorContract'
+import { setupOperatorContract, SetupOperatorOpts } from './setupOperatorContract'
 
-const chainConfig = CHAIN_CONFIG.dev2
-
+const chainConfig = config.dev2
 const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8800/subgraphs/name/streamr-dev/network-subgraphs`
+
 const logger = new Logger(module)
 
 const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
+const ONE_ETHER = BigInt(1e18)
 
-describe('MaintainOperatorValueService', () => {
+describe('OperatorValueBreachWatcher', () => {
     let provider: Provider
     let token: TestToken
     let streamId: string
+    let deployConfig: SetupOperatorOpts
 
     beforeAll(async () => {
         provider = new JsonRpcProvider(`${chainConfig.rpcEndpoints[0].url}`)
@@ -35,18 +37,20 @@ describe('MaintainOperatorValueService', () => {
         await client.destroy()
 
         token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
-    }, 60 * 1000)
-
-    it('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
-        const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract({
+        deployConfig = {
             provider,
             chainConfig,
             theGraphUrl,
             operatorConfig: {
                 sharePercent: 10
             }
-        })
+        }
+    }, 60 * 1000)
 
+    it('withdraws the other Operators earnings when they are above the penalty limit', async () => {
+        const { operatorConfig: watcherConfig } = await setupOperatorContract(deployConfig)
+        const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
+        
         const sponsorship1 = await deploySponsorship(chainConfig, operatorWallet, { streamId, earningsPerSecond: parseEther('1') })
         await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther('250'), '0x')).wait()
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
@@ -56,20 +60,29 @@ describe('MaintainOperatorValueService', () => {
         await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther('250'), '0x')).wait()
         await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
 
-        // 1000 = check every second
-        const service = new MaintainOperatorValueService(operatorConfig, 0.5, 1000)
+        const operatorValueBreachWatcher = new OperatorValueBreachWatcher(watcherConfig)
 
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
+        const streamrConfigAddress = await operatorContract.streamrConfig()
+        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, provider) as unknown as StreamrConfig
+        const poolValueDriftLimitFraction = await streamrConfig.poolValueDriftLimitFraction()
+        const allowedDifference = poolValueBeforeWithdraw.mul(poolValueDriftLimitFraction).div(ONE_ETHER).toBigInt()
+        
+        // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
+        operatorValueBreachWatcher.helper.getRandomOperator = async () => {
+            return toEthereumAddress(operatorContract.address)
+        }
 
-        await service.start()
-
-        // wait until we see the withdraw happened: first we go above a sum (that must be < safe threshold), then below
-        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > parseEther('3').toBigInt(), 10000, 1000)
-        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) < parseEther('3').toBigInt(), 10000, 1000)
+        logger.debug('Waiting until above', { allowedDifference })
+        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > allowedDifference, 10000, 1000)
+        await operatorValueBreachWatcher.start()
+        logger.debug('Waiting until below', { allowedDifference })
+        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) < allowedDifference, 10000, 1000)
 
         const poolValueAfterWithdraw = await operatorContract.getApproximatePoolValue()
         expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
 
-        await service.stop()
+        await operatorValueBreachWatcher.stop()
+
     }, 60 * 1000)
 })

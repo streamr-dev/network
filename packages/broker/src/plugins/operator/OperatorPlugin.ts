@@ -12,9 +12,13 @@ import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorContractService } from './MaintainOperatorContractService'
 import { MaintainOperatorValueService } from './MaintainOperatorValueService'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
+import { OperatorValueBreachWatcher } from './OperatorValueBreachWatcher'
 import { OperatorFleetState } from './OperatorFleetState'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+
+export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
+export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -25,6 +29,8 @@ export interface OperatorServiceConfig {
     nodeWallet: Wallet
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
+    maxSponsorshipsInWithdraw?: number
+    minSponsorshipEarningsInWithdraw?: number
 }
 
 const logger = new Logger(module)
@@ -37,6 +43,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly voteOnSuspectNodeService: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
     private readonly maintainOperatorValueService: MaintainOperatorValueService
+    private readonly operatorValueBreachWatcher: OperatorValueBreachWatcher
     private readonly fleetState: OperatorFleetState
     private readonly serviceConfig: OperatorServiceConfig
 
@@ -50,6 +57,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
             // TODO read from client, as we need to use production value in production environment (not ConfigTest)
             theGraphUrl: CONFIG_TEST.contracts!.theGraphUrl!,
+            maxSponsorshipsInWithdraw: DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW,
+            minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
         }
         this.announceNodeToStreamService = new AnnounceNodeToStreamService(
             this.streamrClient,
@@ -65,11 +74,12 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             this.fleetState
         )
         this.maintainOperatorValueService = new MaintainOperatorValueService(this.serviceConfig)
+        this.operatorValueBreachWatcher = new OperatorValueBreachWatcher(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
             this.streamrClient,
             this.serviceConfig
         )
-    
+
     }
 
     async start(): Promise<void> {
@@ -85,6 +95,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.maintainOperatorValueService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
+        await this.operatorValueBreachWatcher.start()
         await this.fleetState.start()
         this.announceNodeToContractService.start().catch((err) => {
             logger.fatal('Encountered fatal error in announceNodeToContractService', { err })
@@ -98,6 +109,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.maintainOperatorContractService.stop()
         await this.maintainOperatorValueService.stop()
         await this.voteOnSuspectNodeService.stop()
+        await this.operatorValueBreachWatcher.stop()
     }
 
     // eslint-disable-next-line class-methods-use-this
