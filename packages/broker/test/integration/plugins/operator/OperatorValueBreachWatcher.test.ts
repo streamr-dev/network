@@ -39,7 +39,7 @@ describe('OperatorValueBreachWatcher', () => {
 
     it('withdraws the other Operators earnings when they are above the penalty limit', async () => {
         // eslint-disable-next-line max-len
-        const { operatorConfig: watcherConfig, operatorWallet: watcherOperatorWallet, nodeWallets: _watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
+        const { operatorServiceConfig: watcherConfig, operatorWallet: watcherOperatorWallet, nodeWallets: _watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         
         const sponsorer = await generateWalletWithGasAndTokens()

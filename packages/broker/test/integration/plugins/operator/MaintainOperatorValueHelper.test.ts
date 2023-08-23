@@ -17,12 +17,12 @@ describe('MaintainOperatorValueHelper', () => {
     }, 60 * 1000)
 
     it('can find a random operator with getRandomOperator(), excluding himself', async () => {
-        const { operatorContract, operatorConfig, nodeWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
+        const { operatorContract, operatorServiceConfig, nodeWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         // deploy another operator to make sure there are at least 2 operators
         await setupOperatorContract(deployConfig)
 
         const helper = new MaintainOperatorValueHelper({
-            ...operatorConfig,
+            ...operatorServiceConfig,
             nodeWallet: nodeWallets[0]
         })
         const randomOperatorAddress = await helper.getRandomOperator()

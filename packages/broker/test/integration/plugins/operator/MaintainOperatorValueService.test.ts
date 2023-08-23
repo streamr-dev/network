@@ -20,7 +20,7 @@ describe('MaintainOperatorValueService', () => {
     }, 60 * 1000)
 
     it('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
-        const { operatorWallet, operatorContract, operatorConfig, nodeWallets } = await setupOperatorContract({
+        const { operatorWallet, operatorContract, operatorServiceConfig, nodeWallets } = await setupOperatorContract({
             nodeCount: 1,
             operatorConfig: {
                 sharePercent: 10
@@ -38,7 +38,7 @@ describe('MaintainOperatorValueService', () => {
 
         // 1000 = check every second
         const service = new MaintainOperatorValueService({
-            ...operatorConfig,
+            ...operatorServiceConfig,
             nodeWallet: nodeWallets[0]
         }, 0.5, 1000)
 

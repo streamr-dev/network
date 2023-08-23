@@ -35,9 +35,9 @@ describe('InspectRandomNodeHelper', () => {
     })
 
     it('getSponsorshipsOfOperator, getOperatorsInSponsorship', async () => {
-        const { operatorWallet, operatorContract, operatorConfig } = await setupOperatorContract()
+        const { operatorWallet, operatorContract, operatorServiceConfig } = await setupOperatorContract()
         const inspectRandomNodeHelper = new InspectRandomNodeHelper({
-            ...operatorConfig,
+            ...operatorServiceConfig,
             nodeWallet: undefined as any
         })
 
@@ -76,7 +76,7 @@ describe('InspectRandomNodeHelper', () => {
         await wait(3000)
 
         const inspectRandomNodeHelper = new InspectRandomNodeHelper({
-            ...flagger.operatorConfig,
+            ...flagger.operatorServiceConfig,
             nodeWallet: flagger.nodeWallets[0]
         })
         await inspectRandomNodeHelper.flag(toEthereumAddress(sponsorship.address), toEthereumAddress(target.operatorContract.address))

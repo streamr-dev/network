@@ -1,21 +1,17 @@
 import { waitForCondition } from '@streamr/utils'
-import { Wallet } from 'ethers'
 import { AnnounceNodeToContractHelper } from '../../../../src/plugins/operator/AnnounceNodeToContractHelper'
-import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { setupOperatorContract } from './contractUtils'
 
 describe(AnnounceNodeToContractHelper, () => {
 
-    let nodeWallets: Wallet[]
-    let operatorConfig: Omit<OperatorServiceConfig, 'nodeWallet'>
     let helper: AnnounceNodeToContractHelper
 
     beforeEach(async () => {
-        ({ operatorConfig, nodeWallets } = await setupOperatorContract({
+        const { operatorServiceConfig, nodeWallets } = await setupOperatorContract({
             nodeCount: 1
-        }))
+        })
         helper = new AnnounceNodeToContractHelper({
-            ...operatorConfig,
+            ...operatorServiceConfig,
             nodeWallet: nodeWallets[0]
         })
     })

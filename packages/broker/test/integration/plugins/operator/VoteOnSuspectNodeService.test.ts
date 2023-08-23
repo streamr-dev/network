@@ -65,7 +65,7 @@ describe('VoteOnSuspectNodeService', () => {
         
         const voterClient = createClient(voter.nodeWallets[0].privateKey)
         const voterVoteService = new VoteOnSuspectNodeService(voterClient, {
-            ...voter.operatorConfig,
+            ...voter.operatorServiceConfig,
             nodeWallet: voter.nodeWallets[0]
         })
         await voterVoteService.start()

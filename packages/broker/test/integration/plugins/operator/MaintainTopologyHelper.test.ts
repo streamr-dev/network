@@ -26,7 +26,7 @@ describe('MaintainTopologyHelper', () => {
 
         let operatorWallet: Wallet
         let operatorContract: Operator
-        let operatorConfig: OperatorServiceConfig
+        let operatorServiceConfig: OperatorServiceConfig
         let sponsorship1: Contract
         let sponsorship2: Contract
         let topologyHelper: MaintainTopologyHelper
@@ -35,8 +35,8 @@ describe('MaintainTopologyHelper', () => {
             const deployment = await setupOperatorContract({ nodeCount: 1 })
             operatorWallet = deployment.operatorWallet
             operatorContract = deployment.operatorContract
-            operatorConfig = {
-                ...deployment.operatorConfig,
+            operatorServiceConfig = {
+                ...deployment.operatorServiceConfig,
                 nodeWallet: deployment.nodeWallets[0]
             }
         })
@@ -47,7 +47,7 @@ describe('MaintainTopologyHelper', () => {
         })
 
         it('client emits events when sponsorships are staked', async () => {
-            topologyHelper = new MaintainTopologyHelper(operatorConfig)
+            topologyHelper = new MaintainTopologyHelper(operatorServiceConfig)
             let eventcount = 0
             topologyHelper.on('addStakedStreams', () => {
                 eventcount += 1
@@ -68,7 +68,7 @@ describe('MaintainTopologyHelper', () => {
 
         it('client returns all streams from theGraph on initial startup as event', async () => {
             await wait(5000)
-            topologyHelper = new MaintainTopologyHelper(operatorConfig)
+            topologyHelper = new MaintainTopologyHelper(operatorServiceConfig)
             let streams: string[] = []
             topologyHelper.on('addStakedStreams', (streamid: string[]) => {
                 streams = streams.concat(streamid)
@@ -85,7 +85,7 @@ describe('MaintainTopologyHelper', () => {
 
         it('client catches onchain events and emits join and leave events', async () => {
 
-            topologyHelper = new MaintainTopologyHelper(operatorConfig)
+            topologyHelper = new MaintainTopologyHelper(operatorServiceConfig)
             let eventcount = 0
             topologyHelper.on('removeStakedStream', () => {
                 eventcount += 1
@@ -104,7 +104,7 @@ describe('MaintainTopologyHelper', () => {
 
         let operatorWallet: Wallet
         let operatorContract: Operator
-        let operatorConfig: OperatorServiceConfig
+        let operatorServiceConfig: OperatorServiceConfig
         let sponsorship1: Contract
         let sponsorship2: Contract
         let topologyHelper: MaintainTopologyHelper
@@ -113,8 +113,8 @@ describe('MaintainTopologyHelper', () => {
             const deployment = await setupOperatorContract({ nodeCount: 1 })
             operatorWallet = deployment.operatorWallet
             operatorContract = deployment.operatorContract
-            operatorConfig = {
-                ...deployment.operatorConfig,
+            operatorServiceConfig = {
+                ...deployment.operatorServiceConfig,
                 nodeWallet: deployment.nodeWallets[0]
             }
         })
@@ -126,7 +126,7 @@ describe('MaintainTopologyHelper', () => {
 
         it('edge cases, 2 sponsorships for the same stream, join only fired once', async () => {
 
-            topologyHelper = new MaintainTopologyHelper(operatorConfig)
+            topologyHelper = new MaintainTopologyHelper(operatorServiceConfig)
             let receivedAddStreams = 0
             topologyHelper.on('addStakedStreams', () => {
                 receivedAddStreams += 1
@@ -152,7 +152,7 @@ describe('MaintainTopologyHelper', () => {
 
         it('only returns the stream from getAllStreams when staked on 2 sponsorships for the stream', async () => {
 
-            const operatorClient = new MaintainTopologyHelper(operatorConfig)
+            const operatorClient = new MaintainTopologyHelper(operatorServiceConfig)
             let streams: string[] = []
             operatorClient.on('addStakedStreams', (streamIDs: string[]) => {
                 streams = streamIDs
@@ -165,7 +165,7 @@ describe('MaintainTopologyHelper', () => {
 
         it('edge cases, 2 sponsorships for the same stream, remove only fired once', async () => {
 
-            topologyHelper = new MaintainTopologyHelper(operatorConfig)
+            topologyHelper = new MaintainTopologyHelper(operatorServiceConfig)
             let receivedRemoveStreams = 0
             topologyHelper.on('removeStakedStream', () => {
                 receivedRemoveStreams += 1
