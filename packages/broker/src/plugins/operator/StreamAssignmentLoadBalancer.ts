@@ -1,6 +1,6 @@
 import { OperatorFleetStateEvents } from './OperatorFleetState'
 import { MaintainTopologyHelperEvents } from './MaintainTopologyHelper'
-import { StreamID, StreamPartID } from '@streamr/protocol'
+import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
 import pLimit from 'p-limit'
 import EventEmitter3 from 'eventemitter3'
@@ -19,7 +19,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
     private readonly myStreamParts = new Set<StreamPartID>()
     private readonly concurrencyLimit = pLimit(1)
     private readonly consistentHashRing: ConsistentHashRing
-    private readonly myNodeId: string
+    private readonly myNodeId: NodeID
     private readonly getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>
     private readonly operatorFleetState: EventEmitter3<OperatorFleetStateEvents>
     private readonly maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>
@@ -42,6 +42,25 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.operatorFleetState.on('removed', this.nodeRemoved)
         this.maintainTopologyHelper.on('addStakedStreams', this.streamsAdded)
         this.maintainTopologyHelper.on('removeStakedStream', this.streamRemoved)
+    }
+
+    isAnyPartitionOfStreamAssignedToMe(streamId: StreamID): boolean {
+        for (const streamPart of this.myStreamParts.keys()) {
+            if (StreamPartIDUtils.getStreamID(streamPart) === streamId) {
+                return true
+            }
+        }
+        return false
+    }
+
+    getPartitionsOfStreamAssignedToMe(streamId: StreamID): StreamPartID[] {
+        const streamParts: StreamPartID[] = []
+        for (const streamPart of this.myStreamParts.keys()) {
+            if (StreamPartIDUtils.getStreamID(streamPart) === streamId) {
+                streamParts.push(streamPart)
+            }
+        }
+        return streamParts
     }
 
     private nodeAdded = this.concurrencyLimiter(async (nodeId: NodeID): Promise<void> => {

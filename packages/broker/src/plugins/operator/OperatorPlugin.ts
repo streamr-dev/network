@@ -36,7 +36,7 @@ const logger = new Logger(module)
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private announceNodeToStreamService?: AnnounceNodeToStreamService
     private announceNodeToContractService?: AnnounceNodeToContractService
-    private inspectRandomNodeService = new InspectRandomNodeService()
+    private inspectRandomNodeService?: InspectRandomNodeService
     private voteOnSuspectNodeService?: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
     private maintainOperatorPoolValueService?: MaintainOperatorPoolValueService
@@ -87,7 +87,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             operatorFleetState: this.fleetState
         })
         await this.announceNodeToStreamService.start()
-        await this.inspectRandomNodeService.start()
+        //await this.inspectRandomNodeService.start()
         await this.maintainOperatorPoolValueService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
@@ -101,7 +101,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
 
     async stop(): Promise<void> {
         await this.announceNodeToStreamService!.stop()
-        await this.inspectRandomNodeService.stop()
+        //await this.inspectRandomNodeService.stop()
         await this.maintainOperatorPoolValueService!.stop()
         await this.voteOnSuspectNodeService!.stop()
         await this.operatorPoolValueBreachWatcher!.stop()
