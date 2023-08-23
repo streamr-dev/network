@@ -23,7 +23,6 @@ export async function deploySponsorship(
     } = {},
 ): Promise<Sponsorship> {
     const { contracts } = chainConfig
-    logger.debug('deploySponsorship', { contracts, deployerBalance: await deployer.getBalance() })
 
     const sponsorshipFactory = new Contract(contracts.SponsorshipFactory, sponsorshipFactoryABI, deployer) as unknown as SponsorshipFactory
 
