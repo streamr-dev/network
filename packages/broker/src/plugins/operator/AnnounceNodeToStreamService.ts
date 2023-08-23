@@ -23,17 +23,21 @@ export class AnnounceNodeToStreamService {
     }
 
     async start(): Promise<void> {
-        const nodeId = (await this.streamrClient.getNode()).getNodeId()
         setAbortableInterval(() => {
-            this.streamrClient.publish(this.coordinationStream, {
-                msgType: 'heartbeat',
-                nodeId
-            }).catch((err) => {
-                logger.warn('Unable to publish to coordination stream', {
-                    streamId: this.coordinationStream,
-                    reason: err?.message
-                })
-            })
+            (async () => {
+                try {
+                    const peerDescriptor = await this.streamrClient.getPeerDescriptor()
+                    await this.streamrClient.publish(this.coordinationStream, {
+                        msgType: 'heartbeat',
+                        peerDescriptor
+                    })
+                } catch (err) {
+                    logger.warn('Unable to publish to coordination stream', {
+                        streamId: this.coordinationStream,
+                        reason: err?.message
+                    })
+                }
+            })()
         }, this.intervalInMs, this.abortController.signal)
     }
 
