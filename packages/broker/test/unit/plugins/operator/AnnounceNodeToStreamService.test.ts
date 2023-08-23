@@ -1,12 +1,20 @@
 import { AnnounceNodeToStreamService } from '../../../../src/plugins/operator/AnnounceNodeToStreamService'
-import { StreamrClient } from 'streamr-client'
+import { NetworkNodeType, StreamrClient } from 'streamr-client'
 import { mock, mockClear, MockProxy } from 'jest-mock-extended'
 import { toEthereumAddress, wait } from '@streamr/utils'
 import { toStreamID } from '@streamr/protocol'
 
-const ADDRESS = toEthereumAddress('0x61BBf708Fb7bB1D4dA10D1958C88A170988d3d1F')
-const NODE_ID = toEthereumAddress('0xA3B2B8AAAC099833275b1f7fCC415E121326D38c')
 const INTERVAL_IN_MS = 25
+const ADDRESS = toEthereumAddress('0x61BBf708Fb7bB1D4dA10D1958C88A170988d3d1F')
+const PEER_DESCRIPTOR = Object.freeze({
+    id: 'nodeId',
+    type: NetworkNodeType.NODEJS,
+    websocket: {
+        ip: '127.0.0.1',
+        port: 6666
+    },
+    openInternet: true
+})
 
 describe(AnnounceNodeToStreamService, () => {
 
@@ -15,9 +23,7 @@ describe(AnnounceNodeToStreamService, () => {
 
     beforeEach(async () => {
         streamrClient = mock<StreamrClient>()
-        streamrClient.getNode.mockResolvedValue({
-            getNodeId: () => NODE_ID
-        } as any)
+        streamrClient.getPeerDescriptor.mockResolvedValue(PEER_DESCRIPTOR)
         streamrClient.publish.mockResolvedValue(null as any)
         service = new AnnounceNodeToStreamService(streamrClient, ADDRESS, INTERVAL_IN_MS)
         await service.start()
@@ -32,7 +38,7 @@ describe(AnnounceNodeToStreamService, () => {
         expect(streamrClient.publish.mock.calls.length).toBeGreaterThan(10)
         expect(streamrClient.publish).toHaveBeenCalledWith(toStreamID('/operator/coordination', ADDRESS), {
             msgType: 'heartbeat',
-            nodeId: NODE_ID
+            peerDescriptor: PEER_DESCRIPTOR
         })
     })
 
