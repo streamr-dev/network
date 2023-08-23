@@ -4,7 +4,7 @@ import { StreamrConfig, TestToken, streamrConfigABI } from '@streamr/network-con
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { OperatorValueBreachWatcher } from '../../../../src/plugins/operator/OperatorValueBreachWatcher'
 import { createClient, createTestStream } from '../../../utils'
-import { SetupOperatorContractOpts, deploySponsorshipContract, getProvider, setupOperatorContract } from './contractUtils'
+import { SetupOperatorContractOpts, deploySponsorshipContract, getProvider, getTokenContract, setupOperatorContract } from './contractUtils'
 import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
 
 const logger = new Logger(module)
@@ -27,6 +27,7 @@ describe('OperatorValueBreachWatcher', () => {
                 sharePercent: 10
             }
         }
+        token = getTokenContract()
     }, 60 * 1000)
 
     it('withdraws the other Operators earnings when they are above the penalty limit', async () => {
