@@ -1,20 +1,20 @@
 import { Contract } from '@ethersproject/contracts'
-import { Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { parseEther } from '@ethersproject/units'
-
-import { tokenABI, TestToken, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
+import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { config } from '@streamr/config'
-
-import { deploySponsorship } from './deploySponsorshipContract'
-import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
-
 import { OperatorValueBreachWatcher } from '../../../../src/plugins/operator/OperatorValueBreachWatcher'
-import { STREAMR_DOCKER_DEV_HOST, createClient, createTestStream } from '../../../utils'
-import { setupOperatorContract, SetupOperatorOpts } from './setupOperatorContract'
-
-const chainConfig = config.dev2
-const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8800/subgraphs/name/streamr-dev/network-subgraphs`
+import { createClient, createTestStream } from '../../../utils'
+import {
+    SetupOperatorContractOpts,
+    delegate,
+    deploySponsorshipContract,
+    generateWalletWithGasAndTokens,
+    getProvider,
+    setupOperatorContract,
+    sponsor,
+    stake
+} from './contractUtils'
+import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
 
 const logger = new Logger(module)
 
@@ -22,49 +22,43 @@ const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35
 const ONE_ETHER = BigInt(1e18)
 
 describe('OperatorValueBreachWatcher', () => {
-    let provider: Provider
-    let token: TestToken
+
     let streamId: string
-    let deployConfig: SetupOperatorOpts
+    let deployConfig: SetupOperatorContractOpts
 
     beforeAll(async () => {
-        provider = new JsonRpcProvider(`${chainConfig.rpcEndpoints[0].url}`)
-        logger.debug('Connected to: ', await provider.getNetwork())
-
-        logger.debug('Creating stream for the test')
         const client = createClient(STREAM_CREATION_KEY)
         streamId = (await createTestStream(client, module)).id
         await client.destroy()
-
-        token = new Contract(chainConfig.contracts.DATA, tokenABI) as unknown as TestToken
         deployConfig = {
-            provider,
-            chainConfig,
-            theGraphUrl,
-            operatorSettings: {
-                operatorSharePercent: 10
+            operatorConfig: {
+                sharePercent: 10
             }
         }
     }, 60 * 1000)
 
     it('withdraws the other Operators earnings when they are above the penalty limit', async () => {
-        const { operatorConfig: watcherConfig } = await setupOperatorContract(deployConfig)
+        // eslint-disable-next-line max-len
+        const { operatorServiceConfig: watcherConfig, operatorWallet: watcherOperatorWallet, nodeWallets: _watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         
-        const sponsorship1 = await deploySponsorship(chainConfig, operatorWallet, { streamId, earningsPerSecond: parseEther('1') })
-        await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther('250'), '0x')).wait()
-        await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
-        await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
+        const sponsorer = await generateWalletWithGasAndTokens()
+        await delegate(operatorWallet, operatorContract.address, 200)
+        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, sponsorship1.address, 250)
+        await stake(operatorContract, sponsorship1.address, 100)
+        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: parseEther('2'), streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, sponsorship2.address, 250)
+        await stake(operatorContract, sponsorship2.address, 100)
 
-        const sponsorship2 = await deploySponsorship(chainConfig, operatorWallet, { streamId, earningsPerSecond: parseEther('2') })
-        await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther('250'), '0x')).wait()
-        await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
-
-        const operatorValueBreachWatcher = new OperatorValueBreachWatcher(watcherConfig)
+        const operatorValueBreachWatcher = new OperatorValueBreachWatcher({
+            ...watcherConfig,
+            nodeWallet: watcherOperatorWallet // TODO should be _watcherWallets[0] when ETH-579 deployed
+        })
 
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
         const streamrConfigAddress = await operatorContract.streamrConfig()
-        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, provider) as unknown as StreamrConfig
+        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
         const poolValueDriftLimitFraction = await streamrConfig.poolValueDriftLimitFraction()
         const allowedDifference = poolValueBeforeWithdraw.mul(poolValueDriftLimitFraction).div(ONE_ETHER).toBigInt()
         

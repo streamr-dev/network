@@ -1,10 +1,6 @@
 import { formatEther } from 'ethers/lib/utils'
-
 import { Operator } from '@streamr/network-contracts'
 import { Logger } from '@streamr/utils'
-
-import { deploySponsorship as _deploySponsorship } from './deploySponsorshipContract'
-import { deployOperatorContract as _deployOperatorContract } from './deployOperatorContract'
 
 const logger = new Logger(module)
 
