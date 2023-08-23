@@ -106,7 +106,7 @@ export class MaintainOperatorValueHelper {
         }
         const parseItems = (response: { operators: { id: string }[] }) => response.operators
         this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
-        const queryResult = this.theGraphClient.queryEntities<{ id: string }>(createQuery, parseItems)
+        const queryResult = this.theGraphClient.queryEntities<{ id: string }>(createQuery)
 
         const operatorAddresses: EthereumAddress[] = []
         for await (const operator of queryResult) {
