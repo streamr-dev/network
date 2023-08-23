@@ -15,13 +15,13 @@ export async function deploySponsorship(
         minimumStakeWei = parseEther('60'),
         minHorizonSeconds = 0,
         minOperatorCount = 1,
+        earningsPerSecond = parseEther('0.01'),
     } = {},
 ): Promise<Sponsorship> {
+    const { contracts } = chainConfig
 
-    // console.log("Chain config: %o", chainConfig)
-    const sponsorshipFactory =
-        new Contract(chainConfig.contracts.SponsorshipFactory, sponsorshipFactoryABI, deployer) as unknown as SponsorshipFactory
-    // console.log("deployer balance", await deployer.getBalance())
+    const sponsorshipFactory = new Contract(contracts.SponsorshipFactory, sponsorshipFactoryABI, deployer) as unknown as SponsorshipFactory
+
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
         minimumStakeWei.toString(),
         minHorizonSeconds.toString(),
@@ -29,11 +29,11 @@ export async function deploySponsorship(
         streamId,
         metadata,
         [
-            chainConfig.contracts.SponsorshipStakeWeightedAllocationPolicy,
-            chainConfig.contracts.SponsorshipDefaultLeavePolicy,
-            chainConfig.contracts.SponsorshipVoteKickPolicy,
+            contracts.SponsorshipStakeWeightedAllocationPolicy,
+            contracts.SponsorshipDefaultLeavePolicy,
+            contracts.SponsorshipVoteKickPolicy,
         ], [
-            parseEther('0.01'),
+            earningsPerSecond,
             '0',
             '0'
         ]

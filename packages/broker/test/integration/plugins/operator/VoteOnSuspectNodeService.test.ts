@@ -30,7 +30,7 @@ describe('VoteOnSuspectNodeService', () => {
 
     beforeAll(async () => {
         streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, chainURL)
-        await streamrEnvDeployer.deployEvironment()
+        await streamrEnvDeployer.deployEnvironment()
         const { contracts } = streamrEnvDeployer
         chainConfig = { contracts: streamrEnvDeployer.addresses } as any
         provider = new JsonRpcProvider(chainURL)
