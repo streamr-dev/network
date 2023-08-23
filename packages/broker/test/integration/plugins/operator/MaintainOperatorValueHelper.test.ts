@@ -1,12 +1,9 @@
 import { Contract } from '@ethersproject/contracts'
 import { Provider } from '@ethersproject/providers'
-import { OperatorFactory, operatorFactoryABI } from '@streamr/network-contracts'
-import { Wallet } from 'ethers'
-import { MaintainOperatorValueHelper } from '../../../../src/plugins/operator/MaintainOperatorValueHelper'
-import { SetupOperatorContractOpts, setupOperatorContract } from './contractUtils'
 import { config as CHAIN_CONFIG } from '@streamr/config'
-
-const ADMIN_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
+import { OperatorFactory, operatorFactoryABI } from '@streamr/network-contracts'
+import { MaintainOperatorValueHelper } from '../../../../src/plugins/operator/MaintainOperatorValueHelper'
+import { SetupOperatorContractOpts, getAdminWallet, setupOperatorContract } from './contractUtils'
 
 describe('MaintainOperatorValueHelper', () => {
     let provider: Provider
@@ -34,10 +31,9 @@ describe('MaintainOperatorValueHelper', () => {
         expect(randomOperatorAddress).toBeDefined()
 
         // check it's a valid operator, deployed by the OperatorFactory
-        const adminWallet = new Wallet(ADMIN_KEY, provider)
         const operatorFactory = new Contract(
             CHAIN_CONFIG.dev2.contracts.OperatorFactory,
-            operatorFactoryABI, adminWallet
+            operatorFactoryABI, getAdminWallet()
         ) as unknown as OperatorFactory
         const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)).gt(0)
         expect(isDeployedByFactory).toBeTrue()

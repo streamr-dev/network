@@ -160,6 +160,10 @@ export function getTokenContract(): TestToken {
     return new Contract(CHAIN_CONFIG[TEST_CHAIN].contracts.DATA, tokenABI) as unknown as TestToken
 }
 
+export const getAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
+    return new Wallet(adminKey ?? CHAIN_CONFIG[TEST_CHAIN].adminPrivateKey).connect(provider ?? getProvider())
+}
+
 interface GenerateWalletWithGasAndTokensOpts {
     provider?: Provider
     chainConfig?: { contracts: { DATA: string } }
@@ -169,7 +173,7 @@ interface GenerateWalletWithGasAndTokensOpts {
 export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGasAndTokensOpts): Promise<Wallet> {
     const provider = opts?.provider ?? getProvider()
     const newWallet = new Wallet(fastPrivateKey())
-    const adminWallet = new Wallet(opts?.adminKey ?? CHAIN_CONFIG[TEST_CHAIN].adminPrivateKey).connect(provider)
+    const adminWallet = getAdminWallet(opts?.adminKey ?? CHAIN_CONFIG[TEST_CHAIN].adminPrivateKey, provider)
     const token = (opts?.chainConfig !== undefined) 
         ? new Contract(opts.chainConfig.contracts.DATA!, tokenABI, adminWallet) as unknown as TestToken
         : getTokenContract().connect(adminWallet)
