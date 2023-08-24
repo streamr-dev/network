@@ -297,23 +297,30 @@ export class DataStore implements IStoreService {
             const contact = sortedList.getAllContacts()[0]
             const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
             if (!incomingPeerId.equals(contactPeerId) && !ownPeerId.equals(contactPeerId)) {
-                this.migrateDataToContact(dataEntry, contact.getPeerDescriptor()).then(() => {
-                    logger.trace('migrateDataToContact() returned when migrating to only the closest contact')
-                }).catch((e) => {
-                    logger.error('migrating data to only the closest contact failed ' + e)
+                setImmediate(async () => {
+                    try {
+                        await this.migrateDataToContact(dataEntry, contact.getPeerDescriptor())
+                        logger.trace('migrateDataToContact() returned when migrating to only the closest contact')
+                    } catch (e) {
+                        logger.error('migrating data to only the closest contact failed ' + e)
+                    }
                 })
             }
         } else {
             // if we are the closest to the data, migrate to all 5 nearest
-
             sortedList.getAllContacts().forEach((contact) => {
                 const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
                 if (!incomingPeerId.equals(contactPeerId) && !ownPeerId.equals(contactPeerId)) {
-                    this.migrateDataToContact(dataEntry, contact.getPeerDescriptor()).then(() => {
-                        logger.trace('migrateDataToContact() returned')
-                    }).catch((e) => {
-                        logger.error('migrating data to one of the closest contacts failed ' + e)
-                    })
+                    if (!incomingPeerId.equals(contactPeerId) && !ownPeerId.equals(contactPeerId)) {
+                        setImmediate(async () => {
+                            try {
+                                await this.migrateDataToContact(dataEntry, contact.getPeerDescriptor())
+                                logger.trace('migrateDataToContact() returned')
+                            } catch (e) {
+                                logger.error('migrating data to one of the closest contacts failed ' + e)
+                            }
+                        })
+                    }
                 }
             })
         }
