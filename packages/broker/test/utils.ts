@@ -153,7 +153,7 @@ export const createTestStream = async (
 }
 
 export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
-    const node = await broker.getNode()
+    const node = await (broker.getStreamrClient().getNode())
     return Array.from(node.getStreamParts())
 }
 
