@@ -3,9 +3,8 @@ import {
     GroupKeyResponse as OldGroupKeyResponse,
     EncryptedGroupKey as OldEncryptedGroupKey
 } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, hexToBinary } from '@streamr/utils'
 import { GroupKey, GroupKeyResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { hexToBinary } from '../../src/logic/utils'
 
 describe('GroupKeyResponseTranslator', () => {
 

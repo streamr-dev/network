@@ -6,8 +6,7 @@ import {
     StreamMessageType,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Propagation } from '../../src/logic/propagation/Propagation'
-import { toEthereumAddress, wait } from '@streamr/utils'
-import { utf8ToBinary } from '../../src/logic/utils'
+import { toEthereumAddress, wait, utf8ToBinary } from '@streamr/utils'
 
 const PUBLISHER_ID = toEthereumAddress('0x1111111111111111111111111111111111111111')
 

@@ -9,6 +9,7 @@ import {
     keyFromPeerDescriptor,
     PeerIDKey
 } from '@streamr/dht'
+import { binaryToHex } from '@streamr/utils'
 import {
     StreamMessage,
     LeaveStreamNotice,
@@ -35,7 +36,7 @@ import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 import { IInspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
-import { binaryToHex, markAndCheckDuplicate } from './utils'
+import { markAndCheckDuplicate } from './utils'
 
 export interface Events {
     message: (message: StreamMessage) => void

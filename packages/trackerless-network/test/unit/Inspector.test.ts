@@ -2,7 +2,7 @@ import { ListeningRpcCommunicator, NodeType, PeerDescriptor, PeerID, keyFromPeer
 import { Inspector } from '../../src/logic/inspect/Inspector'
 import { mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
-import { utf8ToBinary } from '../../src/logic/utils'
+import { utf8ToBinary } from '@streamr/utils'
 
 describe('Inspector', () => {
     

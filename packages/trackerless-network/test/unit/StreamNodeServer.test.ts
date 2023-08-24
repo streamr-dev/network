@@ -3,7 +3,7 @@ import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
 import { LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/Transport'
 import { createStreamMessage } from '../utils/utils'
-import { utf8ToBinary } from '../../src/logic/utils'
+import { utf8ToBinary } from '@streamr/utils'
 
 describe('StreamNodeServer', () => {
 

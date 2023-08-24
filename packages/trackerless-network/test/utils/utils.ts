@@ -11,7 +11,7 @@ import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
 import { NetworkNode } from '../../src/NetworkNode'
-import { hexToBinary, utf8ToBinary } from '../../src/logic/utils'
+import { hexToBinary, utf8ToBinary } from '@streamr/utils'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},

@@ -1,7 +1,6 @@
 import { GroupKeyRequest as OldGroupKeyRequest } from '@streamr/protocol'
 import { GroupKeyRequest } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { toEthereumAddress } from '@streamr/utils'
-import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary } from '../../utils'
+import { toEthereumAddress, binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary } from '@streamr/utils'
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class GroupKeyRequestTranslator {
