@@ -27,8 +27,9 @@ const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
 }
 
 export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
-    const node = await (broker.getStreamrClient().getNode())
-    return node.getStreamParts()
+    const client = broker.getStreamrClient()
+    const subs = await client.getSubscriptions()
+    return subs.map((s) => s.streamPartId)
 }
 
 describe('broker subscriptions', () => {
