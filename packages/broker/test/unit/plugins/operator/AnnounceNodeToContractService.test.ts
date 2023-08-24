@@ -4,7 +4,6 @@ import { mock, MockProxy } from 'jest-mock-extended'
 import { AnnounceNodeToContractHelper } from '../../../../src/plugins/operator/AnnounceNodeToContractHelper'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { wait, waitForCondition } from '@streamr/utils'
-import { NetworkNode } from '@streamr/trackerless-network'
 
 function setUp({
     nodeId,
@@ -20,13 +19,11 @@ function setUp({
     pollIntervalInMs: number
 }): { service: AnnounceNodeToContractService, helper: MockProxy<AnnounceNodeToContractHelper> } {
     let heartbeatTs: number | undefined = initialHeartbeatTs
-    const networkNode = mock<NetworkNode>()
     const streamrClient = mock<StreamrClient>()
     const helper = mock<AnnounceNodeToContractHelper>()
     const operatorFleetState = mock<OperatorFleetState>()
 
-    networkNode.getNodeId.mockReturnValue(nodeId)
-    streamrClient.getNode.mockResolvedValue(networkNode)
+    streamrClient.getNodeId.mockResolvedValue(nodeId)
     streamrClient.getPeerDescriptor.mockResolvedValue({ id: nodeId, type: NetworkNodeType.NODEJS })
     if (typeof leaderNodeId === 'string') {
         operatorFleetState.getLeaderNodeId.mockReturnValue(leaderNodeId)

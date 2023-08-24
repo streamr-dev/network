@@ -2,7 +2,6 @@ import { createIsLeaderFn } from '../../../../src/plugins/operator/createIsLeade
 import StreamrClient from 'streamr-client'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
-import { NetworkNode } from '@streamr/trackerless-network'
 import { Logger } from '@streamr/utils'
 
 describe(createIsLeaderFn, () => {
@@ -10,12 +9,11 @@ describe(createIsLeaderFn, () => {
     let operatorFleetState: MockProxy<OperatorFleetState>
 
     beforeEach(() => {
-        const networkNode = mock<NetworkNode>()
         client = mock<StreamrClient>()
         operatorFleetState = mock<OperatorFleetState>()
-        networkNode.getNodeId.mockReturnValue('myNodeId')
-        client.getNode.mockResolvedValue(networkNode)
+        client.getNodeId.mockResolvedValue('myNodeId')
     })
+
     it('equality check works on newest info', async () => {
         const isLeader = await createIsLeaderFn(client, operatorFleetState)
 
