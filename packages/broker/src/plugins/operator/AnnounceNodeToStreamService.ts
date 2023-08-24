@@ -31,6 +31,9 @@ export class AnnounceNodeToStreamService {
                         msgType: 'heartbeat',
                         peerDescriptor
                     })
+                    logger.debug('Published heartbeat to coordination stream', {
+                        streamId: this.coordinationStream
+                    })
                 } catch (err) {
                     logger.warn('Unable to publish to coordination stream', {
                         streamId: this.coordinationStream,
@@ -42,7 +45,6 @@ export class AnnounceNodeToStreamService {
     }
 
     async stop(): Promise<void> {
-        logger.info('Stop')
         this.abortController.abort()
     }
 }
