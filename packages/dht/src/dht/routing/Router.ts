@@ -122,16 +122,21 @@ export class Router implements IRouter {
         try {
             // eslint-disable-next-line promise/catch-or-return
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
-            raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped', 'noCandidatesFound'], 10000)
-                .then(() => {
-                    logger.trace('raceEvents ended from routingSession: ' + session.sessionId)
-                    this.removeRoutingSession(session.sessionId)
-                })
-                .catch(() => {
-                    logger.trace('raceEvents timed out for routingSession ' + session.sessionId) 
-                    this.removeRoutingSession(session.sessionId) 
-                })
+            const eventReceived = raceEvents3<RoutingSessionEvents>(
+                session,
+                ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped', 'noCandidatesFound'],
+                10000
+            )
             session.start()
+            setImmediate(async () => {
+                try {
+                    await eventReceived
+                    logger.trace('raceEvents ended from routingSession: ' + session.sessionId)
+                } catch (e) {
+                    logger.trace('raceEvents timed out for routingSession ' + session.sessionId) 
+                }
+                this.removeRoutingSession(session.sessionId) 
+            })
         } catch (e) {
             if (peerIdFromPeerDescriptor(routedMessage.sourcePeer!).equals(this.ownPeerId!)) {
                 logger.warn(
