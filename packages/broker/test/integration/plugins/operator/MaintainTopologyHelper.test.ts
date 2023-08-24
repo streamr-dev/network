@@ -125,7 +125,7 @@ describe('MaintainTopologyHelper', () => {
                 eventcount += 1
             })
             await topologyHelper.start()
-            await wait(2000)
+            await wait(3000)
 
             logger.debug('Staking to sponsorship...')
             await (await operatorContract.unstake(sponsorship1.address)).wait()
@@ -170,8 +170,8 @@ describe('MaintainTopologyHelper', () => {
             topologyHelper.on('removeStakedStream', (streamid: string) => {
                 logger.debug(`got removeStakedStream event for stream ${streamid}`)
             })
-            await wait(2000)
             await topologyHelper.start()
+            await wait(3000)
 
             logger.debug('Added OperatorClient listeners, deploying Sponsorship contract...')
             sponsorship1 = await deploySponsorship(chainConfig, operatorWallet, {
@@ -191,8 +191,6 @@ describe('MaintainTopologyHelper', () => {
             await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
             logger.debug(`staked on sponsorship ${sponsorship2.address}`)
             await waitForCondition(() => receivedAddStreams === 1, 10000, 1000)
-
-            await wait(10000) // wait for events to be processed
 
             topologyHelper.stop()
 
