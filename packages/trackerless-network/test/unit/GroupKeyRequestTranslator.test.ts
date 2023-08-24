@@ -14,7 +14,7 @@ describe('GroupKeyRequestTranslator', () => {
     })
     const newGroupKeyRequest: GroupKeyRequest = {
         rsaPublicKey: utf8ToBinary('aaaaaaaa'),
-        recipient: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+        recipientId: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
         requestId: 'request',
         groupKeyIds: ['id1', 'id2', 'id3']
     }
@@ -22,7 +22,7 @@ describe('GroupKeyRequestTranslator', () => {
     it('translates old protocol to protobuf', () => {
         const translated = GroupKeyRequestTranslator.toProtobuf(oldGroupKeyRequest)
         expect(translated.rsaPublicKey).toEqual(newGroupKeyRequest.rsaPublicKey)
-        expect(translated.recipient).toEqual(newGroupKeyRequest.recipient)
+        expect(translated.recipientId).toEqual(newGroupKeyRequest.recipientId)
         expect(translated.requestId).toEqual(newGroupKeyRequest.requestId)
         expect(translated.groupKeyIds).toEqual(newGroupKeyRequest.groupKeyIds)
     })
