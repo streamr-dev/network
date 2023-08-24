@@ -131,7 +131,7 @@ export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDes
     }
     return {
         ...omit(descriptor, 'kademliaId'),
-        id: PeerID.fromValue(descriptor.kademliaId).toString(),
+        id: PeerID.fromValue(descriptor.kademliaId).toKey(),
         type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
     }
 }
