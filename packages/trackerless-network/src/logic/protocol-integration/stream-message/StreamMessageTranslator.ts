@@ -40,21 +40,12 @@ const newToOldEncryptionType = (type: EncryptionType): OldEncryptionType => {
     return OldEncryptionType.NONE
 }
 
-const oldToNewContentType = (_type: OldContentType): ContentType => {
-    return ContentType.JSON
-}
-
-const newToOldContentType = (_type: ContentType): OldContentType => {
-    return OldContentType.JSON
-}
-
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class StreamMessageTranslator {
 
     static toProtobuf(msg: OldStreamMessage): StreamMessage {
         let content: Uint8Array
         let messageType: StreamMessageType
-        const contentType = msg.contentType
         if (msg.messageType === OldStreamMessageType.MESSAGE) {
             content = utf8ToBinary(msg.serializedContent)
             messageType = StreamMessageType.MESSAGE
@@ -106,7 +97,7 @@ export class StreamMessageTranslator {
             previousMessageRef,
             content,
             messageType,
-            contentType: oldToNewContentType(contentType),
+            contentType: ContentType.JSON,
             encryptionType: oldToNewEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId ?? undefined,
             newGroupKey,
@@ -118,7 +109,6 @@ export class StreamMessageTranslator {
 
     static toClientProtocol<T>(msg: StreamMessage): OldStreamMessage<T> {
         let content: string
-        const contentType = msg.contentType
         let messageType: OldStreamMessageType
         if (msg.messageType === StreamMessageType.MESSAGE) {
             messageType = OldStreamMessageType.MESSAGE
@@ -156,7 +146,7 @@ export class StreamMessageTranslator {
             prevMsgRef,
             content,
             messageType,
-            contentType: newToOldContentType(contentType),
+            contentType: OldContentType.JSON,
             encryptionType: newToOldEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId,
             newGroupKey,
