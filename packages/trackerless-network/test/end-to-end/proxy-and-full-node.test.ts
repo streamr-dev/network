@@ -4,6 +4,10 @@ import { MessageID, MessageRef, StreamID, StreamMessage, StreamMessageType, toSt
 import { EthereumAddress, waitForEvent3 } from '@streamr/utils'
 import { ProxyDirection, StreamMessage as InternalStreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { StreamNodeType } from '../../src/logic/StreamrNode'
+import { randomEthereumAddress } from '@streamr/test-utils'
+import { hexToBinary } from '../../src/logic/utils'
+
+const PROXIED_NODE_USER_ID = hexToBinary(randomEthereumAddress())
 
 const createMessage = (streamId: StreamID): StreamMessage => {
     return new StreamMessage({ 
@@ -85,7 +89,7 @@ describe('proxy and full node', () => {
     })
 
     it('proxied node can act as full node on another stream', async () => {
-        await proxiedNode.setProxies(proxyStreamId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, async () => 'proxiedNode', 1)
+        await proxiedNode.setProxies(proxyStreamId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
         expect(proxiedNode.stack.getLayer0DhtNode().hasJoined()).toBe(false)
 
         await Promise.all([
@@ -105,7 +109,7 @@ describe('proxy and full node', () => {
     })
 
     it('proxied node can act as full node on multiple streams', async () => {
-        await proxiedNode.setProxies(proxyStreamId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, async () => 'proxiedNode', 1)
+        await proxiedNode.setProxies(proxyStreamId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
         expect(proxiedNode.stack.getLayer0DhtNode().hasJoined()).toBe(false)
 
         await Promise.all([
