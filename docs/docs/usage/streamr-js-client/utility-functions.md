@@ -25,6 +25,18 @@ You can search for streams by specifying a search term:
 const streams = await streamr.searchStreams('foo');
 ```
 
+:::caution Important:
+Stream searches return an iterable AsyncGenerator object that you must iterate over. For example, 
+
+```ts
+const streams = await searchStreams...
+
+    for await (stream of streams) {
+        console.log(stream)
+    }
+```
+:::
+
 Alternatively or additionally to the search term, you can search for streams based on permissions.
 
 To get all streams for which a user has any direct permission:
