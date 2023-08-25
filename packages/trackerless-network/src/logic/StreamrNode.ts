@@ -27,7 +27,6 @@ import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
 import { PeerIDKey } from '@streamr/dht/src/exports'
 import { UserID } from '../identifiers'
-import { hexToBinary } from './utils'
 
 export enum StreamNodeType {
     RANDOM_GRAPH = 'random-graph',
@@ -307,10 +306,9 @@ export class StreamrNode extends EventEmitter<Events> {
         streamPartId: string,
         contactPeerDescriptors: PeerDescriptor[],
         direction: ProxyDirection,
-        getUserId: () => Promise<string>,
+        userId: UserID,
         connectionCount?: number
     ): Promise<void> {
-        const userId = hexToBinary(await getUserId()) as UserID
         if (this.streams.get(streamPartId)?.type === StreamNodeType.PROXY && contactPeerDescriptors.length > 0) {
             const proxyClient = this.streams.get(streamPartId)!.layer2 as ProxyStreamConnectionClient
             await proxyClient.setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
