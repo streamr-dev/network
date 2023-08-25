@@ -6,7 +6,6 @@
         "allowJs": true,
         "composite": true,
         "declaration": true,
-        "moduleResolution": "node",
         "noImplicitOverride": true,
         "resolveJsonModule": true,
         "types": ["node"],
