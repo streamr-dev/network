@@ -139,7 +139,7 @@ export class Handshaker implements IHandshaker {
         return result.accepted
     }
 
-    private async handshakeWithInterleaving(target: PeerDescriptor, interleaveSourcePeerId: string): Promise<boolean> {
+    private async handshakeWithInterleaving(target: PeerDescriptor, interleaveSourceId: string): Promise<boolean> {
         const targetNeighbor = new RemoteHandshaker(
             target,
             this.config.randomGraphId,
@@ -151,7 +151,7 @@ export class Handshaker implements IHandshaker {
             this.config.ownPeerDescriptor,
             this.config.targetNeighbors.getStringIds(),
             undefined,
-            interleaveSourcePeerId
+            interleaveSourceId
         )
         if (result.accepted) {
             this.config.targetNeighbors.add(this.createRemoteNode(targetNeighbor.getPeerDescriptor()))

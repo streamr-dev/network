@@ -38,7 +38,7 @@ export class HandshakerServer implements IHandshakeRpc {
             return this.acceptHandshake(request, request.senderDescriptor!)
         } else if (this.config.targetNeighbors!.size() + this.config.ongoingHandshakes.size < this.config.N) {
             return this.acceptHandshake(request, request.senderDescriptor!)
-        } else if (this.config.targetNeighbors!.size([request.interleaveSourcePeerId!]) >= 2) {
+        } else if (this.config.targetNeighbors!.size([request.interleaveSourceId!]) >= 2) {
             return this.acceptHandshakeWithInterleaving(request, request.senderDescriptor!)
         } else {
             return this.rejectHandshake(request)
@@ -67,7 +67,7 @@ export class HandshakerServer implements IHandshakeRpc {
     private acceptHandshakeWithInterleaving(request: StreamHandshakeRequest, requester: PeerDescriptor): StreamHandshakeResponse {
         const exclude = request.neighborIds
         exclude.push(request.senderId)
-        exclude.push(request.interleaveSourcePeerId!)
+        exclude.push(request.interleaveSourceId!)
         const furthest = this.config.targetNeighbors.getFurthest(exclude)
         const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
         if (furthest) {

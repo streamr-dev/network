@@ -17,7 +17,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
         ownPeerDescriptor: PeerDescriptor,
         neighbors: string[],
         concurrentHandshakeTargetId?: string,
-        interleaveSourcePeerId?: string
+        interleaveSourceId?: string
     ): Promise<HandshakeResponse> {
         const request: StreamHandshakeRequest = {
             randomGraphId: this.graphId,
@@ -25,7 +25,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
             senderId: keyFromPeerDescriptor(ownPeerDescriptor),
             neighbors,
             concurrentHandshakeTargetId,
-            interleaveSourcePeerId,
+            interleaveSourceId,
             senderDescriptor: ownPeerDescriptor
         }
         const options: DhtRpcOptions = {
