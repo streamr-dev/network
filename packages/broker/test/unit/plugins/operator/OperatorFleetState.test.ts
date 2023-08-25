@@ -149,6 +149,19 @@ describe(OperatorFleetState, () => {
         expect(state.getLeaderNodeId()).toEqual('a')
     })
 
+    it('getPeerDescriptorOf returns descriptor for online nodes', async () => {
+        await state.start()
+        await setTimeAndPublishMessage(10, createHeartbeatMsg('a'))
+
+        expect(state.getPeerDescriptorOf('a')).toEqual({ id: 'a' })
+        expect(state.getPeerDescriptorOf('unknown')).toBeUndefined()
+
+        currentTime = 30
+        await waitForEvent(state as any, 'removed')
+
+        expect(state.getPeerDescriptorOf('a')).toBeUndefined()
+    })
+
     describe('waitUntilReady', () => {
         let ready: boolean
 
