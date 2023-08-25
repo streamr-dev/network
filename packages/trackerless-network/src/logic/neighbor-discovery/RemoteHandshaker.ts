@@ -8,7 +8,7 @@ const logger = new Logger(module)
 
 interface HandshakeResponse {
     accepted: boolean
-    interleaveTargetPeerDescriptor?: PeerDescriptor
+    interleaveTargetDescriptor?: PeerDescriptor
 }
 
 export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
@@ -36,7 +36,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
             const response = await this.client.handshake(request, options)
             return {
                 accepted: response.accepted,
-                interleaveTargetPeerDescriptor: response.interleaveTargetPeerDescriptor
+                interleaveTargetDescriptor: response.interleaveTargetDescriptor
             }
         } catch (err: any) {
             logger.debug(`handshake to ${keyFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
@@ -54,7 +54,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
         }
         const notification: InterleaveNotice = {
             randomGraphId: this.graphId,
-            interleaveTargetPeerDescriptor: originatorDescriptor,
+            interleaveTargetDescriptor: originatorDescriptor,
             senderId: keyFromPeerDescriptor(ownPeerDescriptor)
         }
         this.client.interleaveNotice(notification, options).catch(() => {

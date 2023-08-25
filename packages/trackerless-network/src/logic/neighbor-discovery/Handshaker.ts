@@ -132,8 +132,8 @@ export class Handshaker implements IHandshaker {
             this.config.targetNeighbors.add(this.createRemoteNode(targetNeighbor.getPeerDescriptor()))
             this.config.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.config.randomGraphId)
         }
-        if (result.interleaveTargetPeerDescriptor) {
-            await this.handshakeWithInterleaving(result.interleaveTargetPeerDescriptor, targetStringId)
+        if (result.interleaveTargetDescriptor) {
+            await this.handshakeWithInterleaving(result.interleaveTargetDescriptor, targetStringId)
         }
         this.ongoingHandshakes.delete(targetStringId)
         return result.accepted

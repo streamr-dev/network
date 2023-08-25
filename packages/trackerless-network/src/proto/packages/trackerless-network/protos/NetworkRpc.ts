@@ -185,9 +185,9 @@ export interface StreamHandshakeResponse {
      */
     requestId: string;
     /**
-     * @generated from protobuf field: optional dht.PeerDescriptor interleaveTargetPeerDescriptor = 3;
+     * @generated from protobuf field: optional dht.PeerDescriptor interleaveTargetDescriptor = 3;
      */
-    interleaveTargetPeerDescriptor?: PeerDescriptor;
+    interleaveTargetDescriptor?: PeerDescriptor;
 }
 /**
  * @generated from protobuf message InterleaveNotice
@@ -202,9 +202,9 @@ export interface InterleaveNotice {
      */
     randomGraphId: string;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor interleaveTargetPeerDescriptor = 3;
+     * @generated from protobuf field: dht.PeerDescriptor interleaveTargetDescriptor = 3;
      */
-    interleaveTargetPeerDescriptor?: PeerDescriptor;
+    interleaveTargetDescriptor?: PeerDescriptor;
 }
 /**
  * @generated from protobuf message LeaveStreamNotice
@@ -497,7 +497,7 @@ class StreamHandshakeResponse$Type extends MessageType<StreamHandshakeResponse> 
         super("StreamHandshakeResponse", [
             { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "interleaveTargetPeerDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 3, name: "interleaveTargetDescriptor", kind: "message", T: () => PeerDescriptor }
         ]);
     }
 }
@@ -511,7 +511,7 @@ class InterleaveNotice$Type extends MessageType<InterleaveNotice> {
         super("InterleaveNotice", [
             { no: 1, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "interleaveTargetPeerDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 3, name: "interleaveTargetDescriptor", kind: "message", T: () => PeerDescriptor }
         ]);
     }
 }
