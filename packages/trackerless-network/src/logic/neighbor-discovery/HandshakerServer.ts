@@ -81,7 +81,7 @@ export class HandshakerServer implements IHandshakeRpc {
         return {
             requestId: request.requestId,
             accepted: true,
-            interleaveTarget: furthestPeerDescriptor
+            interleaveTargetPeerDescriptor: furthestPeerDescriptor
         }
     }
 
@@ -92,7 +92,7 @@ export class HandshakerServer implements IHandshakeRpc {
                 this.config.connectionLocker.unlockConnection(senderDescriptor, this.config.randomGraphId)
                 this.config.targetNeighbors.remove(senderDescriptor)
             }
-            this.config.handshakeWithInterleaving(message.interleaveTarget!, message.senderId).catch((_e) => {})
+            this.config.handshakeWithInterleaving(message.interleaveTargetPeerDescriptor!, message.senderId).catch((_e) => {})
         }
         return Empty
     }

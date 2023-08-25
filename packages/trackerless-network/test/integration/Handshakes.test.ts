@@ -59,7 +59,7 @@ describe('Handshakes', () => {
         const response: StreamHandshakeResponse = {
             requestId: request.requestId,
             accepted: true,
-            interleaveTarget: peerDescriptor3
+            interleaveTargetPeerDescriptor: peerDescriptor3
         }
         return response
     }

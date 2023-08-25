@@ -52,7 +52,7 @@ describe('HandshakerServer', () => {
         })
         const res = await handshakerServer.handshake(req, {} as any)
         expect(res.accepted).toEqual(true)
-        expect(res.interleaveTarget).toBeUndefined()
+        expect(res.interleaveTargetPeerDescriptor).toBeUndefined()
         expect(res.requestId).toEqual('requestId')
     })
 
@@ -72,7 +72,7 @@ describe('HandshakerServer', () => {
         })
         const res = await handshakerServer.handshake(req, {} as any)
         expect(res.accepted).toEqual(true)
-        expect(res.interleaveTarget).toBeDefined()
+        expect(res.interleaveTargetPeerDescriptor).toBeDefined()
     })
 
     it('unaccepted handshake', async () => {
@@ -97,8 +97,8 @@ describe('HandshakerServer', () => {
         const req: InterleaveNotice = {
             randomGraphId: 'random-graph',
             senderId: 'senderId',
-            interleaveTarget: {
-                kademliaId: PeerID.fromString('interleaveTarget').value,
+            interleaveTargetPeerDescriptor: {
+                kademliaId: PeerID.fromString('interleaveTargetPeerDescriptor').value,
                 type: 0
             }
 
@@ -111,8 +111,8 @@ describe('HandshakerServer', () => {
         const req: InterleaveNotice = {
             randomGraphId: 'wrong-random-graph',
             senderId: 'senderId',
-            interleaveTarget: {
-                kademliaId: PeerID.fromString('interleaveTarget').value,
+            interleaveTargetPeerDescriptor: {
+                kademliaId: PeerID.fromString('interleaveTargetPeerDescriptor').value,
                 type: 0
             }
         }

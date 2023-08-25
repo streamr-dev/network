@@ -101,13 +101,13 @@ message StreamHandshakeRequest {
 message StreamHandshakeResponse {
   bool accepted = 1;
   string requestId = 2;
-  optional dht.PeerDescriptor interleaveTarget = 3;
+  optional dht.PeerDescriptor interleaveTargetPeerDescriptor = 3;
 }
 
 message InterleaveNotice {
   string senderId = 1;
   string randomGraphId = 2;
-  dht.PeerDescriptor interleaveTarget = 3;
+  dht.PeerDescriptor interleaveTargetPeerDescriptor = 3;
 }
 
 message LeaveStreamNotice {
