@@ -1,13 +1,10 @@
 import { toEthereumAddress } from '@streamr/utils'
 import assert from 'assert'
-import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
 import ValidationError from '../../../../src/errors/ValidationError'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
 import MessageID from '../../../../src/protocol/message_layer/MessageID'
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 import StreamMessage, { ContentType, EncryptionType, StreamMessageType } from '../../../../src/protocol/message_layer/StreamMessage'
-import '../../../../src/protocol/message_layer/StreamMessageSerializerV32'
-import { Serializer } from '../../../../src/Serializer'
 import { toStreamID } from '../../../../src/utils/StreamID'
 import { StreamPartIDUtils } from '../../../../src/utils/StreamPartID'
 import { merge, hexToBinary } from '@streamr/utils'
@@ -255,94 +252,6 @@ describe('StreamMessage', () => {
             expect(streamMessageClone.encryptionType).toEqual(EncryptionType.RSA)
             expect(streamMessageClone.encryptionType).toEqual(encryptedMessage.encryptionType)
             expect(streamMessageClone.serialize()).toEqual(encryptedMessage.serialize())
-        })
-    })
-
-    describe('serialization', () => {
-        let serializer: Serializer<StreamMessage>
-        const VERSION = StreamMessage.LATEST_VERSION + 100
-
-        beforeEach(() => {
-            serializer = {
-                fromArray: jest.fn(),
-                toArray: jest.fn(),
-            }
-            StreamMessage.unregisterSerializer(VERSION)
-            StreamMessage.registerSerializer(VERSION, serializer)
-        })
-
-        afterEach(() => {
-            StreamMessage.unregisterSerializer(VERSION)
-        })
-
-        describe('registerSerializer', () => {
-            beforeEach(() => {
-                // Start from a clean slate
-                StreamMessage.unregisterSerializer(VERSION)
-            })
-
-            it('registers a Serializer retrievable by getSerializer()', () => {
-                StreamMessage.registerSerializer(VERSION, serializer)
-                assert.strictEqual(StreamMessage.getSerializer(VERSION), serializer)
-            })
-            it('throws if the Serializer for a version is already registered', () => {
-                StreamMessage.registerSerializer(VERSION, serializer)
-                assert.throws(() => StreamMessage.registerSerializer(VERSION, serializer))
-            })
-            it('throws if the Serializer does not implement fromArray', () => {
-                const invalidSerializer: any = {
-                    toArray: jest.fn()
-                }
-                assert.throws(() => StreamMessage.registerSerializer(VERSION, invalidSerializer))
-            })
-            it('throws if the Serializer does not implement toArray', () => {
-                const invalidSerializer: any = {
-                    fromArray: jest.fn()
-                }
-                assert.throws(() => StreamMessage.registerSerializer(VERSION, invalidSerializer))
-            })
-        })
-
-        describe('serialize', () => {
-            const m = msg()
-
-            it('calls toArray() on the configured serializer and stringifies it', () => {
-                serializer.toArray = jest.fn().mockReturnValue([12345])
-                assert.strictEqual(m.serialize(VERSION), '[12345]')
-                expect(serializer.toArray).toBeCalledWith(m)
-            })
-
-            it('should throw on unsupported version', () => {
-                assert.throws(() => m.serialize(999), (err: UnsupportedVersionError) => {
-                    assert(err instanceof UnsupportedVersionError)
-                    assert.strictEqual(err.version, 999)
-                    return true
-                })
-            })
-        })
-
-        describe('deserialize', () => {
-            it('parses the input, reads version, and calls fromArray() on the configured serializer', () => {
-                const arr = [VERSION]
-                const m = msg()
-                serializer.fromArray = jest.fn().mockReturnValue(m)
-                assert.strictEqual(StreamMessage.deserialize(JSON.stringify(arr)), m)
-                expect(serializer.fromArray).toBeCalledWith(arr)
-            })
-
-            it('should throw on unsupported version', () => {
-                const arr = [999]
-                assert.throws(() => StreamMessage.deserialize(JSON.stringify(arr)), (err: UnsupportedVersionError) => {
-                    assert(err instanceof UnsupportedVersionError)
-                    assert.strictEqual(err.version, 999)
-                    return true
-                })
-            })
-        })
-
-        it('returns an array of registered versions', () => {
-            assert(StreamMessage.getSupportedVersions().indexOf(VERSION) >= 0)
-            assert(StreamMessage.getSupportedVersions().indexOf(999) < 0)
         })
     })
 })

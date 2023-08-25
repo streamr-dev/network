@@ -1,83 +1,58 @@
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
 import { OperatorServiceConfig } from './OperatorPlugin'
-import { BigNumber } from 'ethers'
 
 const logger = new Logger(module)
 
-const CHECK_VALUE_INTERVAL = 1000 * 60 * 60 * 24 // 1 day
-const ONE_ETHER = BigInt(1e18)
+const DEFAULT_CHECK_VALUE_INTERVAL_MS = 1000 * 60 * 60 * 24 // 1 day
+const DEFAULT_WITHDRAW_LIMIT_SAFETY_FRACTION = 0.5 // 50%
+const ONE_ETHER = 1e18
 
 export class MaintainOperatorValueService {
-    private penaltyLimitFraction: bigint
+    private readonly withdrawLimitSafetyFraction: bigint
+    private penaltyLimitFraction?: bigint
     private readonly helper: MaintainOperatorValueHelper
     private readonly abortController: AbortController
+    private readonly checkIntervalInMs: number
 
-    constructor(config: OperatorServiceConfig, penaltyLimitFraction = BigInt(0)) {
-        this.penaltyLimitFraction = penaltyLimitFraction
+    constructor(
+        config: OperatorServiceConfig,
+        withdrawLimitSafetyFraction = DEFAULT_WITHDRAW_LIMIT_SAFETY_FRACTION,
+        checkValueIntervalMs = DEFAULT_CHECK_VALUE_INTERVAL_MS
+    ) {
+        this.withdrawLimitSafetyFraction = BigInt(withdrawLimitSafetyFraction * ONE_ETHER)
         this.helper = new MaintainOperatorValueHelper(config)
         this.abortController = new AbortController()
+        this.checkIntervalInMs = checkValueIntervalMs
     }
 
     async start(): Promise<void> {
+        this.penaltyLimitFraction = await this.helper.getPenaltyLimitFraction()
+
         await scheduleAtInterval(
-            () => this.checkValue().catch((err) => {
-                logger.warn('Encountered error while checking value', { err })
+            () => this.checkMyUnwithdrawnEarnings().catch((err) => {
+                logger.error('Encountered error while checking unwithdrawn earnings', { err })
             }),
-            CHECK_VALUE_INTERVAL,
+            this.checkIntervalInMs,
             true,
             this.abortController.signal
         )
     }
 
-    private async checkValue(): Promise<void> {
-        const { sponsorshipAddresses, approxValues, realValues } = await this.helper.getApproximatePoolValuesPerSponsorship()
-        let totalDiff = BigInt(0)
-        let totalApprox = BigInt(0)
-        const sponsorships: { address: string, approxValue: BigNumber, realValue: BigNumber, diff: BigNumber }[] = []
-        for (let i = 0; i < sponsorshipAddresses.length; i++) {
-            const sponsorship = {
-                address: sponsorshipAddresses[i],
-                approxValue: approxValues[i],
-                realValue: realValues[i],
-                diff: realValues[i].sub(approxValues[i])
-            }
-            sponsorships.push(sponsorship)
-            totalDiff = totalDiff + sponsorship.diff.toBigInt()
-            totalApprox = totalApprox + sponsorship.approxValue.toBigInt()
-        }
-
-        if (this.penaltyLimitFraction === BigInt(0)) {
-            this.penaltyLimitFraction = await this.helper.getPenaltyLimitFraction()
-        }
-
-        const threshold = totalApprox * this.penaltyLimitFraction / BigInt(ONE_ETHER)
-
-        logger.info('Check approximate pool values of sponsorships', { threshold, totalDiff })
-        if (totalDiff > threshold) {
-            // sort sponsorships by diff in descending order
-            const sortedSponsorships = sponsorships.sort((a: any, b: any) => b.diff - a.diff)
-
-            // find the number of sponsorships needed to get the total diff under the threshold
-            let neededSponsorshipsCount = 0
-            let diffSum = BigInt(0)
-            for (const sponsorship of sortedSponsorships) {
-                diffSum = diffSum + sponsorship.diff.toBigInt()
-                neededSponsorshipsCount += 1
-                if (diffSum > totalDiff - threshold) {
-                    break
-                }
-            }
-            
-            logger.info('Update approximate pool values of sponsorships', { threshold, diffPercentage: diffSum / totalDiff })
-            // pick the first entries needed to get the total diff under the threshold
-            const neededSponsorshipAddresses = sortedSponsorships.slice(0, neededSponsorshipsCount).map((sponsorship) => sponsorship.address)
-            await this.helper.updateApproximatePoolValueOfSponsorships(neededSponsorshipAddresses)
+    private async checkMyUnwithdrawnEarnings(): Promise<void> {
+        logger.info('Check whether it is time to withdraw my earnings')
+        const { fraction, sponsorshipAddresses } = await this.helper.getMyUnwithdrawnEarnings()
+        const safeUnwithdrawnEarningsFraction = this.penaltyLimitFraction! * this.withdrawLimitSafetyFraction / BigInt(ONE_ETHER)
+        logger.trace(` -> is ${Number(fraction) / ONE_ETHER * 100}% > ${Number(safeUnwithdrawnEarningsFraction) / ONE_ETHER * 100}% ?`)
+        if (fraction > safeUnwithdrawnEarningsFraction) {
+            logger.info('Withdraw earnings from sponsorships', { sponsorshipAddresses })
+            await this.helper.withdrawMyEarningsFromSponsorships(sponsorshipAddresses)
+        } else {
+            logger.info('Skip withdrawing earnings', { fraction, safeUnwithdrawnEarningsFraction })
         }
     }
 
     async stop(): Promise<void> {
-        logger.info('Stop')
         this.abortController.abort()
     }
 }

@@ -24,10 +24,10 @@ describe('NetworkNodeFacade', () => {
                     privateKey: fastPrivateKey()
                 }
             })
-            const node = await client.getNode()
+            const nodeId = await client.getNodeId()
             const expectedPrefix = `${await client.getAddress()}#`
-            expect(node.getNodeId().startsWith(expectedPrefix)).toBe(true)
-            expect(node.getNodeId().length).toBeGreaterThan(expectedPrefix.length) // has more characters after #
+            expect(nodeId.startsWith(expectedPrefix)).toBe(true)
+            expect(nodeId.length).toBeGreaterThan(expectedPrefix.length) // has more characters after #
         })
 
         it('generates different ids for different clients with same private key', async () => {
@@ -45,13 +45,12 @@ describe('NetworkNodeFacade', () => {
             // same key, same address
             expect(await client1.getAddress()).toEqual(await client2.getAddress())
             const expectedPrefix = `${await client1.getAddress()}#`
-            const node1 = await client1.getNode()
-            const node2 = await client2.getNode()
-            expect(node1).not.toBe(node2)
+            const node1Id = await client1.getNodeId()
+            const node2Id = await client2.getNodeId()
             // both start with same prefix
-            expect(node1.getNodeId().startsWith(expectedPrefix)).toBe(true)
-            expect(node2.getNodeId().startsWith(expectedPrefix)).toBe(true)
-            expect(node1.getNodeId()).not.toEqual(node2.getNodeId())
+            expect(node1Id.startsWith(expectedPrefix)).toBe(true)
+            expect(node2Id.startsWith(expectedPrefix)).toBe(true)
+            expect(node1Id).not.toEqual(node2Id)
         })
 
         it('uses supplied network node id, if compatible', async () => {
@@ -68,8 +67,7 @@ describe('NetworkNodeFacade', () => {
                     }
                 }
             })
-            const node = await client.getNode()
-            expect(node.getNodeId()).toEqual(nodeId)
+            expect(await client.getNodeId()).toEqual(nodeId)
         })
 
         it('throws error if supplied network node id not compatible', async () => {

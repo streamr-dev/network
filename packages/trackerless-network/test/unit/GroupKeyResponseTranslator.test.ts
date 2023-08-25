@@ -19,14 +19,14 @@ describe('GroupKeyResponseTranslator', () => {
     }
     const newGroupKeyResponse: GroupKeyResponse = {
         requestId: 'request',
-        recipient: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+        recipientId: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
         groupKeys: [ newGroupKey ]
     }
 
     it('translates old protocol to protobuf', () => {
         const translated = GroupKeyResponseTranslator.toProtobuf(oldGroupKeyResponse)
         expect(translated.groupKeys).toEqual(newGroupKeyResponse.groupKeys)
-        expect(translated.recipient).toEqual(newGroupKeyResponse.recipient)
+        expect(translated.recipientId).toEqual(newGroupKeyResponse.recipientId)
         expect(translated.requestId).toEqual(newGroupKeyResponse.requestId)
     })
 

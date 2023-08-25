@@ -26,7 +26,7 @@ export async function setUpAndStartMaintainTopologyService({
 }): Promise<MaintainTopologyService> {
     // TODO: check that operatorFleetState is NOT started
     const maintainTopologyHelper = new MaintainTopologyHelper(serviceHelperConfig)
-    const nodeId = (await streamrClient.getNode()).getNodeId()
+    const nodeId = await streamrClient.getNodeId()
     const service = new MaintainTopologyService(
         streamrClient,
         new StreamAssignmentLoadBalancer(

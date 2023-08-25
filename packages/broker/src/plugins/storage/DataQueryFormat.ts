@@ -2,14 +2,14 @@ import { EncryptionType, StreamMessage } from '@streamr/protocol'
 import { binaryToHex } from '@streamr/utils'
 
 export interface Format {
-    getMessageAsString: (streamMessage: StreamMessage, version: number | undefined) => string
+    getMessageAsString: (streamMessage: StreamMessage) => string
     contentType: string
     delimiter: string
     header: string
     footer: string
 }
 
-const createJsonFormat = (getMessageAsString: (streamMessage: StreamMessage, version: number | undefined) => string): Format => {
+const createJsonFormat = (getMessageAsString: (streamMessage: StreamMessage) => string): Format => {
     return {
         getMessageAsString,
         contentType: 'application/json',
@@ -19,7 +19,7 @@ const createJsonFormat = (getMessageAsString: (streamMessage: StreamMessage, ver
     }
 }
 
-const createPlainTextFormat = (getMessageAsString: (streamMessage: StreamMessage, version: number | undefined) => string): Format => {
+const createPlainTextFormat = (getMessageAsString: (streamMessage: StreamMessage) => string): Format => {
     return {
         getMessageAsString,
         contentType: 'text/plain',
@@ -49,14 +49,14 @@ export const toObject = (msg: StreamMessage<any>): any => {
 const FORMATS: Record<string, Format> = {
     // TODO could we deprecate protocol format?
     // eslint-disable-next-line max-len
-    'protocol': createJsonFormat((streamMessage: StreamMessage, version: number | undefined) => JSON.stringify(streamMessage.serialize(version))),
+    'protocol': createJsonFormat((streamMessage: StreamMessage) => JSON.stringify(streamMessage.serialize())),
     'object': createJsonFormat((streamMessage: StreamMessage) => JSON.stringify(toObject(streamMessage))),
     // the raw format message is the same string which we have we have stored to Cassandra (if the version numbers match)
     // -> TODO we could optimize the reading if we'd fetch the data from Cassandra as plain text
     // currently we:
     // 1) deserialize the string to an object in Storage._parseRow
     // 2) serialize the same object to string here
-    'raw': createPlainTextFormat((streamMessage: StreamMessage, version: number | undefined) => streamMessage.serialize(version))
+    'raw': createPlainTextFormat((streamMessage: StreamMessage) => streamMessage.serialize())
 }
 
 export const getFormat = (id: string | undefined): Format | undefined => {

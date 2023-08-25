@@ -636,6 +636,13 @@ export class StreamrClient {
     }
 
     /**
+     * Get the network-level node id of the client.
+     */
+    async getNodeId(): Promise<string> {
+        return this.node.getNodeId()
+    }
+
+    /**
      * Get diagnostic info about the underlying network. Useful for debugging issues.
      *
      * @remark returned object's structure can change without semver considerations

@@ -6,6 +6,7 @@ import { NodeId } from '@streamr/trackerless-network'
 import min from 'lodash/min'
 import once from 'lodash/once'
 import { DEFAULT_INTERVAL_IN_MS } from './AnnounceNodeToStreamService'
+import isPlainObject from 'lodash/isPlainObject'
 
 const logger = new Logger(module)
 
@@ -18,6 +19,13 @@ const DEFAULT_LATENCY_EXTRA_MS = 2000
 export interface OperatorFleetStateEvents {
     added: (nodeId: string) => void
     removed: (nodeId: string) => void
+}
+
+function isValidMessage(content: any): content is { msgType: string, peerDescriptor: { id: string } } {
+    const { msgType, peerDescriptor } = (content as Record<string, unknown>)
+    return typeof msgType === 'string'
+        && isPlainObject(peerDescriptor)
+        && typeof (peerDescriptor as any)?.id === 'string'
 }
 
 export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
@@ -57,14 +65,14 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
             throw new Error('already started')
         }
         this.subscription = await this.streamrClient.subscribe(this.coordinationStreamId, (content) => {
-            const { msgType, nodeId } = (content as Record<string, unknown>)
-            if (typeof msgType !== 'string' || typeof nodeId !== 'string') {
+            if (!isValidMessage(content)) {
                 logger.warn('Received invalid message in coordination stream', {
                     coordinationStreamId: this.coordinationStreamId,
                 })
                 return
             }
-            if (msgType === 'heartbeat') {
+            if (content.msgType === 'heartbeat') {
+                const nodeId = content.peerDescriptor.id
                 const exists = this.heartbeatTimestamps.has(nodeId)
                 this.heartbeatTimestamps.set(nodeId, this.timeProvider())
                 if (!exists) {

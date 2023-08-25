@@ -97,9 +97,9 @@ export interface GroupKeyRequest {
      */
     requestId: string;
     /**
-     * @generated from protobuf field: bytes recipient = 2;
+     * @generated from protobuf field: bytes recipientId = 2;
      */
-    recipient: Uint8Array;
+    recipientId: Uint8Array;
     /**
      * @generated from protobuf field: bytes rsaPublicKey = 3;
      */
@@ -118,9 +118,9 @@ export interface GroupKeyResponse {
      */
     requestId: string;
     /**
-     * @generated from protobuf field: bytes recipient = 2;
+     * @generated from protobuf field: bytes recipientId = 2;
      */
-    recipient: Uint8Array;
+    recipientId: Uint8Array;
     /**
      * @generated from protobuf field: repeated GroupKey groupKeys = 3;
      */
@@ -436,7 +436,7 @@ class GroupKeyRequest$Type extends MessageType<GroupKeyRequest> {
     constructor() {
         super("GroupKeyRequest", [
             { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "recipient", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "recipientId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 3, name: "rsaPublicKey", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 4, name: "groupKeyIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
@@ -451,7 +451,7 @@ class GroupKeyResponse$Type extends MessageType<GroupKeyResponse> {
     constructor() {
         super("GroupKeyResponse", [
             { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "recipient", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "recipientId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 3, name: "groupKeys", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GroupKey }
         ]);
     }
