@@ -65,7 +65,7 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     private acceptHandshakeWithInterleaving(request: StreamHandshakeRequest, requester: PeerDescriptor): StreamHandshakeResponse {
-        const exclude = request.neighbors
+        const exclude = request.neighborIds
         exclude.push(request.senderId)
         exclude.push(request.interleavingFrom!)
         const furthest = this.config.targetNeighbors.getFurthest(exclude)

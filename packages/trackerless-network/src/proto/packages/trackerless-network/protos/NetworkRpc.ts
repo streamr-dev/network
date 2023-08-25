@@ -160,9 +160,9 @@ export interface StreamHandshakeRequest {
      */
     concurrentHandshakeTargetId?: string;
     /**
-     * @generated from protobuf field: repeated string neighbors = 5;
+     * @generated from protobuf field: repeated string neighborIds = 5;
      */
-    neighbors: string[];
+    neighborIds: string[];
     /**
      * @generated from protobuf field: dht.PeerDescriptor senderDescriptor = 6;
      */
@@ -481,7 +481,7 @@ class StreamHandshakeRequest$Type extends MessageType<StreamHandshakeRequest> {
             { no: 2, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "concurrentHandshakeTargetId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "neighbors", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "neighborIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 6, name: "senderDescriptor", kind: "message", T: () => PeerDescriptor },
             { no: 7, name: "interleavingFrom", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
