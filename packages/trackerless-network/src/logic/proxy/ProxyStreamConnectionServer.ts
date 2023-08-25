@@ -7,12 +7,14 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { EventEmitter } from 'eventemitter3'
 import { Logger } from '@streamr/utils'
+import { UserID } from '../../identifiers'
+import { areEqualUsers } from '../utils'
 
 const logger = new Logger(module)
 
 interface ProxyConnection {
     direction: ProxyDirection // Direction is from the client's point of view
-    userId: string
+    userId: UserID
     remote: RemoteRandomGraphNode
 }
 
@@ -68,8 +70,8 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
     }
 
-    public getPeerKeysForUserId(userId: string): PeerIDKey[] {
-        return Array.from(this.connections.keys()).filter((nodeId) => this.connections.get(nodeId)!.userId === userId)
+    public getPeerKeysForUserId(userId: UserID): PeerIDKey[] {
+        return Array.from(this.connections.keys()).filter((nodeId) => areEqualUsers(this.connections.get(nodeId)!.userId, userId))
     }
 
     // IProxyConnectionRpc server method

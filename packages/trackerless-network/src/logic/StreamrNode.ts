@@ -26,6 +26,8 @@ import { ProxyDirection } from '../proto/packages/trackerless-network/protos/Net
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
 import { PeerIDKey } from '@streamr/dht/src/exports'
+import { UserID } from '../identifiers'
+import { hexToBinary } from './utils'
 
 export enum StreamNodeType {
     RANDOM_GRAPH = 'random-graph',
@@ -308,7 +310,7 @@ export class StreamrNode extends EventEmitter<Events> {
         getUserId: () => Promise<string>,
         connectionCount?: number
     ): Promise<void> {
-        const userId = await getUserId()
+        const userId = hexToBinary(await getUserId()) as UserID
         if (this.streams.get(streamPartId)?.type === StreamNodeType.PROXY && contactPeerDescriptors.length > 0) {
             const proxyClient = this.streams.get(streamPartId)!.layer2 as ProxyStreamConnectionClient
             await proxyClient.setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
@@ -322,7 +324,7 @@ export class StreamrNode extends EventEmitter<Events> {
         }
     }
 
-    private createProxyStream(streamPartId: string, userId: string): ProxyStreamConnectionClient {
+    private createProxyStream(streamPartId: string, userId: UserID): ProxyStreamConnectionClient {
         const layer2 = this.createProxyStreamConnectionClient(streamPartId, userId)
         this.streams.set(streamPartId, {
             type: StreamNodeType.PROXY,
@@ -334,7 +336,7 @@ export class StreamrNode extends EventEmitter<Events> {
         return layer2
     }
 
-    private createProxyStreamConnectionClient(streamPartId: string, userId: string): ProxyStreamConnectionClient {
+    private createProxyStreamConnectionClient(streamPartId: string, userId: UserID): ProxyStreamConnectionClient {
         return new ProxyStreamConnectionClient({
             P2PTransport: this.P2PTransport!,
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),

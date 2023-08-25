@@ -1,5 +1,6 @@
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector' 
 import { MessageID, MessageRef } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { UserID } from '../identifiers'
 
 export const markAndCheckDuplicate = (
     duplicateDetectors: Map<string, DuplicateMessageDetector>,
@@ -39,4 +40,16 @@ export const hexToBinary = (hex: string): Uint8Array => {
         hex = hex.slice(2)
     }
     return Buffer.from(hex, 'hex')
+}
+
+export const areEqualUsers = (userId1: UserID, userId2: UserID): boolean => {
+    return areEqualByteArrays(userId1, userId2)
+}
+
+const areEqualByteArrays = (arr1: Uint8Array, arr2: Uint8Array): boolean => {
+    if (arr1.byteLength === arr2.byteLength) {
+        return arr1.every((value, index) => value === arr2[index])
+    } else {
+        return false
+    }
 }
