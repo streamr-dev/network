@@ -3,7 +3,6 @@ import { MockLayer0 } from '../utils/mock/MockLayer0'
 import { isSamePeerDescriptor, PeerDescriptor, PeerID } from '@streamr/dht'
 import { createStreamMessage, mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
-import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForCondition } from '@streamr/utils'
 
 describe('StreamrNode', () => {
@@ -14,10 +13,11 @@ describe('StreamrNode', () => {
         type: 0
     }
     const stream = 'stream'
-    const content: ContentMessage = {
-        body: JSON.stringify({ hello: 'WORLD' })
-    }
-    const message = createStreamMessage(content, stream, 'publisher')
+    const message = createStreamMessage(
+        JSON.stringify({ hello: 'WORLD' }), 
+        stream, 
+        peerDescriptor.kademliaId
+    )
 
     beforeEach(async () => {
         node = new StreamrNode({})

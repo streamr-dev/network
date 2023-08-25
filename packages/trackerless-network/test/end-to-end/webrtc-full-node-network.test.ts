@@ -1,7 +1,6 @@
 import { PeerDescriptor, NodeType, PeerID, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
-import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { getRandomRegion } from '@streamr/dht'
 import { createStreamMessage } from '../utils/utils'
 import { NetworkStack } from '../../src/NetworkStack'
@@ -82,13 +81,10 @@ describe('Full node network with WebRTC connections', () => {
                 numOfMessagesReceived += 1
             })
         })
-        const content: ContentMessage = {
-            body: JSON.stringify({ hello: 'WORLD' })
-        }
         const msg = createStreamMessage(
-            content,
+            JSON.stringify({ hello: 'WORLD' }),
             randomGraphId,
-            peerIdFromPeerDescriptor(epPeerDescriptor).toString()
+            peerIdFromPeerDescriptor(epPeerDescriptor).value
         )
         entryPoint.getStreamrNode()!.publishToStream(randomGraphId, msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)

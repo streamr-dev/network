@@ -110,13 +110,13 @@ describe('proxy and full node', () => {
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageRef!.streamId === 'regular-stream1'),
+                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream1'),
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageRef!.streamId === 'regular-stream2'),
+                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream2'),
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageRef!.streamId === 'regular-stream3'),
+                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream3'),
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageRef!.streamId === 'regular-stream4'),
+                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream4'),
             proxiedNode.publish(regularMessage1),
             proxiedNode.publish(regularMessage2),
             proxiedNode.publish(regularMessage3),

@@ -1,37 +1,35 @@
 import { GroupKeyResponse as OldGroupKeyResponse, EncryptedGroupKey as OldEncryptedGroupKey } from '@streamr/protocol'
-import { EncryptedGroupKey, GroupKeyResponse } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { EthereumAddress } from '@streamr/utils'
+import { GroupKey, GroupKeyResponse } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { toEthereumAddress } from '@streamr/utils'
+import { binaryToHex, hexToBinary } from '../../utils'
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class GroupKeyResponseTranslator {
 
     static toProtobuf(msg: OldGroupKeyResponse): GroupKeyResponse {
 
-        const encryptedGroupKeys = msg.encryptedGroupKeys.map((groupKey) => {
-            const encryptedGroupKey: EncryptedGroupKey = {
-                encryptedGroupKeyHex: groupKey.encryptedGroupKeyHex,
-                groupKeyId: groupKey.groupKeyId,
-                serialized: groupKey.serialized ?? undefined
+        const groupKeys = msg.encryptedGroupKeys.map((groupKey) => {
+            return {
+                data: hexToBinary(groupKey.encryptedGroupKeyHex),
+                id: groupKey.groupKeyId
             }
-            return encryptedGroupKey
         })
         const translated: GroupKeyResponse = {
-            recipient: msg.recipient as string,
+            recipientId: hexToBinary(msg.recipient),
             requestId: msg.requestId,
-            encryptedGroupKeys
+            groupKeys
         }
         return translated
     }
 
     static toClientProtocol(msg: GroupKeyResponse): OldGroupKeyResponse {
-        const encryptedGroupKeys = msg.encryptedGroupKeys.map((groupKey: EncryptedGroupKey) => new OldEncryptedGroupKey(
-            groupKey.groupKeyId,
-            groupKey.encryptedGroupKeyHex,
-            groupKey.serialized
+        const encryptedGroupKeys = msg.groupKeys.map((groupKey: GroupKey) => new OldEncryptedGroupKey(
+            groupKey.id,
+            binaryToHex(groupKey.data),
         ))
         return new OldGroupKeyResponse({
             requestId: msg.requestId,
-            recipient: msg.recipient as EthereumAddress,
+            recipient: toEthereumAddress(binaryToHex(msg.recipientId, true)),
             encryptedGroupKeys
         })
     }

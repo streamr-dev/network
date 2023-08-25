@@ -28,17 +28,18 @@ service TemporaryConnectionRpc {
   rpc openConnection (TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
 }
 
+message MessageID {
+  string streamId = 1;
+  int32 streamPartition = 2;
+  int64 timestamp = 3;
+  int32 sequenceNumber = 4;
+  bytes publisherId = 5;
+  string messageChainId = 6;
+}
+
 message MessageRef {
   int64 timestamp = 1;
   int32 sequenceNumber = 2;
-  string messageChainId = 3;
-  string streamId = 4;
-  int32 streamPartition = 5;
-  string publisherId = 6;
-}
-
-message ContentMessage {
-  string body = 1;
 }
 
 enum StreamMessageType {
@@ -47,48 +48,44 @@ enum StreamMessageType {
   GROUP_KEY_RESPONSE = 2;
 }
 
-enum EncryptionType {
-  NONE = 0;
-  RSA = 1;
-  AES = 2;
+enum ContentType {
+  JSON = 0;
+  BINARY = 1;
 }
 
-message EncryptedGroupKey {
-  string groupKeyId = 1;
-  string encryptedGroupKeyHex = 2;
-  optional string serialized = 3;
+enum EncryptionType {
+  NONE = 0;
+  AES = 1;
 }
 
 message StreamMessage {
   StreamMessageType messageType = 1;
-  optional EncryptionType encryptionType = 2;
-  bytes content = 3;
-  string signature = 4;
-  MessageRef messageRef = 5;
-  optional MessageRef previousMessageRef = 6;
-  optional string groupKeyId = 7;
-  optional EncryptedGroupKey newGroupKey = 8;
+  ContentType contentType = 2;
+  EncryptionType encryptionType = 3;
+  bytes content = 4;
+  bytes signature = 5;
+  MessageID messageId = 6;
+  optional MessageRef previousMessageRef = 7;
+  optional string groupKeyId = 8;
+  optional GroupKey newGroupKey = 9;
 }
 
 message GroupKeyRequest {
   string requestId = 1;
-  string recipient = 2;
-  string rsaPublicKey = 3;
+  bytes recipientId = 2;
+  bytes rsaPublicKey = 3;
   repeated string groupKeyIds = 4;
 }
 
 message GroupKeyResponse {
   string requestId = 1;
-  string recipient = 2;
-  repeated EncryptedGroupKey encryptedGroupKeys = 3;
+  bytes recipientId = 2;
+  repeated GroupKey groupKeys = 3;
 }
 
-message Layer2Message {
-  Layer2Type type = 1;
-}
-
-enum Layer2Type {
-  Data = 0;
+message GroupKey {
+  string id = 1;
+  bytes data = 2;
 }
 
 message StreamHandshakeRequest {
@@ -119,7 +116,7 @@ message LeaveStreamNotice {
 }
 
 message NeighborUpdate {
-  string senderId = 1;
+  string senderId = 1; // TODO: remove redundant info NET-1028
   string randomGraphId = 2;
   bool removeMe = 3;
   repeated dht.PeerDescriptor neighborDescriptors = 4;
@@ -131,7 +128,7 @@ message StreamEntryPoint {
 }
 
 message ProxyConnectionRequest {
-  string senderId = 1;
+  string senderId = 1; // TODO: remove redundant info NET-1028
   string streamId = 2;
   uint32 streamPartition = 3; 
   ProxyDirection direction = 4;
@@ -140,7 +137,7 @@ message ProxyConnectionRequest {
 }
 
 message ProxyConnectionResponse {
-  string senderId = 1;
+  string senderId = 1; // TODO: remove redundant info NET-1028
   string streamId = 2;
   uint32 streamPartition = 3;
   ProxyDirection direction = 4;  

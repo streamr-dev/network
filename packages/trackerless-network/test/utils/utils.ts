@@ -1,8 +1,9 @@
 import { ConnectionLocker, DhtNode, PeerDescriptor, PeerID, Simulator, SimulatorTransport, UUID } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import {
-    ContentMessage,
-    MessageRef,
+    ContentType,
+    EncryptionType,
+    MessageID,
     StreamMessage,
     StreamMessageType
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -10,6 +11,7 @@ import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
 import { NetworkNode } from '../../src/NetworkNode'
+import { hexToBinary, utf8ToBinary } from '../../src/logic/utils'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -42,13 +44,13 @@ export const createMockRandomGraphNodeAndDhtNode = (
 }
 
 export const createStreamMessage = (
-    content: ContentMessage,
+    content: string,
     streamId: string,
-    publisherId: string,
+    publisherId: Uint8Array,
     timestamp?: number,
     sequenceNumber?: number
 ): StreamMessage => {
-    const messageRef: MessageRef = {
+    const messageId: MessageID = {
         streamId,
         messageChainId: 'messageChain0',
         streamPartition: 0,
@@ -58,9 +60,11 @@ export const createStreamMessage = (
     }
     const msg: StreamMessage = {
         messageType: StreamMessageType.MESSAGE,
-        content: ContentMessage.toBinary(content),
-        messageRef,
-        signature: 'signature'
+        encryptionType: EncryptionType.NONE,
+        content: utf8ToBinary(content),
+        contentType: ContentType.JSON,
+        messageId,
+        signature: hexToBinary('0x1234')
     }
     return msg
 }

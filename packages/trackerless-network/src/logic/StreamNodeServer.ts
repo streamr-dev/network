@@ -2,6 +2,7 @@ import { keyFromPeerDescriptor, ListeningRpcCommunicator, PeerDescriptor, DhtCal
 import { Empty } from '../proto/google/protobuf/empty'
 import {
     LeaveStreamNotice,
+    MessageID,
     MessageRef,
     StreamMessage
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
@@ -11,10 +12,10 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 export interface StreamNodeServerConfig {
     ownPeerDescriptor: PeerDescriptor
     randomGraphId: string
-    markAndCheckDuplicate: (messageRef: MessageRef, previousMessageRef?: MessageRef) => boolean
+    markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
     broadcast: (message: StreamMessage, previousPeer?: string) => void
     onLeaveNotice(notice: LeaveStreamNotice): void
-    markForInspection(senderId: PeerIDKey, messageRef: MessageRef): void
+    markForInspection(senderId: PeerIDKey, messageId: MessageID): void
     rpcCommunicator: ListeningRpcCommunicator
 }
 
@@ -28,8 +29,8 @@ export class StreamNodeServer implements INetworkRpc {
 
     async sendData(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
         const previousPeer = keyFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
-        this.config.markForInspection(previousPeer, message.messageRef!)
-        if (this.config.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
+        this.config.markForInspection(previousPeer, message.messageId!)
+        if (this.config.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
             this.config.broadcast(message, previousPeer)
         }
         return Empty

@@ -1,5 +1,5 @@
 import { PeerIDKey, PeerDescriptor, keyFromPeerDescriptor, ConnectionLocker } from '@streamr/dht'
-import { MessageRef } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
@@ -17,7 +17,7 @@ interface InspectorConfig {
 
 export interface IInspector {
     inspect(peerDescriptor: PeerDescriptor): Promise<boolean>
-    markMessage(sender: PeerIDKey, messageId: MessageRef): void
+    markMessage(sender: PeerIDKey, messageId: MessageID): void
     isInspected(nodeId: PeerIDKey): boolean
     stop(): void
 }
@@ -71,7 +71,7 @@ export class Inspector implements IInspector {
         return success || session.getInspectedMessageCount() < 1
     }
 
-    markMessage(sender: PeerIDKey, messageId: MessageRef): void {
+    markMessage(sender: PeerIDKey, messageId: MessageID): void {
         this.sessions.forEach((session) => session.markMessage(sender, messageId))
     }
 

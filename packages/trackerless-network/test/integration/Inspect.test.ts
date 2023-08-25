@@ -2,7 +2,7 @@ import { LatencyType, NodeType, PeerDescriptor, PeerID, Simulator, SimulatorTran
 import { NetworkStack } from '../../src/NetworkStack'
 import { range } from 'lodash'
 import { createStreamMessage } from '../utils/utils'
-import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { utf8ToBinary } from '../../src/logic/utils'
 
 describe('inspect', () => {
 
@@ -79,13 +79,10 @@ describe('inspect', () => {
 
     it('gets successful inspections from all suspects', async () => {
         publishInterval = setInterval(async () => {
-            const content: ContentMessage = {
-                body: JSON.stringify({ hello: 'WORLD' })
-            }
             const msg = createStreamMessage(
-                content,
+                JSON.stringify({ hello: 'WORLD' }),
                 'stream',
-                'publisher',
+                utf8ToBinary('publisher'),
                 123123,
                 sequenceNumber
             )
