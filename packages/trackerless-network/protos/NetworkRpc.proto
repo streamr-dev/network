@@ -122,11 +122,6 @@ message NeighborUpdate {
   repeated dht.PeerDescriptor neighborDescriptors = 4;
 }
 
-message StreamEntryPoint {
-  dht.PeerDescriptor peerDescriptor = 1;
-  bool firstToJoin = 2;
-}
-
 message ProxyConnectionRequest {
   string senderId = 1; // TODO: remove redundant info NET-1028
   string streamId = 2;
