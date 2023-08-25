@@ -9,7 +9,6 @@ import {
     keyFromPeerDescriptor,
     PeerIDKey
 } from '@streamr/dht'
-import { binaryToHex } from '@streamr/utils'
 import {
     StreamMessage,
     LeaveStreamNotice,
@@ -25,7 +24,7 @@ import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/N
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
-import { Logger } from '@streamr/utils'
+import { Logger, binaryToHex } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { IHandshaker } from './neighbor-discovery/Handshaker'
 import { Propagation } from './propagation/Propagation'
@@ -271,7 +270,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         let propagationTargets = this.config.targetNeighbors.getStringIds()
         if (this.config.proxyConnectionServer) {
             const proxyTargets = (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST)
-                ? this.config.proxyConnectionServer.getPeerKeysForUserId(binaryToHex(GroupKeyRequest.fromBinary(msg.content).recipient, true))
+                ? this.config.proxyConnectionServer.getPeerKeysForUserId(binaryToHex(GroupKeyRequest.fromBinary(msg.content).recipientId, true))
                 : this.config.proxyConnectionServer.getSubscribers()
             propagationTargets = propagationTargets.concat(proxyTargets)
         }

@@ -61,6 +61,7 @@ describe('Layer1 Scale', () => {
         await epLayer1Node.stop()
     }, 15000)
 
+    // TODO: fix flaky test in NET-1021
     it('bucket sizes', async () => {
         layer0Nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)

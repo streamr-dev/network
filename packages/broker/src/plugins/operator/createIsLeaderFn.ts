@@ -7,7 +7,7 @@ export async function createIsLeaderFn(
     operatorFleetState: OperatorFleetState,
     logger?: Logger
 ): Promise<() => boolean> {
-    const myNodeId = (await streamrClient.getNode()).getNodeId()
+    const myNodeId = await streamrClient.getNodeId()
     return () => {
         const leaderNodeId = operatorFleetState.getLeaderNodeId()
         const isLeader = myNodeId === leaderNodeId

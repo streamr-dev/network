@@ -72,14 +72,14 @@ message StreamMessage {
 
 message GroupKeyRequest {
   string requestId = 1;
-  bytes recipient = 2;
+  bytes recipientId = 2;
   bytes rsaPublicKey = 3;
   repeated string groupKeyIds = 4;
 }
 
 message GroupKeyResponse {
   string requestId = 1;
-  bytes recipient = 2;
+  bytes recipientId = 2;
   repeated GroupKey groupKeys = 3;
 }
 

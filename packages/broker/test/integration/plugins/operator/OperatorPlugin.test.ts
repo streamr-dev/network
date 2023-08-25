@@ -1,10 +1,10 @@
-import { Wallet } from 'ethers'
 import { fastWallet } from '@streamr/test-utils'
-
+import { Wallet } from 'ethers'
 import { Broker } from '../../../../src/broker'
 import { startBroker } from '../../../utils'
 
 describe('OperatorPlugin', () => {
+
     let brokerWallet: Wallet
     let broker: Broker
 
@@ -23,7 +23,7 @@ describe('OperatorPlugin', () => {
             privateKey: brokerWallet.privateKey,
             extraPlugins: {
                 operator: {
-                    operatorContractAddress: '0x4A5C0EC07F7ddBd4B6050181638e24b0153991b2'
+                    operatorContractAddress: '0x139dfa493a45364b598f2f98e504192819082c85'
                 }
             }
         })

@@ -1,20 +1,17 @@
+import { StreamPartID, toStreamID } from '@streamr/protocol'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { toEthereumAddress, waitForCondition } from '@streamr/utils'
+import StreamrClient, { Stream } from 'streamr-client'
 import {
     setUpAndStartMaintainTopologyService
 } from '../../../../src/plugins/operator/MaintainTopologyService'
-import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { parseEther } from '@ethersproject/units'
-import StreamrClient, { Stream } from 'streamr-client'
-import {
-    deploySponsorship,
-    deployOperatorContract,
-    generateWalletWithGasAndTokens,
-    getProvider,
-    getTokenContract
-} from './smartContractUtils'
-import { StreamPartID, toStreamID } from '@streamr/protocol'
-import { createClient, createTestStream } from '../../../utils'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
+import { createClient, createTestStream } from '../../../utils'
+import {
+    THE_GRAPH_URL, delegate, deployOperatorContract, deploySponsorshipContract, generateWalletWithGasAndTokens,
+    getProvider,
+    stake
+} from './contractUtils'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -49,6 +46,7 @@ function doesNotContainAny(arr: StreamPartID[], notToInclude: StreamPartID[]): b
 }
 
 describe('MaintainTopologyService', () => {
+
     let client: StreamrClient
     let operatorFleetState: OperatorFleetState
 
@@ -61,21 +59,19 @@ describe('MaintainTopologyService', () => {
     })
 
     it('happy path', async () => {
-        const provider = getProvider()
-        const operatorWallet = await generateWalletWithGasAndTokens(provider)
+        const operatorWallet = await generateWalletWithGasAndTokens()
         const [stream1, stream2] = await setUpStreams()
-        const sponsorship1 = await deploySponsorship(stream1.id, operatorWallet)
-        const sponsorship2 = await deploySponsorship(stream2.id, operatorWallet)
-        const operatorContract = await deployOperatorContract(operatorWallet)
-        const token = getTokenContract()
-        await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther('200'), operatorWallet.address)).wait()
-        await (await operatorContract.stake(sponsorship1.address, parseEther('100'))).wait()
+        const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
+        const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
+        const operatorContract = await deployOperatorContract({ deployer: operatorWallet })
+        await delegate(operatorWallet, operatorContract.address, 200)
+        await stake(operatorContract, sponsorship1.address, 100)
 
         const serviceHelperConfig = {
-            provider,
-            signer: operatorWallet,
+            provider: getProvider(),
+            nodeWallet: operatorWallet,
             operatorContractAddress: toEthereumAddress(operatorContract.address),
-            theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`,
+            theGraphUrl: THE_GRAPH_URL
         }
 
         operatorFleetState = new OperatorFleetState(client, toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress))
@@ -90,7 +86,7 @@ describe('MaintainTopologyService', () => {
             return containsAll(await getSubscribedStreamPartIds(client), stream1.getStreamParts())
         }, 10000, 1000)
 
-        await (await operatorContract.stake(sponsorship2.address, parseEther('100'))).wait()
+        await stake(operatorContract, sponsorship2.address, 100)
         await waitForCondition(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), [
                 ...stream1.getStreamParts(),

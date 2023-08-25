@@ -61,8 +61,8 @@ describe('PubSub with proxy connections', () => {
         const proxyUser1 = await proxyClient1.getAddress()
         const proxyUser2 = await proxyClient2.getAddress()
 
-        proxyPeerKey1 = (await proxyClient1.getNode()).getNodeId()
-        proxyPeerKey2 = (await proxyClient2.getNode()).getNodeId()
+        proxyPeerKey1 = await proxyClient1.getNodeId()
+        proxyPeerKey2 = await proxyClient2.getNodeId()
 
         await onewayClient.setPermissions({
             streamId: stream.id,
