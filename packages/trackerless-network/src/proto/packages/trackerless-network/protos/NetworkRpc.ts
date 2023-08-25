@@ -168,9 +168,9 @@ export interface StreamHandshakeRequest {
      */
     senderDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: optional string interleavingFrom = 7;
+     * @generated from protobuf field: optional string interleaveSourcePeerId = 7;
      */
-    interleavingFrom?: string;
+    interleaveSourcePeerId?: string;
 }
 /**
  * @generated from protobuf message StreamHandshakeResponse
@@ -483,7 +483,7 @@ class StreamHandshakeRequest$Type extends MessageType<StreamHandshakeRequest> {
             { no: 4, name: "concurrentHandshakeTargetId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "neighborIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 6, name: "senderDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 7, name: "interleavingFrom", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 7, name: "interleaveSourcePeerId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
