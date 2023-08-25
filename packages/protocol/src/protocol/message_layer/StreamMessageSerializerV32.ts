@@ -5,6 +5,7 @@ import EncryptedGroupKey from './EncryptedGroupKey'
 
 import { Serializer } from '../../Serializer'
 import ValidationError from '../../errors/ValidationError'
+import { binaryToHex, hexToBinary } from '@streamr/utils'
 
 const VERSION = 32
 export const SIGNATURE_TYPE_ETH = 2
@@ -23,7 +24,7 @@ export default class StreamMessageSerializerV32 extends Serializer<StreamMessage
             streamMessage.serializedContent,
             streamMessage.newGroupKey ? streamMessage.newGroupKey.serialize() : null,
             SIGNATURE_TYPE_ETH,
-            streamMessage.signature,
+            binaryToHex(streamMessage.signature, true),
         ]
     }
 
@@ -55,7 +56,7 @@ export default class StreamMessageSerializerV32 extends Serializer<StreamMessage
             encryptionType,
             groupKeyId,
             newGroupKey: serializedNewGroupKey ? EncryptedGroupKey.deserialize(serializedNewGroupKey) : null,
-            signature
+            signature: hexToBinary(signature)
         })
     }
 }

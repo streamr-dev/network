@@ -1,4 +1,4 @@
-import { toEthereumAddress } from '@streamr/utils'
+import { toEthereumAddress, hexToBinary } from '@streamr/utils'
 import assert from 'assert'
 import ValidationError from '../../../../src/errors/ValidationError'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
@@ -11,6 +11,7 @@ import { toStreamID } from '../../../../src/utils/StreamID'
 const VERSION = 32
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const signature = '0x111233'
 
 // Message definitions
 const message = new StreamMessage({
@@ -22,7 +23,7 @@ const message = new StreamMessage({
     groupKeyId: 'groupKeyId',
     encryptionType: EncryptionType.AES,
     newGroupKey: new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex', '["groupKeyId","encryptedGroupKeyHex"]'),
-    signature: 'signature',
+    signature: hexToBinary(signature),
 })
 const serializedMessage = JSON.stringify([
     VERSION,
@@ -35,7 +36,7 @@ const serializedMessage = JSON.stringify([
     'encrypted-content',
     '["groupKeyId","encryptedGroupKeyHex"]',
     SIGNATURE_TYPE_ETH,
-    'signature'
+    signature
 ])
 
 describe('StreamMessageSerializerV32', () => {
@@ -58,7 +59,7 @@ describe('StreamMessageSerializerV32', () => {
                 'encrypted-content',
                 '["groupKeyId","encryptedGroupKeyHex"]',
                 0,
-                'signature'
+                signature
             ])
             assert.throws(() => StreamMessage.deserialize(serializedMessage), ValidationError)
         })

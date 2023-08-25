@@ -109,7 +109,7 @@ export class StreamMessageTranslator {
             encryptionType: oldToNewEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId ?? undefined,
             newGroupKey,
-            signature: hexToBinary(msg.signature)
+            signature: msg.signature
 
         }
         return translated
@@ -159,7 +159,7 @@ export class StreamMessageTranslator {
             encryptionType: newToOldEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId,
             newGroupKey,
-            signature: binaryToHex(msg.signature, true),
+            signature: msg.signature
         })
         return translated
     }

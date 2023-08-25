@@ -8,7 +8,7 @@ import {
     StreamPartIDUtils,
     toStreamID
 } from '@streamr/protocol'
-import { EthereumAddress, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, waitForCondition, hexToBinary } from '@streamr/utils'
 
 describe('NetworkNode', () => {
 
@@ -82,7 +82,7 @@ describe('NetworkNode', () => {
                 hello: 'world'
             },
             messageType: StreamMessageType.MESSAGE,
-            signature: 'signature',
+            signature: hexToBinary('0x1234'),
         })
 
         let msgCount = 0

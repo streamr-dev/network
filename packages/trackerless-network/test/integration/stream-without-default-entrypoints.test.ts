@@ -9,7 +9,7 @@ import {
     StreamPartIDUtils,
     toStreamID
 } from '@streamr/protocol'
-import { EthereumAddress, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, waitForCondition, hexToBinary } from '@streamr/utils'
 import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
 
 describe('stream without default entrypoints', () => {
@@ -38,7 +38,7 @@ describe('stream without default entrypoints', () => {
             hello: 'world'
         },
         messageType: StreamMessageType.MESSAGE,
-        signature: 'signature',
+        signature: hexToBinary('0x1234'),
     })
 
     beforeEach(async () => {

@@ -4,6 +4,7 @@ import { MessageID, MessageRef, StreamID, StreamMessage, StreamMessageType, toSt
 import { EthereumAddress, waitForEvent3 } from '@streamr/utils'
 import { ProxyDirection, StreamMessage as InternalStreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { StreamNodeType } from '../../src/logic/StreamrNode'
+import { hexToBinary } from '@streamr/utils'
 
 const createMessage = (streamId: StreamID): StreamMessage => {
     return new StreamMessage({ 
@@ -20,7 +21,7 @@ const createMessage = (streamId: StreamID): StreamMessage => {
             hello: 'world'
         },
         messageType: StreamMessageType.MESSAGE,
-        signature: 'signature',
+        signature: hexToBinary('0x1234'),
     })
 }
 

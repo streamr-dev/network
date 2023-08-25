@@ -1,6 +1,6 @@
 import { NodeType, PeerDescriptor, PeerID, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { EthereumAddress, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { EthereumAddress, waitForCondition, waitForEvent3, hexToBinary } from '@streamr/utils'
 import { NetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
 
@@ -40,7 +40,7 @@ describe('Proxy connections', () => {
             hello: 'world'
         },
         messageType: StreamMessageType.MESSAGE,
-        signature: 'signature',
+        signature: hexToBinary('0x1234'),
     })
 
     let proxyNode1: NetworkNode
