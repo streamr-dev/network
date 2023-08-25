@@ -6,7 +6,8 @@ import { NodeId } from '@streamr/trackerless-network'
 import min from 'lodash/min'
 import once from 'lodash/once'
 import { DEFAULT_INTERVAL_IN_MS } from './AnnounceNodeToStreamService'
-import isPlainObject from 'lodash/isPlainObject'
+import { NetworkPeerDescriptor } from 'streamr-client'
+import { HeartbeatMessage, HeartbeatMessageSchema } from './heartbeatUtils'
 
 const logger = new Logger(module)
 
@@ -21,13 +22,6 @@ export interface OperatorFleetStateEvents {
     removed: (nodeId: string) => void
 }
 
-function isValidMessage(content: any): content is { msgType: string, peerDescriptor: { id: string } } {
-    const { msgType, peerDescriptor } = (content as Record<string, unknown>)
-    return typeof msgType === 'string'
-        && isPlainObject(peerDescriptor)
-        && typeof (peerDescriptor as any)?.id === 'string'
-}
-
 export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly streamrClient: StreamrClient
     private readonly coordinationStreamId: StreamID
@@ -37,6 +31,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly heartbeatIntervalInMs: number
     private readonly latencyExtraInMs: number
     private readonly heartbeatTimestamps = new Map<NodeId, number>()
+    private readonly peerDescriptors = new Map<NodeId, NetworkPeerDescriptor>()
     private readonly abortController = new AbortController()
     private readonly ready = new Gate(false)
     private subscription?: Subscription
@@ -64,17 +59,22 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         if (this.subscription !== undefined) {
             throw new Error('already started')
         }
-        this.subscription = await this.streamrClient.subscribe(this.coordinationStreamId, (content) => {
-            if (!isValidMessage(content)) {
+        this.subscription = await this.streamrClient.subscribe(this.coordinationStreamId, (rawContent) => {
+            let message: HeartbeatMessage
+            try {
+                message = HeartbeatMessageSchema.parse(rawContent)
+            } catch (err) {
                 logger.warn('Received invalid message in coordination stream', {
                     coordinationStreamId: this.coordinationStreamId,
+                    reason: err?.reason
                 })
                 return
             }
-            if (content.msgType === 'heartbeat') {
-                const nodeId = content.peerDescriptor.id
+            if (message.msgType === 'heartbeat') {
+                const nodeId = message.peerDescriptor.id
                 const exists = this.heartbeatTimestamps.has(nodeId)
                 this.heartbeatTimestamps.set(nodeId, this.timeProvider())
+                this.peerDescriptors.set(nodeId, message.peerDescriptor)
                 if (!exists) {
                     this.emit('added', nodeId)
                 }
@@ -103,6 +103,10 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         return [...this.heartbeatTimestamps.keys()]
     }
 
+    getPeerDescriptorOf(nodeId: NodeId): NetworkPeerDescriptor | undefined {
+        return this.peerDescriptors.get(nodeId)
+    }
+
     private launchOpenReadyGateTimer = once(() => {
         setAbortableTimeout(() => {
             this.ready.open()
@@ -114,6 +118,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         for (const [nodeId, time] of this.heartbeatTimestamps) {
             if (now - time >= this.pruneAgeInMs) {
                 this.heartbeatTimestamps.delete(nodeId)
+                this.peerDescriptors.delete(nodeId)
                 this.emit('removed', nodeId)
             }
         }
