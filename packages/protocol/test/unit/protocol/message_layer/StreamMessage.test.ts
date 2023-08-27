@@ -13,7 +13,7 @@ const content = {
     hello: 'world',
 }
 
-const newGroupKey = new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex')
+const newGroupKey = new EncryptedGroupKey('groupKeyId', hexToBinary('1234'))
 const signature = hexToBinary('0x1231234')
 
 const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = {}) => {

@@ -116,7 +116,7 @@ describe('MessageFactory', () => {
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)
         expect(msg.newGroupKey).toMatchObject({
             groupKeyId: nextGroupKey.id,
-            encryptedGroupKeyHex: expect.any(String)
+            data: expect.any(Buffer)
         })
         expect(GROUP_KEY.decryptNextGroupKey(msg.newGroupKey!)).toEqual(nextGroupKey)
     })

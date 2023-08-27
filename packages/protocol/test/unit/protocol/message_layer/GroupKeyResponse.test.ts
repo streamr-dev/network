@@ -1,4 +1,4 @@
-import { toEthereumAddress } from '@streamr/utils'
+import { toEthereumAddress, hexToBinary } from '@streamr/utils'
 import assert from 'assert'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
 import GroupKeyMessage from '../../../../src/protocol/message_layer/GroupKeyMessage'
@@ -12,12 +12,12 @@ const message = new GroupKeyResponse({
     requestId: 'requestId',
     recipient,
     encryptedGroupKeys: [
-        new EncryptedGroupKey('groupKeyId1', 'encryptedGroupKey1'),
-        new EncryptedGroupKey('groupKeyId2', 'encryptedGroupKey2'),
+        new EncryptedGroupKey('groupKeyId1', hexToBinary('1111')),
+        new EncryptedGroupKey('groupKeyId2', hexToBinary('2222')),
     ],
 })
 // eslint-disable-next-line max-len
-const serializedMessage = JSON.stringify(['requestId', recipient, [['groupKeyId1', 'encryptedGroupKey1'], ['groupKeyId2', 'encryptedGroupKey2']]])
+const serializedMessage = JSON.stringify(['requestId', recipient, [['groupKeyId1', '1111'], ['groupKeyId2', '2222']]])
 
 describe('GroupKeyResponse', () => {
     describe('deserialize', () => {

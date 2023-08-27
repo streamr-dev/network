@@ -20,7 +20,7 @@ const message = new StreamMessage({
     contentType: ContentType.JSON,
     groupKeyId: 'groupKeyId',
     encryptionType: EncryptionType.AES,
-    newGroupKey: new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex', '["groupKeyId","encryptedGroupKeyHex"]'),
+    newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('1234'), '["groupKeyId","1234"]'),
     signature: hexToBinary(signature),
 })
 const serializedMessage = JSON.stringify([
@@ -32,7 +32,7 @@ const serializedMessage = JSON.stringify([
     EncryptionType.AES,
     'groupKeyId',
     'encrypted-content',
-    '["groupKeyId","encryptedGroupKeyHex"]',
+    '["groupKeyId","1234"]',
     SIGNATURE_TYPE_ETH,
     signature
 ])
@@ -55,7 +55,7 @@ describe('streamMessageSerialization', () => {
                 EncryptionType.AES,
                 'groupKeyId',
                 'encrypted-content',
-                '["groupKeyId","encryptedGroupKeyHex"]',
+                '["groupKeyId","1234"]',
                 0,
                 signature
             ])
