@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { toEthereumAddress } from '@streamr/utils'
+import { toEthereumAddress, ethereumAddressToByteArray } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 import {
     ContentType,
@@ -53,7 +53,7 @@ describe('PublisherKeyExchange', () => {
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(streamPartId),
                 streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
-                publisherId: toEthereumAddress(publisherWallet.address),
+                publisherId: ethereumAddressToByteArray(toEthereumAddress(publisherWallet.address)),
             },
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             contentType: ContentType.JSON,

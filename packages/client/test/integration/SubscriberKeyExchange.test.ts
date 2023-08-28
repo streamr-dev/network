@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { toEthereumAddress, waitForCondition, ethereumAddressToByteArray } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 import {
     ContentType,
@@ -53,7 +53,7 @@ describe('SubscriberKeyExchange', () => {
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(streamPartId),
                 streamPartition:  StreamPartIDUtils.getStreamPartition(streamPartId),
-                publisherId: toEthereumAddress(subscriberWallet.address)
+                publisherId: ethereumAddressToByteArray(toEthereumAddress(subscriberWallet.address))
             },
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             contentType: ContentType.JSON,

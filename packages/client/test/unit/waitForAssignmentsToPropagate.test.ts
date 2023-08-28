@@ -18,7 +18,7 @@ const authentication = createRandomAuthentication()
 
 async function makeMsg<T>(ts: number, content: T): Promise<StreamMessage<T>> {
     return createSignedMessage({
-        messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getAddress(), 'msgChain'),
+        messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getByteArrayAddress(), 'msgChain'),
         serializedContent: JSON.stringify(content),
         authentication
     })

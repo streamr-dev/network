@@ -1,5 +1,5 @@
 import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
-import { collect, toEthereumAddress, wait } from '@streamr/utils'
+import { collect, toEthereumAddress, wait, ethereumAddressToByteArray } from '@streamr/utils'
 import { Authentication } from '../../src/Authentication'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { pull } from '../../src/utils/PushBuffer'
@@ -9,7 +9,7 @@ import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { Msg } from '../test-utils/publish'
 import { createRandomAuthentication } from '../test-utils/utils'
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const PUBLISHER_ID = ethereumAddressToByteArray(toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'))
 
 describe('PushPipeline', () => {
 

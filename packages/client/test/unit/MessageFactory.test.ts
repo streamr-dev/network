@@ -9,7 +9,7 @@ import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
-import { merge } from '@streamr/utils'
+import { merge, ethereumAddressToByteArray } from '@streamr/utils'
 
 const WALLET = fastWallet()
 const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
@@ -60,7 +60,7 @@ describe('MessageFactory', () => {
         expect(msg).toMatchObject({
             messageId: {
                 msgChainId: expect.any(String),
-                publisherId: toEthereumAddress(WALLET.address),
+                publisherId: ethereumAddressToByteArray(toEthereumAddress(WALLET.address)),
                 sequenceNumber: 0,
                 streamId: STREAM_ID,
                 streamPartition: expect.toBeWithin(0, PARTITION_COUNT),

@@ -9,7 +9,7 @@ import {
     ValidationError,
     toStreamID
 } from '@streamr/protocol'
-import { EthereumAddress, hexToBinary } from '@streamr/utils'
+import { EthereumAddress, hexToBinary, ethereumAddressToByteArray, byteArrayToEthereumAddress } from '@streamr/utils'
 import assert from 'assert'
 import { Authentication } from '../../src/Authentication'
 import { Stream } from '../../src/Stream'
@@ -74,13 +74,13 @@ describe('Validator2', () => {
         }
 
         msg = await createSignedMessage({
-            messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
+            messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, ethereumAddressToByteArray(publisher), 'msgChainId'),
             serializedContent: JSON.stringify({}),
             authentication: publisherAuthentication
         })
 
         msgWithNewGroupKey = await createSignedMessage({
-            messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
+            messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, ethereumAddressToByteArray(publisher), 'msgChainId'),
             serializedContent: JSON.stringify({}),
             newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('11111')),
             authentication: publisherAuthentication
@@ -88,7 +88,7 @@ describe('Validator2', () => {
         assert.notStrictEqual(msg.signature, msgWithNewGroupKey.signature)
 
         msgWithPrevMsgRef = await createSignedMessage({
-            messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, publisher, 'msgChainId'),
+            messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, ethereumAddressToByteArray(publisher), 'msgChainId'),
             serializedContent: JSON.stringify({}),
             prevMsgRef: new MessageRef(1000, 0),
             authentication: publisherAuthentication
@@ -100,7 +100,7 @@ describe('Validator2', () => {
             recipient: publisher,
             rsaPublicKey: 'rsaPublicKey',
             groupKeyIds: ['groupKeyId1', 'groupKeyId2']
-        }), new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), null, subscriberAuthentication)
+        }), new MessageID(toStreamID('streamId'), 0, 0, 0, ethereumAddressToByteArray(subscriber), 'msgChainId'), null, subscriberAuthentication)
 
         groupKeyResponse = await groupKeyMessageToStreamMessage(new GroupKeyResponse({
             requestId: 'requestId',
@@ -109,7 +109,7 @@ describe('Validator2', () => {
                 new EncryptedGroupKey('groupKeyId1', hexToBinary('11111')),
                 new EncryptedGroupKey('groupKeyId2', hexToBinary('22222'))
             ],
-        }), new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), null, publisherAuthentication)
+        }), new MessageID(toStreamID('streamId'), 0, 0, 0, ethereumAddressToByteArray(publisher), 'msgChainId'), null, publisherAuthentication)
     })
 
     describe('validate(unknown message type)', () => {
@@ -167,7 +167,7 @@ describe('Validator2', () => {
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                expect(isPublisher).toHaveBeenCalledWith(msg.getPublisherId(), msg.getStreamId())
+                expect(isPublisher).toHaveBeenCalledWith(byteArrayToEthereumAddress(msg.getPublisherId()), msg.getStreamId())
                 return true
             })
         })

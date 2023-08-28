@@ -1,4 +1,4 @@
-import { toEthereumAddress } from '@streamr/utils'
+import { toEthereumAddress, ethereumAddressToByteArray } from '@streamr/utils'
 import { MessageID, toStreamID } from '@streamr/protocol'
 import { Authentication } from '../../src/Authentication'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
@@ -8,7 +8,7 @@ import { createRandomAuthentication, waitForCalls } from '../test-utils/utils'
 import { convertStreamMessageToMessage } from './../../src/Message'
 import omit from 'lodash/omit'
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const PUBLISHER_ID = ethereumAddressToByteArray(toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'))
 
 describe('MessageStream', () => {
 

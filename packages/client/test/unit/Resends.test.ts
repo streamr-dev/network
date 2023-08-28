@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress, startTestServer } from '@streamr/test-utils'
-import { collect } from '@streamr/utils'
+import { collect, ethereumAddressToByteArray } from '@streamr/utils'
 import range from 'lodash/range'
 import { Resends } from '../../src/subscribe/Resends'
 import { mockLoggerFactory } from '../test-utils/utils'
@@ -56,7 +56,7 @@ describe('Resends', () => {
         const MESSAGE_COUNT = 257
         const streamPartId = StreamPartIDUtils.parse('stream#0')
         const server = await startTestServer('/streams/:streamId/data/partitions/:partition/:resendType', async (_req, res) => {
-            const publisherId = randomEthereumAddress()
+            const publisherId = ethereumAddressToByteArray(randomEthereumAddress())
             for (const _ of range(MESSAGE_COUNT)) {
                 const msg = new StreamMessage({
                     messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisherId, ''),
