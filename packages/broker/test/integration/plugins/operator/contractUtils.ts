@@ -12,15 +12,15 @@ import { OperatorServiceConfig } from '../../../../src/plugins/operator/Operator
 import { range } from 'lodash'
 
 const TEST_CHAIN = 'dev2'
-// TODO read from config when https://github.com/streamr-dev/network-contracts/pull/604 
+// TODO read from config when https://github.com/streamr-dev/network-contracts/pull/604
 export const THE_GRAPH_URL = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 export interface SetupOperatorContractOpts {
     nodeCount?: number
     adminKey?: string
     provider?: Provider
-    chainConfig?: { 
-        contracts: { 
+    chainConfig?: {
+        contracts: {
             DATA: string
             OperatorFactory: string
             OperatorDefaultDelegationPolicy: string
@@ -30,14 +30,14 @@ export interface SetupOperatorContractOpts {
     }
     operatorConfig?: {
         minStakePercent?: number
-        sharePercent?: number
+        operatorsCutPercent?: number
         metadata?: string
     }
 }
 
 export async function setupOperatorContract(
     opts?: SetupOperatorContractOpts
-): Promise<{ 
+): Promise<{
     operatorWallet: Wallet
     operatorContract: Operator
     operatorServiceConfig: Omit<OperatorServiceConfig, 'nodeWallet'>
@@ -52,7 +52,7 @@ export async function setupOperatorContract(
         chainConfig: opts?.chainConfig ?? CHAIN_CONFIG[TEST_CHAIN],
         deployer: operatorWallet,
         minStakePercent: opts?.operatorConfig?.minStakePercent,
-        sharePercent: opts?.operatorConfig?.sharePercent,
+        operatorsCutPercent: opts?.operatorConfig?.operatorsCutPercent,
         metadata: opts?.operatorConfig?.metadata
     })
     const nodeWallets: Wallet[] = []
@@ -76,9 +76,9 @@ export async function setupOperatorContract(
 interface DeployOperatorContractOpts {
     deployer: Wallet
     minStakePercent?: number
-    sharePercent?: number
+    operatorsCutPercent?: number
     metadata?: string
-    poolTokenName?: string 
+    poolTokenName?: string
     // eslint-disable-next-line max-len
     chainConfig?: { contracts: { OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
 }
@@ -96,20 +96,19 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
         throw new Error('Operator already has a contract')
     }
     const operatorReceipt = await (await operatorFactory.deployOperator(
-        [ opts.poolTokenName ?? `Pool-${Date.now()}`, opts.metadata ?? '{}' ],
+        parseEther('1').mul(opts.operatorsCutPercent ?? 0).div(100),
+        opts.poolTokenName ?? `Pool-${Date.now()}`,
+        opts.metadata ?? '{}',
         [
             chainConfig.contracts.OperatorDefaultDelegationPolicy,
             chainConfig.contracts.OperatorDefaultPoolYieldPolicy,
             chainConfig.contracts.OperatorDefaultUndelegationPolicy,
         ], [
             0,
-            parseEther('1').mul(opts.minStakePercent ?? 0).div(100),
             0,
             0,
-            0,
-            parseEther('1').mul(opts.sharePercent ?? 0).div(100)
         ]
-    )).wait() as ContractReceipt // TODO: figure out why typechain types produce any from .connect, shouldn't need explicit typing here
+    )).wait()
     const newOperatorAddress = operatorReceipt.events?.find((e) => e.event === 'NewOperator')?.args?.operatorContractAddress
     const newOperator = new Contract(newOperatorAddress, operatorABI, opts.deployer) as unknown as Operator
     return newOperator
@@ -130,13 +129,11 @@ export interface DeploySponsorshipContractOpts {
 export async function deploySponsorshipContract(opts: DeploySponsorshipContractOpts): Promise<Sponsorship> {
     const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
     const sponsorshipFactory = new Contract(
-        chainConfig.contracts.SponsorshipFactory, 
+        chainConfig.contracts.SponsorshipFactory,
         sponsorshipFactoryABI,
         opts.deployer
     ) as unknown as SponsorshipFactory
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
-        (opts.minimumStakeWei ?? parseEther('60')).toString(),
-        (opts.minHorizonSeconds ?? 0).toString(),
         (opts.minOperatorCount ?? 1).toString(),
         opts.streamId,
         opts.metadata ?? '{}',
@@ -147,7 +144,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
         ], [
             (opts.earningsPerSecond ?? parseEther('0.01')).toString(),
             '0',
-            '0'
+            '0',
         ]
     )
     const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait() as ContractReceipt
