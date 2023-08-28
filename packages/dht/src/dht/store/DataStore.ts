@@ -232,7 +232,7 @@ export class DataStore implements IStoreService {
         const { incomingSourceDescriptor } = context as DhtCallContext
         const { kademliaId, data, storerTime } = request
         this.localDataStore.storeEntry({ 
-            kademliaId: kademliaId, 
+            kademliaId, 
             storer: incomingSourceDescriptor!, 
             ttl,
             storedAt: Timestamp.now(),

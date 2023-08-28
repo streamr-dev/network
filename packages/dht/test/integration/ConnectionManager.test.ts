@@ -126,7 +126,7 @@ describe('ConnectionManager', () => {
         })
 
         const msg: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
             body: {
@@ -188,7 +188,7 @@ describe('ConnectionManager', () => {
         })
 
         const msg: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
             body: {
@@ -237,7 +237,7 @@ describe('ConnectionManager', () => {
         const connectionManager4 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor4, simulator: simulator2 })
 
         const msg: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
             body: {
