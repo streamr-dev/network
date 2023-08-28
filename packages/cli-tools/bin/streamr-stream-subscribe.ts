@@ -2,7 +2,7 @@
 import '../src/logLevel'
 import omit from 'lodash/omit'
 import isString from 'lodash/isString'
-import StreamrClient, { MessageMetadata } from 'streamr-client'
+import { StreamrClient, MessageMetadata } from 'streamr-client'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { createFnParseInt } from '../src/common'
 

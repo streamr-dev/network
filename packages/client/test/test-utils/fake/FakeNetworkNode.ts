@@ -5,7 +5,7 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
 import { PeerDescriptor } from '@streamr/dht'
-import { NetworkOptions, NodeId } from '@streamr/trackerless-network'
+import { NetworkOptions, NodeId, UserID } from '@streamr/trackerless-network'
 
 type MessageListener = (msg: StreamMessage) => void
 
@@ -129,7 +129,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         _streamPartId: StreamPartID,
         _peerDescriptors: PeerDescriptor[],
         _direction: ProxyDirection,
-        _getUserId: () => Promise<string>,
+        _userId: UserID,
         _targetCount?: number
     ): Promise<void> {
         throw new Error('not implemented')

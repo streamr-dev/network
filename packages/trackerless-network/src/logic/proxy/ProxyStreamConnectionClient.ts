@@ -22,6 +22,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { markAndCheckDuplicate } from '../utils'
 import { StreamPartID } from '@streamr/protocol'
+import { UserID } from '../../identifiers'
 
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
     // eslint-disable-next-line no-constant-condition
@@ -43,7 +44,7 @@ interface ProxyStreamConnectionClientConfig {
     ownPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     connectionLocker: ConnectionLocker
-    userId: string
+    userId: UserID
     nodeName?: string
 }
 
@@ -51,7 +52,7 @@ interface ProxyDefinition {
     peers: Map<PeerIDKey, PeerDescriptor>
     connectionCount: number
     direction: ProxyDirection
-    userId: string
+    userId: UserID
 }
 
 const logger = new Logger(module)
@@ -113,7 +114,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         streamPartId: StreamPartID,
         peerDescriptors: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: string,
+        userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         logger.trace('Setting proxies', { streamPartId, peerDescriptors, direction, userId, connectionCount })
@@ -161,7 +162,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         ))
     }
 
-    private async attemptConnection(peer: PeerIDKey, direction: ProxyDirection, userId: string): Promise<void> {
+    private async attemptConnection(peer: PeerIDKey, direction: ProxyDirection, userId: UserID): Promise<void> {
         const peerDescriptor = this.definition!.peers.get(peer)!
         const client = toProtoRpcClient(new ProxyConnectionRpcClient(this.rpcCommunicator.getRpcClientTransport()))
         const proxyPeer = new RemoteProxyServer(peerDescriptor, this.config.streamPartId, client)
