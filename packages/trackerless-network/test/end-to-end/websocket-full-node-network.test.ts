@@ -38,7 +38,7 @@ describe('Full node network with WebSocket connections only', () => {
             const node = new NetworkStack({
                 layer0: {
                     entryPoints: [epPeerDescriptor],
-                    webSocketPort: 15556 + i,
+                    webSocketPortRange: { min: 15556 + i, max: 15556 + i },
                     webSocketHost: 'localhost',
                     peerIdString: `${i}`,
                     nodeName: `${i}`,
