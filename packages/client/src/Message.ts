@@ -1,4 +1,4 @@
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddressByteArray } from '@streamr/utils'
 import { StreamID, StreamMessage } from '@streamr/protocol'
 
 /**
@@ -40,7 +40,7 @@ export interface Message {
     /**
      * Publisher of message.
      */
-    publisherId: EthereumAddress
+    publisherId: EthereumAddressByteArray
 
     /**
      * Identifies the message chain the message was published to.

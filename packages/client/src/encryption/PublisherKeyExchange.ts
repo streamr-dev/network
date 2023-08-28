@@ -10,7 +10,7 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, Logger, hexToBinary } from '@streamr/utils'
+import { EthereumAddress, Logger, byteArrayToEthereumAddress, hexToBinary } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -72,7 +72,7 @@ export class PublisherKeyExchange {
                             keys,
                             request.getStreamPartID(),
                             rsaPublicKey,
-                            request.getPublisherId(),
+                            byteArrayToEthereumAddress(request.getPublisherId()),
                             requestId)
                         const node = await this.networkNodeFacade.getNode()
                         await node.publish(response)
@@ -115,7 +115,7 @@ export class PublisherKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                await this.authentication.getAddress(),
+                await this.authentication.getByteArrayAddress(),
                 createRandomMsgChainId()
             ),
             serializedContent: JSON.stringify(responseContent.toArray()),

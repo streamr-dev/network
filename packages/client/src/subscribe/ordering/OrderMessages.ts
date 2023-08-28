@@ -1,5 +1,5 @@
 import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { EthereumAddress, executeSafePromise } from '@streamr/utils'
+import { EthereumAddress, executeSafePromise, byteArrayToEthereumAddress } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../../Config'
 import { Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
@@ -101,7 +101,7 @@ export class OrderMessages {
                 if (this.abortController.signal.aborted) {
                     return
                 }
-                const chain = await this.chains.get(msg.getPublisherId(), msg.getMsgChainId())
+                const chain = await this.chains.get(byteArrayToEthereumAddress(msg.getPublisherId()), msg.getMsgChainId())
                 chain.addMessage(msg)
             }
             await Promise.all(this.chains.values().map((chain) => chain.waitUntilIdle()))

@@ -47,7 +47,7 @@ describe('inspect', () => {
             0,
             666,
             0,
-            'peer' as EthereumAddress,
+            hexToBinary('0x111'),
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),

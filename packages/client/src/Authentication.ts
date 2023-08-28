@@ -6,7 +6,7 @@ import { getStreamRegistryChainProviders } from './Ethereum'
 import { PrivateKeyAuthConfig, ProviderAuthConfig } from './Config'
 import { pLimitFn } from './utils/promises'
 import pMemoize from 'p-memoize'
-import { EthereumAddress, toEthereumAddress, wait, hexToBinary } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, wait, hexToBinary, EthereumAddressByteArray, ethereumAddressToByteArray } from '@streamr/utils'
 import { sign } from './utils/signingUtils'
 import { StrictStreamrClientConfig } from './Config'
 
@@ -15,6 +15,7 @@ export const AuthenticationInjectionToken = Symbol('Authentication')
 export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
+    getByteArrayAddress: () => Promise<EthereumAddressByteArray>
     createMessageSignature: (payload: string) => Promise<Uint8Array>
     getStreamRegistryChainSigner: () => Promise<Signer>
 }
@@ -23,6 +24,7 @@ export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictS
     const address = toEthereumAddress(computeAddress(key))
     return {
         getAddress: async () => address,
+        getByteArrayAddress: async () => ethereumAddressToByteArray(address),
         createMessageSignature: async (payload: string) => sign(payload, key),
         getStreamRegistryChainSigner: async () => {
             const primaryProvider = getStreamRegistryChainProviders(config)[0]
@@ -42,8 +44,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
         const ethereum = (config.auth as ProviderAuthConfig)?.ethereum
         const provider = new Web3Provider(ethereum)
         const signer = provider.getSigner()
-        return {
-            getAddress: pMemoize(async () => {
+        const getAddress = pMemoize(async () => {
                 try {
                     if (!('request' in ethereum && typeof ethereum.request === 'function')) {
                         throw new Error(`invalid ethereum provider ${ethereum}`)
@@ -53,7 +54,10 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                 } catch {
                     throw new Error('no addresses connected and selected in the custom authentication provider')
                 }
-            }),
+            })
+        return {
+            getAddress,
+            getByteArrayAddress: async () => ethereumAddressToByteArray(await getAddress()),
             createMessageSignature: pLimitFn(async (payload: string) => {
                 // sign one at a time & wait a moment before asking for next signature
                 // otherwise MetaMask extension may not show the prompt window

@@ -7,7 +7,7 @@ import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 import StreamMessage, { ContentType, EncryptionType, StreamMessageType } from '../../../../src/protocol/message_layer/StreamMessage'
 import { toStreamID } from '../../../../src/utils/StreamID'
 import { StreamPartIDUtils } from '../../../../src/utils/StreamPartID'
-import { merge, hexToBinary } from '@streamr/utils'
+import { merge, hexToBinary, ethereumAddressToByteArray } from '@streamr/utils'
 
 const content = {
     hello: 'world',
@@ -33,7 +33,7 @@ const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = 
     )
 }
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const PUBLISHER_ID = ethereumAddressToByteArray(toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'))
 
 describe('StreamMessage', () => {
     describe('constructor', () => {

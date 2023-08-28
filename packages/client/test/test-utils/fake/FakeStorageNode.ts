@@ -7,7 +7,7 @@ import {
     toStreamID,
     toStreamPartID
 } from '@streamr/protocol'
-import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Multimap, toEthereumAddress, byteArrayToEthereumAddress } from '@streamr/utils'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
 import { Server } from 'http'
@@ -180,7 +180,7 @@ export class FakeStorageNode extends FakeNetworkNode {
             const minSequenceNumber = opts.fromSequenceNumber ?? MIN_SEQUENCE_NUMBER
             const maxSequenceNumber = opts.toSequenceNumber ?? MAX_SEQUENCE_NUMBER
             yield* messages.filter((msg) => {
-                return ((opts.publisherId === undefined) || (msg.getPublisherId() === opts.publisherId))
+                return ((opts.publisherId === undefined) || (byteArrayToEthereumAddress(msg.getPublisherId()) === opts.publisherId))
                     && ((opts.msgChainId === undefined) || (msg.getMsgChainId() === opts.msgChainId))
                     && (
                         ((msg.getTimestamp() > opts.fromTimestamp) && (msg.getTimestamp() < opts.toTimestamp))

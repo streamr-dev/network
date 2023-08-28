@@ -12,7 +12,7 @@ import {
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
 import { PublishMetadata } from './Publisher'
-import { keyToArrayIndex } from '@streamr/utils'
+import { keyToArrayIndex, ethereumAddressToByteArray } from '@streamr/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
 import { Authentication } from '../Authentication'
@@ -97,7 +97,7 @@ export class MessageFactory {
         const prevMsgRef = this.prevMsgRefs.get(msgChainKey)
         const msgRef = createMessageRef(metadata.timestamp, prevMsgRef)
         this.prevMsgRefs.set(msgChainKey, msgRef)
-        const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
+        const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, ethereumAddressToByteArray(publisherId), msgChainId)
 
         const encryptionType = (await this.streamRegistry.hasPublicSubscribePermission(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
         let groupKeyId: string | undefined

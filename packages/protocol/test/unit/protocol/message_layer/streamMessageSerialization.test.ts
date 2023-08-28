@@ -1,4 +1,4 @@
-import { toEthereumAddress, hexToBinary } from '@streamr/utils'
+import { toEthereumAddress, hexToBinary, ethereumAddressToByteArray, byteArrayToEthereumAddress } from '@streamr/utils'
 import assert from 'assert'
 import ValidationError from '../../../../src/errors/ValidationError'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
@@ -8,7 +8,7 @@ import StreamMessage, { ContentType, EncryptionType, StreamMessageType, VERSION 
 import { toStreamID } from '../../../../src/utils/StreamID'
 import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/streamMessageSerialization'
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const PUBLISHER_ID = ethereumAddressToByteArray(toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'))
 const signature = '0x111233'
 
 // Message definitions
@@ -25,7 +25,7 @@ const message = new StreamMessage({
 })
 const serializedMessage = JSON.stringify([
     VERSION,
-    ['streamId', 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'],
+    ['streamId', 0, 1564046332168, 10, byteArrayToEthereumAddress(PUBLISHER_ID), 'msgChainId'],
     [1564046132168, 5],
     StreamMessageType.MESSAGE,
     ContentType.JSON,

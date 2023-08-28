@@ -8,22 +8,23 @@ import {
     StreamMessage as OldStreamMessage,
     StreamMessageType as OldStreamMessageType
 } from '@streamr/protocol'
-import { EthereumAddress, binaryToHex, binaryToUtf8, hexToBinary, areEqualBinaries } from '@streamr/utils'
+import { binaryToHex, binaryToUtf8, hexToBinary, areEqualBinaries } from '@streamr/utils'
 
 describe('StreamMessageTranslator', () => {
 
     const signature = hexToBinary('0x1234')
+    const publisherId = hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
     const protobufMsg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         'TEST',
-        hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        publisherId
     )
     const messageId = new MessageID(
         'TEST' as StreamID,
         0,
         Date.now(),
         0,
-        '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
+        publisherId,
         'test',
     )
     const oldProtocolMsg = new OldStreamMessage({
@@ -41,7 +42,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId!.sequenceNumber).toEqual(0)
         expect(translated.messageId!.streamId).toEqual('TEST')
         expect(translated.messageId!.streamPartition).toEqual(0)
-        expect(binaryToHex(translated.messageId!.publisherId, true)).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        expect(areEqualBinaries(translated.messageId!.publisherId, publisherId))
         expect(translated.previousMessageRef).toEqual(undefined)
         expect(translated.messageType).toEqual(StreamMessageType.MESSAGE)
         expect(translated.groupKeyId).toEqual(undefined)
@@ -56,7 +57,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId.sequenceNumber).toEqual(0)
         expect(translated.messageId.streamId).toEqual('TEST')
         expect(translated.messageId.streamPartition).toEqual(0)
-        expect(translated.getPublisherId()).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        expect(areEqualBinaries(translated.getPublisherId(), publisherId))
         expect(translated.prevMsgRef).toEqual(null)
         expect(translated.messageType).toEqual(OldStreamMessageType.MESSAGE)
         expect(translated.contentType).toEqual(0)

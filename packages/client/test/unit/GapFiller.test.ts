@@ -19,7 +19,7 @@ const createMessage = (timestamp: number, hasPrevRef = true) => {
             StreamPartIDUtils.getStreamPartition(CONTEXT.streamPartId),
             timestamp,
             0,
-            CONTEXT.publisherId, 
+            hexToBinary(CONTEXT.publisherId), 
             CONTEXT.msgChainId
         ),
         prevMsgRef: hasPrevRef ? new MessageRef(timestamp - 1, 0) : null,

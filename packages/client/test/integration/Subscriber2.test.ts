@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { MessageID, StreamID, StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { Defer, collect, waitForCondition } from '@streamr/utils'
+import { Defer, collect, waitForCondition, ethereumAddressToByteArray } from '@streamr/utils'
 import sample from 'lodash/sample'
 import shuffle from 'lodash/shuffle'
 import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -51,7 +51,7 @@ describe('Subscriber', () => {
 
     const createMockMessage = async (serializedContent: string, timestamp: number) => {
         return await createSignedMessage({
-            messageId: new MessageID(streamId, 0, timestamp, 0, await publisher.getAddress(), 'msgChainId'),
+            messageId: new MessageID(streamId, 0, timestamp, 0, ethereumAddressToByteArray(await publisher.getAddress()), 'msgChainId'),
             serializedContent,
             authentication: publisherAuthentication
         })

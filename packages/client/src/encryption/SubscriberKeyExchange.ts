@@ -9,7 +9,7 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, Logger } from '@streamr/utils'
+import { EthereumAddress, Logger, byteArrayToEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -108,7 +108,7 @@ export class SubscriberKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                await this.authentication.getAddress(),
+                await this.authentication.getByteArrayAddress(),
                 createRandomMsgChainId()
             ),
             serializedContent: JSON.stringify(requestContent),
@@ -129,7 +129,7 @@ export class SubscriberKeyExchange {
                     await validateStreamMessage(msg, this.streamRegistry)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
                         const key = GroupKey.decryptRSAEncrypted(encryptedKey, this.rsaKeyPair!.getPrivateKey())
-                        await this.store.set(key.id, msg.getPublisherId(), key.data)
+                        await this.store.set(key.id, byteArrayToEthereumAddress(msg.getPublisherId()), key.data)
                     }))
                 }
             } catch (err: any) {

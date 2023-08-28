@@ -1,6 +1,6 @@
 import secp256k1 from 'secp256k1'
 import { Keccak } from 'sha3'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { areEqualBinaries, EthereumAddressByteArray } from '@streamr/utils'
 
 const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
@@ -55,7 +55,7 @@ export function recover(
     signature: Uint8Array,
     payload: string,
     publicKeyBuffer: Buffer | Uint8Array | undefined = undefined
-): string {
+): Uint8Array {
     const signatureBuffer = Buffer.from(signature)
     const payloadBuffer = Buffer.from(payload, 'utf-8')
 
@@ -66,13 +66,13 @@ export function recover(
     keccak.reset()
     keccak.update(Buffer.from(pubKeyWithoutFirstByte))
     const hashOfPubKey = keccak.digest('binary')
-    return '0x' + hashOfPubKey.subarray(12, hashOfPubKey.length).toString('hex')
+    return hashOfPubKey.subarray(12, hashOfPubKey.length)
 }
 
-export function verify(address: EthereumAddress, payload: string, signature: Uint8Array): boolean {
+export function verify(address: EthereumAddressByteArray, payload: string, signature: Uint8Array): boolean {
     try {
-        const recoveredAddress = toEthereumAddress(recover(signature, payload))
-        return recoveredAddress === address
+        const recoveredAddress = recover(signature, payload)
+        return areEqualBinaries(recoveredAddress, address)
     } catch (err) {
         return false
     }

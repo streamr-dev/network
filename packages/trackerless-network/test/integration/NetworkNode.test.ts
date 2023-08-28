@@ -74,7 +74,7 @@ describe('NetworkNode', () => {
                 0,
                 666,
                 0,
-                '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
+                hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
                 'msgChainId'
             ),
             prevMsgRef: new MessageRef(665, 0),

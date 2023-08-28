@@ -13,7 +13,7 @@ import {
     uid
 } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
-import { waitForCondition } from '@streamr/utils'
+import { waitForCondition, binaryToHex } from '@streamr/utils'
 
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages
@@ -137,18 +137,20 @@ describe('PubSub with multiple clients', () => {
             await otherClient.subscribe({
                 stream: stream.id,
             }, (_content, metadata) => {
-                const msgs = receivedMessagesOther[metadata.publisherId] || []
+                const key = binaryToHex(metadata.publisherId)
+                const msgs = receivedMessagesOther[key] || []
                 msgs.push(metadata)
-                receivedMessagesOther[metadata.publisherId] = msgs
+                receivedMessagesOther[key] = msgs
             })
 
             // subscribe to stream from main client instance
             await mainClient.subscribe({
                 stream: stream.id,
             }, (_content, metadata) => {
-                const msgs = receivedMessagesMain[metadata.publisherId] || []
+                const key = binaryToHex(metadata.publisherId)
+                const msgs = receivedMessagesMain[key] || []
                 msgs.push(metadata)
-                receivedMessagesMain[metadata.publisherId] = msgs
+                receivedMessagesMain[key] = msgs
             })
 
             const publishers: StreamrClient[] = []
@@ -192,7 +194,7 @@ describe('PubSub with multiple clients', () => {
             const mainSub = await mainClient.subscribe({
                 stream: stream.id,
             }, (_content, metadata) => {
-                const key = metadata.publisherId
+                const key = binaryToHex(metadata.publisherId)
                 const msgs = receivedMessagesMain[key] || []
                 msgs.push(metadata)
                 receivedMessagesMain[key] = msgs
@@ -235,7 +237,7 @@ describe('PubSub with multiple clients', () => {
                             from: lastMessage.streamMessage.getMessageRef()
                         }
                     }, (_content, metadata) => {
-                        const key = metadata.publisherId
+                        const key = binaryToHex(metadata.publisherId)
                         const msgs = receivedMessagesOther[key] || []
                         msgs.push(metadata)
                         receivedMessagesOther[key] = msgs
@@ -284,7 +286,7 @@ describe('PubSub with multiple clients', () => {
         await otherClient.subscribe({
             stream: stream.id,
         }, (_content, metadata) => {
-            const key = metadata.publisherId
+            const key = binaryToHex(metadata.publisherId)
             const msgs = receivedMessagesOther[key] || []
             msgs.push(metadata)
             receivedMessagesOther[key] = msgs
@@ -294,7 +296,7 @@ describe('PubSub with multiple clients', () => {
         await mainClient.subscribe({
             stream: stream.id,
         }, (_content, metadata) => {
-            const key = metadata.publisherId
+            const key = binaryToHex(metadata.publisherId)
             const msgs = receivedMessagesMain[key] || []
             msgs.push(metadata)
             receivedMessagesMain[key] = msgs
@@ -346,7 +348,7 @@ describe('PubSub with multiple clients', () => {
         const mainSub = await mainClient.subscribe({
             stream: stream.id,
         }, (_content, metadata) => {
-            const key = metadata.publisherId
+            const key = binaryToHex(metadata.publisherId)
             const msgs = receivedMessagesMain[key] || []
             msgs.push(metadata)
             receivedMessagesMain[key] = msgs
@@ -378,7 +380,7 @@ describe('PubSub with multiple clients', () => {
                         from: lastMessage.streamMessage.getMessageRef()
                     }
                 }, (_content, metadata) => {
-                    const key = metadata.publisherId
+                    const key = binaryToHex(metadata.publisherId)
                     const msgs = receivedMessagesOther[key] || []
                     msgs.push(metadata)
                     receivedMessagesOther[key] = msgs

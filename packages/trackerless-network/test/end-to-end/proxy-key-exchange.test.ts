@@ -95,7 +95,7 @@ describe('proxy group key exchange', () => {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                subscriberUserId,
+                hexToBinary(subscriberUserId),
                 '0'
             ),
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
@@ -125,7 +125,7 @@ describe('proxy group key exchange', () => {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                publisherUserId,
+                hexToBinary(publisherUserId),
                 '0'
             ),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,

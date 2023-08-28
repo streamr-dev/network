@@ -15,7 +15,7 @@ const createMessage = (streamId: StreamID): StreamMessage => {
             0,
             666,
             0,
-            'peer' as EthereumAddress,
+            hexToBinary('0x1111'),
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),

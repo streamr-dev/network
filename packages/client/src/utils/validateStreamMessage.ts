@@ -5,7 +5,7 @@ import {
     StreamMessageType,
     createSignaturePayload,
 } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, byteArrayToEthereumAddress } from '@streamr/utils'
 import { StreamRegistry } from '../registry/StreamRegistry'
 import { verify } from '../utils/signingUtils'
 
@@ -40,13 +40,13 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
             return validateGroupKeyMessage(
                 streamMessage,
                 GroupKeyMessage.fromStreamMessage(streamMessage).recipient,
-                streamMessage.getPublisherId(),
+                byteArrayToEthereumAddress(streamMessage.getPublisherId()),
                 streamRegistry
             )
         case StreamMessageType.GROUP_KEY_RESPONSE:
             return validateGroupKeyMessage(
                 streamMessage,
-                streamMessage.getPublisherId(),
+                byteArrayToEthereumAddress(streamMessage.getPublisherId()),
                 GroupKeyMessage.fromStreamMessage(streamMessage).recipient,
                 streamRegistry
             )
@@ -89,7 +89,7 @@ const validateMessage = async (
     if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
         throw new StreamMessageError(`Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`, streamMessage)
     }
-    const sender = streamMessage.getPublisherId()
+    const sender = byteArrayToEthereumAddress(streamMessage.getPublisherId())
     const isPublisher = await streamRegistry.isStreamPublisher(streamId, sender)
     if (!isPublisher) {
         throw new StreamMessageError(`${sender} is not a publisher on stream ${streamId}`, streamMessage)

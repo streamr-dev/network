@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { toEthereumAddress } from '@streamr/utils'
+import { toEthereumAddress, ethereumAddressToByteArray } from '@streamr/utils'
 import { MessageID } from '@streamr/protocol'
 import { Authentication } from '../../src/Authentication'
 import { StreamPermission } from '../../src/permission'
@@ -13,7 +13,7 @@ import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createRandomAuthentication, createRelativeTestStreamId } from '../test-utils/utils'
 import { convertStreamMessageToMessage } from '../../src/Message'
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const PUBLISHER_ID = ethereumAddressToByteArray(toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'))
 
 describe('waitForStorage', () => {
 

@@ -3,6 +3,7 @@ import { EncryptionUtil, DecryptError } from '../encryption/EncryptionUtil'
 import { DestroySignal } from '../DestroySignal'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { byteArrayToEthereumAddress } from '@streamr/utils'
 
 // TODO if this.destroySignal.isDestroyed() is true, would it make sense to reject the promise
 // and not to return the original encrypted message?
@@ -16,11 +17,12 @@ export const decrypt = async (
         return streamMessage
     }
     let groupKey: GroupKey | undefined
+    const publisherEthereumAddress = byteArrayToEthereumAddress(streamMessage.getPublisherId())
     try {
         groupKey = await groupKeyManager.fetchKey(
             streamMessage.getStreamPartID(),
             streamMessage.groupKeyId,
-            streamMessage.getPublisherId()
+            publisherEthereumAddress
         )
     } catch (e: any) {
         if (destroySignal.isDestroyed()) {
@@ -37,7 +39,7 @@ export const decrypt = async (
         // newGroupKey has been converted into GroupKey
         await groupKeyManager.addKeyToLocalStore(
             clone.newGroupKey as unknown as GroupKey,
-            streamMessage.getPublisherId()
+            publisherEthereumAddress
         )
     }
     return clone
