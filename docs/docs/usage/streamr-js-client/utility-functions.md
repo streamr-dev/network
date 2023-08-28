@@ -26,7 +26,7 @@ const streams = await streamr.searchStreams('foo');
 ```
 
 :::caution Important:
-Stream searches return an iterable AsyncGenerator object that you must iterate over. For example, 
+Stream searches return an iterable AsyncIterable object that you must iterate over. For example, 
 
 ```ts
 const streams = await searchStreams...
