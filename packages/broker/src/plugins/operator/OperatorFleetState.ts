@@ -22,6 +22,11 @@ export interface OperatorFleetStateEvents {
     removed: (nodeId: string) => void
 }
 
+interface Heartbeat {
+    timestamp: number
+    peerDescriptor: NetworkPeerDescriptor
+}
+
 export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly streamrClient: StreamrClient
     private readonly coordinationStreamId: StreamID
@@ -30,8 +35,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly pruneIntervalInMs: number
     private readonly heartbeatIntervalInMs: number
     private readonly latencyExtraInMs: number
-    private readonly heartbeatTimestamps = new Map<NodeId, number>()
-    private readonly peerDescriptors = new Map<NodeId, NetworkPeerDescriptor>()
+    private readonly latestHeartbeats = new Map<NodeId, Heartbeat>()
     private readonly abortController = new AbortController()
     private readonly ready = new Gate(false)
     private subscription?: Subscription
@@ -72,9 +76,11 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
             }
             if (message.msgType === 'heartbeat') {
                 const nodeId = message.peerDescriptor.id
-                const exists = this.heartbeatTimestamps.has(nodeId)
-                this.heartbeatTimestamps.set(nodeId, this.timeProvider())
-                this.peerDescriptors.set(nodeId, message.peerDescriptor)
+                const exists = this.latestHeartbeats.has(nodeId)
+                this.latestHeartbeats.set(nodeId, {
+                    timestamp: this.timeProvider(),
+                    peerDescriptor: message.peerDescriptor
+                })
                 if (!exists) {
                     this.emit('added', nodeId)
                 }
@@ -100,11 +106,11 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     }
 
     getNodeIds(): string[] {
-        return [...this.heartbeatTimestamps.keys()]
+        return [...this.latestHeartbeats.keys()]
     }
 
     getPeerDescriptorOf(nodeId: NodeId): NetworkPeerDescriptor | undefined {
-        return this.peerDescriptors.get(nodeId)
+        return this.latestHeartbeats.get(nodeId)?.peerDescriptor
     }
 
     private launchOpenReadyGateTimer = once(() => {
@@ -115,10 +121,9 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
 
     private pruneOfflineNodes(): void {
         const now = this.timeProvider()
-        for (const [nodeId, time] of this.heartbeatTimestamps) {
-            if (now - time >= this.pruneAgeInMs) {
-                this.heartbeatTimestamps.delete(nodeId)
-                this.peerDescriptors.delete(nodeId)
+        for (const [nodeId, { timestamp }] of this.latestHeartbeats) {
+            if (now - timestamp >= this.pruneAgeInMs) {
+                this.latestHeartbeats.delete(nodeId)
                 this.emit('removed', nodeId)
             }
         }
