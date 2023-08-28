@@ -3,7 +3,8 @@ import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsStrin
 import MessageRef from './MessageRef'
 import { StreamID, toStreamID } from '../../../src/utils/StreamID'
 import { StreamPartID, toStreamPartID } from '../../utils/StreamPartID'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddressByteArray, hexToBinary, binaryToHex } from '@streamr/utils'
+
 /** @internal */
 export type MessageIDArray = [string, number, number, number, string, string]
 export default class MessageID {
@@ -12,7 +13,7 @@ export default class MessageID {
     streamPartition: number
     timestamp: number
     sequenceNumber: number
-    publisherId: EthereumAddress
+    publisherId: EthereumAddressByteArray
     msgChainId: string
 
     constructor(
@@ -20,7 +21,7 @@ export default class MessageID {
         streamPartition: number,
         timestamp: number,
         sequenceNumber: number,
-        publisherId: EthereumAddress,
+        publisherId: EthereumAddressByteArray,
         msgChainId: string
     ) {
         validateIsNotEmptyString('streamId', streamId)
@@ -45,7 +46,7 @@ export default class MessageID {
             this.streamPartition,
             this.timestamp,
             this.sequenceNumber,
-            this.publisherId,
+            binaryToHex(this.publisherId, true),
             this.msgChainId,
         ]
     }
@@ -66,7 +67,7 @@ export default class MessageID {
             streamPartition,
             timestamp,
             sequenceNumber,
-            toEthereumAddress(publisherId),
+            hexToBinary(publisherId),
             msgChainId
         )
     }
@@ -84,6 +85,13 @@ export default class MessageID {
     }
 
     clone(): MessageID {
-        return new MessageID(...this.toArray() as [StreamID, number, number, number, EthereumAddress, string])
+        return new MessageID(
+            this.streamId,
+            this.streamPartition,
+            this.timestamp,
+            this.sequenceNumber,
+            this.publisherId,
+            this.msgChainId
+        )
     }
 }

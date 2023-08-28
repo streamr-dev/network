@@ -8,7 +8,7 @@ import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
 import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from '../../utils/StreamPartID'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddressByteArray } from '@streamr/utils'
 import { fromArray, toArray } from './streamMessageSerialization'
 
 export const VERSION = 32
@@ -155,7 +155,7 @@ export default class StreamMessage<T = unknown> {
         return this.messageId.sequenceNumber
     }
 
-    getPublisherId(): EthereumAddress {
+    getPublisherId(): EthereumAddressByteArray {
         return this.messageId.publisherId
     }
 

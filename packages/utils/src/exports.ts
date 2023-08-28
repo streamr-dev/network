@@ -3,7 +3,13 @@ import { AbortError, asAbortable } from './asAbortable'
 import { setAbortableInterval, setAbortableTimeout } from './abortableTimers'
 import { Defer } from './Defer'
 import { ENSName, toENSName } from './ENSName'
-import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
+import {
+    EthereumAddress,
+    toEthereumAddress,
+    ethereumAddressToByteArray,
+    EthereumAddressByteArray,
+    byteArrayToEthereumAddress
+} from './EthereumAddress'
 import { isENSName } from './isENSName'
 import { keyToArrayIndex } from './keyToArrayIndex'
 import { Logger, LogLevel } from './Logger'
@@ -43,6 +49,9 @@ export {
     BrandedString,
     ENSName,
     EthereumAddress,
+    EthereumAddressByteArray,
+    ethereumAddressToByteArray,
+    byteArrayToEthereumAddress,
     Defer,
     Logger,
     LogLevel,
