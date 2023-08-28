@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 import EasyTable from 'easy-table'
-import StreamrClient from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 import { createClientCommand } from '../src/command'
 
 createClientCommand((async (client: StreamrClient, storageNodeAddress: string) => {

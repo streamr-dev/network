@@ -1,7 +1,7 @@
 import { EthereumAddress, merge, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import padEnd from 'lodash/padEnd'
-import StreamrClient, {
+import { StreamrClient,
     CONFIG_TEST,
     NetworkPeerDescriptor,
     Stream,

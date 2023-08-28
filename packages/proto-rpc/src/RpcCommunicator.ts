@@ -357,7 +357,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
             RpcResponseParams
     ): RpcMessage {
         return {
-            body: body,
+            body,
             header: {
                 response: 'response',
                 method: request.header.method

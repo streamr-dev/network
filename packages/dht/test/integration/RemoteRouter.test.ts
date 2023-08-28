@@ -38,7 +38,7 @@ describe('RemoteRouter', () => {
     it('routeMessage happy path', async () => {
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor, serverPeerDescriptor)
         const routed: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageId: 'routed',
             messageType: MessageType.RPC,
             body: {
@@ -61,7 +61,7 @@ describe('RemoteRouter', () => {
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockRoutingService.throwRouteMessageError)
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor, serverPeerDescriptor)
         const routed: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageId: 'routed',
             messageType: MessageType.RPC,
             body: {
