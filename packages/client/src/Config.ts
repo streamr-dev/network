@@ -76,8 +76,8 @@ export interface ControlLayerConfig {
     peerDescriptor?: NetworkPeerDescriptor
 
     /**
-     * The port range to use for the client's Network Node WebSocket server.
-     * If not specified, the server will not be started.
+     * The port range used to find a free port for the client's network layer WebSocket server.
+     * If not specified, a server will not be started.
      * The server is used by the network layer to accept incoming connections
      * over the public internet to improve the network node's connectivity.
      */
