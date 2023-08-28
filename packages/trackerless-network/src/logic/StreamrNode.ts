@@ -163,41 +163,41 @@ export class StreamrNode extends EventEmitter<Events> {
         this.connectionLocker = undefined
     }
 
-    subscribeToStream(streamPartID: string): void {
-        if (!this.streams.has(streamPartID)) {
-            this.joinStream(streamPartID)
+    subscribeToStream(streamPartId: string): void {
+        if (!this.streams.has(streamPartId)) {
+            this.joinStream(streamPartId)
                 .catch((err) => {
-                    logger.warn(`Failed to subscribe to stream ${streamPartID} with error: ${err}`)
+                    logger.warn(`Failed to subscribe to stream ${streamPartId} with error: ${err}`)
                 })
         }
     }
 
-    publishToStream(streamPartID: string, msg: StreamMessage): void {
-        if (this.streams.has(streamPartID)) {
-            this.streams.get(streamPartID)!.layer2.broadcast(msg)
+    publishToStream(streamPartId: string, msg: StreamMessage): void {
+        if (this.streams.has(streamPartId)) {
+            this.streams.get(streamPartId)!.layer2.broadcast(msg)
         } else {
-            this.joinStream(streamPartID)
+            this.joinStream(streamPartId)
                 .catch((err) => {
-                    logger.warn(`Failed to publish to stream ${streamPartID} with error: ${err}`)
+                    logger.warn(`Failed to publish to stream ${streamPartId} with error: ${err}`)
                 })
-            this.streams.get(streamPartID)!.layer2.broadcast(msg)
+            this.streams.get(streamPartId)!.layer2.broadcast(msg)
         }
         this.metrics.publishMessagesPerSecond.record(1)
         this.metrics.publishBytesPerSecond.record(msg.content.length)
     }
 
-    unsubscribeFromStream(streamPartID: string): void {
-        this.leaveStream(streamPartID)
+    unsubscribeFromStream(streamPartId: string): void {
+        this.leaveStream(streamPartId)
     }
 
-    leaveStream(streamPartID: string): void {
-        const stream = this.streams.get(streamPartID)
+    leaveStream(streamPartId: string): void {
+        const stream = this.streams.get(streamPartId)
         if (stream) {
             stream.layer2.stop()
             stream.layer1?.stop()
-            this.streams.delete(streamPartID)
+            this.streams.delete(streamPartId)
         }
-        this.streamEntryPointDiscovery!.removeSelfAsEntryPoint(streamPartID)
+        this.streamEntryPointDiscovery!.removeSelfAsEntryPoint(streamPartId)
     }
 
     async joinStream(streamPartId: string): Promise<void> {
@@ -226,10 +226,10 @@ export class StreamrNode extends EventEmitter<Events> {
         )
     }
 
-    private createStream(streamPartID: string, entryPoints: PeerDescriptor[]): [DhtNode, RandomGraphNode] {
-        const layer1 = this.createLayer1Node(streamPartID, entryPoints)
-        const layer2 = this.createRandomGraphNode(streamPartID, layer1)
-        this.streams.set(streamPartID, {
+    private createStream(streamPartId: string, entryPoints: PeerDescriptor[]): [DhtNode, RandomGraphNode] {
+        const layer1 = this.createLayer1Node(streamPartId, entryPoints)
+        const layer2 = this.createRandomGraphNode(streamPartId, layer1)
+        this.streams.set(streamPartId, {
             type: StreamNodeType.RANDOM_GRAPH,
             layer1,
             layer2
@@ -240,10 +240,10 @@ export class StreamrNode extends EventEmitter<Events> {
         return [layer1, layer2]
     }
 
-    private createLayer1Node = (streamPartID: string, entryPoints: PeerDescriptor[]) => {
+    private createLayer1Node = (streamPartId: string, entryPoints: PeerDescriptor[]) => {
         return new DhtNode({
             transportLayer: this.layer0!,
-            serviceId: 'layer1::' + streamPartID,
+            serviceId: 'layer1::' + streamPartId,
             peerDescriptor: this.layer0!.getPeerDescriptor(),
             entryPoints: entryPoints,
             numberOfNodesPerKBucket: 4,
@@ -253,9 +253,9 @@ export class StreamrNode extends EventEmitter<Events> {
         })
     }
 
-    private createRandomGraphNode = (streamPartID: string, layer1: DhtNode) => {
+    private createRandomGraphNode = (streamPartId: string, layer1: DhtNode) => {
         return createRandomGraphNode({
-            randomGraphId: streamPartID,
+            randomGraphId: streamPartId,
             P2PTransport: this.P2PTransport!,
             layer1: layer1,
             connectionLocker: this.connectionLocker!,

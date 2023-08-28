@@ -77,7 +77,7 @@ export class StreamEntryPointDiscovery {
     }
 
     async discoverEntryPointsFromDht(
-        streamPartID: string,
+        streamPartId: string,
         knownEntryPointCount: number,
         forwardingPeer?: PeerDescriptor
     ): Promise<FindEntryPointsResult> {
@@ -89,7 +89,7 @@ export class StreamEntryPointDiscovery {
             }
         }
         let joiningEmptyStream = false
-        const discoveredEntryPoints = await this.discoverEntryPoints(streamPartID, forwardingPeer)
+        const discoveredEntryPoints = await this.discoverEntryPoints(streamPartId, forwardingPeer)
         if (discoveredEntryPoints.length === 0) {
             joiningEmptyStream = true
             discoveredEntryPoints.push(this.config.ownPeerDescriptor)
@@ -136,17 +136,17 @@ export class StreamEntryPointDiscovery {
     }
 
     async storeSelfAsEntryPointIfNecessary(
-        streamPartID: string,
+        streamPartId: string,
         joiningEmptyStream: boolean,
         entryPointsFromDht: boolean,
         currentEntrypointCount: number
     ): Promise<void> {
         if (joiningEmptyStream) {
-            await this.storeSelfAsEntryPoint(streamPartID)
-            setImmediate(() => this.avoidNetworkSplit(streamPartID))
+            await this.storeSelfAsEntryPoint(streamPartId)
+            setImmediate(() => this.avoidNetworkSplit(streamPartId))
         } else if (entryPointsFromDht && currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) {
             try {
-                await this.storeSelfAsEntryPoint(streamPartID)
+                await this.storeSelfAsEntryPoint(streamPartId)
             } catch (err) {
                 logger.trace(`Failed to store self as entrypoint on stream `)
             }
@@ -190,11 +190,11 @@ export class StreamEntryPointDiscovery {
         }, this.cacheInterval))
     }
 
-    private async avoidNetworkSplit(streamPartID: string): Promise<void> {
+    private async avoidNetworkSplit(streamPartId: string): Promise<void> {
         await exponentialRunOff(async () => {
-            if (this.config.streams.has(streamPartID)) {
-                const stream = this.config.streams.get(streamPartID)
-                const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartID)
+            if (this.config.streams.has(streamPartId)) {
+                const stream = this.config.streams.get(streamPartId)
+                const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartId)
                 await stream!.layer1!.joinDht(rediscoveredEntrypoints, false)
                 if (stream!.layer1!.getBucketSize() < 4) {
                     throw new Error(`Network split is still possible`)
