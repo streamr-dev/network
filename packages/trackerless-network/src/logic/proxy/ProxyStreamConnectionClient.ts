@@ -21,6 +21,7 @@ import { NetworkRpcClient, ProxyConnectionRpcClient } from '../../proto/packages
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { markAndCheckDuplicate } from '../utils'
+import { StreamPartID } from '@streamr/protocol'
 
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
     // eslint-disable-next-line no-constant-condition
@@ -40,7 +41,7 @@ export const retry = async <T>(task: () => Promise<T>, description: string, abor
 interface ProxyStreamConnectionClientConfig {
     P2PTransport: ITransport
     ownPeerDescriptor: PeerDescriptor
-    streamPartId: string
+    streamPartId: StreamPartID
     connectionLocker: ConnectionLocker
     userId: string
     nodeName?: string
@@ -109,7 +110,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     }
 
     async setProxies(
-        streamPartId: string,
+        streamPartId: StreamPartID,
         peerDescriptors: PeerDescriptor[],
         direction: ProxyDirection,
         userId: string,

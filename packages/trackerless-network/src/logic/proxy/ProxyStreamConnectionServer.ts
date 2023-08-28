@@ -7,6 +7,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { EventEmitter } from 'eventemitter3'
 import { Logger } from '@streamr/utils'
+import { StreamPartID } from '@streamr/protocol'
 
 const logger = new Logger(module)
 
@@ -18,7 +19,7 @@ interface ProxyConnection {
 
 interface ProxyStreamConnectionServerConfig {
     ownPeerDescriptor: PeerDescriptor
-    streamPartId: string
+    streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
 }
 

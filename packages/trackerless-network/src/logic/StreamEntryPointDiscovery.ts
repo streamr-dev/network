@@ -8,8 +8,9 @@ import {
 import { Any } from '../proto/google/protobuf/any'
 import { Logger, setAbortableTimeout, wait } from '@streamr/utils'
 import { StreamObject } from './StreamrNode'
+import { StreamPartID } from '@streamr/protocol'
 
-export const streamPartIdToDataKey = (streamPartId: string): Uint8Array => {
+export const streamPartIdToDataKey = (streamPartId: StreamPartID): Uint8Array => {
     return new Uint8Array(createHash('md5').update(streamPartId).digest())
 }
 
@@ -66,7 +67,8 @@ interface StreamEntryPointDiscoveryConfig {
 export class StreamEntryPointDiscovery {
     private readonly abortController: AbortController
     private readonly config: StreamEntryPointDiscoveryConfig
-    private readonly servicedStreams: Map<string, NodeJS.Timeout>
+    // TODO rename: contains stream parts, not streams
+    private readonly servicedStreams: Map<StreamPartID, NodeJS.Timeout>
     private readonly cacheInterval: number
 
     constructor(config: StreamEntryPointDiscoveryConfig) {
@@ -77,7 +79,7 @@ export class StreamEntryPointDiscovery {
     }
 
     async discoverEntryPointsFromDht(
-        streamPartId: string,
+        streamPartId: StreamPartID,
         knownEntryPointCount: number,
         forwardingPeer?: PeerDescriptor
     ): Promise<FindEntryPointsResult> {
@@ -101,7 +103,7 @@ export class StreamEntryPointDiscovery {
         }
     }
 
-    private async discoverEntryPoints(streamPartId: string, forwardingPeer?: PeerDescriptor): Promise<PeerDescriptor[]> {
+    private async discoverEntryPoints(streamPartId: StreamPartID, forwardingPeer?: PeerDescriptor): Promise<PeerDescriptor[]> {
         const dataKey = streamPartIdToDataKey(streamPartId)
         return forwardingPeer ? 
             this.queryEntryPointsViaPeer(dataKey, forwardingPeer) : await this.queryEntrypoints(dataKey)
@@ -136,7 +138,7 @@ export class StreamEntryPointDiscovery {
     }
 
     async storeSelfAsEntryPointIfNecessary(
-        streamPartId: string,
+        streamPartId: StreamPartID,
         joiningEmptyStream: boolean,
         entryPointsFromDht: boolean,
         currentEntrypointCount: number
@@ -153,7 +155,7 @@ export class StreamEntryPointDiscovery {
         }
     }
 
-    private async storeSelfAsEntryPoint(streamPartId: string): Promise<void> {
+    private async storeSelfAsEntryPoint(streamPartId: StreamPartID): Promise<void> {
         const ownPeerDescriptor = this.config.ownPeerDescriptor
         const dataToStore = Any.pack(ownPeerDescriptor, PeerDescriptor)
         try {
@@ -164,7 +166,7 @@ export class StreamEntryPointDiscovery {
         }
     }
 
-    private keepSelfAsEntryPoint(streamPartId: string): void {
+    private keepSelfAsEntryPoint(streamPartId: StreamPartID): void {
         if (!this.config.streams.has(streamPartId) || this.servicedStreams.has(streamPartId)) {
             return
         }
@@ -190,7 +192,7 @@ export class StreamEntryPointDiscovery {
         }, this.cacheInterval))
     }
 
-    private async avoidNetworkSplit(streamPartId: string): Promise<void> {
+    private async avoidNetworkSplit(streamPartId: StreamPartID): Promise<void> {
         await exponentialRunOff(async () => {
             if (this.config.streams.has(streamPartId)) {
                 const stream = this.config.streams.get(streamPartId)
@@ -204,7 +206,7 @@ export class StreamEntryPointDiscovery {
         logger.trace(`Network split avoided`)
     }
 
-    removeSelfAsEntryPoint(streamPartId: string): void {
+    removeSelfAsEntryPoint(streamPartId: StreamPartID): void {
         if (this.servicedStreams.has(streamPartId)) {
             setAbortableTimeout(() => this.config.deleteEntryPointData(streamPartIdToDataKey(streamPartId)), 0, this.abortController.signal)
             clearTimeout(this.servicedStreams.get(streamPartId)!)
