@@ -3,8 +3,8 @@
  */
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NetworkNode, NetworkOptions, ProxyDirection } from '@streamr/trackerless-network'
-import { MetricsContext } from '@streamr/utils'
+import { NetworkNode, NetworkOptions, ProxyDirection, UserID } from '@streamr/trackerless-network'
+import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
@@ -45,7 +45,7 @@ export interface NetworkNodeStub {
         streamPartId: StreamPartID,
         peerDescriptors: PeerDescriptor[],
         direction: ProxyDirection,
-        getUserId: () => Promise<string>,
+        userId: UserID,
         connectionCount?: number
     ) => Promise<void>
     setStreamPartEntryPoints: (streamPartId: StreamPartID, peerDescriptors: PeerDescriptor[]) => void
@@ -53,6 +53,10 @@ export interface NetworkNodeStub {
 
 export interface Events {
     start: () => void
+}
+
+export const toUserID = (address: EthereumAddress): UserID => {
+    return Buffer.from(address.slice(2), 'hex') as UserID
 }
 
 /**
@@ -242,7 +246,7 @@ export class NetworkNodeFacade {
             streamPartId,
             peerDescriptors,
             direction,
-            () => this.authentication.getAddress(),
+            toUserID(await this.authentication.getAddress()),
             connectionCount
         )
     }
