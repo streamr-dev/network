@@ -43,7 +43,7 @@ describe('WebSocket Connection Management', () => {
         const config1 = {
             transportLayer: connectorTransport1,
             webSocketHost: '127.0.0.1',
-            webSocketPort: 12223,
+            webSocketPortRange: { min: 12223, max: 12223 },
         }
         const config2 = {
             transportLayer: connectorTransport2

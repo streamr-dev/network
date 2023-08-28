@@ -16,7 +16,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebSocketServer } from './WebSocketServer'
 import { ConnectivityChecker } from '../ConnectivityChecker'
-import { NatType } from '../ConnectionManager'
+import { NatType, PortRange } from '../ConnectionManager'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { ServerWebSocket } from './ServerWebSocket'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -31,13 +31,13 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     private readonly webSocketServer?: WebSocketServer
-    private readonly connectivityChecker: ConnectivityChecker
+    private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private incomingConnectionCallback: (connection: ManagedConnection) => boolean
-    private webSocketPort?: number
+    private webSocketPortRange?: PortRange
     private webSocketHost?: string
     private entrypoints?: PeerDescriptor[]
-
+    private selectedPort?: number
     private readonly protocolVersion: string
     private ownPeerDescriptor?: PeerDescriptor
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
@@ -48,15 +48,14 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         rpcTransport: ITransport,
         fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
         incomingConnectionCallback: (connection: ManagedConnection) => boolean,
-        webSocketPort?: number,
+        webSocketPortRange?: PortRange,
         webSocketHost?: string,
         entrypoints?: PeerDescriptor[]
     ) {
         this.protocolVersion = protocolVersion
-        this.webSocketServer = webSocketPort ? new WebSocketServer() : undefined
-        this.connectivityChecker = new ConnectivityChecker(webSocketPort)
+        this.webSocketServer = webSocketPortRange ? new WebSocketServer() : undefined
         this.incomingConnectionCallback = incomingConnectionCallback
-        this.webSocketPort = webSocketPort
+        this.webSocketPortRange = webSocketPortRange
         this.webSocketHost = webSocketHost
         this.entrypoints = entrypoints
 
@@ -92,7 +91,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     const query = serverSocket.resourceURL.query as unknown as ParsedUrlQuery
                     if (query.connectivityRequest) {
                         logger.trace('Received connectivity request connection')
-                        this.connectivityChecker.listenToIncomingConnectivityRequests(serverSocket)
+                        this.connectivityChecker!.listenToIncomingConnectivityRequests(serverSocket)
                     } else if (query.connectivityProbe) {
                         logger.trace('Received connectivity probe connection')
                     } else {
@@ -102,7 +101,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     this.attachHandshaker(connection)
                 }
             })
-            await this.webSocketServer.start(this.webSocketPort!, this.webSocketHost)
+            const port = await this.webSocketServer.start(this.webSocketPortRange!, this.webSocketHost)
+            this.selectedPort = port
+            this.connectivityChecker = new ConnectivityChecker(this.selectedPort!)
         }
     }
 
@@ -125,7 +126,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                         openInternet: true,
                         ip: this.webSocketHost!,
                         natType: NatType.OPEN_INTERNET,
-                        websocket: { ip: this.webSocketHost!, port: this.webSocketPort! }
+                        websocket: { ip: this.webSocketHost!, port: this.selectedPort! }
                     }
                     return preconfiguredConnectivityResponse
                 } else {
@@ -133,7 +134,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     
                     let response = noServerConnectivityResponse
 
-                    response = await this.connectivityChecker.sendConnectivityRequest(this.entrypoints[0])
+                    response = await this.connectivityChecker!.sendConnectivityRequest(this.entrypoints[0])
 
                     return response
                 }

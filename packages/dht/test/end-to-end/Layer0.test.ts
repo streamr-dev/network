@@ -15,6 +15,7 @@ describe('Layer0', () => {
     let node3: DhtNode
     let node4: DhtNode
 
+    const webSocketPortRange = { min: 10012, max: 10015 } 
     beforeEach(async () => {
         
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
@@ -22,10 +23,10 @@ describe('Layer0', () => {
         
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ peerIdString: '1', webSocketPort: 10012, entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ peerIdString: '2', webSocketPort: 10013, entryPoints: [epPeerDescriptor] })
-        node3 = new DhtNode({ peerIdString: '3', webSocketPort: 10014, entryPoints: [epPeerDescriptor] })
-        node4 = new DhtNode({ peerIdString: '4', webSocketPort: 10015, entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ peerIdString: '1', webSocketPortRange, entryPoints: [epPeerDescriptor] })
+        node2 = new DhtNode({ peerIdString: '2', webSocketPortRange, entryPoints: [epPeerDescriptor] })
+        node3 = new DhtNode({ peerIdString: '3', webSocketPortRange, entryPoints: [epPeerDescriptor] })
+        node4 = new DhtNode({ peerIdString: '4', webSocketPortRange, entryPoints: [epPeerDescriptor] })
         
         await node1.start()
         await node2.start()

@@ -41,7 +41,7 @@ import {
 export class ConnectionManagerConfig {
     transportLayer?: ITransport
     webSocketHost?: string
-    webSocketPort?: number
+    webSocketPortRange?: PortRange
     entryPoints?: PeerDescriptor[]
     nodeName?: string
     maxConnections: number = 80
@@ -107,6 +107,11 @@ export interface ConnectionLocker {
     weakUnlockConnection(targetDescriptor: PeerDescriptor): void
 }
 
+export interface PortRange {
+    min: number
+    max: number
+}
+
 export type Events = TransportEvents & ConnectionManagerEvents
 
 export class ConnectionManager extends EventEmitter<Events> implements ITransport, ConnectionLocker {
@@ -159,7 +164,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 this.config.transportLayer!,
                 this.canConnect.bind(this),
                 this.incomingConnectionCallback,
-                this.config.webSocketPort,
+                this.config.webSocketPortRange,
                 this.config.webSocketHost,
                 this.config.entryPoints
             )

@@ -8,6 +8,7 @@ import {
 
 import { Logger } from '@streamr/utils'
 import { StartingWebSocketServerFailed } from '../../helpers/errors'
+import { PortRange } from '../ConnectionManager'
 
 const logger = new Logger(module)
 
@@ -23,7 +24,19 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     private httpServer?: http.Server
     private wsServer?: WsServer
     
-    public start(port: number, host?: string): Promise<void> {
+    public async start(portRange: PortRange, host?: string): Promise<number> {
+        for (let port = portRange.min; port <= portRange.max; port++) {
+            try {
+                await this.startServer(port, host)
+                return port
+            } catch (err) {
+                logger.debug(`failed to start WebSocket server on port: ${port} reattempting on next port`)
+            }
+        }
+        throw new StartingWebSocketServerFailed('Failed to start WebSocket server on any port in range')
+    }
+
+    private startServer(port: number, host?: string): Promise<void> {
         return new Promise((resolve, reject) => {
             this.httpServer = http.createServer((request, response) => {
                 logger.trace('Received request for ' + request.url)
