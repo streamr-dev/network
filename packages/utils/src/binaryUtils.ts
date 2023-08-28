@@ -23,6 +23,6 @@ export const hexToBinary = (hex: string): Uint8Array => {
     return Buffer.from(hex, 'hex')
 }
 
-export const areEqualBinaries = (a: Uint8Array, b: Uint8Array): boolean => {
-    return Buffer.compare(a, b) === 0
+export const areEqualBinaries = (arr1: Uint8Array, arr2: Uint8Array): boolean => {
+    return Buffer.compare(arr1, arr2) === 0
 }

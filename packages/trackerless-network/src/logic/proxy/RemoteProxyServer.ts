@@ -5,12 +5,13 @@ import { Remote } from '../Remote'
 import { StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { ProxyDirection, ProxyConnectionRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Logger } from '@streamr/utils'
+import { UserID } from '../../identifiers'
 
 const logger = new Logger(module)
 
 export class RemoteProxyServer extends Remote<IProxyConnectionRpcClient> {
 
-    async requestConnection(ownPeerDescriptor: PeerDescriptor, direction: ProxyDirection, userId: string): Promise<boolean> {
+    async requestConnection(ownPeerDescriptor: PeerDescriptor, direction: ProxyDirection, userId: UserID): Promise<boolean> {
         const streamPartId = StreamPartIDUtils.parse(this.graphId)
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor as PeerDescriptor,

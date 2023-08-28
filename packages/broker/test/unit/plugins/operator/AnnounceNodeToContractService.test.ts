@@ -1,5 +1,5 @@
 import { AnnounceNodeToContractService } from '../../../../src/plugins/operator/AnnounceNodeToContractService'
-import StreamrClient, { NetworkNodeType } from 'streamr-client'
+import { StreamrClient, NetworkNodeType } from 'streamr-client'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { AnnounceNodeToContractHelper } from '../../../../src/plugins/operator/AnnounceNodeToContractHelper'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
