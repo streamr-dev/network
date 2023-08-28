@@ -1,6 +1,6 @@
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { mock, MockProxy } from 'jest-mock-extended'
-import StreamrClient, { MessageListener, Subscription } from 'streamr-client'
+import { StreamrClient, MessageListener, Subscription } from 'streamr-client'
 import { wait, waitForCondition, waitForEvent } from '@streamr/utils'
 import { toStreamID } from '@streamr/protocol'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'

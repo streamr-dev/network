@@ -132,7 +132,7 @@ message ProxyConnectionRequest {
   string streamId = 2;
   uint32 streamPartition = 3; 
   ProxyDirection direction = 4;
-  string userId = 5;
+  bytes userId = 5;
   dht.PeerDescriptor senderDescriptor = 6;
 }
 
