@@ -74,7 +74,7 @@ export class RemoteConnectionLocker {
         const request: DisconnectNotice = {
             peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,
-            disconnecMode: disconnecMode
+            disconnecMode
         }
         const options = {
             sourceDescriptor: this.ownPeerDescriptor,
