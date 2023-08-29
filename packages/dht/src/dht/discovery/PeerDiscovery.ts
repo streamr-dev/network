@@ -74,8 +74,8 @@ export class PeerDiscovery {
                 await randomSession.findClosestNodes(this.config.joinTimeout)
             }
             if (!this.stopped) {
-                if (this.config.peerManager.getNumberOfPeers() == 0) {
-                    this.rejoinDht(entryPointDescriptor).catch(() => { })
+                if (this.config.peerManager.getKBucketSize() === 0) {
+                    this.rejoinDht(entryPointDescriptor).catch(() => {})
                 } else {
                     await scheduleAtInterval(() => this.getClosestPeersFromBucket(), 60000, true, this.abortController.signal)
                 }

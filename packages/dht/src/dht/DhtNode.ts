@@ -290,7 +290,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             maxNeighborListSize: this.config.maxNeighborListSize,
             ownPeerId: selfId,
             connectionManager: this.connectionManager!,
-            nodeName: this.config.nodeName!,
+            nodeName: this.getNodeName(),
             getClosestContactsLimit: this.config.getClosestContactsLimit,
             createDhtPeer: this.createDhtPeer.bind(this)
         })

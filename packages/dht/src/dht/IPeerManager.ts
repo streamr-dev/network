@@ -7,4 +7,5 @@ export interface IPeerManager {
     handlePeerActive(peer: DhtPeer): void
     handlePeerUnresponsive(peer: DhtPeer): void
     handleNewPeers(peerDescriptors: PeerDescriptor[], setActive?: boolean): void
+    getKBucketSize(): number
 }

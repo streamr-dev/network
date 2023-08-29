@@ -254,12 +254,14 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
     }
 
     public getNumberOfPeers(exclude?: Set<DhtPeer>): number {
-
         const closest = new SortedContactList<DhtPeer>(this.config.ownPeerId!)
         this.neighborList!.getAllContacts().map((contact) => closest.addContact(contact))
         this.bucket!.toArray().map((contact) => closest.addContact(contact))
         return closest.getClosestContacts().filter((contact) => !exclude?.has(contact)).length
+    }
 
+    public getKBucketSize(): number {
+        return this.bucket!.count()
     }
 
     public handlePeerActive(peer: DhtPeer): void {

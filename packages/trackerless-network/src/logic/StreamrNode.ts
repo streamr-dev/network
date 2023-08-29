@@ -144,7 +144,7 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     async destroy(): Promise<void> {
-        if (this.destroyed) {
+        if (!this.started || this.destroyed) {
             return
         }
         logger.trace('Destroying StreamrNode...')
@@ -153,13 +153,11 @@ export class StreamrNode extends EventEmitter<Events> {
             stream.layer2.stop()
             stream.layer1?.stop()
         })
-        
-        await this.streamEntryPointDiscovery?.destroy()
+        await this.streamEntryPointDiscovery!.destroy()
         this.streams.clear()
         this.removeAllListeners()
-        await this.layer0?.stop()
-        await this.P2PTransport?.stop()
-        
+        await this.layer0!.stop()
+        await this.P2PTransport!.stop()
         this.layer0 = undefined
         this.P2PTransport = undefined
         this.streamEntryPointDiscovery = undefined
