@@ -14,7 +14,7 @@ import { FakeLogger } from './FakeLogger'
 import { FakeNetwork } from './FakeNetwork'
 import { FakeNetworkNode, FakeNetworkNodeFactory } from './FakeNetworkNode'
 import { FakeStorageNode } from './FakeStorageNode'
-import { NodeId } from '@streamr/trackerless-network'
+import { NodeID } from '@streamr/trackerless-network'
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
@@ -65,7 +65,7 @@ export class FakeEnvironment {
         return client
     }
 
-    startNode(nodeId: NodeId): FakeNetworkNode {
+    startNode(nodeId: NodeID): FakeNetworkNode {
         const node = new FakeNetworkNode({
             networkNode: {
                 id: nodeId

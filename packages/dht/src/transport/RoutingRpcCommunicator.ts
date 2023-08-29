@@ -35,7 +35,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
                     rpcMessage: msg
                 },
                 messageType: MessageType.RPC, 
-                targetDescriptor: targetDescriptor
+                targetDescriptor
             }
 
             if (msg.header.response || callContext && callContext.doNotConnect && callContext.doNotMindStopped ) {

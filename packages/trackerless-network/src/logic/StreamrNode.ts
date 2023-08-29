@@ -246,7 +246,7 @@ export class StreamrNode extends EventEmitter<Events> {
             transportLayer: this.layer0!,
             serviceId: 'layer1::' + streamPartId,
             peerDescriptor: this.layer0!.getPeerDescriptor(),
-            entryPoints: entryPoints,
+            entryPoints,
             numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 15000,
             dhtJoinTimeout: 60000,
@@ -258,7 +258,7 @@ export class StreamrNode extends EventEmitter<Events> {
         return createRandomGraphNode({
             randomGraphId: streamPartId,
             P2PTransport: this.P2PTransport!,
-            layer1: layer1,
+            layer1,
             connectionLocker: this.connectionLocker!,
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
@@ -338,10 +338,10 @@ export class StreamrNode extends EventEmitter<Events> {
         return new ProxyStreamConnectionClient({
             P2PTransport: this.P2PTransport!,
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
-            streamPartId: streamPartId,
+            streamPartId,
             connectionLocker: this.connectionLocker!,
             nodeName: this.config.nodeName,
-            userId: userId
+            userId
         })
     }
 
