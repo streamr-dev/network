@@ -12,6 +12,7 @@ import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
 import { NetworkNode } from '../../src/NetworkNode'
 import { hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -45,18 +46,18 @@ export const createMockRandomGraphNodeAndDhtNode = (
 
 export const createStreamMessage = (
     content: string,
-    streamId: string,
+    streamPartId: StreamPartID,
     publisherId: Uint8Array,
     timestamp?: number,
     sequenceNumber?: number
 ): StreamMessage => {
     const messageId: MessageID = {
-        streamId,
-        messageChainId: 'messageChain0',
-        streamPartition: 0,
+        streamId: StreamPartIDUtils.getStreamID(streamPartId),
+        streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
         sequenceNumber: sequenceNumber || 0,
         timestamp: timestamp || Date.now(),
-        publisherId
+        publisherId,
+        messageChainId: 'messageChain0',
     }
     const msg: StreamMessage = {
         messageType: StreamMessageType.MESSAGE,

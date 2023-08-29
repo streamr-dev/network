@@ -164,44 +164,44 @@ export class StreamrNode extends EventEmitter<Events> {
         this.connectionLocker = undefined
     }
 
-    subscribeToStream(streamPartID: string): void {
-        if (!this.streams.has(streamPartID)) {
-            this.joinStream(streamPartID)
+    subscribeToStream(streamPartId: StreamPartID): void {
+        if (!this.streams.has(streamPartId)) {
+            this.joinStream(streamPartId)
                 .catch((err) => {
-                    logger.warn(`Failed to subscribe to stream ${streamPartID} with error: ${err}`)
+                    logger.warn(`Failed to subscribe to stream ${streamPartId} with error: ${err}`)
                 })
         }
     }
 
-    publishToStream(streamPartID: string, msg: StreamMessage): void {
-        if (this.streams.has(streamPartID)) {
-            this.streams.get(streamPartID)!.layer2.broadcast(msg)
+    publishToStream(streamPartId: StreamPartID, msg: StreamMessage): void {
+        if (this.streams.has(streamPartId)) {
+            this.streams.get(streamPartId)!.layer2.broadcast(msg)
         } else {
-            this.joinStream(streamPartID)
+            this.joinStream(streamPartId)
                 .catch((err) => {
-                    logger.warn(`Failed to publish to stream ${streamPartID} with error: ${err}`)
+                    logger.warn(`Failed to publish to stream ${streamPartId} with error: ${err}`)
                 })
-            this.streams.get(streamPartID)!.layer2.broadcast(msg)
+            this.streams.get(streamPartId)!.layer2.broadcast(msg)
         }
         this.metrics.publishMessagesPerSecond.record(1)
         this.metrics.publishBytesPerSecond.record(msg.content.length)
     }
 
-    unsubscribeFromStream(streamPartID: string): void {
-        this.leaveStream(streamPartID)
+    unsubscribeFromStream(streamPartId: StreamPartID): void {
+        this.leaveStream(streamPartId)
     }
 
-    leaveStream(streamPartID: string): void {
-        const stream = this.streams.get(streamPartID)
+    leaveStream(streamPartId: StreamPartID): void {
+        const stream = this.streams.get(streamPartId)
         if (stream) {
             stream.layer2.stop()
             stream.layer1?.stop()
-            this.streams.delete(streamPartID)
+            this.streams.delete(streamPartId)
         }
-        this.streamEntryPointDiscovery!.removeSelfAsEntryPoint(streamPartID)
+        this.streamEntryPointDiscovery!.removeSelfAsEntryPoint(streamPartId)
     }
 
-    async joinStream(streamPartId: string): Promise<void> {
+    async joinStream(streamPartId: StreamPartID): Promise<void> {
         if (this.streams.has(streamPartId)) {
             return
         }
@@ -227,10 +227,10 @@ export class StreamrNode extends EventEmitter<Events> {
         )
     }
 
-    private createStream(streamPartID: string, entryPoints: PeerDescriptor[]): [DhtNode, RandomGraphNode] {
-        const layer1 = this.createLayer1Node(streamPartID, entryPoints)
-        const layer2 = this.createRandomGraphNode(streamPartID, layer1)
-        this.streams.set(streamPartID, {
+    private createStream(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): [DhtNode, RandomGraphNode] {
+        const layer1 = this.createLayer1Node(streamPartId, entryPoints)
+        const layer2 = this.createRandomGraphNode(streamPartId, layer1)
+        this.streams.set(streamPartId, {
             type: StreamNodeType.RANDOM_GRAPH,
             layer1,
             layer2
@@ -241,12 +241,12 @@ export class StreamrNode extends EventEmitter<Events> {
         return [layer1, layer2]
     }
 
-    private createLayer1Node = (streamPartID: string, entryPoints: PeerDescriptor[]) => {
+    private createLayer1Node = (streamPartId: StreamPartID, entryPoints: PeerDescriptor[]) => {
         return new DhtNode({
             transportLayer: this.layer0!,
-            serviceId: 'layer1::' + streamPartID,
+            serviceId: 'layer1::' + streamPartId,
             peerDescriptor: this.layer0!.getPeerDescriptor(),
-            entryPoints: entryPoints,
+            entryPoints,
             numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 15000,
             dhtJoinTimeout: 60000,
@@ -254,11 +254,11 @@ export class StreamrNode extends EventEmitter<Events> {
         })
     }
 
-    private createRandomGraphNode = (streamPartID: string, layer1: DhtNode) => {
+    private createRandomGraphNode = (streamPartId: StreamPartID, layer1: DhtNode) => {
         return createRandomGraphNode({
-            randomGraphId: streamPartID,
+            randomGraphId: streamPartId,
             P2PTransport: this.P2PTransport!,
-            layer1: layer1,
+            layer1,
             connectionLocker: this.connectionLocker!,
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
@@ -269,7 +269,7 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     async waitForJoinAndPublish(
-        streamPartId: string,
+        streamPartId: StreamPartID,
         msg: StreamMessage,
         timeout?: number
     ): Promise<number> {
@@ -286,7 +286,7 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     async waitForJoinAndSubscribe(
-        streamPartId: string,
+        streamPartId: StreamPartID,
         timeout?: number,
         expectedNeighbors = 1
     ): Promise<number> {
@@ -303,7 +303,7 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     async setProxies(
-        streamPartId: string,
+        streamPartId: StreamPartID,
         contactPeerDescriptors: PeerDescriptor[],
         direction: ProxyDirection,
         userId: UserID,
@@ -322,7 +322,7 @@ export class StreamrNode extends EventEmitter<Events> {
         }
     }
 
-    private createProxyStream(streamPartId: string, userId: UserID): ProxyStreamConnectionClient {
+    private createProxyStream(streamPartId: StreamPartID, userId: UserID): ProxyStreamConnectionClient {
         const layer2 = this.createProxyStreamConnectionClient(streamPartId, userId)
         this.streams.set(streamPartId, {
             type: StreamNodeType.PROXY,
@@ -334,18 +334,18 @@ export class StreamrNode extends EventEmitter<Events> {
         return layer2
     }
 
-    private createProxyStreamConnectionClient(streamPartId: string, userId: UserID): ProxyStreamConnectionClient {
+    private createProxyStreamConnectionClient(streamPartId: StreamPartID, userId: UserID): ProxyStreamConnectionClient {
         return new ProxyStreamConnectionClient({
             P2PTransport: this.P2PTransport!,
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
-            streamPartId: streamPartId,
+            streamPartId,
             connectionLocker: this.connectionLocker!,
             nodeName: this.config.nodeName,
-            userId: userId
+            userId
         })
     }
 
-    async inspect(peerDescriptor: PeerDescriptor, streamPartId: string): Promise<boolean> {
+    async inspect(peerDescriptor: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
         if (this.streams.get(streamPartId)?.type === StreamNodeType.RANDOM_GRAPH) {
             const streamNode = this.streams.get(streamPartId)!.layer2 as RandomGraphNode
             return streamNode.inspect(peerDescriptor)
@@ -353,7 +353,7 @@ export class StreamrNode extends EventEmitter<Events> {
         return false
     }
 
-    setStreamPartEntryPoints(streamPartId: string, entryPoints: PeerDescriptor[]): void {
+    setStreamPartEntryPoints(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): void {
         this.knownStreamEntryPoints.set(streamPartId, entryPoints)
     }
 
@@ -366,11 +366,11 @@ export class StreamrNode extends EventEmitter<Events> {
         return this.streams.has(streamId) && this.streams.get(streamId)!.layer2.hasProxyConnection(peerKey, direction)
     }
 
-    getStream(streamPartId: string): StreamObject | undefined {
+    getStream(streamPartId: StreamPartID): StreamObject | undefined {
         return this.streams.get(streamPartId)
     }
 
-    hasStream(streamPartId: string): boolean {
+    hasStream(streamPartId: StreamPartID): boolean {
         return this.streams.has(streamPartId)
     }
 

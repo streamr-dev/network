@@ -12,6 +12,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { createStreamMessage } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Simulator } from '@streamr/dht'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Network RPC', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -46,7 +47,7 @@ describe('Network RPC', () => {
     it('sends Data', async () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
-            'testStream',
+            StreamPartIDUtils.parse('testStream#0'),
             utf8ToBinary('peer1')
         )
         await client.sendData(msg)
