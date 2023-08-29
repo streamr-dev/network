@@ -32,7 +32,7 @@ describe('OperatorValueBreachWatcher', () => {
         await client.destroy()
         deployConfig = {
             operatorConfig: {
-                sharePercent: 10
+                operatorsCutPercent: 10
             }
         }
     }, 60 * 1000)
@@ -41,7 +41,7 @@ describe('OperatorValueBreachWatcher', () => {
         // eslint-disable-next-line max-len
         const { operatorServiceConfig: watcherConfig, operatorWallet: watcherOperatorWallet, nodeWallets: _watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
-        
+
         const sponsorer = await generateWalletWithGasAndTokens()
         await delegate(operatorWallet, operatorContract.address, 200)
         const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
@@ -61,7 +61,7 @@ describe('OperatorValueBreachWatcher', () => {
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
         const poolValueDriftLimitFraction = await streamrConfig.poolValueDriftLimitFraction()
         const allowedDifference = poolValueBeforeWithdraw.mul(poolValueDriftLimitFraction).div(ONE_ETHER).toBigInt()
-        
+
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
         operatorValueBreachWatcher.helper.getRandomOperator = async () => {
             return toEthereumAddress(operatorContract.address)

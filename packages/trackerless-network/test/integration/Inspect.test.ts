@@ -3,12 +3,13 @@ import { NetworkStack } from '../../src/NetworkStack'
 import { range } from 'lodash'
 import { createStreamMessage } from '../utils/utils'
 import { utf8ToBinary } from '@streamr/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('inspect', () => {
 
     let simulator: Simulator
 
-    const streamId = 'stream#0'
+    const streamPartId = StreamPartIDUtils.parse('stream#0')
     let sequenceNumber: number
 
     const publisherDescriptor: PeerDescriptor = {
@@ -60,9 +61,9 @@ describe('inspect', () => {
             inspectedNodes.push(node)
         }))
         await Promise.all([
-            publisherNode.getStreamrNode().waitForJoinAndSubscribe(streamId, 5000, 4),
-            inspectorNode.getStreamrNode().waitForJoinAndSubscribe(streamId, 5000, 4),
-            ...inspectedNodes.map((node) => node.getStreamrNode().waitForJoinAndSubscribe(streamId, 5000, 4))
+            publisherNode.getStreamrNode().waitForJoinAndSubscribe(streamPartId, 5000, 4),
+            inspectorNode.getStreamrNode().waitForJoinAndSubscribe(streamPartId, 5000, 4),
+            ...inspectedNodes.map((node) => node.getStreamrNode().waitForJoinAndSubscribe(streamPartId, 5000, 4))
         ])
         sequenceNumber = 0
     }, 30000)
@@ -81,17 +82,17 @@ describe('inspect', () => {
         publishInterval = setInterval(async () => {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
-                'stream',
+                StreamPartIDUtils.parse('stream#0'),
                 utf8ToBinary('publisher'),
                 123123,
                 sequenceNumber
             )
-            await publisherNode.getStreamrNode().publishToStream(streamId, msg)
+            await publisherNode.getStreamrNode().publishToStream(streamPartId, msg)
             sequenceNumber += 1
         }, 200)
 
         for (const node of inspectedNodes) {
-            const result = await inspectorNode.getStreamrNode().inspect(node.getLayer0DhtNode().getPeerDescriptor(), streamId)
+            const result = await inspectorNode.getStreamrNode().inspect(node.getLayer0DhtNode().getPeerDescriptor(), streamPartId)
             expect(result).toEqual(true)
         }
     }, 25000)

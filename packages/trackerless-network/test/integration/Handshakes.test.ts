@@ -59,7 +59,7 @@ describe('Handshakes', () => {
         const response: StreamHandshakeResponse = {
             requestId: request.requestId,
             accepted: true,
-            interleaveTarget: peerDescriptor3
+            interleaveTargetDescriptor: peerDescriptor3
         }
         return response
     }
@@ -85,10 +85,10 @@ describe('Handshakes', () => {
         targetNeighbors = new PeerList(handshakerPeerId, 4)
         handshaker = new Handshaker({
             ownPeerDescriptor: peerDescriptor2,
-            randomGraphId: randomGraphId,
+            randomGraphId,
             nearbyContactPool: contactPool,
             randomContactPool: contactPool,
-            targetNeighbors: targetNeighbors,
+            targetNeighbors,
             connectionLocker: mockConnectionLocker,
             rpcCommunicator: rpcCommunicator2,
             N: 4

@@ -25,10 +25,10 @@ function formKey(streamPartId: StreamPartID): string {
 export class ConsistentHashRing {
     private readonly nodes = new Array<string>()
     private consistentHash?: ConsistentHash
-    private readonly replicationFactor: number
+    private readonly redundancyFactor: number
 
-    constructor(replicationFactor: number) {
-        this.replicationFactor = replicationFactor
+    constructor(redundancyFactor: number) {
+        this.redundancyFactor = redundancyFactor
     }
 
     add(nodeId: string): void {
@@ -56,7 +56,7 @@ export class ConsistentHashRing {
                 this.consistentHash.add(nodeId)
             }
         }
-        const result = this.consistentHash.get(formKey(streamPartId), this.replicationFactor)
+        const result = this.consistentHash.get(formKey(streamPartId), this.redundancyFactor)
         return result as any
     }
 }

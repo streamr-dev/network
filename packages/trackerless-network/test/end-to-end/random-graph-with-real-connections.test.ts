@@ -3,6 +3,7 @@ import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('random graph with real connections', () => {
 
@@ -12,7 +13,7 @@ describe('random graph with real connections', () => {
         websocket: { ip: 'localhost', port: 12221 }
     }
 
-    const randomGraphId = 'random-graph'
+    const randomGraphId = StreamPartIDUtils.parse('random-graph#0')
     let epDhtNode: DhtNode
     let dhtNode1: DhtNode
     let dhtNode2: DhtNode
