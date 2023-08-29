@@ -1,6 +1,6 @@
 import type { Operator } from '@streamr/network-contracts'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { wait } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { ProxyDirection, StreamPermission } from 'streamr-client'
 import { Broker } from '../../../../src/broker'
@@ -46,6 +46,7 @@ describe('OperatorPlugin', () => {
         }, 500)
         broker = await startBroker({
             privateKey: brokerWallet.privateKey,
+            networkLayerWsServerPort: 32123, // TODO do not include this config (not needed when NET-1006 done)
             extraPlugins: {
                 operator: {
                     operatorContractAddress: operatorContract.address
@@ -54,14 +55,15 @@ describe('OperatorPlugin', () => {
         })
         const brokerDescriptor = await broker.getStreamrClient().getPeerDescriptor()
         await subscriber.setProxies({ id: stream.id }, [brokerDescriptor], ProxyDirection.SUBSCRIBE)
-        await subscriber.subscribe(stream.id, (_content) => {
-            // eslint-disable-next-line no-console
-            console.log(_content)
+        const receivedMessages: any[] = []
+        await subscriber.subscribe(stream.id, (content) => {
+            receivedMessages.push(content)
         })
-        // TODO do not wait(30000) but wait until we get one message from subscriber.subscribe() callback
-        await wait(30000)
+        await waitForCondition(() => receivedMessages.length > 0)
         clearInterval(publishTimer)
+
+        expect(receivedMessages![0]).toEqual({ foo: 'bar' })
         await subscriber.destroy()
         await publisher.destroy()
-    }, 90 * 1000)
+    }, 30 * 1000)
 })

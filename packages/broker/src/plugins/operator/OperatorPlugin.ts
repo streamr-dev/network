@@ -119,6 +119,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
 
     // eslint-disable-next-line class-methods-use-this
     override getClientConfig(): { path: string, value: any }[] {
+        //return []
         return [{
             path: 'network.node.acceptProxyConnections', value: true
         }]
