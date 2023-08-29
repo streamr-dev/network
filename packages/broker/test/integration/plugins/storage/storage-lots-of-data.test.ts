@@ -65,7 +65,7 @@ describe('Storage: lots of data', () => {
         for (let i = 0; i < NUM_MESSAGES; i++) {
             randomFillSync(randomBuffer)
             const msg = buildMsg({
-                streamId: streamId,
+                streamId,
                 streamPartition: 0,
                 timestamp: 1000000 + (i + 1),
                 sequenceNumber: 0,

@@ -1,7 +1,7 @@
 import { setupOperatorContract } from './contractUtils'
 import { AnnounceNodeToStreamService } from '../../../../src/plugins/operator/AnnounceNodeToStreamService'
 import { createClient } from '../../../utils'
-import StreamrClient from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { toStreamID } from '@streamr/protocol'
 import { collect, EthereumAddress } from '@streamr/utils'

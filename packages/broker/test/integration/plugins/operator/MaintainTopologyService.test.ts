@@ -1,7 +1,7 @@
 import { StreamPartID, toStreamID } from '@streamr/protocol'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import StreamrClient, { Stream } from 'streamr-client'
+import { StreamrClient, Stream } from 'streamr-client'
 import {
     setUpAndStartMaintainTopologyService
 } from '../../../../src/plugins/operator/MaintainTopologyService'
@@ -77,7 +77,7 @@ describe('MaintainTopologyService', () => {
         operatorFleetState = new OperatorFleetState(client, toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress))
         await setUpAndStartMaintainTopologyService({
             streamrClient: client,
-            replicationFactor: 3,
+            redundancyFactor: 3,
             serviceHelperConfig,
             operatorFleetState
         })

@@ -47,9 +47,5 @@ export const areEqualUsers = (userId1: UserID, userId2: UserID): boolean => {
 }
 
 const areEqualByteArrays = (arr1: Uint8Array, arr2: Uint8Array): boolean => {
-    if (arr1.byteLength === arr2.byteLength) {
-        return arr1.every((value, index) => value === arr2[index])
-    } else {
-        return false
-    }
+    return Buffer.compare(arr1, arr2) === 0
 }
