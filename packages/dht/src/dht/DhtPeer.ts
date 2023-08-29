@@ -37,7 +37,7 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
     async getClosestPeers(kademliaId: Uint8Array): Promise<PeerDescriptor[]> {
         logger.trace(`Requesting getClosestPeers on ${this.serviceId} from ${this.peerId.toKey()}`)
         const request: ClosestPeersRequest = {
-            kademliaId: kademliaId,
+            kademliaId,
             requestId: v4()
         }
         const options: DhtRpcOptions = {

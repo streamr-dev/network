@@ -127,7 +127,7 @@ describe('RPC errors', () => {
         }
 
         const msg: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
             body: RpcMessage.toBinary(rpcMessage)

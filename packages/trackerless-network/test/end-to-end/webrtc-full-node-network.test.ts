@@ -4,6 +4,7 @@ import { waitForCondition } from '@streamr/utils'
 import { getRandomRegion } from '@streamr/dht'
 import { createStreamMessage } from '../utils/utils'
 import { NetworkStack } from '../../src/NetworkStack'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Full node network with WebRTC connections', () => {
 
@@ -16,7 +17,7 @@ describe('Full node network with WebRTC connections', () => {
         region: getRandomRegion()
     }
 
-    const randomGraphId = 'webrtc-network'
+    const randomGraphId = StreamPartIDUtils.parse('webrtc-network#0')
 
     let entryPoint: NetworkStack
 

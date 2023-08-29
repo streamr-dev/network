@@ -1,8 +1,7 @@
 import { NetworkStack } from '../../src/NetworkStack'
 import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
 import {
-    StreamPartIDUtils,
-    toStreamID,
+    StreamPartIDUtils
 } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils/utils'
@@ -60,7 +59,7 @@ describe('NetworkStack', () => {
         })
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
-            toStreamID(streamPartId),
+            streamPartId,
             PeerID.fromString('network-stack').value
         )
         await stack2.getStreamrNode().waitForJoinAndPublish(streamPartId, msg)

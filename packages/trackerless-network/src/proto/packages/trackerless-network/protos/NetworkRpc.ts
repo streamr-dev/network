@@ -160,17 +160,17 @@ export interface StreamHandshakeRequest {
      */
     concurrentHandshakeTargetId?: string;
     /**
-     * @generated from protobuf field: repeated string neighbors = 5;
+     * @generated from protobuf field: repeated string neighborIds = 5;
      */
-    neighbors: string[];
+    neighborIds: string[];
     /**
      * @generated from protobuf field: dht.PeerDescriptor senderDescriptor = 6;
      */
     senderDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: optional string interleavingFrom = 7;
+     * @generated from protobuf field: optional string interleaveSourceId = 7;
      */
-    interleavingFrom?: string;
+    interleaveSourceId?: string;
 }
 /**
  * @generated from protobuf message StreamHandshakeResponse
@@ -185,9 +185,9 @@ export interface StreamHandshakeResponse {
      */
     requestId: string;
     /**
-     * @generated from protobuf field: optional dht.PeerDescriptor interleaveTarget = 3;
+     * @generated from protobuf field: optional dht.PeerDescriptor interleaveTargetDescriptor = 3;
      */
-    interleaveTarget?: PeerDescriptor;
+    interleaveTargetDescriptor?: PeerDescriptor;
 }
 /**
  * @generated from protobuf message InterleaveNotice
@@ -202,9 +202,9 @@ export interface InterleaveNotice {
      */
     randomGraphId: string;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor interleaveTarget = 3;
+     * @generated from protobuf field: dht.PeerDescriptor interleaveTargetDescriptor = 3;
      */
-    interleaveTarget?: PeerDescriptor;
+    interleaveTargetDescriptor?: PeerDescriptor;
 }
 /**
  * @generated from protobuf message LeaveStreamNotice
@@ -239,19 +239,6 @@ export interface NeighborUpdate {
      * @generated from protobuf field: repeated dht.PeerDescriptor neighborDescriptors = 4;
      */
     neighborDescriptors: PeerDescriptor[];
-}
-/**
- * @generated from protobuf message StreamEntryPoint
- */
-export interface StreamEntryPoint {
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 1;
-     */
-    peerDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: bool firstToJoin = 2;
-     */
-    firstToJoin: boolean;
 }
 /**
  * @generated from protobuf message ProxyConnectionRequest
@@ -481,9 +468,9 @@ class StreamHandshakeRequest$Type extends MessageType<StreamHandshakeRequest> {
             { no: 2, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "concurrentHandshakeTargetId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "neighbors", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "neighborIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 6, name: "senderDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 7, name: "interleavingFrom", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 7, name: "interleaveSourceId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -497,7 +484,7 @@ class StreamHandshakeResponse$Type extends MessageType<StreamHandshakeResponse> 
         super("StreamHandshakeResponse", [
             { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "interleaveTarget", kind: "message", T: () => PeerDescriptor }
+            { no: 3, name: "interleaveTargetDescriptor", kind: "message", T: () => PeerDescriptor }
         ]);
     }
 }
@@ -511,7 +498,7 @@ class InterleaveNotice$Type extends MessageType<InterleaveNotice> {
         super("InterleaveNotice", [
             { no: 1, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "interleaveTarget", kind: "message", T: () => PeerDescriptor }
+            { no: 3, name: "interleaveTargetDescriptor", kind: "message", T: () => PeerDescriptor }
         ]);
     }
 }
@@ -547,19 +534,6 @@ class NeighborUpdate$Type extends MessageType<NeighborUpdate> {
  * @generated MessageType for protobuf message NeighborUpdate
  */
 export const NeighborUpdate = new NeighborUpdate$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class StreamEntryPoint$Type extends MessageType<StreamEntryPoint> {
-    constructor() {
-        super("StreamEntryPoint", [
-            { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "firstToJoin", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message StreamEntryPoint
- */
-export const StreamEntryPoint = new StreamEntryPoint$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class ProxyConnectionRequest$Type extends MessageType<ProxyConnectionRequest> {
     constructor() {

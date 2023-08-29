@@ -11,7 +11,7 @@ describe('MaintainOperatorValueHelper', () => {
     beforeAll(async () => {
         deployConfig = {
             operatorConfig: {
-                sharePercent: 10
+                operatorsCutPercent: 10
             }
         }
     }, 60 * 1000)

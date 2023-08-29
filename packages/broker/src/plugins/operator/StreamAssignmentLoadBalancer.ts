@@ -25,7 +25,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
 
     constructor(
         myNodeId: string,
-        replicationFactor: number,
+        redundancyFactor: number,
         getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>,
         operatorFleetState: EventEmitter3<OperatorFleetStateEvents>,
         maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>,
@@ -35,7 +35,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.getStreamParts = getStreamParts
         this.operatorFleetState = operatorFleetState
         this.maintainTopologyHelper = maintainTopologyHelper
-        this.consistentHashRing = new ConsistentHashRing(replicationFactor)
+        this.consistentHashRing = new ConsistentHashRing(redundancyFactor)
         this.consistentHashRing.add(myNodeId)
         this.operatorFleetState.on('added', this.nodeAdded)
         this.operatorFleetState.on('removed', this.nodeRemoved)

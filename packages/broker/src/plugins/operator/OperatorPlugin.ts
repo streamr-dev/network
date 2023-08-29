@@ -22,7 +22,7 @@ export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, no
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
-    replicationFactor: number
+    redundancyFactor: number
 }
 
 export interface OperatorServiceConfig {
@@ -85,7 +85,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     async start(): Promise<void> {
         this.maintainTopologyService = await setUpAndStartMaintainTopologyService({
             streamrClient: this.streamrClient,
-            replicationFactor: this.pluginConfig.replicationFactor,
+            redundancyFactor: this.pluginConfig.redundancyFactor,
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
