@@ -10,6 +10,7 @@ import { MarkOptional } from 'ts-essentials'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     'nearbyContactPool' | 'randomContactPool' | 'targetNeighbors' | 'propagation'
@@ -37,7 +38,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     })
     const proxyConnectionServer = acceptProxyConnections ? new ProxyStreamConnectionServer({
         ownPeerDescriptor: config.ownPeerDescriptor,
-        streamPartId: config.randomGraphId,
+        streamPartId: StreamPartIDUtils.parse(config.randomGraphId),
         rpcCommunicator
     }) : undefined
     const propagation = config.propagation ?? new Propagation({

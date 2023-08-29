@@ -47,10 +47,10 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     async waitForJoinAndPublish(msg: StreamMessage, _timeout?: number): Promise<number> {
-        const streamPartID = msg.getStreamPartID()
-        this.subscriptions.add(streamPartID)
+        const streamPartId = msg.getStreamPartID()
+        this.subscriptions.add(streamPartId)
         await this.publish(msg)
-        return this.getNeighborsForStreamPart(streamPartID).length
+        return this.getNeighborsForStreamPart(streamPartId).length
     }
 
     async publish(msg: StreamMessage): Promise<void> {
