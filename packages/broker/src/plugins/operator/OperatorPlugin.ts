@@ -3,8 +3,9 @@ import { toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Wallet } from 'ethers'
-import { CONFIG_TEST } from 'streamr-client'
-import { Plugin, PluginOptions } from '../../Plugin'
+import StreamrClient, { CONFIG_TEST } from 'streamr-client'
+import { Plugin } from '../../Plugin'
+import { StrictConfig } from '../../config/config'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
 import { AnnounceNodeToStreamService } from './AnnounceNodeToStreamService'
@@ -12,8 +13,8 @@ import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorContractService } from './MaintainOperatorContractService'
 import { MaintainOperatorValueService } from './MaintainOperatorValueService'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
-import { OperatorValueBreachWatcher } from './OperatorValueBreachWatcher'
 import { OperatorFleetState } from './OperatorFleetState'
+import { OperatorValueBreachWatcher } from './OperatorValueBreachWatcher'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 
@@ -36,19 +37,19 @@ export interface OperatorServiceConfig {
 const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
-    private readonly announceNodeToStreamService: AnnounceNodeToStreamService
-    private readonly announceNodeToContractService: AnnounceNodeToContractService
+    private announceNodeToStreamService?: AnnounceNodeToStreamService
+    private announceNodeToContractService?: AnnounceNodeToContractService
     private readonly inspectRandomNodeService = new InspectRandomNodeService()
     private readonly maintainOperatorContractService = new MaintainOperatorContractService()
-    private readonly voteOnSuspectNodeService: VoteOnSuspectNodeService
+    private voteOnSuspectNodeService?: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
-    private readonly maintainOperatorValueService: MaintainOperatorValueService
-    private readonly operatorValueBreachWatcher: OperatorValueBreachWatcher
-    private readonly fleetState: OperatorFleetState
+    private maintainOperatorValueService?: MaintainOperatorValueService
+    private operatorValueBreachWatcher?: OperatorValueBreachWatcher
+    private fleetState?: OperatorFleetState
     private readonly serviceConfig: OperatorServiceConfig
 
-    constructor(options: PluginOptions) {
-        super(options)
+    constructor(name: string, brokerConfig: StrictConfig) {
+        super(name, brokerConfig)
         const provider = new JsonRpcProvider(this.brokerConfig.client.contracts!.streamRegistryChainRPCs!.rpcs[0].url)
         // TODO read from client, as we need to use production value in production environment (not random address)
         const nodeWallet = Wallet.createRandom().connect(provider)
@@ -60,31 +61,30 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             maxSponsorshipsInWithdraw: DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW,
             minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
         }
+    }
+
+    async start(streamrClient: StreamrClient): Promise<void> {
         this.announceNodeToStreamService = new AnnounceNodeToStreamService(
-            this.streamrClient,
+            streamrClient,
             toEthereumAddress(this.pluginConfig.operatorContractAddress)
         )
         this.fleetState = new OperatorFleetState(
-            this.streamrClient,
+            streamrClient,
             toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
         )
         this.announceNodeToContractService = new AnnounceNodeToContractService(
-            this.streamrClient,
+            streamrClient,
             new AnnounceNodeToContractHelper(this.serviceConfig),
             this.fleetState
         )
         this.maintainOperatorValueService = new MaintainOperatorValueService(this.serviceConfig)
         this.operatorValueBreachWatcher = new OperatorValueBreachWatcher(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
-            this.streamrClient,
+            streamrClient,
             this.serviceConfig
         )
-
-    }
-
-    async start(): Promise<void> {
         this.maintainTopologyService = await setUpAndStartMaintainTopologyService({
-            streamrClient: this.streamrClient,
+            streamrClient,
             redundancyFactor: this.pluginConfig.redundancyFactor,
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
@@ -104,12 +104,12 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     }
 
     async stop(): Promise<void> {
-        await this.announceNodeToStreamService.stop()
+        await this.announceNodeToStreamService!.stop()
         await this.inspectRandomNodeService.stop()
-        await this.maintainOperatorContractService.stop()
-        await this.maintainOperatorValueService.stop()
-        await this.voteOnSuspectNodeService.stop()
-        await this.operatorValueBreachWatcher.stop()
+        await this.maintainOperatorContractService!.stop()
+        await this.maintainOperatorValueService!.stop()
+        await this.voteOnSuspectNodeService!.stop()
+        await this.operatorValueBreachWatcher!.stop()
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -120,7 +120,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     // eslint-disable-next-line class-methods-use-this
     override getClientConfig(): { path: string, value: any }[] {
         return [{
-            path: "network.node.acceptProxyConnections", value: true
+            path: 'network.node.acceptProxyConnections', value: true
         }]
     }
 }

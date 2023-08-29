@@ -5,7 +5,7 @@ import get from 'lodash/get'
 import has from 'lodash/has'
 import isEqual from 'lodash/isEqual'
 import set from 'lodash/set'
-import StreamrClient, { NetworkNodeStub, NetworkPeerDescriptor } from 'streamr-client'
+import StreamrClient from 'streamr-client'
 import { version as CURRENT_VERSION } from '../package.json'
 import { HttpServerEndpoint, Plugin } from './Plugin'
 import { Config, StrictConfig } from './config/config'
@@ -18,10 +18,9 @@ import { createPlugin } from './pluginRegistry'
 const logger = new Logger(module)
 
 export interface Broker {
+    getStreamrClient: () => StreamrClient
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
-    getNode: () => Promise<NetworkNodeStub>
-    getPeerDescriptor: () => Promise<NetworkPeerDescriptor>
 }
 
 const applyPluginClientConfigs = (plugins: Plugin<any>[], clientConfig: StrictConfig['client']) => {
@@ -48,6 +47,9 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
     let httpServer: HttpServer | HttpsServer | undefined
 
     return {
+        getStreamrClient: () => {
+            return streamrClient
+        },
         start: async () => {
             logger.info(`Start broker version ${CURRENT_VERSION}`)
             await Promise.all(plugins.map((plugin) => plugin.start(streamrClient)))
@@ -82,14 +84,6 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
             }
             await Promise.all(plugins.map((plugin) => plugin.stop()))
             await streamrClient.destroy()
-        },
-        getNode: () => {
-            failIfNotStarted()
-            return streamrClient.getNode()
-        },
-        getPeerDescriptor: () => {
-            failIfNotStarted()
-            return streamrClient.getPeerDescriptor()
         }
     }
 }
