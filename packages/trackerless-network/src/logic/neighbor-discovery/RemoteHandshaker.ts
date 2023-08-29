@@ -8,24 +8,24 @@ const logger = new Logger(module)
 
 interface HandshakeResponse {
     accepted: boolean
-    interleaveTarget?: PeerDescriptor
+    interleaveTargetDescriptor?: PeerDescriptor
 }
 
 export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
 
     async handshake(
         ownPeerDescriptor: PeerDescriptor,
-        neighbors: string[],
+        neighborIds: string[],
         concurrentHandshakeTargetId?: string,
-        interleavingFrom?: string
+        interleaveSourceId?: string
     ): Promise<HandshakeResponse> {
         const request: StreamHandshakeRequest = {
             randomGraphId: this.graphId,
             requestId: new UUID().toString(),
             senderId: keyFromPeerDescriptor(ownPeerDescriptor),
-            neighbors,
+            neighborIds,
             concurrentHandshakeTargetId,
-            interleavingFrom,
+            interleaveSourceId,
             senderDescriptor: ownPeerDescriptor
         }
         const options: DhtRpcOptions = {
@@ -36,7 +36,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
             const response = await this.client.handshake(request, options)
             return {
                 accepted: response.accepted,
-                interleaveTarget: response.interleaveTarget
+                interleaveTargetDescriptor: response.interleaveTargetDescriptor
             }
         } catch (err: any) {
             logger.debug(`handshake to ${keyFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
@@ -54,7 +54,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
         }
         const notification: InterleaveNotice = {
             randomGraphId: this.graphId,
-            interleaveTarget: originatorDescriptor,
+            interleaveTargetDescriptor: originatorDescriptor,
             senderId: keyFromPeerDescriptor(ownPeerDescriptor)
         }
         this.client.interleaveNotice(notification, options).catch(() => {

@@ -16,6 +16,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { waitForCondition } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { createStreamMessage } from '../utils/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('RemoteRandomGraphNode', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -82,7 +83,7 @@ describe('RemoteRandomGraphNode', () => {
     it('sendData', async () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
-            'test-stream',
+            StreamPartIDUtils.parse('test-stream#0'),
             peerIdFromPeerDescriptor(clientPeer).value
         )
 

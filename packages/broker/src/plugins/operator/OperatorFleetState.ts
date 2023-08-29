@@ -2,7 +2,7 @@ import { StreamrClient, Subscription } from 'streamr-client'
 import { Gate, Logger, setAbortableInterval, setAbortableTimeout } from '@streamr/utils'
 import { StreamID } from '@streamr/protocol'
 import { EventEmitter } from 'eventemitter3'
-import { NodeId } from '@streamr/trackerless-network'
+import { NodeID } from '@streamr/trackerless-network'
 import min from 'lodash/min'
 import once from 'lodash/once'
 import { DEFAULT_INTERVAL_IN_MS } from './AnnounceNodeToStreamService'
@@ -35,7 +35,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly pruneIntervalInMs: number
     private readonly heartbeatIntervalInMs: number
     private readonly latencyExtraInMs: number
-    private readonly latestHeartbeats = new Map<NodeId, Heartbeat>()
+    private readonly latestHeartbeats = new Map<NodeID, Heartbeat>()
     private readonly abortController = new AbortController()
     private readonly ready = new Gate(false)
     private subscription?: Subscription

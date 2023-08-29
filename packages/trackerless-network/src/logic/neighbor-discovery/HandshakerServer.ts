@@ -38,7 +38,7 @@ export class HandshakerServer implements IHandshakeRpc {
             return this.acceptHandshake(request, request.senderDescriptor!)
         } else if (this.config.targetNeighbors!.size() + this.config.ongoingHandshakes.size < this.config.N) {
             return this.acceptHandshake(request, request.senderDescriptor!)
-        } else if (this.config.targetNeighbors!.size([request.interleavingFrom!]) >= 2) {
+        } else if (this.config.targetNeighbors!.size([request.interleaveSourceId!]) >= 2) {
             return this.acceptHandshakeWithInterleaving(request, request.senderDescriptor!)
         } else {
             return this.rejectHandshake(request)
@@ -65,9 +65,9 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     private acceptHandshakeWithInterleaving(request: StreamHandshakeRequest, requester: PeerDescriptor): StreamHandshakeResponse {
-        const exclude = request.neighbors
+        const exclude = request.neighborIds
         exclude.push(request.senderId)
-        exclude.push(request.interleavingFrom!)
+        exclude.push(request.interleaveSourceId!)
         const furthest = this.config.targetNeighbors.getFurthest(exclude)
         const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
         if (furthest) {
@@ -81,7 +81,7 @@ export class HandshakerServer implements IHandshakeRpc {
         return {
             requestId: request.requestId,
             accepted: true,
-            interleaveTarget: furthestPeerDescriptor
+            interleaveTargetDescriptor: furthestPeerDescriptor
         }
     }
 
@@ -92,7 +92,7 @@ export class HandshakerServer implements IHandshakeRpc {
                 this.config.connectionLocker.unlockConnection(senderDescriptor, this.config.randomGraphId)
                 this.config.targetNeighbors.remove(senderDescriptor)
             }
-            this.config.handshakeWithInterleaving(message.interleaveTarget!, message.senderId).catch((_e) => {})
+            this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, message.senderId).catch((_e) => {})
         }
         return Empty
     }
