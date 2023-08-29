@@ -67,15 +67,14 @@ interface StreamEntryPointDiscoveryConfig {
 export class StreamEntryPointDiscovery {
     private readonly abortController: AbortController
     private readonly config: StreamEntryPointDiscoveryConfig
-    // TODO rename: contains stream parts, not streams
-    private readonly servicedStreams: Map<StreamPartID, NodeJS.Timeout>
+    private readonly servicedStreamParts: Map<StreamPartID, NodeJS.Timeout>
     private readonly cacheInterval: number
 
     constructor(config: StreamEntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
         this.cacheInterval = this.config.cacheInterval ?? 60000
-        this.servicedStreams = new Map()
+        this.servicedStreamParts = new Map()
     }
 
     async discoverEntryPointsFromDht(
@@ -167,12 +166,12 @@ export class StreamEntryPointDiscovery {
     }
 
     private keepSelfAsEntryPoint(streamPartId: StreamPartID): void {
-        if (!this.config.streams.has(streamPartId) || this.servicedStreams.has(streamPartId)) {
+        if (!this.config.streams.has(streamPartId) || this.servicedStreamParts.has(streamPartId)) {
             return
         }
-        this.servicedStreams.set(streamPartId, setTimeout(async () => {
+        this.servicedStreamParts.set(streamPartId, setTimeout(async () => {
             if (!this.config.streams.has(streamPartId)) {
-                this.servicedStreams.delete(streamPartId)
+                this.servicedStreamParts.delete(streamPartId)
                 return
             }
             logger.trace(`Attempting to keep self as entrypoint for ${streamPartId}`)
@@ -181,10 +180,10 @@ export class StreamEntryPointDiscovery {
                 if (discovered.length < ENTRYPOINT_STORE_LIMIT 
                     || discovered.some((peer) => isSamePeerDescriptor(peer, this.config.ownPeerDescriptor))) {
                     await this.storeSelfAsEntryPoint(streamPartId)
-                    this.servicedStreams.delete(streamPartId)
+                    this.servicedStreamParts.delete(streamPartId)
                     this.keepSelfAsEntryPoint(streamPartId)
                 } else {
-                    this.servicedStreams.delete(streamPartId)
+                    this.servicedStreamParts.delete(streamPartId)
                 }
             } catch (err) {
                 logger.debug(`Failed to keep self as entrypoint for ${streamPartId}`)
@@ -207,16 +206,16 @@ export class StreamEntryPointDiscovery {
     }
 
     removeSelfAsEntryPoint(streamPartId: StreamPartID): void {
-        if (this.servicedStreams.has(streamPartId)) {
+        if (this.servicedStreamParts.has(streamPartId)) {
             setAbortableTimeout(() => this.config.deleteEntryPointData(streamPartIdToDataKey(streamPartId)), 0, this.abortController.signal)
-            clearTimeout(this.servicedStreams.get(streamPartId)!)
-            this.servicedStreams.delete(streamPartId)
+            clearTimeout(this.servicedStreamParts.get(streamPartId)!)
+            this.servicedStreamParts.delete(streamPartId)
         }
     }
 
     async destroy(): Promise<void> {
-        this.servicedStreams.forEach((_, streamPartId) => this.removeSelfAsEntryPoint(streamPartId))
-        this.servicedStreams.clear()
+        this.servicedStreamParts.forEach((_, streamPartId) => this.removeSelfAsEntryPoint(streamPartId))
+        this.servicedStreamParts.clear()
         this.abortController.abort()
     }
 
