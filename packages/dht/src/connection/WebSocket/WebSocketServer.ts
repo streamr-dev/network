@@ -9,6 +9,7 @@ import {
 import { Logger, asAbortable } from '@streamr/utils'
 import { StartingWebSocketServerFailed } from '../../helpers/errors'
 import { PortRange } from '../ConnectionManager'
+import { range } from 'lodash'
 
 const logger = new Logger(module)
 
@@ -26,7 +27,8 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     private readonly abortController = new AbortController()
     
     public async start(portRange: PortRange, host?: string): Promise<number> {
-        for (let port = portRange.min; port <= portRange.max; port++) {
+        const ports = range(portRange.min, portRange.max + 1)
+        for (const port of ports) {
             try {
                 await asAbortable(this.startServer(port, host), this.abortController.signal)
                 return port
