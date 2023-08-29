@@ -82,10 +82,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     public async start(): Promise<void> {
-        if (this.destroyed) {
-            return
-        }
-        if (this.webSocketServer) {
+        if (!this.destroyed && this.webSocketServer) {
             this.webSocketServer.on('connected', (connection: IConnection) => {
 
                 const serverSocket = connection as unknown as ServerWebSocket
@@ -111,13 +108,15 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     public async checkConnectivity(reattempt = 0): Promise<ConnectivityResponse> {
+        const noServerConnectivityResponse: ConnectivityResponse = {
+            openInternet: false,
+            ip: '127.0.0.1',
+            natType: NatType.UNKNOWN
+        }
+        if (this.destroyed) {
+            return noServerConnectivityResponse
+        }
         try {
-            const noServerConnectivityResponse: ConnectivityResponse = {
-                openInternet: false,
-                ip: '127.0.0.1',
-                natType: NatType.UNKNOWN
-            }
-
             if (!this.webSocketServer) {
                 // If no websocket server, return openInternet: false
                 return noServerConnectivityResponse
@@ -154,6 +153,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+        if (this.destroyed) {
+            throw new Error('WebSocketConnector is destroyed')
+        }
         const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(peerKey)
         if (existingConnection) {
