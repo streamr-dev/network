@@ -3,6 +3,7 @@ import { Inspector } from '../../src/logic/inspect/Inspector'
 import { mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
 import { utf8ToBinary } from '../../src/logic/utils'
+import { NodeID } from '../../src/identifiers'
 
 describe('Inspector', () => {
     
@@ -18,7 +19,7 @@ describe('Inspector', () => {
         type: NodeType.NODEJS
     }
 
-    const otherPeerKey = PeerID.fromString('other').toKey()
+    const otherPeerKey = PeerID.fromString('other').toKey() as unknown as NodeID
     let mockConnect: jest.Mock
 
     const messageRef = {
@@ -47,11 +48,11 @@ describe('Inspector', () => {
 
     it('Opens inspection connection and runs successfully', async () => {
         setTimeout(() => {
-            inspector.markMessage(keyFromPeerDescriptor(inspectedDescriptor), messageRef)
+            inspector.markMessage(keyFromPeerDescriptor(inspectedDescriptor) as unknown as NodeID, messageRef)
             inspector.markMessage(otherPeerKey, messageRef)
         }, 250)
         await inspector.inspect(inspectedDescriptor)
-        expect(inspector.isInspected(keyFromPeerDescriptor(inspectedDescriptor))).toBe(false)
+        expect(inspector.isInspected(keyFromPeerDescriptor(inspectedDescriptor) as unknown as NodeID)).toBe(false)
         expect(mockConnect).toBeCalledTimes(1)
     })
 

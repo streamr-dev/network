@@ -72,7 +72,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
                 return
             }
             if (content.msgType === 'heartbeat') {
-                const nodeId = content.peerDescriptor.id
+                const nodeId = content.peerDescriptor.id as NodeID
                 const exists = this.heartbeatTimestamps.has(nodeId)
                 this.heartbeatTimestamps.set(nodeId, this.timeProvider())
                 if (!exists) {

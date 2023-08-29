@@ -1,10 +1,11 @@
 import { setAbortableTimeout } from '@streamr/utils'
 import { PeerList } from '../PeerList'
+import { NodeID } from '../../identifiers'
 
 interface FindNeighborsSessionConfig {
     targetNeighbors: PeerList
     nearbyContactPool: PeerList
-    doFindNeighbors: (excludedNodes: string[]) => Promise<string[]>
+    doFindNeighbors: (excludedNodes: NodeID[]) => Promise<NodeID[]>
     N: number
 }
 
@@ -12,7 +13,7 @@ const INITIAL_TIMEOUT = 100
 const INTERVAL_TIMEOUT = 250
 
 export interface INeighborFinder {
-    start(excluded?: string[]): void
+    start(excluded?: NodeID[]): void
     stop(): void
     isRunning(): boolean
 }
@@ -27,7 +28,7 @@ export class NeighborFinder implements INeighborFinder {
         this.abortController = new AbortController()
     }
 
-    private async findNeighbors(excluded: string[]): Promise<void> {
+    private async findNeighbors(excluded: NodeID[]): Promise<void> {
         if (!this.running) {
             return
         }
@@ -43,7 +44,7 @@ export class NeighborFinder implements INeighborFinder {
         return this.running
     }
 
-    start(excluded: string[] = []): void {
+    start(excluded: NodeID[] = []): void {
         if (this.running) {
             return
         }

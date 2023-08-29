@@ -3,6 +3,7 @@ import { HandshakerServer } from '../../src/logic/neighbor-discovery/HandshakerS
 import { PeerList } from '../../src/logic/PeerList'
 import { InterleaveNotice, StreamHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockRemoteHandshaker, createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
+import { NodeID } from '../../src/identifiers'
 
 describe('HandshakerServer', () => {
 
@@ -15,7 +16,7 @@ describe('HandshakerServer', () => {
     }
 
     let targetNeighbors: PeerList
-    let ongoingHandshakes: Set<string>
+    let ongoingHandshakes: Set<NodeID>
     let handshakeWithInterleaving: jest.Mock
 
     beforeEach(() => {
@@ -76,10 +77,10 @@ describe('HandshakerServer', () => {
     })
 
     it('unaccepted handshake', async () => {
-        ongoingHandshakes.add('mock1')
-        ongoingHandshakes.add('mock2')
-        ongoingHandshakes.add('mock3')
-        ongoingHandshakes.add('mock4')
+        ongoingHandshakes.add('mock1' as NodeID)
+        ongoingHandshakes.add('mock2' as NodeID)
+        ongoingHandshakes.add('mock3' as NodeID)
+        ongoingHandshakes.add('mock4' as NodeID)
         const req = StreamHandshakeRequest.create({
             randomGraphId: 'random-graph',
             senderId: 'senderId',

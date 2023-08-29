@@ -7,6 +7,7 @@ import { wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { EventEmitter } from 'eventemitter3'
+import { NodeID } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -28,7 +29,7 @@ class SuccessListener extends EventEmitter<SuccessEvents> {
         node.on('nearbyContactPoolIdAdded', this.onNearbyContactPoolIdAdded)
     }
 
-    private onTargetNeighborConnected = (_stringId: string) => {
+    private onTargetNeighborConnected = (_stringId: NodeID) => {
         this.numNeighbors++
 
         if (this.numNeighbors >= this.wantedNumNeighbors

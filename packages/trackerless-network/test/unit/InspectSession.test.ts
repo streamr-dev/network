@@ -1,14 +1,15 @@
-import { PeerIDKey, PeerID } from '@streamr/dht'
+import { PeerID } from '@streamr/dht'
 import { InspectSession, Events } from '../../src/logic/inspect/InspectSession'
 import { MessageID } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent3 } from '../../../utils/dist/src/waitForEvent3'
 import { utf8ToBinary } from '../../src/logic/utils'
+import { NodeID } from '../../src/identifiers'
 
 describe('InspectSession', () => {
 
     let inspectSession: InspectSession
-    let inspectedPeer: PeerIDKey
-    let anotherPeer: PeerIDKey
+    let inspectedPeer: NodeID
+    let anotherPeer: NodeID
 
     const publisherId = utf8ToBinary('publisherId')
     const messageId1: MessageID = {
@@ -30,8 +31,8 @@ describe('InspectSession', () => {
     }
 
     beforeEach(() => {
-        inspectedPeer = PeerID.fromString('inspectedPeer').toKey()
-        anotherPeer = PeerID.fromString('anotherPeer').toKey()
+        inspectedPeer = PeerID.fromString('inspectedPeer').toKey() as unknown as NodeID
+        anotherPeer = PeerID.fromString('anotherPeer').toKey() as unknown as NodeID
         inspectSession = new InspectSession({
             inspectedPeer
         })

@@ -7,6 +7,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
+import { NodeID } from '../../identifiers'
 
 interface NeighborUpdateManagerConfig {
     ownStringId: string
@@ -27,10 +28,10 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
 
     // INetworkRpc server method
     async neighborUpdate(message: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> {
-        if (this.config.targetNeighbors!.hasPeerWithStringId(message.senderId)) {
+        if (this.config.targetNeighbors!.hasPeerWithStringId(message.senderId as NodeID)) {
             const newPeers = message.neighborDescriptors
                 .filter((peerDescriptor) => {
-                    const stringId = keyFromPeerDescriptor(peerDescriptor)
+                    const stringId = keyFromPeerDescriptor(peerDescriptor) as unknown as NodeID
                     return stringId !== this.config.ownStringId && !this.config.targetNeighbors.getStringIds().includes(stringId)
                 })
             newPeers.forEach((peer) => this.config.nearbyContactPool.add(

@@ -25,8 +25,7 @@ import { createRandomGraphNode } from './createRandomGraphNode'
 import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
-import { PeerIDKey } from '@streamr/dht/src/exports'
-import { UserID } from '../identifiers'
+import { NodeID, UserID } from '../identifiers'
 
 export enum StreamNodeType {
     RANDOM_GRAPH = 'random-graph',
@@ -89,7 +88,7 @@ interface Metrics extends MetricsDefinition {
 
 export interface StreamrNodeConfig {
     metricsContext?: MetricsContext
-    id?: string
+    id?: NodeID
     streamPartitionNumOfNeighbors?: number
     streamPartitionMinPropagationTargets?: number
     nodeName?: string
@@ -362,7 +361,7 @@ export class StreamrNode extends EventEmitter<Events> {
             && (this.streams.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction
     }
 
-    hasProxyConnection(streamId: string, peerKey: PeerIDKey, direction: ProxyDirection): boolean {
+    hasProxyConnection(streamId: string, peerKey: NodeID, direction: ProxyDirection): boolean {
         return this.streams.has(streamId) && this.streams.get(streamId)!.layer2.hasProxyConnection(peerKey, direction)
     }
 
@@ -378,16 +377,16 @@ export class StreamrNode extends EventEmitter<Events> {
         return this.layer0!.getPeerDescriptor()
     }
 
-    getNodeId(): string {
-        return this.layer0!.getNodeId().toKey()
+    getNodeId(): NodeID {
+        return this.layer0!.getNodeId().toKey() as unknown as NodeID
     }
 
     getNodeStringId(): string {
         return this.layer0!.getNodeId().toString()
     }
 
-    getNeighbors(): string[] {
-        const neighbors: string[] = []
+    getNeighbors(): NodeID[] {
+        const neighbors: NodeID[] = []
         this.streams.forEach((stream) =>
             stream.layer2.getTargetNeighborStringIds().forEach((neighbor) => neighbors.push(neighbor))
         )

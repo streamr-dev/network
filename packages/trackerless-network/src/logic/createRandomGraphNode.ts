@@ -1,4 +1,4 @@
-import { ListeningRpcCommunicator, PeerIDKey, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { ListeningRpcCommunicator, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { Handshaker } from './neighbor-discovery/Handshaker'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
@@ -11,6 +11,7 @@ import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { NodeID } from '../identifiers'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     'nearbyContactPool' | 'randomContactPool' | 'targetNeighbors' | 'propagation'
@@ -43,9 +44,9 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     }) : undefined
     const propagation = config.propagation ?? new Propagation({
         minPropagationTargets,
-        sendToNeighbor: async (neighborId: string, msg: StreamMessage): Promise<void> => {
+        sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
             const remote = targetNeighbors.getNeighborById(neighborId) ?? temporaryConnectionServer.getPeers().getNeighborById(neighborId)
-            const proxyConnection = proxyConnectionServer?.getConnection(neighborId as PeerIDKey)
+            const proxyConnection = proxyConnectionServer?.getConnection(neighborId)
             if (remote) {
                 await remote.sendData(config.ownPeerDescriptor, msg)
             } else if (proxyConnection) {
@@ -74,7 +75,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
         targetNeighbors,
         nearbyContactPool,
-        ownStringId: peerId.toKey(),
+        ownStringId: peerId.toKey() as unknown as NodeID,
         ownPeerDescriptor: config.ownPeerDescriptor,
         neighborFinder,
         randomGraphId: config.randomGraphId,

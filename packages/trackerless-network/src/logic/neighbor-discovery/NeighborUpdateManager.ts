@@ -3,14 +3,14 @@ import { keyFromPeerDescriptor, ListeningRpcCommunicator, PeerDescriptor } from 
 import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
 import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
-import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
 import { INeighborFinder } from './NeighborFinder'
 import { PeerList } from '../PeerList'
 import { RemoteNeighborUpdateManager } from './RemoteNeighborUpdateManager'
 import { NeighborUpdateManagerServer } from './NeighborUpdateManagerServer'
+import { NodeID } from '../../identifiers'
 
 interface NeighborUpdateManagerConfig {
-    ownStringId: PeerIDKey
+    ownStringId: NodeID
     ownPeerDescriptor: PeerDescriptor
     targetNeighbors: PeerList
     nearbyContactPool: PeerList
@@ -56,7 +56,7 @@ export class NeighborUpdateManager implements INeighborUpdateManager {
             const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.config.ownPeerDescriptor, neighborDescriptors)
             if (res.removeMe) {
                 this.config.targetNeighbors!.remove(neighbor.getPeerDescriptor())
-                this.config.neighborFinder!.start([keyFromPeerDescriptor(neighbor.getPeerDescriptor())])
+                this.config.neighborFinder!.start([keyFromPeerDescriptor(neighbor.getPeerDescriptor()) as unknown as NodeID])
             }
         }))
     }

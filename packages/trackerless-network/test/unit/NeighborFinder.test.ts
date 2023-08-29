@@ -5,6 +5,7 @@ import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
 import { createMockRemotePeer } from '../utils/utils'
+import { NodeID } from '../../src/identifiers'
 
 describe('NeighborFinder', () => {
 
@@ -19,12 +20,12 @@ describe('NeighborFinder', () => {
         targetNeighbors = new PeerList(peerId, 15)
         nearbyContactPool = new PeerList(peerId, 30)
         range(30).forEach(() => nearbyContactPool.add(createMockRemotePeer()))
-        const mockDoFindNeighbors = async (excluded: string[]) => {
+        const mockDoFindNeighbors = async (excluded: NodeID[]) => {
             const target = nearbyContactPool.getRandom(excluded)
             if (Math.random() < 0.5) {
                 targetNeighbors.add(target!)
             } else {
-                excluded.push(keyFromPeerDescriptor(target!.getPeerDescriptor()))
+                excluded.push(keyFromPeerDescriptor(target!.getPeerDescriptor()) as unknown as NodeID)
             }
             return excluded
         }
