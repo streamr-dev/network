@@ -153,9 +153,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        if (this.destroyed) {
-            throw new Error('WebSocketConnector is destroyed')
-        }
         const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(peerKey)
         if (existingConnection) {
