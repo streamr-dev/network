@@ -7,7 +7,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
     private contactIds: PeerID[] = []
     private ownId: PeerID
-    private maxSize: number
+    private maxSize?: number
     private getContactsLimit: number
     private allowOwnPeerId: boolean
     private peerIdDistanceLimit?: PeerID
@@ -15,7 +15,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
 
     constructor(
         ownId: PeerID,
-        maxSize: number,
+        maxSize?: number,
         getContactsLimit = 20,
         allowOwnPeerId = false,
         peerIdDistanceLimit?: PeerID,
@@ -50,7 +50,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
             return
         }
         if (!this.contactsById.has(contact.getPeerId().toKey())) {
-            if (this.contactIds.length < this.maxSize) {
+            if (!this.maxSize || this.contactIds.length < this.maxSize) {
                 this.contactsById.set(contact.getPeerId().toKey(), new ContactState(contact))
                 this.contactIds.push(contact.getPeerId())
                 this.contactIds.sort(this.compareIds)
@@ -151,7 +151,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     public removeContact(id: PeerID): boolean {
         if (this.contactsById.has(id.toKey())) {
             const removedDescriptor = this.contactsById.get(id.toKey())!.contact.getPeerDescriptor()
-            const index = this.contactIds.indexOf(id)
+            const index = this.contactIds.findIndex((element) => element.equals(id))
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id.toKey())
             this.emit(
@@ -173,10 +173,12 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     }
 
     public getAllContacts(): Contact[] {
-        return this.contactIds.map((peerId) => this.contactsById.get(peerId.toKey())!.contact)
+        return this.contactIds.map((peerId) => {
+            return this.contactsById.get(peerId.toKey())!.contact
+        })
     }
 
-    public getMaxSize(): number {
+    public getMaxSize(): number | undefined {
         return this.maxSize
     }
 

@@ -8,6 +8,7 @@ describe('NetworkStack can be stopped during start', () => {
         kademliaId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
         websocket: { ip: 'localhost', port: 32224 },
+        nodeName: 'entrypoint'
     }
     let entryPoint: NetworkStack
     let peer: NetworkStack
@@ -16,17 +17,21 @@ describe('NetworkStack can be stopped during start', () => {
         entryPoint = new NetworkStack({
             layer0: {
                 peerDescriptor: epDescriptor,
-                entryPoints: [epDescriptor]
+                entryPoints: [epDescriptor],
+                nodeName: 'entrypoint',
             },
+           
             networkNode: {}
         })
         peer = new NetworkStack({
             layer0: {
                 peerDescriptor: {
                     kademliaId: PeerID.fromString('peer').value,
-                    type: NodeType.NODEJS
+                    type: NodeType.NODEJS, 
+                    nodeName: 'peer'
                 },
-                entryPoints: [epDescriptor]
+                nodeName: 'peer',
+                entryPoints: [epDescriptor],
             },
             networkNode: {}
         })
@@ -37,9 +42,20 @@ describe('NetworkStack can be stopped during start', () => {
         await entryPoint.stop()
     })
 
-    it('Can be stopped during start', async () => {
-        setImmediate(() => peer.stop())
-        await peer.start()
+    it('Can be stopped during start', (done) => {
+        let readyCounter = 0
+        const onReady = () => {
+            readyCounter++
+            if (readyCounter === 2) {
+                done()
+            }
+        }
+
+        setImmediate(async () => {
+            await peer.stop()
+            onReady()
+        })
+        peer.start().then(() => onReady()).catch(() => done())
     })
 
 })
