@@ -1,11 +1,11 @@
-import { Empty } from "../../proto/google/protobuf/empty"
-import { InterleaveNotice, StreamHandshakeRequest, StreamHandshakeResponse } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
+import { Empty } from '../../proto/google/protobuf/empty'
+import { InterleaveNotice, StreamHandshakeRequest, StreamHandshakeResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { PeerList } from "../PeerList"
-import { ConnectionLocker, keyFromPeerDescriptor, PeerDescriptor } from "@streamr/dht"
-import { IHandshakeRpc } from "../../proto/packages/trackerless-network/protos/NetworkRpc.server"
-import { RemoteHandshaker } from "./RemoteHandshaker"
-import { RemoteRandomGraphNode } from "../RemoteRandomGraphNode"
+import { PeerList } from '../PeerList'
+import { ConnectionLocker, keyFromPeerDescriptor, PeerDescriptor } from '@streamr/dht'
+import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { RemoteHandshaker } from './RemoteHandshaker'
+import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 
 interface HandshakerServerConfig {
     randomGraphId: string
@@ -38,7 +38,7 @@ export class HandshakerServer implements IHandshakeRpc {
             return this.acceptHandshake(request, request.senderDescriptor!)
         } else if (this.config.targetNeighbors!.size() + this.config.ongoingHandshakes.size < this.config.N) {
             return this.acceptHandshake(request, request.senderDescriptor!)
-        } else if (this.config.targetNeighbors!.size([request.interleavingFrom!]) >= 2) {
+        } else if (this.config.targetNeighbors!.size([request.interleaveSourceId!]) >= 2) {
             return this.acceptHandshakeWithInterleaving(request, request.senderDescriptor!)
         } else {
             return this.rejectHandshake(request)
@@ -65,9 +65,9 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     private acceptHandshakeWithInterleaving(request: StreamHandshakeRequest, requester: PeerDescriptor): StreamHandshakeResponse {
-        const exclude = request.neighbors
+        const exclude = request.neighborIds
         exclude.push(request.senderId)
-        exclude.push(request.interleavingFrom!)
+        exclude.push(request.interleaveSourceId!)
         const furthest = this.config.targetNeighbors.getFurthest(exclude)
         const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
         if (furthest) {
@@ -81,18 +81,18 @@ export class HandshakerServer implements IHandshakeRpc {
         return {
             requestId: request.requestId,
             accepted: true,
-            interleaveTarget: furthestPeerDescriptor
+            interleaveTargetDescriptor: furthestPeerDescriptor
         }
     }
 
     async interleaveNotice(message: InterleaveNotice, _context: ServerCallContext): Promise<Empty> {
         if (message.randomGraphId === this.config.randomGraphId) {
             if (this.config.targetNeighbors.hasPeerWithStringId(message.senderId)) {
-                const senderDescriptor = this.config.targetNeighbors.getNeighborWithId(message.senderId)!.getPeerDescriptor()
+                const senderDescriptor = this.config.targetNeighbors.getNeighborById(message.senderId)!.getPeerDescriptor()
                 this.config.connectionLocker.unlockConnection(senderDescriptor, this.config.randomGraphId)
                 this.config.targetNeighbors.remove(senderDescriptor)
             }
-            this.config.handshakeWithInterleaving(message.interleaveTarget!, message.senderId).catch((_e) => {})
+            this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, message.senderId).catch((_e) => {})
         }
         return Empty
     }

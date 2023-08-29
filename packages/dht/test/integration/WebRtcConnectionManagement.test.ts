@@ -16,14 +16,14 @@ describe('WebRTC Connection Management', () => {
     let simulator: Simulator
 
     const peerDescriptor1: PeerDescriptor = {
-        kademliaId: PeerID.fromString("peer1").value,
-        nodeName: "peer1",
+        kademliaId: PeerID.fromString('peer1').value,
+        nodeName: 'peer1',
         type: NodeType.NODEJS,
     }
 
     const peerDescriptor2: PeerDescriptor = {
-        kademliaId: PeerID.fromString("peer2").value,
-        nodeName: "peer2",
+        kademliaId: PeerID.fromString('peer2').value,
+        nodeName: 'peer2',
         type: NodeType.NODEJS,
     }
 
@@ -84,7 +84,7 @@ describe('WebRTC Connection Management', () => {
 
     it('Peer2 can open WebRTC Datachannel', (done) => {
         const dummyMessage: Message = {
-            serviceId: serviceId,
+            serviceId,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
@@ -105,7 +105,7 @@ describe('WebRTC Connection Management', () => {
 
     it('Connecting to self throws', async () => {
         const dummyMessage: Message = {
-            serviceId: serviceId,
+            serviceId,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
@@ -121,7 +121,7 @@ describe('WebRTC Connection Management', () => {
 
     it('Connects and disconnects webrtc connections', async () => {
         const msg: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
             body: {
@@ -176,7 +176,7 @@ describe('WebRTC Connection Management', () => {
 
     it('Disconnects webrtcconnection while being connected', async () => {
         const msg: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
             body: {

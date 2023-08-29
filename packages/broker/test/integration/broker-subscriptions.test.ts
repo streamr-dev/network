@@ -1,10 +1,10 @@
 import { Wallet } from '@ethersproject/wallet'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
-import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
+import { StreamrClient, Stream, StreamPartID, StreamPermission } from 'streamr-client'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
 import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream, getStreamParts } from '../utils'
+import { startBroker, createClient, createTestStream } from '../utils'
 
 jest.setTimeout(50000)
 
@@ -24,6 +24,12 @@ const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
         })
         await s.grantPermissions(...assignments)
     }
+}
+
+export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
+    const client = broker.getStreamrClient()
+    const subs = await client.getSubscriptions()
+    return subs.map((s) => s.streamPartId)
 }
 
 describe('broker subscriptions', () => {

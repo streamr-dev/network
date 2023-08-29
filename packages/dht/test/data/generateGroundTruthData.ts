@@ -35,7 +35,7 @@ const findNNearestNeighbors = function(ownIndex: number, ownId: Uint8Array, node
 const writer = fs.createWriteStream('nodeids.json', {})
 const neighborWriter = fs.createWriteStream('orderedneighbors.json', {})
 
-neighborWriter.write("{\n")
+neighborWriter.write('{\n')
 
 const nodes: Array<Uint8Array> = []
 
@@ -66,5 +66,5 @@ for (let i = 0; i < NUM_NODES; i++) {
     }
 }
 
-neighborWriter.write("}")
+neighborWriter.write('}')
 neighborWriter.end()

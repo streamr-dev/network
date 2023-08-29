@@ -84,12 +84,12 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
 
         if (typeof NodeJsWsServer !== 'undefined') {
             return new NodeJsWsServer({
-                httpServer: httpServer,
+                httpServer,
                 autoAcceptConnections: false
             })
         } else {
             return this.wsServer = new WsServer({
-                httpServer: httpServer,
+                httpServer,
                 autoAcceptConnections: false
             })
         }

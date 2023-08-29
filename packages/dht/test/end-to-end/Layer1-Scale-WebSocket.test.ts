@@ -24,11 +24,11 @@ describe('Layer1 Scale', () => {
     beforeEach(async () => {
         epLayer0Node = new DhtNode({ peerDescriptor: epPeerDescriptor, nodeName: 'entrypoint' })
         await epLayer0Node.start()
-        await epLayer0Node.joinDht(epPeerDescriptor)
+        await epLayer0Node.joinDht([epPeerDescriptor])
 
         epLayer1Node = new DhtNode({ transportLayer: epLayer0Node, peerDescriptor: epPeerDescriptor, serviceId: STREAM_ID, nodeName: 'entrypoint' })
         await epLayer1Node.start()
-        await epLayer1Node.joinDht(epPeerDescriptor)
+        await epLayer1Node.joinDht([epPeerDescriptor])
 
         layer0Nodes = []
         layer1Nodes = []
@@ -48,9 +48,9 @@ describe('Layer1 Scale', () => {
             layer1Nodes.push(layer1)
         }
 
-        await Promise.all(layer0Nodes.map((node) => node.joinDht(epPeerDescriptor)))
+        await Promise.all(layer0Nodes.map((node) => node.joinDht([epPeerDescriptor])))
 
-        await Promise.all(layer1Nodes.map((node) => node.joinDht(epPeerDescriptor)))
+        await Promise.all(layer1Nodes.map((node) => node.joinDht([epPeerDescriptor])))
 
     }, 60000)
 
@@ -61,6 +61,7 @@ describe('Layer1 Scale', () => {
         await epLayer1Node.stop()
     }, 15000)
 
+    // TODO: fix flaky test in NET-1021
     it('bucket sizes', async () => {
         layer0Nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)

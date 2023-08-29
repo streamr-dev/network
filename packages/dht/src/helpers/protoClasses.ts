@@ -29,7 +29,7 @@ import {
     UnlockRequest,
     LockResponse
 
-} from "../proto/packages/dht/protos/DhtRpc"
+} from '../proto/packages/dht/protos/DhtRpc'
 
 export const protoClasses: Array<IMessageType<any>> = [
     ClosestPeersRequest,

@@ -51,7 +51,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
             this.socket.onmessage = (message: IMessageEvent) => {
                 if (!this.stopped) {
                     if (typeof message.data === 'string') {
-                        logger.debug("Received string: '" + message.data + "'")
+                        logger.debug('Received string: \'' + message.data + '\'')
                     } else {
                         this.emit('data', new Uint8Array(message.data))
                     }

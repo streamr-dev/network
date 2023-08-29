@@ -1,12 +1,12 @@
 import http from 'http'
 import { Wallet } from 'ethers'
-import StreamrClient, { Stream } from 'streamr-client'
+import { StreamrClient, Stream } from 'streamr-client'
 import {
     createClient,
     createTestStream,
     startStorageNode
 } from '../../../utils'
-import { Broker } from "../../../../src/broker"
+import { Broker } from '../../../../src/broker'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 

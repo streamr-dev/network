@@ -30,7 +30,7 @@ describe('stream without default entrypoints', () => {
             0,
             666,
             0,
-            'peer2' as EthereumAddress,
+            '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),
@@ -65,7 +65,7 @@ describe('stream without default entrypoints', () => {
             const transport = new SimulatorTransport(peerDescriptor, simulator)
             const node = new NetworkNode({
                 layer0: {
-                    peerDescriptor: peerDescriptor,
+                    peerDescriptor,
                     transportLayer: transport,
                     entryPoints: [entryPointPeerDescriptor]
                 },

@@ -1,11 +1,9 @@
 import { NetworkStack } from '../../src/NetworkStack'
 import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
 import {
-    StreamPartIDUtils,
-    toStreamID,
+    StreamPartIDUtils
 } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
-import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createStreamMessage } from '../utils/utils'
 
 describe('NetworkStack', () => {
@@ -59,13 +57,10 @@ describe('NetworkStack', () => {
         stack1.getStreamrNode().on('newMessage', () => {
             receivedMessages += 1
         })
-        const content: ContentMessage = {
-            body: JSON.stringify({ hello: "WORLD" })
-        }
         const msg = createStreamMessage(
-            content,
-            toStreamID(streamPartId),
-            PeerID.fromString('network-stack').toKey()
+            JSON.stringify({ hello: 'WORLD' }),
+            streamPartId,
+            PeerID.fromString('network-stack').value
         )
         await stack2.getStreamrNode().waitForJoinAndPublish(streamPartId, msg)
         await waitForCondition(() => receivedMessages === 1)

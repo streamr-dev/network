@@ -2,10 +2,11 @@ import { StreamrClient, Subscription } from 'streamr-client'
 import { Gate, Logger, setAbortableInterval, setAbortableTimeout } from '@streamr/utils'
 import { StreamID } from '@streamr/protocol'
 import { EventEmitter } from 'eventemitter3'
-import { NodeId } from '@streamr/trackerless-network'
+import { NodeID } from '@streamr/trackerless-network'
 import min from 'lodash/min'
 import once from 'lodash/once'
-import { DEFAULT_INTERVAL_IN_MS } from './AnnounceNodeService'
+import { DEFAULT_INTERVAL_IN_MS } from './AnnounceNodeToStreamService'
+import isPlainObject from 'lodash/isPlainObject'
 
 const logger = new Logger(module)
 
@@ -20,6 +21,13 @@ export interface OperatorFleetStateEvents {
     removed: (nodeId: string) => void
 }
 
+function isValidMessage(content: any): content is { msgType: string, peerDescriptor: { id: string } } {
+    const { msgType, peerDescriptor } = (content as Record<string, unknown>)
+    return typeof msgType === 'string'
+        && isPlainObject(peerDescriptor)
+        && typeof (peerDescriptor as any)?.id === 'string'
+}
+
 export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly streamrClient: StreamrClient
     private readonly coordinationStreamId: StreamID
@@ -28,7 +36,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly pruneIntervalInMs: number
     private readonly heartbeatIntervalInMs: number
     private readonly latencyExtraInMs: number
-    private readonly heartbeatTimestamps = new Map<NodeId, number>()
+    private readonly heartbeatTimestamps = new Map<NodeID, number>()
     private readonly abortController = new AbortController()
     private readonly ready = new Gate(false)
     private subscription?: Subscription
@@ -57,14 +65,14 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
             throw new Error('already started')
         }
         this.subscription = await this.streamrClient.subscribe(this.coordinationStreamId, (content) => {
-            const { msgType, nodeId } = (content as Record<string, unknown>)
-            if (typeof msgType !== 'string' || typeof nodeId !== 'string') {
+            if (!isValidMessage(content)) {
                 logger.warn('Received invalid message in coordination stream', {
                     coordinationStreamId: this.coordinationStreamId,
                 })
                 return
             }
-            if (msgType === 'heartbeat') {
+            if (content.msgType === 'heartbeat') {
+                const nodeId = content.peerDescriptor.id
                 const exists = this.heartbeatTimestamps.has(nodeId)
                 this.heartbeatTimestamps.set(nodeId, this.timeProvider())
                 if (!exists) {

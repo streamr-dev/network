@@ -1,8 +1,9 @@
 import { ConnectionLocker, DhtNode, PeerDescriptor, PeerID, Simulator, SimulatorTransport, UUID } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import {
-    ContentMessage,
-    MessageRef,
+    ContentType,
+    EncryptionType,
+    MessageID,
     StreamMessage,
     StreamMessageType
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -10,6 +11,8 @@ import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
 import { NetworkNode } from '../../src/NetworkNode'
+import { hexToBinary, utf8ToBinary } from '../../src/logic/utils'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -41,31 +44,38 @@ export const createMockRandomGraphNodeAndDhtNode = (
     return [dhtNode, randomGraphNode]
 }
 
-export const createStreamMessage = (content: ContentMessage, streamId: string, publisherId: string): StreamMessage => {
-    const messageRef: MessageRef = {
-        streamId,
+export const createStreamMessage = (
+    content: string,
+    streamPartId: StreamPartID,
+    publisherId: Uint8Array,
+    timestamp?: number,
+    sequenceNumber?: number
+): StreamMessage => {
+    const messageId: MessageID = {
+        streamId: StreamPartIDUtils.getStreamID(streamPartId),
+        streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
+        sequenceNumber: sequenceNumber || 0,
+        timestamp: timestamp || Date.now(),
+        publisherId,
         messageChainId: 'messageChain0',
-        streamPartition: 0,
-        sequenceNumber: 0,
-        timestamp: Date.now(),
-        publisherId
-
     }
     const msg: StreamMessage = {
         messageType: StreamMessageType.MESSAGE,
-        content: ContentMessage.toBinary(content),
-        messageRef,
-        signature: 'signature'
+        encryptionType: EncryptionType.NONE,
+        content: utf8ToBinary(content),
+        contentType: ContentType.JSON,
+        messageId,
+        signature: hexToBinary('0x1234')
     }
     return msg
 }
 
-export const createMockRemotePeer = (): RemoteRandomGraphNode => {
+export const createMockRemotePeer = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
     const mockPeer: PeerDescriptor = {
         kademliaId: PeerID.fromString(new UUID().toString()).value,
         type: 0
     }
-    return new RemoteRandomGraphNode(mockPeer, 'mock', {} as any)
+    return new RemoteRandomGraphNode(peerDescriptor || mockPeer, 'mock', {} as any)
 }
 
 export const createMockRemoteHandshaker = (): RemoteHandshaker => {

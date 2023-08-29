@@ -1,1 +1,3 @@
-export type NodeId = string
+export type NodeID = string
+
+export type UserID = Uint8Array

@@ -30,7 +30,7 @@ export class PropagationTaskStore {
     }
 
     add(task: PropagationTask): void {
-        const messageId = task.message.messageRef!
+        const messageId = task.message.messageId!
         this.tasks.set(messageId, task)
     }
 

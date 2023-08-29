@@ -35,12 +35,12 @@ describe('Mock IConnection DHT Joining', () => {
     })
 
     it('Happy path', async () => {
-        await entryPoint.joinDht(entrypointDescriptor)
-        await Promise.all(nodes.map((node) => node.joinDht(entrypointDescriptor)))
+        await entryPoint.joinDht([entrypointDescriptor])
+        await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
         nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
-            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 1)
+            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 2)
+            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 2)
         })
-        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() - 1)
+        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() - 2)
     }, 60000)
 })

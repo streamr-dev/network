@@ -1,10 +1,10 @@
-import { RpcCommunicator, toProtoRpcClient } from "@streamr/proto-rpc"
-import { RemoteRouter } from "../../src/dht/routing/RemoteRouter"
-import { Message, MessageType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from "../../src/proto/packages/dht/protos/DhtRpc"
+import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
+import { RemoteRouter } from '../../src/dht/routing/RemoteRouter'
+import { Message, MessageType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RoutingServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { RpcMessage } from "../../src/proto/packages/proto-rpc/protos/ProtoRpc"
-import { DhtCallContext } from "../../src/rpc-protocol/DhtCallContext"
-import { createWrappedClosestPeersRequest, generateId, MockRoutingService } from "../utils/utils"
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
+import { createWrappedClosestPeersRequest, generateId, MockRoutingService } from '../utils/utils'
 
 describe('RemoteRouter', () => {
 
@@ -38,7 +38,7 @@ describe('RemoteRouter', () => {
     it('routeMessage happy path', async () => {
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor, serverPeerDescriptor)
         const routed: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageId: 'routed',
             messageType: MessageType.RPC,
             body: {
@@ -61,7 +61,7 @@ describe('RemoteRouter', () => {
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockRoutingService.throwRouteMessageError)
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor, serverPeerDescriptor)
         const routed: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageId: 'routed',
             messageType: MessageType.RPC,
             body: {

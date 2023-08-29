@@ -1,4 +1,4 @@
-import { Logger } from "@streamr/utils"
+import { Logger } from '@streamr/utils'
 
 export const debugVars: Record<string, any> = []
 

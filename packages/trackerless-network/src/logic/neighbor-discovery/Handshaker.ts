@@ -25,7 +25,6 @@ interface HandshakerConfig {
     randomContactPool: PeerList
     rpcCommunicator: RpcCommunicator
     N: number
-    nodeName?: string
 }
 
 const logger = new Logger(module)
@@ -133,14 +132,14 @@ export class Handshaker implements IHandshaker {
             this.config.targetNeighbors.add(this.createRemoteNode(targetNeighbor.getPeerDescriptor()))
             this.config.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.config.randomGraphId)
         }
-        if (result.interleaveTarget) {
-            await this.handshakeWithInterleaving(result.interleaveTarget, targetStringId)
+        if (result.interleaveTargetDescriptor) {
+            await this.handshakeWithInterleaving(result.interleaveTargetDescriptor, targetStringId)
         }
         this.ongoingHandshakes.delete(targetStringId)
         return result.accepted
     }
 
-    private async handshakeWithInterleaving(target: PeerDescriptor, interleavingFrom: string): Promise<boolean> {
+    private async handshakeWithInterleaving(target: PeerDescriptor, interleaveSourceId: string): Promise<boolean> {
         const targetNeighbor = new RemoteHandshaker(
             target,
             this.config.randomGraphId,
@@ -152,7 +151,7 @@ export class Handshaker implements IHandshaker {
             this.config.ownPeerDescriptor,
             this.config.targetNeighbors.getStringIds(),
             undefined,
-            interleavingFrom
+            interleaveSourceId
         )
         if (result.accepted) {
             this.config.targetNeighbors.add(this.createRemoteNode(targetNeighbor.getPeerDescriptor()))

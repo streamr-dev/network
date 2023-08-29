@@ -25,6 +25,7 @@ import { IRoutingService } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { RecursiveFindSessionServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { SortedContactList } from '../contact/SortedContactList'
 
 interface RecursiveFinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -36,7 +37,6 @@ interface RecursiveFinderConfig {
     serviceId: string
     localDataStore: LocalDataStore
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
-    getClosestPeerDescriptors: (kademliaId: Uint8Array, limit: number) => PeerDescriptor[]
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
 }
 
@@ -61,7 +61,6 @@ export class RecursiveFinder implements IRecursiveFinder {
     private readonly serviceId: string
     private readonly localDataStore: LocalDataStore
     private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
-    private readonly getClosestPeerDescriptors: (kademliaId: Uint8Array, limit: number) => PeerDescriptor[]
     private readonly isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
     private ongoingSessions: Map<string, RecursiveFindSession> = new Map()
     private stopped = false
@@ -76,7 +75,6 @@ export class RecursiveFinder implements IRecursiveFinder {
         this.serviceId = config.serviceId
         this.localDataStore = config.localDataStore
         this.addContact = config.addContact
-        this.getClosestPeerDescriptors = config.getClosestPeerDescriptors
         this.isPeerCloserToIdThanSelf = config.isPeerCloserToIdThanSelf
         this.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'findRecursively',
             (routedMessage: RouteMessageWrapper) => this.findRecursively(routedMessage))
@@ -211,7 +209,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         const idToFind = PeerID.fromValue(routedMessage.destinationPeer!.kademliaId)
         const msg = routedMessage.message
         const recursiveFindRequest = msg?.body.oneofKind === 'recursiveFindRequest' ? msg.body.recursiveFindRequest : undefined
-        const closestPeersToDestination = this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5)
+        const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.kademliaId, 5)
         const data = this.findLocalData(idToFind.value, recursiveFindRequest!.findMode)
         if (this.ownPeerId!.equals(idToFind)) {
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
@@ -235,6 +233,19 @@ export class RecursiveFinder implements IRecursiveFinder {
                 closestPeersToDestination, data, noCloserContactsFound)
         }
         return ack
+    }
+
+    private getClosestConnections(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
+        const connectedPeers = Array.from(this.connections.values())
+        const closestPeers = new SortedContactList(
+            PeerID.fromValue(kademliaId),
+            limit,
+            undefined,
+            true,
+            undefined
+        )
+        closestPeers.addContacts(connectedPeers)
+        return closestPeers.getClosestContacts(limit).map((peer) => peer.getPeerDescriptor())
     }
 
     // IRoutingService method

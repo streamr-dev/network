@@ -1,15 +1,16 @@
 import { GroupKeyRequest as OldGroupKeyRequest } from '@streamr/protocol'
 import { GroupKeyRequest } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { EthereumAddress } from '@streamr/utils'
+import { toEthereumAddress } from '@streamr/utils'
+import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary } from '../../utils'
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class GroupKeyRequestTranslator {
 
     static toProtobuf(msg: OldGroupKeyRequest): GroupKeyRequest {
         const translated: GroupKeyRequest = {
-            recipient: msg.recipient,
+            recipientId: hexToBinary(msg.recipient),
             requestId: msg.requestId,
-            rsaPublicKey: msg.rsaPublicKey,
+            rsaPublicKey: utf8ToBinary(msg.rsaPublicKey),
             groupKeyIds: msg.groupKeyIds
         }
         return translated
@@ -17,9 +18,9 @@ export class GroupKeyRequestTranslator {
 
     static toClientProtocol(msg: GroupKeyRequest): OldGroupKeyRequest {
         const translated = new OldGroupKeyRequest({
-            recipient: msg.recipient as EthereumAddress,
+            recipient: toEthereumAddress(binaryToHex(msg.recipientId, true)),
             requestId: msg.requestId,
-            rsaPublicKey: msg.rsaPublicKey,
+            rsaPublicKey: binaryToUtf8(msg.rsaPublicKey),
             groupKeyIds: msg.groupKeyIds
         })
         return translated

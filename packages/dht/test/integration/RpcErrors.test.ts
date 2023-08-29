@@ -23,12 +23,12 @@ describe('RPC errors', () => {
     let simulator: Simulator
 
     const peerDescriptor1: PeerDescriptor = {
-        kademliaId: PeerID.fromString("peer1").value,
+        kademliaId: PeerID.fromString('peer1').value,
         type: NodeType.NODEJS,
     }
 
     const peerDescriptor2: PeerDescriptor = {
-        kademliaId: PeerID.fromString("peer2").value,
+        kademliaId: PeerID.fromString('peer2').value,
         type: NodeType.NODEJS,
     }
 
@@ -127,7 +127,7 @@ describe('RPC errors', () => {
         }
 
         const msg: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
             body: RpcMessage.toBinary(rpcMessage)

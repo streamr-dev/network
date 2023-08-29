@@ -1,86 +1,115 @@
-import { Signer } from '@ethersproject/abstract-signer'
-import { JsonRpcProvider, Provider } from '@ethersproject/providers'
+import { JsonRpcProvider } from '@ethersproject/providers'
 import { toStreamID } from '@streamr/protocol'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Wallet } from 'ethers'
-import { StreamrClient } from 'streamr-client'
-import { Plugin } from '../../Plugin'
-import { AnnounceNodeService } from './AnnounceNodeService'
+import { CONFIG_TEST } from 'streamr-client'
+import { Plugin, PluginOptions } from '../../Plugin'
+import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
+import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
+import { AnnounceNodeToStreamService } from './AnnounceNodeToStreamService'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorContractService } from './MaintainOperatorContractService'
 import { MaintainOperatorValueService } from './MaintainOperatorValueService'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
+import { OperatorValueBreachWatcher } from './OperatorValueBreachWatcher'
 import { OperatorFleetState } from './OperatorFleetState'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 
+export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
+export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
+
 export interface OperatorPluginConfig {
     operatorContractAddress: string
-    replicationFactor: number
+    redundancyFactor: number
 }
 
 export interface OperatorServiceConfig {
-    provider: Provider
-    signer: Signer
+    nodeWallet: Wallet
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
+    maxSponsorshipsInWithdraw?: number
+    minSponsorshipEarningsInWithdraw?: number
 }
 
+const logger = new Logger(module)
+
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
-
-    private announceNodeService?: AnnounceNodeService
-    private inspectRandomNodeService = new InspectRandomNodeService()
-    private maintainOperatorContractService = new MaintainOperatorContractService()
-    private voteOnSuspectNodeService?: VoteOnSuspectNodeService
+    private readonly announceNodeToStreamService: AnnounceNodeToStreamService
+    private readonly announceNodeToContractService: AnnounceNodeToContractService
+    private readonly inspectRandomNodeService = new InspectRandomNodeService()
+    private readonly maintainOperatorContractService = new MaintainOperatorContractService()
+    private readonly voteOnSuspectNodeService: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
-    private maintainOperatorValueService?: MaintainOperatorValueService
-    private fleetState?: OperatorFleetState
-    private serviceConfig?: OperatorServiceConfig
+    private readonly maintainOperatorValueService: MaintainOperatorValueService
+    private readonly operatorValueBreachWatcher: OperatorValueBreachWatcher
+    private readonly fleetState: OperatorFleetState
+    private readonly serviceConfig: OperatorServiceConfig
 
-    async start(streamrClient: StreamrClient): Promise<void> {
+    constructor(options: PluginOptions) {
+        super(options)
         const provider = new JsonRpcProvider(this.brokerConfig.client.contracts!.streamRegistryChainRPCs!.rpcs[0].url)
+        // TODO read from client, as we need to use production value in production environment (not random address)
+        const nodeWallet = Wallet.createRandom().connect(provider)
         this.serviceConfig = {
-            provider,
+            nodeWallet,
             operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
-            theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
-            signer: Wallet.createRandom().connect(provider)
+            // TODO read from client, as we need to use production value in production environment (not ConfigTest)
+            theGraphUrl: CONFIG_TEST.contracts!.theGraphUrl!,
+            maxSponsorshipsInWithdraw: DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW,
+            minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
         }
-        this.announceNodeService = new AnnounceNodeService(
-            streamrClient,
+        this.announceNodeToStreamService = new AnnounceNodeToStreamService(
+            this.streamrClient,
             toEthereumAddress(this.pluginConfig.operatorContractAddress)
         )
         this.fleetState = new OperatorFleetState(
-            streamrClient,
+            this.streamrClient,
             toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
         )
+        this.announceNodeToContractService = new AnnounceNodeToContractService(
+            this.streamrClient,
+            new AnnounceNodeToContractHelper(this.serviceConfig),
+            this.fleetState
+        )
         this.maintainOperatorValueService = new MaintainOperatorValueService(this.serviceConfig)
+        this.operatorValueBreachWatcher = new OperatorValueBreachWatcher(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
-            streamrClient,
+            this.streamrClient,
             this.serviceConfig
         )
+
+    }
+
+    async start(): Promise<void> {
         this.maintainTopologyService = await setUpAndStartMaintainTopologyService({
-            streamrClient: streamrClient,
-            replicationFactor: this.pluginConfig.replicationFactor,
+            streamrClient: this.streamrClient,
+            redundancyFactor: this.pluginConfig.redundancyFactor,
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
-        await this.announceNodeService.start()
+        await this.announceNodeToStreamService.start()
         await this.inspectRandomNodeService.start()
         await this.maintainOperatorContractService.start()
         await this.maintainOperatorValueService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
-
-        await this.fleetState.start() // must be started last!
+        await this.operatorValueBreachWatcher.start()
+        await this.fleetState.start()
+        this.announceNodeToContractService.start().catch((err) => {
+            logger.fatal('Encountered fatal error in announceNodeToContractService', { err })
+            process.exit(1)
+        })
     }
 
     async stop(): Promise<void> {
-        await this.announceNodeService!.stop()
+        await this.announceNodeToStreamService.stop()
         await this.inspectRandomNodeService.stop()
         await this.maintainOperatorContractService.stop()
-        await this.maintainOperatorValueService!.stop()
-        await this.voteOnSuspectNodeService!.stop()
+        await this.maintainOperatorValueService.stop()
+        await this.voteOnSuspectNodeService.stop()
+        await this.operatorValueBreachWatcher.stop()
     }
 
     // eslint-disable-next-line class-methods-use-this

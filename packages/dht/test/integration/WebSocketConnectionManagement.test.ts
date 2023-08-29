@@ -19,7 +19,7 @@ describe('WebSocket Connection Management', () => {
     const simulator = new Simulator()
 
     const wsServerConnectorPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString("peerWithServer").value,
+        kademliaId: PeerID.fromString('peerWithServer').value,
         type: NodeType.NODEJS,
         websocket: {
             ip: '127.0.0.1',
@@ -28,7 +28,7 @@ describe('WebSocket Connection Management', () => {
     }
 
     const noWsServerConnectorPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString("peerWithoutServer").value,
+        kademliaId: PeerID.fromString('peerWithoutServer').value,
         type: NodeType.NODEJS,
     }
 
@@ -65,7 +65,7 @@ describe('WebSocket Connection Management', () => {
 
     it('Can open connections to serverless peer', (done) => {
         const dummyMessage: Message = {
-            serviceId: serviceId,
+            serviceId,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
@@ -87,7 +87,7 @@ describe('WebSocket Connection Management', () => {
 
     it('Can open connections to peer with server', async () => {
         const dummyMessage: Message = {
-            serviceId: serviceId,
+            serviceId,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
@@ -110,7 +110,7 @@ describe('WebSocket Connection Management', () => {
 
     it('Connecting to self throws', async () => {
         const dummyMessage: Message = {
-            serviceId: serviceId,
+            serviceId,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()

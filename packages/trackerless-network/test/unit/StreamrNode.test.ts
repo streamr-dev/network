@@ -3,8 +3,8 @@ import { MockLayer0 } from '../utils/mock/MockLayer0'
 import { isSamePeerDescriptor, PeerDescriptor, PeerID } from '@streamr/dht'
 import { createStreamMessage, mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
-import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('StreamrNode', () => {
 
@@ -13,17 +13,18 @@ describe('StreamrNode', () => {
         kademliaId: PeerID.fromString('streamr-node').value,
         type: 0
     }
-    const stream = 'stream'
-    const content: ContentMessage = {
-        body: JSON.stringify({ hello: "WORLD" })
-    }
-    const message = createStreamMessage(content, stream, 'publisher')
+    const streamPartId = StreamPartIDUtils.parse('stream#0')
+    const message = createStreamMessage(
+        JSON.stringify({ hello: 'WORLD' }), 
+        streamPartId, 
+        peerDescriptor.kademliaId
+    )
 
     beforeEach(async () => {
         node = new StreamrNode({})
         const mockLayer0 = new MockLayer0(peerDescriptor)
         await node.start(mockLayer0, new MockTransport(), mockConnectionLocker)
-        node.setStreamPartEntryPoints(stream, [peerDescriptor])
+        node.setStreamPartEntryPoints(streamPartId, [peerDescriptor])
     })
 
     afterEach(async () => {
@@ -35,40 +36,40 @@ describe('StreamrNode', () => {
     })
 
     it('can join streams', async () => {
-        await node.joinStream(stream)
-        expect(node.hasStream(stream)).toEqual(true)
+        await node.joinStream(streamPartId)
+        expect(node.hasStream(streamPartId)).toEqual(true)
     })
 
     it('can leave streams', async () => {
-        await node.joinStream(stream)
-        expect(node.hasStream(stream)).toEqual(true)
-        node.leaveStream(stream)
-        expect(node.hasStream(stream)).toEqual(false)
+        await node.joinStream(streamPartId)
+        expect(node.hasStream(streamPartId)).toEqual(true)
+        node.leaveStream(streamPartId)
+        expect(node.hasStream(streamPartId)).toEqual(false)
     })
 
     it('subscribe and wait for join', async () => {
-        await node.waitForJoinAndSubscribe(stream)
-        expect(node.hasStream(stream)).toEqual(true)
+        await node.waitForJoinAndSubscribe(streamPartId)
+        expect(node.hasStream(streamPartId)).toEqual(true)
     })
 
     it('publish and wait for join', async () => {
-        await node.waitForJoinAndPublish(stream, message)
-        expect(node.hasStream(stream)).toEqual(true)
+        await node.waitForJoinAndPublish(streamPartId, message)
+        expect(node.hasStream(streamPartId)).toEqual(true)
     })
 
     it('subscribe joins stream', async () => {
-        node.subscribeToStream(stream)
-        await waitForCondition(() => node.hasStream(stream))
+        node.subscribeToStream(streamPartId)
+        await waitForCondition(() => node.hasStream(streamPartId))
     })
 
     it('publish joins stream', async () => {
-        await node.publishToStream(stream, message)
-        await waitForCondition(() => node.hasStream(stream))
+        await node.publishToStream(streamPartId, message)
+        await waitForCondition(() => node.hasStream(streamPartId))
     })
 
     it('can unsubscribe', async () => {
-        await node.joinStream(stream)
-        await node.unsubscribeFromStream(stream)
+        await node.joinStream(streamPartId)
+        await node.unsubscribeFromStream(streamPartId)
     })
 
 })

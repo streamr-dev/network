@@ -1,19 +1,17 @@
 import InvalidJsonError from '../../errors/InvalidJsonError'
 import StreamMessageError from '../../errors/StreamMessageError'
 import ValidationError from '../../errors/ValidationError'
-import UnsupportedVersionError from '../../errors/UnsupportedVersionError'
 import { validateIsNotEmptyString, validateIsString, validateIsType } from '../../utils/validations'
 
 import MessageRef from './MessageRef'
 import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
-import { Serializer } from '../../Serializer'
 import { StreamID } from '../../utils/StreamID'
-import { StreamPartID } from "../../utils/StreamPartID"
+import { StreamPartID } from '../../utils/StreamPartID'
 import { EthereumAddress } from '@streamr/utils'
+import { fromArray, toArray } from './streamMessageSerialization'
 
-const serializerByVersion: Record<string, Serializer<StreamMessage>> = {}
-const LATEST_VERSION = 32
+export const VERSION = 32
 
 export enum StreamMessageType {
     MESSAGE = 27,
@@ -53,8 +51,6 @@ export type StreamMessageAESEncrypted<T = unknown> = StreamMessage<T> & {
 }
 
 export default class StreamMessage<T = unknown> {
-    static LATEST_VERSION = LATEST_VERSION
-
     private static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessageType))
     private static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
     private static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
@@ -227,45 +223,8 @@ export default class StreamMessage<T = unknown> {
         return this.newGroupKey
     }
 
-    /** @internal */
-    static registerSerializer(version: number, serializer: Serializer<StreamMessage<unknown>>): void {
-        // Check the serializer interface
-        if (!serializer.fromArray) {
-            throw new Error(`Serializer ${JSON.stringify(serializer)} doesn't implement a method fromArray!`)
-        }
-        if (!serializer.toArray) {
-            throw new Error(`Serializer ${JSON.stringify(serializer)} doesn't implement a method toArray!`)
-        }
-
-        if (serializerByVersion[version] !== undefined) {
-            throw new Error(`Serializer for version ${version} is already registered: ${
-                JSON.stringify(serializerByVersion[version])
-            }`)
-        }
-        serializerByVersion[version] = serializer
-    }
-
-    /** @internal */
-    static unregisterSerializer(version: number): void {
-        delete serializerByVersion[version]
-    }
-
-    /** @internal */
-    static getSerializer(version: number): Serializer<StreamMessage<unknown>> {
-        const clazz = serializerByVersion[version]
-        if (!clazz) {
-            throw new UnsupportedVersionError(version, `Supported versions: [${StreamMessage.getSupportedVersions()}]`)
-        }
-        return clazz
-    }
-
-    static getSupportedVersions(): number[] {
-        return Object.keys(serializerByVersion).map((key) => parseInt(key, 10))
-    }
-
-    serialize(version = LATEST_VERSION): string {
-        const serializer = StreamMessage.getSerializer(version)
-        return JSON.stringify(serializer.toArray(this))
+    serialize(): string {
+        return JSON.stringify(toArray(this))
     }
 
     /**
@@ -273,11 +232,7 @@ export default class StreamMessage<T = unknown> {
      */
     static deserialize(msg: any[] | string): StreamMessage {
         const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
-
-        const messageVersion = messageArray[0]
-
-        const C = StreamMessage.getSerializer(messageVersion)
-        return C.fromArray(messageArray)
+        return fromArray(messageArray)
     }
 
     static validateMessageType(messageType: StreamMessageType): void {
@@ -296,10 +251,6 @@ export default class StreamMessage<T = unknown> {
         if (!StreamMessage.VALID_ENCRYPTIONS.has(encryptionType)) {
             throw new ValidationError(`Unsupported encryption type: ${encryptionType}`)
         }
-    }
-
-    static versionSupportsEncryption(streamMessageVersion: number): boolean {
-        return streamMessageVersion >= 31
     }
 
     static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null }): void {

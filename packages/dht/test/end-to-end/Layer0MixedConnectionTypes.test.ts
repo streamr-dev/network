@@ -23,7 +23,7 @@ describe('Layer0MixedConnectionTypes', () => {
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 2 })
         await epDhtNode.start()
 
-        await epDhtNode.joinDht(epPeerDescriptor)
+        await epDhtNode.joinDht([epPeerDescriptor])
         node1 = new DhtNode({ peerIdString: 'Peer1', webSocketPort: 11222, entryPoints: [epPeerDescriptor] })
         node2 = new DhtNode({ peerIdString: 'Peer2', webSocketPort: 11228, entryPoints: [epPeerDescriptor] })
         node3 = new DhtNode({ peerIdString: 'Peer3', entryPoints: [epPeerDescriptor] })
@@ -38,7 +38,7 @@ describe('Layer0MixedConnectionTypes', () => {
             node5.start()
         ])
 
-        await epDhtNode.joinDht(epPeerDescriptor)
+        await epDhtNode.joinDht([epPeerDescriptor])
     })
 
     afterEach(async () => {
@@ -59,14 +59,14 @@ describe('Layer0MixedConnectionTypes', () => {
             waitForEvent3<ConnectionManagerEvents>((node4.getTransport() as ConnectionManager), 'newConnection'),
         ])
 
-        node3.joinDht(epPeerDescriptor)
-        node4.joinDht(epPeerDescriptor)
+        node3.joinDht([epPeerDescriptor])
+        node4.joinDht([epPeerDescriptor])
 
         await promise
         await Promise.all([
-            node1.joinDht(epPeerDescriptor),
-            node2.joinDht(epPeerDescriptor),
-            node5.joinDht(epPeerDescriptor)
+            node1.joinDht([epPeerDescriptor]),
+            node2.joinDht([epPeerDescriptor]),
+            node5.joinDht([epPeerDescriptor])
         ])
 
         expect(node1.getBucketSize()).toBeGreaterThanOrEqual(2)
@@ -79,11 +79,11 @@ describe('Layer0MixedConnectionTypes', () => {
 
     it('Simultaneous joins', async () => {
         await Promise.all([
-            node1.joinDht(epPeerDescriptor),
-            node2.joinDht(epPeerDescriptor),
-            node3.joinDht(epPeerDescriptor),
-            node4.joinDht(epPeerDescriptor),
-            node5.joinDht(epPeerDescriptor)
+            node1.joinDht([epPeerDescriptor]),
+            node2.joinDht([epPeerDescriptor]),
+            node3.joinDht([epPeerDescriptor]),
+            node4.joinDht([epPeerDescriptor]),
+            node5.joinDht([epPeerDescriptor])
         ])
         expect(node1.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(node2.getBucketSize()).toBeGreaterThanOrEqual(2)

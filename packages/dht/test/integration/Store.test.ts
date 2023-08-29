@@ -12,7 +12,7 @@ describe('Storing data in DHT', () => {
     const simulator = new Simulator(LatencyType.RANDOM)
     const NUM_NODES = 100
     const MAX_CONNECTIONS = 20
-    const K = 2
+    const K = 4
     const nodeIndicesById: Record<string, number> = {}
 
     const getRandomNode = () => {
@@ -39,7 +39,7 @@ describe('Storing data in DHT', () => {
             nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }
-        await Promise.all(nodes.map((node) => node.joinDht(entrypointDescriptor)))
+        await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
         await waitConnectionManagersReadyForTesting(nodes.map((node) => node.connectionManager!), MAX_CONNECTIONS)
     }, 90000)
 

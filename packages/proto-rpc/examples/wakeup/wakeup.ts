@@ -18,7 +18,7 @@ class WakeUpService implements IWakeUpRpcService {
     // You always have return google.protobuf.Empty from notifications
     async wakeUp(request: WakeUpRequest, _context: ServerCallContext): Promise<Empty> {
         // eslint-disable-next-line no-console
-        console.log("WakeUp notification of node " + this.nodeId + " called with reason: " + request.reason)
+        console.log('WakeUp notification of node ' + this.nodeId + ' called with reason: ' + request.reason)
         const ret: Empty = {}
         return ret
     }
@@ -42,7 +42,7 @@ class Node {
     public wakeUpOtherNode(targetNodeId: string, reason: string) {
         // pass targetNodeId in CallContext
         this.client.wakeUp({ reason: reason }, {
-            targetNodeId: targetNodeId,
+            targetNodeId,
             // By setting the notification flag the client will not wait for a response from the server
             // and the server will know not to send a response.
             notification: true
@@ -57,27 +57,27 @@ const run = async () => {
 
         // Pass the message to the right based on targetNodeId passed in the context
         if (callContext!.targetNodeId) {
-            const targetNodeId = callContext!["targetNodeId"] as string
+            const targetNodeId = callContext!['targetNodeId'] as string
             nodes[targetNodeId].communicator.handleIncomingMessage(msgBody)
         }
     }
     // Setup nodes
 
-    nodes["1"] = new Node("1")
-    nodes["1"].communicator.on('outgoingMessage', emulateNetwork) 
+    nodes['1'] = new Node('1')
+    nodes['1'].communicator.on('outgoingMessage', emulateNetwork) 
 
-    nodes["2"] = new Node("2")
-    nodes["2"].communicator.on('outgoingMessage', emulateNetwork)
+    nodes['2'] = new Node('2')
+    nodes['2'].communicator.on('outgoingMessage', emulateNetwork)
 
-    nodes["3"] = new Node("3")
-    nodes["3"].communicator.on('outgoingMessage', emulateNetwork)
+    nodes['3'] = new Node('3')
+    nodes['3'].communicator.on('outgoingMessage', emulateNetwork)
 
-    nodes["1"].wakeUpOtherNode("2", "Notification from node 1")
-    nodes["3"].wakeUpOtherNode("1", "Notification from node 3")
+    nodes['1'].wakeUpOtherNode('2', 'Notification from node 1')
+    nodes['3'].wakeUpOtherNode('1', 'Notification from node 3')
 
-    nodes["1"].communicator.stop()
-    nodes["2"].communicator.stop()
-    nodes["3"].communicator.stop()
+    nodes['1'].communicator.stop()
+    nodes['2'].communicator.stop()
+    nodes['3'].communicator.stop()
    
 }
 

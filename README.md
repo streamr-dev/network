@@ -129,6 +129,19 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 ![image](https://user-images.githubusercontent.com/43438/135347920-97d6e0e7-b86c-40ff-bfc9-91f160ae975c.png)
 
+### Generate package-lock.json from scratch
+
+Occasionally it can be useful to clear all the packages and generate
+package-lock.json completely from scratch. To do this run the following.
+
+```bash
+npm run clean
+rm -rf node_modules
+rm package-lock.json
+npm cache clean --force
+npm install
+```
+
 ## Environment variables
 
 | Variable                     | Description                                                                            | Packages                                    |
@@ -145,11 +158,9 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 ## Release
 
-### utils, test-utils, protocol, network-tracker, network-node, client, cli-tools
+All packages are released at the same time under the same version (except for internal dev-dependency packages).
 
-All the above packages are released at the same time.
-
-1. `git checkout main && git pull`
+1. `git checkout streamr-1.0 && git pull`
 2. (skip if beta) Read [CHANGELOG](CHANGELOG.md), decide new version, and edit file.
 3. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
 4. `npm run clean && npm install && npm run build && npm run versions`
@@ -165,25 +176,6 @@ All the above packages are released at the same time.
 cd packages/client
 npm run docs
 aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
-```
-
-### broker
-
-Broker is released independently of other packages because it follows its own versioning
-for the time being.
-
-```shell
-git checkout main && git pull
-cd packages/broker
-# Read CHANGELOG.md, decide new version, and edit file
-npm version <SEMVER_OPTION>
-git add package.json ../../package-lock.json CHANGELOG.md
-git commit -m "release(broker): vX.Y.Z"
-git tag broker/vX.Y.Z
-git push --atomic origin main broker/vX.Y.Z
-
-npm run build
-npm publish
 ```
 
 #### Docker release

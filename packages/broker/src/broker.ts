@@ -45,14 +45,7 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
     applyPluginClientConfigs(plugins, config.client)
     const streamrClient = new StreamrClient(config.client)
 
-    let started = false
     let httpServer: HttpServer | HttpsServer | undefined
-
-    const failIfNotStarted = (): void => {
-        if (!started) {
-            throw new Error('cannot invoke on non-started broker')
-        }
-    }
 
     return {
         start: async () => {
@@ -66,7 +59,7 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
             if (httpServerEndpoints.length > 0) {
                 httpServer = await startHttpServer(httpServerEndpoints, config.httpServer)
             }
-            const nodeId = (await streamrClient.getNode()).getNodeId()
+            const nodeId = await streamrClient.getNodeId()
             const brokerAddress = await streamrClient.getAddress()
             const mnemonic = generateMnemonicFromAddress(toEthereumAddress(brokerAddress))
 
@@ -82,7 +75,6 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
                     'This makes it impossible to create network layer connections directly via local routers ' +
                     'More info: https://github.com/streamr-dev/network-monorepo/wiki/WebRTC-private-addresses')
             }
-            started = true
         },
         stop: async () => {
             if (httpServer !== undefined) {

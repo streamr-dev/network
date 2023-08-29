@@ -1,12 +1,12 @@
-import { Contract } from "@ethersproject/contracts"
-import { Provider } from "@ethersproject/providers"
-import { operatorABI, sponsorshipABI } from "@streamr/network-contracts"
-import type { Operator, Sponsorship } from "@streamr/network-contracts"
-import { EventEmitter } from "eventemitter3"
-import { EthereumAddress, Logger, TheGraphClient, toEthereumAddress } from "@streamr/utils"
-import { OperatorServiceConfig } from "./OperatorPlugin"
+import { Contract } from '@ethersproject/contracts'
+import { Provider } from '@ethersproject/providers'
+import type { Operator, Sponsorship } from '@streamr/network-contracts'
+import { operatorABI, sponsorshipABI } from '@streamr/network-contracts'
 import { StreamID, toStreamID } from '@streamr/protocol'
+import { EthereumAddress, Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
+import { EventEmitter } from 'eventemitter3'
 import fetch from 'node-fetch'
+import { OperatorServiceConfig } from './OperatorPlugin'
 
 const logger = new Logger(module)
 
@@ -34,15 +34,13 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     private readonly streamIdOfSponsorship: Map<EthereumAddress, StreamID> = new Map()
     private readonly sponsorshipCountOfStream: Map<StreamID, number> = new Map()
     private readonly operatorContractAddress: EthereumAddress
-    private readonly provider: Provider
     private readonly operatorContract: Operator
     private readonly theGraphClient: TheGraphClient
 
-    constructor({ operatorContractAddress, provider, theGraphUrl }: OperatorServiceConfig) {
+    constructor({ operatorContractAddress, nodeWallet, theGraphUrl }: OperatorServiceConfig) {
         super()
         this.operatorContractAddress = operatorContractAddress
-        this.provider = provider
-        this.operatorContract = new Contract(operatorContractAddress, operatorABI, this.provider) as unknown as Operator
+        this.operatorContract = new Contract(operatorContractAddress, operatorABI, nodeWallet) as unknown as Operator
         this.theGraphClient = new TheGraphClient({
             serverUrl: theGraphUrl,
             fetch,

@@ -1,7 +1,7 @@
-import { PeerID } from "@streamr/dht"
-import { HandshakerServer } from "../../src/logic/neighbor-discovery/HandshakerServer"
-import { PeerList } from "../../src/logic/PeerList"
-import { InterleaveNotice, StreamHandshakeRequest } from "../../src/proto/packages/trackerless-network/protos/NetworkRpc"
+import { PeerID } from '@streamr/dht'
+import { HandshakerServer } from '../../src/logic/neighbor-discovery/HandshakerServer'
+import { PeerList } from '../../src/logic/PeerList'
+import { InterleaveNotice, StreamHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockRemoteHandshaker, createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
 
 describe('HandshakerServer', () => {
@@ -52,7 +52,7 @@ describe('HandshakerServer', () => {
         })
         const res = await handshakerServer.handshake(req, {} as any)
         expect(res.accepted).toEqual(true)
-        expect(res.interleaveTarget).toBeUndefined()
+        expect(res.interleaveTargetDescriptor).toBeUndefined()
         expect(res.requestId).toEqual('requestId')
     })
 
@@ -72,7 +72,7 @@ describe('HandshakerServer', () => {
         })
         const res = await handshakerServer.handshake(req, {} as any)
         expect(res.accepted).toEqual(true)
-        expect(res.interleaveTarget).toBeDefined()
+        expect(res.interleaveTargetDescriptor).toBeDefined()
     })
 
     it('unaccepted handshake', async () => {
@@ -97,8 +97,8 @@ describe('HandshakerServer', () => {
         const req: InterleaveNotice = {
             randomGraphId: 'random-graph',
             senderId: 'senderId',
-            interleaveTarget: {
-                kademliaId: PeerID.fromString('interleaveTarget').value,
+            interleaveTargetDescriptor: {
+                kademliaId: PeerID.fromString('interleaveTargetDescriptor').value,
                 type: 0
             }
 
@@ -111,8 +111,8 @@ describe('HandshakerServer', () => {
         const req: InterleaveNotice = {
             randomGraphId: 'wrong-random-graph',
             senderId: 'senderId',
-            interleaveTarget: {
-                kademliaId: PeerID.fromString('interleaveTarget').value,
+            interleaveTargetDescriptor: {
+                kademliaId: PeerID.fromString('interleaveTargetDescriptor').value,
                 type: 0
             }
         }

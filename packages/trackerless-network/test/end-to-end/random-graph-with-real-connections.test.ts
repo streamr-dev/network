@@ -2,8 +2,8 @@ import { ConnectionManager, DhtNode, PeerDescriptor, NodeType, peerIdFromPeerDes
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils/utils'
-import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('random graph with real connections', () => {
 
@@ -13,7 +13,7 @@ describe('random graph with real connections', () => {
         websocket: { ip: 'localhost', port: 12221 }
     }
 
-    const randomGraphId = 'random-graph'
+    const randomGraphId = StreamPartIDUtils.parse('random-graph#0')
     let epDhtNode: DhtNode
     let dhtNode1: DhtNode
     let dhtNode2: DhtNode
@@ -74,12 +74,12 @@ describe('random graph with real connections', () => {
             connectionLocker: dhtNode4.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode4.getPeerDescriptor()
         })
-        await epDhtNode.joinDht(epPeerDescriptor)
+        await epDhtNode.joinDht([epPeerDescriptor])
         await Promise.all([
-            dhtNode1.joinDht(epPeerDescriptor),
-            dhtNode2.joinDht(epPeerDescriptor),
-            dhtNode3.joinDht(epPeerDescriptor),
-            dhtNode4.joinDht(epPeerDescriptor)
+            dhtNode1.joinDht([epPeerDescriptor]),
+            dhtNode2.joinDht([epPeerDescriptor]),
+            dhtNode3.joinDht([epPeerDescriptor]),
+            dhtNode4.joinDht([epPeerDescriptor])
         ])
         await Promise.all([
             randomGraphNode1.start(),
@@ -140,13 +140,10 @@ describe('random graph with real connections', () => {
                 && randomGraphNode5.getTargetNeighborStringIds().length >= 3
         }, 10000)
 
-        const content: ContentMessage = {
-            body: JSON.stringify({ hello: "WORLD" })
-        }
         const msg = createStreamMessage(
-            content,
+            JSON.stringify({ hello: 'WORLD' }),
             randomGraphId,
-            peerIdFromPeerDescriptor(epPeerDescriptor).toString()
+            peerIdFromPeerDescriptor(epPeerDescriptor).value
         )
         randomGraphNode1.broadcast(msg)
         await waitForCondition(() => numOfMessagesReceived >= 4)

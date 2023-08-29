@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor, PeerID } from "@streamr/dht"
+import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
 import { 
     EncryptionType,
     GroupKeyRequest,
@@ -9,10 +9,11 @@ import {
     StreamPartIDUtils,
     toStreamID,
     toStreamPartID
-} from "@streamr/protocol"
-import { NetworkNode } from "../../src/NetworkNode"
-import { ProxyDirection } from "../../src/proto/packages/trackerless-network/protos/NetworkRpc"
-import { toEthereumAddress, waitForEvent3 } from "@streamr/utils"
+} from '@streamr/protocol'
+import { NetworkNode } from '../../src/NetworkNode'
+import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { toEthereumAddress, waitForEvent3 } from '@streamr/utils'
+import { hexToBinary } from '../../src/logic/utils'
 
 describe('proxy group key exchange', () => {
     const proxyNodeDescriptor: PeerDescriptor = {
@@ -78,8 +79,8 @@ describe('proxy group key exchange', () => {
     })
     
     it('happy path request', async () => {
-        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, async () => publisherUserId)
-        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, async () => subscriberUserId)
+        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, hexToBinary(publisherUserId))
+        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, hexToBinary(subscriberUserId))
 
         const requestContent = new GroupKeyRequest({
             recipient: publisherUserId,
@@ -101,7 +102,7 @@ describe('proxy group key exchange', () => {
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             encryptionType: EncryptionType.NONE,
             content: requestContent,
-            signature: 'signature'
+            signature: '1234'
         })
 
         await Promise.all([
@@ -111,8 +112,8 @@ describe('proxy group key exchange', () => {
     })
 
     it('happy path response', async () => {
-        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, async () => publisherUserId)
-        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, async () => subscriberUserId)
+        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, hexToBinary(publisherUserId))
+        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, hexToBinary(subscriberUserId))
 
         const responseContent = new GroupKeyResponse({
             recipient: publisherUserId,
@@ -131,7 +132,7 @@ describe('proxy group key exchange', () => {
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.RSA,
             content: responseContent,
-            signature: 'signature'
+            signature: '1234'
         })
 
         await Promise.all([

@@ -1,9 +1,9 @@
 import { PeerDescriptor, NodeType, PeerID, peerIdFromPeerDescriptor, keyFromPeerDescriptor } from '@streamr/dht'
 import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
-import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createStreamMessage } from '../utils/utils'
 import { NetworkStack } from '../../src/NetworkStack'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Full node network with WebSocket connections only', () => {
 
@@ -14,7 +14,7 @@ describe('Full node network with WebSocket connections only', () => {
         nodeName: 'entrypoint',
         websocket: { ip: 'localhost', port: 15555 }
     }
-    const randomGraphId = 'websocket-network'
+    const randomGraphId = StreamPartIDUtils.parse('websocket-network#0')
 
     let entryPoint: NetworkStack
 
@@ -78,13 +78,11 @@ describe('Full node network with WebSocket connections only', () => {
                 numOfMessagesReceived += 1
             })
         })
-        const content: ContentMessage = {
-            body: JSON.stringify({ hello: "WORLD" })
-        }
+
         const msg = createStreamMessage(
-            content,
+            JSON.stringify({ hello: 'WORLD' }),
             randomGraphId,
-            peerIdFromPeerDescriptor(epPeerDescriptor).toString()
+            peerIdFromPeerDescriptor(epPeerDescriptor).value
         )
         entryPoint.getStreamrNode()!.publishToStream(randomGraphId, msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)

@@ -26,6 +26,7 @@ PKG_NAMES="@streamr/utils
 @streamr/trackerless-network
 streamr-client
 @streamr/cli-tools
+streamr-broker
 "
 
 # Update package versions
@@ -33,10 +34,8 @@ for pkg in $PKG_DIRS
 do
     FILE_NAME=packages/$pkg/package.json
     TMP_FILE=$(mktemp)
-    if [[ "$pkg" != "broker" ]]; then
-        jq --arg versionNumber $VERSION '.version |= $versionNumber' $FILE_NAME > $TMP_FILE
-        mv $TMP_FILE $FILE_NAME
-    fi
+    jq --arg versionNumber $VERSION '.version |= $versionNumber' $FILE_NAME > $TMP_FILE
+    mv $TMP_FILE $FILE_NAME
     for PKG_NAME in $PKG_NAMES
     do
         jq --arg versionNumber $VERSION --arg PKG_NAME $PKG_NAME '

@@ -186,7 +186,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
 
     public clear(): void {
         this.contactsById.clear()
-        this.contactIds.splice(0, this.contactIds.length)
+        this.contactIds = []
     }
 
     public stop(): void {

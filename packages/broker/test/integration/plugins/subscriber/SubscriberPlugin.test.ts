@@ -1,6 +1,6 @@
 import { createClient } from '../../../utils'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
-import StreamrClient from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 import { fastWallet } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 
@@ -17,15 +17,15 @@ const createMockPlugin = async () => {
             subscriber: {
                 streams: [
                     {
-                        streamId: "stream-0",
+                        streamId: 'stream-0',
                         streamPartition: 0
                     },
                     {
-                        streamId: "stream-0",
+                        streamId: 'stream-0',
                         streamPartition: 1
                     },
                     {
-                        streamId: "stream-1",
+                        streamId: 'stream-1',
                         streamPartition: 0
                     }
                 ]
@@ -56,9 +56,9 @@ describe('Subscriber Plugin', () => {
         const node = await client.getNode()
         await waitForCondition(() => {
             const streams = node.getStreamParts().map((stream) => stream.toString())
-            return streams.includes("stream-0#0")
-                && streams.includes("stream-0#1")
-                && streams.includes("stream-1#0")
+            return streams.includes('stream-0#0')
+                && streams.includes('stream-0#1')
+                && streams.includes('stream-1#0')
         })
         // If waitForCondition succeeds we are okay
         expect(true).toEqual(true)

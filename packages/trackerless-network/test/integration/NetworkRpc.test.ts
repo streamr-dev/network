@@ -5,16 +5,15 @@ import {
     toProtoRpcClient
 } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import {
-    StreamMessage,
-    ContentMessage
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForCondition } from '@streamr/utils'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { createStreamMessage } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Simulator } from '@streamr/dht'
+import { utf8ToBinary } from '../../src/logic/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Network RPC', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -47,13 +46,10 @@ describe('Network RPC', () => {
     })
 
     it('sends Data', async () => {
-        const content: ContentMessage = {
-            body: JSON.stringify({ hello: "WORLD" })
-        }
         const msg = createStreamMessage(
-            content,
-            'testStream',
-            'peer1'
+            JSON.stringify({ hello: 'WORLD' }),
+            StreamPartIDUtils.parse('testStream#0'),
+            utf8ToBinary('peer1')
         )
         await client.sendData(msg)
         await waitForCondition(() => recvCounter === 1)

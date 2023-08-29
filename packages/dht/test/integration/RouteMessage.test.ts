@@ -47,10 +47,10 @@ describe('Route Message With Mock Connections', () => {
             routerNodes.push(node)
         }
 
-        await destinationNode.joinDht(entryPointDescriptor)
-        await sourceNode.joinDht(entryPointDescriptor)
-        await Promise.all(routerNodes.map((node) => node.joinDht(entryPointDescriptor)))
-        await entryPoint.joinDht(entryPointDescriptor)
+        await destinationNode.joinDht([entryPointDescriptor])
+        await sourceNode.joinDht([entryPointDescriptor])
+        await Promise.all(routerNodes.map((node) => node.joinDht([entryPointDescriptor])))
+        await entryPoint.joinDht([entryPointDescriptor])
     }, 15000)
 
     afterEach(async () => {
@@ -82,7 +82,7 @@ describe('Route Message With Mock Connections', () => {
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
             sourceNode.router!.doRouteMessage({
-                message: message,
+                message,
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 requestId: v4(),
                 sourcePeer: sourceNode.getPeerDescriptor(),
@@ -114,7 +114,7 @@ describe('Route Message With Mock Connections', () => {
                 targetDescriptor: destinationNode.getPeerDescriptor()
             }
             await sourceNode.router!.doRouteMessage({
-                message: message,
+                message,
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 requestId: v4(),
                 sourcePeer: sourceNode.getPeerDescriptor(),
@@ -170,7 +170,7 @@ describe('Route Message With Mock Connections', () => {
                             targetDescriptor: destinationNode.getPeerDescriptor()
                         }
                         await node.router!.doRouteMessage({
-                            message: message,
+                            message,
                             destinationPeer: receiver.getPeerDescriptor(),
                             sourcePeer: node.getPeerDescriptor(),
                             requestId: v4(),
@@ -229,7 +229,7 @@ describe('Route Message With Mock Connections', () => {
             messageType: MessageType.RPC,
             body: {
                 oneofKind: 'rpcMessage',
-                rpcMessage: rpcMessage
+                rpcMessage
             },
             sourceDescriptor: sourceNode.getPeerDescriptor()!,
             targetDescriptor: entryPoint.getPeerDescriptor()!

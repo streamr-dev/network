@@ -1,6 +1,6 @@
 // Loads non-browser compatible components to Electron's NodeJS sandbox during tests
 
-process.once("loaded", () => {
+process.once('loaded', () => {
     window.NodeJsWsServer = require('websocket').server
     window.WebSocket = require('ws')
     window.Express = require('express')

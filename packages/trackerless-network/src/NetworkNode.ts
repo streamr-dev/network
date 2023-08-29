@@ -4,7 +4,7 @@ import { StreamMessageTranslator } from './logic/protocol-integration/stream-mes
 import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { MetricsContext } from '@streamr/utils'
 import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
-
+import { UserID } from './identifiers'
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
 */
@@ -25,6 +25,10 @@ export class NetworkNode {
 
     setExtraMetadata(metadata: Record<string, unknown>): void {
         this.stack.getStreamrNode().setExtraMetadata(metadata)
+    }
+
+    async inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
+        return this.stack.getStreamrNode().inspect(node, streamPartId)
     }
 
     async publish(streamMessage: StreamMessage): Promise<void> {
@@ -51,13 +55,13 @@ export class NetworkNode {
         streamPartId: StreamPartID,
         contactPeerDescriptors: PeerDescriptor[],
         direction: ProxyDirection,
-        getUserId: () => Promise<string>,
+        userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         if (this.options.networkNode.acceptProxyConnections) {
             throw new Error('cannot set proxies when acceptProxyConnections=true')
         }
-        await this.stack.getStreamrNode().setProxies(streamPartId, contactPeerDescriptors, direction, getUserId, connectionCount)
+        await this.stack.getStreamrNode().setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
     }
 
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {

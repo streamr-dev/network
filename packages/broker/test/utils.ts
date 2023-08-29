@@ -1,18 +1,17 @@
-import StreamrClient, {
-    CONFIG_TEST,
-    Stream,
-    StreamPermission,
-    StreamMetadata,
-    StreamrClientConfig,
-    NetworkPeerDescriptor
-} from 'streamr-client'
-import padEnd from 'lodash/padEnd'
+import { EthereumAddress, merge, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
+import padEnd from 'lodash/padEnd'
+import { StreamrClient,
+    CONFIG_TEST,
+    NetworkPeerDescriptor,
+    Stream,
+    StreamMetadata,
+    StreamPermission,
+    StreamrClientConfig
+} from 'streamr-client'
+import { v4 as uuid } from 'uuid'
 import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
-import { StreamPartID } from '@streamr/protocol'
-import { EthereumAddress, toEthereumAddress, merge } from '@streamr/utils'
-import { v4 as uuid } from 'uuid'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 
@@ -28,9 +27,9 @@ interface TestConfig {
 }
 
 export const DEFAULT_ENTRYPOINTS = [{
-    id: "entrypoint",
+    id: 'entrypoint',
     websocket: {
-        ip: "127.0.0.1",
+        ip: '127.0.0.1',
         port: 40500
     }
 }]
@@ -150,11 +149,6 @@ export const createTestStream = async (
         ...props
     })
     return stream
-}
-
-export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
-    const node = await broker.getNode()
-    return Array.from(node.getStreamParts())
 }
 
 export async function startStorageNode(

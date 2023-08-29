@@ -1,10 +1,10 @@
-import { ConnectionManager } from "../../src/connection/ConnectionManager"
-import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/packages/dht/protos/DhtRpc"
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
-import { createPeerDescriptor } from "../../src/dht/DhtNode"
-import { RpcMessage } from "../../src/proto/packages/proto-rpc/protos/ProtoRpc"
-import { Logger } from "@streamr/utils"
+import { createPeerDescriptor } from '../../src/dht/DhtNode'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
@@ -12,24 +12,24 @@ describe('ConnectionManager', () => {
     const serviceId = 'demo'
 
     const mockPeerDescriptor1: PeerDescriptor = {
-        kademliaId: PeerID.fromString("tester1").value,
-        nodeName: "tester1",
+        kademliaId: PeerID.fromString('tester1').value,
+        nodeName: 'tester1',
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor2: PeerDescriptor = {
-        kademliaId: PeerID.fromString("tester2").value,
-        nodeName: "tester2",
+        kademliaId: PeerID.fromString('tester2').value,
+        nodeName: 'tester2',
         type: NodeType.NODEJS
     }
 
     const mockPeerDescriptor3: PeerDescriptor = {
-        kademliaId: PeerID.fromString("tester3").value,
-        nodeName: "tester3",
+        kademliaId: PeerID.fromString('tester3').value,
+        nodeName: 'tester3',
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor4: PeerDescriptor = {
-        kademliaId: PeerID.fromString("tester4").value,
-        nodeName: "tester4",
+        kademliaId: PeerID.fromString('tester4').value,
+        nodeName: 'tester4',
         type: NodeType.NODEJS
     }
     const simulator = new Simulator()
@@ -126,7 +126,7 @@ describe('ConnectionManager', () => {
         })
 
         const msg: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
             body: {
@@ -188,7 +188,7 @@ describe('ConnectionManager', () => {
         })
 
         const msg: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
             body: {
@@ -237,7 +237,7 @@ describe('ConnectionManager', () => {
         const connectionManager4 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor4, simulator: simulator2 })
 
         const msg: Message = {
-            serviceId: serviceId,
+            serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
             body: {
