@@ -77,7 +77,7 @@ describe('MaintainTopologyService', () => {
         operatorFleetState = new OperatorFleetState(client, toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress))
         await setUpAndStartMaintainTopologyService({
             streamrClient: client,
-            replicationFactor: 3,
+            redundancyFactor: 3,
             serviceHelperConfig,
             operatorFleetState
         })

@@ -23,7 +23,7 @@ describe('MaintainOperatorValueService', () => {
         const { operatorWallet, operatorContract, operatorServiceConfig, nodeWallets } = await setupOperatorContract({
             nodeCount: 1,
             operatorConfig: {
-                sharePercent: 10
+                operatorsCutPercent: 10
             }
         })
 
