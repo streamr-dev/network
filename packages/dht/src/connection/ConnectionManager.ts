@@ -246,7 +246,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             clearInterval(this.disconnectorIntervalRef)
         }
         if (!this.config.simulator) {
-            await this.webSocketConnector!.stop()
+            await this.webSocketConnector!.destroy()
             this.webSocketConnector = undefined
             await this.webrtcConnector!.stop()
             this.webrtcConnector = undefined

@@ -41,7 +41,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private readonly protocolVersion: string
     private ownPeerDescriptor?: PeerDescriptor
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
-    private stopped = false
+    private destroyed = false
 
     constructor(
         protocolVersion: string,
@@ -82,6 +82,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     public async start(): Promise<void> {
+        if (this.destroyed) {
+            return
+        }
         if (this.webSocketServer) {
             this.webSocketServer.on('connected', (connection: IConnection) => {
 
@@ -151,9 +154,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        if (this.stopped) {
-            return new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion, ConnectionType.WEBSOCKET_CLIENT)
-        }
         const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(peerKey)
         if (existingConnection) {
@@ -233,8 +233,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         this.ownPeerDescriptor = ownPeerDescriptor
     }
 
-    public async stop(): Promise<void> {
-        this.stopped = true
+    public async destroy(): Promise<void> {
+        this.destroyed = true
         this.rpcCommunicator.stop()
 
         const requests = Array.from(this.ongoingConnectRequests.values())
@@ -242,14 +242,17 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
         const attempts = Array.from(this.connectingConnections.values())
         await Promise.allSettled(attempts.map((conn) => conn.close('OTHER')))
-
+        this.connectivityChecker?.destroy()
         await this.webSocketServer?.stop()
     }
 
     // IWebSocketConnectorService implementation
     public async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse> {
-        if (!this.stopped && this.canConnectFunction(request.requester!, request.ip, request.port)) {
+        if (!this.destroyed && this.canConnectFunction(request.requester!, request.ip, request.port)) {
             setImmediate(() => {
+                if (this.destroyed) {
+                    return
+                }
                 const connection = this.connect(request.requester!)
                 this.incomingConnectionCallback(connection)
             })
