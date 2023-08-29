@@ -29,7 +29,6 @@ export interface SetupOperatorContractOpts {
         }
     }
     operatorConfig?: {
-        minStakePercent?: number
         operatorsCutPercent?: number
         metadata?: string
     }
@@ -51,7 +50,6 @@ export async function setupOperatorContract(
     const operatorContract = await deployOperatorContract({
         chainConfig: opts?.chainConfig ?? CHAIN_CONFIG[TEST_CHAIN],
         deployer: operatorWallet,
-        minStakePercent: opts?.operatorConfig?.minStakePercent,
         operatorsCutPercent: opts?.operatorConfig?.operatorsCutPercent,
         metadata: opts?.operatorConfig?.metadata
     })
@@ -75,12 +73,17 @@ export async function setupOperatorContract(
 
 interface DeployOperatorContractOpts {
     deployer: Wallet
-    minStakePercent?: number
     operatorsCutPercent?: number
     metadata?: string
     poolTokenName?: string
-    // eslint-disable-next-line max-len
-    chainConfig?: { contracts: { OperatorFactory: string, OperatorDefaultDelegationPolicy: string, OperatorDefaultPoolYieldPolicy: string, OperatorDefaultUndelegationPolicy: string } }
+    chainConfig?: {
+        contracts: {
+            OperatorFactory: string
+            OperatorDefaultDelegationPolicy: string
+            OperatorDefaultPoolYieldPolicy: string
+            OperatorDefaultUndelegationPolicy: string
+        }
+    }
 }
 
 /**
@@ -118,12 +121,16 @@ export interface DeploySponsorshipContractOpts {
     streamId: string
     deployer: Wallet
     metadata?: string
-    minimumStakeWei?: BigNumber
-    minHorizonSeconds?: number
     minOperatorCount?: number
     earningsPerSecond?: BigNumber
-    // eslint-disable-next-line max-len
-    chainConfig?: { contracts: { SponsorshipFactory: string, SponsorshipStakeWeightedAllocationPolicy: string, SponsorshipDefaultLeavePolicy: string, SponsorshipVoteKickPolicy: string } }
+    chainConfig?: {
+        contracts: {
+            SponsorshipFactory: string
+            SponsorshipStakeWeightedAllocationPolicy: string
+            SponsorshipDefaultLeavePolicy: string
+            SponsorshipVoteKickPolicy: string
+        }
+    }
 }
 
 export async function deploySponsorshipContract(opts: DeploySponsorshipContractOpts): Promise<Sponsorship> {
