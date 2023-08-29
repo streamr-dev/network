@@ -152,7 +152,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         if (this.stopped) {
-            logger.info('connect called on closed websocketconnector')
+            return new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion, ConnectionType.WEBSOCKET_CLIENT)
         }
         const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(peerKey)
