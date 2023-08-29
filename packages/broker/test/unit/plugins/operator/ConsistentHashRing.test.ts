@@ -109,7 +109,7 @@ describe(ConsistentHashRing, () => {
         }
     })
 
-    it('replication factor > 1', () => {
+    it('redundancy factor > 1', () => {
         const h = new ConsistentHashRing(3)
         h.add('node-1')
         h.add('node-2')
