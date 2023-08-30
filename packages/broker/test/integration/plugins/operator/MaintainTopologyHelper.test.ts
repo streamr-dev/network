@@ -2,13 +2,24 @@ import { Contract } from '@ethersproject/contracts'
 import { Wallet } from '@ethersproject/wallet'
 import type { Operator } from '@streamr/network-contracts'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { wait, waitForCondition } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
 import { delegate, deploySponsorshipContract, setupOperatorContract, stake } from './contractUtils'
+import { StreamrClient } from 'streamr-client'
 
 jest.setTimeout(60 * 1000)
+
+const waitForTheGraphToHaveIndexed = async (streamId: string, client: StreamrClient): Promise<void> => {
+    await waitForCondition(async () => {
+        // eslint-disable-next-line no-underscore-dangle
+        for await (const _msg of client.searchStreams(streamId, undefined)) {
+            return true
+        }
+        return false
+    }, 15 * 1000, 600)
+}
 
 describe('MaintainTopologyHelper', () => {
 
@@ -19,6 +30,8 @@ describe('MaintainTopologyHelper', () => {
         const client = createClient(await fetchPrivateKeyWithGas())
         streamId1 = (await createTestStream(client, module)).id
         streamId2 = (await createTestStream(client, module)).id
+        await waitForTheGraphToHaveIndexed(streamId1, client)
+        await waitForTheGraphToHaveIndexed(streamId2, client)
         await client.destroy()
     })
 
@@ -67,7 +80,6 @@ describe('MaintainTopologyHelper', () => {
         })
 
         it('client returns all streams from theGraph on initial startup as event', async () => {
-            await wait(5000)
             topologyHelper = new MaintainTopologyHelper(operatorServiceConfig)
             let streams: string[] = []
             topologyHelper.on('addStakedStreams', (streamid: string[]) => {
@@ -75,7 +87,6 @@ describe('MaintainTopologyHelper', () => {
             })
 
             await topologyHelper.start()
-            await wait(3000)
             expect(streams.length).toEqual(2)
             expect(streams).toContain(streamId1)
             expect(streams).toContain(streamId2)
@@ -91,7 +102,6 @@ describe('MaintainTopologyHelper', () => {
                 eventcount += 1
             })
             await topologyHelper.start()
-            await wait(2000)
 
             await (await operatorContract.unstake(sponsorship1.address)).wait()
             await (await operatorContract.unstake(sponsorship2.address)).wait()
@@ -131,7 +141,6 @@ describe('MaintainTopologyHelper', () => {
             topologyHelper.on('addStakedStreams', () => {
                 receivedAddStreams += 1
             })
-            await wait(2000)
             await topologyHelper.start()
 
             sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
@@ -143,8 +152,6 @@ describe('MaintainTopologyHelper', () => {
             await waitForCondition(() => receivedAddStreams === 1, 10000, 1000)
             await stake(operatorContract, sponsorship2.address, 100)
             await waitForCondition(() => receivedAddStreams === 1, 10000, 1000)
-
-            await wait(10000) // wait for events to be processed
 
             topologyHelper.stop()
 
@@ -171,8 +178,6 @@ describe('MaintainTopologyHelper', () => {
                 receivedRemoveStreams += 1
             })
             await topologyHelper.start()
-
-            await wait(3000)
 
             await (await operatorContract.unstake(sponsorship1.address)).wait()
             await waitForCondition(() => receivedRemoveStreams === 0, 10000, 1000)
