@@ -118,10 +118,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     }
 
     private sendRouteMessageRequest = async (contact: RemoteRouter): Promise<boolean> => {
-        logger.trace('sendRouteMessageRequest() sessionId: ' + this.sessionId)
-        logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${contact.getPeerId()}`)
-        this.contactList.setContacted(contact.getPeerId())
-        this.ongoingRequests.add(contact.getPeerId().toKey())
         if (this.mode === RoutingMode.FORWARD) {
             return contact.forwardMessage({
                 ...this.messageToRoute,
@@ -182,19 +178,25 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             }
             const nextPeer = uncontacted.shift()
             logger.trace('sendRouteMessageRequest')
-            // eslint-disable-next-line promise/catch-or-return
-            this.sendRouteMessageRequest(nextPeer!)
-                .then((succeeded) => {
+            logger.trace('sendRouteMessageRequest() sessionId: ' + this.sessionId)
+            logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${nextPeer!.getPeerId()}`)
+            this.contactList.setContacted(nextPeer!.getPeerId())
+            this.ongoingRequests.add(nextPeer!.getPeerId().toKey())
+            setImmediate(async () => {
+                try {
+                    const succeeded = await this.sendRouteMessageRequest(nextPeer!)
                     if (succeeded) {
                         this.onRequestSucceeded(nextPeer!.getPeerId())
                     } else {
                         this.onRequestFailed(nextPeer!.getPeerId())
                     }
-                }).catch((e) => { 
+                } catch (e) {
                     logger.error(e)
-                }).finally(() => {
+                } finally {
                     logger.trace('sendRouteMessageRequest returned')
-                })
+                }
+            })
+
         }
     }
 
