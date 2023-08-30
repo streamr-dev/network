@@ -136,7 +136,7 @@ const run = async () => {
     Simulator.useFakeTimers(false)
 } 
 
-// eslint-disable-next-line promise/catch-or-return
+// eslint-disable-next-line promise/catch-or-return, promise/always-return
 run().then(() => {
     console.log('done')
 }).catch((err) => {
