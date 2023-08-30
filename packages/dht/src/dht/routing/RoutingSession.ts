@@ -177,6 +177,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         while ((this.ongoingRequests.size) < this.parallelism && (uncontacted.length > 0) && !this.stopped) {
             const nextPeer = uncontacted.shift()
+            // eslint-disable-next-line max-len
             logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${nextPeer!.getPeerId()} (sessionId=${this.sessionId})`)
             this.contactList.setContacted(nextPeer!.getPeerId())
             this.ongoingRequests.add(nextPeer!.getPeerId().toKey())
