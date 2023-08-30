@@ -13,7 +13,7 @@ const WAIT_FOR_EVENTS_IN_MS = 10 * 1000
 const NO_EVENTS_FIRED_WAIT_IN_MS = 4000
 const WAIT_FOR_EVENT_HANDLERS_TO_REGISTER_IN_MS = 4000
 
-async function ensureMinElapsedTime<T>(task: () => Promise<T>, minElapsedTimeInMs: number): Promise<T> {
+async function runWhileWaiting<T>(task: () => Promise<T>, minElapsedTimeInMs: number): Promise<T> {
     const startTimestamp = Date.now()
     const result = await task()
     const timeLeft = minElapsedTimeInMs - (Date.now() - startTimestamp)
@@ -67,7 +67,7 @@ describe(MaintainTopologyHelper, () => {
             const events = eventsToArray(topologyHelper as any, ['addStakedStreams'])
             await topologyHelper.start()
 
-            await ensureMinElapsedTime(async () => {
+            await runWhileWaiting(async () => {
                 sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
                 sponsorship2 = await deploySponsorshipContract({ streamId: streamId2, deployer: operatorWallet })
                 await delegate(operatorWallet, operatorContract.address, 200)
@@ -134,7 +134,7 @@ describe(MaintainTopologyHelper, () => {
             const events = eventsToArray(topologyHelper as any, ['addStakedStreams'])
             await topologyHelper.start()
 
-            await ensureMinElapsedTime(async () => {
+            await runWhileWaiting(async () => {
                 sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
                 sponsorship2 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
                 await delegate(operatorWallet, operatorContract.address, 200)
