@@ -23,6 +23,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from '../Handshaker'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
+import { sample } from 'lodash'
 
 const logger = new Logger(module)
 
@@ -34,8 +35,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private incomingConnectionCallback: (connection: ManagedConnection) => boolean
-    private webSocketPortRange?: PortRange
-    private webSocketHost?: string
+    private portRange?: PortRange
+    private host?: string
     private entrypoints?: PeerDescriptor[]
     private selectedPort?: number
     private readonly protocolVersion: string
@@ -48,15 +49,15 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         rpcTransport: ITransport,
         fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
         incomingConnectionCallback: (connection: ManagedConnection) => boolean,
-        webSocketPortRange?: PortRange,
-        webSocketHost?: string,
+        portRange?: PortRange,
+        host?: string,
         entrypoints?: PeerDescriptor[]
     ) {
         this.protocolVersion = protocolVersion
-        this.webSocketServer = webSocketPortRange ? new WebSocketServer() : undefined
+        this.webSocketServer = portRange ? new WebSocketServer() : undefined
         this.incomingConnectionCallback = incomingConnectionCallback
-        this.webSocketPortRange = webSocketPortRange
-        this.webSocketHost = webSocketHost
+        this.portRange = portRange
+        this.host = host
         this.entrypoints = entrypoints
 
         this.canConnectFunction = fnCanConnect.bind(this)
@@ -75,7 +76,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
     private attachHandshaker(connection: IConnection) {
         const handshaker = new Handshaker(this.ownPeerDescriptor!, this.protocolVersion, connection)
-
         handshaker.once('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
             this.onServerSocketHandshakeRequest(peerDescriptor, connection)
         })
@@ -101,7 +101,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     this.attachHandshaker(connection)
                 }
             })
-            const port = await this.webSocketServer.start(this.webSocketPortRange!, this.webSocketHost)
+            const port = await this.webSocketServer.start(this.portRange!, this.host)
             this.selectedPort = port
             this.connectivityChecker = new ConnectivityChecker(this.selectedPort!)
         }
@@ -123,21 +123,17 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             } else {
                 if (!this.entrypoints || this.entrypoints.length < 1) {
                     // return connectivity info given in config
-
                     const preconfiguredConnectivityResponse: ConnectivityResponse = {
                         openInternet: true,
-                        ip: this.webSocketHost!,
+                        ip: this.host!,
                         natType: NatType.OPEN_INTERNET,
-                        websocket: { ip: this.webSocketHost!, port: this.selectedPort! }
+                        websocket: { ip: this.host!, port: this.selectedPort! }
                     }
                     return preconfiguredConnectivityResponse
                 } else {
-                    // Do real connectivity checking
-                    
+                    // Do real connectivity checking     
                     let response = noServerConnectivityResponse
-
-                    response = await this.connectivityChecker!.sendConnectivityRequest(this.entrypoints[0])
-
+                    response = await this.connectivityChecker!.sendConnectivityRequest(sample(this.entrypoints)!)
                     return response
                 }
             }

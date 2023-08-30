@@ -40,8 +40,8 @@ import {
 
 export class ConnectionManagerConfig {
     transportLayer?: ITransport
-    webSocketHost?: string
-    webSocketPortRange?: PortRange
+    websocketHost?: string
+    websocketPortRange?: PortRange
     entryPoints?: PeerDescriptor[]
     nodeName?: string
     maxConnections: number = 80
@@ -164,8 +164,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 this.config.transportLayer!,
                 this.canConnect.bind(this),
                 this.incomingConnectionCallback,
-                this.config.webSocketPortRange,
-                this.config.webSocketHost,
+                this.config.websocketPortRange,
+                this.config.websocketHost,
                 this.config.entryPoints
             )
             logger.trace(`Creating WebRTCConnector`)

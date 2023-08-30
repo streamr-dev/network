@@ -21,7 +21,7 @@ describe('Layer0-Layer1', () => {
     let stream2Node1: DhtNode
     let stream2Node2: DhtNode
 
-    const webSocketPortRange = { min: 10017, max: 10018 }
+    const websocketPortRange = { min: 10017, max: 10018 }
 
     beforeEach(async () => {
 
@@ -29,8 +29,8 @@ describe('Layer0-Layer1', () => {
         await epDhtNode.start()
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ peerIdString: '1', webSocketPortRange, entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ peerIdString: '2', webSocketPortRange, entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ peerIdString: '1', websocketPortRange, entryPoints: [epPeerDescriptor] })
+        node2 = new DhtNode({ peerIdString: '2', websocketPortRange, entryPoints: [epPeerDescriptor] })
 
         await node1.start()
         await node2.start()

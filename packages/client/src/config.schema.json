@@ -89,7 +89,7 @@
                                 }
                             }]
                         },
-                        "webSocketPortRange": {
+                        "websocketPortRange": {
                             "$ref": "#/definitions/portRange",
                             "default": {
                                 "min": 32200,

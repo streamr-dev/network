@@ -69,8 +69,8 @@ export interface DhtNodeOptions {
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
-    webSocketHost?: string
-    webSocketPortRange?: PortRange
+    websocketHost?: string
+    websocketPortRange?: PortRange
     peerIdString?: string
 
     nodeName?: string
@@ -101,8 +101,8 @@ export class DhtNodeConfig {
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
-    webSocketHost?: string
-    webSocketPortRange?: PortRange
+    websocketHost?: string
+    websocketPortRange?: PortRange
     nodeName?: string
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
@@ -183,7 +183,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.started = true
 
         if (!isNodeJS()) {
-            this.config.webSocketPortRange = undefined
+            this.config.websocketPortRange = undefined
             if (this.config.peerDescriptor) {
                 this.config.peerDescriptor.websocket = undefined
             }
@@ -209,18 +209,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 maxConnections: this.config.maxConnections
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
-            if (this.config.peerDescriptor && this.config.peerDescriptor.websocket && isNodeJS()) {
-                connectionManagerConfig.webSocketHost = this.config.peerDescriptor.websocket.ip
-                connectionManagerConfig.webSocketPortRange = { 
+            if (this.config.peerDescriptor?.websocket) {
+                connectionManagerConfig.websocketHost = this.config.peerDescriptor.websocket.ip
+                connectionManagerConfig.websocketPortRange = { 
                     min: this.config.peerDescriptor.websocket.port,
                     max: this.config.peerDescriptor.websocket.port
                 }
-            } else {
-                // If webSocketPort is given, create ws server using it, webSocketHost can be undefined
-                if (this.config.webSocketPortRange) {
-                    connectionManagerConfig.webSocketHost = this.config.webSocketHost
-                    connectionManagerConfig.webSocketPortRange = this.config.webSocketPortRange
-                }
+            // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
+            } else if (this.config.websocketPortRange) { 
+                connectionManagerConfig.websocketHost = this.config.websocketHost
+                connectionManagerConfig.websocketPortRange = this.config.websocketPortRange
             }
 
             const connectionManager = new ConnectionManager(connectionManagerConfig)

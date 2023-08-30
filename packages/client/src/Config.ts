@@ -81,7 +81,7 @@ export interface ControlLayerConfig {
      * The server is used by the network layer to accept incoming connections
      * over the public internet to improve the network node's connectivity.
      */
-    webSocketPortRange?: PortRange
+    websocketPortRange?: PortRange
 }
 
 export interface NetworkNodeConfig {

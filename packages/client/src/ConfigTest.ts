@@ -23,7 +23,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
                     port: 40401
                 }
             }],
-            webSocketPortRange: {
+            websocketPortRange: {
                 min: 32400,
                 max: 32800
             },

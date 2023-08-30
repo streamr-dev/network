@@ -47,8 +47,8 @@ describe('ConnectionManager', () => {
     it('Can start alone', async () => {
         const connectionManager = new ConnectionManager({
             transportLayer: mockTransport,
-            webSocketHost: '127.0.0.1',
-            webSocketPortRange: { min: 9991, max: 9991 }
+            websocketHost: '127.0.0.1',
+            websocketPortRange: { min: 9991, max: 9991 }
         })
 
         await connectionManager.start((report) => {
@@ -64,7 +64,7 @@ describe('ConnectionManager', () => {
 
         const connectionManager = new ConnectionManager({
             transportLayer: mockTransport,
-            webSocketPortRange: { min: 9992, max: 9992 },
+            websocketPortRange: { min: 9992, max: 9992 },
             entryPoints: [
                 { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 12345 } }
             ]
@@ -80,8 +80,8 @@ describe('ConnectionManager', () => {
     it('Can probe connectivity in open internet', async () => {
         const connectionManager1 = new ConnectionManager({
             transportLayer: mockTransport,
-            webSocketHost: '127.0.0.1',
-            webSocketPortRange: { min: 9993, max: 9993 }
+            websocketHost: '127.0.0.1',
+            websocketPortRange: { min: 9993, max: 9993 }
         })
 
         await connectionManager1.start((report) => {
@@ -92,7 +92,7 @@ describe('ConnectionManager', () => {
 
         const connectionManager2 = new ConnectionManager({
             transportLayer: mockConnectorTransport2,
-            webSocketPortRange: { min: 9994, max: 9994 },
+            websocketPortRange: { min: 9994, max: 9994 },
             entryPoints: [
                 { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 9993 } }
             ]
@@ -111,8 +111,8 @@ describe('ConnectionManager', () => {
     it('Can send data to other connectionmanager over websocket', async () => {
         const connectionManager1 = new ConnectionManager({
             transportLayer: mockConnectorTransport1,
-            webSocketHost: '127.0.0.1',
-            webSocketPortRange: { min: 9995, max: 9995 }
+            websocketHost: '127.0.0.1',
+            websocketPortRange: { min: 9995, max: 9995 }
         })
 
         let peerDescriptor: PeerDescriptor | undefined
@@ -126,7 +126,7 @@ describe('ConnectionManager', () => {
 
         const connectionManager2 = new ConnectionManager({
             transportLayer: mockConnectorTransport2,
-            webSocketPortRange: { min: 9996, max: 9996 },
+            websocketPortRange: { min: 9996, max: 9996 },
             entryPoints: [
                 peerDescriptor!
             ]
@@ -181,8 +181,8 @@ describe('ConnectionManager', () => {
     it('Can disconnect websockets', async () => {
         const connectionManager1 = new ConnectionManager({ 
             transportLayer: mockConnectorTransport1,
-            webSocketHost: '127.0.0.1',
-            webSocketPortRange: { min: 9997, max: 9997 }
+            websocketHost: '127.0.0.1',
+            websocketPortRange: { min: 9997, max: 9997 }
         })
 
         let peerDescriptor: PeerDescriptor | undefined
@@ -195,7 +195,7 @@ describe('ConnectionManager', () => {
 
         const connectionManager2 = new ConnectionManager({
             transportLayer: mockConnectorTransport2,
-            webSocketPortRange: { min: 9999, max: 9999 },
+            websocketPortRange: { min: 9999, max: 9999 },
             entryPoints: [
                 peerDescriptor!
             ]
