@@ -71,9 +71,9 @@ describe('inspect', () => {
     afterEach(async () => {
         clearInterval(publishInterval)
         await Promise.all([
-            publisherNode.stop(),
-            inspectorNode.stop(),
-            ...inspectedNodes.map((node) => node.stop())
+            publisherNode.destroy(),
+            inspectorNode.destroy(),
+            ...inspectedNodes.map((node) => node.destroy())
         ])
         Simulator.useFakeTimers(false)
     })

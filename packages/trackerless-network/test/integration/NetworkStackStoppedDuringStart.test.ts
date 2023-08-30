@@ -34,11 +34,11 @@ describe('NetworkStack can be stopped during start', () => {
     })
     
     afterEach(async () => {
-        await entryPoint.stop()
+        await entryPoint.destroy()
     })
 
     it('Can be stopped during start', async () => {
-        setImmediate(() => peer.stop())
+        setImmediate(() => peer.destroy())
         await peer.start()
     })
 

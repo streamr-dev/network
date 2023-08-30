@@ -58,8 +58,8 @@ describe('Full node network with WebSocket connections only', () => {
 
     afterEach(async () => {
         await Promise.all([
-            entryPoint.stop(),
-            ...nodes.map((node) => node.stop())
+            entryPoint.destroy(),
+            ...nodes.map((node) => node.destroy())
         ])
     })
 

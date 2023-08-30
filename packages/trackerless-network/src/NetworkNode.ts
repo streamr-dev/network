@@ -135,7 +135,7 @@ export class NetworkNode {
 
     async stop(): Promise<void> {
         this.stopped = true
-        await this.stack.stop()
+        await this.stack.destroy()
     }
 
     getPeerDescriptor(): PeerDescriptor {

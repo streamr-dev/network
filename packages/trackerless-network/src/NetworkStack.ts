@@ -17,18 +17,18 @@ class ReadynessListener {
     constructor(networkStack: NetworkStack, dhtNode: DhtNode) {
         this.networkStack = networkStack
         this.dhtNode = dhtNode
-        this.networkStack.on('stopped', this.onStopped)
+        this.networkStack.on('destroyed', this.onStopped)
         this.dhtNode.on('connected', this.onConnected)
     }
 
     private onConnected = () => {
-        this.networkStack.off('stopped', this.onStopped)
+        this.networkStack.off('destroyed', this.onStopped)
         this.dhtNode.off('connected', this.onConnected)
         this.emitter.emit('done')
     }
 
     private onStopped = () => {
-        this.networkStack.off('stopped', this.onStopped)
+        this.networkStack.off('destroyed', this.onStopped)
         this.dhtNode.off('connected', this.onConnected)
         this.emitter.emit('done')
     }
@@ -49,8 +49,10 @@ export interface NetworkOptions {
 }
 
 export interface NetworkStackEvents {
-    stopped: () => void
+    destroyed: () => void
 }
+
+let cleanUp: () => Promise<void> = async () => { }
 
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
@@ -76,6 +78,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             metricsContext: this.metricsContext
         })
         this.firstConnectionTimeout = options.networkNode.firstConnectionTimeout ?? 5000
+        cleanUp = () => this.destroy()
     }
 
     async start(doJoin = true): Promise<void> {
@@ -133,12 +136,20 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         return this.metricsContext
     }
 
-    async stop(): Promise<void> {
-        await this.streamrNode!.destroy()
+    async destroy(): Promise<void> {
+        await this.streamrNode?.destroy()
+        await this.layer0DhtNode?.stop()
+        await this.connectionManager?.stop()
         this.streamrNode = undefined
         this.layer0DhtNode = undefined
         this.connectionManager = undefined
-        this.emit('stopped')
+        this.emit('destroyed')
     }
-
 }
+
+[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {
+    process.on(term, async () => {
+        await cleanUp()
+        process.exit()
+    })
+})

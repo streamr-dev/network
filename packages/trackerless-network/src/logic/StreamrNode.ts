@@ -80,8 +80,6 @@ export interface Events {
 
 const logger = new Logger(module)
 
-let cleanUp: () => Promise<void> = async () => { }
-
 interface Metrics extends MetricsDefinition {
     publishMessagesPerSecond: Metric
     publishBytesPerSecond: Metric
@@ -140,7 +138,6 @@ export class StreamrNode extends EventEmitter<Events> {
             storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data),
             deleteEntryPointData: (key) => this.layer0!.deleteDataFromDht(key)
         })
-        cleanUp = () => this.destroy()
     }
 
     async destroy(): Promise<void> {
@@ -156,8 +153,6 @@ export class StreamrNode extends EventEmitter<Events> {
         await this.streamEntryPointDiscovery!.destroy()
         this.streams.clear()
         this.removeAllListeners()
-        await this.layer0!.stop()
-        await this.P2PTransport!.stop()
         this.layer0 = undefined
         this.P2PTransport = undefined
         this.streamEntryPointDiscovery = undefined
@@ -407,10 +402,3 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
 }
-
-[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {
-    process.on(term, async () => {
-        await cleanUp()
-        process.exit()
-    })
-})

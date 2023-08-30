@@ -46,8 +46,8 @@ describe('NetworkStack', () => {
 
     afterEach(async () => {
         await Promise.all([
-            stack1.stop(),
-            stack2.stop()
+            stack1.destroy(),
+            stack2.destroy()
         ])
     })
 
