@@ -127,7 +127,6 @@ export class Router implements IRouter {
                 ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped', 'noCandidatesFound'],
                 10000
             )
-            session.start()
             setImmediate(async () => {
                 try {
                     await eventReceived
@@ -137,6 +136,7 @@ export class Router implements IRouter {
                 }
                 this.removeRoutingSession(session.sessionId) 
             })
+            session.start()
         } catch (e) {
             if (peerIdFromPeerDescriptor(routedMessage.sourcePeer!).equals(this.ownPeerId!)) {
                 logger.warn(
