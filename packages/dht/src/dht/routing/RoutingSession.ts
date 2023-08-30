@@ -177,9 +177,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 return
             }
             const nextPeer = uncontacted.shift()
-            logger.trace('sendRouteMessageRequest')
-            logger.trace('sendRouteMessageRequest() sessionId: ' + this.sessionId)
-            logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${nextPeer!.getPeerId()}`)
+            logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${nextPeer!.getPeerId()} (sessionId=${this.sessionId})`)
             this.contactList.setContacted(nextPeer!.getPeerId())
             this.ongoingRequests.add(nextPeer!.getPeerId().toKey())
             setImmediate(async () => {
@@ -196,7 +194,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                     logger.trace('sendRouteMessageRequest returned')
                 }
             })
-
         }
     }
 
