@@ -118,6 +118,9 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     }
 
     private sendRouteMessageRequest = async (contact: RemoteRouter): Promise<boolean> => {
+        if (this.stopped) {
+            return false
+        }
         if (this.mode === RoutingMode.FORWARD) {
             return contact.forwardMessage({
                 ...this.messageToRoute,
