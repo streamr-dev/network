@@ -67,7 +67,7 @@ export type RunAndRaceEventsReturnType<T extends EventEmitter.ValidEventTypes> =
 export function raceEvents3<T extends EventEmitter.ValidEventTypes>(
     emitter: EventEmitter<T>,
     eventNames: Array<keyof T>,
-    timeout = 5000
+    timeout: number | null = 5000
 ): Promise<RunAndRaceEventsReturnType<T>> {
     const promises: Array<{ task: Promise<RunAndRaceEventsReturnType<T>>, cancel: () => void }> = []
     eventNames.forEach((eventName) => {
@@ -85,13 +85,20 @@ export function raceEvents3<T extends EventEmitter.ValidEventTypes>(
         })
     }
 
-    return withTimeout(
-        Promise.race(promises.map((promise) => promise.task)),
-        timeout,
-        'raceEvents3'
-    ).finally(() => {
+    if (timeout !== null) {
+        return withTimeout(
+            Promise.race(promises.map((promise) => promise.task)),
+            timeout,
+            'raceEvents3'
+        ).finally(() => {
+            cancelAll()
+        })
+    } else {
+        const result = Promise.race(promises.map((promise) => promise.task))
         cancelAll()
-    })
+        return result
+    }
+
 }
 
 export function runAndRaceEvents3<T extends EventEmitter.ValidEventTypes>(
