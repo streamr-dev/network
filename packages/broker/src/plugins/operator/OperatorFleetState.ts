@@ -109,7 +109,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         return [...this.latestHeartbeats.keys()]
     }
 
-    getPeerDescriptorOf(nodeId: NodeID): NetworkPeerDescriptor | undefined {
+    getPeerDescriptor(nodeId: NodeID): NetworkPeerDescriptor | undefined {
         return this.latestHeartbeats.get(nodeId)?.peerDescriptor
     }
 

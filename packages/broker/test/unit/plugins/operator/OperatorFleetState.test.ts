@@ -153,13 +153,13 @@ describe(OperatorFleetState, () => {
         await state.start()
         await setTimeAndPublishMessage(10, createHeartbeatMsg('a'))
 
-        expect(state.getPeerDescriptorOf('a')).toEqual({ id: 'a' })
-        expect(state.getPeerDescriptorOf('unknown')).toBeUndefined()
+        expect(state.getPeerDescriptor('a')).toEqual({ id: 'a' })
+        expect(state.getPeerDescriptor('unknown')).toBeUndefined()
 
         currentTime = 30
         await waitForEvent(state as any, 'removed')
 
-        expect(state.getPeerDescriptorOf('a')).toBeUndefined()
+        expect(state.getPeerDescriptor('a')).toBeUndefined()
     })
 
     describe('waitUntilReady', () => {
