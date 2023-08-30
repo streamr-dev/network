@@ -172,10 +172,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.emitFailure()
             return
         }
-        while (this.ongoingRequests.size < this.parallelism && uncontacted.length > 0) {
-            if (this.stopped) {
-                return
-            }
+        while ((this.ongoingRequests.size) < this.parallelism && (uncontacted.length > 0) && !this.stopped) {
             const nextPeer = uncontacted.shift()
             logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${nextPeer!.getPeerId()} (sessionId=${this.sessionId})`)
             this.contactList.setContacted(nextPeer!.getPeerId())
