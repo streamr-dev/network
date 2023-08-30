@@ -4,6 +4,7 @@ import { StreamrClient, MessageListener, Subscription } from 'streamr-client'
 import { wait, waitForCondition, waitForEvent } from '@streamr/utils'
 import { toStreamID } from '@streamr/protocol'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
+import { createHeartbeatMessage } from '../../../../src/plugins/operator/heartbeatUtils'
 
 const ADDRESS = randomEthereumAddress()
 const coordinationStreamId = toStreamID('/operator/coordination', ADDRESS)
@@ -12,10 +13,7 @@ const READY_WAIT_MS = 500
 const JITTER = 100
 
 function createHeartbeatMsg(id: string): Record<string, unknown> {
-    return {
-        msgType: 'heartbeat',
-        peerDescriptor: { id }
-    }
+    return createHeartbeatMessage({ id })
 }
 
 describe(OperatorFleetState, () => {
@@ -149,6 +147,19 @@ describe(OperatorFleetState, () => {
         await setTimeAndPublishMessage(5, createHeartbeatMsg('b'))
 
         expect(state.getLeaderNodeId()).toEqual('a')
+    })
+
+    it('getPeerDescriptorOf returns descriptor for online nodes', async () => {
+        await state.start()
+        await setTimeAndPublishMessage(10, createHeartbeatMsg('a'))
+
+        expect(state.getPeerDescriptor('a')).toEqual({ id: 'a' })
+        expect(state.getPeerDescriptor('unknown')).toBeUndefined()
+
+        currentTime = 30
+        await waitForEvent(state as any, 'removed')
+
+        expect(state.getPeerDescriptor('a')).toBeUndefined()
     })
 
     describe('waitUntilReady', () => {
