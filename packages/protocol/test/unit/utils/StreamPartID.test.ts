@@ -21,12 +21,12 @@ describe('StreamPartIDUtils#parse', () => {
         expect(StreamPartIDUtils.parse(`${streamId}#10`)).toEqual(toStreamPartID(streamId, 10))
     })
 
-    it.each(['', 'foo', 'foo/bar', streamId])('throws error on invalid streamPartID string "%s"', (str) => {
+    it.each(['', 'foo', 'foo/bar', streamId])('throws error on invalid streamPartId string "%s"', (str) => {
         expect(() => StreamPartIDUtils.parse(str))
-            .toThrow('invalid streamPartID string: ' + str)
+            .toThrow('invalid streamPartId string: ' + str)
     })
 
-    it.each(INVALID_PARTITIONS)('throws error on invalid streamPartID string legacyStream#%s', (partition) => {
+    it.each(INVALID_PARTITIONS)('throws error on invalid streamPartId string legacyStream#%s', (partition) => {
         expect(() => StreamPartIDUtils.parse(`legacyStream#${partition}`))
             .toThrow(`invalid streamPartition value: ${Number(partition)}`)
     })

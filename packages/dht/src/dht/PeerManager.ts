@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/parameter-properties, class-methods-use-this */
 
-// convert all from fields to use single quotes
 import KBucket from 'k-bucket'
 import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { DhtPeer } from './DhtPeer'
@@ -45,11 +44,12 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
     private openInternetPeers?: SortedContactList<DhtPeer>
     private randomPeers?: RandomContactList<DhtPeer>
     public readonly connections: Map<PeerIDKey, DhtPeer> = new Map()
-    
+    private readonly config: PeerManagerConfig
     private stopped = false
 
-    constructor(private config: PeerManagerConfig) {
+    constructor(config: PeerManagerConfig) {
         super()
+        this.config = config
         this.initKBuckets(config.ownPeerId)
     }
 
@@ -125,7 +125,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
         if (this.stopped) {
             return
         }
-        // this.contactOnAddedCounter++
         if (!this.stopped && !contact.getPeerId().equals(this.config.ownPeerId!)) {
             // Important to lock here, before the ping result is known
             this.config.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
@@ -199,7 +198,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
         }
     }
 
-    public handleDisconnected(peerDescriptor: PeerDescriptor, dicsonnectionType: DisconnectionType, isLayer0 = false): void {
+    public handleDisconnected(peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType, isLayer0 = false): void {
         logger.trace('disconnected: ' + this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ')
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
         
@@ -207,11 +206,11 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
         if (isLayer0) {
             this.bucket!.remove(peerDescriptor.kademliaId)
 
-            if (dicsonnectionType === 'OUTGOING_GRACEFUL_LEAVE' || dicsonnectionType === 'INCOMING_GRACEFUL_LEAVE') {
-                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
+            if (disconnectionType === 'OUTGOING_GRACEFUL_LEAVE' || disconnectionType === 'INCOMING_GRACEFUL_LEAVE') {
+                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + disconnectionType)
                 this.removeContact(peerDescriptor, true)
             } else {
-                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
+                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + disconnectionType)
             }
         }
     }
@@ -257,12 +256,14 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
     }
 
     public getNumberOfPeers(excludeSet?: Set<PeerIDKey>): number {
-
         const closest = new SortedContactList<DhtPeer>(this.config.ownPeerId!)
         this.neighborList!.getAllContacts().map((contact) => closest.addContact(contact))
         this.bucket!.toArray().map((contact) => closest.addContact(contact))
         return closest.getClosestContacts().filter((contact) => !excludeSet?.has(contact.getPeerId().toKey())).length
+    }
 
+    public getKBucketSize(): number {
+        return this.bucket!.count()
     }
 
     public handlePeerActive(peer: DhtPeer): void {

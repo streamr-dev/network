@@ -213,7 +213,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
             this.connectionManager = new ConnectionManager(connectionManagerConfig)
             await this.connectionManager.start(this.generatePeerDescriptorCallBack)
-            //this.connectionManager = connectionManager
             this.transportLayer = this.connectionManager
         }
 
@@ -291,7 +290,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             maxNeighborListSize: this.config.maxNeighborListSize,
             ownPeerId: selfId,
             connectionManager: this.connectionManager!,
-            nodeName: this.config.nodeName!,
+            nodeName: this.getNodeName(),
             getClosestContactsLimit: this.config.getClosestContactsLimit,
             createDhtPeer: this.createDhtPeer.bind(this)
         })
@@ -314,6 +313,19 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.peerManager.on('newRandomContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('newRandomContact', peerDescriptor, activeContacts)
         )
+        this.peerManager.on('kBucketEmpty', () => {
+            if (!this.peerDiscovery!.isJoinOngoing()
+                && this.config.entryPoints
+                && this.config.entryPoints.length > 0
+            ) {
+                setImmediate(async () => {
+                    await Promise.all(this.config.entryPoints!.map((entryPoint) => 
+                        this.peerDiscovery!.rejoinDht(entryPoint)
+                    )) 
+                })
+            }
+        
+        })
         this.transportLayer!.on('connected', (peerDescriptor: PeerDescriptor) => {
             this.peerManager!.handleConnected(peerDescriptor)
             this.emit('connected', peerDescriptor)

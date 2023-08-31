@@ -9,4 +9,5 @@ export interface IPeerManager {
     handlePeerUnresponsive(peer: DhtPeer): void
     handleNewPeers(peerDescriptors: PeerDescriptor[], setActive?: boolean): void
     getDistance(kademliaId1: Uint8Array, kademliaId2: Uint8Array): number
+    getKBucketSize(): number
 }

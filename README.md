@@ -129,6 +129,19 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 ![image](https://user-images.githubusercontent.com/43438/135347920-97d6e0e7-b86c-40ff-bfc9-91f160ae975c.png)
 
+### Generate package-lock.json from scratch
+
+Occasionally it can be useful to clear all the packages and generate
+package-lock.json completely from scratch. To do this run the following.
+
+```bash
+npm run clean
+rm -rf node_modules
+rm package-lock.json
+npm cache clean --force
+npm install
+```
+
 ## Environment variables
 
 | Variable                     | Description                                                                            | Packages                                    |
