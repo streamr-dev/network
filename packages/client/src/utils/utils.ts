@@ -11,7 +11,7 @@ import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } fro
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
-import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
+import { NodeType, PeerDescriptor, PeerID, PeerIDKey } from '@streamr/dht'
 import omit from 'lodash/omit'
 
 const logger = new Logger(module)
@@ -118,7 +118,7 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
         ...json,
-        kademliaId: PeerID.fromString(json.id).value,
+        kademliaId: PeerID.fromKey(json.id as PeerIDKey).value,
         type,
         websocket: json.websocket
     }
