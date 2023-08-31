@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/parameter-properties */
+/* eslint-disable @typescript-eslint/parameter-properties, class-methods-use-this */
 
 // convert all from fields to use single quotes
 import KBucket from 'k-bucket'
@@ -248,20 +248,20 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
 
     // IPeerManager implementation start
 
-    public getClosestPeersTo(kademliaId: Uint8Array, limit?: number, exclude?: Set<DhtPeer>): DhtPeer[] {
+    public getClosestPeersTo(kademliaId: Uint8Array, limit?: number, excludeSet?: Set<PeerIDKey>): DhtPeer[] {
         
         const closest = new SortedContactList<DhtPeer>(PeerID.fromValue(kademliaId))
         this.neighborList!.getAllContacts().map((contact) => closest.addContact(contact))
         this.bucket!.toArray().map((contact) => closest.addContact(contact))
-        return closest.getClosestContacts(limit).filter((contact) => !exclude?.has(contact))
+        return closest.getClosestContacts(limit).filter((contact) => !excludeSet?.has(contact.getPeerId().toKey()))
     }
 
-    public getNumberOfPeers(exclude?: Set<DhtPeer>): number {
+    public getNumberOfPeers(excludeSet?: Set<PeerIDKey>): number {
 
         const closest = new SortedContactList<DhtPeer>(this.config.ownPeerId!)
         this.neighborList!.getAllContacts().map((contact) => closest.addContact(contact))
         this.bucket!.toArray().map((contact) => closest.addContact(contact))
-        return closest.getClosestContacts().filter((contact) => !exclude?.has(contact)).length
+        return closest.getClosestContacts().filter((contact) => !excludeSet?.has(contact.getPeerId().toKey())).length
 
     }
 
@@ -303,6 +303,9 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
         })
     }
 
+    public getDistance(kademliaId1: Uint8Array, kademliaId2: Uint8Array): number {
+        return KBucket.distance(kademliaId1, kademliaId2)
+    }
     // IPeerManager implementation end
 
 }

@@ -1,7 +1,7 @@
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
-import { PeerID } from '../../helpers/PeerID'
+import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { DhtPeer } from '../DhtPeer'
 import { IPeerManager } from '../IPeerManager'
@@ -29,7 +29,7 @@ export class DiscoverySession {
     private noProgressCounter = 0
     private ongoingClosestPeersRequests: Set<string> = new Set()
     private readonly config: DiscoverySessionConfig
-    private contactedPeers: Set<DhtPeer> = new Set()
+    private contactedPeers: Set<PeerIDKey> = new Set()
 
     constructor(config: DiscoverySessionConfig) {
         this.config = config
@@ -49,7 +49,7 @@ export class DiscoverySession {
         logger.trace(`Getting closest peers from contact: ${contact.getPeerId().toKey()}`)
         this.outgoingClosestPeersRequestsCounter++
 
-        this.contactedPeers.add(contact)
+        this.contactedPeers.add(contact.getPeerId().toKey())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)
         this.config.peerManager.handlePeerActive(contact)
         return returnedContacts
@@ -61,11 +61,15 @@ export class DiscoverySession {
         }
         this.ongoingClosestPeersRequests.delete(peerId.toKey())
 
-        const oldClosestContact = this.config.peerManager.getClosestPeersTo(this.config.targetId, 1, this.contactedPeers)[0]
+        const oldClosestContact = this.config.peerManager.getClosestPeersTo(this.config.targetId, 1)[0]
+        const oldClosestDistance = this.config.peerManager.getDistance(this.config.targetId, oldClosestContact.getPeerId().value)
 
         this.addNewContacts(contacts)
-        if (this.config.peerManager.getClosestPeersTo(this.config.targetId, 1, this.contactedPeers)[0]
-            .getPeerId().equals(oldClosestContact.getPeerId())) {
+
+        const newClosestContact = this.config.peerManager.getClosestPeersTo(this.config.targetId, 1)[0]        
+        const newClosestDistance = this.config.peerManager.getDistance(this.config.targetId, newClosestContact.getPeerId().value)
+        
+        if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
         } else {
             this.noProgressCounter = 0
@@ -77,7 +81,7 @@ export class DiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(peer.getPeerId().toKey())
-        
+
         this.config.peerManager.handlePeerUnresponsive(peer)
     }
 

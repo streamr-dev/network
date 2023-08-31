@@ -3,6 +3,7 @@ import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils/utils'
 import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
+import { LatencyType } from '@streamr/dht'
 
 describe('Propagation', () => {
     const entryPointDescriptor: PeerDescriptor = {
@@ -16,8 +17,9 @@ describe('Propagation', () => {
     const NUM_OF_NODES = 256
 
     beforeEach(async () => {
+        Simulator.useFakeTimers(true)
+        const simulator = new Simulator(LatencyType.FIXED, 1000)
         totalReceived = 0
-        const simulator = new Simulator()
         dhtNodes = []
         randomGraphNodes = []
         const [entryPoint, node1] = createMockRandomGraphNodeAndDhtNode(entryPointDescriptor, entryPointDescriptor, STREAM_ID, simulator)
@@ -52,6 +54,7 @@ describe('Propagation', () => {
     afterEach(async () => {
         await Promise.all(randomGraphNodes.map((node) => node.stop()))
         await Promise.all(dhtNodes.map((node) => node.stop()))
+        Simulator.useFakeTimers(false)
     })
 
     it('All nodes receive messages', async () => {
