@@ -144,7 +144,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     }
 
     stop(): void {
-        // TODO: remove our listeners from operatorContract
+        this.operatorContract.removeAllListeners()
         this.removeAllListeners()
     }
 }
