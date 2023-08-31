@@ -94,9 +94,9 @@ export function raceEvents3<T extends EventEmitter.ValidEventTypes>(
             cancelAll()
         })
     } else {
-        const result = Promise.race(promises.map((promise) => promise.task))
-        cancelAll()
-        return result
+        return Promise.race(promises.map((promise) => promise.task)).finally(() => {
+            cancelAll()
+        })
     }
 
 }
