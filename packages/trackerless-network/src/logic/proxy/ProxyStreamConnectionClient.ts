@@ -186,20 +186,20 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         await Promise.allSettled(proxiesToDisconnect.map((node) => this.closeConnection(node)))
     }
 
-    private async closeConnection(peerKey: NodeID): Promise<void> {
-        if (this.connections.has(peerKey)) {
+    private async closeConnection(nodeId: NodeID): Promise<void> {
+        if (this.connections.has(nodeId)) {
             logger.info('Close proxy connection', {
-                peerKey
+                nodeId
             })
-            const server = this.targetNeighbors.getNeighborById(peerKey)
+            const server = this.targetNeighbors.getNeighborById(nodeId)
             server?.leaveStreamNotice(this.config.ownPeerDescriptor)
-            this.removeConnection(peerKey)
+            this.removeConnection(nodeId)
         }
     }
 
-    private removeConnection(peerKey: NodeID): void {
-        this.connections.delete(peerKey)
-        this.targetNeighbors.removeById(peerKey)
+    private removeConnection(nodeId: NodeID): void {
+        this.connections.delete(nodeId)
+        this.targetNeighbors.removeById(nodeId)
     }
 
     broadcast(msg: StreamMessage, previousPeer?: NodeID): void {
@@ -214,8 +214,8 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         return this.targetNeighbors.getStringIds()
     }
 
-    hasProxyConnection(peerKey: NodeID, direction: ProxyDirection): boolean {
-        return this.connections.has(peerKey) && this.connections.get(peerKey) === direction
+    hasProxyConnection(nodeId: NodeID, direction: ProxyDirection): boolean {
+        return this.connections.has(nodeId) && this.connections.get(nodeId) === direction
     }
 
     getDirection(): ProxyDirection {
@@ -223,10 +223,10 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     }
 
     async onPeerDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
-        const peerKey = getNodeIdFromPeerDescriptor(peerDescriptor)
-        if (this.connections.has(peerKey)) {
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        if (this.connections.has(nodeId)) {
             this.config.connectionLocker.unlockConnection(peerDescriptor, 'proxy-stream-connection-client')
-            this.removeConnection(peerKey)
+            this.removeConnection(nodeId)
             await retry(() => this.updateConnections(), 'updating proxy connections', this.abortController.signal)
         }
     }

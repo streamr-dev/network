@@ -26,7 +26,7 @@ interface ProxyStreamConnectionServerConfig {
 }
 
 export interface Events {
-    newConnection: (peerKey: NodeID) => void
+    newConnection: (nodeId: NodeID) => void
 }
 
 export class ProxyStreamConnectionServer extends EventEmitter<Events> implements IProxyConnectionRpc {
@@ -41,16 +41,16 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
             (msg: ProxyConnectionRequest, context) => this.requestConnection(msg, context))
     }
 
-    getConnection(peerKey: NodeID): ProxyConnection | undefined {
-        return this.connections.get(peerKey)
+    getConnection(nodeId: NodeID): ProxyConnection | undefined {
+        return this.connections.get(nodeId)
     }
 
-    hasConnection(peerKey: NodeID): boolean {
-        return this.connections.has(peerKey)
+    hasConnection(nodeId: NodeID): boolean {
+        return this.connections.has(nodeId)
     }
 
-    removeConnection(peerKey: NodeID): void {
-        this.connections.delete(peerKey)
+    removeConnection(nodeId: NodeID): void {
+        this.connections.delete(nodeId)
     }
 
     stop(): void {

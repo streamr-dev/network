@@ -224,9 +224,9 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         })
     }
 
-    public hasProxyConnection(peerKey: NodeID): boolean {
+    public hasProxyConnection(nodeId: NodeID): boolean {
         if (this.config.proxyConnectionServer) {
-            return this.config.proxyConnectionServer.hasConnection(peerKey)
+            return this.config.proxyConnectionServer.hasConnection(nodeId)
         }
         return false
     }

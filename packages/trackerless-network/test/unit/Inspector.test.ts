@@ -19,7 +19,7 @@ describe('Inspector', () => {
         type: NodeType.NODEJS
     }
 
-    const otherPeerKey = PeerID.fromString('other').toKey() as unknown as NodeID
+    const nodeId = PeerID.fromString('other').toKey() as unknown as NodeID
     let mockConnect: jest.Mock
 
     const messageRef = {
@@ -49,7 +49,7 @@ describe('Inspector', () => {
     it('Opens inspection connection and runs successfully', async () => {
         setTimeout(() => {
             inspector.markMessage(getNodeIdFromPeerDescriptor(inspectedDescriptor), messageRef)
-            inspector.markMessage(otherPeerKey, messageRef)
+            inspector.markMessage(nodeId, messageRef)
         }, 250)
         await inspector.inspect(inspectedDescriptor)
         expect(inspector.isInspected(getNodeIdFromPeerDescriptor(inspectedDescriptor))).toBe(false)

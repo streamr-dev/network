@@ -360,8 +360,8 @@ export class StreamrNode extends EventEmitter<Events> {
             && (this.streams.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction
     }
 
-    hasProxyConnection(streamId: string, peerKey: NodeID, direction: ProxyDirection): boolean {
-        return this.streams.has(streamId) && this.streams.get(streamId)!.layer2.hasProxyConnection(peerKey, direction)
+    hasProxyConnection(streamId: string, nodeId: NodeID, direction: ProxyDirection): boolean {
+        return this.streams.has(streamId) && this.streams.get(streamId)!.layer2.hasProxyConnection(nodeId, direction)
     }
 
     getStream(streamPartId: StreamPartID): StreamObject | undefined {
