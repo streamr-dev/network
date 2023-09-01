@@ -46,16 +46,19 @@ export function parsePartitionFromMetadata(metadataAsString: string | undefined)
     return partition
 }
 
-export class VoteOnSuspectNodeHelper {
-    private readonly nodeWallet: Wallet
-    private readonly contract: Operator
-    private readonly callback: (sponsorship: string, operatorContractAddress: string, partition: number) => void
+export type ReviewRequestCallback = (sponsorship: string, operatorContractAddress: string, partition: number) => void
 
-    constructor(config: OperatorServiceConfig,
-        callback: (sponsorship: string, operatorContractAddress: string) => void) {
+export class VoteOnSuspectNodeHelper {
+    private readonly callback: ReviewRequestCallback
+    private readonly contract: Operator
+
+    constructor(
+        config: OperatorServiceConfig,
+        callback: ReviewRequestCallback,
+        contract = new Contract(config.operatorContractAddress, operatorABI, config.nodeWallet) as unknown as Operator
+    ) {
         this.callback = callback
-        this.nodeWallet = config.nodeWallet
-        this.contract = new Contract(config.operatorContractAddress, operatorABI, this.nodeWallet) as unknown as Operator
+        this.contract = contract
     }
 
     async start(): Promise<void> {
@@ -92,7 +95,6 @@ export class VoteOnSuspectNodeHelper {
     }
 
     stop(): void {
-        // TODO: remove only the listener added by this class
-        this.nodeWallet.provider.removeAllListeners()
+        this.contract.removeAllListeners()
     }
 }
