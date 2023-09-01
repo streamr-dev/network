@@ -85,7 +85,7 @@ const measureJoiningTime = async (count: number) => {
                 0,
                 i,
                 Math.floor(Math.random() * 20000),
-                'peer' as any,
+                'node' as any,
                 'msgChainId'
             ),
             prevMsgRef: null,
