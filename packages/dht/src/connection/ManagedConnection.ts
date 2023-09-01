@@ -219,8 +219,8 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     private onDisconnected(disconnectionType: DisconnectionType, _code?: number, _reason?: string): void {
-        logger.error('ManagedConnection this is ManagedConnection: ' +  (this instanceof ManagedConnection))
-        logger.info('Typeof ManagedConnection.ownPeerDescriptor: ' +  typeof this.ownPeerDescriptor)
+        logger.error('ManagedConnection this is ManagedConnection: ' + (this instanceof ManagedConnection))
+        logger.info('Typeof ManagedConnection.ownPeerDescriptor: ' + typeof this.ownPeerDescriptor)
         logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' onDisconnected() ' + disconnectionType)
         if (this.bufferSentbyOtherConnection) {
             return
