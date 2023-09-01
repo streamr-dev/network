@@ -1,5 +1,4 @@
 import { Contract } from '@ethersproject/contracts'
-import { Wallet } from '@ethersproject/wallet'
 import type { Operator } from '@streamr/network-contracts'
 import { operatorABI } from '@streamr/network-contracts'
 import { Logger } from '@streamr/utils'
