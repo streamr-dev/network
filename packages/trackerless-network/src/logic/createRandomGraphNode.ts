@@ -75,7 +75,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
         targetNeighbors,
         nearbyContactPool,
-        ownStringId: peerId.toKey() as unknown as NodeID,
+        ownNodeId: peerId.toKey() as unknown as NodeID,
         ownPeerDescriptor: config.ownPeerDescriptor,
         neighborFinder,
         randomGraphId: config.randomGraphId,

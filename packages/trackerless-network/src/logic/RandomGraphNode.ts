@@ -279,7 +279,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         return propagationTargets
     }
 
-    getOwnStringId(): NodeID {
+    getOwnNodeId(): NodeID {
         return getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)
     }
 

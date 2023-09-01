@@ -100,10 +100,10 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
         range(5).map((i) => {
-            const nodeId = allNodes[i].getOwnStringId()
+            const nodeId = allNodes[i].getOwnNodeId()
             allNodes[i].getNearbyContactPoolIds().forEach((nodeId) => {
                 const neighbor = allNodes.find((node) => {
-                    return node.getOwnStringId() === nodeId
+                    return node.getOwnNodeId() === nodeId
                 })
                 expect(neighbor!.getTargetNeighborIds()).toContain(nodeId)
             })
@@ -126,10 +126,10 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await wait(20000)
         let mismatchCounter = 0
         graphNodes.forEach((node) => {
-            const nodeId = node.getOwnStringId()
+            const nodeId = node.getOwnNodeId()
             node.getTargetNeighborIds().forEach((neighborId) => {
-                if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
-                    const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
+                if (neighborId !== entryPointRandomGraphNode.getOwnNodeId()) {
+                    const neighbor = graphNodes.find((n) => n.getOwnNodeId() === neighborId)
                     if (!neighbor!.getTargetNeighborIds().includes(nodeId)) {
                         mismatchCounter += 1
                     }

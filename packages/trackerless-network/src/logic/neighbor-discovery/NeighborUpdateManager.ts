@@ -10,7 +10,7 @@ import { NeighborUpdateManagerServer } from './NeighborUpdateManagerServer'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 interface NeighborUpdateManagerConfig {
-    ownStringId: NodeID
+    ownNodeId: NodeID
     ownPeerDescriptor: PeerDescriptor
     targetNeighbors: NodeList
     nearbyContactPool: NodeList

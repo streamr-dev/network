@@ -10,7 +10,7 @@ import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { getNodeIdFromPeerDescriptor, NodeID } from '../../identifiers'
 
 interface NeighborUpdateManagerConfig {
-    ownStringId: string
+    ownNodeId: NodeID
     randomGraphId: string
     targetNeighbors: NodeList
     nearbyContactPool: NodeList
@@ -32,7 +32,7 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
             const newPeers = message.neighborDescriptors
                 .filter((peerDescriptor) => {
                     const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-                    return nodeId !== this.config.ownStringId && !this.config.targetNeighbors.getIds().includes(nodeId)
+                    return nodeId !== this.config.ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
                 })
             newPeers.forEach((peer) => this.config.nearbyContactPool.add(
                 new RemoteRandomGraphNode(
@@ -43,7 +43,7 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
             )
             this.config.neighborFinder!.start()
             const response: NeighborUpdate = {
-                senderId: this.config.ownStringId,
+                senderId: this.config.ownNodeId,
                 randomGraphId: this.config.randomGraphId,
                 neighborDescriptors: this.config.targetNeighbors.getNodes().map((neighbor) => neighbor.getPeerDescriptor()),
                 removeMe: false
@@ -51,7 +51,7 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
             return response
         } else {
             const response: NeighborUpdate = {
-                senderId: this.config.ownStringId,
+                senderId: this.config.ownNodeId,
                 randomGraphId: this.config.randomGraphId,
                 neighborDescriptors: this.config.targetNeighbors.getNodes().map((neighbor) => neighbor.getPeerDescriptor()),
                 removeMe: true

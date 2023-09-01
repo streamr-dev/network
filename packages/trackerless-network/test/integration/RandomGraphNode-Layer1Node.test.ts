@@ -184,9 +184,9 @@ describe('RandomGraphNode-DhtNode', () => {
         range(5).map((i) => {
             allNodes[i].getNearbyContactPoolIds().forEach((nodeId) => {
                 const neighbor = allNodes.find((node) => {
-                    return node.getOwnStringId() === nodeId
+                    return node.getOwnNodeId() === nodeId
                 })
-                expect(neighbor!.getTargetNeighborIds().includes(allNodes[i].getOwnStringId())).toEqual(true)
+                expect(neighbor!.getTargetNeighborIds().includes(allNodes[i].getOwnNodeId())).toEqual(true)
             })
         })
     }, 10000)
@@ -211,10 +211,10 @@ describe('RandomGraphNode-DhtNode', () => {
         await wait(10000)
         let mismatchCounter = 0
         graphNodes.forEach((node) => {
-            const nodeId = node.getOwnStringId()
+            const nodeId = node.getOwnNodeId()
             node.getTargetNeighborIds().forEach((neighborId) => {
-                if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
-                    const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
+                if (neighborId !== entryPointRandomGraphNode.getOwnNodeId()) {
+                    const neighbor = graphNodes.find((n) => n.getOwnNodeId() === neighborId)
                     if (!neighbor!.getTargetNeighborIds().includes(nodeId)) {
                         logger.info('mismatching ids length: ' + nodeId + ' ' + neighbor!.getTargetNeighborIds().length)
                         mismatchCounter += 1
