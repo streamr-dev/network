@@ -50,7 +50,7 @@ export class NeighborUpdateManager implements INeighborUpdateManager {
     }
 
     private async updateNeighborInfo(): Promise<void> {
-        logger.trace(`Updating neighbor info to peers`)
+        logger.trace(`Updating neighbor info to nodes`)
         const neighborDescriptors = this.config.targetNeighbors!.getNodes().map((neighbor) => neighbor.getPeerDescriptor())
         await Promise.allSettled(this.config.targetNeighbors!.getNodes().map(async (neighbor) => {
             const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.config.ownPeerDescriptor, neighborDescriptors)

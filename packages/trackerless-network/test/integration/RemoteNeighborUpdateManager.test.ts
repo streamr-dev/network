@@ -77,6 +77,6 @@ describe('RemoteNeighborUpdateManager', () => {
 
     it('updateNeighbors', async () => {
         const res = await neighborUpdateRpcClient.updateNeighbors(clientPeer, [])
-        expect(res.peers.length).toEqual(1)
+        expect(res.peerDescriptors.length).toEqual(1)
     })
 })

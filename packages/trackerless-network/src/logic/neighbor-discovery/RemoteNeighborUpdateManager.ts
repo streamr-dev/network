@@ -8,7 +8,7 @@ import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 const logger = new Logger(module)
 
 interface UpdateNeighborsResponse {
-    peers: PeerDescriptor[]
+    peerDescriptors: PeerDescriptor[]
     removeMe: boolean
 }
 
@@ -28,13 +28,13 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
         try {
             const response = await this.client.neighborUpdate(request, options)
             return {
-                peers: response.neighborDescriptors!,
+                peerDescriptors: response.neighborDescriptors!,
                 removeMe: response.removeMe
             }
         } catch (err: any) {
             logger.debug(`updateNeighbors to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
             return {
-                peers: [],
+                peerDescriptors: [],
                 removeMe: true
             }
         }
