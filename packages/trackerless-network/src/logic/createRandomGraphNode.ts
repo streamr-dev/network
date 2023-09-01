@@ -3,7 +3,7 @@ import { Handshaker } from './neighbor-discovery/Handshaker'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
 import { StrictRandomGraphNodeConfig, RandomGraphNode } from './RandomGraphNode'
-import { PeerList } from './PeerList'
+import { NodeList } from './NodeList'
 import { Propagation } from './propagation/Propagation'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { MarkOptional } from 'ts-essentials'
@@ -28,9 +28,9 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const minPropagationTargets = config.minPropagationTargets ?? 2
     const acceptProxyConnections = config.acceptProxyConnections ?? false
     const neighborUpdateInterval = config.neighborUpdateInterval ?? 10000
-    const nearbyContactPool = config.nearbyContactPool ?? new PeerList(peerId, numOfTargetNeighbors + 1)
-    const randomContactPool = config.randomContactPool ?? new PeerList(peerId, maxNumberOfContacts)
-    const targetNeighbors = config.targetNeighbors ?? new PeerList(peerId, maxNumberOfContacts)
+    const nearbyContactPool = config.nearbyContactPool ?? new NodeList(peerId, numOfTargetNeighbors + 1)
+    const randomContactPool = config.randomContactPool ?? new NodeList(peerId, maxNumberOfContacts)
+    const targetNeighbors = config.targetNeighbors ?? new NodeList(peerId, maxNumberOfContacts)
 
     const temporaryConnectionServer = new TemporaryConnectionRpcServer({
         randomGraphId: config.randomGraphId,

@@ -3,7 +3,7 @@ import { PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
-import { PeerList } from '../../src/logic/PeerList'
+import { NodeList } from '../../src/logic/NodeList'
 import { MockHandshaker } from '../utils/mock/MockHandshaker'
 import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManager'
 import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
@@ -18,16 +18,16 @@ describe('RandomGraphNode', () => {
         type: 0
     }
 
-    let targetNeighbors: PeerList
-    let nearbyContactPool: PeerList
-    let randomContactPool: PeerList
+    let targetNeighbors: NodeList
+    let nearbyContactPool: NodeList
+    let randomContactPool: NodeList
 
     beforeEach(async () => {
         const peerId = peerIdFromPeerDescriptor(peerDescriptor)
 
-        targetNeighbors = new PeerList(peerId, 10)
-        randomContactPool = new PeerList(peerId, 10)
-        nearbyContactPool = new PeerList(peerId, 10)
+        targetNeighbors = new NodeList(peerId, 10)
+        randomContactPool = new NodeList(peerId, 10)
+        nearbyContactPool = new NodeList(peerId, 10)
 
         randomGraphNode = createRandomGraphNode({
             targetNeighbors,

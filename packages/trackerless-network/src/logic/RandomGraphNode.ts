@@ -17,7 +17,7 @@ import {
     TemporaryConnectionResponse,
     MessageID,
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { PeerList } from './PeerList'
+import { NodeList } from './NodeList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
@@ -49,9 +49,9 @@ export interface StrictRandomGraphNodeConfig {
     connectionLocker: ConnectionLocker
     ownPeerDescriptor: PeerDescriptor
     peerViewSize: number
-    nearbyContactPool: PeerList
-    randomContactPool: PeerList
-    targetNeighbors: PeerList
+    nearbyContactPool: NodeList
+    randomContactPool: NodeList
+    targetNeighbors: NodeList
     handshaker: IHandshaker
     neighborFinder: INeighborFinder
     neighborUpdateManager: INeighborUpdateManager
@@ -115,7 +115,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.config.layer1.on('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
         this.config.layer1.on('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
         this.config.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => this.onPeerDisconnected(peerDescriptor))
-        this.config.targetNeighbors.on('peerAdded', (id, _remote) => {
+        this.config.targetNeighbors.on('nodeAdded', (id, _remote) => {
             this.config.propagation.onNeighborJoined(id)
             this.emit('targetNeighborConnected', id)
         })
@@ -210,7 +210,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     }
 
     private onPeerDisconnected(peerDescriptor: PeerDescriptor): void {
-        if (this.config.targetNeighbors.hasPeer(peerDescriptor)) {
+        if (this.config.targetNeighbors.hasNode(peerDescriptor)) {
             this.config.targetNeighbors.remove(peerDescriptor)
             this.config.connectionLocker.unlockConnection(peerDescriptor, this.config.randomGraphId)
             this.config.neighborFinder.start([getNodeIdFromPeerDescriptor(peerDescriptor)])
@@ -237,7 +237,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         }
         this.stopped = true
         this.config.proxyConnectionServer?.stop()
-        this.config.targetNeighbors.getPeers().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor))
+        this.config.targetNeighbors.getNodes().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor))
         this.config.rpcCommunicator.stop()
         this.removeAllListeners()
         this.config.layer1.off('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))

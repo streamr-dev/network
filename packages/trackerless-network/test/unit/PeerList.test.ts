@@ -1,4 +1,4 @@
-import { PeerList } from '../../src/logic/PeerList'
+import { NodeList } from '../../src/logic/NodeList'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import {
     PeerDescriptor,
@@ -23,7 +23,7 @@ describe('PeerList', () => {
     ]
     const ownId = PeerID.fromString('test')
     const graphId = 'test'
-    let peerList: PeerList
+    let peerList: NodeList
     let simulator: Simulator
     let mockTransports: SimulatorTransport[]
 
@@ -39,7 +39,7 @@ describe('PeerList', () => {
     beforeEach(() => {
         simulator = new Simulator()
         mockTransports = []
-        peerList = new PeerList(ownId, 6)
+        peerList = new NodeList(ownId, 6)
         ids.forEach((peerId) => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: peerId,
@@ -64,7 +64,7 @@ describe('PeerList', () => {
         }
         const newNode = createRemoteGraphNode(newDescriptor)
         peerList.add(newNode)
-        expect(peerList.hasPeer(newDescriptor)).toEqual(true)
+        expect(peerList.hasNode(newDescriptor)).toEqual(true)
 
         const newDescriptor2 = {
             kademliaId: new Uint8Array([1, 2, 4]),
@@ -72,20 +72,20 @@ describe('PeerList', () => {
         }
         const newNode2 = createRemoteGraphNode(newDescriptor2)
         peerList.add(newNode2)
-        expect(peerList.hasPeer(newDescriptor2)).toEqual(false)
+        expect(peerList.hasNode(newDescriptor2)).toEqual(false)
     })
 
     it('remove', () => {
         const toRemove = peerList.getClosest([])
         peerList.remove(toRemove!.getPeerDescriptor())
-        expect(peerList.hasPeer(toRemove!.getPeerDescriptor())).toEqual(false)
+        expect(peerList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
     })
 
     it('removeById', () => {
         const toRemove = peerList.getClosest([])
         const stringId = getNodeIdFromPeerDescriptor(toRemove!.getPeerDescriptor())
         peerList.removeById(stringId)
-        expect(peerList.hasPeer(toRemove!.getPeerDescriptor())).toEqual(false)
+        expect(peerList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
     })
 
     it('getClosest', () => {
@@ -118,22 +118,22 @@ describe('PeerList', () => {
     })
 
     it('getClosest empty', () => {
-        const emptyPeerList = new PeerList(ownId, 2)
+        const emptyPeerList = new NodeList(ownId, 2)
         expect(emptyPeerList.getClosest([])).toBeUndefined()
     })
 
     it('getFurthest empty', () => {
-        const emptyPeerList = new PeerList(ownId, 2)
+        const emptyPeerList = new NodeList(ownId, 2)
         expect(emptyPeerList.getFurthest([])).toBeUndefined()
     })
 
     it('getRandom empty', () => {
-        const emptyPeerList = new PeerList(ownId, 2)
+        const emptyPeerList = new NodeList(ownId, 2)
         expect(emptyPeerList.getRandom([])).toBeUndefined()
     })
 
     it('getClosestAndFurthest empty', () => {
-        const emptyPeerList = new PeerList(ownId, 2)
+        const emptyPeerList = new NodeList(ownId, 2)
         expect(emptyPeerList.getClosestAndFurthest([])).toEqual([])
     })
 

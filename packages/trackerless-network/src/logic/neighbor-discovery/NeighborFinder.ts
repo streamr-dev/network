@@ -1,10 +1,10 @@
 import { setAbortableTimeout } from '@streamr/utils'
-import { PeerList } from '../PeerList'
+import { NodeList } from '../NodeList'
 import { NodeID } from '../../identifiers'
 
 interface FindNeighborsSessionConfig {
-    targetNeighbors: PeerList
-    nearbyContactPool: PeerList
+    targetNeighbors: NodeList
+    nearbyContactPool: NodeList
     doFindNeighbors: (excludedNodes: NodeID[]) => Promise<NodeID[]>
     N: number
 }

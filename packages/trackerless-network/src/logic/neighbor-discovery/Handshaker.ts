@@ -1,5 +1,5 @@
 import { ConnectionLocker, PeerDescriptor } from '@streamr/dht'
-import { PeerList } from '../PeerList'
+import { NodeList } from '../NodeList'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import {
@@ -21,9 +21,9 @@ interface HandshakerConfig {
     ownPeerDescriptor: PeerDescriptor
     randomGraphId: string
     connectionLocker: ConnectionLocker
-    targetNeighbors: PeerList
-    nearbyContactPool: PeerList
-    randomContactPool: PeerList
+    targetNeighbors: NodeList
+    nearbyContactPool: NodeList
+    randomContactPool: NodeList
     rpcCommunicator: RpcCommunicator
     N: number
 }

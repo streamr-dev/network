@@ -1,6 +1,6 @@
 import { PeerID } from '@streamr/dht'
 import { HandshakerServer } from '../../src/logic/neighbor-discovery/HandshakerServer'
-import { PeerList } from '../../src/logic/PeerList'
+import { NodeList } from '../../src/logic/NodeList'
 import { InterleaveNotice, StreamHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockRemoteHandshaker, createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
 import { NodeID } from '../../src/identifiers'
@@ -15,12 +15,12 @@ describe('HandshakerServer', () => {
         type: 0
     }
 
-    let targetNeighbors: PeerList
+    let targetNeighbors: NodeList
     let ongoingHandshakes: Set<NodeID>
     let handshakeWithInterleaving: jest.Mock
 
     beforeEach(() => {
-        targetNeighbors = new PeerList(peerId, 10)
+        targetNeighbors = new NodeList(peerId, 10)
         ongoingHandshakes = new Set()
 
         handshakeWithInterleaving = jest.fn()

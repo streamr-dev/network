@@ -1,7 +1,7 @@
 import { Empty } from '../../proto/google/protobuf/empty'
 import { InterleaveNotice, StreamHandshakeRequest, StreamHandshakeResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { PeerList } from '../PeerList'
+import { NodeList } from '../NodeList'
 import { ConnectionLocker, PeerDescriptor } from '@streamr/dht'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { RemoteHandshaker } from './RemoteHandshaker'
@@ -11,7 +11,7 @@ import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 interface HandshakerServerConfig {
     randomGraphId: string
     ownPeerDescriptor: PeerDescriptor
-    targetNeighbors: PeerList
+    targetNeighbors: NodeList
     connectionLocker: ConnectionLocker
     ongoingHandshakes: Set<NodeID>
     N: number
@@ -33,7 +33,7 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     private handleRequest(request: StreamHandshakeRequest): StreamHandshakeResponse {
-        if (this.config.targetNeighbors!.hasPeer(request.senderDescriptor!)
+        if (this.config.targetNeighbors!.hasNode(request.senderDescriptor!)
             || this.config.ongoingHandshakes.has(getNodeIdFromPeerDescriptor(request.senderDescriptor!))
         ) {
             return this.acceptHandshake(request, request.senderDescriptor!)
@@ -88,7 +88,7 @@ export class HandshakerServer implements IHandshakeRpc {
 
     async interleaveNotice(message: InterleaveNotice, _context: ServerCallContext): Promise<Empty> {
         if (message.randomGraphId === this.config.randomGraphId) {
-            if (this.config.targetNeighbors.hasPeerWithStringId(message.senderId as NodeID)) {
+            if (this.config.targetNeighbors.hasNodeWithStringId(message.senderId as NodeID)) {
                 const senderDescriptor = this.config.targetNeighbors.getNeighborById(message.senderId as NodeID)!.getPeerDescriptor()
                 this.config.connectionLocker.unlockConnection(senderDescriptor, this.config.randomGraphId)
                 this.config.targetNeighbors.remove(senderDescriptor)

@@ -11,7 +11,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     HandshakeRpcClient
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { PeerList } from '../../src/logic/PeerList'
+import { NodeList } from '../../src/logic/NodeList'
 import { mockConnectionLocker } from '../utils/utils'
 import { StreamHandshakeRequest, StreamHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -34,8 +34,8 @@ describe('Handshakes', () => {
     let rpcCommunicator1: ListeningRpcCommunicator
     let rpcCommunicator2: ListeningRpcCommunicator
     let rpcCommunicator3: ListeningRpcCommunicator
-    let contactPool: PeerList
-    let targetNeighbors: PeerList
+    let contactPool: NodeList
+    let targetNeighbors: NodeList
     let handshaker: Handshaker
     const randomGraphId = 'handshaker'
 
@@ -81,8 +81,8 @@ describe('Handshakes', () => {
         rpcCommunicator3 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport3)
 
         const handshakerPeerId = peerIdFromPeerDescriptor(peerDescriptor2)
-        contactPool = new PeerList(handshakerPeerId, 10)
-        targetNeighbors = new PeerList(handshakerPeerId, 4)
+        contactPool = new NodeList(handshakerPeerId, 10)
+        targetNeighbors = new NodeList(handshakerPeerId, 4)
         handshaker = new Handshaker({
             ownPeerDescriptor: peerDescriptor2,
             randomGraphId,
@@ -118,7 +118,7 @@ describe('Handshakes', () => {
             )
         )
         expect(res).toEqual(true)
-        expect(targetNeighbors.hasPeer(peerDescriptor1)).toEqual(true)
+        expect(targetNeighbors.hasNode(peerDescriptor1)).toEqual(true)
     })
 
     it('Handshake accepted', async () => {
@@ -132,7 +132,7 @@ describe('Handshakes', () => {
             )
         )
         expect(res).toEqual(true)
-        expect(targetNeighbors.hasPeer(peerDescriptor1)).toEqual(true)
+        expect(targetNeighbors.hasNode(peerDescriptor1)).toEqual(true)
     })
 
     it('Handshake rejected', async () => {
@@ -146,7 +146,7 @@ describe('Handshakes', () => {
             )
         )
         expect(res).toEqual(false)
-        expect(targetNeighbors.hasPeer(peerDescriptor1)).toEqual(false)
+        expect(targetNeighbors.hasNode(peerDescriptor1)).toEqual(false)
     })
 
     it('Handshake with Interleaving', async () => {
@@ -161,7 +161,7 @@ describe('Handshakes', () => {
             )
         )
         expect(res).toEqual(true)
-        expect(targetNeighbors.hasPeer(peerDescriptor1)).toEqual(true)
-        expect(targetNeighbors.hasPeer(peerDescriptor3)).toEqual(true)
+        expect(targetNeighbors.hasNode(peerDescriptor1)).toEqual(true)
+        expect(targetNeighbors.hasNode(peerDescriptor3)).toEqual(true)
     })
 })

@@ -11,7 +11,7 @@ import { ConnectionLocker } from '@streamr/dht/src/exports'
 import { StreamNodeServer } from '../StreamNodeServer'
 import { Logger, wait } from '@streamr/utils'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
-import { PeerList } from '../PeerList'
+import { NodeList } from '../NodeList'
 import { Propagation } from '../propagation/Propagation'
 import { sampleSize } from 'lodash'
 import { RemoteProxyServer } from './RemoteProxyServer'
@@ -64,14 +64,14 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     private definition?: ProxyDefinition
     private readonly connections: Map<NodeID, ProxyDirection> = new Map()
     private readonly propagation: Propagation
-    private readonly targetNeighbors: PeerList
+    private readonly targetNeighbors: NodeList
     private readonly abortController: AbortController
 
     constructor(config: ProxyStreamConnectionClientConfig) {
         super()
         this.config = config
         this.rpcCommunicator = new ListeningRpcCommunicator(`layer2-${config.streamPartId}`, config.P2PTransport)
-        this.targetNeighbors = new PeerList(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor), 1000)
+        this.targetNeighbors = new NodeList(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor), 1000)
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.streamPartId,
@@ -239,7 +239,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     }
 
     stop(): void {
-        this.targetNeighbors.getPeers().map((remote) => {
+        this.targetNeighbors.getNodes().map((remote) => {
             this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), 'proxy-stream-connection-client')
             remote.leaveStreamNotice(this.config.ownPeerDescriptor)
         })

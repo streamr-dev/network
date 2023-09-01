@@ -3,7 +3,7 @@ import { TemporaryConnectionRequest, TemporaryConnectionResponse } from '../../p
 import { ITemporaryConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DhtCallContext, ListeningRpcCommunicator, PeerID } from '@streamr/dht'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { PeerList } from '../PeerList'
+import { NodeList } from '../NodeList'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
@@ -17,14 +17,14 @@ interface TemporaryConnectionRpcServerConfig {
 export class TemporaryConnectionRpcServer implements ITemporaryConnectionRpc {
 
     private readonly config: TemporaryConnectionRpcServerConfig
-    private readonly temporaryPeers: PeerList
+    private readonly temporaryPeers: NodeList
 
     constructor(config: TemporaryConnectionRpcServerConfig) {
         this.config = config
-        this.temporaryPeers = new PeerList(config.ownPeerId, 10)
+        this.temporaryPeers = new NodeList(config.ownPeerId, 10)
     }
 
-    getPeers(): PeerList {
+    getPeers(): NodeList {
         return this.temporaryPeers
     }
 
