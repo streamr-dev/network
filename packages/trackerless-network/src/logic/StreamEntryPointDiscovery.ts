@@ -58,7 +58,7 @@ interface StreamEntryPointDiscoveryConfig {
     streams: Map<string, StreamObject>
     ownPeerDescriptor: PeerDescriptor
     getEntryPointData: (key: Uint8Array) => Promise<RecursiveFindResult>
-    getEntryPointDataViaPeer: (key: Uint8Array, peer: PeerDescriptor) => Promise<DataEntry[]>
+    getEntryPointDataViaNode: (key: Uint8Array, peer: PeerDescriptor) => Promise<DataEntry[]>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
     deleteEntryPointData: (key: Uint8Array) => Promise<void>
     cacheInterval?: number
@@ -125,7 +125,7 @@ export class StreamEntryPointDiscovery {
     private async queryEntryPointsViaPeer(key: Uint8Array, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
         logger.trace(`Finding data via peer ${this.config.ownPeerDescriptor!.nodeName}`)
         try {
-            const results = await this.config.getEntryPointDataViaPeer(key, peer)
+            const results = await this.config.getEntryPointDataViaNode(key, peer)
             if (results) {
                 return parseEntryPointData(results)
             } else {
