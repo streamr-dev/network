@@ -7,7 +7,7 @@ import { LatencyType } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import events from 'events'
 
-events.setMaxListeners(1000)
+events.defaultMaxListeners = 1000
 
 describe('Propagation', () => {
     const entryPointDescriptor: PeerDescriptor = {
