@@ -5,6 +5,9 @@ import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
 import { LatencyType } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import events from 'events'
+
+events.setMaxListeners(1000)
 
 describe('Propagation', () => {
     const entryPointDescriptor: PeerDescriptor = {
