@@ -83,8 +83,8 @@ describe('NodeList', () => {
 
     it('removeById', () => {
         const toRemove = nodeList.getClosest([])
-        const stringId = getNodeIdFromPeerDescriptor(toRemove!.getPeerDescriptor())
-        nodeList.removeById(stringId)
+        const nodeId = getNodeIdFromPeerDescriptor(toRemove!.getPeerDescriptor())
+        nodeList.removeById(nodeId)
         expect(nodeList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
     })
 

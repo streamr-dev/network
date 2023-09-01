@@ -29,7 +29,7 @@ class SuccessListener extends EventEmitter<SuccessEvents> {
         node.on('nearbyContactPoolIdAdded', this.onNearbyContactPoolIdAdded)
     }
 
-    private onTargetNeighborConnected = (_stringId: NodeID) => {
+    private onTargetNeighborConnected = (_nodeId: NodeID) => {
         this.numNeighbors++
 
         if (this.numNeighbors >= this.wantedNumNeighbors
@@ -182,9 +182,9 @@ describe('RandomGraphNode-DhtNode', () => {
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
         range(5).map((i) => {
-            allNodes[i].getNearbyContactPoolIds().forEach((stringId) => {
+            allNodes[i].getNearbyContactPoolIds().forEach((nodeId) => {
                 const neighbor = allNodes.find((node) => {
-                    return node.getOwnStringId() === stringId
+                    return node.getOwnStringId() === nodeId
                 })
                 expect(neighbor!.getTargetNeighborIds().includes(allNodes[i].getOwnStringId())).toEqual(true)
             })

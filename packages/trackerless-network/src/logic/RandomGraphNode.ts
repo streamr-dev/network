@@ -38,7 +38,7 @@ import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 
 export interface Events {
     message: (message: StreamMessage) => void
-    targetNeighborConnected: (stringId: NodeID) => void
+    targetNeighborConnected: (nodeId: NodeID) => void
     nearbyContactPoolIdAdded: () => void
 }
 

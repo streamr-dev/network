@@ -31,8 +31,8 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
         if (this.config.targetNeighbors!.hasNodeById(message.senderId as NodeID)) {
             const newPeers = message.neighborDescriptors
                 .filter((peerDescriptor) => {
-                    const stringId = getNodeIdFromPeerDescriptor(peerDescriptor)
-                    return stringId !== this.config.ownStringId && !this.config.targetNeighbors.getIds().includes(stringId)
+                    const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+                    return nodeId !== this.config.ownStringId && !this.config.targetNeighbors.getIds().includes(nodeId)
                 })
             newPeers.forEach((peer) => this.config.nearbyContactPool.add(
                 new RemoteRandomGraphNode(

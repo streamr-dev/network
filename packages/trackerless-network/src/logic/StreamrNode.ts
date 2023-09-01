@@ -389,7 +389,7 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     getStreamParts(): StreamPartID[] {
-        return Array.from(this.streams.keys()).map((stringId) => StreamPartIDUtils.parse(stringId))
+        return Array.from(this.streams.keys()).map((id) => StreamPartIDUtils.parse(id))
     }
 
     setExtraMetadata(metadata: Record<string, unknown>): void {

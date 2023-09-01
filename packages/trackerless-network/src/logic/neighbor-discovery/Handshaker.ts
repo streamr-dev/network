@@ -97,8 +97,8 @@ export class Handshaker implements IHandshaker {
         const results = await Promise.allSettled(
             Array.from(targets.values()).map(async (target: RemoteHandshaker, i) => {
                 const otherNode = i === 0 ? targets[1] : targets[0]
-                const otherNodeStringId = otherNode ? getNodeIdFromPeerDescriptor(otherNode.getPeerDescriptor()) : undefined
-                return this.handshakeWithTarget(target, otherNodeStringId)
+                const otherNodeId = otherNode ? getNodeIdFromPeerDescriptor(otherNode.getPeerDescriptor()) : undefined
+                return this.handshakeWithTarget(target, otherNodeId)
             })
         )
         results.map((res, i) => {
@@ -121,22 +121,22 @@ export class Handshaker implements IHandshaker {
         return excludedIds
     }
 
-    private async handshakeWithTarget(targetNeighbor: RemoteHandshaker, concurrentStringId?: NodeID): Promise<boolean> {
-        const targetStringId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
-        this.ongoingHandshakes.add(targetStringId)
+    private async handshakeWithTarget(targetNeighbor: RemoteHandshaker, concurrentNodeId?: NodeID): Promise<boolean> {
+        const targetNodeId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
+        this.ongoingHandshakes.add(targetNodeId)
         const result = await targetNeighbor.handshake(
             this.config.ownPeerDescriptor,
             this.config.targetNeighbors.getIds(),
-            concurrentStringId
+            concurrentNodeId
         )
         if (result.accepted) {
             this.config.targetNeighbors.add(this.createRemoteNode(targetNeighbor.getPeerDescriptor()))
             this.config.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.config.randomGraphId)
         }
         if (result.interleaveTargetDescriptor) {
-            await this.handshakeWithInterleaving(result.interleaveTargetDescriptor, targetStringId)
+            await this.handshakeWithInterleaving(result.interleaveTargetDescriptor, targetNodeId)
         }
-        this.ongoingHandshakes.delete(targetStringId)
+        this.ongoingHandshakes.delete(targetNodeId)
         return result.accepted
     }
 
@@ -146,8 +146,8 @@ export class Handshaker implements IHandshaker {
             this.config.randomGraphId,
             this.client
         )
-        const targetStringId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
-        this.ongoingHandshakes.add(targetStringId)
+        const targetNodeId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
+        this.ongoingHandshakes.add(targetNodeId)
         const result = await targetNeighbor.handshake(
             this.config.ownPeerDescriptor,
             this.config.targetNeighbors.getIds(),
@@ -158,7 +158,7 @@ export class Handshaker implements IHandshaker {
             this.config.targetNeighbors.add(this.createRemoteNode(targetNeighbor.getPeerDescriptor()))
             this.config.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.config.randomGraphId)
         }
-        this.ongoingHandshakes.delete(targetStringId)
+        this.ongoingHandshakes.delete(targetNodeId)
         return result.accepted
     }
 

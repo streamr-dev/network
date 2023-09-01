@@ -28,12 +28,12 @@ export class NodeList extends EventEmitter<Events> {
 
     add(remote: RemoteRandomGraphNode): void {
         if (!this.ownPeerID.equals(peerIdFromPeerDescriptor(remote.getPeerDescriptor())) && this.nodes.size < this.limit) {
-            const stringId = getNodeIdFromPeerDescriptor(remote.getPeerDescriptor())
-            const isExistingNode = this.nodes.has(stringId)
-            this.nodes.set(stringId, remote)
+            const nodeId = getNodeIdFromPeerDescriptor(remote.getPeerDescriptor())
+            const isExistingNode = this.nodes.has(nodeId)
+            this.nodes.set(nodeId, remote)
             
             if (!isExistingNode) {
-                this.emit('nodeAdded', stringId, remote)
+                this.emit('nodeAdded', nodeId, remote)
             }
         }
     }
@@ -42,16 +42,16 @@ export class NodeList extends EventEmitter<Events> {
         this.nodes.delete(getNodeIdFromPeerDescriptor(peerDescriptor))
     }
 
-    removeById(stringId: NodeID): void {
-        this.nodes.delete(stringId)
+    removeById(nodeId: NodeID): void {
+        this.nodes.delete(nodeId)
     }
 
     hasNode(peerDescriptor: PeerDescriptor): boolean {
         return this.nodes.has(getNodeIdFromPeerDescriptor(peerDescriptor))
     }
 
-    hasNodeById(stringId: NodeID): boolean {
-        return this.nodes.has(stringId)
+    hasNodeById(nodeId: NodeID): boolean {
+        return this.nodes.has(nodeId)
     }
 
     replaceAll(neighbors: RemoteRandomGraphNode[]): void {
