@@ -34,14 +34,14 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     private handleRequest(request: StreamHandshakeRequest): StreamHandshakeResponse {
+        const getInterleaveSourceIds = () => (request.interleaveSourceId !== undefined) ? [binaryToHex(request.interleaveSourceId!) as NodeID] : []
         if (this.config.targetNeighbors!.hasNode(request.senderDescriptor!)
             || this.config.ongoingHandshakes.has(getNodeIdFromPeerDescriptor(request.senderDescriptor!))
         ) {
             return this.acceptHandshake(request, request.senderDescriptor!)
         } else if (this.config.targetNeighbors!.size() + this.config.ongoingHandshakes.size < this.config.N) {
             return this.acceptHandshake(request, request.senderDescriptor!)
-            // eslint-disable-next-line max-len
-        } else if (this.config.targetNeighbors!.size([binaryToHex(request.interleaveSourceId!) as NodeID]) >= 2) {
+        } else if (this.config.targetNeighbors!.size(getInterleaveSourceIds()) >= 2) {
             return this.acceptHandshakeWithInterleaving(request, request.senderDescriptor!)
         } else {
             return this.rejectHandshake(request)
@@ -70,7 +70,9 @@ export class HandshakerServer implements IHandshakeRpc {
     private acceptHandshakeWithInterleaving(request: StreamHandshakeRequest, requester: PeerDescriptor): StreamHandshakeResponse {
         const exclude = request.neighborIds.map((id: Uint8Array) => binaryToHex(id) as NodeID)
         exclude.push(binaryToHex(request.senderId) as NodeID)
-        exclude.push(binaryToHex(request.interleaveSourceId!) as NodeID)
+        if (request.interleaveSourceId !== undefined) {
+            exclude.push(binaryToHex(request.interleaveSourceId) as NodeID)
+        }
         const furthest = this.config.targetNeighbors.getFurthest(exclude)
         const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
         if (furthest) {
