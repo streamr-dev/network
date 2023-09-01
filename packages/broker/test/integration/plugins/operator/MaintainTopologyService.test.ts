@@ -9,7 +9,6 @@ import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFle
 import { createClient, createTestStream } from '../../../utils'
 import {
     THE_GRAPH_URL, delegate, deployOperatorContract, deploySponsorshipContract, generateWalletWithGasAndTokens,
-    getProvider,
     stake
 } from './contractUtils'
 
@@ -68,8 +67,7 @@ describe('MaintainTopologyService', () => {
         await stake(operatorContract, sponsorship1.address, 100)
 
         const serviceHelperConfig = {
-            provider: getProvider(),
-            nodeWallet: operatorWallet,
+            signer: operatorWallet,
             operatorContractAddress: toEthereumAddress(operatorContract.address),
             theGraphUrl: THE_GRAPH_URL
         }

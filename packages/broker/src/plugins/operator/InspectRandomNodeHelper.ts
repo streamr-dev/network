@@ -13,7 +13,7 @@ export class InspectRandomNodeHelper {
     private readonly theGraphClient: TheGraphClient
 
     constructor(config: OperatorServiceConfig) {
-        this.operatorContract = new Contract(config.operatorContractAddress, operatorABI, config.nodeWallet) as unknown as Operator
+        this.operatorContract = new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator
         this.theGraphClient = new TheGraphClient({
             serverUrl: config.theGraphUrl,
             fetch,

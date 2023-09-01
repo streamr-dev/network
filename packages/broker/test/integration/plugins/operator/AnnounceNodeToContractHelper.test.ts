@@ -12,7 +12,7 @@ describe(AnnounceNodeToContractHelper, () => {
         })
         helper = new AnnounceNodeToContractHelper({
             ...operatorServiceConfig,
-            nodeWallet: nodeWallets[0]
+            signer: nodeWallets[0]
         })
     })
 

@@ -1,5 +1,4 @@
 import { Contract } from '@ethersproject/contracts'
-import { Wallet } from '@ethersproject/wallet'
 import type { Operator } from '@streamr/network-contracts'
 import { operatorABI } from '@streamr/network-contracts'
 import { Logger } from '@streamr/utils'
@@ -11,15 +10,13 @@ export const VOTE_NO_KICK = '0x0000000000000000000000000000000000000000000000000
 const logger = new Logger(module)
 
 export class VoteOnSuspectNodeHelper {
-    private readonly nodeWallet: Wallet
     private readonly contract: Operator
     private readonly callback: (sponsorship: string, operatorContractAddress: string) => void
 
     constructor(config: OperatorServiceConfig,
         callback: (sponsorship: string, operatorContractAddress: string) => void) {
         this.callback = callback
-        this.nodeWallet = config.nodeWallet
-        this.contract = new Contract(config.operatorContractAddress, operatorABI, this.nodeWallet) as unknown as Operator
+        this.contract = new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator
     }
 
     async start(): Promise<void> {
@@ -36,7 +33,6 @@ export class VoteOnSuspectNodeHelper {
     }
 
     stop(): void {
-        // TODO: remove only the listener added by this class
-        this.nodeWallet.provider.removeAllListeners()
+        this.contract.removeAllListeners()
     }
 }
