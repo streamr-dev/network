@@ -132,9 +132,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     return preconfiguredConnectivityResponse
                 } else {
                     // Do real connectivity checking     
-                    let response = noServerConnectivityResponse
-                    response = await this.connectivityChecker!.sendConnectivityRequest(sample(this.entrypoints)!)
-                    return response
+                    return await this.connectivityChecker!.sendConnectivityRequest(sample(this.entrypoints)!)
                 }
             }
         } catch (err) {
