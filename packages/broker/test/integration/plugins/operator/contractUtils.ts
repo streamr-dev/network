@@ -34,14 +34,16 @@ export interface SetupOperatorContractOpts {
     }
 }
 
-export async function setupOperatorContract(
-    opts?: SetupOperatorContractOpts
-): Promise<{
+export interface SetupOperatorContractReturnType {
     operatorWallet: Wallet
     operatorContract: Operator
     operatorServiceConfig: Omit<OperatorServiceConfig, 'nodeWallet'>
     nodeWallets: Wallet[]
-}> {
+}
+
+export async function setupOperatorContract(
+    opts?: SetupOperatorContractOpts
+): Promise<SetupOperatorContractReturnType> {
     const operatorWallet = await generateWalletWithGasAndTokens({
         provider: opts?.provider,
         chainConfig: opts?.chainConfig,

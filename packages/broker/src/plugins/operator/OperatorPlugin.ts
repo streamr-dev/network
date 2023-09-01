@@ -16,13 +16,13 @@ import { OperatorValueBreachWatcher } from './OperatorValueBreachWatcher'
 import { OperatorFleetState } from './OperatorFleetState'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
-    redundancyFactor: number
 }
 
 export interface OperatorServiceConfig {
@@ -83,9 +83,10 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     }
 
     async start(): Promise<void> {
+        const redundancyFactor = await fetchRedundancyFactor(this.serviceConfig)
         this.maintainTopologyService = await setUpAndStartMaintainTopologyService({
             streamrClient: this.streamrClient,
-            redundancyFactor: this.pluginConfig.redundancyFactor,
+            redundancyFactor: redundancyFactor,
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
