@@ -48,7 +48,7 @@ export interface StrictRandomGraphNodeConfig {
     P2PTransport: ITransport
     connectionLocker: ConnectionLocker
     ownPeerDescriptor: PeerDescriptor
-    peerViewSize: number
+    nodeViewSize: number
     nearbyContactPool: NodeList
     randomContactPool: NodeList
     targetNeighbors: NodeList
@@ -219,7 +219,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     }
 
     private getNewNeighborCandidates(): PeerDescriptor[] {
-        return this.config.layer1.getNeighborList().getClosestContacts(this.config.peerViewSize).map((contact: DhtPeer) => {
+        return this.config.layer1.getNeighborList().getClosestContacts(this.config.nodeViewSize).map((contact: DhtPeer) => {
             return contact.getPeerDescriptor()
         })
     }

@@ -16,7 +16,7 @@ import { NodeID } from '../identifiers'
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     'nearbyContactPool' | 'randomContactPool' | 'targetNeighbors' | 'propagation'
     | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'name' | 'numOfTargetNeighbors'
-    | 'maxNumberOfContacts' | 'minPropagationTargets' | 'rpcCommunicator' | 'peerViewSize' | 'acceptProxyConnections'
+    | 'maxNumberOfContacts' | 'minPropagationTargets' | 'rpcCommunicator' | 'nodeViewSize' | 'acceptProxyConnections'
     | 'neighborUpdateInterval' | 'inspector' | 'temporaryConnectionServer'>
 
 const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
@@ -102,7 +102,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         minPropagationTargets,
         maxNumberOfContacts,
         name,
-        peerViewSize: maxNumberOfContacts,
+        nodeViewSize: maxNumberOfContacts,
         acceptProxyConnections,
         proxyConnectionServer,
         neighborUpdateInterval,
