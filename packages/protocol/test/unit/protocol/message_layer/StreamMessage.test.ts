@@ -14,7 +14,7 @@ const content = {
 }
 
 const newGroupKey = new EncryptedGroupKey('groupKeyId', hexToBinary('1234'))
-const signature = hexToBinary('0x1231234')
+const signature = hexToBinary('0x123123')
 
 const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = {}) => {
     return new StreamMessage(

@@ -20,7 +20,14 @@ export const hexToBinary = (hex: string): Uint8Array => {
     if (hex.startsWith('0x')) {
         hex = hex.slice(2)
     }
-    return Buffer.from(hex, 'hex')
+    if (hex.length % 2 !== 0) {
+        throw new Error(`Hex string length must be even, received: 0x${hex}`)
+    }
+    const result = Buffer.from(hex, 'hex')
+    if (hex.length !== result.length * 2) {
+        throw new Error(`Hex string input is likely malformed, received: 0x${hex}`)
+    }
+    return result
 }
 
 export const areEqualBinaries = (arr1: Uint8Array, arr2: Uint8Array): boolean => {

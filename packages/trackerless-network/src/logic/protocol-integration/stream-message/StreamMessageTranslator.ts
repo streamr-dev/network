@@ -101,7 +101,6 @@ export class StreamMessageTranslator {
             groupKeyId: msg.groupKeyId ?? undefined,
             newGroupKey,
             signature: msg.signature
-
         }
         return translated
     }

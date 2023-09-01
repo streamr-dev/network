@@ -15,7 +15,7 @@ describe('GroupKeyResponseTranslator', () => {
     })
     const newGroupKey: GroupKey = {
         id: 'id',
-        data: hexToBinary('0000')
+        data: hexToBinary('0000')!
     }
     const newGroupKeyResponse: GroupKeyResponse = {
         requestId: 'request',

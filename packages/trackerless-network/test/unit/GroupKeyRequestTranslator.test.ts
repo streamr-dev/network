@@ -1,5 +1,5 @@
 import { GroupKeyRequest as OldGroupKeyRequest } from '@streamr/protocol'
-import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { GroupKeyRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { GroupKeyRequestTranslator } from '../../src/logic/protocol-integration/stream-message/GroupKeyRequestTranslator'
 
@@ -7,7 +7,7 @@ describe('GroupKeyRequestTranslator', () => {
 
     const oldGroupKeyRequest = new OldGroupKeyRequest({
         rsaPublicKey: 'aaaaaaaa',
-        recipient: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
+        recipient: toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
         requestId: 'request',
         groupKeyIds: ['id1', 'id2', 'id3']
     })

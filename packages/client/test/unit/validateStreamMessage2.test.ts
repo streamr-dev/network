@@ -82,7 +82,7 @@ describe('Validator2', () => {
         msgWithNewGroupKey = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
             serializedContent: JSON.stringify({}),
-            newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('11111')),
+            newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
             authentication: publisherAuthentication
         })
         assert.notStrictEqual(msg.signature, msgWithNewGroupKey.signature)
@@ -106,8 +106,8 @@ describe('Validator2', () => {
             requestId: 'requestId',
             recipient: subscriber,
             encryptedGroupKeys: [
-                new EncryptedGroupKey('groupKeyId1', hexToBinary('11111')),
-                new EncryptedGroupKey('groupKeyId2', hexToBinary('22222'))
+                new EncryptedGroupKey('groupKeyId1', hexToBinary('0x1111')),
+                new EncryptedGroupKey('groupKeyId2', hexToBinary('0x2222'))
             ],
         }), new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), null, publisherAuthentication)
     })
