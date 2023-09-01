@@ -100,10 +100,10 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
         range(5).map((i) => {
-            const nodeId = allNodes[i].getOwnNodeId()
+            const ownNodeId = allNodes[i].getOwnNodeId()
             allNodes[i].getNearbyContactPoolIds().forEach((nodeId) => {
                 const neighbor = allNodes.find((node) => {
-                    return node.getOwnNodeId() === nodeId
+                    return node.getOwnNodeId() === ownNodeId
                 })
                 expect(neighbor!.getTargetNeighborIds()).toContain(nodeId)
             })
