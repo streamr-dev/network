@@ -178,7 +178,7 @@ export class StreamEntryPointDiscovery {
             try {
                 const discovered = await this.discoverEntryPoints(streamPartId)
                 if (discovered.length < ENTRYPOINT_STORE_LIMIT 
-                    || discovered.some((peer) => isSamePeerDescriptor(peer, this.config.ownPeerDescriptor))) {
+                    || discovered.some((peerDescriptor) => isSamePeerDescriptor(peerDescriptor, this.config.ownPeerDescriptor))) {
                     await this.storeSelfAsEntryPoint(streamPartId)
                     this.servicedStreamParts.delete(streamPartId)
                     this.keepSelfAsEntryPoint(streamPartId)
