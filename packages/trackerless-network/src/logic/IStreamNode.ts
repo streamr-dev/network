@@ -13,5 +13,5 @@ export interface IStreamNode {
     hasProxyConnection(nodeId: NodeID, direction: ProxyDirection): boolean
     stop(): void
     start(): Promise<void>
-    getTargetNeighborStringIds(): NodeID[]
+    getTargetNeighborIds(): NodeID[]
 }

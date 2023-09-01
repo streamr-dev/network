@@ -58,8 +58,8 @@ async function run(): Promise<void> {
     setInterval(() => {
         // eslint-disable-next-line no-console
         console.log(
-            `Number of connected stream neighbors ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0}, `
-            + `targets: ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborStringIds() || []}`
+            `Number of connected stream neighbors ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborIds().length || 0}, `
+            + `targets: ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborIds() || []}`
         )
         // eslint-disable-next-line no-console
         console.log(

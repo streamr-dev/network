@@ -155,7 +155,7 @@ describe('RandomGraphNode-DhtNode', () => {
 
         await successListener.waitForSuccess(15006)
         expect(graphNodes[0].getNearbyContactPoolIds().length).toEqual(1)
-        expect(graphNodes[0].getTargetNeighborStringIds().length).toEqual(1)
+        expect(graphNodes[0].getTargetNeighborIds().length).toEqual(1)
 
     })
 
@@ -175,7 +175,7 @@ describe('RandomGraphNode-DhtNode', () => {
 
         range(4).map((i) => {
             expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
-            expect(graphNodes[i].getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
 
         // Check bidirectionality
@@ -186,7 +186,7 @@ describe('RandomGraphNode-DhtNode', () => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnStringId() === stringId
                 })
-                expect(neighbor!.getTargetNeighborStringIds().includes(allNodes[i].getOwnStringId())).toEqual(true)
+                expect(neighbor!.getTargetNeighborIds().includes(allNodes[i].getOwnStringId())).toEqual(true)
             })
         })
     }, 10000)
@@ -197,11 +197,11 @@ describe('RandomGraphNode-DhtNode', () => {
             dhtNodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(graphNodes.map((node) =>
-            waitForCondition(() => node.getTargetNeighborStringIds().length >= 4, 10000)
+            waitForCondition(() => node.getTargetNeighborIds().length >= 4, 10000)
         ))
 
         const avg = graphNodes.reduce((acc, curr) => {
-            return acc + curr.getTargetNeighborStringIds().length
+            return acc + curr.getTargetNeighborIds().length
         }, 0) / numOfNodes
 
         logger.info(`AVG Number of neighbors: ${avg}`)
@@ -212,11 +212,11 @@ describe('RandomGraphNode-DhtNode', () => {
         let mismatchCounter = 0
         graphNodes.forEach((node) => {
             const nodeId = node.getOwnStringId()
-            node.getTargetNeighborStringIds().forEach((neighborId) => {
+            node.getTargetNeighborIds().forEach((neighborId) => {
                 if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
                     const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
-                    if (!neighbor!.getTargetNeighborStringIds().includes(nodeId)) {
-                        logger.info('mismatching ids length: ' + nodeId + ' ' + neighbor!.getTargetNeighborStringIds().length)
+                    if (!neighbor!.getTargetNeighborIds().includes(nodeId)) {
+                        logger.info('mismatching ids length: ' + nodeId + ' ' + neighbor!.getTargetNeighborIds().length)
                         mismatchCounter += 1
                     }
                 }

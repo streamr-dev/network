@@ -45,7 +45,7 @@ class NeighborCounter {
     constructor(randomGraphNode: RandomGraphNode, targetNumberOfNeighbors: number) {
         this.randomGraphNode = randomGraphNode
         this.targetNumberOfNeighbors = targetNumberOfNeighbors
-        this.counter = randomGraphNode.getTargetNeighborStringIds().length
+        this.counter = randomGraphNode.getTargetNeighborIds().length
         this.randomGraphNode.on('targetNeighborConnected', this.onTargetNeighborConnected)
     }
 
@@ -280,7 +280,7 @@ export class StreamrNode extends EventEmitter<Events> {
             await neighborCounter.waitForTargetReached(timeout)
         }
         this.publishToStream(streamPartId, msg)
-        return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length ?? 0
+        return this.getStream(streamPartId)?.layer2.getTargetNeighborIds().length ?? 0
     }
 
     async waitForJoinAndSubscribe(
@@ -297,7 +297,7 @@ export class StreamrNode extends EventEmitter<Events> {
             await neighborCounter.waitForTargetReached(timeout)
         }
         this.subscribeToStream(streamPartId)
-        return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length ?? 0
+        return this.getStream(streamPartId)?.layer2.getTargetNeighborIds().length ?? 0
     }
 
     async setProxies(
@@ -387,7 +387,7 @@ export class StreamrNode extends EventEmitter<Events> {
     getNeighbors(): NodeID[] {
         const neighbors: NodeID[] = []
         this.streams.forEach((stream) =>
-            stream.layer2.getTargetNeighborStringIds().forEach((neighbor) => neighbors.push(neighbor))
+            stream.layer2.getTargetNeighborIds().forEach((neighbor) => neighbors.push(neighbor))
         )
         return uniq(neighbors)
     }

@@ -49,10 +49,10 @@ describe('RandomGraphNode', () => {
         await randomGraphNode.stop()
     })
 
-    it('getTargetNeighborStringIds', () => {
+    it('getTargetNeighborIds', () => {
         const mockRemote = createMockRemoteNode()
         targetNeighbors.add(mockRemote)
-        const ids = randomGraphNode.getTargetNeighborStringIds()
+        const ids = randomGraphNode.getTargetNeighborIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
         targetNeighbors.remove(mockRemote.getPeerDescriptor())
     })

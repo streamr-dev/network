@@ -210,7 +210,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         this.propagation.feedUnseenMessage(msg, this.targetNeighbors.getIds(), previousPeer ?? null)
     }
 
-    getTargetNeighborStringIds(): NodeID[] {
+    getTargetNeighborIds(): NodeID[] {
         return this.targetNeighbors.getIds()
     }
 

@@ -287,7 +287,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         return this.config.handshaker.getOngoingHandshakes().size
     }
 
-    getTargetNeighborStringIds(): NodeID[] {
+    getTargetNeighborIds(): NodeID[] {
         if (!this.started && this.stopped) {
             return []
         }

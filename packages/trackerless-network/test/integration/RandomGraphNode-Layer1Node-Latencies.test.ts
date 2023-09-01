@@ -75,10 +75,10 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await graphNodes[0].start()
         await Promise.all([
             waitForCondition(() => graphNodes[0].getNearbyContactPoolIds().length === 1),
-            waitForCondition(() => graphNodes[0].getTargetNeighborStringIds().length === 1)
+            waitForCondition(() => graphNodes[0].getTargetNeighborIds().length === 1)
         ])
         expect(graphNodes[0].getNearbyContactPoolIds().length).toEqual(1)
-        expect(graphNodes[0].getTargetNeighborStringIds().length).toEqual(1)
+        expect(graphNodes[0].getTargetNeighborIds().length).toEqual(1)
     })
 
     it('happy path 5 nodes', async () => {
@@ -89,12 +89,12 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         }))
         await Promise.all(range(4).map((i) => {
             return waitForCondition(() => {
-                return graphNodes[i].getTargetNeighborStringIds().length >= 4
+                return graphNodes[i].getTargetNeighborIds().length >= 4
             }, 10000, 2000)
         }))
         range(4).map((i) => {
             expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
-            expect(graphNodes[i].getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
         // Check bidirectionality
         const allNodes = graphNodes
@@ -105,7 +105,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnStringId() === stringId
                 })
-                expect(neighbor!.getTargetNeighborStringIds()).toContain(nodeId)
+                expect(neighbor!.getTargetNeighborIds()).toContain(nodeId)
             })
         })
     }, 60000)
@@ -116,7 +116,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             dhtNodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(graphNodes.map((node) =>
-            waitForCondition(() => node.getTargetNeighborStringIds().length >= 4, 10000)
+            waitForCondition(() => node.getTargetNeighborIds().length >= 4, 10000)
         ))
 
         await Promise.all(graphNodes.map((node) =>
@@ -127,10 +127,10 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         let mismatchCounter = 0
         graphNodes.forEach((node) => {
             const nodeId = node.getOwnStringId()
-            node.getTargetNeighborStringIds().forEach((neighborId) => {
+            node.getTargetNeighborIds().forEach((neighborId) => {
                 if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
                     const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
-                    if (!neighbor!.getTargetNeighborStringIds().includes(nodeId)) {
+                    if (!neighbor!.getTargetNeighborIds().includes(nodeId)) {
                         mismatchCounter += 1
                     }
                 }
