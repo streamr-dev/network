@@ -107,7 +107,7 @@ describe('Handshakes', () => {
         Simulator.useFakeTimers(false)
     })
 
-    it('Two peers can handshake', async () => {
+    it('Two nodes can handshake', async () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(

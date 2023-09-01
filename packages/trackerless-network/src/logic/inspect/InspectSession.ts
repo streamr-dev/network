@@ -8,7 +8,7 @@ export interface Events {
 }
 
 interface InspectSessionConfig {
-    inspectedPeer: NodeID
+    inspectedNode: NodeID
 }
 
 const createMessageKey = (messageId: MessageID): string => {
@@ -18,20 +18,20 @@ export class InspectSession extends EventEmitter<Events> {
     
     // Boolean indicates if the message has been received by the inspected node
     private readonly inspectionMessages: Map<string, boolean> = new Map()
-    private readonly inspectedPeer: NodeID
+    private readonly inspectedNode: NodeID
 
     constructor(config: InspectSessionConfig) {
         super()
-        this.inspectedPeer = config.inspectedPeer
+        this.inspectedNode = config.inspectedNode
     }
 
     markMessage(senderId: NodeID, messageId: MessageID): void {
         const messageKey = createMessageKey(messageId)
         if (!this.inspectionMessages.has(messageKey)) {
-            this.inspectionMessages.set(messageKey, senderId === this.inspectedPeer)
+            this.inspectionMessages.set(messageKey, senderId === this.inspectedNode)
         } else if (this.inspectionMessages.has(messageKey)
             && this.inspectionMessages.get(messageKey) === false
-            && senderId === this.inspectedPeer
+            && senderId === this.inspectedNode
         ) {
             this.emit('done')
         } else if (this.inspectionMessages.has(messageKey)

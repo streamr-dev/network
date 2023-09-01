@@ -57,7 +57,7 @@ describe('Propagation', () => {
 
     it('All nodes receive messages', async () => {
         await waitForCondition(
-            () => randomGraphNodes.every((peer) => peer.getTargetNeighborStringIds().length >= 3), 30000
+            () => randomGraphNodes.every((node) => node.getTargetNeighborStringIds().length >= 3), 30000
         )
         await waitForCondition(() => {
             const avg = randomGraphNodes.reduce((acc, curr) => {

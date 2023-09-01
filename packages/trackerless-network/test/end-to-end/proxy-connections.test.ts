@@ -37,7 +37,7 @@ describe('Proxy connections', () => {
             0,
             666,
             0,
-            'peer' as EthereumAddress,
+            'node' as EthereumAddress,
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),

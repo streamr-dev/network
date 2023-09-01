@@ -4,7 +4,7 @@ import { PeerID } from '@streamr/dht'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
-import { createMockRemotePeer } from '../utils/utils'
+import { createMockRemoteNode } from '../utils/utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('NeighborFinder', () => {
@@ -19,7 +19,7 @@ describe('NeighborFinder', () => {
     beforeEach(() => {
         targetNeighbors = new NodeList(peerId, 15)
         nearbyContactPool = new NodeList(peerId, 30)
-        range(30).forEach(() => nearbyContactPool.add(createMockRemotePeer()))
+        range(30).forEach(() => nearbyContactPool.add(createMockRemoteNode()))
         const mockDoFindNeighbors = async (excluded: NodeID[]) => {
             const target = nearbyContactPool.getRandom(excluded)
             if (Math.random() < 0.5) {
@@ -41,7 +41,7 @@ describe('NeighborFinder', () => {
         neighborFinder.stop()
     })
 
-    it('Finds target number of peers', async () => {
+    it('Finds target number of nodes', async () => {
         neighborFinder.start()
         await waitForCondition(() => targetNeighbors.size() >= N, 10000)
         expect(neighborFinder.isRunning()).toEqual(false)

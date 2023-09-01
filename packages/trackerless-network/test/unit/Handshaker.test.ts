@@ -1,6 +1,6 @@
 import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
 import { ListeningRpcCommunicator, PeerDescriptor, PeerID, Simulator, SimulatorTransport } from '@streamr/dht'
-import { mockConnectionLocker, createMockRemotePeer } from '../utils/utils'
+import { mockConnectionLocker, createMockRemoteNode } from '../utils/utils'
 import { NodeList } from '../../src/logic/NodeList'
 import { range } from 'lodash'
 
@@ -54,8 +54,8 @@ describe('Handshaker', () => {
         expect(res.length).toEqual(0)
     })
 
-    it('attemptHandshakesOnContact with known peers that cannot be connected to', async () => {
-        range(2).forEach(() => nearbyContactPool.add(createMockRemotePeer()))
+    it('attemptHandshakesOnContact with known nodes that cannot be connected to', async () => {
+        range(2).forEach(() => nearbyContactPool.add(createMockRemoteNode()))
         const res = await handshaker.attemptHandshakesOnContacts([])
         expect(res.length).toEqual(2)
     })

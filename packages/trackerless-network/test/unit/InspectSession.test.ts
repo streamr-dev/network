@@ -8,8 +8,8 @@ import { NodeID } from '../../src/identifiers'
 describe('InspectSession', () => {
 
     let inspectSession: InspectSession
-    let inspectedPeer: NodeID
-    let anotherPeer: NodeID
+    let inspectedNode: NodeID
+    let anotherNode: NodeID
 
     const publisherId = utf8ToBinary('publisherId')
     const messageId1: MessageID = {
@@ -31,10 +31,10 @@ describe('InspectSession', () => {
     }
 
     beforeEach(() => {
-        inspectedPeer = PeerID.fromString('inspectedPeer').toKey() as unknown as NodeID
-        anotherPeer = PeerID.fromString('anotherPeer').toKey() as unknown as NodeID
+        inspectedNode = PeerID.fromString('inspectedNode').toKey() as unknown as NodeID
+        anotherNode = PeerID.fromString('anotherNode').toKey() as unknown as NodeID
         inspectSession = new InspectSession({
-            inspectedPeer
+            inspectedNode
         })
     })
 
@@ -43,36 +43,36 @@ describe('InspectSession', () => {
     })
 
     it('should mark message', () => {
-        inspectSession.markMessage(inspectedPeer, messageId1)
+        inspectSession.markMessage(inspectedNode, messageId1)
         expect(inspectSession.getInspectedMessageCount()).toBe(1)
-        inspectSession.markMessage(inspectedPeer, messageId2)
+        inspectSession.markMessage(inspectedNode, messageId2)
         expect(inspectSession.getInspectedMessageCount()).toBe(2)
     })
 
-    it('should emit done event when inspected peer sends seen message', async () => {
-        inspectSession.markMessage(anotherPeer, messageId1)
+    it('should emit done event when inspected node sends seen message', async () => {
+        inspectSession.markMessage(anotherNode, messageId1)
         await Promise.all([
             waitForEvent3<Events>(inspectSession, 'done', 100),
-            inspectSession.markMessage(inspectedPeer, messageId1)
+            inspectSession.markMessage(inspectedNode, messageId1)
         ])
         expect(inspectSession.getInspectedMessageCount()).toBe(1)
     })
 
-    it('should emit done event another peer sends message after inspected peer', async () => {
-        inspectSession.markMessage(inspectedPeer, messageId1)
+    it('should emit done event another node sends message after inspected node', async () => {
+        inspectSession.markMessage(inspectedNode, messageId1)
         await Promise.all([
             waitForEvent3<Events>(inspectSession, 'done', 100),
-            inspectSession.markMessage(anotherPeer, messageId1)
+            inspectSession.markMessage(anotherNode, messageId1)
         ])
         expect(inspectSession.getInspectedMessageCount()).toBe(1)
     })
 
     it('should not emit done if messageIds do not match', async () => {
-        inspectSession.markMessage(inspectedPeer, messageId1)
+        inspectSession.markMessage(inspectedNode, messageId1)
         await expect(async () => {
             await Promise.all([
                 waitForEvent3<Events>(inspectSession, 'done', 100),
-                inspectSession.markMessage(anotherPeer, messageId2)
+                inspectSession.markMessage(anotherNode, messageId2)
             ])
         }).rejects.toThrow('waitForEvent3')
         

@@ -12,7 +12,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { expect } from 'expect'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
-describe('PeerList', () => {
+describe('NodeList', () => {
 
     const ids = [
         new Uint8Array([1, 1, 1]),
@@ -23,7 +23,7 @@ describe('PeerList', () => {
     ]
     const ownId = PeerID.fromString('test')
     const graphId = 'test'
-    let peerList: NodeList
+    let nodeList: NodeList
     let simulator: Simulator
     let mockTransports: SimulatorTransport[]
 
@@ -39,13 +39,13 @@ describe('PeerList', () => {
     beforeEach(() => {
         simulator = new Simulator()
         mockTransports = []
-        peerList = new NodeList(ownId, 6)
+        nodeList = new NodeList(ownId, 6)
         ids.forEach((peerId) => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: peerId,
                 type: 0
             }
-            peerList.add(createRemoteGraphNode(peerDescriptor))
+            nodeList.add(createRemoteGraphNode(peerDescriptor))
         })
     })
 
@@ -63,88 +63,88 @@ describe('PeerList', () => {
             type: 0
         }
         const newNode = createRemoteGraphNode(newDescriptor)
-        peerList.add(newNode)
-        expect(peerList.hasNode(newDescriptor)).toEqual(true)
+        nodeList.add(newNode)
+        expect(nodeList.hasNode(newDescriptor)).toEqual(true)
 
         const newDescriptor2 = {
             kademliaId: new Uint8Array([1, 2, 4]),
             type: 0
         }
         const newNode2 = createRemoteGraphNode(newDescriptor2)
-        peerList.add(newNode2)
-        expect(peerList.hasNode(newDescriptor2)).toEqual(false)
+        nodeList.add(newNode2)
+        expect(nodeList.hasNode(newDescriptor2)).toEqual(false)
     })
 
     it('remove', () => {
-        const toRemove = peerList.getClosest([])
-        peerList.remove(toRemove!.getPeerDescriptor())
-        expect(peerList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
+        const toRemove = nodeList.getClosest([])
+        nodeList.remove(toRemove!.getPeerDescriptor())
+        expect(nodeList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
     })
 
     it('removeById', () => {
-        const toRemove = peerList.getClosest([])
+        const toRemove = nodeList.getClosest([])
         const stringId = getNodeIdFromPeerDescriptor(toRemove!.getPeerDescriptor())
-        peerList.removeById(stringId)
-        expect(peerList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
+        nodeList.removeById(stringId)
+        expect(nodeList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
     })
 
     it('getClosest', () => {
-        const closest = peerList.getClosest([])
+        const closest = nodeList.getClosest([])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey())
     })
 
     it('getClosest with exclude', () => {
-        const closest = peerList.getClosest([PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey() as unknown as NodeID])
+        const closest = nodeList.getClosest([PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey() as unknown as NodeID])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 2])).toKey())
     })
 
     it('getFurthest', () => {
-        const closest = peerList.getFurthest([])
+        const closest = nodeList.getFurthest([])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey())
     })
 
     it('getFurthest with exclude', () => {
-        const closest = peerList.getFurthest([PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey() as unknown as NodeID])
+        const closest = nodeList.getFurthest([PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey() as unknown as NodeID])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 4])).toKey())
     })
 
     it('getClosestAndFurthest', () => {
-        const results = peerList.getClosestAndFurthest([])
-        expect(results).toEqual([peerList.getClosest([]), peerList.getFurthest([])])
+        const results = nodeList.getClosestAndFurthest([])
+        expect(results).toEqual([nodeList.getClosest([]), nodeList.getFurthest([])])
     })
 
     it('getClosest empty', () => {
-        const emptyPeerList = new NodeList(ownId, 2)
-        expect(emptyPeerList.getClosest([])).toBeUndefined()
+        const emptyList = new NodeList(ownId, 2)
+        expect(emptyList.getClosest([])).toBeUndefined()
     })
 
     it('getFurthest empty', () => {
-        const emptyPeerList = new NodeList(ownId, 2)
-        expect(emptyPeerList.getFurthest([])).toBeUndefined()
+        const emptyList = new NodeList(ownId, 2)
+        expect(emptyList.getFurthest([])).toBeUndefined()
     })
 
     it('getRandom empty', () => {
-        const emptyPeerList = new NodeList(ownId, 2)
-        expect(emptyPeerList.getRandom([])).toBeUndefined()
+        const emptyList = new NodeList(ownId, 2)
+        expect(emptyList.getRandom([])).toBeUndefined()
     })
 
     it('getClosestAndFurthest empty', () => {
-        const emptyPeerList = new NodeList(ownId, 2)
-        expect(emptyPeerList.getClosestAndFurthest([])).toEqual([])
+        const emptyList = new NodeList(ownId, 2)
+        expect(emptyList.getClosestAndFurthest([])).toEqual([])
     })
 
     it('getClosestAndFurthest with exclude', () => {
-        const results = peerList.getClosestAndFurthest([
+        const results = nodeList.getClosestAndFurthest([
             PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey() as unknown as NodeID,
             PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey() as unknown as NodeID
         ])
         expect(results).toEqual([
-            peerList.getClosest([PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey() as unknown as NodeID]),
-            peerList.getFurthest([PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey() as unknown as NodeID])
+            nodeList.getClosest([PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey() as unknown as NodeID]),
+            nodeList.getFurthest([PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey() as unknown as NodeID])
         ])
     })
 })

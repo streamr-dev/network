@@ -96,9 +96,9 @@ export class Handshaker implements IHandshaker {
     private async doParallelHandshakes(targets: RemoteHandshaker[], excludedIds: NodeID[]): Promise<NodeID[]> {
         const results = await Promise.allSettled(
             Array.from(targets.values()).map(async (target: RemoteHandshaker, i) => {
-                const otherPeer = i === 0 ? targets[1] : targets[0]
-                const otherPeerStringId = otherPeer ? getNodeIdFromPeerDescriptor(otherPeer.getPeerDescriptor()) : undefined
-                return this.handshakeWithTarget(target, otherPeerStringId)
+                const otherNode = i === 0 ? targets[1] : targets[0]
+                const otherNodeStringId = otherNode ? getNodeIdFromPeerDescriptor(otherNode.getPeerDescriptor()) : undefined
+                return this.handshakeWithTarget(target, otherNodeStringId)
             })
         )
         results.map((res, i) => {

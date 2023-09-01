@@ -69,7 +69,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         Simulator.useFakeTimers(false)
     })
 
-    it('happy path single peer', async () => {
+    it('happy path single node', async () => {
         await dhtNodes[0].joinDht([entrypointDescriptor])
         entryPointRandomGraphNode.start()
         await graphNodes[0].start()
@@ -81,7 +81,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         expect(graphNodes[0].getTargetNeighborStringIds().length).toEqual(1)
     })
 
-    it('happy path 5 peers', async () => {
+    it('happy path 5 nodes', async () => {
         entryPointRandomGraphNode.start()
         range(4).map((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
@@ -102,15 +102,15 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         range(5).map((i) => {
             const nodeId = allNodes[i].getOwnStringId()
             allNodes[i].getNearbyContactPoolIds().forEach((stringId) => {
-                const neighbor = allNodes.find((peer) => {
-                    return peer.getOwnStringId() === stringId
+                const neighbor = allNodes.find((node) => {
+                    return node.getOwnStringId() === stringId
                 })
                 expect(neighbor!.getTargetNeighborStringIds()).toContain(nodeId)
             })
         })
     }, 60000)
 
-    it('happy path 64 peers', async () => {
+    it('happy path 64 nodes', async () => {
         await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
         await Promise.all(range(numOfNodes).map((i) => {
             dhtNodes[i].joinDht([entrypointDescriptor])

@@ -54,7 +54,7 @@ export class Inspector implements IInspector {
     async inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         const session = new InspectSession({
-            inspectedPeer: nodeId
+            inspectedNode: nodeId
         })
         const lockId = `inspector-${this.graphId}`
         this.sessions.set(nodeId, session)

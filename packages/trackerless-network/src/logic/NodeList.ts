@@ -10,8 +10,8 @@ export interface Events {
 
 const getValuesOfIncludedKeys = (nodes: Map<NodeID, RemoteRandomGraphNode>, exclude: NodeID[]): RemoteRandomGraphNode[] => {
     return Array.from(nodes.entries())
-        .filter(([id, _peer]) => !exclude.includes(id))
-        .map(([_id, peer]) => peer)
+        .filter(([id, _node]) => !exclude.includes(id))
+        .map(([_id, node]) => node)
 }
 
 export class NodeList extends EventEmitter<Events> {
@@ -29,10 +29,10 @@ export class NodeList extends EventEmitter<Events> {
     add(remote: RemoteRandomGraphNode): void {
         if (!this.ownPeerID.equals(peerIdFromPeerDescriptor(remote.getPeerDescriptor())) && this.nodes.size < this.limit) {
             const stringId = getNodeIdFromPeerDescriptor(remote.getPeerDescriptor())
-            const isExistingPeer = this.nodes.has(stringId)
+            const isExistingNode = this.nodes.has(stringId)
             this.nodes.set(stringId, remote)
             
-            if (!isExistingPeer) {
+            if (!isExistingNode) {
                 this.emit('nodeAdded', stringId, remote)
             }
         }
@@ -71,7 +71,7 @@ export class NodeList extends EventEmitter<Events> {
     }
 
     size(exclude: NodeID[] = []): number {
-        return Array.from(this.nodes.keys()).filter((peer) => !exclude.includes(peer)).length
+        return Array.from(this.nodes.keys()).filter((node) => !exclude.includes(node)).length
     }
 
     getRandom(exclude: NodeID[]): RemoteRandomGraphNode | undefined {

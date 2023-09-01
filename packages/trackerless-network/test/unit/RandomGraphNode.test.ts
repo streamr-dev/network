@@ -1,7 +1,7 @@
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { MockTransport } from '../utils/mock/Transport'
-import { createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
+import { createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { NodeList } from '../../src/logic/NodeList'
 import { MockHandshaker } from '../utils/mock/MockHandshaker'
@@ -50,7 +50,7 @@ describe('RandomGraphNode', () => {
     })
 
     it('getTargetNeighborStringIds', () => {
-        const mockRemote = createMockRemotePeer()
+        const mockRemote = createMockRemoteNode()
         targetNeighbors.add(mockRemote)
         const ids = randomGraphNode.getTargetNeighborStringIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
@@ -58,14 +58,14 @@ describe('RandomGraphNode', () => {
     })
 
     it('getNearbyContactPoolIds', () => {
-        const mockRemote = createMockRemotePeer()
+        const mockRemote = createMockRemoteNode()
         nearbyContactPool.add(mockRemote)
         const ids = randomGraphNode.getNearbyContactPoolIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
     it('getRandomContactPoolIds', () => {
-        const mockRemote = createMockRemotePeer()
+        const mockRemote = createMockRemoteNode()
         randomContactPool.add(mockRemote)
         const ids = randomGraphNode.getRandomContactPoolIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))

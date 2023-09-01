@@ -2,7 +2,7 @@ import { PeerID } from '@streamr/dht'
 import { HandshakerServer } from '../../src/logic/neighbor-discovery/HandshakerServer'
 import { NodeList } from '../../src/logic/NodeList'
 import { InterleaveNotice, StreamHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createMockRemoteHandshaker, createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
+import { createMockRemoteHandshaker, createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
 import { NodeID } from '../../src/identifiers'
 
 describe('HandshakerServer', () => {
@@ -31,7 +31,7 @@ describe('HandshakerServer', () => {
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
             createRemoteHandshaker: (_p) => createMockRemoteHandshaker(),
-            createRemoteNode: (_p) => createMockRemotePeer(),
+            createRemoteNode: (_p) => createMockRemoteNode(),
             handshakeWithInterleaving: async (_p, _t) => {
                 handshakeWithInterleaving()
                 return true
@@ -58,10 +58,10 @@ describe('HandshakerServer', () => {
     })
 
     it('handshake interleave', async () => {
-        targetNeighbors.add(createMockRemotePeer())
-        targetNeighbors.add(createMockRemotePeer())
-        targetNeighbors.add(createMockRemotePeer())
-        targetNeighbors.add(createMockRemotePeer())
+        targetNeighbors.add(createMockRemoteNode())
+        targetNeighbors.add(createMockRemoteNode())
+        targetNeighbors.add(createMockRemoteNode())
+        targetNeighbors.add(createMockRemoteNode())
         const req = StreamHandshakeRequest.create({
             randomGraphId: 'random-graph',
             senderId: 'senderId',
