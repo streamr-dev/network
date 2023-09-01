@@ -13,7 +13,7 @@ describe('GroupKeyRequestTranslator', () => {
     })
     const newGroupKeyRequest: GroupKeyRequest = {
         rsaPublicKey: utf8ToBinary('aaaaaaaa'),
-        recipientId: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+        recipientId: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')!,
         requestId: 'request',
         groupKeyIds: ['id1', 'id2', 'id3']
     }

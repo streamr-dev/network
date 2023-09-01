@@ -5,7 +5,7 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 
-const PROXIED_NODE_USER_ID = hexToBinary(randomEthereumAddress())
+const PROXIED_NODE_USER_ID = hexToBinary(randomEthereumAddress())!
 
 describe('Proxy connections', () => {
 

@@ -17,7 +17,7 @@ describe('StreamMessageTranslator', () => {
     const protobufMsg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         StreamPartIDUtils.parse('TEST#0'),
-        hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')!
     )
     const messageId = new MessageID(
         'TEST' as StreamID,

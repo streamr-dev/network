@@ -16,11 +16,15 @@ export const binaryToHex = (bytes: Uint8Array, addPrefix = false): string => {
     return Buffer.from(bytes).toString('hex')
 }
 
-export const hexToBinary = (hex: string): Uint8Array => {
+export const hexToBinary = (hex: string): Uint8Array | undefined => {
     if (hex.startsWith('0x')) {
         hex = hex.slice(2)
     }
-    return Buffer.from(hex, 'hex')
+    if (hex.length % 2 !== 0) {
+        return undefined
+    }
+    const result = Buffer.from(hex, 'hex')
+    return hex.length === result.length * 2 ? result : undefined
 }
 
 export const areEqualBinaries = (arr1: Uint8Array, arr2: Uint8Array): boolean => {
