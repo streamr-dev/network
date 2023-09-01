@@ -65,7 +65,7 @@ export const createStreamMessage = (
         content: utf8ToBinary(content),
         contentType: ContentType.JSON,
         messageId,
-        signature: hexToBinary('0x1234')!
+        signature: hexToBinary('0x1234')
     }
     return msg
 }

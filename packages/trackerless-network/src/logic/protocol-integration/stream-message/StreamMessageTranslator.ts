@@ -74,7 +74,7 @@ export class StreamMessageTranslator {
             sequenceNumber: msg.getSequenceNumber(),
             streamId: msg.getStreamId() as string,
             streamPartition: msg.getStreamPartition(),
-            publisherId: hexToBinary(msg.getPublisherId())!,
+            publisherId: hexToBinary(msg.getPublisherId()),
             messageChainId: msg.getMsgChainId()
         }
         let previousMessageRef: MessageRef | undefined = undefined
@@ -88,7 +88,7 @@ export class StreamMessageTranslator {
         if (msg.getNewGroupKey()) {
             newGroupKey = {
                 id: msg.getNewGroupKey()!.groupKeyId,
-                data: hexToBinary(msg.getNewGroupKey()!.encryptedGroupKeyHex)!
+                data: hexToBinary(msg.getNewGroupKey()!.encryptedGroupKeyHex)
             }
         }
         const translated: StreamMessage = {

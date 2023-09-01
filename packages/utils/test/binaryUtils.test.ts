@@ -11,25 +11,24 @@ describe('binaryUtils', () => {
     it('can translate hex', () => {
         const hex = '0x1234567890abcdef'
         const binary = hexToBinary(hex)
-        expect(binaryToHex(binary!, true)).toEqual(hex)
+        expect(binaryToHex(binary, true)).toEqual(hex)
     })
 
     it('hexToBinary no prefix', () => {
         const hex = '1234567890abcdef'
         const binary = hexToBinary(hex)
-        expect(binaryToHex(binary!, false)).toEqual(hex)
+        expect(binaryToHex(binary, false)).toEqual(hex)
     })
 
-    it('hexToBinary malformed input retruns undefined', () => {
-        const hex = '0x123MMMM'
-        const binary = hexToBinary(hex)
-        expect(binary).toEqual(undefined)
+    it('hexToBinary malformed input', () => {
+        const hex = '0x123MMM'
+        expect(() => hexToBinary(hex)).toThrow('Hex string input is likely malformed, received: 0x123MMM')
+    
     })
 
     it('hexToBinary odd input', () => {
         const hex = '0x123'
-        const binary = hexToBinary(hex)
-        expect(binary).toEqual(undefined)
+        expect(() => hexToBinary(hex)).toThrow('Hex string length must be even, received: 0x123')
     })
 
     it('areEqualBinaries', () => {

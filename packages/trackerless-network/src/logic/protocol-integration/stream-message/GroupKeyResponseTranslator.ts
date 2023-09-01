@@ -9,12 +9,12 @@ export class GroupKeyResponseTranslator {
 
         const groupKeys = msg.encryptedGroupKeys.map((groupKey) => {
             return {
-                data: hexToBinary(groupKey.encryptedGroupKeyHex)!,
+                data: hexToBinary(groupKey.encryptedGroupKeyHex),
                 id: groupKey.groupKeyId
             }
         })
         const translated: GroupKeyResponse = {
-            recipientId: hexToBinary(msg.recipient)!,
+            recipientId: hexToBinary(msg.recipient),
             requestId: msg.requestId,
             groupKeys
         }

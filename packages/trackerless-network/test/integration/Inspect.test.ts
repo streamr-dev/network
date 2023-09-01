@@ -2,8 +2,9 @@ import { LatencyType, NodeType, PeerDescriptor, PeerID, Simulator, SimulatorTran
 import { NetworkStack } from '../../src/NetworkStack'
 import { range } from 'lodash'
 import { createStreamMessage } from '../utils/utils'
-import { utf8ToBinary } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress } from '@streamr/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('inspect', () => {
 
@@ -83,7 +84,7 @@ describe('inspect', () => {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
                 StreamPartIDUtils.parse('stream#0'),
-                utf8ToBinary('publisher'),
+                hexToBinary(toEthereumAddress(randomEthereumAddress())),
                 123123,
                 sequenceNumber
             )

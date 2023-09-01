@@ -7,7 +7,7 @@ export class GroupKeyRequestTranslator {
 
     static toProtobuf(msg: OldGroupKeyRequest): GroupKeyRequest {
         const translated: GroupKeyRequest = {
-            recipientId: hexToBinary(msg.recipient)!,
+            recipientId: hexToBinary(msg.recipient),
             requestId: msg.requestId,
             rsaPublicKey: utf8ToBinary(msg.rsaPublicKey),
             groupKeyIds: msg.groupKeyIds
