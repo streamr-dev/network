@@ -14,7 +14,7 @@ export interface StreamNodeServerConfig {
     ownPeerDescriptor: PeerDescriptor
     randomGraphId: string
     markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
-    broadcast: (message: StreamMessage, previousPeer?: NodeID) => void
+    broadcast: (message: StreamMessage, previousNode?: NodeID) => void
     onLeaveNotice(notice: LeaveStreamNotice): void
     markForInspection(senderId: NodeID, messageId: MessageID): void
     rpcCommunicator: ListeningRpcCommunicator
@@ -29,10 +29,10 @@ export class StreamNodeServer implements INetworkRpc {
     }
 
     async sendData(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
-        const previousPeer = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
-        this.config.markForInspection(previousPeer, message.messageId!)
+        const previousNode = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
+        this.config.markForInspection(previousNode, message.messageId!)
         if (this.config.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
-            this.config.broadcast(message, previousPeer)
+            this.config.broadcast(message, previousNode)
         }
         return Empty
     }

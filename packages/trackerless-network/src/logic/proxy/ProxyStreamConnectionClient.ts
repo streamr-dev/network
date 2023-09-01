@@ -76,7 +76,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.streamPartId,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
-            broadcast: (message: StreamMessage, previousPeer?: NodeID) => this.broadcast(message, previousPeer),
+            broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
                 const senderId = notice.senderId as NodeID
                 const contact = this.targetNeighbors.getNeighborById(senderId)
@@ -202,12 +202,12 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         this.targetNeighbors.removeById(nodeId)
     }
 
-    broadcast(msg: StreamMessage, previousPeer?: NodeID): void {
-        if (!previousPeer) {
+    broadcast(msg: StreamMessage, previousNode?: NodeID): void {
+        if (!previousNode) {
             markAndCheckDuplicate(this.duplicateDetectors, msg.messageId!, msg.previousMessageRef)
         }
         this.emit('message', msg)
-        this.propagation.feedUnseenMessage(msg, this.targetNeighbors.getIds(), previousPeer ?? null)
+        this.propagation.feedUnseenMessage(msg, this.targetNeighbors.getIds(), previousNode ?? null)
     }
 
     getTargetNeighborIds(): NodeID[] {

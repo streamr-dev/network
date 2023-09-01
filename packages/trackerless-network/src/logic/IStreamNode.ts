@@ -9,7 +9,7 @@ export interface IStreamNode {
 
     off(event: 'message', listener: (message: StreamMessage) => void): void
 
-    broadcast(msg: StreamMessage, previousPeer?: NodeID): void
+    broadcast(msg: StreamMessage, previousNode?: NodeID): void
     hasProxyConnection(nodeId: NodeID, direction: ProxyDirection): boolean
     stop(): void
     start(): Promise<void>

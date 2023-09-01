@@ -86,7 +86,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             randomGraphId: this.config.randomGraphId,
             rpcCommunicator: this.config.rpcCommunicator,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
-            broadcast: (message: StreamMessage, previousPeer?: NodeID) => this.broadcast(message, previousPeer),
+            broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
                 const senderId = notice.senderId as NodeID
                 const contact = this.config.nearbyContactPool.getNeighborById(senderId)
@@ -253,12 +253,12 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.config.inspector.stop()
     }
 
-    broadcast(msg: StreamMessage, previousPeer?: NodeID): void {
-        if (!previousPeer) {
+    broadcast(msg: StreamMessage, previousNode?: NodeID): void {
+        if (!previousNode) {
             markAndCheckDuplicate(this.duplicateDetectors, msg.messageId!, msg.previousMessageRef)
         }
         this.emit('message', msg)
-        this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), previousPeer ?? null)
+        this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), previousNode ?? null)
     }
 
     inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
