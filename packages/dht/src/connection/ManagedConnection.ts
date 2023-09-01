@@ -59,13 +59,6 @@ export class ManagedConnection extends EventEmitter<Events> {
     ) {
         super()
 
-        if (typeof ownPeerDescriptor === 'undefined') {
-            logger.error('ownPeerDescriptor is undefined while constructing ManagedConnection')
-            const error = new Error('ownPeerDescriptor is undefined while constructing ManagedConnection')
-            logger.error('stack: ' + error.stack)
-            throw error
-        }
-
         this.objectId = ManagedConnection.objectCounter
         ManagedConnection.objectCounter++
 
@@ -227,9 +220,6 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     private onDisconnected(disconnectionType: DisconnectionType, _code?: number, _reason?: string): void {
-        logger.error('ManagedConnection this is ManagedConnection: ' + (this instanceof ManagedConnection))
-        logger.info('Typeof ManagedConnection.ownPeerDescriptor: ' + typeof this.ownPeerDescriptor)
-        logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' onDisconnected() ' + disconnectionType)
         if (this.bufferSentbyOtherConnection) {
             return
         }
