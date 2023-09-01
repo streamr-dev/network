@@ -2,7 +2,7 @@ import { keyFromPeerDescriptor, PeerDescriptor, PeerID, peerIdFromPeerDescriptor
 import { sample } from 'lodash'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { EventEmitter } from 'eventemitter3'
-import { NodeID } from '../identifiers'
+import { getNodeIdFromPeerDescriptor, NodeID } from '../identifiers'
 
 export interface Events {
     peerAdded: (id: NodeID, remote: RemoteRandomGraphNode) => any
@@ -39,7 +39,7 @@ export class PeerList extends EventEmitter<Events> {
     }
 
     remove(peerDescriptor: PeerDescriptor): void {
-        this.peers.delete(keyFromPeerDescriptor(peerDescriptor) as unknown as NodeID)
+        this.peers.delete(getNodeIdFromPeerDescriptor(peerDescriptor))
     }
 
     removeById(stringId: NodeID): void {
@@ -47,7 +47,7 @@ export class PeerList extends EventEmitter<Events> {
     }
 
     hasPeer(peerDescriptor: PeerDescriptor): boolean {
-        return this.peers.has(keyFromPeerDescriptor(peerDescriptor) as unknown as NodeID)
+        return this.peers.has(getNodeIdFromPeerDescriptor(peerDescriptor))
     }
 
     hasPeerWithStringId(stringId: NodeID): boolean {

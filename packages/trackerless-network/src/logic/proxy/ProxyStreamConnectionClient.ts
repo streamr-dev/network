@@ -21,7 +21,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { markAndCheckDuplicate } from '../utils'
 import { StreamPartID } from '@streamr/protocol'
-import { NodeID, UserID } from '../../identifiers'
+import { NodeID, UserID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
     // eslint-disable-next-line no-constant-condition
@@ -224,7 +224,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     }
 
     async onPeerDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
-        const peerKey = keyFromPeerDescriptor(peerDescriptor) as unknown as NodeID
+        const peerKey = getNodeIdFromPeerDescriptor(peerDescriptor)
         if (this.connections.has(peerKey)) {
             this.config.connectionLocker.unlockConnection(peerDescriptor, 'proxy-stream-connection-client')
             this.removeConnection(peerKey)

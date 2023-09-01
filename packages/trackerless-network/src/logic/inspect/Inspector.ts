@@ -1,11 +1,11 @@
-import { PeerDescriptor, keyFromPeerDescriptor, ConnectionLocker } from '@streamr/dht'
+import { PeerDescriptor, ConnectionLocker } from '@streamr/dht'
 import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger, waitForEvent3 } from '@streamr/utils'
 import { RemoteTemporaryConnectionRpcServer } from '../temporary-connection/RemoteTemporaryConnectionRpcServer'
-import { NodeID } from '../../identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 interface InspectorConfig {
     ownPeerDescriptor: PeerDescriptor
@@ -52,7 +52,7 @@ export class Inspector implements IInspector {
     }
 
     async inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
-        const nodeId = keyFromPeerDescriptor(peerDescriptor) as unknown as NodeID
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         const session = new InspectSession({
             inspectedPeer: nodeId
         })

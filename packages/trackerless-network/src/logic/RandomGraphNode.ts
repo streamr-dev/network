@@ -35,7 +35,7 @@ import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer
 import { IInspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 import { markAndCheckDuplicate } from './utils'
-import { NodeID } from '../identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -214,7 +214,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         if (this.config.targetNeighbors.hasPeer(peerDescriptor)) {
             this.config.targetNeighbors.remove(peerDescriptor)
             this.config.connectionLocker.unlockConnection(peerDescriptor, this.config.randomGraphId)
-            this.config.neighborFinder.start([keyFromPeerDescriptor(peerDescriptor) as unknown as NodeID])
+            this.config.neighborFinder.start([getNodeIdFromPeerDescriptor(peerDescriptor)])
             this.config.temporaryConnectionServer.removePeer(peerDescriptor)
         }
     }
