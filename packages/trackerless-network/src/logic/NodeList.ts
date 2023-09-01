@@ -50,7 +50,7 @@ export class NodeList extends EventEmitter<Events> {
         return this.nodes.has(getNodeIdFromPeerDescriptor(peerDescriptor))
     }
 
-    hasNodeWithStringId(stringId: NodeID): boolean {
+    hasNodeById(stringId: NodeID): boolean {
         return this.nodes.has(stringId)
     }
 

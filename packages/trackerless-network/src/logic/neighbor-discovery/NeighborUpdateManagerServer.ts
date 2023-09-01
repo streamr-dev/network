@@ -28,7 +28,7 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
 
     // INetworkRpc server method
     async neighborUpdate(message: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> {
-        if (this.config.targetNeighbors!.hasNodeWithStringId(message.senderId as NodeID)) {
+        if (this.config.targetNeighbors!.hasNodeById(message.senderId as NodeID)) {
             const newPeers = message.neighborDescriptors
                 .filter((peerDescriptor) => {
                     const stringId = getNodeIdFromPeerDescriptor(peerDescriptor)

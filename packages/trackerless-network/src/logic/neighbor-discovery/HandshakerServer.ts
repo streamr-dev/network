@@ -88,7 +88,7 @@ export class HandshakerServer implements IHandshakeRpc {
 
     async interleaveNotice(message: InterleaveNotice, _context: ServerCallContext): Promise<Empty> {
         if (message.randomGraphId === this.config.randomGraphId) {
-            if (this.config.targetNeighbors.hasNodeWithStringId(message.senderId as NodeID)) {
+            if (this.config.targetNeighbors.hasNodeById(message.senderId as NodeID)) {
                 const senderDescriptor = this.config.targetNeighbors.getNeighborById(message.senderId as NodeID)!.getPeerDescriptor()
                 this.config.connectionLocker.unlockConnection(senderDescriptor, this.config.randomGraphId)
                 this.config.targetNeighbors.remove(senderDescriptor)
