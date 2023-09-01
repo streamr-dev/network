@@ -24,7 +24,7 @@ export const hexToBinary = (hex: string): Uint8Array | undefined => {
         return undefined
     }
     const result = Buffer.from(hex, 'hex')
-    return (hex.length - (hex.length % 2)) === result.length * 2 ? result : undefined
+    return hex.length === result.length * 2 ? result : undefined
 }
 
 export const areEqualBinaries = (arr1: Uint8Array, arr2: Uint8Array): boolean => {
