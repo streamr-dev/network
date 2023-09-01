@@ -13,7 +13,7 @@ program
     .option('--name <name>', 'Name in published messages', 'full-node')
     .option('--ip <ip>', 'Ip address to use', '0.0.0.0')
     .option('--wsPort <port>', 'Name in published messages', '23124')
-    .option('--entrypointId <entrypointId>', 'Entrypoints stringId', 'bootstrap')
+    .option('--entrypointId <entrypointId>', 'Entrypoints node id', 'bootstrap')
     .option('--entrypointIp <entrypointIp>', 'Entrypoints IP address', '0.0.0.0')
     .option('--streamIds <streamIds>', 'streamId to publish', (value: string) => value.split(','), ['stream-0'])
     .description('Run full node')
