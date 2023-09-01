@@ -24,7 +24,7 @@ function makeMsg(streamId: string, partition: number, ts: number, msgNo: number)
         content: new Uint8Array([1]),
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-        signature: hexToBinary('0x1111')!,
+        signature: hexToBinary('0x1111'),
         messageType: StreamMessageType.MESSAGE
     }
 }

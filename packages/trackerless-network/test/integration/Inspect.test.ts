@@ -84,7 +84,7 @@ describe('inspect', () => {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
                 StreamPartIDUtils.parse('stream#0'),
-                hexToBinary(toEthereumAddress(randomEthereumAddress()))!,
+                hexToBinary(toEthereumAddress(randomEthereumAddress())),
                 123123,
                 sequenceNumber
             )

@@ -19,7 +19,7 @@ describe('GroupKeyResponseTranslator', () => {
     }
     const newGroupKeyResponse: GroupKeyResponse = {
         requestId: 'request',
-        recipientId: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')!,
+        recipientId: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
         groupKeys: [ newGroupKey ]
     }
 
