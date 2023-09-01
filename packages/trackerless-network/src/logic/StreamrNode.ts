@@ -380,10 +380,6 @@ export class StreamrNode extends EventEmitter<Events> {
         return this.layer0!.getNodeId().toKey() as unknown as NodeID
     }
 
-    getNodeStringId(): string {
-        return this.layer0!.getNodeId().toString()
-    }
-
     getNeighbors(): NodeID[] {
         const neighbors: NodeID[] = []
         this.streams.forEach((stream) =>
