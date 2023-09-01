@@ -29,14 +29,14 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
     // INetworkRpc server method
     async neighborUpdate(message: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> {
         if (this.config.targetNeighbors!.hasNodeById(message.senderId as NodeID)) {
-            const newPeers = message.neighborDescriptors
+            const newPeerDescriptors = message.neighborDescriptors
                 .filter((peerDescriptor) => {
                     const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
                     return nodeId !== this.config.ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
                 })
-            newPeers.forEach((peer) => this.config.nearbyContactPool.add(
+            newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyContactPool.add(
                 new RemoteRandomGraphNode(
-                    peer,
+                    peerDescriptor,
                     this.config.randomGraphId,
                     toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator!.getRpcClientTransport()))
                 ))
