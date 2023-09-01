@@ -12,6 +12,7 @@ import {
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteNeighborUpdateManager } from '../../src/logic/neighbor-discovery/RemoteNeighborUpdateManager'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { hexToBinary } from '../../src/logic/utils'
 
 describe('RemoteNeighborUpdateManager', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -50,7 +51,7 @@ describe('RemoteNeighborUpdateManager', () => {
                 }
 
                 const update: NeighborUpdate = {
-                    senderId: getNodeIdFromPeerDescriptor(peer),
+                    senderId: hexToBinary(getNodeIdFromPeerDescriptor(peer)),
                     randomGraphId: 'testStream',
                     neighborDescriptors: [
                         peer

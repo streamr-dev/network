@@ -4,6 +4,7 @@ import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/
 import { Remote } from '../Remote'
 import { INeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { hexToBinary } from '../utils'
 
 const logger = new Logger(module)
 
@@ -20,7 +21,7 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
         }
         const request: NeighborUpdate = {
-            senderId: getNodeIdFromPeerDescriptor(ownPeerDescriptor),
+            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
             randomGraphId: this.graphId,
             neighborDescriptors: neighbors,
             removeMe: false
