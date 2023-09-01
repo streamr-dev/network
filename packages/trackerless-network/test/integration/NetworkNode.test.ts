@@ -82,7 +82,7 @@ describe('NetworkNode', () => {
                 hello: 'world'
             },
             messageType: StreamMessageType.MESSAGE,
-            signature: 'signature',
+            signature: '0x1111',
         })
 
         let msgCount = 0

@@ -101,7 +101,7 @@ describe('proxy group key exchange', () => {
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             encryptionType: EncryptionType.NONE,
             content: requestContent,
-            signature: '1234'
+            signature: '0x1234'
         })
 
         await Promise.all([

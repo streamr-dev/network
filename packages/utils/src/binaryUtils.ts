@@ -21,7 +21,7 @@ export const hexToBinary = (hex: string): Uint8Array | undefined => {
         hex = hex.slice(2)
     }
     if (hex.length % 2 !== 0) {
-        return undefined
+        throw new Error('hexToBinary: hex string length must be even received ' + hex)
     }
     const result = Buffer.from(hex, 'hex')
     return hex.length === result.length * 2 ? result : undefined
