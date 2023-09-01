@@ -5,14 +5,15 @@ import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
 import { LatencyType } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import events from 'events'
+import { EventEmitter } from 'events'
 
-events.defaultMaxListeners = 1000
+EventEmitter.setMaxListeners(1000)
 
 describe('Propagation', () => {
     const entryPointDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString(`entrypoint`).value,
-        type: 1
+        type: 1,
+        nodeName: 'ep'
     }
     let dhtNodes: DhtNode[]
     let randomGraphNodes: RandomGraphNode[]
@@ -21,8 +22,7 @@ describe('Propagation', () => {
     const NUM_OF_NODES = 256
 
     beforeEach(async () => {
-        Simulator.useFakeTimers(true)
-        const simulator = new Simulator(LatencyType.FIXED, 1000)
+        const simulator = new Simulator(LatencyType.FIXED, 10)
         totalReceived = 0
         dhtNodes = []
         randomGraphNodes = []
@@ -34,10 +34,11 @@ describe('Propagation', () => {
         dhtNodes.push(entryPoint)
         randomGraphNodes.push(node1)
 
-        await Promise.all(range(NUM_OF_NODES).map(async (_i) => {
+        await Promise.all(range(NUM_OF_NODES).map(async (_i, index) => {
             const descriptor: PeerDescriptor = {
                 kademliaId: PeerID.fromString(new UUID().toString()).value,
-                type: 1
+                type: 1,
+                nodeName: '' + index
             }
             const [dht, graph] = createMockRandomGraphNodeAndDhtNode(
                 descriptor,
@@ -58,7 +59,6 @@ describe('Propagation', () => {
     afterEach(async () => {
         await Promise.all(randomGraphNodes.map((node) => node.stop()))
         await Promise.all(dhtNodes.map((node) => node.stop()))
-        Simulator.useFakeTimers(false)
     })
 
     it('All nodes receive messages', async () => {

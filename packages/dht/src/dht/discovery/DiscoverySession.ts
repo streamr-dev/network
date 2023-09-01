@@ -30,6 +30,7 @@ export class DiscoverySession {
     private ongoingClosestPeersRequests: Set<string> = new Set()
     private readonly config: DiscoverySessionConfig
     private contactedPeers: Set<PeerIDKey> = new Set()
+    private joiningPath: Array<string> = [] 
 
     constructor(config: DiscoverySessionConfig) {
         this.config = config
@@ -46,6 +47,9 @@ export class DiscoverySession {
         if (this.stopped) {
             return []
         }
+
+        this.joiningPath.push('' + contact.getPeerDescriptor().nodeName)
+
         logger.trace(`Getting closest peers from contact: ${contact.getPeerId().toKey()}`)
         this.outgoingClosestPeersRequestsCounter++
 
@@ -92,6 +96,7 @@ export class DiscoverySession {
         const uncontacted = this.config.peerManager.getClosestPeersTo(this.config.targetId, this.config.parallelism, this.contactedPeers)
 
         if (uncontacted.length < 1 || this.noProgressCounter >= this.config.noProgressLimit) {
+            logger.trace( this.config.nodeName + ' discoveryCompleted in findMoreContacts, path: ' + this.joiningPath.join(', '))
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
             return
@@ -103,7 +108,9 @@ export class DiscoverySession {
             this.ongoingClosestPeersRequests.add(nextPeer!.getPeerId().toKey())
             // eslint-disable-next-line promise/catch-or-return
             this.getClosestPeersFromContact(nextPeer!)
-                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer!.getPeerId(), contacts))
+                .then((contacts) => {
+                    this.onClosestPeersRequestSucceeded(nextPeer!.getPeerId(), contacts)
+                })
                 .catch((err) => this.onClosestPeersRequestFailed(nextPeer!, err))
                 .finally(() => {
                     this.outgoingClosestPeersRequestsCounter--
@@ -125,6 +132,7 @@ export class DiscoverySession {
 
     public stop(): void {
         this.stopped = true
+        logger.trace(this.config.nodeName + ' discoveryCompleted in stop, path: ' + this.joiningPath.join(', '))
         this.emitter.emit('discoveryCompleted')
         this.emitter.removeAllListeners()
     }

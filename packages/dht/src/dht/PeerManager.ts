@@ -247,19 +247,33 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
 
     // IPeerManager implementation start
 
-    public getClosestPeersTo(kademliaId: Uint8Array, limit?: number, excludeSet?: Set<PeerIDKey>): DhtPeer[] {
+    public getClosestPeersTo = (kademliaId: Uint8Array, limit?: number, excludeSet?: Set<PeerIDKey>): DhtPeer[] => {
         
         const closest = new SortedContactList<DhtPeer>(PeerID.fromValue(kademliaId))
         this.neighborList!.getAllContacts().map((contact) => closest.addContact(contact))
         this.bucket!.toArray().map((contact) => closest.addContact(contact))
-        return closest.getClosestContacts(limit).filter((contact) => !excludeSet?.has(contact.getPeerId().toKey()))
+        return closest.getClosestContacts(limit).filter((contact) => {
+            if (!excludeSet) {
+                return true
+            } else {
+                return !excludeSet.has(contact.getPeerId().toKey())
+            } 
+        })
     }
 
-    public getNumberOfPeers(excludeSet?: Set<PeerIDKey>): number {
+    public getNumberOfPeers = (excludeSet?: Set<PeerIDKey>): number => {
         const closest = new SortedContactList<DhtPeer>(this.config.ownPeerId!)
         this.neighborList!.getAllContacts().map((contact) => closest.addContact(contact))
         this.bucket!.toArray().map((contact) => closest.addContact(contact))
-        return closest.getClosestContacts().filter((contact) => !excludeSet?.has(contact.getPeerId().toKey())).length
+        const numClosest = closest.getClosestContacts().filter((contact) => {
+            if (!excludeSet) {
+                return true
+            } else {
+                return !excludeSet.has(contact.getPeerId().toKey())
+            } 
+        }).length
+
+        return numClosest
     }
 
     public getKBucketSize(): number {

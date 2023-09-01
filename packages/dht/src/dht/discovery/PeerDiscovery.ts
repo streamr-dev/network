@@ -95,7 +95,7 @@ export class PeerDiscovery {
         if (this.stopped || this.rejoinOngoing) {
             return
         }
-        logger.debug(`Rejoining DHT ${this.config.serviceId} ${this.config.ownPeerDescriptor.nodeName}!`)
+        logger.error(`${this.config.ownPeerDescriptor.nodeName} Rejoining DHT ${this.config.serviceId} ${this.config.ownPeerDescriptor.nodeName}!`)
         this.rejoinOngoing = true
         try {
             await this.joinDht(entryPoint)
