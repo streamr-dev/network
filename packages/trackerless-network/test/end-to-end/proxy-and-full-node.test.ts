@@ -6,7 +6,7 @@ import { ProxyDirection, StreamMessage as InternalStreamMessage } from '../../sr
 import { StreamNodeType } from '../../src/logic/StreamrNode'
 import { randomEthereumAddress } from '@streamr/test-utils'
 
-const PROXIED_NODE_USER_ID = hexToBinary(randomEthereumAddress())
+const PROXIED_NODE_USER_ID = hexToBinary(randomEthereumAddress())!
 
 const createMessage = (streamId: StreamID): StreamMessage => {
     return new StreamMessage({ 
