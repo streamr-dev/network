@@ -1,5 +1,7 @@
-import { Database } from 'sqlite'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import range from 'lodash/range'
+import { join } from 'path'
+import { Database } from 'sqlite'
 import ServerPersistence from '../../src/utils/persistence/ServerPersistence'
 import { mockLoggerFactory } from '../test-utils/utils'
 
@@ -48,5 +50,23 @@ describe('ServerPersistence', () => {
         expect(await persistence.exists()).toBeFalse()
         await persistence.set('mock-key', 'mock-value', NAMESPACE)
         expect(await persistence.exists()).toBeTrue()
+    })
+
+    // enable when NET-1057 done
+    it.skip('concurrency', async () => {
+        const instanceCount = 10
+        const clientId = randomEthereumAddress()
+        const values = await Promise.all(range(instanceCount).map(async (i: number) => {
+            const instance = await ServerPersistence.createInstance({
+                loggerFactory: mockLoggerFactory(),
+                clientId,
+                namespaces: [NAMESPACE],
+                migrationsPath: join(__dirname, '../../src/encryption/migrations')
+            })
+            await instance.set('key', `value${i}`, 'EncryptionKeys')
+            const value = await instance.get('key', 'EncryptionKeys')
+            return value
+        }))
+        expect(values).toEqual(range(instanceCount).map((i: number) => `value${i}`))
     })
 })
