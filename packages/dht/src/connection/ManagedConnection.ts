@@ -62,7 +62,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         if (typeof ownPeerDescriptor === 'undefined') {
             logger.error('ownPeerDescriptor is undefined while constructing ManagedConnection')
             const error = new Error('ownPeerDescriptor is undefined while constructing ManagedConnection')
-            logger.error('stack: ' +error.stack)
+            logger.error('stack: ' + error.stack)
             throw error
         }
 
