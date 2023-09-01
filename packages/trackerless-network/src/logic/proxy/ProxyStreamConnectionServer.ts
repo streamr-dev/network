@@ -59,7 +59,7 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         this.removeAllListeners()
     }
 
-    getConnectedPeerIds(): NodeID[] {
+    getConnectedNodeIds(): NodeID[] {
         return Array.from(this.connections.keys())
     }
 
@@ -71,7 +71,7 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
     }
 
-    public getPeerKeysForUserId(userId: UserID): NodeID[] {
+    public getNodeIdsForUserId(userId: UserID): NodeID[] {
         return Array.from(this.connections.keys()).filter((nodeId) => areEqualUsers(this.connections.get(nodeId)!.userId, userId))
     }
 

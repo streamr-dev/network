@@ -47,7 +47,7 @@ interface ProxyStreamConnectionClientConfig {
 }
 
 interface ProxyDefinition {
-    peers: Map<NodeID, PeerDescriptor>
+    nodes: Map<NodeID, PeerDescriptor>
     connectionCount: number
     direction: ProxyDirection
     userId: UserID
@@ -81,7 +81,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
                 const senderId = notice.senderId as NodeID
                 const contact = this.targetNeighbors.getNeighborById(senderId)
                 if (contact) {
-                    setImmediate(() => this.onPeerDisconnected(contact.getPeerDescriptor()))
+                    setImmediate(() => this.onNodeDisconnected(contact.getPeerDescriptor()))
                 }
             },
             rpcCommunicator: this.rpcCommunicator,
@@ -119,12 +119,12 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         if (connectionCount !== undefined && connectionCount > peerDescriptors.length) {
             throw Error('Cannot set connectionCount above the size of the configured array of nodes')
         }
-        const peers = new Map()
+        const nodes = new Map()
         peerDescriptors.forEach((peerDescriptor) => {
-            peers.set(getNodeIdFromPeerDescriptor(peerDescriptor), peerDescriptor)
+            nodes.set(getNodeIdFromPeerDescriptor(peerDescriptor), peerDescriptor)
         })
         this.definition = {
-            peers,
+            nodes,
             userId,
             direction,
             connectionCount: connectionCount ?? peerDescriptors.length
@@ -146,13 +146,13 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
 
     private getInvalidConnections(): NodeID[] {
         return Array.from(this.connections.keys()).filter((id) => {
-            return !this.definition!.peers.has(id )
+            return !this.definition!.nodes.has(id )
                 || this.definition!.direction !== this.connections.get(id)
         })
     }
 
     private async openRandomConnections(connectionCount: number): Promise<void> {
-        const proxiesToAttempt = sampleSize(Array.from(this.definition!.peers.keys()).filter((id) =>
+        const proxiesToAttempt = sampleSize(Array.from(this.definition!.nodes.keys()).filter((id) =>
             !this.connections.has(id as unknown as NodeID)
         ), connectionCount)
         await Promise.all(proxiesToAttempt.map((id) =>
@@ -160,23 +160,23 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         ))
     }
 
-    private async attemptConnection(peer: NodeID, direction: ProxyDirection, userId: UserID): Promise<void> {
-        const peerDescriptor = this.definition!.peers.get(peer)!
+    private async attemptConnection(nodeId: NodeID, direction: ProxyDirection, userId: UserID): Promise<void> {
+        const peerDescriptor = this.definition!.nodes.get(nodeId)!
         const client = toProtoRpcClient(new ProxyConnectionRpcClient(this.rpcCommunicator.getRpcClientTransport()))
-        const proxyPeer = new RemoteProxyServer(peerDescriptor, this.config.streamPartId, client)
-        const accepted = await proxyPeer.requestConnection(this.config.ownPeerDescriptor, direction, userId)
+        const proxyNode = new RemoteProxyServer(peerDescriptor, this.config.streamPartId, client)
+        const accepted = await proxyNode.requestConnection(this.config.ownPeerDescriptor, direction, userId)
         if (accepted) {
             this.config.connectionLocker.lockConnection(peerDescriptor, 'proxy-stream-connection-client')
-            this.connections.set(peer, direction)
+            this.connections.set(nodeId, direction)
             const remote = new RemoteRandomGraphNode(
                 peerDescriptor,
                 this.config.streamPartId,
                 toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator.getRpcClientTransport()))   
             )
             this.targetNeighbors.add(remote)
-            this.propagation.onNeighborJoined(peer)
+            this.propagation.onNeighborJoined(nodeId)
             logger.info('Open proxy connection', {
-                peer
+                nodeId
             })
         }
     }
@@ -222,7 +222,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         return this.definition!.direction
     }
 
-    async onPeerDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
+    async onNodeDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         if (this.connections.has(nodeId)) {
             this.config.connectionLocker.unlockConnection(peerDescriptor, 'proxy-stream-connection-client')
@@ -234,7 +234,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     async start(): Promise<void> {
         this.registerDefaultServerMethods()
         this.config.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => 
-            this.onPeerDisconnected(peerDescriptor)
+            this.onNodeDisconnected(peerDescriptor)
         )
     }
 
@@ -248,7 +248,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         this.connections.clear()
         this.abortController.abort()
         this.config.P2PTransport.off('disconnected', (peerDescriptor: PeerDescriptor) => 
-            this.onPeerDisconnected(peerDescriptor)
+            this.onNodeDisconnected(peerDescriptor)
         )
     }
 
