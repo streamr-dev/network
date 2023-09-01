@@ -207,11 +207,11 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             markAndCheckDuplicate(this.duplicateDetectors, msg.messageId!, msg.previousMessageRef)
         }
         this.emit('message', msg)
-        this.propagation.feedUnseenMessage(msg, this.targetNeighbors.getStringIds(), previousPeer ?? null)
+        this.propagation.feedUnseenMessage(msg, this.targetNeighbors.getIds(), previousPeer ?? null)
     }
 
     getTargetNeighborStringIds(): NodeID[] {
-        return this.targetNeighbors.getStringIds()
+        return this.targetNeighbors.getIds()
     }
 
     hasProxyConnection(nodeId: NodeID, direction: ProxyDirection): boolean {

@@ -76,7 +76,7 @@ export class Handshaker implements IHandshaker {
     }
 
     private async selectParallelTargetsAndHandshake(excludedIds: NodeID[]): Promise<NodeID[]> {
-        const exclude = excludedIds.concat(this.config.targetNeighbors.getStringIds())
+        const exclude = excludedIds.concat(this.config.targetNeighbors.getIds())
         const targetNeighbors = this.selectParallelTargets(exclude)
         targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())))
         return this.doParallelHandshakes(targetNeighbors, exclude)
@@ -110,7 +110,7 @@ export class Handshaker implements IHandshaker {
     }
 
     private async selectNewTargetAndHandshake(excludedIds: NodeID[]): Promise<NodeID[]> {
-        const exclude = excludedIds.concat(this.config.targetNeighbors.getStringIds())
+        const exclude = excludedIds.concat(this.config.targetNeighbors.getIds())
         const targetNeighbor = this.config.nearbyContactPool.getClosest(exclude) ?? this.config.randomContactPool.getRandom(exclude)
         if (targetNeighbor) {
             const accepted = await this.handshakeWithTarget(this.createRemoteHandshaker(targetNeighbor.getPeerDescriptor()))
@@ -126,7 +126,7 @@ export class Handshaker implements IHandshaker {
         this.ongoingHandshakes.add(targetStringId)
         const result = await targetNeighbor.handshake(
             this.config.ownPeerDescriptor,
-            this.config.targetNeighbors.getStringIds(),
+            this.config.targetNeighbors.getIds(),
             concurrentStringId
         )
         if (result.accepted) {
@@ -150,7 +150,7 @@ export class Handshaker implements IHandshaker {
         this.ongoingHandshakes.add(targetStringId)
         const result = await targetNeighbor.handshake(
             this.config.ownPeerDescriptor,
-            this.config.targetNeighbors.getStringIds(),
+            this.config.targetNeighbors.getIds(),
             undefined,
             interleaveSourceId
         )

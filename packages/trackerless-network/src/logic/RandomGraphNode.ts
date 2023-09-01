@@ -147,7 +147,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             return
         }
       
-        const oldLength = this.config.nearbyContactPool.getStringIds().length
+        const oldLength = this.config.nearbyContactPool.getIds().length
         this.config.nearbyContactPool.replaceAll(closestTen.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
@@ -156,7 +156,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             )
         ))
 
-        if (oldLength < this.config.nearbyContactPool.getStringIds().length) {
+        if (oldLength < this.config.nearbyContactPool.getIds().length) {
             this.emit('nearbyContactPoolIdAdded')
         }
         
@@ -266,7 +266,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     }
 
     private getPropagationTargets(msg: StreamMessage): NodeID[] {
-        let propagationTargets = this.config.targetNeighbors.getStringIds()
+        let propagationTargets = this.config.targetNeighbors.getIds()
         if (this.config.proxyConnectionServer) {
             const proxyTargets = (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST)
                 ? this.config.proxyConnectionServer.getNodeIdsForUserId(GroupKeyRequest.fromBinary(msg.content).recipientId)
@@ -275,7 +275,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         }
 
         propagationTargets = propagationTargets.filter((target) => !this.config.inspector.isInspected(target as NodeID))
-        propagationTargets = propagationTargets.concat(this.config.temporaryConnectionServer.getPeers().getStringIds())
+        propagationTargets = propagationTargets.concat(this.config.temporaryConnectionServer.getPeers().getIds())
         return propagationTargets
     }
 
@@ -291,20 +291,20 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         if (!this.started && this.stopped) {
             return []
         }
-        return this.config.targetNeighbors.getStringIds()
+        return this.config.targetNeighbors.getIds()
     }
 
     getNearbyContactPoolIds(): NodeID[] {
         if (!this.started && this.stopped) {
             return []
         }
-        return this.config.nearbyContactPool.getStringIds()
+        return this.config.nearbyContactPool.getIds()
     }
 
     getRandomContactPoolIds(): NodeID[] {
         if (!this.started && this.stopped) {
             return []
         }
-        return this.config.randomContactPool.getStringIds()
+        return this.config.randomContactPool.getIds()
     }
 }

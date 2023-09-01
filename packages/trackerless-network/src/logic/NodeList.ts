@@ -62,7 +62,7 @@ export class NodeList extends EventEmitter<Events> {
         })
     }
 
-    getStringIds(): NodeID[] {
+    getIds(): NodeID[] {
         return Array.from(this.nodes.keys())
     }
 
