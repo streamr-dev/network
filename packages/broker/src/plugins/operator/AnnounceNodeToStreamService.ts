@@ -1,6 +1,7 @@
 import { EthereumAddress, Logger, setAbortableInterval } from '@streamr/utils'
 import { StreamrClient } from 'streamr-client'
 import { StreamID, toStreamID } from '@streamr/protocol'
+import { createHeartbeatMessage } from './heartbeatUtils'
 
 const logger = new Logger(module)
 
@@ -27,10 +28,7 @@ export class AnnounceNodeToStreamService {
             (async () => {
                 try {
                     const peerDescriptor = await this.streamrClient.getPeerDescriptor()
-                    await this.streamrClient.publish(this.coordinationStream, {
-                        msgType: 'heartbeat',
-                        peerDescriptor
-                    })
+                    await this.streamrClient.publish(this.coordinationStream, createHeartbeatMessage(peerDescriptor))
                     logger.debug('Published heartbeat to coordination stream', {
                         streamId: this.coordinationStream
                     })

@@ -5,6 +5,7 @@ import { Logger } from '@streamr/utils'
 import pLimit from 'p-limit'
 import EventEmitter3 from 'eventemitter3'
 import { ConsistentHashRing } from './ConsistentHashRing'
+import { NodeID } from '@streamr/trackerless-network'
 
 const logger = new Logger(module)
 
@@ -43,7 +44,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.maintainTopologyHelper.on('removeStakedStream', this.streamRemoved)
     }
 
-    private nodeAdded = this.concurrencyLimiter(async (nodeId: string): Promise<void> => {
+    private nodeAdded = this.concurrencyLimiter(async (nodeId: NodeID): Promise<void> => {
         if (nodeId === this.myNodeId) {
             return
         }
@@ -51,7 +52,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.recalculateAssignments()
     })
 
-    private nodeRemoved = this.concurrencyLimiter(async (nodeId: string): Promise<void> => {
+    private nodeRemoved = this.concurrencyLimiter(async (nodeId: NodeID): Promise<void> => {
         if (nodeId === this.myNodeId) {
             return
         }
