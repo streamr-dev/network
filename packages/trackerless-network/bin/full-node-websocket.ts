@@ -33,7 +33,7 @@ async function run(): Promise<void> {
 
     const layer0 = new DhtNode({
         webSocketPort: port,
-        webSocketHost: ip,
+        websocketHost: ip,
         peerIdString: program.opts().id,
         numberOfNodesPerKBucket: 2,
         entryPoints: [epPeerDescriptor]

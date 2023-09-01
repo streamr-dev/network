@@ -22,7 +22,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
-import { ConnectionManager, ConnectionManagerConfig } from '../connection/ConnectionManager'
+import { ConnectionManager, ConnectionManagerConfig, PortRange } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
@@ -43,6 +43,8 @@ import { ExternalApi } from './ExternalApi'
 import { RemoteExternalApi } from './RemoteExternalApi'
 import { UUID } from '../exports'
 import { PeerManager } from './PeerManager'
+import { isNodeJS } from '../helpers/browser/isNodeJS'
+
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -69,8 +71,8 @@ export interface DhtNodeOptions {
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
-    webSocketHost?: string
-    webSocketPort?: number
+    websocketHost?: string
+    websocketPortRange?: PortRange
     peerIdString?: string
 
     nodeName?: string
@@ -101,8 +103,8 @@ export class DhtNodeConfig {
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
-    webSocketHost?: string
-    webSocketPort?: number
+    websocketHost?: string
+    websocketPortRange?: PortRange
     nodeName?: string
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
@@ -179,6 +181,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         logger.trace(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
         this.started = true
 
+        if (!isNodeJS()) {
+            this.config.websocketPortRange = undefined
+            if (this.config.peerDescriptor) {
+                this.config.peerDescriptor.websocket = undefined
+            }
+        }
         // If transportLayer is given, do not create a ConnectionManager
         if (this.config.transportLayer) {
             this.transportLayer = this.config.transportLayer
@@ -200,15 +208,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 maxConnections: this.config.maxConnections
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
-            if (this.config.peerDescriptor && this.config.peerDescriptor.websocket) {
-                connectionManagerConfig.webSocketHost = this.config.peerDescriptor.websocket.ip
-                connectionManagerConfig.webSocketPort = this.config.peerDescriptor.websocket.port
-            } else {
-                // If webSocketPort is given, create ws server using it, webSocketHost can be undefined
-                if (this.config.webSocketPort) {
-                    connectionManagerConfig.webSocketHost = this.config.webSocketHost
-                    connectionManagerConfig.webSocketPort = this.config.webSocketPort
+            if (this.config.peerDescriptor?.websocket) {
+                connectionManagerConfig.websocketHost = this.config.peerDescriptor.websocket.ip
+                connectionManagerConfig.websocketPortRange = { 
+                    min: this.config.peerDescriptor.websocket.port,
+                    max: this.config.peerDescriptor.websocket.port
                 }
+            // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
+            } else if (this.config.websocketPortRange) { 
+                connectionManagerConfig.websocketHost = this.config.websocketHost
+                connectionManagerConfig.websocketPortRange = this.config.websocketPortRange
             }
 
             this.connectionManager = new ConnectionManager(connectionManagerConfig)

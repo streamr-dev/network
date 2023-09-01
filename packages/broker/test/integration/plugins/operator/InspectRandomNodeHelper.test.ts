@@ -1,5 +1,5 @@
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, TheGraphClient, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
+import { Logger, TheGraphClient, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import fetch from 'node-fetch'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { createClient, createTestStream } from '../../../utils'
@@ -69,11 +69,8 @@ describe('InspectRandomNodeHelper', () => {
 
         await delegate(flagger.operatorWallet, flagger.operatorContract.address, 200)
         await delegate(target.operatorWallet, target.operatorContract.address, 300)
-        await wait(3000) // sometimes these stake fail, possibly when they end up in the same block
         await stake(flagger.operatorContract, sponsorship.address, 150)
-        await wait(3000)
         await stake(target.operatorContract, sponsorship.address, 250)
-        await wait(3000)
 
         const inspectRandomNodeHelper = new InspectRandomNodeHelper({
             ...flagger.operatorServiceConfig,
