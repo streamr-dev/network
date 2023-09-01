@@ -45,7 +45,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const propagation = config.propagation ?? new Propagation({
         minPropagationTargets,
         sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
-            const remote = targetNeighbors.getNeighborById(neighborId) ?? temporaryConnectionServer.getPeers().getNeighborById(neighborId)
+            const remote = targetNeighbors.getNeighborById(neighborId) ?? temporaryConnectionServer.getNodes().getNeighborById(neighborId)
             const proxyConnection = proxyConnectionServer?.getConnection(neighborId)
             if (remote) {
                 await remote.sendData(config.ownPeerDescriptor, msg)

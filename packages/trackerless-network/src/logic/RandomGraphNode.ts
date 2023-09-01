@@ -214,7 +214,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             this.config.targetNeighbors.remove(peerDescriptor)
             this.config.connectionLocker.unlockConnection(peerDescriptor, this.config.randomGraphId)
             this.config.neighborFinder.start([getNodeIdFromPeerDescriptor(peerDescriptor)])
-            this.config.temporaryConnectionServer.removePeer(peerDescriptor)
+            this.config.temporaryConnectionServer.removeNode(peerDescriptor)
         }
     }
 
@@ -275,7 +275,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         }
 
         propagationTargets = propagationTargets.filter((target) => !this.config.inspector.isInspected(target as NodeID))
-        propagationTargets = propagationTargets.concat(this.config.temporaryConnectionServer.getPeers().getIds())
+        propagationTargets = propagationTargets.concat(this.config.temporaryConnectionServer.getNodes().getIds())
         return propagationTargets
     }
 
