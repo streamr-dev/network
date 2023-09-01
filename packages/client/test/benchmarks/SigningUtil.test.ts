@@ -1,5 +1,5 @@
 import { verifyMessage, Wallet } from '@ethersproject/wallet'
-import { randomString, toEthereumAddress, hexToBinary } from '@streamr/utils'
+import { randomString, toEthereumAddress, hexToBinary, areEqualBinaries } from '@streamr/utils'
 import { fastWallet } from '@streamr/test-utils'
 import { sign, verify } from '../../src/utils/signingUtils'
 
@@ -50,9 +50,9 @@ describe('SigningUtil', () => {
         
             for (let i = 0; i < ITERATIONS; i++) {
                 const result = await functionToTest()
-                // if (result !== expectedResult) {
-                //     throw new Error(`invalid result in ${name}`)
-                // }
+                if (!((expectedResult instanceof Uint8Array && areEqualBinaries(expectedResult, result as Uint8Array)) || result === expectedResult)) {
+                    throw new Error(`invalid result in ${name}`)
+                }
             }
         
             const elapsed = Date.now() - start
