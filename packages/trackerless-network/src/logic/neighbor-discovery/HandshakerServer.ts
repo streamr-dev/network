@@ -2,11 +2,11 @@ import { Empty } from '../../proto/google/protobuf/empty'
 import { InterleaveNotice, StreamHandshakeRequest, StreamHandshakeResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { PeerList } from '../PeerList'
-import { ConnectionLocker, keyFromPeerDescriptor, PeerDescriptor } from '@streamr/dht'
+import { ConnectionLocker, PeerDescriptor } from '@streamr/dht'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { RemoteHandshaker } from './RemoteHandshaker'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
-import { NodeID } from '../../identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 interface HandshakerServerConfig {
     randomGraphId: string
@@ -34,7 +34,7 @@ export class HandshakerServer implements IHandshakeRpc {
 
     private handleRequest(request: StreamHandshakeRequest): StreamHandshakeResponse {
         if (this.config.targetNeighbors!.hasPeer(request.senderDescriptor!)
-            || this.config.ongoingHandshakes.has(keyFromPeerDescriptor(request.senderDescriptor!) as unknown as NodeID)
+            || this.config.ongoingHandshakes.has(getNodeIdFromPeerDescriptor(request.senderDescriptor!))
         ) {
             return this.acceptHandshake(request, request.senderDescriptor!)
         } else if (this.config.targetNeighbors!.size() + this.config.ongoingHandshakes.size < this.config.N) {

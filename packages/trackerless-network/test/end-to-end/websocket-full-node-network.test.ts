@@ -1,9 +1,10 @@
-import { PeerDescriptor, NodeType, PeerID, peerIdFromPeerDescriptor, keyFromPeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, NodeType, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('Full node network with WebSocket connections only', () => {
 
@@ -74,7 +75,7 @@ describe('Full node network with WebSocket connections only', () => {
         const successIds: string[] = []
         nodes.map((node) => {
             node.getStreamrNode()!.on('newMessage', () => {
-                successIds.push(keyFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
+                successIds.push(getNodeIdFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
                 numOfMessagesReceived += 1
             })
         })

@@ -1,5 +1,5 @@
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { keyFromPeerDescriptor, PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
@@ -8,6 +8,7 @@ import { MockHandshaker } from '../utils/mock/MockHandshaker'
 import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManager'
 import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
 import { mockLayer1 } from '../utils/mock/MockLayer1'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('RandomGraphNode', () => {
 
@@ -52,7 +53,7 @@ describe('RandomGraphNode', () => {
         const mockRemote = createMockRemotePeer()
         targetNeighbors.add(mockRemote)
         const ids = randomGraphNode.getTargetNeighborStringIds()
-        expect(ids[0]).toEqual(keyFromPeerDescriptor(mockRemote.getPeerDescriptor()))
+        expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
         targetNeighbors.remove(mockRemote.getPeerDescriptor())
     })
 
@@ -60,14 +61,14 @@ describe('RandomGraphNode', () => {
         const mockRemote = createMockRemotePeer()
         nearbyContactPool.add(mockRemote)
         const ids = randomGraphNode.getNearbyContactPoolIds()
-        expect(ids[0]).toEqual(keyFromPeerDescriptor(mockRemote.getPeerDescriptor()))
+        expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
     it('getRandomContactPoolIds', () => {
         const mockRemote = createMockRemotePeer()
         randomContactPool.add(mockRemote)
         const ids = randomGraphNode.getRandomContactPoolIds()
-        expect(ids[0]).toEqual(keyFromPeerDescriptor(mockRemote.getPeerDescriptor()))
+        expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
 })

@@ -1,11 +1,11 @@
-import { NodeType, PeerDescriptor, PeerID, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { NodeType, PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { EthereumAddress, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary } from '../../src/logic/utils'
-import { NodeID } from '../../src/identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const PROXIED_NODE_USER_ID = hexToBinary(randomEthereumAddress())
 
@@ -199,12 +199,12 @@ describe('Proxy connections', () => {
         expect(proxiedNode.hasStreamPart(streamPartId)).toBe(true)
         proxyNode1.unsubscribe(streamPartId)
         await waitForCondition(() => 
-            proxiedNode.hasProxyConnection(streamPartId, keyFromPeerDescriptor(proxyNodeDescriptor1) as unknown as NodeID, ProxyDirection.SUBSCRIBE))
+            proxiedNode.hasProxyConnection(streamPartId, getNodeIdFromPeerDescriptor(proxyNodeDescriptor1), ProxyDirection.SUBSCRIBE))
         expect(proxyNode1.hasProxyConnection(streamPartId, proxiedPeerId.toKey() as unknown as NodeID, ProxyDirection.SUBSCRIBE)).toBe(false)
     
         await proxyNode1.stack.getStreamrNode()!.joinStream(streamPartId)
         await waitForCondition(() => 
-            proxiedNode.hasProxyConnection(streamPartId, keyFromPeerDescriptor(proxyNodeDescriptor1) as unknown as NodeID, ProxyDirection.SUBSCRIBE)
+            proxiedNode.hasProxyConnection(streamPartId, getNodeIdFromPeerDescriptor(proxyNodeDescriptor1), ProxyDirection.SUBSCRIBE)
         , 25000)
         expect(proxyNode1.hasProxyConnection(streamPartId, proxiedPeerId.toKey() as unknown as NodeID, ProxyDirection.SUBSCRIBE)).toBe(false)
 

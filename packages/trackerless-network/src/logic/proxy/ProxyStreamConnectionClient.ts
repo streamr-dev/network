@@ -2,7 +2,6 @@ import {
     ITransport,
     ListeningRpcCommunicator,
     PeerDescriptor,
-    keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '@streamr/dht'
 import { LeaveStreamNotice, MessageID, MessageRef, ProxyDirection, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
@@ -122,7 +121,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         }
         const peers = new Map()
         peerDescriptors.forEach((peerDescriptor) => {
-            peers.set(keyFromPeerDescriptor(peerDescriptor), peerDescriptor)
+            peers.set(getNodeIdFromPeerDescriptor(peerDescriptor), peerDescriptor)
         })
         this.definition = {
             peers,

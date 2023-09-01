@@ -1,11 +1,11 @@
 import { NeighborFinder } from '../../src/logic/neighbor-discovery/NeighborFinder'
 import { PeerList } from '../../src/logic/PeerList'
-import { keyFromPeerDescriptor, PeerID } from '@streamr/dht'
+import { PeerID } from '@streamr/dht'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
 import { createMockRemotePeer } from '../utils/utils'
-import { NodeID } from '../../src/identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('NeighborFinder', () => {
 
@@ -25,7 +25,7 @@ describe('NeighborFinder', () => {
             if (Math.random() < 0.5) {
                 targetNeighbors.add(target!)
             } else {
-                excluded.push(keyFromPeerDescriptor(target!.getPeerDescriptor()) as unknown as NodeID)
+                excluded.push(getNodeIdFromPeerDescriptor(target!.getPeerDescriptor()))
             }
             return excluded
         }

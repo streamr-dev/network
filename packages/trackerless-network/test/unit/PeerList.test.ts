@@ -6,12 +6,11 @@ import {
     Simulator,
     PeerID,
     SimulatorTransport,
-    keyFromPeerDescriptor
 } from '@streamr/dht'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { expect } from 'expect'
-import { NodeID } from '../../src/identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('PeerList', () => {
 
@@ -84,32 +83,32 @@ describe('PeerList', () => {
 
     it('removeById', () => {
         const toRemove = peerList.getClosest([])
-        const stringId = keyFromPeerDescriptor(toRemove!.getPeerDescriptor()) as unknown as NodeID
+        const stringId = getNodeIdFromPeerDescriptor(toRemove!.getPeerDescriptor())
         peerList.removeById(stringId)
         expect(peerList.hasPeer(toRemove!.getPeerDescriptor())).toEqual(false)
     })
 
     it('getClosest', () => {
         const closest = peerList.getClosest([])
-        expect(keyFromPeerDescriptor(closest!.getPeerDescriptor()))
+        expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey())
     })
 
     it('getClosest with exclude', () => {
         const closest = peerList.getClosest([PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey() as unknown as NodeID])
-        expect(keyFromPeerDescriptor(closest!.getPeerDescriptor()))
+        expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 2])).toKey())
     })
 
     it('getFurthest', () => {
         const closest = peerList.getFurthest([])
-        expect(keyFromPeerDescriptor(closest!.getPeerDescriptor()))
+        expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey())
     })
 
     it('getFurthest with exclude', () => {
         const closest = peerList.getFurthest([PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey() as unknown as NodeID])
-        expect(keyFromPeerDescriptor(closest!.getPeerDescriptor()))
+        expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 4])).toKey())
     })
 

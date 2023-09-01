@@ -1,9 +1,9 @@
-import { ListeningRpcCommunicator, NodeType, PeerDescriptor, PeerID, keyFromPeerDescriptor } from '@streamr/dht'
+import { ListeningRpcCommunicator, NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
 import { Inspector } from '../../src/logic/inspect/Inspector'
 import { mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
 import { utf8ToBinary } from '../../src/logic/utils'
-import { NodeID } from '../../src/identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('Inspector', () => {
     
@@ -48,11 +48,11 @@ describe('Inspector', () => {
 
     it('Opens inspection connection and runs successfully', async () => {
         setTimeout(() => {
-            inspector.markMessage(keyFromPeerDescriptor(inspectedDescriptor) as unknown as NodeID, messageRef)
+            inspector.markMessage(getNodeIdFromPeerDescriptor(inspectedDescriptor), messageRef)
             inspector.markMessage(otherPeerKey, messageRef)
         }, 250)
         await inspector.inspect(inspectedDescriptor)
-        expect(inspector.isInspected(keyFromPeerDescriptor(inspectedDescriptor) as unknown as NodeID)).toBe(false)
+        expect(inspector.isInspected(getNodeIdFromPeerDescriptor(inspectedDescriptor))).toBe(false)
         expect(mockConnect).toBeCalledTimes(1)
     })
 

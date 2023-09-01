@@ -1,4 +1,4 @@
-import { ConnectionLocker, keyFromPeerDescriptor, PeerDescriptor } from '@streamr/dht'
+import { ConnectionLocker, PeerDescriptor } from '@streamr/dht'
 import { PeerList } from '../PeerList'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
@@ -15,7 +15,7 @@ import { Logger } from '@streamr/utils'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { RemoteHandshaker } from './RemoteHandshaker'
 import { HandshakerServer } from './HandshakerServer'
-import { NodeID } from '../../identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 interface HandshakerConfig {
     ownPeerDescriptor: PeerDescriptor
@@ -78,7 +78,7 @@ export class Handshaker implements IHandshaker {
     private async selectParallelTargetsAndHandshake(excludedIds: NodeID[]): Promise<NodeID[]> {
         const exclude = excludedIds.concat(this.config.targetNeighbors.getStringIds())
         const targetNeighbors = this.selectParallelTargets(exclude)
-        targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(keyFromPeerDescriptor(contact.getPeerDescriptor()) as unknown as NodeID))
+        targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())))
         return this.doParallelHandshakes(targetNeighbors, exclude)
     }
 
@@ -97,13 +97,13 @@ export class Handshaker implements IHandshaker {
         const results = await Promise.allSettled(
             Array.from(targets.values()).map(async (target: RemoteHandshaker, i) => {
                 const otherPeer = i === 0 ? targets[1] : targets[0]
-                const otherPeerStringId = otherPeer ? keyFromPeerDescriptor(otherPeer.getPeerDescriptor()) as unknown as NodeID : undefined
+                const otherPeerStringId = otherPeer ? getNodeIdFromPeerDescriptor(otherPeer.getPeerDescriptor()) : undefined
                 return this.handshakeWithTarget(target, otherPeerStringId)
             })
         )
         results.map((res, i) => {
             if (res.status !== 'fulfilled' || !res.value) {
-                excludedIds.push(keyFromPeerDescriptor(targets[i].getPeerDescriptor()) as unknown as NodeID)
+                excludedIds.push(getNodeIdFromPeerDescriptor(targets[i].getPeerDescriptor()))
             }
         })
         return excludedIds
@@ -115,14 +115,14 @@ export class Handshaker implements IHandshaker {
         if (targetNeighbor) {
             const accepted = await this.handshakeWithTarget(this.createRemoteHandshaker(targetNeighbor.getPeerDescriptor()))
             if (!accepted) {
-                excludedIds.push(keyFromPeerDescriptor(targetNeighbor.getPeerDescriptor()) as unknown as NodeID)
+                excludedIds.push(getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor()))
             }
         }
         return excludedIds
     }
 
     private async handshakeWithTarget(targetNeighbor: RemoteHandshaker, concurrentStringId?: NodeID): Promise<boolean> {
-        const targetStringId = keyFromPeerDescriptor(targetNeighbor.getPeerDescriptor()) as unknown as NodeID
+        const targetStringId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
         this.ongoingHandshakes.add(targetStringId)
         const result = await targetNeighbor.handshake(
             this.config.ownPeerDescriptor,
@@ -146,7 +146,7 @@ export class Handshaker implements IHandshaker {
             this.config.randomGraphId,
             this.client
         )
-        const targetStringId = keyFromPeerDescriptor(targetNeighbor.getPeerDescriptor()) as unknown as NodeID
+        const targetStringId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
         this.ongoingHandshakes.add(targetStringId)
         const result = await targetNeighbor.handshake(
             this.config.ownPeerDescriptor,

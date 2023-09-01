@@ -1,9 +1,9 @@
 import { Remote } from '../Remote'
-import { DhtRpcOptions, keyFromPeerDescriptor, PeerDescriptor, UUID } from '@streamr/dht'
+import { DhtRpcOptions, PeerDescriptor, UUID } from '@streamr/dht'
 import { InterleaveNotice, StreamHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Logger } from '@streamr/utils'
 import { IHandshakeRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { NodeID } from '../../identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -23,7 +23,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
         const request: StreamHandshakeRequest = {
             randomGraphId: this.graphId,
             requestId: new UUID().toString(),
-            senderId: keyFromPeerDescriptor(ownPeerDescriptor),
+            senderId: getNodeIdFromPeerDescriptor(ownPeerDescriptor),
             neighborIds,
             concurrentHandshakeTargetId,
             interleaveSourceId,
@@ -40,7 +40,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
                 interleaveTargetDescriptor: response.interleaveTargetDescriptor
             }
         } catch (err: any) {
-            logger.debug(`handshake to ${keyFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
+            logger.debug(`handshake to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
             return {
                 accepted: false
             }
@@ -56,7 +56,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
         const notification: InterleaveNotice = {
             randomGraphId: this.graphId,
             interleaveTargetDescriptor: originatorDescriptor,
-            senderId: keyFromPeerDescriptor(ownPeerDescriptor)
+            senderId: getNodeIdFromPeerDescriptor(ownPeerDescriptor)
         }
         this.client.interleaveNotice(notification, options).catch(() => {
             logger.debug('Failed to send interleaveNotice')

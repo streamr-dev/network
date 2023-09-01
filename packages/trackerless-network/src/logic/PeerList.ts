@@ -1,4 +1,4 @@
-import { keyFromPeerDescriptor, PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { sample } from 'lodash'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { EventEmitter } from 'eventemitter3'
@@ -28,7 +28,7 @@ export class PeerList extends EventEmitter<Events> {
 
     add(remote: RemoteRandomGraphNode): void {
         if (!this.ownPeerID.equals(peerIdFromPeerDescriptor(remote.getPeerDescriptor())) && this.peers.size < this.limit) {
-            const stringId = keyFromPeerDescriptor(remote.getPeerDescriptor()) as unknown as NodeID
+            const stringId = getNodeIdFromPeerDescriptor(remote.getPeerDescriptor())
             const isExistingPeer = this.peers.has(stringId)
             this.peers.set(stringId, remote)
             

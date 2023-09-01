@@ -3,8 +3,7 @@ import {
     PeerDescriptor,
     ConnectionLocker,
     DhtNode,
-    ITransport,
-    keyFromPeerDescriptor
+    ITransport
 } from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'eventemitter3'
@@ -25,7 +24,7 @@ import { createRandomGraphNode } from './createRandomGraphNode'
 import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
-import { NodeID, UserID } from '../identifiers'
+import { NodeID, UserID, getNodeIdFromPeerDescriptor } from '../identifiers'
 
 export enum StreamNodeType {
     RANDOM_GRAPH = 'random-graph',
@@ -126,7 +125,7 @@ export class StreamrNode extends EventEmitter<Events> {
         if (this.started || this.destroyed) {
             return
         }
-        logger.info(`Starting new StreamrNode with id ${keyFromPeerDescriptor(startedAndJoinedLayer0.getPeerDescriptor())}`)
+        logger.info(`Starting new StreamrNode with id ${getNodeIdFromPeerDescriptor(startedAndJoinedLayer0.getPeerDescriptor())}`)
         this.started = true
         this.layer0 = startedAndJoinedLayer0
         this.P2PTransport = transport

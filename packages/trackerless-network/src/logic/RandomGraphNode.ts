@@ -5,8 +5,7 @@ import {
     DhtPeer,
     ListeningRpcCommunicator,
     ITransport,
-    ConnectionLocker,
-    keyFromPeerDescriptor
+    ConnectionLocker
 } from '@streamr/dht'
 import {
     StreamMessage,
@@ -281,7 +280,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     }
 
     getOwnStringId(): NodeID {
-        return keyFromPeerDescriptor(this.config.ownPeerDescriptor) as unknown as NodeID
+        return getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)
     }
 
     getNumberOfOutgoingHandshakes(): number {
