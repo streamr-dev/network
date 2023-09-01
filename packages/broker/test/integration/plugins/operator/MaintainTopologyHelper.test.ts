@@ -1,28 +1,29 @@
 import { Contract } from '@ethersproject/contracts'
 import { Wallet } from '@ethersproject/wallet'
 import type { Operator } from '@streamr/network-contracts'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { waitForCondition } from '@streamr/utils'
+import { eventsToArray, eventsWithArgsToArray, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { wait, waitForCondition } from '@streamr/utils'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
-import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { createClient, createTestStream } from '../../../utils'
-import { delegate, deploySponsorshipContract, setupOperatorContract, stake } from './contractUtils'
-import { StreamrClient } from 'streamr-client'
+import { delegate, deploySponsorshipContract, setupOperatorContract, stake, unstake } from './contractUtils'
+import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 
-jest.setTimeout(60 * 1000)
+const TIMEOUT = 30 * 1000
+const WAIT_FOR_EVENTS_IN_MS = 10 * 1000
+const NO_EVENTS_FIRED_WAIT_IN_MS = 4000
+const WAIT_FOR_EVENT_HANDLERS_TO_REGISTER_IN_MS = 4000
 
-const waitForTheGraphToHaveIndexed = async (streamId: string, client: StreamrClient): Promise<void> => {
-    await waitForCondition(async () => {
-        // eslint-disable-next-line no-underscore-dangle
-        for await (const _msg of client.searchStreams(streamId, undefined)) {
-            return true
-        }
-        return false
-    }, 15 * 1000, 600)
+async function runWhileWaiting<T>(task: () => Promise<T>, minElapsedTimeInMs: number): Promise<T> {
+    const startTimestamp = Date.now()
+    const result = await task()
+    const timeLeft = minElapsedTimeInMs - (Date.now() - startTimestamp)
+    if (timeLeft > 0) {
+        await wait(timeLeft)
+    }
+    return result
 }
 
-describe('MaintainTopologyHelper', () => {
-
+describe(MaintainTopologyHelper, () => {
     let streamId1: string
     let streamId2: string
 
@@ -30,161 +31,145 @@ describe('MaintainTopologyHelper', () => {
         const client = createClient(await fetchPrivateKeyWithGas())
         streamId1 = (await createTestStream(client, module)).id
         streamId2 = (await createTestStream(client, module)).id
-        await waitForTheGraphToHaveIndexed(streamId1, client)
-        await waitForTheGraphToHaveIndexed(streamId2, client)
         await client.destroy()
-    })
+    }, TIMEOUT)
 
-    describe('normal workflow', () => {
-
+    describe('two different streams included in two sponsorships', () => {
         let operatorWallet: Wallet
         let operatorContract: Operator
-        let operatorServiceConfig: OperatorServiceConfig
+        let operatorServiceConfig: Omit<OperatorServiceConfig, 'nodeWallet'>
+        let nodeWallet: Wallet
         let sponsorship1: Contract
         let sponsorship2: Contract
         let topologyHelper: MaintainTopologyHelper
 
         beforeAll(async () => {
-            const deployment = await setupOperatorContract({ nodeCount: 1 })
-            operatorWallet = deployment.operatorWallet
-            operatorContract = deployment.operatorContract
-            operatorServiceConfig = {
-                ...deployment.operatorServiceConfig,
-                nodeWallet: deployment.nodeWallets[0]
-            }
+            ({
+                operatorWallet,
+                operatorContract,
+                operatorServiceConfig,
+                nodeWallets: [nodeWallet]
+            } = await setupOperatorContract({ nodeCount: 1 }))
+        }, TIMEOUT)
+
+        beforeEach(() => {
+            topologyHelper = new MaintainTopologyHelper({
+                ...operatorServiceConfig,
+                nodeWallet
+            })
         })
 
         afterEach(async () => {
             topologyHelper.stop()
-            operatorContract.provider.removeAllListeners()
         })
 
-        it('client emits events when sponsorships are staked', async () => {
-            topologyHelper = new MaintainTopologyHelper(operatorServiceConfig)
-            let eventcount = 0
-            topologyHelper.on('addStakedStreams', () => {
-                eventcount += 1
-            })
+        it('emits events when sponsorships are staked to', async () => {
+            const events = eventsToArray(topologyHelper as any, ['addStakedStreams'])
             await topologyHelper.start()
 
-            sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
-            sponsorship2 = await deploySponsorshipContract({ streamId: streamId2, deployer: operatorWallet })
+            await runWhileWaiting(async () => {
+                sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
+                sponsorship2 = await deploySponsorshipContract({ streamId: streamId2, deployer: operatorWallet })
+                await delegate(operatorWallet, operatorContract.address, 200)
+            }, WAIT_FOR_EVENT_HANDLERS_TO_REGISTER_IN_MS)
 
-            await delegate(operatorWallet, operatorContract.address, 200)
             await stake(operatorContract, sponsorship1.address, 100)
             await stake(operatorContract, sponsorship2.address, 100)
 
-            await waitForCondition(() => eventcount === 2, 10000, 1000)
+            await waitForCondition(() => events.length >= 2, WAIT_FOR_EVENTS_IN_MS)
+            expect(events.length).toEqual(2)
+        }, TIMEOUT)
 
-            topologyHelper.stop()
-        })
-
-        it('client returns all streams from theGraph on initial startup as event', async () => {
-            topologyHelper = new MaintainTopologyHelper(operatorServiceConfig)
-            let streams: string[] = []
-            topologyHelper.on('addStakedStreams', (streamid: string[]) => {
-                streams = streams.concat(streamid)
-            })
-
-            await topologyHelper.start()
-            expect(streams.length).toEqual(2)
-            expect(streams).toContain(streamId1)
-            expect(streams).toContain(streamId2)
-
-            topologyHelper.stop()
-        })
-
-        it('client catches onchain events and emits join and leave events', async () => {
-
-            topologyHelper = new MaintainTopologyHelper(operatorServiceConfig)
-            let eventcount = 0
-            topologyHelper.on('removeStakedStream', () => {
-                eventcount += 1
-            })
+        it('emits events for existing sponsorship stakes on start', async () => {
+            const events = eventsWithArgsToArray(topologyHelper as any, ['addStakedStreams'])
             await topologyHelper.start()
 
-            await (await operatorContract.unstake(sponsorship1.address)).wait()
-            await (await operatorContract.unstake(sponsorship2.address)).wait()
-            await waitForCondition(() => eventcount === 2, 10000, 1000)
-            topologyHelper.stop()
-        })
+            expect(events.length).toEqual(1)
+            expect(events[0][1]).toIncludeSameMembers([streamId1, streamId2])
+        }, TIMEOUT)
+
+        it('emits events when sponsorships are (fully) un-staked from', async () => {
+            const events = eventsToArray(topologyHelper as any, ['removeStakedStream'])
+            await topologyHelper.start()
+            await wait(WAIT_FOR_EVENT_HANDLERS_TO_REGISTER_IN_MS)
+
+            await unstake(operatorContract, sponsorship1.address)
+            await unstake(operatorContract, sponsorship2.address)
+
+            await waitForCondition(() => events.length >= 2, WAIT_FOR_EVENTS_IN_MS)
+            expect(events.length).toEqual(2)
+        }, TIMEOUT)
     })
 
-    describe('edge cases', () => {
-
+    describe('same stream included in two sponsorships', () => {
         let operatorWallet: Wallet
         let operatorContract: Operator
-        let operatorServiceConfig: OperatorServiceConfig
+        let operatorServiceConfig: Omit<OperatorServiceConfig, 'nodeWallet'>
+        let nodeWallet: Wallet
         let sponsorship1: Contract
         let sponsorship2: Contract
         let topologyHelper: MaintainTopologyHelper
 
         beforeAll(async () => {
-            const deployment = await setupOperatorContract({ nodeCount: 1 })
-            operatorWallet = deployment.operatorWallet
-            operatorContract = deployment.operatorContract
-            operatorServiceConfig = {
-                ...deployment.operatorServiceConfig,
-                nodeWallet: deployment.nodeWallets[0]
-            }
+            ({
+                operatorWallet,
+                operatorContract,
+                operatorServiceConfig,
+                nodeWallets: [nodeWallet]
+            } = await setupOperatorContract({ nodeCount: 1 }))
+        }, TIMEOUT)
+
+        beforeEach(() => {
+            topologyHelper = new MaintainTopologyHelper({
+                ...operatorServiceConfig,
+                nodeWallet
+            })
         })
 
         afterEach(async () => {
             topologyHelper.stop()
-            operatorContract.provider.removeAllListeners()
         })
 
-        it('edge cases, 2 sponsorships for the same stream, join only fired once', async () => {
-
-            topologyHelper = new MaintainTopologyHelper(operatorServiceConfig)
-            let receivedAddStreams = 0
-            topologyHelper.on('addStakedStreams', () => {
-                receivedAddStreams += 1
-            })
+        it('emits event once when both sponsorships are staked to', async () => {
+            const events = eventsToArray(topologyHelper as any, ['addStakedStreams'])
             await topologyHelper.start()
 
-            sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
-            sponsorship2 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
-
-            await delegate(operatorWallet, operatorContract.address, 200)
+            await runWhileWaiting(async () => {
+                sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
+                sponsorship2 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
+                await delegate(operatorWallet, operatorContract.address, 200)
+            }, WAIT_FOR_EVENT_HANDLERS_TO_REGISTER_IN_MS)
 
             await stake(operatorContract, sponsorship1.address, 100)
-            await waitForCondition(() => receivedAddStreams === 1, 10000, 1000)
+            await waitForCondition(() => events.length >= 1, WAIT_FOR_EVENTS_IN_MS)
+            expect(events.length).toEqual(1)
+
             await stake(operatorContract, sponsorship2.address, 100)
-            await waitForCondition(() => receivedAddStreams === 1, 10000, 1000)
+            await wait(NO_EVENTS_FIRED_WAIT_IN_MS)
+            expect(events.length).toEqual(1)
+        }, TIMEOUT)
 
-            topologyHelper.stop()
-
-        })
-
-        it('only returns the stream from getAllStreams when staked on 2 sponsorships for the stream', async () => {
-
-            const operatorClient = new MaintainTopologyHelper(operatorServiceConfig)
-            let streams: string[] = []
-            operatorClient.on('addStakedStreams', (streamIDs: string[]) => {
-                streams = streamIDs
-            })
-            await operatorClient.start()
-            await waitForCondition(() => streams.length === 1, 10000, 1000)
-            expect(streams).toContain(streamId1)
-            operatorClient.stop()
-        })
-
-        it('edge cases, 2 sponsorships for the same stream, remove only fired once', async () => {
-
-            topologyHelper = new MaintainTopologyHelper(operatorServiceConfig)
-            let receivedRemoveStreams = 0
-            topologyHelper.on('removeStakedStream', () => {
-                receivedRemoveStreams += 1
-            })
+        it('emits event once (and for single stream) for existing sponsorship stakes on start', async () => {
+            const events = eventsWithArgsToArray(topologyHelper as any, ['addStakedStreams'])
             await topologyHelper.start()
 
-            await (await operatorContract.unstake(sponsorship1.address)).wait()
-            await waitForCondition(() => receivedRemoveStreams === 0, 10000, 1000)
-            await (await operatorContract.unstake(sponsorship2.address)).wait()
-            await waitForCondition(() => receivedRemoveStreams === 1, 10000, 1000)
+            await waitForCondition(() => events.length >= 1, WAIT_FOR_EVENTS_IN_MS)
+            expect(events.length).toEqual(1)
+            expect(events[0][1]).toEqual([streamId1])
+        }, TIMEOUT)
 
-            topologyHelper.stop()
-        })
+        it('emits event once after both sponsorships are (fully) un-staked from', async () => {
+            const events = eventsToArray(topologyHelper as any, ['removeStakedStream'])
+            await topologyHelper.start()
+            await wait(WAIT_FOR_EVENT_HANDLERS_TO_REGISTER_IN_MS)
+
+            await unstake(operatorContract, sponsorship1.address)
+            await wait(NO_EVENTS_FIRED_WAIT_IN_MS)
+            expect(events.length).toEqual(0)
+
+            await unstake(operatorContract, sponsorship2.address)
+            await waitForCondition(() => events.length > 0, WAIT_FOR_EVENTS_IN_MS)
+            expect(events.length).toEqual(1)
+        }, TIMEOUT)
     })
 })
