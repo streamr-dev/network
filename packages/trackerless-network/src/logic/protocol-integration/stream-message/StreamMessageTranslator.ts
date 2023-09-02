@@ -46,13 +46,13 @@ export class StreamMessageTranslator {
         let content: Uint8Array
         let messageType: StreamMessageType
         if (msg.messageType === OldStreamMessageType.MESSAGE) {
-            content = utf8ToBinary(msg.serializedContent)
+            content = msg.serializedContent
             messageType = StreamMessageType.MESSAGE
         } else if (msg.messageType === OldStreamMessageType.GROUP_KEY_REQUEST) {
             content = GroupKeyRequest.toBinary(
                 GroupKeyRequestTranslator.toProtobuf(
                     OldGroupKeyRequest.deserialize(
-                        msg.serializedContent,
+                        binaryToUtf8(msg.serializedContent),
                         OldStreamMessageType.GROUP_KEY_REQUEST) as OldGroupKeyRequest
                 )
             )
@@ -61,7 +61,7 @@ export class StreamMessageTranslator {
             content = GroupKeyResponse.toBinary(
                 GroupKeyResponseTranslator.toProtobuf(
                     OldGroupKeyResponse.deserialize(
-                        msg.serializedContent,
+                        binaryToUtf8(msg.serializedContent),
                         OldStreamMessageType.GROUP_KEY_RESPONSE) as OldGroupKeyResponse
                 )
             )
