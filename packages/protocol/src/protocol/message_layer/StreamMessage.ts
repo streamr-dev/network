@@ -1,14 +1,14 @@
 import InvalidJsonError from '../../errors/InvalidJsonError'
 import StreamMessageError from '../../errors/StreamMessageError'
 import ValidationError from '../../errors/ValidationError'
-import { validateIsNotEmptyString, validateIsString, validateIsType } from '../../utils/validations'
+import { validateIsNotEmptyByteArray, validateIsString, validateIsType } from '../../utils/validations'
 
 import MessageRef from './MessageRef'
 import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
 import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from '../../utils/StreamPartID'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, utf8ToBinary, binaryToUtf8 } from '@streamr/utils'
 import { fromArray, toArray } from './streamMessageSerialization'
 
 export const VERSION = 32
@@ -20,7 +20,8 @@ export enum StreamMessageType {
 }
 
 export enum ContentType {
-    JSON = 0
+    JSON = 0,
+    BINARY = 1
 }
 
 export enum EncryptionType {
@@ -32,7 +33,7 @@ export enum EncryptionType {
 export interface StreamMessageOptions<T> {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
-    content: T | string
+    content: T | string | Uint8Array
     messageType?: StreamMessageType
     contentType?: ContentType
     encryptionType?: EncryptionType
@@ -64,7 +65,7 @@ export default class StreamMessage<T = unknown> {
     newGroupKey: EncryptedGroupKey | null
     signature: Uint8Array
     parsedContent?: T
-    serializedContent: string
+    serializedContent: Uint8Array
 
     /**
      * Create a new StreamMessage identical to the passed-in streamMessage.
@@ -92,7 +93,7 @@ export default class StreamMessage<T = unknown> {
         prevMsgRef = null,
         content,
         messageType = StreamMessageType.MESSAGE,
-        contentType = ContentType.JSON,
+        contentType,
         encryptionType = EncryptionType.NONE,
         groupKeyId = null,
         newGroupKey = null,
@@ -106,9 +107,6 @@ export default class StreamMessage<T = unknown> {
 
         StreamMessage.validateMessageType(messageType)
         this.messageType = messageType
-
-        StreamMessage.validateContentType(contentType)
-        this.contentType = contentType
 
         StreamMessage.validateEncryptionType(encryptionType)
         this.encryptionType = encryptionType
@@ -124,13 +122,23 @@ export default class StreamMessage<T = unknown> {
 
         if (typeof content === 'string') {
             // this.parsedContent gets written lazily
+            contentType = ContentType.JSON
+            this.serializedContent = utf8ToBinary(content)
+        } else if (content instanceof Uint8Array) {
+            if (contentType == null) {
+                contentType = ContentType.BINARY
+            }
             this.serializedContent = content
         } else {
+            contentType = ContentType.JSON
             this.parsedContent = content
-            this.serializedContent = JSON.stringify(content)
+            this.serializedContent = utf8ToBinary(JSON.stringify(content))
         }
 
-        validateIsNotEmptyString('content', this.serializedContent)
+        validateIsNotEmptyByteArray('content', this.serializedContent)
+
+        StreamMessage.validateContentType(contentType)
+        this.contentType = contentType
 
         StreamMessage.validateSequence(this)
     }
@@ -175,7 +183,7 @@ export default class StreamMessage<T = unknown> {
         return this.messageId
     }
 
-    getSerializedContent(): string {
+    getSerializedContent(): Uint8Array {
         return this.serializedContent
     }
 
@@ -192,7 +200,7 @@ export default class StreamMessage<T = unknown> {
 
             if (this.contentType === ContentType.JSON) {
                 try {
-                    this.parsedContent = JSON.parse(this.serializedContent)
+                    this.parsedContent = JSON.parse(binaryToUtf8(this.serializedContent))
                 } catch (err: any) {
                     throw new InvalidJsonError(
                         this.getStreamId(),
@@ -209,10 +217,10 @@ export default class StreamMessage<T = unknown> {
         return this.parsedContent as T
     }
 
-    getContent(): string
-    getContent(parsedContent: false): string
+    getContent(): Uint8Array
+    getContent(parsedContent: false): Uint8Array
     getContent(parsedContent: true): T
-    getContent(parsedContent = true): string | T {
+    getContent(parsedContent = true): Uint8Array | T {
         if (parsedContent) {
             return this.getParsedContent()
         }
