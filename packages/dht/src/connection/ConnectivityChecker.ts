@@ -21,7 +21,7 @@ export class ConnectivityChecker {
 
     private static readonly CONNECTIVITY_CHECKER_SERVICE_ID = 'system/connectivitychecker'
     private static readonly CONNECTIVITY_CHECKER_TIMEOUT = 5000
-    private stopped = false
+    private destroyed = false
     private webSocketPort?: number
 
     constructor(webSocketPort?: number) {
@@ -29,6 +29,9 @@ export class ConnectivityChecker {
     }
 
     public async sendConnectivityRequest(entryPoint: PeerDescriptor): Promise<ConnectivityResponse> {
+        if (this.destroyed) {
+            throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
+        }
         let outgoingConnection: IConnection
         try {
             outgoingConnection = await this.connectAsync({
@@ -102,7 +105,7 @@ export class ConnectivityChecker {
         connection: ServerWebSocket,
         connectivityRequest: ConnectivityRequest
     ): Promise<void> {
-        if (this.stopped) {
+        if (this.destroyed) {
             return
         }
         let outgoingConnection: IConnection | undefined
@@ -169,5 +172,9 @@ export class ConnectivityChecker {
             throw (new Err.ConnectionFailed('Could not open WebSocket connection'))
         }
         return socket
+    }
+
+    public destroy(): void {
+        this.destroyed = true
     }
 }
