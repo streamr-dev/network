@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey } from '@streamr/test-utils'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -35,18 +34,13 @@ describe('PubSub with multiple clients', () => {
     let stream: Stream
     let mainClient: StreamrClient
     let otherClient: StreamrClient
-    let privateKey: string
     let environment: FakeEnvironment
     const addAfter = addAfterFn()
 
     beforeEach(async () => {
         environment = new FakeEnvironment()
-        privateKey = fastPrivateKey()
         mainClient = environment.createClient({
-            id: 'subscriber-main',
-            auth: {
-                privateKey
-            }
+            id: 'subscriber-main'
         })
         stream = await createTestStream(mainClient, module)
         const storageNode = await environment.startStorageNode()
@@ -77,10 +71,7 @@ describe('PubSub with multiple clients', () => {
 
     async function createSubscriber() {
         const client = environment.createClient({
-            id: 'subscriber-other',
-            auth: {
-                privateKey
-            }
+            id: 'subscriber-other'
         })
         const user = await client.getAddress()
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user })
