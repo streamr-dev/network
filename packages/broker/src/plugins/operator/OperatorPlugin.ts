@@ -86,7 +86,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         const redundancyFactor = await fetchRedundancyFactor(this.serviceConfig)
         this.maintainTopologyService = await setUpAndStartMaintainTopologyService({
             streamrClient: this.streamrClient,
-            redundancyFactor: redundancyFactor,
+            redundancyFactor,
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
