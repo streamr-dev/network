@@ -7,7 +7,7 @@ import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from 
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
-import { BigNumber, ContractReceipt, Wallet } from 'ethers'
+import { BigNumber, Wallet } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { range } from 'lodash'
 
@@ -154,7 +154,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
             '0',
         ]
     )
-    const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait() as ContractReceipt
+    const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait() 
     const newSponsorshipEvent = sponsorshipDeployReceipt.events?.find((e) => e.event === 'NewSponsorship')
     const newSponsorshipAddress = newSponsorshipEvent?.args?.sponsorshipContract
     const newSponsorship = new Contract(newSponsorshipAddress, sponsorshipABI, opts.deployer) as unknown as Sponsorship
@@ -184,7 +184,7 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
     const newWallet = new Wallet(fastPrivateKey())
     const adminWallet = getAdminWallet(opts?.adminKey, opts?.provider)
     const token = (opts?.chainConfig !== undefined)
-        ? new Contract(opts.chainConfig.contracts.DATA!, tokenABI, adminWallet) as unknown as TestToken
+        ? new Contract(opts.chainConfig.contracts.DATA, tokenABI, adminWallet) as unknown as TestToken
         : getTokenContract().connect(adminWallet)
     await (await token.mint(newWallet.address, parseEther('1000000'), {
         nonce: await adminWallet.getTransactionCount()

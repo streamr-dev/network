@@ -27,7 +27,7 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
 
     // INetworkRpc server method
     async neighborUpdate(message: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> {
-        if (this.config.targetNeighbors!.hasPeerWithStringId(message.senderId)) {
+        if (this.config.targetNeighbors.hasPeerWithStringId(message.senderId)) {
             const newPeers = message.neighborDescriptors
                 .filter((peerDescriptor) => {
                     const stringId = keyFromPeerDescriptor(peerDescriptor)
@@ -37,10 +37,10 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
                 new RemoteRandomGraphNode(
                     peer,
                     this.config.randomGraphId,
-                    toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator!.getRpcClientTransport()))
+                    toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
                 ))
             )
-            this.config.neighborFinder!.start()
+            this.config.neighborFinder.start()
             const response: NeighborUpdate = {
                 senderId: this.config.ownStringId,
                 randomGraphId: this.config.randomGraphId,

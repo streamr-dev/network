@@ -32,13 +32,13 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     private handleRequest(request: StreamHandshakeRequest): StreamHandshakeResponse {
-        if (this.config.targetNeighbors!.hasPeer(request.senderDescriptor!)
+        if (this.config.targetNeighbors.hasPeer(request.senderDescriptor!)
             || this.config.ongoingHandshakes.has(keyFromPeerDescriptor(request.senderDescriptor!))
         ) {
             return this.acceptHandshake(request, request.senderDescriptor!)
-        } else if (this.config.targetNeighbors!.size() + this.config.ongoingHandshakes.size < this.config.N) {
+        } else if (this.config.targetNeighbors.size() + this.config.ongoingHandshakes.size < this.config.N) {
             return this.acceptHandshake(request, request.senderDescriptor!)
-        } else if (this.config.targetNeighbors!.size([request.interleaveSourceId!]) >= 2) {
+        } else if (this.config.targetNeighbors.size([request.interleaveSourceId!]) >= 2) {
             return this.acceptHandshakeWithInterleaving(request, request.senderDescriptor!)
         } else {
             return this.rejectHandshake(request)

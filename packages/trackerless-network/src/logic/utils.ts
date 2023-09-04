@@ -9,7 +9,7 @@ export const markAndCheckDuplicate = (
 ): boolean => {
     const detectorKey = `${binaryToHex(currentMessage.publisherId)}-${currentMessage.messageChainId}`
     const previousNumberPair = previousMessageRef ?
-        new NumberPair(Number(previousMessageRef!.timestamp), previousMessageRef!.sequenceNumber) : null
+        new NumberPair(Number(previousMessageRef.timestamp), previousMessageRef.sequenceNumber) : null
     const currentNumberPair = new NumberPair(Number(currentMessage.timestamp), currentMessage.sequenceNumber)
     if (!duplicateDetectors.has(detectorKey)) {
         duplicateDetectors.set(detectorKey, new DuplicateMessageDetector())

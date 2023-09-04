@@ -201,7 +201,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         if (this.stopped) {
             return
         }
-        this.config.randomContactPool!.replaceAll(randomPeers.map((descriptor) =>
+        this.config.randomContactPool.replaceAll(randomPeers.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,

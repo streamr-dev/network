@@ -26,7 +26,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: params.previousPeer as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            targetDescriptor: this.peerDescriptor,
             timeout: 10000
         }
         try {
@@ -39,7 +39,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
                 && ack.error.includes('duplicate')
             ) {
                 return true
-            } else if (ack.error!.length > 0) {
+            } else if (ack.error.length > 0) {
                 return false
             }
         } catch (err) {
@@ -63,12 +63,12 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: params.previousPeer as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            targetDescriptor: this.peerDescriptor,
             timeout: 10000
         }
         try {
             const ack = await this.client.forwardMessage(message, options)
-            if (ack.error!.length > 0) {
+            if (ack.error.length > 0) {
                 return false
             }
         } catch (err) {
@@ -95,12 +95,12 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: params.previousPeer as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            targetDescriptor: this.peerDescriptor,
             timeout: 10000
         }
         try {
             const ack = await this.client.findRecursively(message, options)
-            if (ack.error!.length > 0) {
+            if (ack.error.length > 0) {
                 logger.debug('Next hop responded with error ' + ack.error)
                 return false
             }

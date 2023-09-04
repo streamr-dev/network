@@ -64,10 +64,10 @@ export class Handshaker implements IHandshaker {
     }
 
     public async attemptHandshakesOnContacts(excludedIds: string[]): Promise<string[]> {
-        if (this.config.targetNeighbors!.size() + this.ongoingHandshakes.size < this.config.N - 2) {
+        if (this.config.targetNeighbors.size() + this.ongoingHandshakes.size < this.config.N - 2) {
             logger.trace(`Attempting parallel handshakes with ${PARALLEL_HANDSHAKE_COUNT} targets`)
             return this.selectParallelTargetsAndHandshake(excludedIds)
-        } else if (this.config.targetNeighbors!.size() + this.ongoingHandshakes.size < this.config.N) {
+        } else if (this.config.targetNeighbors.size() + this.ongoingHandshakes.size < this.config.N) {
             logger.trace(`Attempting handshake with new target`)
             return this.selectNewTargetAndHandshake(excludedIds)
         }
@@ -169,7 +169,7 @@ export class Handshaker implements IHandshaker {
         return new RemoteRandomGraphNode(
             targetPeerDescriptor,
             this.config.randomGraphId,
-            toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator!.getRpcClientTransport()))
+            toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
         )
     }
 

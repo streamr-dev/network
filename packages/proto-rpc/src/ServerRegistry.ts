@@ -73,8 +73,8 @@ export class ServerRegistry {
         logger.trace(`Server processing RPC call ${rpcMessage.requestId}`)
 
         const implementation = this.getImplementation(rpcMessage, this.methods)
-        const timeout = implementation!.options.timeout!
-        return await promiseTimeout(timeout, implementation!.fn(rpcMessage.body!, callContext ? callContext : new ProtoCallContext()))
+        const timeout = implementation.options.timeout!
+        return await promiseTimeout(timeout, implementation.fn(rpcMessage.body!, callContext ? callContext : new ProtoCallContext()))
     }
 
     public async handleNotification(rpcMessage: RpcMessage, callContext?: ProtoCallContext): Promise<void> {
@@ -82,8 +82,8 @@ export class ServerRegistry {
         logger.trace(`Server processing RPC notification ${rpcMessage.requestId}`)
 
         const implementation = this.getImplementation(rpcMessage, this.notifications)
-        const timeout = implementation!.options.timeout!
-        await promiseTimeout(timeout, implementation!.fn(rpcMessage.body!, callContext ? callContext : new ProtoCallContext()))
+        const timeout = implementation.options.timeout!
+        await promiseTimeout(timeout, implementation.fn(rpcMessage.body!, callContext ? callContext : new ProtoCallContext()))
     }
 
     public registerRpcMethod<RequestClass extends IMessageType<RequestType>,
