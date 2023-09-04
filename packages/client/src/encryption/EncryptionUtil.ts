@@ -44,19 +44,19 @@ export class EncryptionUtil {
     /*
      * Returns a hex string without the '0x' prefix.
      */
-    static encryptWithAES(data: Uint8Array, cipherKey: CipherKey): string {
+    static encryptWithAES(data: Uint8Array, cipherKey: CipherKey): Uint8Array {
         const iv = crypto.randomBytes(16) // always need a fresh IV when using CTR mode
         const cipher = crypto.createCipheriv('aes-256-ctr', cipherKey, iv)
-        return hexlify(iv).slice(2) + cipher.update(data, undefined, 'hex') + cipher.final('hex')
+        return Buffer.concat([iv, cipher.update(data), cipher.final()])
     }
 
     /*
      * 'ciphertext' must be a hex string (without '0x' prefix), 'groupKey' must be a GroupKey. Returns a Buffer.
      */
-    static decryptWithAES(ciphertext: string, cipherKey: CipherKey): Buffer {
-        const iv = arrayify(`0x${ciphertext.slice(0, 32)}`)
+    static decryptWithAES(cipher: Uint8Array, cipherKey: CipherKey): Buffer {
+        const iv = cipher.slice(0, 16)
         const decipher = crypto.createDecipheriv('aes-256-ctr', cipherKey, iv)
-        return Buffer.concat([decipher.update(ciphertext.slice(32), 'hex'), decipher.final()])
+        return Buffer.concat([decipher.update(cipher.slice(16)), decipher.final()])
     }
 
     static decryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey): void | never {
@@ -66,9 +66,9 @@ export class EncryptionUtil {
 
         try {
             streamMessage.encryptionType = EncryptionType.NONE
-            const serializedContent = this.decryptWithAES(streamMessage.getSerializedContent(), groupKey.data).toString()
-            streamMessage.parsedContent = JSON.parse(serializedContent)
+            const serializedContent = this.decryptWithAES(streamMessage.getSerializedContent(), groupKey.data)
             streamMessage.serializedContent = serializedContent
+            streamMessage.createParsedContent()
         } catch (err) {
             streamMessage.encryptionType = EncryptionType.AES
             throw new DecryptError(streamMessage, err.stack)

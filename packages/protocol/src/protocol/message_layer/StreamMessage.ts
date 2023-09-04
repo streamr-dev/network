@@ -64,7 +64,7 @@ export default class StreamMessage<T = unknown> {
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
     signature: Uint8Array
-    parsedContent?: T
+    parsedContent?: T | Uint8Array
     serializedContent: Uint8Array
 
     /**
@@ -197,24 +197,29 @@ export default class StreamMessage<T = unknown> {
                 // @ts-expect-error need type narrowing for encrypted vs unencrypted
                 return this.serializedContent
             }
-
-            if (this.contentType === ContentType.JSON) {
-                try {
-                    this.parsedContent = JSON.parse(binaryToUtf8(this.serializedContent))
-                } catch (err: any) {
-                    throw new InvalidJsonError(
-                        this.getStreamId(),
-                        err,
-                        this,
-                    )
-                }
-            } else {
-                throw new StreamMessageError(`Unsupported contentType for getParsedContent: ${this.contentType}`, this)
-            }
+            this.createParsedContent()   
         }
 
         // should be expected type by here
         return this.parsedContent as T
+    }
+
+    createParsedContent(): void {
+        if (this.contentType === ContentType.JSON) {
+            try {
+                this.parsedContent = JSON.parse(binaryToUtf8(this.serializedContent))
+            } catch (err: any) {
+                throw new InvalidJsonError(
+                    this.getStreamId(),
+                    err,
+                    this,
+                )
+            }
+        } else if (this.contentType === ContentType.BINARY) {
+            this.parsedContent = this.serializedContent
+        } else {
+            throw new StreamMessageError(`Unsupported contentType for getParsedContent: ${this.contentType}`, this)
+        }
     }
 
     getContent(): Uint8Array

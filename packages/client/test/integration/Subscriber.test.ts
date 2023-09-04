@@ -135,7 +135,7 @@ describe('Subscriber', () => {
             }))
     
             const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
-            expect(receivedMessage!.content).toBeString()
+            expect(receivedMessage!.content).toBeInstanceOf(Buffer)
             expect(receivedMessage!.streamMessage.groupKeyId).toEqual(groupKey.id)
         })
     })

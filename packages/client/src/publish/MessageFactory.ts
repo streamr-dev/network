@@ -7,12 +7,13 @@ import {
     MessageRef,
     StreamID,
     StreamMessage,
-    StreamMessageOptions
+    StreamMessageOptions,
+    ContentType
 } from '@streamr/protocol'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
 import { PublishMetadata } from './Publisher'
-import { keyToArrayIndex } from '@streamr/utils'
+import { keyToArrayIndex, utf8ToBinary } from '@streamr/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
 import { Authentication } from '../Authentication'
@@ -29,18 +30,19 @@ export interface MessageFactoryOptions {
 
 export const createSignedMessage = async <T>(
     opts: Omit<StreamMessageOptions<T>, 'signature' | 'content'>
-    & { serializedContent: string, authentication: Authentication }
+    & { serializedContent: Uint8Array | string, authentication: Authentication }
 ): Promise<StreamMessage<T>> => {
+    const signatureContent = typeof opts.serializedContent === 'string' ? utf8ToBinary(opts.serializedContent) : opts.serializedContent 
     const signature = await opts.authentication.createMessageSignature(createSignaturePayload({
         messageId: opts.messageId,
-        serializedContent: opts.serializedContent,
+        serializedContent: signatureContent,
         prevMsgRef: opts.prevMsgRef ?? undefined,
         newGroupKey: opts.newGroupKey ?? undefined
     }))
     return new StreamMessage<T>({
         ...opts,
         signature,
-        content: opts.serializedContent,
+        content: opts.serializedContent
     })
 }
 
@@ -102,10 +104,10 @@ export class MessageFactory {
         const encryptionType = (await this.streamRegistry.hasPublicSubscribePermission(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
         let groupKeyId: string | undefined
         let newGroupKey: EncryptedGroupKey | undefined
-        let serializedContent = JSON.stringify(content)
+        let serializedContent = utf8ToBinary(JSON.stringify(content))
         if (encryptionType === EncryptionType.AES) {
             const keySequence = await this.groupKeyQueue.useGroupKey()
-            serializedContent = EncryptionUtil.encryptWithAES(Buffer.from(serializedContent, 'utf8'), keySequence.current.data)
+            serializedContent = EncryptionUtil.encryptWithAES(serializedContent, keySequence.current.data)
             groupKeyId = keySequence.current.id
             if (keySequence.next !== undefined) {
                 newGroupKey = keySequence.current.encryptNextGroupKey(keySequence.next)
@@ -119,7 +121,8 @@ export class MessageFactory {
             encryptionType,
             groupKeyId,
             newGroupKey,
-            authentication: this.authentication
+            authentication: this.authentication,
+            contentType: ContentType.JSON
         })
     }
 

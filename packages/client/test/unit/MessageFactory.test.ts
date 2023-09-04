@@ -9,7 +9,7 @@ import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
-import { merge } from '@streamr/utils'
+import { merge, utf8ToBinary } from '@streamr/utils'
 
 const WALLET = fastWallet()
 const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
@@ -73,7 +73,7 @@ describe('MessageFactory', () => {
             newGroupKey: null,
             signature: expect.toBeObject(),
             contentType: ContentType.JSON,
-            serializedContent: expect.stringMatching(/^[0-9a-f]+$/)
+            serializedContent: expect.any(Uint8Array)
         })
     })
 
@@ -87,7 +87,7 @@ describe('MessageFactory', () => {
         expect(msg).toMatchObject({
             encryptionType: EncryptionType.NONE,
             groupKeyId: null,
-            serializedContent: JSON.stringify(CONTENT)
+            serializedContent: utf8ToBinary(JSON.stringify(CONTENT))
         })
     })
 
@@ -118,6 +118,7 @@ describe('MessageFactory', () => {
             groupKeyId: nextGroupKey.id,
             data: expect.any(Buffer)
         })
+        
         expect(GROUP_KEY.decryptNextGroupKey(msg.newGroupKey!)).toEqual(nextGroupKey)
     })
 

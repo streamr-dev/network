@@ -1,4 +1,3 @@
-import { arrayify } from '@ethersproject/bytes'
 import {
     EncryptedGroupKey,
     EncryptionType,
@@ -10,7 +9,7 @@ import { fastWallet } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { createMockMessage } from '../test-utils/utils'
-import { hexToBinary } from '@streamr/utils'
+import { hexToBinary, binaryToUtf8 } from '@streamr/utils'
 
 const STREAM_ID = toStreamID('streamId')
 
@@ -27,17 +26,16 @@ describe('EncryptionUtil', () => {
         const plaintext = 'some random text'
         const plaintextBuffer = Buffer.from(plaintext, 'utf8')
         const ciphertext = EncryptionUtil.encryptWithAES(plaintextBuffer, key.data)
-        const ciphertextBuffer = arrayify(`0x${ciphertext}`)
-        expect(ciphertextBuffer.length).toStrictEqual(plaintextBuffer.length + 16)
+        expect(ciphertext.length).toStrictEqual(plaintextBuffer.length + 16)
     })
 
     it('multiple same encrypt() calls use different ivs and produce different ciphertexts', () => {
         const key = GroupKey.generate()
         const plaintext = 'some random text'
-        const ciphertext1 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
-        const ciphertext2 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
-        expect(ciphertext1.slice(0, 32)).not.toStrictEqual(ciphertext2.slice(0, 32))
-        expect(ciphertext1.slice(32)).not.toStrictEqual(ciphertext2.slice(32))
+        const cipher1 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
+        const cipher2 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
+        expect(cipher1.slice(0, 16)).not.toStrictEqual(cipher2.slice(0, 16))
+        expect(cipher1.slice(16)).not.toStrictEqual(cipher2.slice(16))
     })
 
     it('StreamMessage decryption: happy path', async () => {
@@ -53,7 +51,7 @@ describe('EncryptionUtil', () => {
             nextEncryptionKey: nextKey
         })
         EncryptionUtil.decryptStreamMessage(streamMessage, key)
-        expect(streamMessage.getSerializedContent()).toStrictEqual('{"foo":"bar"}')
+        expect(binaryToUtf8(streamMessage.getSerializedContent())).toStrictEqual('{"foo":"bar"}')
         expect(streamMessage.encryptionType).toStrictEqual(EncryptionType.NONE)
         expect(streamMessage.groupKeyId).toBe(key.id)
         expect(streamMessage.newGroupKey).toEqual(nextKey)

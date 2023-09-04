@@ -33,7 +33,7 @@ describe('messagePipeline', () => {
     let publisher: Wallet
 
     const createMessage = async (opts: {
-        serializedContent?: string
+        serializedContent?: string | Uint8Array
         encryptionType?: EncryptionType
         groupKeyId?: string
     } = {}): Promise<StreamMessage> => {
