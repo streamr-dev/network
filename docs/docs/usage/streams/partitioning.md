@@ -46,7 +46,7 @@ console.log(
 ## Publish to partitioned streams
 In most use cases, a user wants **related messages (e.g. messages from a particular device) to be assigned to the same partition**, so that the messages retain a deterministic order and reach the same subscriber(s) to allow them to compute stateful aggregates correctly.
 
-If no partition is specified, the **data goes to partition 0 by default**.
+If stream has been setup to have only one partition and no partition key is specified while publishing, the **data goes to partition 0 by default**. However, if stream has been set to have multiple partitions and no partition key is given the partition will be selected randomly from the range between 0 and partition count minus 1 . 
 
 You can specify the partition number as follows:
 

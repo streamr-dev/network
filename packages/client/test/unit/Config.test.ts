@@ -35,11 +35,14 @@ describe('Config', () => {
                     return createStrictConfig({
                         network: {
                             controlLayer: {
-                                webSocketPort: 'aaaa'
+                                websocketPortRange: {
+                                    min: 'aaa',
+                                    max: 1111
+                                }
                             }
                         }
                     } as any)
-                }).toThrow('/network/controlLayer/webSocketPort must be number')
+                }).toThrow('/network/controlLayer/websocketPortRange/min must be number')
             })
 
             it('ajv-format', () => {
