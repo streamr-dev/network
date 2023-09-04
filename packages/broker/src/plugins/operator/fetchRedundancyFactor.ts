@@ -2,8 +2,17 @@ import { Logger } from '@streamr/utils'
 import { Contract } from 'ethers'
 import { Operator, operatorABI } from '@streamr/network-contracts'
 import { OperatorServiceConfig } from './OperatorPlugin'
+import { z } from 'zod'
 
 const logger = new Logger(module)
+
+const MetadataSchema = z.object({
+    redundancyFactor: z.number()
+        .int()
+        .gte(1)
+})
+
+export class RedundancyFactorParseError extends Error {}
 
 export async function fetchRedundancyFactor({
     operatorContractAddress,
@@ -11,14 +20,29 @@ export async function fetchRedundancyFactor({
 }: Pick<OperatorServiceConfig, 'operatorContractAddress' | 'nodeWallet'>): Promise<number> {
     const operator = new Contract(operatorContractAddress, operatorABI, nodeWallet) as unknown as Operator
     const metadataAsString = await operator.metadata()
-    let metadata: Record<string, unknown> = {}
-    if (metadataAsString.length > 0) {
-        try {
-            metadata = JSON.parse(metadataAsString)
-        } catch (e) {
-            logger.warn('Encountered malformed metadata', { operatorContractAddress, metadataAsString })
-        }
+
+    if (metadataAsString.length === 0) {
+        return 1
     }
-    const redundancyFactor = Number(metadata.redundancyFactor)
-    return !isNaN(redundancyFactor) ? Math.max(redundancyFactor, 1) : 1
+
+    let metadata: Record<string, unknown>
+    try {
+        metadata = JSON.parse(metadataAsString)
+    } catch {
+        logger.warn('Encountered malformed metadata', { operatorContractAddress, metadataAsString })
+        throw new RedundancyFactorParseError('Encountered malformed metadata')
+    }
+
+    let validatedMetadata: z.infer<typeof MetadataSchema>
+    try {
+        validatedMetadata = MetadataSchema.parse(metadata)
+    } catch (err) {
+        logger.warn('Encountered invalid metadata', {
+            operatorContractAddress,
+            metadataAsString,
+            reason: err?.reason
+        })
+        throw new RedundancyFactorParseError('Encountered invalid metadata')
+    }
+    return validatedMetadata.redundancyFactor
 }
