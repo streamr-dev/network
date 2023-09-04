@@ -14,7 +14,7 @@ export class ParseError extends Error {
     public readonly reasonText: string
 
     constructor(reasonText: string) {
-        super(`failed to parse metadata: ${reasonText}`)
+        super(`Failed to parse metadata: ${reasonText}`)
         this.reasonText = reasonText
     }
 }
