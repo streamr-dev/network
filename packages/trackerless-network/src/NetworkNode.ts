@@ -115,7 +115,7 @@ export class NetworkNode {
         this.stack.getStreamrNode().unsubscribeFromStream(streamPartId)
     }
 
-    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<string> {
+    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
         return this.hasStreamPart(streamPartId)
             ? this.stack.getStreamrNode().getStream(streamPartId)!.layer2.getTargetNeighborIds()
             : []

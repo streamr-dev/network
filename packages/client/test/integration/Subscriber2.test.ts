@@ -2,7 +2,6 @@ import 'reflect-metadata'
 
 import { MessageID, StreamID, StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { NodeID } from '@streamr/trackerless-network'
 import { Defer, collect, waitForCondition } from '@streamr/utils'
 import sample from 'lodash/sample'
 import shuffle from 'lodash/shuffle'
@@ -334,7 +333,7 @@ describe('Subscriber', () => {
 
                 const published = []
                 const nodeId = await publisher.getNodeId()
-                const node = environment.getNetwork().getNode(nodeId as NodeID)!
+                const node = environment.getNetwork().getNode(nodeId)!
                 for (let i = 0; i < NUM_MESSAGES; i++) {
                     const serializedContent = (i === MAX_ITEMS) ? 'invalid-json' : JSON.stringify({ foo: i })
                     const msg = await createMockMessage(serializedContent, i)
