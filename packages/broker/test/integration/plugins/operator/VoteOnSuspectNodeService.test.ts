@@ -75,7 +75,9 @@ describe('VoteOnSuspectNodeService', () => {
         mockVoteOnSuspectNodeHelper.voteOnFlag.mockResolvedValue(undefined)
         // @ts-expect-error mock
         voterVoteService.voteOnSuspectNodeHelper = mockVoteOnSuspectNodeHelper
-        await (await flagger.operatorContract.connect(flagger.nodeWallets[0]).flag(sponsorship.address, target.operatorContract.address)).wait()
+        await (await flagger.operatorContract.connect(flagger.nodeWallets[0])
+            .flagWithMetadata(sponsorship.address, target.operatorContract.address, JSON.stringify({ partition: 5 }))
+        ).wait()
         // check that voter votes
         await waitForCondition(() => mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls.length > 0, 10000)
         expect(mockVoteOnSuspectNodeHelper.voteOnFlag).toHaveBeenCalledTimes(1)

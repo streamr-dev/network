@@ -24,14 +24,15 @@ describe('random graph with real connections', () => {
     let randomGraphNode3: RandomGraphNode
     let randomGraphNode4: RandomGraphNode
     let randomGraphNode5: RandomGraphNode
+    const websocketPortRange = { min: 12222, max: 12225 } 
 
     beforeEach(async () => {
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
         await epDhtNode.start()
-        dhtNode1 = new DhtNode({ peerIdString: '1', webSocketPort: 12222, entryPoints: [epPeerDescriptor] })
-        dhtNode2 = new DhtNode({ peerIdString: '2', webSocketPort: 12223, entryPoints: [epPeerDescriptor] })
-        dhtNode3 = new DhtNode({ peerIdString: '3', webSocketPort: 12224, entryPoints: [epPeerDescriptor] })
-        dhtNode4 = new DhtNode({ peerIdString: '4', webSocketPort: 12225, entryPoints: [epPeerDescriptor] })
+        dhtNode1 = new DhtNode({ peerIdString: '1', websocketPortRange, entryPoints: [epPeerDescriptor] })
+        dhtNode2 = new DhtNode({ peerIdString: '2', websocketPortRange, entryPoints: [epPeerDescriptor] })
+        dhtNode3 = new DhtNode({ peerIdString: '3', websocketPortRange, entryPoints: [epPeerDescriptor] })
+        dhtNode4 = new DhtNode({ peerIdString: '4', websocketPortRange, entryPoints: [epPeerDescriptor] })
         await dhtNode1.start()
         await dhtNode2.start()
         await dhtNode3.start()
