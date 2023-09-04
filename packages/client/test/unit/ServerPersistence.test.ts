@@ -60,7 +60,7 @@ describe('ServerPersistence', () => {
             const instance = await ServerPersistence.createInstance({
                 loggerFactory: mockLoggerFactory(),
                 clientId,
-                namespaces: [NAMESPACE],
+                namespaces: ['EncryptionKeys'],
                 migrationsPath: join(__dirname, '../../src/encryption/migrations')
             })
             await instance.set('key', `value${i}`, 'EncryptionKeys')
