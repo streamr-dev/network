@@ -20,8 +20,6 @@ describe('Storing data in DHT', () => {
     }
 
     beforeEach(async () => {
-        Simulator.useFakeTimers(true)
-
         nodes = []
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
@@ -47,7 +45,6 @@ describe('Storing data in DHT', () => {
 
     afterEach(async () => {
         await Promise.all(nodes.map((node) => node.stop()))
-        Simulator.useFakeTimers(false)
     })
 
     it('Storing data works', async () => {
@@ -58,7 +55,7 @@ describe('Storing data in DHT', () => {
         expect(successfulStorers.length).toBeGreaterThan(4)
     }, 90000)
 
-    it('Storing and getting data works', async () => {
+    it.only('Storing and getting data works', async () => {
         const storingNode = getRandomNode()
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)

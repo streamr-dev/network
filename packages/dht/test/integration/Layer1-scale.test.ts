@@ -3,6 +3,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
 import { UUID } from '../../src/helpers/UUID'
+import { getTI } from '@streamr/test-utils'
 
 describe('Layer1', () => {
 
@@ -74,7 +75,7 @@ describe('Layer1', () => {
             const layer1Node = layer1Nodes[i]
             expect(layer1Node.getNodeId().equals(layer0Node.getNodeId())).toEqual(true)
             expect(layer1Node.getNumberOfConnections()).toEqual(layer0Node.getNumberOfConnections())
-            expect(layer1Node.getBucketSize()).toBeGreaterThanOrEqual(layer1Node.getK() / 2)
+            expect(getTI(layer1Node).getBucketSize()).toBeGreaterThanOrEqual(layer1Node.getK() / 2)
             expect(layer1Node.getAllConnectionPeerDescriptors()).toEqual(layer0Node.getAllConnectionPeerDescriptors())
         }
     }, 120000)

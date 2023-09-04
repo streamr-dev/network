@@ -37,6 +37,12 @@ export interface PeerManagerEvents {
     kBucketEmpty: () => void
 }
 
+interface IPeerManagerTest {
+    getNeighborList: () => SortedContactList<DhtPeer>
+    getKBucketSize: () => number
+    getKBucketPeers: () => PeerDescriptor[]
+}
+
 export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPeerManager {
 
     private bucket?: KBucket<DhtPeer>
@@ -46,6 +52,13 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
     public readonly connections: Map<PeerIDKey, DhtPeer> = new Map()
     private readonly config: PeerManagerConfig
     private stopped = false
+
+    private testInterface: IPeerManagerTest = {
+        getNeighborList: () => { return this.neighborList! },
+        getKBucketSize: () => { return this.bucket!.count() },
+        getKBucketPeers: () => { return this.bucket!.toArray().map((peer) => peer.getPeerDescriptor()) }
+    }
+    public testInterfaceType?: IPeerManagerTest 
 
     constructor(config: PeerManagerConfig) {
         super()

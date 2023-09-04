@@ -3,7 +3,7 @@ import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
-
+import { getTI } from '@streamr/test-utils'
 const logger = new Logger(module)
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
@@ -86,21 +86,21 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         await layer1Node3.joinDht([entryPointDescriptor])
         await layer1Node4.joinDht([entryPointDescriptor])
 
-        logger.info('layer1EntryPoint.getBucketSize() ' + layer1EntryPoint.getBucketSize())
-        logger.info('layer1Node1.getBucketSize()' + layer1Node1.getBucketSize())
-        logger.info('layer1Node2.getBucketSize()' + layer1Node2.getBucketSize())
-        logger.info('layer1Node3.getBucketSize()' + layer1Node3.getBucketSize())
-        logger.info('layer1Node4.getBucketSize()' + layer1Node4.getBucketSize())
+        logger.info('layer1EntryPoint.getBucketSize() ' + getTI(layer1EntryPoint).getBucketSize())
+        logger.info('layer1Node1.getBucketSize()' + getTI(layer1Node1).getBucketSize())
+        logger.info('layer1Node2.getBucketSize()' + getTI(layer1Node2).getBucketSize())
+        logger.info('layer1Node3.getBucketSize()' + getTI(layer1Node3).getBucketSize())
+        logger.info('layer1Node4.getBucketSize()' + getTI(layer1Node4).getBucketSize())
 
-        expect(layer1Node1.getBucketSize()).toEqual(layer0Node1.getBucketSize())
-        expect(layer1Node2.getBucketSize()).toEqual(layer0Node2.getBucketSize())
-        expect(layer1Node3.getBucketSize()).toEqual(layer0Node3.getBucketSize())
-        expect(layer1Node4.getBucketSize()).toEqual(layer0Node4.getBucketSize())
+        expect(getTI(layer1Node1).getBucketSize()).toEqual(getTI(layer0Node1).getBucketSize())
+        expect(getTI(layer1Node2).getBucketSize()).toEqual(getTI(layer0Node2).getBucketSize())
+        expect(getTI(layer1Node3).getBucketSize()).toEqual(getTI(layer0Node3).getBucketSize())
+        expect(getTI(layer1Node4).getBucketSize()).toEqual(getTI(layer0Node4).getBucketSize())
 
-        expect(layer1Node1.getKBucketPeers()).toContainValues(layer0Node1.getKBucketPeers())
-        expect(layer1Node2.getKBucketPeers()).toContainValues(layer0Node2.getKBucketPeers())
-        expect(layer1Node3.getKBucketPeers()).toContainValues(layer0Node3.getKBucketPeers())
-        expect(layer1Node4.getKBucketPeers()).toContainValues(layer0Node4.getKBucketPeers())
+        expect(getTI(layer1Node1).getKBucketPeers()).toContainValues(getTI(layer0Node1).getKBucketPeers())
+        expect(getTI(layer1Node2).getKBucketPeers()).toContainValues(getTI(layer0Node2).getKBucketPeers())
+        expect(getTI(layer1Node3).getKBucketPeers()).toContainValues(getTI(layer0Node3).getKBucketPeers())
+        expect(getTI(layer1Node4).getKBucketPeers()).toContainValues(getTI(layer0Node4).getKBucketPeers())
 
     }, 60000)
 })

@@ -10,6 +10,7 @@ import fetch from 'node-fetch'
 import { Readable } from 'stream'
 
 export type Event = string
+export { getTI as getTI } from './testInterface'
 
 /**
  * Collect data of a stream into an array. The array is wrapped in a

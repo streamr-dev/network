@@ -1,3 +1,4 @@
+import { getTI } from '@streamr/test-utils'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -38,9 +39,9 @@ describe('Mock IConnection DHT Joining', () => {
         await entryPoint.joinDht([entrypointDescriptor])
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
         nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 2)
-            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 2)
+            expect(getTI(node).getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 2)
+            expect(getTI(node).getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 2)
         })
-        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() - 2)
+        expect(getTI(entryPoint).getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() - 2)
     }, 60000)
 })

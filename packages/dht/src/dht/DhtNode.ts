@@ -6,7 +6,7 @@ import { EventEmitter } from 'eventemitter3'
 import { SortedContactList } from './contact/SortedContactList'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { PeerID } from '../helpers/PeerID'
+import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
@@ -44,6 +44,7 @@ import { RemoteExternalApi } from './RemoteExternalApi'
 import { UUID } from '../exports'
 import { PeerManager } from './PeerManager'
 import { isNodeJS } from '../helpers/browser/isNodeJS'
+import { getTI } from '@streamr/test-utils'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -144,6 +145,13 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerIdString?: 
     return ret
 }
 
+interface IDhtNodeTest {
+    getNeighborList: () => SortedContactList<DhtPeer>
+    getKBucketPeers: () => PeerDescriptor[],
+    getConnections: () => Map<PeerIDKey, DhtPeer>
+    getBucketSize: () =>  number
+}
+
 export class DhtNode extends EventEmitter<Events> implements ITransport {
     private readonly config: DhtNodeConfig
 
@@ -167,6 +175,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public contactAddCounter = 0
     public contactOnAddedCounter = 0
+
+    private testInterface: IDhtNodeTest = {
+        getConnections: () => { return this.peerManager!.connections },
+        getNeighborList: () => { return getTI(this.peerManager!)!.getNeighborList() },
+        getKBucketPeers: () => { return getTI(this.peerManager!)!.getKBucketPeers() },
+        getBucketSize: () => { return getTI(this.peerManager!)!.getKBucketSize() }
+    }
+    public testInterfaceType?: IDhtNodeTest 
 
     constructor(conf: Partial<DhtNodeConfig>) {
         super()
@@ -399,24 +415,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.ownPeerId!
     }
 
-    // only used in tests, that's why access a private field
-    public getNeighborList(): SortedContactList<DhtPeer> {
-        // @ts-ignore access private field
-        return this.peerManager.neighborList!
-    }
-
-    // only used in tests, that's why access a private field
-    public getBucketSize(): number {
-        // @ts-ignore access private field
-        return this.peerManager.bucket!.count()
-    }
-
-    // only used in tests, that's why access a private field
-    public getKBucketPeers(): PeerDescriptor[] {
-        // @ts-ignore access private field
-        return this.peerManager.bucket!.toArray().map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
-    }
-
     private connectToEntryPoint(entryPoint: PeerDescriptor): void {
         this.connectionManager!.lockConnection(entryPoint, 'temporary-layer0-connection')
         this.entryPointDisconnectTimeout = setTimeout(() => {
@@ -605,3 +603,4 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.peerManager!.handlePeerLeaving(peerDescriptor, removeFromOpenInternetPeers)
     }
 }
+
