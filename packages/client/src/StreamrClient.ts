@@ -46,6 +46,7 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
+import { Signer } from '@ethersproject/abstract-signer'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -545,6 +546,13 @@ export class StreamrClient {
     // --------------------------------------------------------------------------------------------
     // Authentication
     // --------------------------------------------------------------------------------------------
+
+    /**
+     * Gets the Signer associated with the current {@link StreamrClient} instance.
+     */
+    getSigner(): Promise<Signer> {
+        return this.authentication.getStreamRegistryChainSigner()
+    }
 
     /**
      * Gets the Ethereum address of the wallet associated with the current {@link StreamrClient} instance.

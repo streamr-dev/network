@@ -39,7 +39,7 @@ describe('waitForStorage', () => {
     })
 
     it('happy path', async () => {
-        await stream.addToStorageNode(storageNode.id)
+        await stream.addToStorageNode(storageNode.getAddress())
         const content = {
             foo: Date.now()
         }
@@ -48,7 +48,7 @@ describe('waitForStorage', () => {
     })
 
     it('no match', async () => {
-        await stream.addToStorageNode(storageNode.id)
+        await stream.addToStorageNode(storageNode.getAddress())
         const content = {
             foo: Date.now()
         }
@@ -66,7 +66,7 @@ describe('waitForStorage', () => {
     })
 
     it('no message', async () => {
-        await stream.addToStorageNode(storageNode.id)
+        await stream.addToStorageNode(storageNode.getAddress())
         const msg = convertStreamMessageToMessage(await createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
             serializedContent: JSON.stringify({}),
