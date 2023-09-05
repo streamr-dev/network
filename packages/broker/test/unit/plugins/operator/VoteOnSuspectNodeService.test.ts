@@ -1,9 +1,12 @@
 import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
 import { mock, MockProxy } from 'jest-mock-extended'
-import { StreamrClient } from 'streamr-client'
+import { NodeID, StreamrClient } from 'streamr-client'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
+import {
+    ReviewRequestCallback,
+    VoteOnSuspectNodeHelper
+} from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
 
 const SPONSORSHIP = randomEthereumAddress()
 const TARGET_OPERATOR = randomEthereumAddress()
@@ -13,7 +16,7 @@ describe(VoteOnSuspectNodeService, () => {
     let operatorFleetState: MockProxy<OperatorFleetState>
     let voteOnSuspectNodeHelper: MockProxy<VoteOnSuspectNodeHelper>
     let service: VoteOnSuspectNodeService
-    let capturedHandleNodeInspectionRequest: (sponsorship: string, targetOperator: string) => void
+    let capturedHandleNodeInspectionRequest: ReviewRequestCallback
 
     beforeEach(() => {
         streamrClient = mock<StreamrClient>()
@@ -43,19 +46,19 @@ describe(VoteOnSuspectNodeService, () => {
 
     it('votes on flag if leader', async () => {
         voteOnSuspectNodeHelper.voteOnFlag.mockResolvedValue(undefined)
-        streamrClient.getNodeId.mockResolvedValue('nodeId')
-        operatorFleetState.getLeaderNodeId.mockReturnValue('nodeId')
+        streamrClient.getNodeId.mockResolvedValue('nodeId' as NodeID)
+        operatorFleetState.getLeaderNodeId.mockReturnValue('nodeId' as NodeID)
         await service.start()
-        capturedHandleNodeInspectionRequest(SPONSORSHIP, TARGET_OPERATOR)
+        capturedHandleNodeInspectionRequest(SPONSORSHIP, TARGET_OPERATOR, 5)
         expect(voteOnSuspectNodeHelper.voteOnFlag).toHaveBeenCalledWith(SPONSORSHIP, TARGET_OPERATOR, true)
     })
 
     it('does not vote on flag if not leader', async () => {
         voteOnSuspectNodeHelper.voteOnFlag.mockResolvedValue(undefined)
-        streamrClient.getNodeId.mockResolvedValue('nodeId')
-        operatorFleetState.getLeaderNodeId.mockReturnValue('leaderId')
+        streamrClient.getNodeId.mockResolvedValue('nodeId' as NodeID)
+        operatorFleetState.getLeaderNodeId.mockReturnValue('leaderId' as NodeID)
         await service.start()
-        capturedHandleNodeInspectionRequest(SPONSORSHIP, TARGET_OPERATOR)
+        capturedHandleNodeInspectionRequest(SPONSORSHIP, TARGET_OPERATOR, 5)
         expect(voteOnSuspectNodeHelper.voteOnFlag).not.toHaveBeenCalled()
     })
 })

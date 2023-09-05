@@ -38,8 +38,8 @@ describe(VoteOnSuspectNodeHelper, () => {
     beforeEach(async () => {
         callback = jest.fn()
         fakeOperator = new EventEmitter()
-        helper = new VoteOnSuspectNodeHelper({} as any, callback, fakeOperator as any)
-        await helper.start()
+        helper = new VoteOnSuspectNodeHelper({} as any, fakeOperator as any)
+        await helper.start(callback)
     })
 
     afterEach(() => {
