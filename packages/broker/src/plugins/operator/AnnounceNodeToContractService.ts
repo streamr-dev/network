@@ -1,6 +1,6 @@
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { OperatorFleetState } from './OperatorFleetState'
-import StreamrClient from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { createIsLeaderFn } from './createIsLeaderFn'
 

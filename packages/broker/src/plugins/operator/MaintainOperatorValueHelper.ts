@@ -23,7 +23,7 @@ export class MaintainOperatorValueHelper {
 
     constructor(config: OperatorServiceConfig) {
         this.config = config
-        this.operator = new Contract(config.operatorContractAddress, operatorABI, this.config.nodeWallet) as unknown as Operator
+        this.operator = new Contract(config.operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
         this.theGraphClient = new TheGraphClient({
             serverUrl: config.theGraphUrl,
             fetch,
@@ -48,7 +48,7 @@ export class MaintainOperatorValueHelper {
      */
     async getPenaltyLimitFraction(): Promise<bigint> {
         const streamrConfigAddress = await this.operator.streamrConfig()
-        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, this.config.nodeWallet) as unknown as StreamrConfig
+        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, this.config.signer) as unknown as StreamrConfig
         return (await streamrConfig.poolValueDriftLimitFraction()).toBigInt()
     }
 
@@ -60,7 +60,7 @@ export class MaintainOperatorValueHelper {
      * @param operatorContractAddress
      */
     async getUnwithdrawnEarningsOf(operatorContractAddress: EthereumAddress): Promise<UnwithdrawnEarningsData> {
-        const operator = new Contract(operatorContractAddress, operatorABI, this.config.nodeWallet) as unknown as Operator
+        const operator = new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
         const minSponsorshipEarningsInWithdrawWei = BigNumber.from(this.config.minSponsorshipEarningsInWithdraw ?? 0)
         const { sponsorshipAddresses: allSponsorshipAddresses, earnings } = await operator.getEarningsFromSponsorships()
 
@@ -71,7 +71,7 @@ export class MaintainOperatorValueHelper {
             .slice(0, this.config.maxSponsorshipsInWithdraw) // take all if maxSponsorshipsInWithdraw is undefined
         const sponsorshipAddresses = sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address))
 
-        const approxPoolValue = (await operator.totalValueInSponsorshipsWei()).toBigInt()
+        const approxPoolValue = (await operator.totalStakedIntoSponsorshipsWei()).toBigInt()
         const sumDataWei = sponsorships.reduce((sum, sponsorship) => sum.add(sponsorship.earnings), BigNumber.from(0)).toBigInt()
         const fraction = approxPoolValue > 0
             ? sumDataWei * ONE_ETHER / approxPoolValue

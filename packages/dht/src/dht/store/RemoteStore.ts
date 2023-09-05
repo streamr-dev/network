@@ -49,7 +49,7 @@ export class RemoteStore extends Remote<IStoreServiceClient> {
             sourceDescriptor: this.ownPeerDescriptor,
             targetDescriptor: this.peerDescriptor,
             timeout: 10000,
-            doNotConnect: doNotConnect
+            doNotConnect
         }
 
         return this.client.migrateData(request, options)      

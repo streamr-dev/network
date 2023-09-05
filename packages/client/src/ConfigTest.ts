@@ -23,6 +23,10 @@ export const CONFIG_TEST: StreamrClientConfig = {
                     port: 40401
                 }
             }],
+            websocketPortRange: {
+                min: 32400,
+                max: 32800
+            },
             iceServers: [],
             webrtcAllowPrivateAddresses: true
         }
@@ -47,7 +51,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
                 timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
             }]
         },
-        theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`,
+        theGraphUrl: DOCKER_DEV_CHAIN_CONFIG.theGraphUrl,
     },
     encryption: {
         rsaKeyLength: MIN_KEY_LENGTH

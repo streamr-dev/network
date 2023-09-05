@@ -1,19 +1,19 @@
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { keyFromPeerDescriptor, ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
+import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
 import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
-import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
 import { INeighborFinder } from './NeighborFinder'
-import { PeerList } from '../PeerList'
+import { NodeList } from '../NodeList'
 import { RemoteNeighborUpdateManager } from './RemoteNeighborUpdateManager'
 import { NeighborUpdateManagerServer } from './NeighborUpdateManagerServer'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 interface NeighborUpdateManagerConfig {
-    ownStringId: PeerIDKey
+    ownNodeId: NodeID
     ownPeerDescriptor: PeerDescriptor
-    targetNeighbors: PeerList
-    nearbyContactPool: PeerList
+    targetNeighbors: NodeList
+    nearbyContactPool: NodeList
     neighborFinder: INeighborFinder
     randomGraphId: string
     rpcCommunicator: ListeningRpcCommunicator
@@ -50,13 +50,13 @@ export class NeighborUpdateManager implements INeighborUpdateManager {
     }
 
     private async updateNeighborInfo(): Promise<void> {
-        logger.trace(`Updating neighbor info to peers`)
-        const neighborDescriptors = this.config.targetNeighbors!.getPeers().map((neighbor) => neighbor.getPeerDescriptor())
-        await Promise.allSettled(this.config.targetNeighbors!.getPeers().map(async (neighbor) => {
+        logger.trace(`Updating neighbor info to nodes`)
+        const neighborDescriptors = this.config.targetNeighbors!.getNodes().map((neighbor) => neighbor.getPeerDescriptor())
+        await Promise.allSettled(this.config.targetNeighbors!.getNodes().map(async (neighbor) => {
             const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.config.ownPeerDescriptor, neighborDescriptors)
             if (res.removeMe) {
                 this.config.targetNeighbors!.remove(neighbor.getPeerDescriptor())
-                this.config.neighborFinder!.start([keyFromPeerDescriptor(neighbor.getPeerDescriptor())])
+                this.config.neighborFinder!.start([getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())])
             }
         }))
     }

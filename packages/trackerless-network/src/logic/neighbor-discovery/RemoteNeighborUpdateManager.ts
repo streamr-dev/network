@@ -1,13 +1,14 @@
-import { DhtRpcOptions, keyFromPeerDescriptor, PeerDescriptor } from '@streamr/dht'
-import { Logger } from '@streamr/utils'
+import { DhtRpcOptions, PeerDescriptor } from '@streamr/dht'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Remote } from '../Remote'
 import { INeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 
 interface UpdateNeighborsResponse {
-    peers: PeerDescriptor[]
+    peerDescriptors: PeerDescriptor[]
     removeMe: boolean
 }
 
@@ -19,7 +20,7 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
         }
         const request: NeighborUpdate = {
-            senderId: keyFromPeerDescriptor(ownPeerDescriptor),
+            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
             randomGraphId: this.graphId,
             neighborDescriptors: neighbors,
             removeMe: false
@@ -27,13 +28,13 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
         try {
             const response = await this.client.neighborUpdate(request, options)
             return {
-                peers: response.neighborDescriptors!,
+                peerDescriptors: response.neighborDescriptors!,
                 removeMe: response.removeMe
             }
         } catch (err: any) {
-            logger.debug(`updateNeighbors to ${keyFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
+            logger.debug(`updateNeighbors to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
             return {
-                peers: [],
+                peerDescriptors: [],
                 removeMe: true
             }
         }

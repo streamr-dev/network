@@ -42,8 +42,8 @@ describe('WebSocket Connection Management', () => {
 
         const config1 = {
             transportLayer: connectorTransport1,
-            webSocketHost: '127.0.0.1',
-            webSocketPort: 12223,
+            websocketHost: '127.0.0.1',
+            websocketPortRange: { min: 12223, max: 12223 },
         }
         const config2 = {
             transportLayer: connectorTransport2
@@ -65,7 +65,7 @@ describe('WebSocket Connection Management', () => {
 
     it('Can open connections to serverless peer', (done) => {
         const dummyMessage: Message = {
-            serviceId: serviceId,
+            serviceId,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
@@ -87,7 +87,7 @@ describe('WebSocket Connection Management', () => {
 
     it('Can open connections to peer with server', async () => {
         const dummyMessage: Message = {
-            serviceId: serviceId,
+            serviceId,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
@@ -110,7 +110,7 @@ describe('WebSocket Connection Management', () => {
 
     it('Connecting to self throws', async () => {
         const dummyMessage: Message = {
-            serviceId: serviceId,
+            serviceId,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()

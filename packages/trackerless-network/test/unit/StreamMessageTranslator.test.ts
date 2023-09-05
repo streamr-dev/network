@@ -6,17 +6,17 @@ import {
     MessageID,
     StreamID,
     StreamMessage as OldStreamMessage,
-    StreamMessageType as OldStreamMessageType
+    StreamMessageType as OldStreamMessageType,
+    StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
-import { binaryToHex, binaryToUtf8, hexToBinary } from '../../src/logic/utils'
+import { EthereumAddress, binaryToHex, binaryToUtf8, hexToBinary } from '@streamr/utils'
 
 describe('StreamMessageTranslator', () => {
 
     const signature = '0x1234'
     const protobufMsg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
-        'TEST',
+        StreamPartIDUtils.parse('TEST#0'),
         hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
     )
     const messageId = new MessageID(

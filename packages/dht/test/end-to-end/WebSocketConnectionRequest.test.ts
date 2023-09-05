@@ -22,7 +22,7 @@ describe('WebSocket IConnection Requests', () => {
 
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ peerIdString: '2', nodeName: 'node1', webSocketPort: 10022, entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ peerIdString: '2', nodeName: 'node1', websocketPortRange: { min: 10022, max: 10022 }, entryPoints: [epPeerDescriptor] })
         node2 = new DhtNode({ peerIdString: '1', nodeName: 'node2', entryPoints: [epPeerDescriptor] })
         await node1.start()
         await node2.start()

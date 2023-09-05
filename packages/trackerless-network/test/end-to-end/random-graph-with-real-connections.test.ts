@@ -3,6 +3,7 @@ import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('random graph with real connections', () => {
 
@@ -12,7 +13,7 @@ describe('random graph with real connections', () => {
         websocket: { ip: 'localhost', port: 12221 }
     }
 
-    const randomGraphId = 'random-graph'
+    const randomGraphId = StreamPartIDUtils.parse('random-graph#0')
     let epDhtNode: DhtNode
     let dhtNode1: DhtNode
     let dhtNode2: DhtNode
@@ -23,14 +24,15 @@ describe('random graph with real connections', () => {
     let randomGraphNode3: RandomGraphNode
     let randomGraphNode4: RandomGraphNode
     let randomGraphNode5: RandomGraphNode
+    const websocketPortRange = { min: 12222, max: 12225 } 
 
     beforeEach(async () => {
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
         await epDhtNode.start()
-        dhtNode1 = new DhtNode({ peerIdString: '1', webSocketPort: 12222, entryPoints: [epPeerDescriptor] })
-        dhtNode2 = new DhtNode({ peerIdString: '2', webSocketPort: 12223, entryPoints: [epPeerDescriptor] })
-        dhtNode3 = new DhtNode({ peerIdString: '3', webSocketPort: 12224, entryPoints: [epPeerDescriptor] })
-        dhtNode4 = new DhtNode({ peerIdString: '4', webSocketPort: 12225, entryPoints: [epPeerDescriptor] })
+        dhtNode1 = new DhtNode({ peerIdString: '1', websocketPortRange, entryPoints: [epPeerDescriptor] })
+        dhtNode2 = new DhtNode({ peerIdString: '2', websocketPortRange, entryPoints: [epPeerDescriptor] })
+        dhtNode3 = new DhtNode({ peerIdString: '3', websocketPortRange, entryPoints: [epPeerDescriptor] })
+        dhtNode4 = new DhtNode({ peerIdString: '4', websocketPortRange, entryPoints: [epPeerDescriptor] })
         await dhtNode1.start()
         await dhtNode2.start()
         await dhtNode3.start()
@@ -111,17 +113,17 @@ describe('random graph with real connections', () => {
 
     it('can fully connected topologies ', async () => {
         await waitForCondition(() => {
-            return randomGraphNode1.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode2.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode3.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode4.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode5.getTargetNeighborStringIds().length >= 3
+            return randomGraphNode1.getTargetNeighborIds().length >= 3
+                && randomGraphNode2.getTargetNeighborIds().length >= 3
+                && randomGraphNode3.getTargetNeighborIds().length >= 3
+                && randomGraphNode4.getTargetNeighborIds().length >= 3
+                && randomGraphNode5.getTargetNeighborIds().length >= 3
         }, 10000)
-        expect(randomGraphNode1.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode2.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode3.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode4.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode5.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode1.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode2.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode3.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode4.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode5.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
     })
 
     it('can propagate messages', async () => {
@@ -132,11 +134,11 @@ describe('random graph with real connections', () => {
         randomGraphNode5.on('message', () => numOfMessagesReceived += 1)
 
         await waitForCondition(() => {
-            return randomGraphNode1.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode2.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode3.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode4.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode5.getTargetNeighborStringIds().length >= 3
+            return randomGraphNode1.getTargetNeighborIds().length >= 3
+                && randomGraphNode2.getTargetNeighborIds().length >= 3
+                && randomGraphNode3.getTargetNeighborIds().length >= 3
+                && randomGraphNode4.getTargetNeighborIds().length >= 3
+                && randomGraphNode5.getTargetNeighborIds().length >= 3
         }, 10000)
 
         const msg = createStreamMessage(

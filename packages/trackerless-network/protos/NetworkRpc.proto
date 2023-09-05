@@ -90,54 +90,49 @@ message GroupKey {
 
 message StreamHandshakeRequest {
   string randomGraphId = 1;
-  string senderId = 2;
+  bytes senderId = 2;
   string requestId = 3;
-  optional string concurrentHandshakeTargetId = 4;
-  repeated string neighbors = 5;
+  optional bytes concurrentHandshakeTargetId = 4;
+  repeated bytes neighborIds = 5;
   dht.PeerDescriptor senderDescriptor = 6;
-  optional string interleavingFrom = 7;
+  optional bytes interleaveSourceId = 7;
 }
 
 message StreamHandshakeResponse {
   bool accepted = 1;
   string requestId = 2;
-  optional dht.PeerDescriptor interleaveTarget = 3;
+  optional dht.PeerDescriptor interleaveTargetDescriptor = 3;
 }
 
 message InterleaveNotice {
-  string senderId = 1;
+  bytes senderId = 1;
   string randomGraphId = 2;
-  dht.PeerDescriptor interleaveTarget = 3;
+  dht.PeerDescriptor interleaveTargetDescriptor = 3;
 }
 
 message LeaveStreamNotice {
   string randomGraphId = 1;
-  string senderId = 2;
+  bytes senderId = 2;
 }
 
 message NeighborUpdate {
-  string senderId = 1; // TODO: remove redundant info NET-1028
+  bytes senderId = 1; // TODO: remove redundant info NET-1028
   string randomGraphId = 2;
   bool removeMe = 3;
   repeated dht.PeerDescriptor neighborDescriptors = 4;
 }
 
-message StreamEntryPoint {
-  dht.PeerDescriptor peerDescriptor = 1;
-  bool firstToJoin = 2;
-}
-
 message ProxyConnectionRequest {
-  string senderId = 1; // TODO: remove redundant info NET-1028
+  bytes senderId = 1; // TODO: remove redundant info NET-1028
   string streamId = 2;
   uint32 streamPartition = 3; 
   ProxyDirection direction = 4;
-  string userId = 5;
+  bytes userId = 5;
   dht.PeerDescriptor senderDescriptor = 6;
 }
 
 message ProxyConnectionResponse {
-  string senderId = 1; // TODO: remove redundant info NET-1028
+  bytes senderId = 1; // TODO: remove redundant info NET-1028
   string streamId = 2;
   uint32 streamPartition = 3;
   ProxyDirection direction = 4;  
@@ -145,7 +140,7 @@ message ProxyConnectionResponse {
 }
 
 message TemporaryConnectionRequest {
-  string senderId = 1;
+  bytes senderId = 1;
 }
 
 message TemporaryConnectionResponse {

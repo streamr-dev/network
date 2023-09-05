@@ -38,7 +38,7 @@ describe('stream without default entrypoints', () => {
             hello: 'world'
         },
         messageType: StreamMessageType.MESSAGE,
-        signature: 'signature',
+        signature: '1234',
     })
 
     beforeEach(async () => {
@@ -65,7 +65,7 @@ describe('stream without default entrypoints', () => {
             const transport = new SimulatorTransport(peerDescriptor, simulator)
             const node = new NetworkNode({
                 layer0: {
-                    peerDescriptor: peerDescriptor,
+                    peerDescriptor,
                     transportLayer: transport,
                     entryPoints: [entryPointPeerDescriptor]
                 },

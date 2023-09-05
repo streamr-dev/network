@@ -1,4 +1,5 @@
-import { ConnectionLocker, DhtNode, PeerDescriptor, PeerID, Simulator, SimulatorTransport, UUID } from '@streamr/dht'
+import { randomBytes } from 'crypto'
+import { ConnectionLocker, DhtNode, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import {
     ContentType,
@@ -11,7 +12,9 @@ import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
 import { NetworkNode } from '../../src/NetworkNode'
-import { hexToBinary, utf8ToBinary } from '../../src/logic/utils'
+import { hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { NodeID } from '../../src/identifiers'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -45,18 +48,18 @@ export const createMockRandomGraphNodeAndDhtNode = (
 
 export const createStreamMessage = (
     content: string,
-    streamId: string,
+    streamPartId: StreamPartID,
     publisherId: Uint8Array,
     timestamp?: number,
     sequenceNumber?: number
 ): StreamMessage => {
     const messageId: MessageID = {
-        streamId,
-        messageChainId: 'messageChain0',
-        streamPartition: 0,
+        streamId: StreamPartIDUtils.getStreamID(streamPartId),
+        streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
         sequenceNumber: sequenceNumber || 0,
         timestamp: timestamp || Date.now(),
-        publisherId
+        publisherId,
+        messageChainId: 'messageChain0',
     }
     const msg: StreamMessage = {
         messageType: StreamMessageType.MESSAGE,
@@ -69,20 +72,24 @@ export const createStreamMessage = (
     return msg
 }
 
-export const createMockRemotePeer = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
-    const mockPeer: PeerDescriptor = {
-        kademliaId: PeerID.fromString(new UUID().toString()).value,
+export const createRandomNodeId = (): NodeID => {
+    return randomBytes(10).toString('hex') as NodeID
+}
+
+export const createMockRemoteNode = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
+    const mockPeerDescriptor: PeerDescriptor = {
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: 0
     }
-    return new RemoteRandomGraphNode(peerDescriptor || mockPeer, 'mock', {} as any)
+    return new RemoteRandomGraphNode(peerDescriptor || mockPeerDescriptor, 'mock', {} as any)
 }
 
 export const createMockRemoteHandshaker = (): RemoteHandshaker => {
-    const mockPeer: PeerDescriptor = {
-        kademliaId: PeerID.fromString(new UUID().toString()).value,
+    const mockPeerDescriptor: PeerDescriptor = {
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: 0
     }
-    return new RemoteHandshaker(mockPeer, 'mock', {
+    return new RemoteHandshaker(mockPeerDescriptor, 'mock', {
         handshake: async () => {},
         interleaveNotice: async () => {}
     } as any)

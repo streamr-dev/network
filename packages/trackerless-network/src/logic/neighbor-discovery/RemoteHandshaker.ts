@@ -1,31 +1,32 @@
 import { Remote } from '../Remote'
-import { DhtRpcOptions, keyFromPeerDescriptor, PeerDescriptor, UUID } from '@streamr/dht'
+import { DhtRpcOptions, PeerDescriptor, UUID } from '@streamr/dht'
 import { InterleaveNotice, StreamHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { Logger } from '@streamr/utils'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { IHandshakeRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 
 interface HandshakeResponse {
     accepted: boolean
-    interleaveTarget?: PeerDescriptor
+    interleaveTargetDescriptor?: PeerDescriptor
 }
 
 export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
 
     async handshake(
         ownPeerDescriptor: PeerDescriptor,
-        neighbors: string[],
-        concurrentHandshakeTargetId?: string,
-        interleavingFrom?: string
+        neighborIds: NodeID[],
+        concurrentHandshakeTargetId?: NodeID,
+        interleaveSourceId?: NodeID
     ): Promise<HandshakeResponse> {
         const request: StreamHandshakeRequest = {
             randomGraphId: this.graphId,
             requestId: new UUID().toString(),
-            senderId: keyFromPeerDescriptor(ownPeerDescriptor),
-            neighbors,
-            concurrentHandshakeTargetId,
-            interleavingFrom,
+            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
+            neighborIds: neighborIds.map((id) => hexToBinary(id)),
+            concurrentHandshakeTargetId: (concurrentHandshakeTargetId !== undefined) ? hexToBinary(concurrentHandshakeTargetId) : undefined,
+            interleaveSourceId: (interleaveSourceId !== undefined) ? hexToBinary(interleaveSourceId) : undefined,
             senderDescriptor: ownPeerDescriptor
         }
         const options: DhtRpcOptions = {
@@ -36,10 +37,10 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
             const response = await this.client.handshake(request, options)
             return {
                 accepted: response.accepted,
-                interleaveTarget: response.interleaveTarget
+                interleaveTargetDescriptor: response.interleaveTargetDescriptor
             }
         } catch (err: any) {
-            logger.debug(`handshake to ${keyFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
+            logger.debug(`handshake to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
             return {
                 accepted: false
             }
@@ -54,8 +55,8 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
         }
         const notification: InterleaveNotice = {
             randomGraphId: this.graphId,
-            interleaveTarget: originatorDescriptor,
-            senderId: keyFromPeerDescriptor(ownPeerDescriptor)
+            interleaveTargetDescriptor: originatorDescriptor,
+            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor))
         }
         this.client.interleaveNotice(notification, options).catch(() => {
             logger.debug('Failed to send interleaveNotice')

@@ -46,7 +46,7 @@
     "commander": "^11.0.0",
     "expect": "^29.6.2",
     "express": "^4.17.1",
-    "ts-essentials": "^9.3.0",
+    "ts-essentials": "^9.4.0",
     "ts-loader": "^9.4.4",
     "ts-node": "^10.9.1"
   }
