@@ -12,8 +12,6 @@ import { OperatorServiceConfig } from '../../../../src/plugins/operator/Operator
 import { range } from 'lodash'
 
 const TEST_CHAIN = 'dev2'
-// TODO read from config when https://github.com/streamr-dev/network-contracts/pull/604
-export const THE_GRAPH_URL = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`
 
 export interface SetupOperatorContractOpts {
     nodeCount?: number
@@ -66,7 +64,7 @@ export async function setupOperatorContract(
     }
     const operatorConfig = {
         operatorContractAddress: toEthereumAddress(operatorContract.address),
-        theGraphUrl: THE_GRAPH_URL,
+        theGraphUrl: CHAIN_CONFIG[TEST_CHAIN].theGraphUrl,
     }
     return { operatorWallet, operatorContract, operatorServiceConfig: operatorConfig, nodeWallets }
 }
