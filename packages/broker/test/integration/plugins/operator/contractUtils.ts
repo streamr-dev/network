@@ -39,7 +39,7 @@ export async function setupOperatorContract(
 ): Promise<{
     operatorWallet: Wallet
     operatorContract: Operator
-    operatorServiceConfig: Omit<OperatorServiceConfig, 'nodeWallet'>
+    operatorServiceConfig: Omit<OperatorServiceConfig, 'signer'>
     nodeWallets: Wallet[]
 }> {
     const operatorWallet = await generateWalletWithGasAndTokens({
@@ -205,6 +205,10 @@ export const delegate = async (delegator: Wallet, operatorContractAddress: strin
 
 export const stake = async (operatorContract: Operator, sponsorshipContractAddress: string, amount: number): Promise<void> => {
     await (await operatorContract.stake(sponsorshipContractAddress, parseEther(amount.toString()))).wait()
+}
+
+export const unstake = async (operatorContract: Operator, sponsorshipContractAddress: string): Promise<void> => {
+    await (await operatorContract.unstake(sponsorshipContractAddress)).wait()
 }
 
 export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddress: string, amount: number, token?: TestToken): Promise<void> => {
