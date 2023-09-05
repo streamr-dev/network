@@ -1,9 +1,9 @@
 import { PeerDescriptor, keyFromPeerDescriptor } from '@streamr/dht'
-import { BrandedString } from '@streamr/utils'
+import { BrandedString, EthereumAddress } from '@streamr/utils'
 
 export type NodeID = BrandedString<'NodeID'>
 
-export type UserID = Uint8Array
+export type UserID = EthereumAddress
 
 export const getNodeIdFromPeerDescriptor = (peerDescriptor: PeerDescriptor): NodeID => {
     return keyFromPeerDescriptor(peerDescriptor) as unknown as NodeID

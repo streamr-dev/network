@@ -6,10 +6,9 @@ import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { EventEmitter } from 'eventemitter3'
-import { Logger, binaryToHex } from '@streamr/utils'
+import { Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
 import { NodeID, UserID } from '../../identifiers'
-import { areEqualUsers } from '../utils'
 
 const logger = new Logger(module)
 
@@ -72,14 +71,14 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
     }
 
     public getNodeIdsForUserId(userId: UserID): NodeID[] {
-        return Array.from(this.connections.keys()).filter((nodeId) => areEqualUsers(this.connections.get(nodeId)!.userId, userId))
+        return Array.from(this.connections.keys()).filter((nodeId) => this.connections.get(nodeId)!.userId === userId)
     }
 
     // IProxyConnectionRpc server method
     async requestConnection(request: ProxyConnectionRequest, _context: ServerCallContext): Promise<ProxyConnectionResponse> {
         this.connections.set(binaryToHex(request.senderId) as NodeID, {
             direction: request.direction,
-            userId: request.userId,
+            userId: toEthereumAddress(binaryToHex(request.userId, true)),
             remote: new RemoteRandomGraphNode(
                 request.senderDescriptor!,
                 this.config.streamPartId,

@@ -24,7 +24,7 @@ export class RemoteProxyServer extends Remote<IProxyConnectionRpcClient> {
             streamId: toStreamID(streamPartId),
             streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
             direction,
-            userId
+            userId: hexToBinary(userId)
         }
         try {
             const res = await this.client.requestConnection(request, options)
