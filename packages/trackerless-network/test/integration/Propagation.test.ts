@@ -1,9 +1,10 @@
-import { DhtNode, PeerDescriptor, Simulator, PeerID, UUID, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtNode, PeerDescriptor, Simulator, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils/utils'
+import { createMockRandomGraphNodeAndDhtNode, createRandomNodeId, createStreamMessage } from '../utils/utils'
 import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { hexToBinary } from '../../src/logic/utils'
 
 describe('Propagation', () => {
     const entryPointDescriptor: PeerDescriptor = {
@@ -31,7 +32,7 @@ describe('Propagation', () => {
 
         await Promise.all(range(NUM_OF_NODES).map(async (_i) => {
             const descriptor: PeerDescriptor = {
-                kademliaId: PeerID.fromString(new UUID().toString()).value,
+                kademliaId: hexToBinary(createRandomNodeId()),
                 type: 1
             }
             const [dht, graph] = createMockRandomGraphNodeAndDhtNode(
@@ -57,11 +58,11 @@ describe('Propagation', () => {
 
     it('All nodes receive messages', async () => {
         await waitForCondition(
-            () => randomGraphNodes.every((peer) => peer.getTargetNeighborStringIds().length >= 3), 30000
+            () => randomGraphNodes.every((node) => node.getTargetNeighborIds().length >= 3), 30000
         )
         await waitForCondition(() => {
             const avg = randomGraphNodes.reduce((acc, curr) => {
-                return acc + curr.getTargetNeighborStringIds().length
+                return acc + curr.getTargetNeighborIds().length
             }, 0) / randomGraphNodes.length
             return avg >= 4
         }, 20000)

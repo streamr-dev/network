@@ -3,8 +3,7 @@ import {
     PeerDescriptor,
     ConnectionLocker,
     DhtNode,
-    ITransport,
-    keyFromPeerDescriptor
+    ITransport
 } from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'eventemitter3'
@@ -25,8 +24,7 @@ import { createRandomGraphNode } from './createRandomGraphNode'
 import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
-import { PeerIDKey } from '@streamr/dht/src/exports'
-import { UserID } from '../identifiers'
+import { NodeID, UserID, getNodeIdFromPeerDescriptor } from '../identifiers'
 
 export enum StreamNodeType {
     RANDOM_GRAPH = 'random-graph',
@@ -47,7 +45,7 @@ class NeighborCounter {
     constructor(randomGraphNode: RandomGraphNode, targetNumberOfNeighbors: number) {
         this.randomGraphNode = randomGraphNode
         this.targetNumberOfNeighbors = targetNumberOfNeighbors
-        this.counter = randomGraphNode.getTargetNeighborStringIds().length
+        this.counter = randomGraphNode.getTargetNeighborIds().length
         this.randomGraphNode.on('targetNeighborConnected', this.onTargetNeighborConnected)
     }
 
@@ -89,7 +87,7 @@ interface Metrics extends MetricsDefinition {
 
 export interface StreamrNodeConfig {
     metricsContext?: MetricsContext
-    id?: string
+    id?: NodeID
     streamPartitionNumOfNeighbors?: number
     streamPartitionMinPropagationTargets?: number
     nodeName?: string
@@ -127,7 +125,7 @@ export class StreamrNode extends EventEmitter<Events> {
         if (this.started || this.destroyed) {
             return
         }
-        logger.info(`Starting new StreamrNode with id ${keyFromPeerDescriptor(startedAndJoinedLayer0.getPeerDescriptor())}`)
+        logger.info(`Starting new StreamrNode with id ${getNodeIdFromPeerDescriptor(startedAndJoinedLayer0.getPeerDescriptor())}`)
         this.started = true
         this.layer0 = startedAndJoinedLayer0
         this.P2PTransport = transport
@@ -136,7 +134,7 @@ export class StreamrNode extends EventEmitter<Events> {
             ownPeerDescriptor: this.getPeerDescriptor(),
             streams: this.streams,
             getEntryPointData: (key) => this.layer0!.getDataFromDht(key),
-            getEntryPointDataViaPeer: (peerDescriptor, key) => this.layer0!.findDataViaPeer(peerDescriptor, key),
+            getEntryPointDataViaNode: (peerDescriptor, key) => this.layer0!.findDataViaPeer(peerDescriptor, key),
             storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data),
             deleteEntryPointData: (key) => this.layer0!.deleteDataFromDht(key)
         })
@@ -282,7 +280,7 @@ export class StreamrNode extends EventEmitter<Events> {
             await neighborCounter.waitForTargetReached(timeout)
         }
         this.publishToStream(streamPartId, msg)
-        return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length ?? 0
+        return this.getStream(streamPartId)?.layer2.getTargetNeighborIds().length ?? 0
     }
 
     async waitForJoinAndSubscribe(
@@ -299,7 +297,7 @@ export class StreamrNode extends EventEmitter<Events> {
             await neighborCounter.waitForTargetReached(timeout)
         }
         this.subscribeToStream(streamPartId)
-        return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length ?? 0
+        return this.getStream(streamPartId)?.layer2.getTargetNeighborIds().length ?? 0
     }
 
     async setProxies(
@@ -362,8 +360,8 @@ export class StreamrNode extends EventEmitter<Events> {
             && (this.streams.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction
     }
 
-    hasProxyConnection(streamId: string, peerKey: PeerIDKey, direction: ProxyDirection): boolean {
-        return this.streams.has(streamId) && this.streams.get(streamId)!.layer2.hasProxyConnection(peerKey, direction)
+    hasProxyConnection(streamId: string, nodeId: NodeID, direction: ProxyDirection): boolean {
+        return this.streams.has(streamId) && this.streams.get(streamId)!.layer2.hasProxyConnection(nodeId, direction)
     }
 
     getStream(streamPartId: StreamPartID): StreamObject | undefined {
@@ -378,24 +376,20 @@ export class StreamrNode extends EventEmitter<Events> {
         return this.layer0!.getPeerDescriptor()
     }
 
-    getNodeId(): string {
-        return this.layer0!.getNodeId().toKey()
+    getNodeId(): NodeID {
+        return this.layer0!.getNodeId().toKey() as unknown as NodeID
     }
 
-    getNodeStringId(): string {
-        return this.layer0!.getNodeId().toString()
-    }
-
-    getNeighbors(): string[] {
-        const neighbors: string[] = []
+    getNeighbors(): NodeID[] {
+        const neighbors: NodeID[] = []
         this.streams.forEach((stream) =>
-            stream.layer2.getTargetNeighborStringIds().forEach((neighbor) => neighbors.push(neighbor))
+            stream.layer2.getTargetNeighborIds().forEach((neighbor) => neighbors.push(neighbor))
         )
         return uniq(neighbors)
     }
 
     getStreamParts(): StreamPartID[] {
-        return Array.from(this.streams.keys()).map((stringId) => StreamPartIDUtils.parse(stringId))
+        return Array.from(this.streams.keys()).map((id) => StreamPartIDUtils.parse(id))
     }
 
     setExtraMetadata(metadata: Record<string, unknown>): void {

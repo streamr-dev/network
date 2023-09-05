@@ -13,7 +13,6 @@ import {
     deployOperatorContract,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
-    getProvider,
     stake
 } from './contractUtils'
 
@@ -72,8 +71,7 @@ describe('MaintainTopologyService', () => {
         await stake(operatorContract, sponsorship1.address, 100)
 
         const serviceHelperConfig = {
-            provider: getProvider(),
-            nodeWallet: operatorWallet,
+            signer: operatorWallet,
             operatorContractAddress: toEthereumAddress(operatorContract.address),
             theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl
         }

@@ -5,6 +5,7 @@ import { wait, waitForCondition, waitForEvent } from '@streamr/utils'
 import { toStreamID } from '@streamr/protocol'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
 import { createHeartbeatMessage } from '../../../../src/plugins/operator/heartbeatUtils'
+import { NodeID } from '@streamr/trackerless-network'
 
 const ADDRESS = randomEthereumAddress()
 const coordinationStreamId = toStreamID('/operator/coordination', ADDRESS)
@@ -153,13 +154,13 @@ describe(OperatorFleetState, () => {
         await state.start()
         await setTimeAndPublishMessage(10, createHeartbeatMsg('a'))
 
-        expect(state.getPeerDescriptor('a')).toEqual({ id: 'a' })
-        expect(state.getPeerDescriptor('unknown')).toBeUndefined()
+        expect(state.getPeerDescriptor('a' as NodeID)).toEqual({ id: 'a' })
+        expect(state.getPeerDescriptor('unknown' as NodeID)).toBeUndefined()
 
         currentTime = 30
         await waitForEvent(state as any, 'removed')
 
-        expect(state.getPeerDescriptor('a')).toBeUndefined()
+        expect(state.getPeerDescriptor('a' as NodeID)).toBeUndefined()
     })
 
     describe('waitUntilReady', () => {
