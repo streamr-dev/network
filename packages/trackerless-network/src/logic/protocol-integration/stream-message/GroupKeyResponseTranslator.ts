@@ -1,7 +1,6 @@
 import { GroupKeyResponse as OldGroupKeyResponse, EncryptedGroupKey as OldEncryptedGroupKey } from '@streamr/protocol'
 import { GroupKey, GroupKeyResponse } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { toEthereumAddress } from '@streamr/utils'
-import { binaryToHex, hexToBinary } from '../../utils'
+import { toEthereumAddress, binaryToHex, hexToBinary } from '@streamr/utils'
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class GroupKeyResponseTranslator {

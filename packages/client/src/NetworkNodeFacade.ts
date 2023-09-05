@@ -11,7 +11,6 @@ import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig, NetworkPeerDescriptor } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { pOnce } from './utils/promises'
-import { uuid } from './utils/uuid'
 import { peerDescriptorTranslator } from './utils/utils'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
@@ -105,32 +104,16 @@ export class NetworkNodeFacade {
     }
 
     private async getNetworkOptions(): Promise<NetworkOptions> {
-        let id = this.config.network!.node!.id
-
         const entryPoints = this.getEntryPoints()
-
         const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer!.peerDescriptor ? 
             peerDescriptorTranslator(this.config.network.controlLayer!.peerDescriptor) : undefined
-
-        if (id == null || id === '') {
-            id = await this.generateId()
-        } else {
-            const ethereumAddress = await this.authentication.getAddress()
-            if (!id.toLowerCase().startsWith(ethereumAddress)) {
-                throw new Error(`given node id ${id} not compatible with authenticated wallet ${ethereumAddress}`)
-            }
-        }
-
         return {
             layer0: {
                 ...this.config.network.controlLayer,
                 entryPoints,
                 peerDescriptor: ownPeerDescriptor
             },
-            networkNode: {
-                ...this.config.network.node,
-                id: id as NodeID
-            },
+            networkNode: this.config.network.node,
             metricsContext: new MetricsContext()
         }
     }
@@ -144,11 +127,6 @@ export class NetworkNodeFacade {
             this.cachedNode = node
         }
         return node
-    }
-
-    private async generateId(): Promise<string> {
-        const address = await this.authentication.getAddress()
-        return `${address}#${uuid()}`
     }
 
     /**

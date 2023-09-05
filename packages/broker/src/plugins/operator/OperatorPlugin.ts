@@ -8,7 +8,6 @@ import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
 import { AnnounceNodeToStreamService } from './AnnounceNodeToStreamService'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
-import { MaintainOperatorContractService } from './MaintainOperatorContractService'
 import { MaintainOperatorValueService } from './MaintainOperatorValueService'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
 import { OperatorValueBreachWatcher } from './OperatorValueBreachWatcher'
@@ -38,7 +37,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private announceNodeToStreamService?: AnnounceNodeToStreamService
     private announceNodeToContractService?: AnnounceNodeToContractService
     private inspectRandomNodeService = new InspectRandomNodeService()
-    private maintainOperatorContractService = new MaintainOperatorContractService()
     private voteOnSuspectNodeService?: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
     private maintainOperatorValueService?: MaintainOperatorValueService
@@ -84,7 +82,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         })
         await this.announceNodeToStreamService.start()
         await this.inspectRandomNodeService.start()
-        await this.maintainOperatorContractService.start()
         await this.maintainOperatorValueService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
@@ -99,7 +96,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     async stop(): Promise<void> {
         await this.announceNodeToStreamService!.stop()
         await this.inspectRandomNodeService.stop()
-        await this.maintainOperatorContractService.stop()
         await this.maintainOperatorValueService!.stop()
         await this.voteOnSuspectNodeService!.stop()
         await this.operatorValueBreachWatcher!.stop()

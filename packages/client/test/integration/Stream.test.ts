@@ -30,7 +30,7 @@ describe('Stream', () => {
             const stream = await createTestStream(client, module, {
                 partitions: 1
             })
-            await expect(stream.addToStorageNode(storageNode.id)) // resolves after assignment stream messages have arrived
+            await expect(stream.addToStorageNode(storageNode.getAddress())) // resolves after assignment stream messages have arrived
                 .resolves
                 .toEqual(undefined)
         })
@@ -39,7 +39,7 @@ describe('Stream', () => {
             const stream = await createTestStream(client, module, {
                 partitions: 5
             })
-            await expect(stream.addToStorageNode(storageNode.id)) // resolves after assignment stream messages have arrived
+            await expect(stream.addToStorageNode(storageNode.getAddress())) // resolves after assignment stream messages have arrived
                 .resolves
                 .toEqual(undefined)
         })
@@ -60,7 +60,7 @@ describe('Stream', () => {
 
         beforeEach(async () => {
             stream = await createTestStream(client, module)
-            await stream.addToStorageNode(storageNode.id)
+            await stream.addToStorageNode(storageNode.getAddress())
         })
 
         it('primitive types', async () => {
