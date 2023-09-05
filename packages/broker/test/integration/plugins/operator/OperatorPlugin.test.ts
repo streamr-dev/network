@@ -56,7 +56,7 @@ describe('OperatorPlugin', () => {
         const brokerDescriptor = await broker.getStreamrClient().getPeerDescriptor()
         await subscriber.setProxies({ id: stream.id }, [brokerDescriptor], ProxyDirection.SUBSCRIBE)
         const receivedMessages: any[] = []
-        await subscriber.subscribe(stream.id, (content) => {
+        await subscriber.subscribe(stream.id, (content: any) => {
             receivedMessages.push(content)
         })
         await waitForCondition(() => receivedMessages.length > 0)
