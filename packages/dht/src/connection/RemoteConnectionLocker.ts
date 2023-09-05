@@ -11,7 +11,6 @@ import { peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 const logger = new Logger(module)
 
 export class RemoteConnectionLocker {
-    private peerId: PeerID
     private ownPeerDescriptor: PeerDescriptor
     private targetPeerDescriptor: PeerDescriptor
     private protocolVersion: string
@@ -23,7 +22,6 @@ export class RemoteConnectionLocker {
         protocolVersion: string,
         client: ProtoRpcClient<IConnectionLockerClient>
     ) {
-        this.peerId = peerIdFromPeerDescriptor(targetPeerDescriptor)
         this.ownPeerDescriptor = ownPeerDescriptor
         this.targetPeerDescriptor = targetPeerDescriptor
         this.protocolVersion = protocolVersion
