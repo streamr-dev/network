@@ -1,4 +1,5 @@
-import { ConnectionLocker, DhtNode, PeerDescriptor, PeerID, Simulator, SimulatorTransport, UUID } from '@streamr/dht'
+import { randomBytes } from 'crypto'
+import { ConnectionLocker, DhtNode, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import {
     ContentType,
@@ -11,8 +12,9 @@ import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
 import { NetworkNode } from '../../src/NetworkNode'
-import { hexToBinary, utf8ToBinary } from '../../src/logic/utils'
+import { hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { NodeID } from '../../src/identifiers'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -70,9 +72,13 @@ export const createStreamMessage = (
     return msg
 }
 
+export const createRandomNodeId = (): NodeID => {
+    return randomBytes(10).toString('hex') as NodeID
+}
+
 export const createMockRemoteNode = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
     const mockPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(new UUID().toString()).value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: 0
     }
     return new RemoteRandomGraphNode(peerDescriptor || mockPeerDescriptor, 'mock', {} as any)
@@ -80,7 +86,7 @@ export const createMockRemoteNode = (peerDescriptor?: PeerDescriptor): RemoteRan
 
 export const createMockRemoteHandshaker = (): RemoteHandshaker => {
     const mockPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(new UUID().toString()).value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: 0
     }
     return new RemoteHandshaker(mockPeerDescriptor, 'mock', {

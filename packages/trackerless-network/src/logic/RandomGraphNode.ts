@@ -22,7 +22,7 @@ import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/N
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
-import { Logger } from '@streamr/utils'
+import { Logger, binaryToHex } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { IHandshaker } from './neighbor-discovery/Handshaker'
 import { Propagation } from './propagation/Propagation'
@@ -88,7 +88,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
-                const senderId = notice.senderId as NodeID
+                const senderId = binaryToHex(notice.senderId) as NodeID
                 const contact = this.config.nearbyContactPool.getNeighborById(senderId)
                 || this.config.randomContactPool.getNeighborById(senderId)
                 || this.config.targetNeighbors.getNeighborById(senderId)

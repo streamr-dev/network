@@ -9,7 +9,7 @@ import { IStreamNode } from '../IStreamNode'
 import { EventEmitter } from 'eventemitter3'
 import { ConnectionLocker } from '@streamr/dht/src/exports'
 import { StreamNodeServer } from '../StreamNodeServer'
-import { Logger, wait } from '@streamr/utils'
+import { Logger, wait, binaryToHex } from '@streamr/utils'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
 import { NodeList } from '../NodeList'
 import { Propagation } from '../propagation/Propagation'
@@ -78,7 +78,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
-                const senderId = notice.senderId as NodeID
+                const senderId = binaryToHex(notice.senderId) as NodeID
                 const contact = this.targetNeighbors.getNeighborById(senderId)
                 if (contact) {
                     setImmediate(() => this.onNodeDisconnected(contact.getPeerDescriptor()))

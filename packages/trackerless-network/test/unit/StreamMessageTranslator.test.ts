@@ -9,8 +9,7 @@ import {
     StreamMessageType as OldStreamMessageType,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
-import { binaryToHex, binaryToUtf8, hexToBinary } from '../../src/logic/utils'
+import { EthereumAddress, binaryToHex, binaryToUtf8, hexToBinary } from '@streamr/utils'
 
 describe('StreamMessageTranslator', () => {
 

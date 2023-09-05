@@ -4,7 +4,7 @@ import { IProxyConnectionRpcClient } from '../../proto/packages/trackerless-netw
 import { Remote } from '../Remote'
 import { StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { ProxyDirection, ProxyConnectionRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { Logger } from '@streamr/utils'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { UserID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
@@ -19,7 +19,7 @@ export class RemoteProxyServer extends Remote<IProxyConnectionRpcClient> {
             timeout: 5000
         }
         const request: ProxyConnectionRequest = {
-            senderId: getNodeIdFromPeerDescriptor(ownPeerDescriptor),
+            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
             senderDescriptor: ownPeerDescriptor,
             streamId: toStreamID(streamPartId),
             streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
