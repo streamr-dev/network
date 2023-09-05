@@ -16,13 +16,14 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebSocketServer } from './WebSocketServer'
 import { ConnectivityChecker } from '../ConnectivityChecker'
-import { NatType } from '../ConnectionManager'
+import { NatType, PortRange } from '../ConnectionManager'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { ServerWebSocket } from './ServerWebSocket'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from '../Handshaker'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
+import { sample } from 'lodash'
 
 const logger = new Logger(module)
 
@@ -31,33 +32,32 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     private readonly webSocketServer?: WebSocketServer
-    private readonly connectivityChecker: ConnectivityChecker
+    private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private incomingConnectionCallback: (connection: ManagedConnection) => boolean
-    private webSocketPort?: number
-    private webSocketHost?: string
+    private portRange?: PortRange
+    private host?: string
     private entrypoints?: PeerDescriptor[]
-
+    private selectedPort?: number
     private readonly protocolVersion: string
     private ownPeerDescriptor?: PeerDescriptor
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
-    private stopped = false
+    private destroyed = false
 
     constructor(
         protocolVersion: string,
         rpcTransport: ITransport,
         fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
         incomingConnectionCallback: (connection: ManagedConnection) => boolean,
-        webSocketPort?: number,
-        webSocketHost?: string,
+        portRange?: PortRange,
+        host?: string,
         entrypoints?: PeerDescriptor[]
     ) {
         this.protocolVersion = protocolVersion
-        this.webSocketServer = webSocketPort ? new WebSocketServer() : undefined
-        this.connectivityChecker = new ConnectivityChecker(webSocketPort)
+        this.webSocketServer = portRange ? new WebSocketServer() : undefined
         this.incomingConnectionCallback = incomingConnectionCallback
-        this.webSocketPort = webSocketPort
-        this.webSocketHost = webSocketHost
+        this.portRange = portRange
+        this.host = host
         this.entrypoints = entrypoints
 
         this.canConnectFunction = fnCanConnect.bind(this)
@@ -76,14 +76,13 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
     private attachHandshaker(connection: IConnection) {
         const handshaker = new Handshaker(this.ownPeerDescriptor!, this.protocolVersion, connection)
-
         handshaker.once('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
             this.onServerSocketHandshakeRequest(peerDescriptor, connection)
         })
     }
 
     public async start(): Promise<void> {
-        if (this.webSocketServer) {
+        if (!this.destroyed && this.webSocketServer) {
             this.webSocketServer.on('connected', (connection: IConnection) => {
 
                 const serverSocket = connection as unknown as ServerWebSocket
@@ -92,7 +91,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     const query = serverSocket.resourceURL.query as unknown as ParsedUrlQuery
                     if (query.connectivityRequest) {
                         logger.trace('Received connectivity request connection')
-                        this.connectivityChecker.listenToIncomingConnectivityRequests(serverSocket)
+                        this.connectivityChecker!.listenToIncomingConnectivityRequests(serverSocket)
                     } else if (query.connectivityProbe) {
                         logger.trace('Received connectivity probe connection')
                     } else {
@@ -102,40 +101,38 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     this.attachHandshaker(connection)
                 }
             })
-            await this.webSocketServer.start(this.webSocketPort!, this.webSocketHost)
+            const port = await this.webSocketServer.start(this.portRange!, this.host)
+            this.selectedPort = port
+            this.connectivityChecker = new ConnectivityChecker(this.selectedPort!)
         }
     }
 
     public async checkConnectivity(reattempt = 0): Promise<ConnectivityResponse> {
+        const noServerConnectivityResponse: ConnectivityResponse = {
+            openInternet: false,
+            ip: '127.0.0.1',
+            natType: NatType.UNKNOWN
+        }
+        if (this.destroyed) {
+            return noServerConnectivityResponse
+        }
         try {
-            const noServerConnectivityResponse: ConnectivityResponse = {
-                openInternet: false,
-                ip: '127.0.0.1',
-                natType: NatType.UNKNOWN
-            }
-
             if (!this.webSocketServer) {
                 // If no websocket server, return openInternet: false
                 return noServerConnectivityResponse
             } else {
                 if (!this.entrypoints || this.entrypoints.length < 1) {
                     // return connectivity info given in config
-
                     const preconfiguredConnectivityResponse: ConnectivityResponse = {
                         openInternet: true,
-                        ip: this.webSocketHost!,
+                        ip: this.host!,
                         natType: NatType.OPEN_INTERNET,
-                        websocket: { ip: this.webSocketHost!, port: this.webSocketPort! }
+                        websocket: { ip: this.host!, port: this.selectedPort! }
                     }
                     return preconfiguredConnectivityResponse
                 } else {
-                    // Do real connectivity checking
-                    
-                    let response = noServerConnectivityResponse
-
-                    response = await this.connectivityChecker.sendConnectivityRequest(this.entrypoints[0])
-
-                    return response
+                    // Do real connectivity checking     
+                    return await this.connectivityChecker!.sendConnectivityRequest(sample(this.entrypoints)!)
                 }
             }
         } catch (err) {
@@ -150,9 +147,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        if (this.stopped) {
-            logger.info('connect called on closed websocketconnector')
-        }
         const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(peerKey)
         if (existingConnection) {
@@ -232,8 +226,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         this.ownPeerDescriptor = ownPeerDescriptor
     }
 
-    public async stop(): Promise<void> {
-        this.stopped = true
+    public async destroy(): Promise<void> {
+        this.destroyed = true
         this.rpcCommunicator.stop()
 
         const requests = Array.from(this.ongoingConnectRequests.values())
@@ -241,14 +235,17 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
         const attempts = Array.from(this.connectingConnections.values())
         await Promise.allSettled(attempts.map((conn) => conn.close('OTHER')))
-
+        this.connectivityChecker?.destroy()
         await this.webSocketServer?.stop()
     }
 
     // IWebSocketConnectorService implementation
     public async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse> {
-        if (!this.stopped && this.canConnectFunction(request.requester!, request.ip, request.port)) {
+        if (!this.destroyed && this.canConnectFunction(request.requester!, request.ip, request.port)) {
             setImmediate(() => {
+                if (this.destroyed) {
+                    return
+                }
                 const connection = this.connect(request.requester!)
                 this.incomingConnectionCallback(connection)
             })

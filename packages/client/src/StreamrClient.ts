@@ -1,6 +1,8 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
+import { StreamID } from '@streamr/protocol'
+import { NodeID, ProxyDirection } from '@streamr/trackerless-network'
 import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -8,18 +10,16 @@ import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata } from '../src/publish/Publisher'
 import { Authentication, AuthenticationInjectionToken, createAuthentication } from './Authentication'
-import { 
+import {
     ConfigInjectionToken,
+    NetworkPeerDescriptor,
     StreamrClientConfig,
     StrictStreamrClientConfig,
     createStrictConfig,
-    redactConfig,
-    NetworkPeerDescriptor
+    redactConfig
 } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
-import { ProxyDirection } from '@streamr/trackerless-network'
-import { StreamID } from '@streamr/protocol'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
@@ -638,7 +638,7 @@ export class StreamrClient {
     /**
      * Get the network-level node id of the client.
      */
-    async getNodeId(): Promise<string> {
+    async getNodeId(): Promise<NodeID> {
         return this.node.getNodeId()
     }
 

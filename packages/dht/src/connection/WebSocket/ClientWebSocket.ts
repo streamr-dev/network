@@ -13,7 +13,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
     private socket?: WebSocket
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
 
-    private stopped = false
+    private destroyed = false
 
     constructor() {
         super()
@@ -21,19 +21,19 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public connect(address: string): void {
-        if (!this.stopped) {
+        if (!this.destroyed) {
             this.socket = new WebSocket(address)
             this.socket.binaryType = BINARY_TYPE
 
             this.socket.onerror = (error: Error) => {
-                if (!this.stopped) {
+                if (!this.destroyed) {
                     logger.trace('WebSocket Client error: ' + error)
                     this.emit('error', error.name)
                 }
             }
 
             this.socket.onopen = () => {
-                if (!this.stopped) {
+                if (!this.destroyed) {
                     logger.trace('WebSocket Client Connected')
                     if (this.socket && this.socket.readyState === this.socket.OPEN) {
                         this.emit('connected')
@@ -42,14 +42,14 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
             }
 
             this.socket.onclose = (event: ICloseEvent) => {
-                if (!this.stopped) {
+                if (!this.destroyed) {
                     logger.trace('Websocket Closed')
                     this.doDisconnect('OTHER', event.code, event.reason)
                 }
             }
 
             this.socket.onmessage = (message: IMessageEvent) => {
-                if (!this.stopped) {
+                if (!this.destroyed) {
                     if (typeof message.data === 'string') {
                         logger.debug('Received string: \'' + message.data + '\'')
                     } else {
@@ -63,7 +63,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     private doDisconnect(disconnectionType: DisconnectionType, code?: number, reason?: string) {
-        this.stopped = true
+        this.destroyed = true
         this.stopListening()
         this.socket = undefined
 
@@ -72,7 +72,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public send(data: Uint8Array): void {
-        if (!this.stopped) {
+        if (!this.destroyed) {
             if (this.socket && this.socket.readyState === this.socket.OPEN) {
                 logger.trace(`Sending data with size ${data.byteLength}`)
                 this.socket?.send(data.buffer)
@@ -85,7 +85,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public async close(): Promise<void> {
-        if (!this.stopped) {
+        if (!this.destroyed) {
             logger.trace(`Closing socket for connection ${this.connectionId.toString()}`)
             this.socket?.close()
         } else {
@@ -103,14 +103,14 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public destroy(): void {
-        if (!this.stopped) {
+        if (!this.destroyed) {
             this.removeAllListeners()
             if (this.socket) {
                 this.stopListening()
                 this.socket.close()
                 this.socket = undefined
             }
-            this.stopped = true
+            this.destroyed = true
         } else {
             logger.debug('Tried to destroy() a stopped connection')
         }

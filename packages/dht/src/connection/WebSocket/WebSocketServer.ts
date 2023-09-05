@@ -6,8 +6,10 @@ import {
     ConnectionSourceEvents
 } from '../IConnectionSource'
 
-import { Logger } from '@streamr/utils'
+import { Logger, asAbortable } from '@streamr/utils'
 import { StartingWebSocketServerFailed } from '../../helpers/errors'
+import { PortRange } from '../ConnectionManager'
+import { range } from 'lodash'
 
 const logger = new Logger(module)
 
@@ -22,8 +24,22 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
 
     private httpServer?: http.Server
     private wsServer?: WsServer
+    private readonly abortController = new AbortController()
     
-    public start(port: number, host?: string): Promise<void> {
+    public async start(portRange: PortRange, host?: string): Promise<number> {
+        const ports = range(portRange.min, portRange.max + 1)
+        for (const port of ports) {
+            try {
+                await asAbortable(this.startServer(port, host), this.abortController.signal)
+                return port
+            } catch (err) {
+                logger.debug(`failed to start WebSocket server on port: ${port} reattempting on next port`)
+            }
+        }
+        throw new StartingWebSocketServerFailed('Failed to start WebSocket server on any port in range')
+    }
+
+    private startServer(port: number, host?: string): Promise<void> {
         return new Promise((resolve, reject) => {
             this.httpServer = http.createServer((request, response) => {
                 logger.trace('Received request for ' + request.url)
@@ -70,6 +86,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     }
 
     public stop(): Promise<void> {
+        this.abortController.abort()
         this.removeAllListeners()
         return new Promise((resolve, _reject) => {
             this.wsServer?.shutDown()

@@ -13,13 +13,11 @@ describe('OperatorPlugin', () => {
     })
 
     afterEach(async () => {
-        await Promise.allSettled([
-            broker?.stop(),
-        ])
+        broker?.stop()
     })
 
     it('can start broker with operator plugin', async () => {
-        const promise = startBroker({
+        broker = await startBroker({
             privateKey: brokerWallet.privateKey,
             extraPlugins: {
                 operator: {
@@ -27,6 +25,5 @@ describe('OperatorPlugin', () => {
                 }
             }
         })
-        await promise
     })
 })

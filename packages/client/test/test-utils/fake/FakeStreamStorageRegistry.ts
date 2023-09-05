@@ -1,4 +1,5 @@
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { NodeID } from '@streamr/trackerless-network'
 import { EthereumAddress } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { Stream } from '../../../src/Stream'
@@ -39,7 +40,7 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
         const nodeAddresses = await this.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
         if (nodeAddresses.length > 0) {
             const chosenAddress = nodeAddresses[Math.floor(Math.random() * nodeAddresses.length)]
-            const storageNode = this.network.getNode(chosenAddress)
+            const storageNode = this.network.getNode(chosenAddress as unknown as NodeID)
             if (storageNode !== undefined) {
                 return storageNode as FakeStorageNode
             } else {
@@ -53,7 +54,7 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
     async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
         if (!(await this.isStoredStream(streamIdOrPath, nodeAddress))) {
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-            const node = this.network.getNode(nodeAddress)
+            const node = this.network.getNode(nodeAddress as unknown as NodeID)
             if (node !== undefined) {
                 this.chain.storageAssignments.add(streamId, nodeAddress)
                 await (node as FakeStorageNode).addAssignment(streamId)
@@ -66,7 +67,7 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
     async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
         if (await this.isStoredStream(streamIdOrPath, nodeAddress)) {
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-            const node = this.network.getNode(nodeAddress)
+            const node = this.network.getNode(nodeAddress as unknown as NodeID)
             if (node !== undefined) {
                 this.chain.storageAssignments.remove(streamId, nodeAddress)
             } else {

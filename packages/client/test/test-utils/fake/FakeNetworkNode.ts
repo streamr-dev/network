@@ -70,7 +70,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<string> {
+    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
         const allNodes = this.network.getNodes()
         return allNodes
             .filter((node) => (node.id !== this.id))

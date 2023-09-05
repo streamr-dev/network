@@ -49,7 +49,7 @@ describe('Network RPC', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             StreamPartIDUtils.parse('testStream#0'),
-            utf8ToBinary('peer1')
+            utf8ToBinary('node1')
         )
         await client.sendData(msg)
         await waitForCondition(() => recvCounter === 1)
