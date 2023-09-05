@@ -1,9 +1,12 @@
 import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
 import { NetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamID, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { EthereumAddress, waitForEvent3 } from '@streamr/utils'
+import { waitForEvent3, hexToBinary, toEthereumAddress } from '@streamr/utils'
 import { ProxyDirection, StreamMessage as InternalStreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { StreamNodeType } from '../../src/logic/StreamrNode'
+import { randomEthereumAddress } from '@streamr/test-utils'
+
+const PROXIED_NODE_USER_ID = hexToBinary(randomEthereumAddress())
 
 const createMessage = (streamId: StreamID): StreamMessage => {
     return new StreamMessage({ 
@@ -12,7 +15,7 @@ const createMessage = (streamId: StreamID): StreamMessage => {
             0,
             666,
             0,
-            'peer' as EthereumAddress,
+            toEthereumAddress(randomEthereumAddress()),
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),
@@ -20,7 +23,7 @@ const createMessage = (streamId: StreamID): StreamMessage => {
             hello: 'world'
         },
         messageType: StreamMessageType.MESSAGE,
-        signature: 'signature',
+        signature: '0x1111',
     })
 }
 
@@ -85,7 +88,7 @@ describe('proxy and full node', () => {
     })
 
     it('proxied node can act as full node on another stream', async () => {
-        await proxiedNode.setProxies(proxyStreamId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, async () => 'proxiedNode', 1)
+        await proxiedNode.setProxies(proxyStreamId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
         expect(proxiedNode.stack.getLayer0DhtNode().hasJoined()).toBe(false)
 
         await Promise.all([
@@ -105,18 +108,18 @@ describe('proxy and full node', () => {
     })
 
     it('proxied node can act as full node on multiple streams', async () => {
-        await proxiedNode.setProxies(proxyStreamId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, async () => 'proxiedNode', 1)
+        await proxiedNode.setProxies(proxyStreamId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
         expect(proxiedNode.stack.getLayer0DhtNode().hasJoined()).toBe(false)
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageRef!.streamId === 'regular-stream1'),
+                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream1'),
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageRef!.streamId === 'regular-stream2'),
+                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream2'),
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageRef!.streamId === 'regular-stream3'),
+                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream3'),
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageRef!.streamId === 'regular-stream4'),
+                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream4'),
             proxiedNode.publish(regularMessage1),
             proxiedNode.publish(regularMessage2),
             proxiedNode.publish(regularMessage3),

@@ -1,10 +1,10 @@
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, TheGraphClient, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
+import { Logger, TheGraphClient, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import fetch from 'node-fetch'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { createClient, createTestStream } from '../../../utils'
 import {
-    THE_GRAPH_URL,
+    TEST_CHAIN_CONFIG,
     delegate,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
@@ -28,7 +28,7 @@ describe('InspectRandomNodeHelper', () => {
         await client.destroy()
 
         graphClient = new TheGraphClient({
-            serverUrl: THE_GRAPH_URL,
+            serverUrl: TEST_CHAIN_CONFIG.theGraphUrl,
             fetch,
             logger: new Logger(module)
         })
@@ -38,7 +38,7 @@ describe('InspectRandomNodeHelper', () => {
         const { operatorWallet, operatorContract, operatorServiceConfig } = await setupOperatorContract()
         const inspectRandomNodeHelper = new InspectRandomNodeHelper({
             ...operatorServiceConfig,
-            nodeWallet: undefined as any
+            signer: undefined as any
         })
 
         const sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
@@ -69,17 +69,14 @@ describe('InspectRandomNodeHelper', () => {
 
         await delegate(flagger.operatorWallet, flagger.operatorContract.address, 200)
         await delegate(target.operatorWallet, target.operatorContract.address, 300)
-        await wait(3000) // sometimes these stake fail, possibly when they end up in the same block
         await stake(flagger.operatorContract, sponsorship.address, 150)
-        await wait(3000)
         await stake(target.operatorContract, sponsorship.address, 250)
-        await wait(3000)
 
         const inspectRandomNodeHelper = new InspectRandomNodeHelper({
             ...flagger.operatorServiceConfig,
-            nodeWallet: flagger.nodeWallets[0]
+            signer: flagger.nodeWallets[0]
         })
-        await inspectRandomNodeHelper.flag(toEthereumAddress(sponsorship.address), toEthereumAddress(target.operatorContract.address))
+        await inspectRandomNodeHelper.flagWithMetadata(toEthereumAddress(sponsorship.address), toEthereumAddress(target.operatorContract.address), 2)
 
         waitForCondition(async (): Promise<boolean> => {
             const result = await graphClient.queryEntity<{ operator: { flagsOpened: any[] } }>({ query: `

@@ -85,7 +85,7 @@ const measureJoiningTime = async (count: number) => {
                 0,
                 i,
                 Math.floor(Math.random() * 20000),
-                'peer' as any,
+                'node' as any,
                 'msgChainId'
             ),
             prevMsgRef: null,
@@ -93,7 +93,7 @@ const measureJoiningTime = async (count: number) => {
                 hello: 'world'
             },
             messageType: StreamMessageType.MESSAGE,
-            signature: 'signature',
+            signature: '0x1111',
         })
         streams.get(stream)!.publish(streamMessage)
     }, 1000)
@@ -147,7 +147,7 @@ run().then(() => {
     console.log(currentNode.stack.getLayer0DhtNode().getKBucketPeers().length)
     console.log(currentNode.stack.getLayer0DhtNode().getNumberOfConnections())
     console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer1!.getKBucketPeers())
-    console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer2.getTargetNeighborStringIds())
+    console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer2.getTargetNeighborIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {
         clearInterval(publishInterval)

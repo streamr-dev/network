@@ -23,7 +23,7 @@ describe('MaintainOperatorValueService', () => {
         const { operatorWallet, operatorContract, operatorServiceConfig, nodeWallets } = await setupOperatorContract({
             nodeCount: 1,
             operatorConfig: {
-                sharePercent: 10
+                operatorsCutPercent: 10
             }
         })
 
@@ -39,7 +39,7 @@ describe('MaintainOperatorValueService', () => {
         // 1000 = check every second
         const service = new MaintainOperatorValueService({
             ...operatorServiceConfig,
-            nodeWallet: nodeWallets[0]
+            signer: nodeWallets[0]
         }, 0.5, 1000)
 
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()

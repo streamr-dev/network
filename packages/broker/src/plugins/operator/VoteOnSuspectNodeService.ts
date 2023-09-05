@@ -1,5 +1,5 @@
 import { Logger } from '@streamr/utils'
-import StreamrClient from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
 import { OperatorFleetState } from './OperatorFleetState'
 import { createIsLeaderFn } from './createIsLeaderFn'

@@ -13,7 +13,7 @@ program
     .option('--name <name>', 'Name in published messages', 'full-node')
     .option('--ip <ip>', 'Ip address to use', '0.0.0.0')
     .option('--wsPort <port>', 'Name in published messages', '23124')
-    .option('--entrypointId <entrypointId>', 'Entrypoints stringId', 'bootstrap')
+    .option('--entrypointId <entrypointId>', 'Entrypoints node id', 'bootstrap')
     .option('--entrypointIp <entrypointIp>', 'Entrypoints IP address', '0.0.0.0')
     .option('--streamIds <streamIds>', 'streamId to publish', (value: string) => value.split(','), ['stream-0'])
     .description('Run full node')
@@ -33,7 +33,7 @@ async function run(): Promise<void> {
 
     const layer0 = new DhtNode({
         webSocketPort: port,
-        webSocketHost: ip,
+        websocketHost: ip,
         peerIdString: program.opts().id,
         numberOfNodesPerKBucket: 2,
         entryPoints: [epPeerDescriptor]
@@ -58,8 +58,8 @@ async function run(): Promise<void> {
     setInterval(() => {
         // eslint-disable-next-line no-console
         console.log(
-            `Number of connected stream neighbors ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0}, `
-            + `targets: ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborStringIds() || []}`
+            `Number of connected stream neighbors ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborIds().length || 0}, `
+            + `targets: ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborIds() || []}`
         )
         // eslint-disable-next-line no-console
         console.log(
@@ -92,7 +92,7 @@ async function run(): Promise<void> {
             content: ContentMessage.toBinary(content),
             messageRef,
             messageType: StreamMessageType.MESSAGE,
-            signature: 'signature'
+            signature: hexToBinary('0x1111')
         }
         streamrNode.publishToStream(streamPartId, epPeerDescriptor, message)
         sequenceNumber++

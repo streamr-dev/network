@@ -13,7 +13,7 @@
       "description": "Operator contract Ethereum address",
       "format": "ethereum-address"
     },
-    "replicationFactor": {
+    "redundancyFactor": {
       "type": "integer",
       "description": "How many nodes a stream partition should be assigned to",
       "default": 1,

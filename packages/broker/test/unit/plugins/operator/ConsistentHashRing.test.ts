@@ -109,7 +109,7 @@ describe(ConsistentHashRing, () => {
         }
     })
 
-    it('replication factor > 1', () => {
+    it('redundancy factor > 1', () => {
         const h = new ConsistentHashRing(3)
         h.add('node-1')
         h.add('node-2')
@@ -137,5 +137,14 @@ describe(ConsistentHashRing, () => {
 
         const assignments4 = h2.get(toStreamPartID(toStreamID('barbar'), 0))
         expect(assignments4).toIncludeSameMembers(['node-3', 'node-4', 'node-5']) // expectation based on arbitrary hashing
+    })
+
+    it('handles properly situation where redundancy factor > number of nodes', () => {
+        const h = new ConsistentHashRing(10)
+        h.add('node-1')
+        h.add('node-2')
+
+        const result = h.get(toStreamPartID(toStreamID('streamId'), 0))
+        expect(result).toEqual(['node-1', 'node-2'])
     })
 })

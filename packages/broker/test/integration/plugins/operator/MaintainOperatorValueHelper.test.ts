@@ -11,7 +11,7 @@ describe('MaintainOperatorValueHelper', () => {
     beforeAll(async () => {
         deployConfig = {
             operatorConfig: {
-                sharePercent: 10
+                operatorsCutPercent: 10
             }
         }
     }, 60 * 1000)
@@ -23,7 +23,7 @@ describe('MaintainOperatorValueHelper', () => {
 
         const helper = new MaintainOperatorValueHelper({
             ...operatorServiceConfig,
-            nodeWallet: nodeWallets[0]
+            signer: nodeWallets[0]
         })
         const randomOperatorAddress = await helper.getRandomOperator()
         expect(randomOperatorAddress).toBeDefined()

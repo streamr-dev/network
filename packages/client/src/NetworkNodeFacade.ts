@@ -3,21 +3,20 @@
  */
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NetworkNode, NetworkOptions, ProxyDirection } from '@streamr/trackerless-network'
-import { MetricsContext } from '@streamr/utils'
+import { NetworkNode, NetworkOptions, ProxyDirection, UserID, NodeID } from '@streamr/trackerless-network'
+import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig, NetworkPeerDescriptor } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { pOnce } from './utils/promises'
-import { uuid } from './utils/uuid'
 import { peerDescriptorTranslator } from './utils/utils'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
 export interface NetworkNodeStub {
-    getNodeId: () => string
+    getNodeId: () => NodeID
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
     subscribe: (streamPartId: StreamPartID) => Promise<void>
@@ -27,7 +26,7 @@ export interface NetworkNodeStub {
     publish: (streamMessage: StreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
     getNeighbors: () => string[]
-    getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<string>
+    getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>
     setExtraMetadata: (metadata: Record<string, unknown>) => void
     getPeerDescriptor: () => PeerDescriptor
     getMetricsContext: () => MetricsContext
@@ -35,7 +34,7 @@ export interface NetworkNodeStub {
     hasStreamPart: (streamPartId: StreamPartID) => boolean
     inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean>
     /** @internal */
-    hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
+    hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: NodeID, direction: ProxyDirection) => boolean
     /** @internal */
     start: (doJoin?: boolean) => Promise<void>
     /** @internal */
@@ -45,7 +44,7 @@ export interface NetworkNodeStub {
         streamPartId: StreamPartID,
         peerDescriptors: PeerDescriptor[],
         direction: ProxyDirection,
-        getUserId: () => Promise<string>,
+        userId: UserID,
         connectionCount?: number
     ) => Promise<void>
     setStreamPartEntryPoints: (streamPartId: StreamPartID, peerDescriptors: PeerDescriptor[]) => void
@@ -53,6 +52,10 @@ export interface NetworkNodeStub {
 
 export interface Events {
     start: () => void
+}
+
+export const toUserID = (address: EthereumAddress): UserID => {
+    return Buffer.from(address.slice(2), 'hex') as UserID
 }
 
 /**
@@ -101,32 +104,16 @@ export class NetworkNodeFacade {
     }
 
     private async getNetworkOptions(): Promise<NetworkOptions> {
-        let id = this.config.network!.node!.id
-
         const entryPoints = this.getEntryPoints()
-
         const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer!.peerDescriptor ? 
             peerDescriptorTranslator(this.config.network.controlLayer!.peerDescriptor) : undefined
-
-        if (id == null || id === '') {
-            id = await this.generateId()
-        } else {
-            const ethereumAddress = await this.authentication.getAddress()
-            if (!id.toLowerCase().startsWith(ethereumAddress)) {
-                throw new Error(`given node id ${id} not compatible with authenticated wallet ${ethereumAddress}`)
-            }
-        }
-
         return {
             layer0: {
                 ...this.config.network.controlLayer,
                 entryPoints,
                 peerDescriptor: ownPeerDescriptor
             },
-            networkNode: {
-                ...this.config.network.node,
-                id
-            },
+            networkNode: this.config.network.node,
             metricsContext: new MetricsContext()
         }
     }
@@ -140,11 +127,6 @@ export class NetworkNodeFacade {
             this.cachedNode = node
         }
         return node
-    }
-
-    private async generateId(): Promise<string> {
-        const address = await this.authentication.getAddress()
-        return `${address}#${uuid()}`
     }
 
     /**
@@ -194,7 +176,7 @@ export class NetworkNodeFacade {
 
     getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
 
-    async getNodeId(): Promise<string> {
+    async getNodeId(): Promise<NodeID> {
         const node = await this.getNode()
         return node.getNodeId()
     }
@@ -242,7 +224,7 @@ export class NetworkNodeFacade {
             streamPartId,
             peerDescriptors,
             direction,
-            () => this.authentication.getAddress(),
+            toUserID(await this.authentication.getAddress()),
             connectionCount
         )
     }

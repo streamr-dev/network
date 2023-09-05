@@ -92,7 +92,7 @@ describe('VoteOnSuspectNodeService', () => {
         })
         const helper = new VoteOnSuspectNodeHelper({
             ...voter.operatorServiceConfig,
-            nodeWallet: voter.nodeWallets[0]
+            signer: voter.nodeWallets[0]
         })
         const voterVoteService = new VoteOnSuspectNodeService(
             helper,
@@ -103,7 +103,9 @@ describe('VoteOnSuspectNodeService', () => {
 
         const voteOnFlag = jest.spyOn(helper, 'voteOnFlag')
 
-        await (await flagger.operatorContract.connect(flagger.nodeWallets[0]).flag(sponsorship.address, target.operatorContract.address)).wait()
+        await (await flagger.operatorContract.connect(flagger.nodeWallets[0])
+            .flagWithMetadata(sponsorship.address, target.operatorContract.address, JSON.stringify({ partition: 5 }))
+        ).wait()
         // check that voter votes
         await waitForCondition(() => voteOnFlag.mock.calls.length > 0, 10000)
         expect(voteOnFlag).toHaveBeenCalledTimes(1)

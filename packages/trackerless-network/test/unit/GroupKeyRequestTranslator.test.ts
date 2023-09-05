@@ -1,5 +1,5 @@
 import { GroupKeyRequest as OldGroupKeyRequest } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { GroupKeyRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { GroupKeyRequestTranslator } from '../../src/logic/protocol-integration/stream-message/GroupKeyRequestTranslator'
 
@@ -7,13 +7,13 @@ describe('GroupKeyRequestTranslator', () => {
 
     const oldGroupKeyRequest = new OldGroupKeyRequest({
         rsaPublicKey: 'aaaaaaaa',
-        recipient: 'recipient' as EthereumAddress,
+        recipient: toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
         requestId: 'request',
         groupKeyIds: ['id1', 'id2', 'id3']
     })
     const newGroupKeyRequest: GroupKeyRequest = {
-        rsaPublicKey: 'aaaaaaaa',
-        recipient: 'recipient',
+        rsaPublicKey: utf8ToBinary('aaaaaaaa'),
+        recipientId: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
         requestId: 'request',
         groupKeyIds: ['id1', 'id2', 'id3']
     }
@@ -21,7 +21,7 @@ describe('GroupKeyRequestTranslator', () => {
     it('translates old protocol to protobuf', () => {
         const translated = GroupKeyRequestTranslator.toProtobuf(oldGroupKeyRequest)
         expect(translated.rsaPublicKey).toEqual(newGroupKeyRequest.rsaPublicKey)
-        expect(translated.recipient).toEqual(newGroupKeyRequest.recipient)
+        expect(translated.recipientId).toEqual(newGroupKeyRequest.recipientId)
         expect(translated.requestId).toEqual(newGroupKeyRequest.requestId)
         expect(translated.groupKeyIds).toEqual(newGroupKeyRequest.groupKeyIds)
     })

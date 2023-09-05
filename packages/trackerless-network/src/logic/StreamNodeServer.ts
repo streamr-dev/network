@@ -1,20 +1,22 @@
-import { keyFromPeerDescriptor, ListeningRpcCommunicator, PeerDescriptor, DhtCallContext, PeerIDKey } from '@streamr/dht'
+import { ListeningRpcCommunicator, PeerDescriptor, DhtCallContext } from '@streamr/dht'
 import { Empty } from '../proto/google/protobuf/empty'
 import {
     LeaveStreamNotice,
+    MessageID,
     MessageRef,
     StreamMessage
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 
 export interface StreamNodeServerConfig {
     ownPeerDescriptor: PeerDescriptor
     randomGraphId: string
-    markAndCheckDuplicate: (messageRef: MessageRef, previousMessageRef?: MessageRef) => boolean
-    broadcast: (message: StreamMessage, previousPeer?: string) => void
+    markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
+    broadcast: (message: StreamMessage, previousNode?: NodeID) => void
     onLeaveNotice(notice: LeaveStreamNotice): void
-    markForInspection(senderId: PeerIDKey, messageRef: MessageRef): void
+    markForInspection(senderId: NodeID, messageId: MessageID): void
     rpcCommunicator: ListeningRpcCommunicator
 }
 
@@ -27,10 +29,10 @@ export class StreamNodeServer implements INetworkRpc {
     }
 
     async sendData(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
-        const previousPeer = keyFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
-        this.config.markForInspection(previousPeer, message.messageRef!)
-        if (this.config.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
-            this.config.broadcast(message, previousPeer)
+        const previousNode = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
+        this.config.markForInspection(previousNode, message.messageId!)
+        if (this.config.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
+            this.config.broadcast(message, previousNode)
         }
         return Empty
     }
