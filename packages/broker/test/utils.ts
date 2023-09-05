@@ -9,7 +9,6 @@ import { StreamrClient,
     StreamPermission,
     StreamrClientConfig
 } from 'streamr-client'
-import { v4 as uuid } from 'uuid'
 import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
 
@@ -61,15 +60,6 @@ export const formConfig = ({
             }
         }
     }
-    const peerDescriptor = networkLayerWsServerPort ? {
-        id: uuid(),
-        websocket: {
-            ip: '127.0.0.1',
-            port: networkLayerWsServerPort
-        }
-    } : {
-        id: uuid(),
-    }
 
     return {
         client: {
@@ -80,12 +70,15 @@ export const formConfig = ({
             network: {
                 controlLayer: {
                     entryPoints,
-                    peerDescriptor,
+                    websocketPortRange: networkLayerWsServerPort ? {
+                        min: networkLayerWsServerPort,
+                        max: networkLayerWsServerPort
+                    } : undefined
                 },
                 node: {
                     id: toEthereumAddress(new Wallet(privateKey).address),
                 }
-            }
+            },
         },
         httpServer: {
             port: httpPort ? httpPort : 7171
