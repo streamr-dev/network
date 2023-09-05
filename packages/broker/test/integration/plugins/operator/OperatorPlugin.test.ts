@@ -1,29 +1,23 @@
-import { fastWallet } from '@streamr/test-utils'
-import { Wallet } from 'ethers'
 import { Broker } from '../../../../src/broker'
 import { startBroker } from '../../../utils'
+import { setupOperatorContract } from './contractUtils'
 
 describe('OperatorPlugin', () => {
-
-    let brokerWallet: Wallet
     let broker: Broker
-
-    beforeEach(async () => {
-        brokerWallet = fastWallet()
-    })
 
     afterEach(async () => {
         broker?.stop()
     })
 
     it('can start broker with operator plugin', async () => {
+        const deployment = await setupOperatorContract({ nodeCount: 1 })
         broker = await startBroker({
-            privateKey: brokerWallet.privateKey,
+            privateKey: deployment.nodeWallets[0].privateKey,
             extraPlugins: {
                 operator: {
-                    operatorContractAddress: '0x139dfa493a45364b598f2f98e504192819082c85'
+                    operatorContractAddress: deployment.operatorContract.address
                 }
             }
         })
-    })
+    }, 30 * 1000)
 })
