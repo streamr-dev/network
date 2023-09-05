@@ -46,7 +46,6 @@ describe('OperatorPlugin', () => {
         }, 500)
         broker = await startBroker({
             privateKey: brokerWallet.privateKey,
-            networkLayerWsServerPort: 32123, // TODO do not include this config (not needed when NET-1006 done)
             extraPlugins: {
                 operator: {
                     operatorContractAddress: operatorContract.address
