@@ -4,7 +4,7 @@ import {
     StreamMessage,
     LeaveStreamNotice
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { Logger } from '@streamr/utils'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { Remote } from './Remote'
 import { getNodeIdFromPeerDescriptor } from '../identifiers'
 
@@ -30,7 +30,7 @@ export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
             notification: true
         }
         const notification: LeaveStreamNotice = {
-            senderId: getNodeIdFromPeerDescriptor(ownPeerDescriptor),
+            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
             randomGraphId: this.graphId
         }
         this.client.leaveStreamNotice(notification, options).catch(() => {
