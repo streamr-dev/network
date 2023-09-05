@@ -115,6 +115,8 @@ module.exports = (env, argv) => {
                 '@streamr/dht': path.resolve('../dht/src/exports.ts'),
                 [path.resolve(__dirname, '../dht/src/connection/WebRTC/NodeWebRtcConnection.ts')]:
                     path.resolve(__dirname, '../dht/src/connection/WebRTC/BrowserWebRtcConnection.ts'),
+                [path.resolve(__dirname, '../dht/src/helpers/browser/isNodeJS.ts')]:
+                    path.resolve(__dirname, '../dht/src/helpers/browser/isBrowser.ts'),
                 // swap out ServerPersistence for BrowserPersistence
                 [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: (
                     path.resolve('./src/utils/persistence/BrowserPersistence.ts')

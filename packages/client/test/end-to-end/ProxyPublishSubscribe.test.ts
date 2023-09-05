@@ -1,13 +1,13 @@
-import { createTestStream, createTestClient } from '../test-utils/utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/Stream'
-import { StreamPermission } from '../../src/permission'
-import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { wait } from '@streamr/utils'
 import { toStreamPartID } from '@streamr/protocol'
-import { ProxyDirection } from '@streamr/trackerless-network'
-import { until } from '../../src/utils/promises'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { NodeID, ProxyDirection } from '@streamr/trackerless-network'
+import { wait } from '@streamr/utils'
 import { NetworkPeerDescriptor } from '../../src/Config'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { StreamPermission } from '../../src/permission'
+import { until } from '../../src/utils/promises'
+import { createTestClient, createTestStream } from '../test-utils/utils'
 
 jest.setTimeout(50000)
 const SUBSCRIBE_WAIT_TIME = 2000
@@ -20,8 +20,8 @@ describe('PubSub with proxy connections', () => {
     let pubPrivateKey: string
     let proxyPrivateKey1: string
     let proxyPrivateKey2: string
-    let proxyPeerKey1: string
-    let proxyPeerKey2: string
+    let proxyPeerKey1: NodeID
+    let proxyPeerKey2: NodeID
 
     const proxyNodeId1 = 'proxy1'
     const proxyNodeId2 = 'proxy2'

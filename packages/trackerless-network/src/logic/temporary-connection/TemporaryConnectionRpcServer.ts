@@ -3,7 +3,7 @@ import { TemporaryConnectionRequest, TemporaryConnectionResponse } from '../../p
 import { ITemporaryConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DhtCallContext, ListeningRpcCommunicator, PeerID } from '@streamr/dht'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { PeerList } from '../PeerList'
+import { NodeList } from '../NodeList'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
@@ -17,19 +17,19 @@ interface TemporaryConnectionRpcServerConfig {
 export class TemporaryConnectionRpcServer implements ITemporaryConnectionRpc {
 
     private readonly config: TemporaryConnectionRpcServerConfig
-    private readonly temporaryPeers: PeerList
+    private readonly temporaryNodes: NodeList
 
     constructor(config: TemporaryConnectionRpcServerConfig) {
         this.config = config
-        this.temporaryPeers = new PeerList(config.ownPeerId, 10)
+        this.temporaryNodes = new NodeList(config.ownPeerId, 10)
     }
 
-    getPeers(): PeerList {
-        return this.temporaryPeers
+    getNodes(): NodeList {
+        return this.temporaryNodes
     }
 
-    removePeer(peer: PeerDescriptor): void {
-        this.temporaryPeers.remove(peer)
+    removeNode(peerDescriptor: PeerDescriptor): void {
+        this.temporaryNodes.remove(peerDescriptor)
     }
 
     async openConnection(
@@ -42,7 +42,7 @@ export class TemporaryConnectionRpcServer implements ITemporaryConnectionRpc {
             this.config.randomGraphId,
             toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
         )
-        this.temporaryPeers.add(remote)
+        this.temporaryNodes.add(remote)
         return {
             accepted: true
         }
