@@ -9,7 +9,7 @@ import { EventEmitter } from 'eventemitter3'
 import { Logger } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
 import { NodeID, UserID } from '../../identifiers'
-import { areEqualUsers } from '../utils'
+import { areEqualUsers, binaryToHex } from '../utils'
 
 const logger = new Logger(module)
 
@@ -77,7 +77,7 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
 
     // IProxyConnectionRpc server method
     async requestConnection(request: ProxyConnectionRequest, _context: ServerCallContext): Promise<ProxyConnectionResponse> {
-        this.connections.set(request.senderId as NodeID, {
+        this.connections.set(binaryToHex(request.senderId) as NodeID, {
             direction: request.direction,
             userId: request.userId,
             remote: new RemoteRandomGraphNode(
@@ -94,7 +94,7 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
             senderId: request.senderId
         }
         logger.trace(`Accepted connection request from ${request.senderId} to ${request.streamId}/${request.streamPartition}`)
-        this.emit('newConnection', request.senderId as NodeID)
+        this.emit('newConnection', binaryToHex(request.senderId) as NodeID)
         return response
     }
 }

@@ -18,7 +18,7 @@ import { RemoteProxyServer } from './RemoteProxyServer'
 import { NetworkRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
-import { markAndCheckDuplicate } from '../utils'
+import { binaryToHex, markAndCheckDuplicate } from '../utils'
 import { StreamPartID } from '@streamr/protocol'
 import { NodeID, UserID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
@@ -78,7 +78,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
-                const senderId = notice.senderId as NodeID
+                const senderId = binaryToHex(notice.senderId) as NodeID
                 const contact = this.targetNeighbors.getNeighborById(senderId)
                 if (contact) {
                     setImmediate(() => this.onNodeDisconnected(contact.getPeerDescriptor()))
