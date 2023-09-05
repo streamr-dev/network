@@ -9,6 +9,7 @@ import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { DisconnectionType } from '../../transport/ITransport'
 import { iceServerAsString } from './iceServerAsString'
 import { IceServer } from './WebRtcConnector'
+import { PortRange } from '../ConnectionManager'
 
 const logger = new Logger(module)
 
@@ -27,6 +28,7 @@ export interface Params {
     bufferThresholdLow?: number
     connectingTimeout?: number
     iceServers?: IceServer[]
+    portRange?: PortRange
 }
 
 // Re-defined accoring to https://github.com/microsoft/TypeScript/blob/main/src/lib/dom.generated.d.ts
@@ -62,6 +64,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     private readonly bufferThresholdLow: number
     private readonly connectingTimeout: number
     private readonly remotePeerDescriptor: PeerDescriptor
+    private readonly portRange?: PortRange
     private closed = false
 
     constructor(params: Params) {
@@ -72,6 +75,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         this.bufferThresholdLow = params.bufferThresholdLow || 2 ** 15
         this.connectingTimeout = params.connectingTimeout || 20000
         this.remotePeerDescriptor = params.remotePeerDescriptor
+        this.portRange = params.portRange
     }
 
     public start(isOffering: boolean): void {
@@ -80,7 +84,9 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         logger.trace(`Staring new connection for peer: ${hexId} offering: ${isOffering}`)
         this.connection = new PeerConnection(hexId, {
             iceServers: this.iceServers.map(iceServerAsString),
-            maxMessageSize: MAX_MESSAGE_SIZE
+            maxMessageSize: MAX_MESSAGE_SIZE,
+            portRangeBegin: this.portRange?.min,
+            portRangeEnd: this.portRange?.max,
         })
 
         this.connectingTimeoutRef = setTimeout(() => {

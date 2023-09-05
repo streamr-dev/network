@@ -51,6 +51,7 @@ export class ConnectionManagerConfig {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    webrtcPortRange?: PortRange
 
     // the following fields are used in simulation only
     simulator?: Simulator
@@ -176,7 +177,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
                 bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
-                connectionTimeout: this.config.webrtcNewConnectionTimeout
+                connectionTimeout: this.config.webrtcNewConnectionTimeout,
+                portRange: this.config.webrtcPortRange
             }, this.incomingConnectionCallback)
         }
         this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'
