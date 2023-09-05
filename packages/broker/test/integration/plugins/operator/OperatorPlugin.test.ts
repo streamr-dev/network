@@ -8,6 +8,7 @@ import { createClient, createTestStream, startBroker } from '../../../utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
 
 describe('OperatorPlugin', () => {
+
     let broker: Broker
     let brokerWallet: Wallet
     let operatorContract: Operator
