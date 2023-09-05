@@ -2,7 +2,6 @@ import 'reflect-metadata'
 
 import { MessageID, StreamID, StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { NodeID } from '@streamr/trackerless-network'
 import { Defer, collect, waitForCondition } from '@streamr/utils'
 import sample from 'lodash/sample'
 import shuffle from 'lodash/shuffle'
