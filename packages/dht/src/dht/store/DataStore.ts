@@ -46,7 +46,7 @@ export class DataStore implements IStoreService {
     private readonly serviceId: string
     private readonly storeMaxTtl: number
     private readonly storeHighestTtl: number
-    private readonly storeNumberOfCopies: number
+    private readonly _storeNumberOfCopies: number  // TODO should be used?
     private readonly dhtNodeEmitter: EventEmitter<Events>
     private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtPeer[]
 
@@ -58,7 +58,7 @@ export class DataStore implements IStoreService {
         this.serviceId = config.serviceId
         this.storeMaxTtl = config.storeMaxTtl
         this.storeHighestTtl = config.storeHighestTtl
-        this.storeNumberOfCopies = config.storeNumberOfCopies
+        this._storeNumberOfCopies = config.storeNumberOfCopies
         this.dhtNodeEmitter = config.dhtNodeEmitter
         this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
         this.rpcCommunicator!.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
