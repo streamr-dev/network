@@ -1,4 +1,4 @@
-import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import {
@@ -25,7 +25,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             routingPath: params.routingPath
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: params.previousPeer as PeerDescriptor,
+            sourceDescriptor: params.previousPeer,
             targetDescriptor: this.peerDescriptor,
             timeout: 10000
         }
@@ -62,7 +62,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             routingPath: params.routingPath
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: params.previousPeer as PeerDescriptor,
+            sourceDescriptor: params.previousPeer,
             targetDescriptor: this.peerDescriptor,
             timeout: 10000
         }
@@ -94,7 +94,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             routingPath: params.routingPath
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: params.previousPeer as PeerDescriptor,
+            sourceDescriptor: params.previousPeer,
             targetDescriptor: this.peerDescriptor,
             timeout: 10000
         }

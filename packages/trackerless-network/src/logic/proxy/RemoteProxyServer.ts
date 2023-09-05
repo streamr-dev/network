@@ -15,7 +15,7 @@ export class RemoteProxyServer extends Remote<IProxyConnectionRpcClient> {
         const streamPartId = StreamPartIDUtils.parse(this.graphId)
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor,
             timeout: 5000
         }
         const request: ProxyConnectionRequest = {
