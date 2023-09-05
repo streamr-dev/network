@@ -53,7 +53,7 @@ describe('OperatorValueBreachWatcher', () => {
 
         const operatorValueBreachWatcher = new OperatorValueBreachWatcher({
             ...watcherConfig,
-            nodeWallet: watcherOperatorWallet // TODO should be _watcherWallets[0] when ETH-579 deployed
+            signer: watcherOperatorWallet // TODO should be _watcherWallets[0] when ETH-579 deployed
         })
 
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()

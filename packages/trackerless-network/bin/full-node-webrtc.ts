@@ -12,7 +12,7 @@ program
     .option('--id <id>', 'Ethereum address / node id', 'full-node')
     .option('--name <name>', 'Name in published messages', 'full-node')
     .option('--wsPort <wsPort>', 'port for ws server', '23124')
-    .option('--entrypointId <entrypointId>', 'Entrypoints stringId', 'bootstrap')
+    .option('--entrypointId <entrypointId>', 'Entrypoints node id', 'bootstrap')
     .option('--entrypointIp <entrypointIp>', 'Entrypoints IP address', '0.0.0.0')
     .option('--streamIds <streamIds>', 'streamId to publish', (value: string) => value.split(','), ['stream-0'])
     .description('Run full node')
@@ -58,8 +58,8 @@ async function run(): Promise<void> {
     setInterval(() => {
         // eslint-disable-next-line no-console
         console.log(
-            `Number of connected stream neighbors ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0}, `
-            + `targets: ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborStringIds() || []}`
+            `Number of connected stream neighbors ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborIds().length || 0}, `
+            + `targets: ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborIds() || []}`
         )
         // eslint-disable-next-line no-console
         console.log(

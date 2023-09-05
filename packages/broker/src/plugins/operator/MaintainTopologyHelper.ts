@@ -37,10 +37,10 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     private readonly operatorContract: Operator
     private readonly theGraphClient: TheGraphClient
 
-    constructor({ operatorContractAddress, nodeWallet, theGraphUrl }: OperatorServiceConfig) {
+    constructor({ operatorContractAddress, signer, theGraphUrl }: OperatorServiceConfig) {
         super()
         this.operatorContractAddress = operatorContractAddress
-        this.operatorContract = new Contract(operatorContractAddress, operatorABI, nodeWallet) as unknown as Operator
+        this.operatorContract = new Contract(operatorContractAddress, operatorABI, signer) as unknown as Operator
         this.theGraphClient = new TheGraphClient({
             serverUrl: theGraphUrl,
             fetch,
