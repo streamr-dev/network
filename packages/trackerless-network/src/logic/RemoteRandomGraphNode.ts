@@ -4,10 +4,9 @@ import {
     StreamMessage,
     LeaveStreamNotice
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { Logger } from '@streamr/utils'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { Remote } from './Remote'
 import { getNodeIdFromPeerDescriptor } from '../identifiers'
-import { hexToBinary } from './utils'
 
 const logger = new Logger(module)
 

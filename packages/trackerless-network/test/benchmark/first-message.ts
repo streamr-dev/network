@@ -93,7 +93,7 @@ const measureJoiningTime = async (count: number) => {
                 hello: 'world'
             },
             messageType: StreamMessageType.MESSAGE,
-            signature: 'signature',
+            signature: '0x1111',
         })
         streams.get(stream)!.publish(streamMessage)
     }, 1000)

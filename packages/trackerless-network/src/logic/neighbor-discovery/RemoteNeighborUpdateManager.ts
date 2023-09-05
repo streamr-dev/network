@@ -1,10 +1,9 @@
 import { DhtRpcOptions, PeerDescriptor } from '@streamr/dht'
-import { Logger } from '@streamr/utils'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Remote } from '../Remote'
 import { INeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { hexToBinary } from '../utils'
 
 const logger = new Logger(module)
 

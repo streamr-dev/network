@@ -12,8 +12,7 @@ import {
 } from '@streamr/protocol'
 import { NetworkNode } from '../../src/NetworkNode'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { toEthereumAddress, waitForEvent3 } from '@streamr/utils'
-import { hexToBinary } from '../../src/logic/utils'
+import { toEthereumAddress, waitForEvent3, hexToBinary } from '@streamr/utils'
 
 describe('proxy group key exchange', () => {
     const proxyNodeDescriptor: PeerDescriptor = {
@@ -102,7 +101,7 @@ describe('proxy group key exchange', () => {
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             encryptionType: EncryptionType.NONE,
             content: requestContent,
-            signature: '1234'
+            signature: '0x1234'
         })
 
         await Promise.all([

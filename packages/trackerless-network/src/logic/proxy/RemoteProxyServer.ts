@@ -4,9 +4,8 @@ import { IProxyConnectionRpcClient } from '../../proto/packages/trackerless-netw
 import { Remote } from '../Remote'
 import { StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { ProxyDirection, ProxyConnectionRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { Logger } from '@streamr/utils'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { UserID, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { hexToBinary } from '../utils'
 
 const logger = new Logger(module)
 

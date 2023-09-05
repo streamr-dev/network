@@ -1,7 +1,7 @@
 import { PeerDescriptor } from '@streamr/dht'
 import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { NodeID, UserID } from '@streamr/trackerless-network'
-import { MetricsContext } from '@streamr/utils'
+import { MetricsContext, binaryToHex } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
 import { Lifecycle, scoped } from 'tsyringe'
@@ -9,11 +9,6 @@ import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFac
 import { FakeNetwork } from './FakeNetwork'
 
 type MessageListener = (msg: StreamMessage) => void
-
-// TODO use from @streamr/utils
-export const binaryToHex = (bytes: Uint8Array): string => {
-    return Buffer.from(bytes).toString('hex')
-}
 
 export class FakeNetworkNode implements NetworkNodeStub {
 
