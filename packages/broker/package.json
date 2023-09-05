@@ -29,7 +29,7 @@
   "dependencies": {
     "@ethersproject/hdnode": "^5.4.0",
     "@streamr/config": "^4.0.1",
-    "@streamr/network-contracts": "^5.0.0",
+    "@streamr/network-contracts": "^5.0.1",
     "@streamr/protocol": "0.0.1-tatum.0",
     "@streamr/utils": "0.0.1-tatum.0",
     "aedes": "^0.50.0",
@@ -52,7 +52,8 @@
     "qs": "^6.10.1",
     "streamr-client": "0.0.1-tatum.0",
     "uuid": "^9.0.0",
-    "ws": "^8.12.0"
+    "ws": "^8.12.0",
+    "zod": "^3.22.2"
   },
   "devDependencies": {
     "@streamr/dht": "0.0.1-tatum.0",

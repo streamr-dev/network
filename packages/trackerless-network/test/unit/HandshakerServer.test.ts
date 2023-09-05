@@ -1,8 +1,9 @@
 import { PeerID } from '@streamr/dht'
 import { HandshakerServer } from '../../src/logic/neighbor-discovery/HandshakerServer'
-import { PeerList } from '../../src/logic/PeerList'
+import { NodeList } from '../../src/logic/NodeList'
 import { InterleaveNotice, StreamHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createMockRemoteHandshaker, createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
+import { createMockRemoteHandshaker, createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
+import { NodeID } from '../../src/identifiers'
 
 describe('HandshakerServer', () => {
 
@@ -14,12 +15,12 @@ describe('HandshakerServer', () => {
         type: 0
     }
 
-    let targetNeighbors: PeerList
-    let ongoingHandshakes: Set<string>
+    let targetNeighbors: NodeList
+    let ongoingHandshakes: Set<NodeID>
     let handshakeWithInterleaving: jest.Mock
 
     beforeEach(() => {
-        targetNeighbors = new PeerList(peerId, 10)
+        targetNeighbors = new NodeList(peerId, 10)
         ongoingHandshakes = new Set()
 
         handshakeWithInterleaving = jest.fn()
@@ -30,7 +31,7 @@ describe('HandshakerServer', () => {
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
             createRemoteHandshaker: (_p) => createMockRemoteHandshaker(),
-            createRemoteNode: (_p) => createMockRemotePeer(),
+            createRemoteNode: (_p) => createMockRemoteNode(),
             handshakeWithInterleaving: async (_p, _t) => {
                 handshakeWithInterleaving()
                 return true
@@ -57,10 +58,10 @@ describe('HandshakerServer', () => {
     })
 
     it('handshake interleave', async () => {
-        targetNeighbors.add(createMockRemotePeer())
-        targetNeighbors.add(createMockRemotePeer())
-        targetNeighbors.add(createMockRemotePeer())
-        targetNeighbors.add(createMockRemotePeer())
+        targetNeighbors.add(createMockRemoteNode())
+        targetNeighbors.add(createMockRemoteNode())
+        targetNeighbors.add(createMockRemoteNode())
+        targetNeighbors.add(createMockRemoteNode())
         const req = StreamHandshakeRequest.create({
             randomGraphId: 'random-graph',
             senderId: 'senderId',
@@ -76,10 +77,10 @@ describe('HandshakerServer', () => {
     })
 
     it('unaccepted handshake', async () => {
-        ongoingHandshakes.add('mock1')
-        ongoingHandshakes.add('mock2')
-        ongoingHandshakes.add('mock3')
-        ongoingHandshakes.add('mock4')
+        ongoingHandshakes.add('mock1' as NodeID)
+        ongoingHandshakes.add('mock2' as NodeID)
+        ongoingHandshakes.add('mock3' as NodeID)
+        ongoingHandshakes.add('mock4' as NodeID)
         const req = StreamHandshakeRequest.create({
             randomGraphId: 'random-graph',
             senderId: 'senderId',

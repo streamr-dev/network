@@ -37,7 +37,7 @@ describe('resend and subscribe', () => {
             permissions: [StreamPermission.PUBLISH]
         })
         storageNode = await environment.startStorageNode()
-        subscriber.addStreamToStorageNode(stream.id, storageNode.id)
+        subscriber.addStreamToStorageNode(stream.id, storageNode.getAddress())
     })
 
     afterAll(async () => {
