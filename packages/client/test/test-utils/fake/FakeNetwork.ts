@@ -20,10 +20,10 @@ export class FakeNetwork {
     private sends: Send[] = []
 
     addNode(node: FakeNetworkNode): void {
-        if (!this.nodes.has(node.id)) {
-            this.nodes.set(node.id, node)
+        if (!this.nodes.has(node.getNodeId())) {
+            this.nodes.set(node.getNodeId(), node)
         } else {
-            throw new Error(`Duplicate node: ${node.id}`)
+            throw new Error(`Duplicate node: ${node.getNodeId()}`)
         }
     }
 
@@ -47,7 +47,7 @@ export class FakeNetwork {
         this.sends.push({
             message: msg,
             sender,
-            recipients: recipients.map((n) => n.id)
+            recipients: recipients.map((n) => n.getNodeId())
         })
     }
 

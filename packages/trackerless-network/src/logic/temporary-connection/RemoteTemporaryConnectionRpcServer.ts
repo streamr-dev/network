@@ -1,8 +1,10 @@
-import { DhtRpcOptions, PeerDescriptor, keyFromPeerDescriptor } from '@streamr/dht'
+import { DhtRpcOptions, PeerDescriptor } from '@streamr/dht'
 import { ITemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { Remote } from '../Remote'
 import { TemporaryConnectionRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Logger } from '@streamr/utils'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { hexToBinary } from '../utils'
 
 const logger = new Logger(module)
 
@@ -14,13 +16,13 @@ export class RemoteTemporaryConnectionRpcServer extends Remote<ITemporaryConnect
             targetDescriptor: this.remotePeerDescriptor,
         }
         const request: TemporaryConnectionRequest = {
-            senderId: keyFromPeerDescriptor(ownPeerDescriptor)
+            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor))
         }
         try {
             const response = await this.client.openConnection(request, options)
             return response.accepted
         } catch (err: any) {
-            logger.debug(`temporaryConnection to ${keyFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
+            logger.debug(`temporaryConnection to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
             return false
         }
     }

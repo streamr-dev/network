@@ -3,7 +3,7 @@
  */
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NetworkNode, NetworkOptions, ProxyDirection, UserID } from '@streamr/trackerless-network'
+import { NetworkNode, NetworkOptions, ProxyDirection, UserID, NodeID } from '@streamr/trackerless-network'
 import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
@@ -17,7 +17,7 @@ import { peerDescriptorTranslator } from './utils/utils'
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
 export interface NetworkNodeStub {
-    getNodeId: () => string
+    getNodeId: () => NodeID
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
     subscribe: (streamPartId: StreamPartID) => Promise<void>
@@ -27,7 +27,7 @@ export interface NetworkNodeStub {
     publish: (streamMessage: StreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
     getNeighbors: () => string[]
-    getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<string>
+    getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>
     setExtraMetadata: (metadata: Record<string, unknown>) => void
     getPeerDescriptor: () => PeerDescriptor
     getMetricsContext: () => MetricsContext
@@ -35,7 +35,7 @@ export interface NetworkNodeStub {
     hasStreamPart: (streamPartId: StreamPartID) => boolean
     inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean>
     /** @internal */
-    hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
+    hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: NodeID, direction: ProxyDirection) => boolean
     /** @internal */
     start: (doJoin?: boolean) => Promise<void>
     /** @internal */
@@ -129,7 +129,7 @@ export class NetworkNodeFacade {
             },
             networkNode: {
                 ...this.config.network.node,
-                id
+                id: id as NodeID
             },
             metricsContext: new MetricsContext()
         }
@@ -198,7 +198,7 @@ export class NetworkNodeFacade {
 
     getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
 
-    async getNodeId(): Promise<string> {
+    async getNodeId(): Promise<NodeID> {
         const node = await this.getNode()
         return node.getNodeId()
     }

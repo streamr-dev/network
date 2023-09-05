@@ -1,10 +1,11 @@
 import { StreamMessage, StreamPartID, StreamMessageType } from '@streamr/protocol'
-import { PeerDescriptor, PeerIDKey } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { MetricsContext } from '@streamr/utils'
 import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
-import { UserID } from './identifiers'
+import { NodeID, UserID } from './identifiers'
+
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
 */
@@ -114,9 +115,9 @@ export class NetworkNode {
         this.stack.getStreamrNode().unsubscribeFromStream(streamPartId)
     }
 
-    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<string> {
+    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
         return this.hasStreamPart(streamPartId)
-            ? this.stack.getStreamrNode().getStream(streamPartId)!.layer2.getTargetNeighborStringIds()
+            ? this.stack.getStreamrNode().getStream(streamPartId)!.layer2.getTargetNeighborIds()
             : []
     }
 
@@ -124,12 +125,12 @@ export class NetworkNode {
         return this.stack.getStreamrNode().hasStream(streamPartId)
     }
 
-    hasProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): boolean {
-        return this.stack.getStreamrNode()!.hasProxyConnection(streamPartId, contactNodeId as PeerIDKey, direction)
+    hasProxyConnection(streamPartId: StreamPartID, contactNodeId: NodeID, direction: ProxyDirection): boolean {
+        return this.stack.getStreamrNode()!.hasProxyConnection(streamPartId, contactNodeId, direction)
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getRtt(_nodeId: string): number | undefined {
+    getRtt(_nodeId: NodeID): number | undefined {
         throw new Error('Not implemented')
     }
 
@@ -146,19 +147,15 @@ export class NetworkNode {
         return this.stack.getMetricsContext()
     }
 
-    getNodeId(): string {
+    getNodeId(): NodeID {
         return this.stack.getStreamrNode().getNodeId()
-    }
-
-    getNodeStringId(): string {
-        return this.stack.getStreamrNode().getNodeStringId()
     }
 
     getStreamParts(): StreamPartID[] {
         return this.stack.getStreamrNode().getStreamParts()
     }
 
-    getNeighbors(): string[] {
+    getNeighbors(): NodeID[] {
         return this.stack.getStreamrNode().getNeighbors()
     }
 

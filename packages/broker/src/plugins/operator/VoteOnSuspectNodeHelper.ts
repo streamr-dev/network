@@ -54,7 +54,7 @@ export class VoteOnSuspectNodeHelper {
     constructor(
         config: OperatorServiceConfig,
         callback: ReviewRequestCallback,
-        contract = new Contract(config.operatorContractAddress, operatorABI, config.nodeWallet) as unknown as Operator
+        contract = new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator
     ) {
         this.callback = callback
         this.contract = contract
