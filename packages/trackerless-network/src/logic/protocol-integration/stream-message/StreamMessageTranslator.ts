@@ -39,6 +39,20 @@ const newToOldEncryptionType = (type: EncryptionType): OldEncryptionType => {
     return OldEncryptionType.NONE
 }
 
+const oldToNewContentType = (type: OldContentType): ContentType => {
+    if (type === OldContentType.JSON) {
+        return ContentType.JSON
+    }
+    return ContentType.BINARY 
+} 
+
+const newToOldContentType = (type: ContentType): OldContentType => {
+    if (type === ContentType.JSON) {
+        return OldContentType.JSON
+    }
+    return OldContentType.BINARY
+}
+
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class StreamMessageTranslator {
 
@@ -96,7 +110,7 @@ export class StreamMessageTranslator {
             previousMessageRef,
             content,
             messageType,
-            contentType: ContentType.JSON,
+            contentType: oldToNewContentType(msg.contentType),
             encryptionType: oldToNewEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId ?? undefined,
             newGroupKey,
@@ -144,7 +158,7 @@ export class StreamMessageTranslator {
             prevMsgRef,
             content,
             messageType,
-            contentType: OldContentType.JSON,
+            contentType: newToOldContentType(msg.contentType),
             encryptionType: newToOldEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId,
             newGroupKey,

@@ -31,7 +31,7 @@ const serializedMessage = JSON.stringify([
     ContentType.JSON,
     EncryptionType.AES,
     'groupKeyId',
-    'encrypted-content',
+    '656e637279707465642d636f6e74656e74',
     '["groupKeyId","1234"]',
     SIGNATURE_TYPE_ETH,
     signature

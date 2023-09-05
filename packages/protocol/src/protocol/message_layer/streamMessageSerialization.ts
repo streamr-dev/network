@@ -46,7 +46,7 @@ export function fromArray(arr: any[]): StreamMessage<any> {
     return new StreamMessage({
         messageId: MessageID.fromArray(messageIdArr),
         prevMsgRef: prevMsgRefArr ? MessageRef.fromArray(prevMsgRefArr) : null,
-        content: hexToBinary(serializedContent),
+        content: new Uint8Array(hexToBinary(serializedContent)),
         messageType,
         contentType,
         encryptionType,
