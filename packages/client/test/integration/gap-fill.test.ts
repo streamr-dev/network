@@ -23,7 +23,10 @@ describe('gap fill', () => {
 
     const createMessage = (timestamp: number) => messageFactory.createMessage({}, { timestamp })
 
-    const publish = (msg: StreamMessage) => environment.getNetwork().send(msg, publisherWallet.address as NodeID, () => true)
+    const publish = (msg: StreamMessage) => {
+        const senderNodeId = 'TODO' // from publisherWallet.address
+        environment.getNetwork().send(msg, senderNodeId, () => true)
+    }
 
     beforeEach(async () => {
         publisherWallet = fastWallet()

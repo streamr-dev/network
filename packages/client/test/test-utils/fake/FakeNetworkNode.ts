@@ -1,13 +1,19 @@
+import { PeerDescriptor } from '@streamr/dht'
 import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
+import { NodeID, UserID } from '@streamr/trackerless-network'
 import { MetricsContext } from '@streamr/utils'
+import crypto from 'crypto'
 import pull from 'lodash/pull'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
-import { PeerDescriptor } from '@streamr/dht'
-import { NetworkOptions, NodeID, UserID } from '@streamr/trackerless-network'
 
 type MessageListener = (msg: StreamMessage) => void
+
+// TODO use from @streamr/utils
+export const binaryToHex = (bytes: Uint8Array): string => {
+    return Buffer.from(bytes).toString('hex')
+}
 
 export class FakeNetworkNode implements NetworkNodeStub {
 
@@ -16,8 +22,8 @@ export class FakeNetworkNode implements NetworkNodeStub {
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
 
-    constructor(opts: NetworkOptions, network: FakeNetwork) {
-        this.id = opts.networkNode!.id!
+    constructor(network: FakeNetwork) {
+        this.id = binaryToHex(crypto.randomBytes(10))
         this.network = network
     }
 
@@ -150,7 +156,7 @@ export class FakeNetworkNodeFactory implements NetworkNodeFactory {
         this.network = network
     }
 
-    createNetworkNode(opts: NetworkOptions): FakeNetworkNode {
-        return new FakeNetworkNode(opts, this.network)
+    createNetworkNode(): FakeNetworkNode {
+        return new FakeNetworkNode(this.network)
     }
 }
