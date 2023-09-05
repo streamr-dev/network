@@ -37,7 +37,7 @@ describe(MaintainTopologyHelper, () => {
     describe('two different streams included in two sponsorships', () => {
         let operatorWallet: Wallet
         let operatorContract: Operator
-        let operatorServiceConfig: Omit<OperatorServiceConfig, 'nodeWallet'>
+        let operatorServiceConfig: Omit<OperatorServiceConfig, 'signer'>
         let nodeWallet: Wallet
         let sponsorship1: Contract
         let sponsorship2: Contract
@@ -55,7 +55,7 @@ describe(MaintainTopologyHelper, () => {
         beforeEach(() => {
             topologyHelper = new MaintainTopologyHelper({
                 ...operatorServiceConfig,
-                nodeWallet
+                signer: nodeWallet
             })
         })
 
@@ -104,7 +104,7 @@ describe(MaintainTopologyHelper, () => {
     describe('same stream included in two sponsorships', () => {
         let operatorWallet: Wallet
         let operatorContract: Operator
-        let operatorServiceConfig: Omit<OperatorServiceConfig, 'nodeWallet'>
+        let operatorServiceConfig: Omit<OperatorServiceConfig, 'signer'>
         let nodeWallet: Wallet
         let sponsorship1: Contract
         let sponsorship2: Contract
@@ -122,7 +122,7 @@ describe(MaintainTopologyHelper, () => {
         beforeEach(() => {
             topologyHelper = new MaintainTopologyHelper({
                 ...operatorServiceConfig,
-                nodeWallet
+                signer: nodeWallet
             })
         })
 
