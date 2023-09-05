@@ -28,20 +28,8 @@ describe('PubSub with proxy connections', () => {
     const proxyNodePort1 = 14231
     const proxyNodePort2 = 14232
 
-    const proxyNodeDescriptor1: NetworkPeerDescriptor = {
-        id: proxyNodeId1,
-        websocket: {
-            ip: 'localhost',
-            port: proxyNodePort1
-        }
-    }
-    const proxyNodeDescriptor2: NetworkPeerDescriptor = {
-        id: proxyNodeId2,
-        websocket: {
-            ip: 'localhost',
-            port: proxyNodePort2
-        }
-    }
+    let proxyNodeDescriptor1: NetworkPeerDescriptor
+    let proxyNodeDescriptor2: NetworkPeerDescriptor
 
     beforeEach(async () => {
         pubPrivateKey = await fetchPrivateKeyWithGas()
@@ -52,6 +40,8 @@ describe('PubSub with proxy connections', () => {
 
         proxyClient1 = await createTestClient(proxyPrivateKey1, proxyNodeId1, proxyNodePort1, true)
         proxyClient2 = await createTestClient(proxyPrivateKey2, proxyNodeId2, proxyNodePort2, true)
+        proxyNodeDescriptor1 = await proxyClient1.getPeerDescriptor()
+        proxyNodeDescriptor2 = await proxyClient2.getPeerDescriptor()
 
     }, 10000)
 

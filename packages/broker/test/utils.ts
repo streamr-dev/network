@@ -27,7 +27,7 @@ interface TestConfig {
 }
 
 export const DEFAULT_ENTRYPOINTS = [{
-    id: 'entrypoint',
+    id: 'eeeeeeeeee',
     websocket: {
         ip: '127.0.0.1',
         port: 40500
