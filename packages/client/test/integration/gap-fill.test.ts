@@ -22,9 +22,9 @@ describe('gap fill', () => {
 
     const createMessage = (timestamp: number) => messageFactory.createMessage({}, { timestamp })
 
-    const publish = (msg: StreamMessage) => {
-        const senderNodeId = 'TODO' // from publisherWallet.address
-        environment.getNetwork().send(msg, senderNodeId, () => true)
+    const publish = async (msg: StreamMessage) => {
+        const node = environment.startNode()
+        await node.publish(msg)
     }
 
     beforeEach(async () => {
@@ -58,9 +58,9 @@ describe('gap fill', () => {
         subscriber.addEncryptionKey(GROUP_KEY, toEthereumAddress(publisherWallet.address))
         const sub = await subscriber.subscribe(stream.id)
         const receivedMessages = collect(sub, 3)
-        publish(await createMessage(1000))
+        await publish(await createMessage(1000))
         storageNode.storeMessage(await createMessage(2000))
-        publish(await createMessage(3000))
+        await publish(await createMessage(3000))
         expect((await receivedMessages).map((m) => m.timestamp)).toEqual([1000, 2000, 3000])
     })
 
@@ -73,9 +73,9 @@ describe('gap fill', () => {
         subscriber.addEncryptionKey(GROUP_KEY, toEthereumAddress(publisherWallet.address))
         const sub = await subscriber.subscribe(stream.id)
         const receivedMessages = collect(sub, 2)
-        publish(await createMessage(1000))
+        await publish(await createMessage(1000))
         await createMessage(2000)
-        publish(await createMessage(3000))
+        await publish(await createMessage(3000))
         expect((await receivedMessages).map((m) => m.timestamp)).toEqual([1000, 3000])
     })
 
