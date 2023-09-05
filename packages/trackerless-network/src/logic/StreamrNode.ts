@@ -87,7 +87,6 @@ interface Metrics extends MetricsDefinition {
 
 export interface StreamrNodeConfig {
     metricsContext?: MetricsContext
-    id?: NodeID
     streamPartitionNumOfNeighbors?: number
     streamPartitionMinPropagationTargets?: number
     nodeName?: string
