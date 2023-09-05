@@ -159,7 +159,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private localDataStore = new LocalDataStore()
     private recursiveFinder?: RecursiveFinder
     private peerDiscovery?: PeerDiscovery
-    private externalApi?: ExternalApi
 
     public connectionManager?: ConnectionManager
     private started = false
@@ -290,7 +289,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.bucket!.closest(id, n)
             }
         })
-        this.externalApi = new ExternalApi(this)
+        // TODO description why we create this instance? (if because of a side effect, could we just call some function?)
+        new ExternalApi(this)
         if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
             && !isSamePeerDescriptor(this.config.entryPoints[0], this.ownPeerDescriptor!)) {
             this.connectToEntryPoint(this.config.entryPoints[0])
