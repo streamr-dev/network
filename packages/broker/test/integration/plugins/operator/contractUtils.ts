@@ -11,7 +11,7 @@ import { BigNumber, ContractReceipt, Wallet } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { range } from 'lodash'
 
-const TEST_CHAIN = 'dev2'
+export const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
 export interface SetupOperatorContractOpts {
     nodeCount?: number
@@ -46,7 +46,7 @@ export async function setupOperatorContract(
         adminKey: opts?.adminKey
     })
     const operatorContract = await deployOperatorContract({
-        chainConfig: opts?.chainConfig ?? CHAIN_CONFIG[TEST_CHAIN],
+        chainConfig: opts?.chainConfig ?? TEST_CHAIN_CONFIG,
         deployer: operatorWallet,
         operatorsCutPercent: opts?.operatorConfig?.operatorsCutPercent,
         metadata: opts?.operatorConfig?.metadata
@@ -64,7 +64,7 @@ export async function setupOperatorContract(
     }
     const operatorConfig = {
         operatorContractAddress: toEthereumAddress(operatorContract.address),
-        theGraphUrl: CHAIN_CONFIG[TEST_CHAIN].theGraphUrl,
+        theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl,
     }
     return { operatorWallet, operatorContract, operatorServiceConfig: operatorConfig, nodeWallets }
 }
@@ -160,15 +160,15 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
 }
 
 export function getProvider(): Provider {
-    return new JsonRpcProvider(CHAIN_CONFIG[TEST_CHAIN].rpcEndpoints[0].url)
+    return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url)
 }
 
 export function getTokenContract(): TestToken {
-    return new Contract(CHAIN_CONFIG[TEST_CHAIN].contracts.DATA, tokenABI) as unknown as TestToken
+    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, tokenABI) as unknown as TestToken
 }
 
 export const getAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
-    return new Wallet(adminKey ?? CHAIN_CONFIG[TEST_CHAIN].adminPrivateKey).connect(provider ?? getProvider())
+    return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider())
 }
 
 interface GenerateWalletWithGasAndTokensOpts {

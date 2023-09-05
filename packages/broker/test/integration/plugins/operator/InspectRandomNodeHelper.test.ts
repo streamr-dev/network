@@ -4,7 +4,7 @@ import fetch from 'node-fetch'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { createClient, createTestStream } from '../../../utils'
 import {
-    THE_GRAPH_URL,
+    TEST_CHAIN_CONFIG,
     delegate,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
@@ -28,7 +28,7 @@ describe('InspectRandomNodeHelper', () => {
         await client.destroy()
 
         graphClient = new TheGraphClient({
-            serverUrl: THE_GRAPH_URL,
+            serverUrl: TEST_CHAIN_CONFIG.theGraphUrl,
             fetch,
             logger: new Logger(module)
         })
