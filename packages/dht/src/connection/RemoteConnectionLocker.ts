@@ -3,10 +3,8 @@ import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { IConnectionLockerClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice, DisconnectMode } from '../proto/packages/dht/protos/DhtRpc'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
-import { PeerID } from '../helpers/PeerID'
 
 import * as Err from '../helpers/errors'
-import { peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 

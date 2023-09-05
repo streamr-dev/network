@@ -68,6 +68,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         super()
         this.connectionId = new ConnectionID()
         this.iceServers = params.iceServers || []
+        // eslint-disable-next-line no-underscore-dangle
         this._bufferThresholdHigh = params.bufferThresholdHigh || 2 ** 17
         this.bufferThresholdLow = params.bufferThresholdLow || 2 ** 15
         this.connectingTimeout = params.connectingTimeout || 20000

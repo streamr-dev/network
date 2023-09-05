@@ -58,6 +58,7 @@ export class DataStore implements IStoreService {
         this.serviceId = config.serviceId
         this.storeMaxTtl = config.storeMaxTtl
         this.storeHighestTtl = config.storeHighestTtl
+        // eslint-disable-next-line no-underscore-dangle
         this._storeNumberOfCopies = config.storeNumberOfCopies
         this.dhtNodeEmitter = config.dhtNodeEmitter
         this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
