@@ -37,6 +37,7 @@ import { Gate } from './Gate'
 import { TheGraphClient, GraphQLQuery, FetchResponse } from './TheGraphClient'
 import { Heap } from './Heap'
 import { executeSafePromise } from './executeSafePromise'
+import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries } from './binaryUtils'
 
 export {
     BrandedString,
@@ -82,7 +83,12 @@ export {
     GraphQLQuery,
     FetchResponse,
     Heap,
-    executeSafePromise
+    executeSafePromise,
+    binaryToHex,
+    binaryToUtf8,
+    hexToBinary,
+    utf8ToBinary,
+    areEqualBinaries
 }
 
 export {

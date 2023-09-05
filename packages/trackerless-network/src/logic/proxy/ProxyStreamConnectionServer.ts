@@ -6,10 +6,10 @@ import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { EventEmitter } from 'eventemitter3'
-import { Logger } from '@streamr/utils'
+import { Logger, binaryToHex } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
 import { NodeID, UserID } from '../../identifiers'
-import { areEqualUsers, binaryToHex } from '../utils'
+import { areEqualUsers } from '../utils'
 
 const logger = new Logger(module)
 
