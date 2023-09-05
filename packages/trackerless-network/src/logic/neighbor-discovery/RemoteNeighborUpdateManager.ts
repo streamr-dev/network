@@ -1,5 +1,5 @@
 import { DhtRpcOptions, PeerDescriptor } from '@streamr/dht'
-import { Logger } from '@streamr/utils'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Remote } from '../Remote'
 import { INeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -20,7 +20,7 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
         }
         const request: NeighborUpdate = {
-            senderId: getNodeIdFromPeerDescriptor(ownPeerDescriptor),
+            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
             randomGraphId: this.graphId,
             neighborDescriptors: neighbors,
             removeMe: false
