@@ -1,12 +1,13 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
-import { toEthereumAddress } from '@streamr/utils'
 import { fastWallet } from '@streamr/test-utils'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { StreamPermission } from '../../src/permission'
+import { NodeID } from '@streamr/trackerless-network'
+import { toEthereumAddress } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamPermission } from '../../src/permission'
 import { nextValue } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createMockMessage } from '../test-utils/utils'
@@ -47,7 +48,7 @@ describe('Subscriber', () => {
     
             const sub = await subscriber.subscribe(stream.id)
     
-            const publisherNode = environment.startNode(publisherWallet.address)
+            const publisherNode = environment.startNode(publisherWallet.address as NodeID)
             await publisherNode.publish(await createMockMessage({
                 stream,
                 publisher: publisherWallet,
@@ -99,7 +100,7 @@ describe('Subscriber', () => {
     
             const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
     
-            const publisherNode = environment.startNode(publisherWallet.address)
+            const publisherNode = environment.startNode(publisherWallet.address as NodeID)
             await publisherNode.publish(await createMockMessage({
                 stream,
                 publisher: publisherWallet,

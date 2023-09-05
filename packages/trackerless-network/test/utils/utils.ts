@@ -70,20 +70,20 @@ export const createStreamMessage = (
     return msg
 }
 
-export const createMockRemotePeer = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
-    const mockPeer: PeerDescriptor = {
+export const createMockRemoteNode = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
+    const mockPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString(new UUID().toString()).value,
         type: 0
     }
-    return new RemoteRandomGraphNode(peerDescriptor || mockPeer, 'mock', {} as any)
+    return new RemoteRandomGraphNode(peerDescriptor || mockPeerDescriptor, 'mock', {} as any)
 }
 
 export const createMockRemoteHandshaker = (): RemoteHandshaker => {
-    const mockPeer: PeerDescriptor = {
+    const mockPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString(new UUID().toString()).value,
         type: 0
     }
-    return new RemoteHandshaker(mockPeer, 'mock', {
+    return new RemoteHandshaker(mockPeerDescriptor, 'mock', {
         handshake: async () => {},
         interleaveNotice: async () => {}
     } as any)

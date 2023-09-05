@@ -71,7 +71,7 @@ export class MaintainOperatorValueHelper {
             .slice(0, this.config.maxSponsorshipsInWithdraw) // take all if maxSponsorshipsInWithdraw is undefined
         const sponsorshipAddresses = sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address))
 
-        const approxPoolValue = (await operator.totalValueInSponsorshipsWei()).toBigInt()
+        const approxPoolValue = (await operator.totalStakedIntoSponsorshipsWei()).toBigInt()
         const sumDataWei = sponsorships.reduce((sum, sponsorship) => sum.add(sponsorship.earnings), BigNumber.from(0)).toBigInt()
         const fraction = approxPoolValue > 0
             ? sumDataWei * ONE_ETHER / approxPoolValue

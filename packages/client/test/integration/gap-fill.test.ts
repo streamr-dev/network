@@ -3,6 +3,7 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
+import { NodeID } from '@streamr/trackerless-network'
 import { collect, toEthereumAddress } from '@streamr/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
@@ -22,7 +23,7 @@ describe('gap fill', () => {
 
     const createMessage = (timestamp: number) => messageFactory.createMessage({}, { timestamp })
 
-    const publish = (msg: StreamMessage) => environment.getNetwork().send(msg, publisherWallet.address, () => true)
+    const publish = (msg: StreamMessage) => environment.getNetwork().send(msg, publisherWallet.address as NodeID, () => true)
 
     beforeEach(async () => {
         publisherWallet = fastWallet()
