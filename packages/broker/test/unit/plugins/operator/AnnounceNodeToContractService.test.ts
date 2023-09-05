@@ -1,9 +1,12 @@
 import { AnnounceNodeToContractService } from '../../../../src/plugins/operator/AnnounceNodeToContractService'
-import { StreamrClient, NetworkNodeType } from 'streamr-client'
+import { StreamrClient, NetworkNodeType, NodeID } from 'streamr-client'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { AnnounceNodeToContractHelper } from '../../../../src/plugins/operator/AnnounceNodeToContractHelper'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { wait, waitForCondition } from '@streamr/utils'
+
+const MY_NODE_ID = '0x1111' as NodeID
+const LEADER_NODE_ID = '0x2222' as NodeID
 
 function setUp({
     nodeId,
@@ -12,8 +15,8 @@ function setUp({
     writeIntervalInMs,
     pollIntervalInMs
 }: {
-    nodeId: string
-    leaderNodeId: string | string[]
+    nodeId: NodeID
+    leaderNodeId: NodeID | NodeID[]
     initialHeartbeatTs: number | undefined
     writeIntervalInMs: number
     pollIntervalInMs: number
@@ -53,36 +56,36 @@ function setUp({
 describe(AnnounceNodeToContractService, () => {
     it('writes heartbeat immediately if undefined at start', async () => {
         const { service, helper } = setUp({
-            nodeId: 'myNodeId',
-            leaderNodeId: 'myNodeId',
+            nodeId: MY_NODE_ID,
+            leaderNodeId: MY_NODE_ID,
             initialHeartbeatTs: undefined,
             writeIntervalInMs: 500,
             pollIntervalInMs: 50
         })
         await service.start()
         await wait(150)
-        expect(helper.writeHeartbeat).toHaveBeenCalledWith({ id: 'myNodeId', type: NetworkNodeType.NODEJS })
+        expect(helper.writeHeartbeat).toHaveBeenCalledWith({ id: MY_NODE_ID, type: NetworkNodeType.NODEJS })
         await service.stop()
     })
 
     it('writes heartbeat immediately if already stale at start', async () => {
         const { service, helper } = setUp({
-            nodeId: 'myNodeId',
-            leaderNodeId: 'myNodeId',
+            nodeId: MY_NODE_ID,
+            leaderNodeId: MY_NODE_ID,
             initialHeartbeatTs: Date.now() - 600,
             writeIntervalInMs: 500,
             pollIntervalInMs: 50
         })
         await service.start()
         await wait(150)
-        expect(helper.writeHeartbeat).toHaveBeenCalledWith({ id: 'myNodeId', type: NetworkNodeType.NODEJS })
+        expect(helper.writeHeartbeat).toHaveBeenCalledWith({ id: MY_NODE_ID, type: NetworkNodeType.NODEJS })
         await service.stop()
     })
 
     it('does not write heartbeat immediately if not stale at start', async () => {
         const { service, helper } = setUp({
-            nodeId: 'myNodeId',
-            leaderNodeId: 'myNodeId',
+            nodeId: MY_NODE_ID,
+            leaderNodeId: MY_NODE_ID,
             initialHeartbeatTs: Date.now(),
             writeIntervalInMs: 500,
             pollIntervalInMs: 50
@@ -95,8 +98,8 @@ describe(AnnounceNodeToContractService, () => {
 
     it('does not write heartbeat if not leader', async () => {
         const { service, helper } = setUp({
-            nodeId: 'myNodeId',
-            leaderNodeId: 'leaderNodeId',
+            nodeId: MY_NODE_ID,
+            leaderNodeId: LEADER_NODE_ID,
             initialHeartbeatTs: undefined,
             writeIntervalInMs: 50,
             pollIntervalInMs: 25
@@ -109,22 +112,22 @@ describe(AnnounceNodeToContractService, () => {
 
     it('longer scenario', async () => {
         const { service, helper } = setUp({
-            nodeId: 'myNodeId',
+            nodeId: MY_NODE_ID,
             leaderNodeId: [
-                'myNodeId',
-                'leaderNodeId',
-                'leaderNodeId',
-                'myNodeId',
-                'leaderNodeId',
-                'leaderNodeId',
-                'leaderNodeId',
-                'leaderNodeId',
-                'myNodeId',
-                'leaderNodeId',
-                'leaderNodeId',
-                'leaderNodeId',
-                'leaderNodeId',
-                'leaderNodeId',
+                MY_NODE_ID,
+                LEADER_NODE_ID,
+                LEADER_NODE_ID,
+                MY_NODE_ID,
+                LEADER_NODE_ID,
+                LEADER_NODE_ID,
+                LEADER_NODE_ID,
+                LEADER_NODE_ID,
+                MY_NODE_ID,
+                LEADER_NODE_ID,
+                LEADER_NODE_ID,
+                LEADER_NODE_ID,
+                LEADER_NODE_ID,
+                LEADER_NODE_ID,
             ],
             initialHeartbeatTs: undefined,
             writeIntervalInMs: 60,

@@ -113,17 +113,17 @@ describe('random graph with real connections', () => {
 
     it('can fully connected topologies ', async () => {
         await waitForCondition(() => {
-            return randomGraphNode1.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode2.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode3.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode4.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode5.getTargetNeighborStringIds().length >= 3
+            return randomGraphNode1.getTargetNeighborIds().length >= 3
+                && randomGraphNode2.getTargetNeighborIds().length >= 3
+                && randomGraphNode3.getTargetNeighborIds().length >= 3
+                && randomGraphNode4.getTargetNeighborIds().length >= 3
+                && randomGraphNode5.getTargetNeighborIds().length >= 3
         }, 10000)
-        expect(randomGraphNode1.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode2.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode3.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode4.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode5.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode1.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode2.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode3.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode4.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode5.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
     })
 
     it('can propagate messages', async () => {
@@ -134,11 +134,11 @@ describe('random graph with real connections', () => {
         randomGraphNode5.on('message', () => numOfMessagesReceived += 1)
 
         await waitForCondition(() => {
-            return randomGraphNode1.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode2.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode3.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode4.getTargetNeighborStringIds().length >= 3
-                && randomGraphNode5.getTargetNeighborStringIds().length >= 3
+            return randomGraphNode1.getTargetNeighborIds().length >= 3
+                && randomGraphNode2.getTargetNeighborIds().length >= 3
+                && randomGraphNode3.getTargetNeighborIds().length >= 3
+                && randomGraphNode4.getTargetNeighborIds().length >= 3
+                && randomGraphNode5.getTargetNeighborIds().length >= 3
         }, 10000)
 
         const msg = createStreamMessage(

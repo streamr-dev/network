@@ -52,7 +52,7 @@ describe('StreamEntryPointDiscovery', () => {
         }
     }
 
-    const fakeGetEntryPointDataViaPeer = async (_key: Uint8Array, _peer: PeerDescriptor): Promise<DataEntry[]> => {
+    const fakegetEntryPointDataViaNode = async (_key: Uint8Array, _peer: PeerDescriptor): Promise<DataEntry[]> => {
         return [fakeData]
     }
 
@@ -78,7 +78,7 @@ describe('StreamEntryPointDiscovery', () => {
             ownPeerDescriptor: peerDescriptor,
             streams,
             getEntryPointData: fakeGetEntryPointData,
-            getEntryPointDataViaPeer: fakeGetEntryPointDataViaPeer,
+            getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
             cacheInterval: 2000
@@ -87,7 +87,7 @@ describe('StreamEntryPointDiscovery', () => {
             ownPeerDescriptor: peerDescriptor,
             streams: new Map<string, StreamObject>(),
             getEntryPointData: fakeEmptyGetEntryPointData,
-            getEntryPointDataViaPeer: fakeGetEntryPointDataViaPeer,
+            getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
             cacheInterval: 2000

@@ -18,8 +18,8 @@ const DEFAULT_PRUNE_INTERVAL_IN_MS = 30 * 1000
 const DEFAULT_LATENCY_EXTRA_MS = 2000
 
 export interface OperatorFleetStateEvents {
-    added: (nodeId: string) => void
-    removed: (nodeId: string) => void
+    added: (nodeId: NodeID) => void
+    removed: (nodeId: NodeID) => void
 }
 
 interface Heartbeat {
@@ -75,7 +75,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
                 return
             }
             if (message.msgType === 'heartbeat') {
-                const nodeId = message.peerDescriptor.id
+                const nodeId = message.peerDescriptor.id as NodeID
                 const exists = this.latestHeartbeats.has(nodeId)
                 this.latestHeartbeats.set(nodeId, {
                     timestamp: this.timeProvider(),
@@ -101,11 +101,11 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         await this.subscription?.unsubscribe()
     }
 
-    getLeaderNodeId(): string | undefined {
+    getLeaderNodeId(): NodeID | undefined {
         return min(this.getNodeIds()) // we just need the leader to be consistent
     }
 
-    getNodeIds(): string[] {
+    getNodeIds(): NodeID[] {
         return [...this.latestHeartbeats.keys()]
     }
 
