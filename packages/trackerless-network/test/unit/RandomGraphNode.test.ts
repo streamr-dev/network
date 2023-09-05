@@ -1,13 +1,14 @@
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { keyFromPeerDescriptor, PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { MockTransport } from '../utils/mock/Transport'
-import { createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
+import { createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
-import { PeerList } from '../../src/logic/PeerList'
+import { NodeList } from '../../src/logic/NodeList'
 import { MockHandshaker } from '../utils/mock/MockHandshaker'
 import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManager'
 import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
 import { mockLayer1 } from '../utils/mock/MockLayer1'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('RandomGraphNode', () => {
 
@@ -17,16 +18,16 @@ describe('RandomGraphNode', () => {
         type: 0
     }
 
-    let targetNeighbors: PeerList
-    let nearbyContactPool: PeerList
-    let randomContactPool: PeerList
+    let targetNeighbors: NodeList
+    let nearbyContactPool: NodeList
+    let randomContactPool: NodeList
 
     beforeEach(async () => {
         const peerId = peerIdFromPeerDescriptor(peerDescriptor)
 
-        targetNeighbors = new PeerList(peerId, 10)
-        randomContactPool = new PeerList(peerId, 10)
-        nearbyContactPool = new PeerList(peerId, 10)
+        targetNeighbors = new NodeList(peerId, 10)
+        randomContactPool = new NodeList(peerId, 10)
+        nearbyContactPool = new NodeList(peerId, 10)
 
         randomGraphNode = createRandomGraphNode({
             targetNeighbors,
@@ -48,26 +49,26 @@ describe('RandomGraphNode', () => {
         await randomGraphNode.stop()
     })
 
-    it('getTargetNeighborStringIds', () => {
-        const mockRemote = createMockRemotePeer()
+    it('getTargetNeighborIds', () => {
+        const mockRemote = createMockRemoteNode()
         targetNeighbors.add(mockRemote)
-        const ids = randomGraphNode.getTargetNeighborStringIds()
-        expect(ids[0]).toEqual(keyFromPeerDescriptor(mockRemote.getPeerDescriptor()))
+        const ids = randomGraphNode.getTargetNeighborIds()
+        expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
         targetNeighbors.remove(mockRemote.getPeerDescriptor())
     })
 
     it('getNearbyContactPoolIds', () => {
-        const mockRemote = createMockRemotePeer()
+        const mockRemote = createMockRemoteNode()
         nearbyContactPool.add(mockRemote)
         const ids = randomGraphNode.getNearbyContactPoolIds()
-        expect(ids[0]).toEqual(keyFromPeerDescriptor(mockRemote.getPeerDescriptor()))
+        expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
     it('getRandomContactPoolIds', () => {
-        const mockRemote = createMockRemotePeer()
+        const mockRemote = createMockRemoteNode()
         randomContactPool.add(mockRemote)
         const ids = randomGraphNode.getRandomContactPoolIds()
-        expect(ids[0]).toEqual(keyFromPeerDescriptor(mockRemote.getPeerDescriptor()))
+        expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
 })
