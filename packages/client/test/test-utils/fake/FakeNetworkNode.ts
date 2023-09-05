@@ -17,13 +17,13 @@ export const binaryToHex = (bytes: Uint8Array): string => {
 
 export class FakeNetworkNode implements NetworkNodeStub {
 
-    public readonly id: NodeID
+    private readonly id: NodeID
     readonly subscriptions: Set<StreamPartID> = new Set()
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
 
     constructor(network: FakeNetwork) {
-        this.id = binaryToHex(crypto.randomBytes(10))
+        this.id = binaryToHex(crypto.randomBytes(10)) as NodeID
         this.network = network
     }
 
