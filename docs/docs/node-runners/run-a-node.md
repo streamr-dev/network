@@ -186,7 +186,7 @@ cd ~/.streamrDocker1
 Start your node:
 
 ```
-docker run --name streamr1 --restart unless-stopped -d -v $(cd ~/.streamrDocker1 && pwd):/home/streamr/.streamr streamr/broker-node:latest
+docker run --name streamr1 --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/broker-node:latest
 ```
 
 **The `docker run` command, deconstructed:**
@@ -298,7 +298,19 @@ Scared of the command line? Not feeling up to docking anything besides your yach
 
 ### Zonaris
 
-To create one or more Streamr nodes via Zonaris, go to [Zonaris's website](https://www.zonaris.io/), click 'Deploy nodes' and follow the onboarding process.
+**Prerequisites**
+
+- One or more wallets with DATA tokens on the Polygon Network. If you don't have a wallet yet, Zonaris gives clear instructions during sign-up.
+
+**Instructions**
+
+1. Visit Zonaris' [Streamr staking landing page](https://www.zonaris.io/streamr)
+2. Click 'Start a Streamr node'
+3. Enter your name, email address and choose your password. Accept the terms and click 'Get Started'.
+4. Verify your email address
+4. "Choose project": Select Streamr and click 'Next'
+5. Follow Zonaris' instructions for creating one or more new wallets. If you already have one, you can click "Skip step" to go to the "Start Earning" screen where you paste your wallet address or addresses. You can add up to 20 wallets at once, meaning you can bulk deploy up to 20 nodes during onboarding.
+6. Add your billing details and pay. Done!
 
 ### Flux
 
