@@ -106,11 +106,11 @@ export class StreamMessageTranslator {
     }
 
     static toClientProtocol<T>(msg: StreamMessage): OldStreamMessage<T> {
-        let content: string
+        let content: Uint8Array | string
         let messageType: OldStreamMessageType
         if (msg.messageType === StreamMessageType.MESSAGE) {
             messageType = OldStreamMessageType.MESSAGE
-            content = binaryToUtf8(msg.content)
+            content = msg.content
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             messageType = OldStreamMessageType.GROUP_KEY_REQUEST
             content = GroupKeyRequestTranslator.toClientProtocol(GroupKeyRequest.fromBinary(msg.content)).serialize()
