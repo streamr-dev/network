@@ -746,7 +746,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         this.transportLayer = undefined
         this.connectionManager = undefined
-        this.externalApi = undefined
         this.connections.clear()
         this.removeAllListeners()
     }
