@@ -83,7 +83,7 @@ export class GroupKey {
     static decryptRSAEncrypted(encryptedKey: EncryptedGroupKey, rsaPrivateKey: string): GroupKey {
         return new GroupKey(
             encryptedKey.groupKeyId,
-            EncryptionUtil.decryptWithRSAPrivateKey(encryptedKey.data, rsaPrivateKey, true)
+            EncryptionUtil.decryptWithRSAPrivateKey(encryptedKey.data, rsaPrivateKey)
         )
     }
 }
