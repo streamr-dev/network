@@ -3,8 +3,8 @@ import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { ProxyDirection, StreamPermission } from 'streamr-client'
-import { Broker } from '../../../../src/broker'
-import { createClient, createTestStream, startBroker } from '../../../utils'
+import { Broker, createBroker } from '../../../../src/broker'
+import { createClient, createTestStream, formConfig, startBroker } from '../../../utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
 
 describe('OperatorPlugin', () => {
@@ -66,4 +66,19 @@ describe('OperatorPlugin', () => {
         await subscriber.destroy()
         await publisher.destroy()
     }, 30 * 1000)
+
+    it('invalid configuration', async () => {
+        await expect(async () => {
+            const config = formConfig({
+                privateKey: brokerWallet.privateKey,
+                extraPlugins: {
+                    operator: {
+                        operatorContractAddress: operatorContract.address
+                    }
+                }
+            })
+            config.client!.network!.node!.acceptProxyConnections = false
+            await createBroker(config)
+        }).rejects.toThrow('Plugin operator doesn\'t support client config value "false" in network.node.acceptProxyConnections')
+    })
 })
