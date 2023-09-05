@@ -2,7 +2,6 @@ import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
 import { fastWallet } from '@streamr/test-utils'
-import { NodeID } from '@streamr/trackerless-network'
 import { toEthereumAddress } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -48,7 +47,7 @@ describe('Subscriber', () => {
     
             const sub = await subscriber.subscribe(stream.id)
     
-            const publisherNode = environment.startNode(publisherWallet.address as NodeID)
+            const publisherNode = environment.startNode()
             await publisherNode.publish(await createMockMessage({
                 stream,
                 publisher: publisherWallet,
@@ -100,7 +99,7 @@ describe('Subscriber', () => {
     
             const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
     
-            const publisherNode = environment.startNode(publisherWallet.address as NodeID)
+            const publisherNode = environment.startNode()
             await publisherNode.publish(await createMockMessage({
                 stream,
                 publisher: publisherWallet,

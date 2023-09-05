@@ -16,9 +16,9 @@ export class RedundancyFactorParseError extends Error {}
 
 export async function fetchRedundancyFactor({
     operatorContractAddress,
-    nodeWallet
-}: Pick<OperatorServiceConfig, 'operatorContractAddress' | 'nodeWallet'>): Promise<number> {
-    const operator = new Contract(operatorContractAddress, operatorABI, nodeWallet) as unknown as Operator
+    signer
+}: Pick<OperatorServiceConfig, 'operatorContractAddress' | 'signer'>): Promise<number> {
+    const operator = new Contract(operatorContractAddress, operatorABI, signer) as unknown as Operator
     const metadataAsString = await operator.metadata()
 
     if (metadataAsString.length === 0) {

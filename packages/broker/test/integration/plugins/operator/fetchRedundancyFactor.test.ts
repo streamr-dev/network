@@ -24,7 +24,7 @@ describe(fetchRedundancyFactor, () => {
         deployment = await setupOperatorContract()
         serviceConfig = {
             ...deployment.operatorServiceConfig,
-            nodeWallet: Wallet.createRandom().connect(getProvider())
+            signer: Wallet.createRandom().connect(getProvider())
         }
     }, 30 * 1000)
 
