@@ -1,6 +1,15 @@
 import { ContractReceipt } from '@ethersproject/contracts'
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { composeAbortSignals, Logger, merge, randomString, TheGraphClient, toEthereumAddress } from '@streamr/utils'
+import {
+    binaryToHex,
+    composeAbortSignals,
+    hexToBinary,
+    Logger,
+    merge,
+    randomString,
+    TheGraphClient,
+    toEthereumAddress
+} from '@streamr/utils'
 import compact from 'lodash/compact'
 import fetch, { Response } from 'node-fetch'
 import { AbortSignal as FetchAbortSignal } from 'node-fetch/externals'
@@ -11,7 +20,7 @@ import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } fro
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
-import { NodeType, PeerDescriptor, PeerID, PeerIDKey } from '@streamr/dht'
+import { NodeType, PeerDescriptor } from '@streamr/dht'
 import omit from 'lodash/omit'
 
 const logger = new Logger(module)
@@ -118,7 +127,7 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
         ...json,
-        kademliaId: PeerID.fromKey(json.id as PeerIDKey).value,
+        kademliaId: hexToBinary(json.id),
         type,
         websocket: json.websocket
     }
@@ -131,7 +140,7 @@ export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDes
     }
     return {
         ...omit(descriptor, 'kademliaId'),
-        id: PeerID.fromValue(descriptor.kademliaId).toKey(),
+        id: binaryToHex(descriptor.kademliaId),
         type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
     }
 }
