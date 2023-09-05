@@ -8,6 +8,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { getNodeIdFromPeerDescriptor, NodeID } from '../../identifiers'
+import { binaryToHex, hexToBinary } from '@streamr/utils'
 
 interface NeighborUpdateManagerConfig {
     ownNodeId: NodeID
@@ -28,7 +29,7 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
 
     // INetworkRpc server method
     async neighborUpdate(message: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> {
-        if (this.config.targetNeighbors!.hasNodeById(message.senderId as NodeID)) {
+        if (this.config.targetNeighbors!.hasNodeById(binaryToHex(message.senderId) as NodeID)) {
             const newPeerDescriptors = message.neighborDescriptors
                 .filter((peerDescriptor) => {
                     const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
@@ -43,7 +44,7 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
             )
             this.config.neighborFinder!.start()
             const response: NeighborUpdate = {
-                senderId: this.config.ownNodeId,
+                senderId: hexToBinary(this.config.ownNodeId),
                 randomGraphId: this.config.randomGraphId,
                 neighborDescriptors: this.config.targetNeighbors.getNodes().map((neighbor) => neighbor.getPeerDescriptor()),
                 removeMe: false
@@ -51,7 +52,7 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
             return response
         } else {
             const response: NeighborUpdate = {
-                senderId: this.config.ownNodeId,
+                senderId: hexToBinary(this.config.ownNodeId),
                 randomGraphId: this.config.randomGraphId,
                 neighborDescriptors: this.config.targetNeighbors.getNodes().map((neighbor) => neighbor.getPeerDescriptor()),
                 removeMe: true

@@ -2,7 +2,7 @@ import { DhtRpcOptions, PeerDescriptor } from '@streamr/dht'
 import { ITemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { Remote } from '../Remote'
 import { TemporaryConnectionRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { Logger } from '@streamr/utils'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
@@ -15,7 +15,7 @@ export class RemoteTemporaryConnectionRpcServer extends Remote<ITemporaryConnect
             targetDescriptor: this.remotePeerDescriptor,
         }
         const request: TemporaryConnectionRequest = {
-            senderId: getNodeIdFromPeerDescriptor(ownPeerDescriptor)
+            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor))
         }
         try {
             const response = await this.client.openConnection(request, options)
