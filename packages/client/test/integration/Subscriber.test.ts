@@ -2,7 +2,6 @@ import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
 import { fastWallet } from '@streamr/test-utils'
-import { NodeID } from '@streamr/trackerless-network'
 import { toEthereumAddress } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'

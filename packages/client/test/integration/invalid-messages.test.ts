@@ -2,7 +2,6 @@ import 'reflect-metadata'
 
 import { StreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { NodeID } from '@streamr/trackerless-network'
 import { wait } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
