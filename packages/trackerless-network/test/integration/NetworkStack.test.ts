@@ -30,7 +30,7 @@ describe('NetworkStack', () => {
         })
         stack2 = new NetworkStack({
             layer0: {
-                webSocketPort: 32223,
+                websocketPortRange: { min: 32223, max: 32223 },
                 peerIdString: 'network-stack',
                 entryPoints: [epDescriptor],
                 nodeName: 'node2'
