@@ -38,5 +38,6 @@ describe(AnnounceNodeToStreamService, () => {
             msgType: 'heartbeat',
             peerDescriptor: await client.getPeerDescriptor()
         })
+        await anonymousClient.destroy()
     }, TIMEOUT)
 })

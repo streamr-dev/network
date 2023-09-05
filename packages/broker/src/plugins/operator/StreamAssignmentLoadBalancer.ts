@@ -25,7 +25,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
     private readonly maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>
 
     constructor(
-        myNodeId: string,
+        myNodeId: NodeID,
         redundancyFactor: number,
         getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>,
         operatorFleetState: EventEmitter3<OperatorFleetStateEvents>,

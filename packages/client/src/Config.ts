@@ -5,7 +5,7 @@ import type { ConnectionInfo } from '@ethersproject/web'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
 import { LogLevel } from '@streamr/utils'
-import { IceServer } from '@streamr/dht'
+import { IceServer, PortRange } from '@streamr/dht'
 import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
 import { GapFillStrategy } from './subscribe/ordering/GapFiller'
@@ -76,12 +76,12 @@ export interface ControlLayerConfig {
     peerDescriptor?: NetworkPeerDescriptor
 
     /**
-     * The port to use for the client's Network Node WebSocket server.
-     * If not specified, the server will not be started.
+     * The port range used to find a free port for the client's network layer WebSocket server.
+     * If not specified, a server will not be started.
      * The server is used by the network layer to accept incoming connections
      * over the public internet to improve the network node's connectivity.
      */
-    webSocketPort?: number
+    websocketPortRange?: PortRange
 }
 
 export interface NetworkNodeConfig {

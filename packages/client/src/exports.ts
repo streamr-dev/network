@@ -46,7 +46,7 @@ export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
 
 export type { StreamID, StreamPartID } from '@streamr/protocol'
-export { ProxyDirection } from '@streamr/trackerless-network'
+export { NodeID, ProxyDirection } from '@streamr/trackerless-network'
 export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
@@ -65,6 +65,6 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
-export type { IceServer, PeerDescriptor } from '@streamr/dht' 
+export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht' 
 export type { ConnectionInfo } from '@ethersproject/web'
 export type { ExternalProvider } from '@ethersproject/providers'

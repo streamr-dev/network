@@ -27,7 +27,7 @@ export interface NetworkNodeStub {
     publish: (streamMessage: StreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
     getNeighbors: () => string[]
-    getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<string>
+    getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>
     setExtraMetadata: (metadata: Record<string, unknown>) => void
     getPeerDescriptor: () => PeerDescriptor
     getMetricsContext: () => MetricsContext
@@ -198,7 +198,7 @@ export class NetworkNodeFacade {
 
     getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
 
-    async getNodeId(): Promise<string> {
+    async getNodeId(): Promise<NodeID> {
         const node = await this.getNode()
         return node.getNodeId()
     }

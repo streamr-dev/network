@@ -8,10 +8,9 @@ import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/pro
 import range from 'lodash/range'
 import { NodeID } from '@streamr/trackerless-network'
 
-const MY_NODE_ID = 'node0'
-
-const N1 = 'node1' as NodeID
-const N2 = 'node2' as NodeID
+const MY_NODE_ID = '0x0000' as NodeID
+const N1 = '0x1111' as NodeID
+const N2 = '0x2222' as NodeID
 const S1 = toStreamID('S1')
 const S2 = toStreamID('S2')
 const S3 = toStreamID('S3')

@@ -101,11 +101,11 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         await this.subscription?.unsubscribe()
     }
 
-    getLeaderNodeId(): string | undefined {
+    getLeaderNodeId(): NodeID | undefined {
         return min(this.getNodeIds()) // we just need the leader to be consistent
     }
 
-    getNodeIds(): string[] {
+    getNodeIds(): NodeID[] {
         return [...this.latestHeartbeats.keys()]
     }
 
