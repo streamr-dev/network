@@ -101,8 +101,8 @@ export class PublisherKeyExchange {
         requestId: string
     ): Promise<StreamMessage<GroupKeyResponseSerialized>> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {
-            const encryptedGroupKeyHex = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey, true)
-            return new EncryptedGroupKey(key.id, hexToBinary(encryptedGroupKeyHex))
+            const encryptedGroupKey = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey, true)
+            return new EncryptedGroupKey(key.id, encryptedGroupKey)
         }))
         const responseContent = new GroupKeyResponse({
             recipient,
