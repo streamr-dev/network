@@ -31,7 +31,7 @@ const applyPluginClientConfigs = (plugins: Plugin<any>[], clientConfig: StrictCo
             } else {
                 const existingValue = get(clientConfig, item.path)
                 if (!isEqual(item.value, existingValue)) {
-                    throw new Error(`Plugin ${plugin.name} doesn't support client config value ${JSON.stringify(item.value)} in ${item.path}`)
+                    throw new Error(`Plugin ${plugin.name} doesn't support client config value "${existingValue}" in ${item.path}`)
                 }
             }
         })
