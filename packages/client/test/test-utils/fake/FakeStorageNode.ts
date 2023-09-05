@@ -72,6 +72,10 @@ export class FakeStorageNode extends FakeNetworkNode {
         this.chain = chain
     }
 
+    getAddress(): EthereumAddress {
+        return toEthereumAddress(this.wallet.address)
+    }
+
     override async start(): Promise<void> {
         super.start()
         this.server = await startServer((streamPartId: StreamPartID, resendType: ResendType, queryParams: Record<string, any>) => {
@@ -102,13 +106,12 @@ export class FakeStorageNode extends FakeNetworkNode {
             }
         })
         const port = (this.server.address() as AddressInfo).port
-        const address = toEthereumAddress(this.wallet.address)
-        this.chain.storageNodeMetadatas.set(address, {
+        this.chain.storageNodeMetadatas.set(this.getAddress(), {
             http: `http://localhost:${port}`
         })
         const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
-        storageNodeAssignmentStreamPermissions.add(address, StreamPermission.PUBLISH)
-        this.chain.streams.set(formStorageNodeAssignmentStreamId(address), {
+        storageNodeAssignmentStreamPermissions.add(this.getAddress(), StreamPermission.PUBLISH)
+        this.chain.streams.set(formStorageNodeAssignmentStreamId(this.getAddress()), {
             metadata: {
                 partitions: 1
             },
@@ -134,7 +137,7 @@ export class FakeStorageNode extends FakeNetworkNode {
                 })
                 this.subscribe(streamPartId)
                 const assignmentMessage = await createMockMessage({
-                    streamPartId: toStreamPartID(formStorageNodeAssignmentStreamId(this.id), DEFAULT_PARTITION),
+                    streamPartId: toStreamPartID(formStorageNodeAssignmentStreamId(this.getAddress()), DEFAULT_PARTITION),
                     publisher: this.wallet,
                     content: {
                         streamPart: streamPartId,

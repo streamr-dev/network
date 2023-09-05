@@ -52,7 +52,7 @@ describe('gap fill', () => {
 
     it('happy path', async () => {
         const storageNode = await environment.startStorageNode()
-        await stream.addToStorageNode(storageNode.id)
+        await stream.addToStorageNode(storageNode.getAddress())
         const subscriber = environment.createClient({
             gapFillTimeout: 50
         })
@@ -67,7 +67,7 @@ describe('gap fill', () => {
 
     it('failing storage node', async () => {
         const storageNode = await startFailingStorageNode(new Error('expected'), environment)
-        await stream.addToStorageNode(storageNode.id)
+        await stream.addToStorageNode(storageNode.getAddress())
         const subscriber = environment.createClient({
             gapFillTimeout: 50
         })

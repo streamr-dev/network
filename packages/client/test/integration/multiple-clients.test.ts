@@ -50,7 +50,7 @@ describe('PubSub with multiple clients', () => {
         })
         stream = await createTestStream(mainClient, module)
         const storageNode = await environment.startStorageNode()
-        await stream.addToStorageNode(storageNode.id)
+        await stream.addToStorageNode(storageNode.getAddress())
     }, 30 * 1000)
 
     afterEach(async () => {
