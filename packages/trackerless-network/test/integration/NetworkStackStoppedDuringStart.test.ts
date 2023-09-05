@@ -10,7 +10,7 @@ describe('NetworkStack can be stopped during start', () => {
         websocket: { ip: 'localhost', port: 32224 },
     }
     let entryPoint: NetworkStack
-    let peer: NetworkStack
+    let node: NetworkStack
 
     beforeEach(async () => {
         entryPoint = new NetworkStack({
@@ -20,10 +20,10 @@ describe('NetworkStack can be stopped during start', () => {
             },
             networkNode: {}
         })
-        peer = new NetworkStack({
+        node = new NetworkStack({
             layer0: {
                 peerDescriptor: {
-                    kademliaId: PeerID.fromString('peer').value,
+                    kademliaId: PeerID.fromString('node').value,
                     type: NodeType.NODEJS
                 },
                 entryPoints: [epDescriptor]
@@ -38,8 +38,8 @@ describe('NetworkStack can be stopped during start', () => {
     })
 
     it('Can be stopped during start', async () => {
-        setImmediate(() => peer.stop())
-        await peer.start()
+        setImmediate(() => node.stop())
+        await node.start()
     })
 
 })

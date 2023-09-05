@@ -13,7 +13,7 @@ describe('WebSocket', () => {
     const clientWebSocket = new ClientWebSocket()
 
     beforeAll(async () => {
-        await webSocketServer.start(9999)
+        await webSocketServer.start({ min: 9999, max: 9999 })
     })
 
     it('Happy path', (done) => {

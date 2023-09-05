@@ -1,4 +1,4 @@
-import { PeerIDKey } from '@streamr/dht'
+import { NodeID } from '../identifiers'
 import { ProxyDirection, StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 
 export interface IStreamNode {
@@ -9,9 +9,9 @@ export interface IStreamNode {
 
     off(event: 'message', listener: (message: StreamMessage) => void): void
 
-    broadcast(msg: StreamMessage, previousPeer?: string): void
-    hasProxyConnection(peerKey: PeerIDKey, direction: ProxyDirection): boolean
+    broadcast(msg: StreamMessage, previousNode?: NodeID): void
+    hasProxyConnection(nodeId: NodeID, direction: ProxyDirection): boolean
     stop(): void
     start(): Promise<void>
-    getTargetNeighborStringIds(): string[]
+    getTargetNeighborIds(): NodeID[]
 }
