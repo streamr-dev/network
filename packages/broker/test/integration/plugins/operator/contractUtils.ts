@@ -103,7 +103,7 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
     const operatorReceipt = await (await operatorFactory.deployOperator(
         parseEther('1').mul(opts.operatorsCutPercent ?? 0).div(100),
         opts.poolTokenName ?? `Pool-${Date.now()}`,
-        opts.metadata ?? '{}',
+        opts.metadata ?? '',
         [
             chainConfig.contracts.OperatorDefaultDelegationPolicy,
             chainConfig.contracts.OperatorDefaultPoolYieldPolicy,
