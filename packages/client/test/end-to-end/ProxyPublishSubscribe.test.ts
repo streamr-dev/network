@@ -23,8 +23,6 @@ describe('PubSub with proxy connections', () => {
     let proxyPeerKey1: NodeID
     let proxyPeerKey2: NodeID
 
-    const proxyNodeId1 = 'proxy1'
-    const proxyNodeId2 = 'proxy2'
     const proxyNodePort1 = 14231
     const proxyNodePort2 = 14232
 
@@ -36,10 +34,10 @@ describe('PubSub with proxy connections', () => {
         proxyPrivateKey1 = fastPrivateKey()
         proxyPrivateKey2 = fastPrivateKey()
 
-        onewayClient = createTestClient(pubPrivateKey, 'proxiedNode')
+        onewayClient = createTestClient(pubPrivateKey)
 
-        proxyClient1 = await createTestClient(proxyPrivateKey1, proxyNodeId1, proxyNodePort1, true)
-        proxyClient2 = await createTestClient(proxyPrivateKey2, proxyNodeId2, proxyNodePort2, true)
+        proxyClient1 = await createTestClient(proxyPrivateKey1, proxyNodePort1, true)
+        proxyClient2 = await createTestClient(proxyPrivateKey2, proxyNodePort2, true)
         proxyNodeDescriptor1 = await proxyClient1.getPeerDescriptor()
         proxyNodeDescriptor2 = await proxyClient2.getPeerDescriptor()
 
