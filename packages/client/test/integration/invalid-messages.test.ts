@@ -2,7 +2,6 @@ import 'reflect-metadata'
 
 import { StreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { NodeID } from '@streamr/trackerless-network'
 import { wait } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -55,7 +54,7 @@ describe('client behaviour on invalid message', () => {
             streamPartId: toStreamPartID(streamId, 0),
             publisher: publisherWallet
         })
-        const networkNode = environment.startNode(publisherWallet.address as NodeID)
+        const networkNode = environment.startNode()
         await networkNode.publish(msg)
         await wait(PROPAGATION_WAIT_TIME)
         expect(true).toEqual(true) // we never get here if subscriberClient crashes
