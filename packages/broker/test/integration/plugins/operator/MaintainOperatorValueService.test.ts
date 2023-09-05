@@ -39,7 +39,7 @@ describe('MaintainOperatorValueService', () => {
         // 1000 = check every second
         const service = new MaintainOperatorValueService({
             ...operatorServiceConfig,
-            nodeWallet: nodeWallets[0]
+            signer: nodeWallets[0]
         }, 0.5, 1000)
 
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()

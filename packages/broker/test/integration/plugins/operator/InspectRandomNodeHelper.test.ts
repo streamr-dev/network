@@ -38,7 +38,7 @@ describe('InspectRandomNodeHelper', () => {
         const { operatorWallet, operatorContract, operatorServiceConfig } = await setupOperatorContract()
         const inspectRandomNodeHelper = new InspectRandomNodeHelper({
             ...operatorServiceConfig,
-            nodeWallet: undefined as any
+            signer: undefined as any
         })
 
         const sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
@@ -74,7 +74,7 @@ describe('InspectRandomNodeHelper', () => {
 
         const inspectRandomNodeHelper = new InspectRandomNodeHelper({
             ...flagger.operatorServiceConfig,
-            nodeWallet: flagger.nodeWallets[0]
+            signer: flagger.nodeWallets[0]
         })
         await inspectRandomNodeHelper.flagWithMetadata(toEthereumAddress(sponsorship.address), toEthereumAddress(target.operatorContract.address), 2)
 

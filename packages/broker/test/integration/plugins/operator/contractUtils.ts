@@ -39,7 +39,7 @@ export async function setupOperatorContract(
 ): Promise<{
     operatorWallet: Wallet
     operatorContract: Operator
-    operatorServiceConfig: Omit<OperatorServiceConfig, 'nodeWallet'>
+    operatorServiceConfig: Omit<OperatorServiceConfig, 'signer'>
     nodeWallets: Wallet[]
 }> {
     const operatorWallet = await generateWalletWithGasAndTokens({
