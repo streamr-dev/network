@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
-import { CONFIG_TEST } from '../../src/ConfigTest'
+import { fastPrivateKey } from '@streamr/test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
