@@ -1,14 +1,14 @@
 import { Logger } from '@streamr/utils'
-import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
+import { MaintainOperatorPoolValueHelper } from './MaintainOperatorPoolValueHelper'
 
 const logger = new Logger(module)
 
 const ONE_ETHER = 1e18
 
-export const maintainOperatorValue = async (
+export const maintainOperatorPoolValue = async (
     withdrawLimitSafetyFraction: bigint,
     driftLimitFraction: bigint,
-    helper: MaintainOperatorValueHelper
+    helper: MaintainOperatorPoolValueHelper
 ): Promise<void> => {
     logger.info('Check whether it is time to withdraw my earnings')
     const { fraction, sponsorshipAddresses } = await helper.getMyUnwithdrawnEarnings()

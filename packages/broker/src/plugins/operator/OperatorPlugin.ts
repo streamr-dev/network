@@ -8,13 +8,13 @@ import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
 import { AnnounceNodeToStreamService } from './AnnounceNodeToStreamService'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
-import { maintainOperatorValue } from './maintainOperatorValue'
+import { maintainOperatorPoolValue } from './maintainOperatorPoolValue'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
-import { OperatorValueBreachWatcher } from './OperatorValueBreachWatcher'
+import { OperatorPoolValueBreachWatcher } from './OperatorPoolValueBreachWatcher'
 import { OperatorFleetState } from './OperatorFleetState'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
+import { MaintainOperatorPoolValueHelper } from './MaintainOperatorPoolValueHelper'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
@@ -41,7 +41,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private inspectRandomNodeService = new InspectRandomNodeService()
     private voteOnSuspectNodeService?: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
-    private operatorValueBreachWatcher?: OperatorValueBreachWatcher
+    private operatorPoolValueBreachWatcher?: OperatorPoolValueBreachWatcher
     private fleetState?: OperatorFleetState
     private serviceConfig?: OperatorServiceConfig
     private abortController: AbortController = new AbortController()
@@ -69,14 +69,14 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             new AnnounceNodeToContractHelper(this.serviceConfig),
             this.fleetState
         )
-        const maintainOperatorValueHelper = new MaintainOperatorValueHelper(this.serviceConfig)
-        const driftLimitFraction = await maintainOperatorValueHelper.getDriftLimitFraction()
+        const maintainOperatorPoolValueHelper = new MaintainOperatorPoolValueHelper(this.serviceConfig)
+        const driftLimitFraction = await maintainOperatorPoolValueHelper.getDriftLimitFraction()
         await scheduleAtInterval(
-            () => maintainOperatorValue(
+            () => maintainOperatorPoolValue(
                 // TODO maybe we should handle fractions as 0..1 and not 0..ONE_ETHER
                 BigInt(0.5 * ONE_ETHER), // 50%
                 driftLimitFraction,
-                maintainOperatorValueHelper
+                maintainOperatorPoolValueHelper
             ).catch((err) => {
                 logger.error('Encountered error while checking unwithdrawn earnings', { err })
             }),
@@ -84,7 +84,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             true,
             this.abortController.signal
         )
-        this.operatorValueBreachWatcher = new OperatorValueBreachWatcher(this.serviceConfig)
+        this.operatorPoolValueBreachWatcher = new OperatorPoolValueBreachWatcher(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
             this.streamrClient,
             this.serviceConfig
@@ -99,7 +99,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.inspectRandomNodeService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
-        await this.operatorValueBreachWatcher.start()
+        await this.operatorPoolValueBreachWatcher.start()
         await this.fleetState.start()
         this.announceNodeToContractService.start().catch((err) => {
             logger.fatal('Encountered fatal error in announceNodeToContractService', { err })
@@ -112,7 +112,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.announceNodeToStreamService!.stop()
         await this.inspectRandomNodeService.stop()
         await this.voteOnSuspectNodeService!.stop()
-        await this.operatorValueBreachWatcher!.stop()
+        await this.operatorPoolValueBreachWatcher!.stop()
     }
 
     // eslint-disable-next-line class-methods-use-this

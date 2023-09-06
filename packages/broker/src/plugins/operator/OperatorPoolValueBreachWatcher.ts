@@ -1,20 +1,20 @@
 import { EthereumAddress, Logger, scheduleAtInterval } from '@streamr/utils'
-import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
+import { MaintainOperatorPoolValueHelper } from './MaintainOperatorPoolValueHelper'
 import { OperatorServiceConfig } from './OperatorPlugin'
 
 const logger = new Logger(module)
 
 const CHECK_VALUE_INTERVAL = 1000 * 60 * 60 // 1 hour
 
-export class OperatorValueBreachWatcher {
+export class OperatorPoolValueBreachWatcher {
     private driftLimitFractionCached?: bigint
     private readonly abortController: AbortController
     
     // public access modifier for tests 
-    readonly helper: MaintainOperatorValueHelper
+    readonly helper: MaintainOperatorPoolValueHelper
 
     constructor(config: OperatorServiceConfig) {
-        this.helper = new MaintainOperatorValueHelper(config)
+        this.helper = new MaintainOperatorPoolValueHelper(config)
         this.abortController = new AbortController()
     }
 

@@ -3,9 +3,9 @@ import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, waitForCondition } from '@streamr/utils'
 import { createClient, createTestStream } from '../../../utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
-import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
-import { MaintainOperatorValueHelper } from '../../../../src/plugins/operator/MaintainOperatorValueHelper'
-import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
+import { getTotalUnwithdrawnEarnings } from './operatorPoolValueUtils'
+import { MaintainOperatorPoolValueHelper } from '../../../../src/plugins/operator/MaintainOperatorPoolValueHelper'
+import { maintainOperatorPoolValue } from '../../../../src/plugins/operator/maintainOperatorPoolValue'
 
 const logger = new Logger(module)
 
@@ -13,7 +13,7 @@ const STAKE_AMOUNT = 100
 const ONE_ETHER = 1e18
 const SAFETY_FRACTION = 0.5  // 50%
 
-describe('MaintainOperatorValueService', () => {
+describe('maintainOperatorPoolValue', () => {
 
     let streamId: string
 
@@ -36,7 +36,7 @@ describe('MaintainOperatorValueService', () => {
         await sponsor(sponsorer, sponsorship1.address, 250)
         await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
         await stake(operatorContract, sponsorship1.address, STAKE_AMOUNT)
-        const helper = new MaintainOperatorValueHelper({ ...operatorServiceConfig, signer: nodeWallets[0] })
+        const helper = new MaintainOperatorPoolValueHelper({ ...operatorServiceConfig, signer: nodeWallets[0] })
         const driftLimitFraction = await helper.getDriftLimitFraction() // 5% in Wei (see StreamrConfig.sol#poolValueDriftLimitFraction in network-contracts)
         // first we wait until there is enough accumulate earnings
         const driftLimit = STAKE_AMOUNT * Number(driftLimitFraction) / ONE_ETHER
@@ -47,7 +47,7 @@ describe('MaintainOperatorValueService', () => {
         }, 10000, 1000)
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
 
-        await maintainOperatorValue(
+        await maintainOperatorPoolValue(
             BigInt(SAFETY_FRACTION * ONE_ETHER),
             driftLimitFraction,
             helper
