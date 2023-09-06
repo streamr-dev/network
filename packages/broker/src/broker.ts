@@ -4,6 +4,7 @@ import { Server as HttpsServer } from 'https'
 import get from 'lodash/get'
 import has from 'lodash/has'
 import isEqual from 'lodash/isEqual'
+import isString from 'lodash/isString'
 import set from 'lodash/set'
 import StreamrClient from 'streamr-client'
 import { version as CURRENT_VERSION } from '../package.json'
@@ -31,7 +32,8 @@ const applyPluginClientConfigs = (plugins: Plugin<any>[], clientConfig: StrictCo
             } else {
                 const existingValue = get(clientConfig, item.path)
                 if (!isEqual(item.value, existingValue)) {
-                    throw new Error(`Plugin ${plugin.name} doesn't support client config value "${existingValue}" in ${item.path}`)
+                    const formattedValue = isString(existingValue) ? existingValue : `${JSON.stringify(existingValue)}`
+                    throw new Error(`Plugin ${plugin.name} doesn't support client config value "${formattedValue}" in ${item.path}`)
                 }
             }
         })
