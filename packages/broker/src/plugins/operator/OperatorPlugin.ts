@@ -8,9 +8,9 @@ import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
 import { AnnounceNodeToStreamService } from './AnnounceNodeToStreamService'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
-import { MaintainOperatorValueService } from './MaintainOperatorValueService'
+import { MaintainOperatorPoolValueService } from './MaintainOperatorPoolValueService'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
-import { OperatorValueBreachWatcher } from './OperatorValueBreachWatcher'
+import { OperatorPoolValueBreachWatcher } from './OperatorPoolValueBreachWatcher'
 import { OperatorFleetState } from './OperatorFleetState'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
@@ -39,8 +39,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private inspectRandomNodeService = new InspectRandomNodeService()
     private voteOnSuspectNodeService?: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
-    private maintainOperatorValueService?: MaintainOperatorValueService
-    private operatorValueBreachWatcher?: OperatorValueBreachWatcher
+    private maintainOperatorPoolValueService?: MaintainOperatorPoolValueService
+    private operatorPoolValueBreachWatcher?: OperatorPoolValueBreachWatcher
     private fleetState?: OperatorFleetState
     private serviceConfig?: OperatorServiceConfig
 
@@ -67,8 +67,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             new AnnounceNodeToContractHelper(this.serviceConfig),
             this.fleetState
         )
-        this.maintainOperatorValueService = new MaintainOperatorValueService(this.serviceConfig)
-        this.operatorValueBreachWatcher = new OperatorValueBreachWatcher(this.serviceConfig)
+        this.maintainOperatorPoolValueService = new MaintainOperatorPoolValueService(this.serviceConfig)
+        this.operatorPoolValueBreachWatcher = new OperatorPoolValueBreachWatcher(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
             this.streamrClient,
             this.serviceConfig
@@ -82,10 +82,10 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         })
         await this.announceNodeToStreamService.start()
         await this.inspectRandomNodeService.start()
-        await this.maintainOperatorValueService.start()
+        await this.maintainOperatorPoolValueService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
-        await this.operatorValueBreachWatcher.start()
+        await this.operatorPoolValueBreachWatcher.start()
         await this.fleetState.start()
         this.announceNodeToContractService.start().catch((err) => {
             logger.fatal('Encountered fatal error in announceNodeToContractService', { err })
@@ -96,9 +96,9 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     async stop(): Promise<void> {
         await this.announceNodeToStreamService!.stop()
         await this.inspectRandomNodeService.stop()
-        await this.maintainOperatorValueService!.stop()
+        await this.maintainOperatorPoolValueService!.stop()
         await this.voteOnSuspectNodeService!.stop()
-        await this.operatorValueBreachWatcher!.stop()
+        await this.operatorPoolValueBreachWatcher!.stop()
     }
 
     // eslint-disable-next-line class-methods-use-this

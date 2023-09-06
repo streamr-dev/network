@@ -1,5 +1,5 @@
 import { Logger, scheduleAtInterval } from '@streamr/utils'
-import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
+import { MaintainOperatorPoolValueHelper } from './MaintainOperatorPoolValueHelper'
 import { OperatorServiceConfig } from './OperatorPlugin'
 
 const logger = new Logger(module)
@@ -8,10 +8,10 @@ const DEFAULT_CHECK_VALUE_INTERVAL_MS = 1000 * 60 * 60 * 24 // 1 day
 const DEFAULT_WITHDRAW_LIMIT_SAFETY_FRACTION = 0.5 // 50%
 const ONE_ETHER = 1e18
 
-export class MaintainOperatorValueService {
+export class MaintainOperatorPoolValueService {
     private readonly withdrawLimitSafetyFraction: bigint
     private penaltyLimitFraction?: bigint
-    private readonly helper: MaintainOperatorValueHelper
+    private readonly helper: MaintainOperatorPoolValueHelper
     private readonly abortController: AbortController
     private readonly checkIntervalInMs: number
 
@@ -21,7 +21,7 @@ export class MaintainOperatorValueService {
         checkValueIntervalMs = DEFAULT_CHECK_VALUE_INTERVAL_MS
     ) {
         this.withdrawLimitSafetyFraction = BigInt(withdrawLimitSafetyFraction * ONE_ETHER)
-        this.helper = new MaintainOperatorValueHelper(config)
+        this.helper = new MaintainOperatorPoolValueHelper(config)
         this.abortController = new AbortController()
         this.checkIntervalInMs = checkValueIntervalMs
     }

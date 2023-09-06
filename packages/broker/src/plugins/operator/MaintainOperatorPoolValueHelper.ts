@@ -16,7 +16,7 @@ interface UnwithdrawnEarningsData {
     sponsorshipAddresses: EthereumAddress[]
 }
 
-export class MaintainOperatorValueHelper {
+export class MaintainOperatorPoolValueHelper {
     private readonly operator: Operator
     private readonly theGraphClient: TheGraphClient
     private readonly config: OperatorServiceConfig
