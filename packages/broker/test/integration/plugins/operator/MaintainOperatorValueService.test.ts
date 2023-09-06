@@ -28,13 +28,10 @@ describe('MaintainOperatorValueService', () => {
         })
 
         const sponsorer = await generateWalletWithGasAndTokens()
-        await delegate(operatorWallet, operatorContract.address, 200)
         const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
         await sponsor(sponsorer, sponsorship1.address, 250)
+        await delegate(operatorWallet, operatorContract.address, 100)
         await stake(operatorContract, sponsorship1.address, 100)
-        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: parseEther('2'), streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, sponsorship2.address, 250)
-        await stake(operatorContract, sponsorship2.address, 100)
 
         // 1000 = check every second
         const service = new MaintainOperatorValueService({
