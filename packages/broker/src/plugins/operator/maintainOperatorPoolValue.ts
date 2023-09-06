@@ -11,7 +11,7 @@ export const maintainOperatorPoolValue = async (
     helper: MaintainOperatorPoolValueHelper
 ): Promise<void> => {
     logger.info('Check whether it is time to withdraw my earnings')
-    const { fraction, sponsorshipAddresses } = await helper.getMyUnwithdrawnEarnings()
+    const { fraction, sponsorshipAddresses } = await helper.getUnwithdrawnEarnings()
     const safeUnwithdrawnEarningsFraction = driftLimitFraction * withdrawLimitSafetyFraction / BigInt(ONE_ETHER)
     logger.trace(` -> is ${Number(fraction) / ONE_ETHER * 100}% > ${Number(safeUnwithdrawnEarningsFraction) / ONE_ETHER * 100}% ?`)
     if (fraction > safeUnwithdrawnEarningsFraction) {

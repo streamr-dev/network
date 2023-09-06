@@ -80,7 +80,7 @@ export class MaintainOperatorPoolValueHelper {
         return { sumDataWei, fraction, sponsorshipAddresses }
     }
 
-    async getMyUnwithdrawnEarnings(): Promise<UnwithdrawnEarningsData> {
+    async getUnwithdrawnEarnings(): Promise<UnwithdrawnEarningsData> {
         return this.getUnwithdrawnEarningsOf(this.config.operatorContractAddress)
     }
 
