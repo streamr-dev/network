@@ -84,7 +84,7 @@ export class MaintainOperatorValueHelper {
         return this.getUnwithdrawnEarningsOf(this.config.operatorContractAddress)
     }
 
-    async withdrawMyEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
+    async withdrawEarningsFromSponsorshipsToOperatorContract(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
         await (await this.operator.withdrawEarningsFromSponsorships(sponsorshipAddresses)).wait()
     }
 

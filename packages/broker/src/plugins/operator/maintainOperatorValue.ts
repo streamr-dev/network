@@ -16,7 +16,7 @@ export const maintainOperatorValue = async (
     logger.trace(` -> is ${Number(fraction) / ONE_ETHER * 100}% > ${Number(safeUnwithdrawnEarningsFraction) / ONE_ETHER * 100}% ?`)
     if (fraction > safeUnwithdrawnEarningsFraction) {
         logger.info('Withdraw earnings from sponsorships', { sponsorshipAddresses })
-        await helper.withdrawMyEarningsFromSponsorships(sponsorshipAddresses)
+        await helper.withdrawEarningsFromSponsorshipsToOperatorContract(sponsorshipAddresses)
     } else {
         logger.info('Skip withdrawing earnings', { fraction, safeUnwithdrawnEarningsFraction })
     }
