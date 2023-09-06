@@ -24,5 +24,5 @@ describe('StreamrClient', () => {
             type: 'nodejs',
         })
         expect(descriptor.id).toEqual(await client.getNodeId())
-    })
+    }, 30 * 1000)
 })

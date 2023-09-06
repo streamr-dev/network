@@ -25,6 +25,12 @@ describe('UUID', () => {
         expect(uuid.toString() === stringId).toEqual(true)
     })
 
+    it('toHex', () => {
+        const stringId = v4()
+        const uuid = new UUID(stringId)
+        expect(uuid.toHex() === stringId.replaceAll('-', '')).toEqual(true)
+    })
+
     it('Throws if incorrect string is given as uuid string parameter', () => {
         expect(()=> {new UUID('äå%')}).toThrow(TypeError)
     })
