@@ -24,6 +24,12 @@ describe('maintainOperatorPoolValue', () => {
         await client.destroy()
     }, 60 * 1000)
 
+    /*
+     * We stake 100 tokens and start a sponsorship which generates 1 token of earnings per second. Then we wait
+     * until we've earned enough tokens so that the pool value has drifted at least for 2.5 tokens.
+     * The default drift limit is 5 token (5% of 100 staked  tokens, see StreamrConfig.sol#poolValueDriftLimitFraction
+     * in network-contracts), and safe limit of 50% of that, i.e. 2.5 tokens.
+     */
     it('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
         const { operatorWallet, operatorContract, operatorServiceConfig, nodeWallets } = await setupOperatorContract({
             nodeCount: 1,
@@ -37,8 +43,7 @@ describe('maintainOperatorPoolValue', () => {
         await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
         await stake(operatorContract, sponsorship1.address, STAKE_AMOUNT)
         const helper = new MaintainOperatorPoolValueHelper({ ...operatorServiceConfig, signer: nodeWallets[0] })
-        const driftLimitFraction = await helper.getDriftLimitFraction() // 5% in Wei (see StreamrConfig.sol#poolValueDriftLimitFraction in network-contracts)
-        // first we wait until there is enough accumulate earnings
+        const driftLimitFraction = await helper.getDriftLimitFraction()
         const driftLimit = STAKE_AMOUNT * Number(driftLimitFraction) / ONE_ETHER
         const safeDriftLimit = driftLimit * SAFETY_FRACTION
         await waitForCondition(async () => {
