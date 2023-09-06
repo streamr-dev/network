@@ -70,12 +70,12 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             this.fleetState
         )
         const maintainOperatorValueHelper = new MaintainOperatorValueHelper(this.serviceConfig)
-        const penaltyLimitFraction = await maintainOperatorValueHelper.getDriftLimitFraction()
+        const driftLimitFraction = await maintainOperatorValueHelper.getDriftLimitFraction()
         await scheduleAtInterval(
             () => maintainOperatorValue(
                 // TODO maybe we should handle fractions as 0..1 and not 0..ONE_ETHER
                 BigInt(0.5 * ONE_ETHER), // 50%
-                penaltyLimitFraction,
+                driftLimitFraction,
                 maintainOperatorValueHelper
             ).catch((err) => {
                 logger.error('Encountered error while checking unwithdrawn earnings', { err })
