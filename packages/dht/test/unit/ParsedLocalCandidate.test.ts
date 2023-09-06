@@ -1,4 +1,4 @@
-import { CandidateType, ParsedLocalCandidate } from "../../src/connection/WebRTC/ParsedLocalCandidate"
+import { CandidateType, ParsedLocalCandidate } from '../../src/connection/WebRTC/ParsedLocalCandidate'
 
 describe('ParsedLocalCandidate', () => {
 
