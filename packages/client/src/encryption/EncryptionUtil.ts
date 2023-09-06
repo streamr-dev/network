@@ -19,16 +19,12 @@ export class EncryptionUtil {
         }
     }
 
-    /**
-     * Returns a Buffer
-     */
     static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike): Buffer {
         this.validateRSAPublicKey(publicKey)
         const ciphertextBuffer = crypto.publicEncrypt(publicKey, plaintextBuffer)
         return ciphertextBuffer
     }
 
-    // Returns a Buffer
     static decryptWithRSAPrivateKey(ciphertext: Uint8Array, privateKey: crypto.KeyLike): Buffer {
         return crypto.privateDecrypt(privateKey, ciphertext)
     }
