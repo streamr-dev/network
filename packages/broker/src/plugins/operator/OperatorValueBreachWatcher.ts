@@ -7,7 +7,7 @@ const logger = new Logger(module)
 const CHECK_VALUE_INTERVAL = 1000 * 60 * 60 // 1 hour
 
 export class OperatorValueBreachWatcher {
-    private penaltyLimitFractionCached?: bigint
+    private driftLimitFractionCached?: bigint
     private readonly abortController: AbortController
     
     // public access modifier for tests 
@@ -41,7 +41,7 @@ export class OperatorValueBreachWatcher {
 
     private async checkUnwithdrawnEarningsOf(targetOperatorAddress: EthereumAddress): Promise<void> {
         const { fraction, sponsorshipAddresses } = await this.helper.getUnwithdrawnEarningsOf(targetOperatorAddress)
-        const limit = await this.getPenaltyLimitFraction()
+        const limit = await this.getDriftLimitFraction()
         logger.trace(` -> is ${fraction} > ${limit}?`)
         if (fraction > limit) {
             logger.info('Withdraw earnings from sponsorships (target operator value in breach)',
@@ -50,11 +50,11 @@ export class OperatorValueBreachWatcher {
         }
     }
 
-    private async getPenaltyLimitFraction(): Promise<bigint> {
-        if (this.penaltyLimitFractionCached === undefined) {
-            this.penaltyLimitFractionCached = await this.helper.getPenaltyLimitFraction()
+    private async getDriftLimitFraction(): Promise<bigint> {
+        if (this.driftLimitFractionCached === undefined) {
+            this.driftLimitFractionCached = await this.helper.getDriftLimitFraction()
         }
-        return this.penaltyLimitFractionCached
+        return this.driftLimitFractionCached
     }
 
     async stop(): Promise<void> {

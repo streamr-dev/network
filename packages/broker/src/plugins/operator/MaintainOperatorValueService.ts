@@ -10,7 +10,7 @@ const ONE_ETHER = 1e18
 
 export class MaintainOperatorValueService {
     private readonly withdrawLimitSafetyFraction: bigint
-    private penaltyLimitFraction?: bigint
+    private driftLimitFraction?: bigint
     private readonly helper: MaintainOperatorValueHelper
     private readonly abortController: AbortController
     private readonly checkIntervalInMs: number
@@ -27,7 +27,7 @@ export class MaintainOperatorValueService {
     }
 
     async start(): Promise<void> {
-        this.penaltyLimitFraction = await this.helper.getPenaltyLimitFraction()
+        this.driftLimitFraction = await this.helper.getDriftLimitFraction()
 
         await scheduleAtInterval(
             () => this.checkMyUnwithdrawnEarnings().catch((err) => {
@@ -42,7 +42,7 @@ export class MaintainOperatorValueService {
     private async checkMyUnwithdrawnEarnings(): Promise<void> {
         logger.info('Check whether it is time to withdraw my earnings')
         const { fraction, sponsorshipAddresses } = await this.helper.getMyUnwithdrawnEarnings()
-        const safeUnwithdrawnEarningsFraction = this.penaltyLimitFraction! * this.withdrawLimitSafetyFraction / BigInt(ONE_ETHER)
+        const safeUnwithdrawnEarningsFraction = this.driftLimitFraction! * this.withdrawLimitSafetyFraction / BigInt(ONE_ETHER)
         logger.trace(` -> is ${Number(fraction) / ONE_ETHER * 100}% > ${Number(safeUnwithdrawnEarningsFraction) / ONE_ETHER * 100}% ?`)
         if (fraction > safeUnwithdrawnEarningsFraction) {
             logger.info('Withdraw earnings from sponsorships', { sponsorshipAddresses })
