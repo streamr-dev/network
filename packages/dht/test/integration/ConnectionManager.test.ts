@@ -335,5 +335,7 @@ describe('ConnectionManager', () => {
         await expect(connectionManager1.send(msg))
             .rejects
             .toThrow('Cannot send to self')
+        
+        await connectionManager1.stop()
     })
 })
