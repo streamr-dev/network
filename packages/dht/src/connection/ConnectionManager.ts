@@ -318,7 +318,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
 
         const peerDescriptor = message.targetDescriptor!
-        if (isSamePeerDescriptor(peerDescriptor, this.ownPeerDescriptor!)) {
+        if (this.isConnectionToSelf(peerDescriptor)) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
         }
         logger.trace(`Sending message to: ${peerDescriptor.kademliaId.toString()}`)
@@ -339,6 +339,16 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.metrics.sendBytesPerSecond.record(binary.byteLength)
         this.metrics.sendMessagesPerSecond.record(1)
         return connection!.send(binary, doNotConnect)
+    }
+
+    private isConnectionToSelf(peerDescriptor: PeerDescriptor): boolean {
+        if (peerDescriptor.websocket && this.ownPeerDescriptor!.websocket) {
+            const isOwnWebSocketServer = (peerDescriptor.websocket.port === this.ownPeerDescriptor!.websocket!.port 
+                && peerDescriptor.websocket.ip === this.ownPeerDescriptor!.websocket.ip)
+            return isSamePeerDescriptor(peerDescriptor, this.ownPeerDescriptor!) || isOwnWebSocketServer
+        } else {
+            return isSamePeerDescriptor(peerDescriptor, this.ownPeerDescriptor!)
+        }
     }
 
     private createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
