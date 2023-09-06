@@ -5,8 +5,12 @@ import { MaintainOperatorValueService } from '../../../../src/plugins/operator/M
 import { createClient, createTestStream } from '../../../utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
 import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
+import { MaintainOperatorValueHelper } from '../../../../src/plugins/operator/MaintainOperatorValueHelper'
+import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
 
 const logger = new Logger(module)
+
+const ONE_ETHER = 1e18
 
 describe('MaintainOperatorValueService', () => {
 
@@ -26,30 +30,24 @@ describe('MaintainOperatorValueService', () => {
                 operatorsCutPercent: 10
             }
         })
-
         const sponsorer = await generateWalletWithGasAndTokens()
         const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
         await sponsor(sponsorer, sponsorship1.address, 250)
         await delegate(operatorWallet, operatorContract.address, 100)
         await stake(operatorContract, sponsorship1.address, 100)
-
-        // 1000 = check every second
-        const service = new MaintainOperatorValueService({
-            ...operatorServiceConfig,
-            signer: nodeWallets[0]
-        }, 0.5, 1000)
-
+        // first we wait until there is enough accumulate earnings (that must be < safe threshold),
+        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > parseEther('3').toBigInt(), 10000, 1000)
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
 
-        await service.start()
-
-        // wait until we see the withdraw happened: first we go above a sum (that must be < safe threshold), then below
-        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > parseEther('3').toBigInt(), 10000, 1000)
+        const helper = new MaintainOperatorValueHelper({ ...operatorServiceConfig, signer: nodeWallets[0] }) 
+        await maintainOperatorValue(
+            BigInt(0.5 * ONE_ETHER), // 50%
+            await helper.getDriftLimitFraction(),
+            helper
+        )
+        // wait until we see the withdraw happened
         await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) < parseEther('3').toBigInt(), 10000, 1000)
-
         const poolValueAfterWithdraw = await operatorContract.getApproximatePoolValue()
         expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
-
-        await service.stop()
     }, 60 * 1000)
 })
