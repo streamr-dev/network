@@ -161,6 +161,10 @@
                         "webrtcDatachannelBufferThresholdHigh": {
                             "type": "number",
                             "default": 131072
+                        },
+                        "externalIp": {
+                            "type": "string",
+                            "format": "ipv4"
                         }
                     },
                     "default": {}

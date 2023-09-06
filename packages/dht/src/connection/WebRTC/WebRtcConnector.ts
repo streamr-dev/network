@@ -24,6 +24,7 @@ import {
     peerIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
+import { CandidateType, ParsedLocalCandidate } from './ParsedLocalCandidate'
 
 const logger = new Logger(module)
 
@@ -35,6 +36,7 @@ export interface WebRtcConnectorConfig {
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
     connectionTimeout?: number
+    externalIp?: string
 }
 
 export interface IceServer {
@@ -128,7 +130,15 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         )
 
         connection.on('localCandidate', (candidate: string, mid: string) => {
-            remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
+            const parsedCandidate = new ParsedLocalCandidate(candidate)
+            if (this.config.externalIp && parsedCandidate.getType() === CandidateType.HOST) {
+                parsedCandidate.setIp(this.config.externalIp)
+                const injectedCandidate = parsedCandidate.toString()
+                logger.error(`onLocalCandidate injected external ip ${injectedCandidate} ${mid}`)
+                remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, injectedCandidate, mid, connection.connectionId.toString())
+            } else {
+                remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
+            }
         })
 
         if (offering) {

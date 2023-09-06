@@ -81,6 +81,7 @@ export interface DhtNodeOptions {
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
     maxConnections?: number
+    externalIp?: string
 }
 
 export class DhtNodeConfig {
@@ -110,6 +111,7 @@ export class DhtNodeConfig {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    externalIp?: string
 
     constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
@@ -206,7 +208,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 nodeName: this.getNodeName(),
-                maxConnections: this.config.maxConnections
+                maxConnections: this.config.maxConnections,
+                externalIp: this.config.externalIp
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
