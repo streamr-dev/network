@@ -1,7 +1,6 @@
 import { parseEther } from '@ethersproject/units'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, waitForCondition } from '@streamr/utils'
-import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
 import { createClient, createTestStream } from '../../../utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
 import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
@@ -10,7 +9,9 @@ import { maintainOperatorValue } from '../../../../src/plugins/operator/maintain
 
 const logger = new Logger(module)
 
+const STAKE_AMOUNT = 100
 const ONE_ETHER = 1e18
+const SAFETY_FRACTION = 0.5  // 50%
 
 describe('MaintainOperatorValueService', () => {
 
@@ -33,20 +34,24 @@ describe('MaintainOperatorValueService', () => {
         const sponsorer = await generateWalletWithGasAndTokens()
         const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
         await sponsor(sponsorer, sponsorship1.address, 250)
-        await delegate(operatorWallet, operatorContract.address, 100)
-        await stake(operatorContract, sponsorship1.address, 100)
-        // first we wait until there is enough accumulate earnings (that must be < safe threshold),
-        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > parseEther('3').toBigInt(), 10000, 1000)
+        await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
+        await stake(operatorContract, sponsorship1.address, STAKE_AMOUNT)
+        const helper = new MaintainOperatorValueHelper({ ...operatorServiceConfig, signer: nodeWallets[0] })
+        const driftLimitFraction = await helper.getDriftLimitFraction() // 5% in Wei (see StreamrConfig.sol#poolValueDriftLimitFraction in network-contracts)
+        // first we wait until there is enough accumulate earnings
+        const driftLimit = STAKE_AMOUNT * Number(driftLimitFraction) / ONE_ETHER
+        const safeDriftLimit = driftLimit * SAFETY_FRACTION
+        await waitForCondition(async () => {
+            const unwithdrawnEarnings = Number(await getTotalUnwithdrawnEarnings(operatorContract)) / ONE_ETHER
+            return unwithdrawnEarnings > safeDriftLimit
+        }, 10000, 1000)
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
 
-        const helper = new MaintainOperatorValueHelper({ ...operatorServiceConfig, signer: nodeWallets[0] }) 
         await maintainOperatorValue(
-            BigInt(0.5 * ONE_ETHER), // 50%
-            await helper.getDriftLimitFraction(),
+            BigInt(SAFETY_FRACTION * ONE_ETHER),
+            driftLimitFraction,
             helper
         )
-        // wait until we see the withdraw happened
-        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) < parseEther('3').toBigInt(), 10000, 1000)
         const poolValueAfterWithdraw = await operatorContract.getApproximatePoolValue()
         expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
     }, 60 * 1000)
