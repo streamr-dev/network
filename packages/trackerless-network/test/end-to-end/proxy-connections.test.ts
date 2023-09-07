@@ -205,7 +205,7 @@ describe('Proxy connections', () => {
         await waitForCondition(() => 
             proxiedNode.hasProxyConnection(streamPartId, getNodeIdFromPeerDescriptor(proxyNodeDescriptor1), ProxyDirection.SUBSCRIBE)
         , 25000)
-        expect(proxyNode1.hasProxyConnection(streamPartId, proxiedPeerId.toKey() as unknown as NodeID, ProxyDirection.SUBSCRIBE)).toBe(false)
+        expect(proxyNode1.hasProxyConnection(streamPartId, proxiedPeerId.toKey() as unknown as NodeID, ProxyDirection.SUBSCRIBE)).toBe(true)
 
     }, 30000)
 

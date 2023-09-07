@@ -61,6 +61,7 @@ interface StreamEntryPointDiscoveryConfig {
     getEntryPointDataViaNode: (key: Uint8Array, peer: PeerDescriptor) => Promise<DataEntry[]>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
     deleteEntryPointData: (key: Uint8Array) => Promise<void>
+    networkSplitAvoidanceLimit: number
     cacheInterval?: number
 }
 
@@ -196,8 +197,8 @@ export class StreamEntryPointDiscovery {
             if (this.config.streams.has(streamPartId)) {
                 const stream = this.config.streams.get(streamPartId)
                 const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartId)
-                await stream!.layer1!.joinDht(rediscoveredEntrypoints, false)
-                if (stream!.layer1!.getBucketSize() < 4) {
+                await stream!.layer1!.joinDht(rediscoveredEntrypoints, false, false)
+                if (stream!.layer1!.getBucketSize() < this.config.networkSplitAvoidanceLimit) {
                     throw new Error(`Network split is still possible`)
                 }
             }
