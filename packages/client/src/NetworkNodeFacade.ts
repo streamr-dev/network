@@ -3,12 +3,12 @@
  */
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NetworkNode, NetworkOptions, ProxyDirection, UserID, NodeID } from '@streamr/trackerless-network'
-import { MetricsContext } from '@streamr/utils'
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { NetworkNode, NetworkOptions, NodeID, ProxyDirection } from '@streamr/trackerless-network'
+import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
-import { ConfigInjectionToken, StrictStreamrClientConfig, NetworkPeerDescriptor } from './Config'
+import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { pOnce } from './utils/promises'
 import { peerDescriptorTranslator } from './utils/utils'
@@ -44,7 +44,7 @@ export interface NetworkNodeStub {
         streamPartId: StreamPartID,
         peerDescriptors: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: UserID,
+        userId: EthereumAddress,
         connectionCount?: number
     ) => Promise<void>
     setStreamPartEntryPoints: (streamPartId: StreamPartID, peerDescriptors: PeerDescriptor[]) => void

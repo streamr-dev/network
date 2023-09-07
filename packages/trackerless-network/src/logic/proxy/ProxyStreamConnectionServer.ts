@@ -6,15 +6,15 @@ import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { EventEmitter } from 'eventemitter3'
-import { Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
-import { NodeID, UserID } from '../../identifiers'
+import { NodeID } from '../../identifiers'
 
 const logger = new Logger(module)
 
 interface ProxyConnection {
     direction: ProxyDirection // Direction is from the client's point of view
-    userId: UserID
+    userId: EthereumAddress
     remote: RemoteRandomGraphNode
 }
 
@@ -70,7 +70,7 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
     }
 
-    public getNodeIdsForUserId(userId: UserID): NodeID[] {
+    public getNodeIdsForUserId(userId: EthereumAddress): NodeID[] {
         return Array.from(this.connections.keys()).filter((nodeId) => this.connections.get(nodeId)!.userId === userId)
     }
 

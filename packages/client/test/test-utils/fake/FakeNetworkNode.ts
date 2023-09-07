@@ -1,7 +1,7 @@
 import { PeerDescriptor } from '@streamr/dht'
 import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NodeID, UserID } from '@streamr/trackerless-network'
-import { MetricsContext, binaryToHex } from '@streamr/utils'
+import { NodeID } from '@streamr/trackerless-network'
+import { EthereumAddress, MetricsContext, binaryToHex } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
 import { Lifecycle, scoped } from 'tsyringe'
@@ -130,7 +130,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         _streamPartId: StreamPartID,
         _peerDescriptors: PeerDescriptor[],
         _direction: ProxyDirection,
-        _userId: UserID,
+        _userId: EthereumAddress,
         _targetCount?: number
     ): Promise<void> {
         throw new Error('not implemented')
