@@ -8,7 +8,7 @@ import { getTotalUnwithdrawnEarnings } from './operatorPoolValueUtils'
 
 const STAKE_AMOUNT = 100
 const ONE_ETHER = 1e18
-const SAFETY_FRACTION = 0.6
+const SAFETY_FRACTION = 0.7
 
 it('simple test', async () => {
     const client = createClient(await fetchPrivateKeyWithGas())
@@ -29,6 +29,7 @@ it('simple test', async () => {
     const driftLimitFraction = await helper.getDriftLimitFraction()
     const driftLimit = STAKE_AMOUNT * Number(driftLimitFraction) / ONE_ETHER
     const safeDriftLimit = driftLimit * SAFETY_FRACTION
+    console.log('Safety fraction ' + SAFETY_FRACTION)
     console.log('Poll for earnings')
     await waitForCondition(async () => {
         const unwithdrawnEarnings = Number(await getTotalUnwithdrawnEarnings(operatorContract)) / ONE_ETHER
