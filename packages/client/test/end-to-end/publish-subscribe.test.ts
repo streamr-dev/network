@@ -7,8 +7,9 @@ import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { peerDescriptorTranslator } from '../../src/utils/utils'
 import { createTestStream, createTestClient } from '../test-utils/utils'
-import { waitForCondition } from '@streamr/utils'
+import { randomString, waitForCondition } from '@streamr/utils'
 import { NetworkNode } from '@streamr/trackerless-network'
+import random from 'lodash/random'
 
 const TIMEOUT = 30 * 1000
 
@@ -70,8 +71,8 @@ describe('publish-subscribe', () => {
     })
 
     beforeEach(async () => {
-        publisherClient = createTestClient(publisherPk, 'e2e-pub-sub-publisher', 15656)
-        subscriberClient = createTestClient(subscriberWallet.privateKey, 'e2e-pub-sub-subscriber', 15657)
+        publisherClient = createTestClient(publisherPk, randomString(16), random(15000, 16000))
+        subscriberClient = createTestClient(subscriberWallet.privateKey, randomString(16), random(16001, 17001))
     }, TIMEOUT)
 
     afterEach(async () => {
