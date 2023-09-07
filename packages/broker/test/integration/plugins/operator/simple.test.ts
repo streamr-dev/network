@@ -12,6 +12,8 @@ const SAFETY_FRACTION = 0.5  // 50%
 
 const logger = new Logger(module)
 
+const failure = true
+
 it('simple test', async () => {
     const client = createClient(await fetchPrivateKeyWithGas())
     const streamId = (await createTestStream(client, module)).id
@@ -32,16 +34,20 @@ it('simple test', async () => {
     const driftLimit = STAKE_AMOUNT * Number(driftLimitFraction) / ONE_ETHER
     const safeDriftLimit = driftLimit * SAFETY_FRACTION
     console.log('Poll for earnings')
-    await waitForCondition(async () => {
-        const unwithdrawnEarnings = Number(await getTotalUnwithdrawnEarnings(operatorContract)) / ONE_ETHER
-        console.log('Earnings: ' + unwithdrawnEarnings)
-        return unwithdrawnEarnings > safeDriftLimit
-    }, 10000, 1000)
-    /*await waitForCondition(async () => {
-        const earnings = Number(await operatorContract.getEarningsFromSponsorship(sponsorship.address)) / ONE_ETHER
-        console.log('Earnings: ' + earnings)
-        return earnings > 5
-    }, 10000, 1000)*/
+    if (failure === true) {
+        await waitForCondition(async () => {
+            const unwithdrawnEarnings = Number(await getTotalUnwithdrawnEarnings(operatorContract)) / ONE_ETHER
+            console.log('Earnings: ' + unwithdrawnEarnings)
+            return unwithdrawnEarnings > safeDriftLimit
+        }, 10000, 1000)
+    } else {
+        await waitForCondition(async () => {
+            const earnings = Number(await operatorContract.getEarningsFromSponsorship(sponsorship.address)) / ONE_ETHER
+            console.log('Earnings: ' + earnings)
+            return earnings > 5
+        }, 10000, 1000)
+    }
+
 
     console.log('Withdraw')
     await (await operatorContract.connect(nodeWallets[0]).withdrawEarningsFromSponsorships([sponsorship.address])).wait()
