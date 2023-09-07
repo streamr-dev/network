@@ -38,10 +38,10 @@ describe('maintainOperatorPoolValue', () => {
             }
         })
         const sponsorer = await generateWalletWithGasAndTokens()
-        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, sponsorship1.address, 250)
+        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, sponsorship.address, 250)
         await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
-        await stake(operatorContract, sponsorship1.address, STAKE_AMOUNT)
+        await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
         const helper = new MaintainOperatorPoolValueHelper({ ...operatorServiceConfig, signer: nodeWallets[0] })
         const driftLimitFraction = await helper.getDriftLimitFraction()
         const driftLimit = STAKE_AMOUNT * Number(driftLimitFraction) / ONE_ETHER
