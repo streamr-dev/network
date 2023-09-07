@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { parseEther } from 'ethers/lib/utils'
+import { formatEther, parseEther } from 'ethers/lib/utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
 import { createClient, createTestStream } from '../../../utils'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
@@ -31,8 +31,8 @@ it('simple test', async () => {
     const cut = await operatorContract.operatorsCutFraction()
     const cfg = new Contract(CHAIN_CONFIG.dev2.contracts.StreamrConfig, streamrConfigABI).connect(operatorWallet) as StreamrConfig
     const penaltyFraction = await cfg.poolValueDriftPenaltyFraction()
-    console.log('Cut: ' + cut)
-    console.log('Penalty fraction: ' + penaltyFraction)
+    console.log('Cut: ' + formatEther(cut))
+    console.log('Penalty fraction: ' + formatEther(penaltyFraction))
     
     console.log('Min earnings ' + MIN_EARNINGS)
     console.log('Poll for earnings')
