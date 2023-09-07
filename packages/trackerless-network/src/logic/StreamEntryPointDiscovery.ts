@@ -102,14 +102,14 @@ export class StreamEntryPointDiscovery {
         }
     }
 
-    private async discoverEntryPoints(streamPartId: StreamPartID, forwardingPeer?: PeerDescriptor): Promise<PeerDescriptor[]> {
+    private async discoverEntryPoints(streamPartId: StreamPartID, forwardingNode?: PeerDescriptor): Promise<PeerDescriptor[]> {
         const dataKey = streamPartIdToDataKey(streamPartId)
-        return forwardingPeer ? 
-            this.queryEntryPointsViaPeer(dataKey, forwardingPeer) : await this.queryEntrypoints(dataKey)
+        return forwardingNode ? 
+            this.queryEntryPointsViaNode(dataKey, forwardingNode) : await this.queryEntrypoints(dataKey)
     }
 
     private async queryEntrypoints(key: Uint8Array): Promise<PeerDescriptor[]> {
-        logger.trace(`Finding data from dht peer ${this.config.ownPeerDescriptor!.nodeName}`)
+        logger.trace(`Finding data from dht node ${this.config.ownPeerDescriptor!.nodeName}`)
         try {
             const results = await this.config.getEntryPointData(key)
             if (results.dataEntries) {
@@ -122,10 +122,10 @@ export class StreamEntryPointDiscovery {
         }
     }
 
-    private async queryEntryPointsViaPeer(key: Uint8Array, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
-        logger.trace(`Finding data via peer ${this.config.ownPeerDescriptor!.nodeName}`)
+    private async queryEntryPointsViaNode(key: Uint8Array, node: PeerDescriptor): Promise<PeerDescriptor[]> {
+        logger.trace(`Finding data via node ${this.config.ownPeerDescriptor!.nodeName}`)
         try {
-            const results = await this.config.getEntryPointDataViaNode(key, peer)
+            const results = await this.config.getEntryPointDataViaNode(key, node)
             if (results) {
                 return parseEntryPointData(results)
             } else {
