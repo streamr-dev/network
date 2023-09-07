@@ -6,9 +6,9 @@ import { wait, waitForCondition } from '@streamr/utils'
 import { MaintainOperatorPoolValueHelper } from '../../../../src/plugins/operator/MaintainOperatorPoolValueHelper'
 import { getTotalUnwithdrawnEarnings } from './operatorPoolValueUtils'
 
-const STAKE_AMOUNT = 100
+const STAKE_AMOUNT = 1000
 const ONE_ETHER = 1e18
-const SAFETY_FRACTION = 0.6
+const SAFETY_FRACTION = 0.5
 
 it('simple test', async () => {
     const client = createClient(await fetchPrivateKeyWithGas())
@@ -21,8 +21,8 @@ it('simple test', async () => {
         }
     })
     const sponsorer = await generateWalletWithGasAndTokens()
-    const sponsorship = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
-    await sponsor(sponsorer, sponsorship.address, 250)
+    const sponsorship = await deploySponsorshipContract({ earningsPerSecond: parseEther('10'), streamId, deployer: operatorWallet })
+    await sponsor(sponsorer, sponsorship.address, 2500)
     await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
     await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
     const helper = new MaintainOperatorPoolValueHelper({ ...operatorServiceConfig, signer: nodeWallets[0] })
