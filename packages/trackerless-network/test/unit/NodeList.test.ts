@@ -11,7 +11,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { expect } from 'expect'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { createRandomNodeId } from '../utils/utils'
-import { binaryToHex } from '@streamr/utils'
+import { binaryToHex, hexToBinary } from '@streamr/utils'
 
 describe('NodeList', () => {
 

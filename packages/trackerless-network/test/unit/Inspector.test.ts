@@ -3,7 +3,7 @@ import { Inspector } from '../../src/logic/inspect/Inspector'
 import { createRandomNodeId, mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
 import { hexToBinary, utf8ToBinary } from '@streamr/utils'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('Inspector', () => {
     

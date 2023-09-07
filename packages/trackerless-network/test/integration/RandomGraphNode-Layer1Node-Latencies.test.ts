@@ -18,7 +18,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         type: 0
     }
 
-    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
+    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => {
         return {
             kademliaId: hexToBinary(createRandomNodeId()),
             type: 0

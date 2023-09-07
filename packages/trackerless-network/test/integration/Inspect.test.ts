@@ -53,7 +53,7 @@ describe('inspect', () => {
         inspectorNode = await initiateNode(inspectorPeerDescriptor, simulator)
 
         inspectedNodes = []
-        await Promise.all(range(inspectedNodeCount).map(async (i) => {
+        await Promise.all(range(inspectedNodeCount).map(async () => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: hexToBinary(createRandomNodeId()),
                 type: NodeType.NODEJS

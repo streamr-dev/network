@@ -39,7 +39,7 @@ describe('Full node network with WebRTC connections', () => {
         entryPoint.getStreamrNode()!.setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
         await entryPoint.getStreamrNode()!.joinStream(randomGraphId)
 
-        await Promise.all(range(NUM_OF_NODES).map(async (i) => {
+        await Promise.all(range(NUM_OF_NODES).map(async () => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: hexToBinary(createRandomNodeId()),
                 type: NodeType.NODEJS,
