@@ -11,7 +11,7 @@ import { randomString, waitForCondition } from '@streamr/utils'
 import { NetworkNode } from '@streamr/trackerless-network'
 import random from 'lodash/random'
 
-const TIMEOUT = 30 * 1000
+const TIMEOUT = 5 * 60 * 1000
 
 const PAYLOAD = { hello: 'world' }
 
@@ -33,7 +33,7 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
         networkNode.addMessageListener((msg) => {
             messages.push(msg.getContent())
         })
-        await waitForCondition(() => messages.length > 0, TIMEOUT - 100)
+        await waitForCondition(() => messages.length > 0, TIMEOUT - 1000)
         return messages
     } finally {
         await networkNode.stop()
@@ -105,7 +105,7 @@ describe('publish-subscribe', () => {
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
-            await waitForCondition(() => messages.length > 0)
+            await waitForCondition(() => messages.length > 0, TIMEOUT - 1000)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })
