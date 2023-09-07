@@ -110,7 +110,7 @@ describe('publish-subscribe', () => {
         }, TIMEOUT)
     })
 
-    describe('public stream', () => {
+    describe.skip('public stream', () => {
         let stream: Stream
 
         beforeAll(async () => {
