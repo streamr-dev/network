@@ -1,4 +1,4 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, NodeType, PeerID } from '@streamr/dht'
+import { ConnectionManager, DhtNode, PeerDescriptor, NodeType } from '@streamr/dht'
 import { Event as StreamrNodeEvent, StreamrNode } from '../src/logic/StreamrNode'
 import {
     ContentMessage,
@@ -7,7 +7,7 @@ import {
     StreamMessageType
 } from '../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { program } from 'commander'
-import { hexToBinary } from '@streamr/utils'
+import { binaryToHex, hexToBinary } from '@streamr/utils'
 
 program
     .option('--id <id>', 'Ethereum address / node id', 'full-node')
@@ -24,13 +24,13 @@ async function run(): Promise<void> {
     const streamPartId = 'stream#0'
 
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(program.opts().entrypointId).value,
+        kademliaId: hexToBinary(program.opts().entrypointId),
         type: NodeType.NODEJS,
         websocket: { ip: program.opts().entrypointIp, port: 23123 }
     }
 
     const peerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(program.opts().id).value,
+        kademliaId: hexToBinary(program.opts().id),
         type: NodeType.NODEJS
     }
     const layer0 = new DhtNode({
@@ -80,7 +80,7 @@ async function run(): Promise<void> {
         const messageRef: MessageRef = {
             sequenceNumber,
             timestamp: BigInt(Date.now()),
-            publisherId: PeerID.fromValue(layer0.getPeerDescriptor().kademliaId).toString(),
+            publisherId: binaryToHex(layer0.getPeerDescriptor().kademliaId, true),
             streamPartition: 0,
             streamId: streamPartId,
             messageChainId: 'network'
