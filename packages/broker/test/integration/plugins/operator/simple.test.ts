@@ -32,11 +32,7 @@ it('simple test', async () => {
     }, 10000, 1000)
 
     console.log('Withdraw')
-    // pass
-    //await (await operatorContract.connect(operatorWallet).withdrawEarningsFromSponsorship(sponsorship.address)).wait()
-
-    // fail
-    await (await operatorContract.connect(nodeWallets[0]).withdrawEarningsFromSponsorships([sponsorship.address])).wait()
+    await (await operatorContract.connect(operatorWallet).withdrawEarningsFromSponsorships([sponsorship.address])).wait()
     
     const earnings = Number(await operatorContract.getEarningsFromSponsorship(sponsorship.address)) / ONE_ETHER
     console.log('Earnings after withdraw ' + earnings)
