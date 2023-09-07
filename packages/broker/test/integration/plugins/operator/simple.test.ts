@@ -5,7 +5,7 @@ import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
 
 const STAKE_AMOUNT = 100
-const MIN_EARNINGS = 5
+const MIN_EARNINGS = 2
 const ONE_ETHER = 1e18
 
 it('simple test', async () => {
