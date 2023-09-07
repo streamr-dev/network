@@ -110,10 +110,10 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     async start(): Promise<void> {
         this.started = true
         this.registerDefaultServerMethods()
-        this.config.layer1.on('newContact', (peerDescriptor, closestPeers) => this.newContact(peerDescriptor, closestPeers))
-        this.config.layer1.on('contactRemoved', (peerDescriptor, closestPeers) => this.removedContact(peerDescriptor, closestPeers))
-        this.config.layer1.on('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
-        this.config.layer1.on('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
+        this.config.layer1.on('newContact', (peerDescriptor: PeerDescriptor, closestNodes: PeerDescriptor[]) => this.newContact(peerDescriptor, closestNodes))
+        this.config.layer1.on('contactRemoved', (peerDescriptor: PeerDescriptor, closestNodes: PeerDescriptor[]) => this.removedContact(peerDescriptor, closestNodes))
+        this.config.layer1.on('newRandomContact', (peerDescriptor: PeerDescriptor, randomNodes: PeerDescriptor[]) => this.newRandomContact(peerDescriptor, randomNodes))
+        this.config.layer1.on('randomContactRemoved', (peerDescriptor: PeerDescriptor, randomNodes: PeerDescriptor[]) => this.removedRandomContact(peerDescriptor, randomNodes))
         this.config.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor))
         this.config.targetNeighbors.on('nodeAdded', (id, _remote) => {
             this.config.propagation.onNeighborJoined(id)
@@ -141,14 +141,14 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionServer.openConnection(req, context))
     }
 
-    private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
+    private newContact(_newContact: PeerDescriptor, closestNodes: PeerDescriptor[]): void {
         logger.trace(`New nearby contact found`)
         if (this.stopped) {
             return
         }
       
         const oldLength = this.config.nearbyContactPool.getIds().length
-        this.config.nearbyContactPool.replaceAll(closestTen.map((descriptor) =>
+        this.config.nearbyContactPool.replaceAll(closestNodes.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,
@@ -165,12 +165,12 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         }
     }
 
-    private removedContact(_removedContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
+    private removedContact(_removedContact: PeerDescriptor, closestNodes: PeerDescriptor[]): void {
         logger.trace(`Nearby contact removed`)
         if (this.stopped) {
             return
         }
-        this.config.nearbyContactPool.replaceAll(closestTen.map((descriptor) =>
+        this.config.nearbyContactPool.replaceAll(closestNodes.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,
@@ -179,11 +179,11 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         ))
     }
 
-    private newRandomContact(_newDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]): void {
+    private newRandomContact(_newDescriptor: PeerDescriptor, randomNodes: PeerDescriptor[]): void {
         if (this.stopped) {
             return
         }
-        this.config.randomContactPool.replaceAll(randomPeers.map((descriptor) =>
+        this.config.randomContactPool.replaceAll(randomNodes.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,
@@ -195,12 +195,12 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         }
     }
 
-    private removedRandomContact(_removedDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]): void {
+    private removedRandomContact(_removedDescriptor: PeerDescriptor, randomNodes: PeerDescriptor[]): void {
         logger.trace(`New nearby contact found`)
         if (this.stopped) {
             return
         }
-        this.config.randomContactPool!.replaceAll(randomPeers.map((descriptor) =>
+        this.config.randomContactPool!.replaceAll(randomNodes.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,
@@ -240,10 +240,10 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.config.targetNeighbors.getNodes().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor))
         this.config.rpcCommunicator.stop()
         this.removeAllListeners()
-        this.config.layer1.off('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
-        this.config.layer1.off('contactRemoved', (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
-        this.config.layer1.off('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
-        this.config.layer1.off('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
+        this.config.layer1.off('newContact', (peerDescriptor: PeerDescriptor, closestNodes: PeerDescriptor[]) => this.newContact(peerDescriptor, closestNodes))
+        this.config.layer1.off('contactRemoved', (peerDescriptor: PeerDescriptor, closestNodes: PeerDescriptor[]) => this.removedContact(peerDescriptor, closestNodes))
+        this.config.layer1.off('newRandomContact', (peerDescriptor: PeerDescriptor, randomNodes: PeerDescriptor[]) => this.newRandomContact(peerDescriptor, randomNodes))
+        this.config.layer1.off('randomContactRemoved', (peerDescriptor: PeerDescriptor, randomNodes: PeerDescriptor[]) => this.removedRandomContact(peerDescriptor, randomNodes))
         this.config.P2PTransport.off('disconnected', (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor))
         this.config.nearbyContactPool.stop()
         this.config.targetNeighbors.stop()

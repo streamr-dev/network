@@ -80,7 +80,7 @@ export class StreamEntryPointDiscovery {
     async discoverEntryPointsFromDht(
         streamPartId: StreamPartID,
         knownEntryPointCount: number,
-        forwardingPeer?: PeerDescriptor
+        forwardingNode?: PeerDescriptor
     ): Promise<FindEntryPointsResult> {
         if (knownEntryPointCount > 0) {
             return {
@@ -90,7 +90,7 @@ export class StreamEntryPointDiscovery {
             }
         }
         let joiningEmptyStream = false
-        const discoveredEntryPoints = await this.discoverEntryPoints(streamPartId, forwardingPeer)
+        const discoveredEntryPoints = await this.discoverEntryPoints(streamPartId, forwardingNode)
         if (discoveredEntryPoints.length === 0) {
             joiningEmptyStream = true
             discoveredEntryPoints.push(this.config.ownPeerDescriptor)
