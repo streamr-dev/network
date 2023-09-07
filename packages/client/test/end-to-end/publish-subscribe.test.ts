@@ -7,11 +7,10 @@ import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { peerDescriptorTranslator } from '../../src/utils/utils'
 import { createTestStream, createTestClient } from '../test-utils/utils'
-import { randomString, waitForCondition } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
 import { NetworkNode } from '@streamr/trackerless-network'
-import random from 'lodash/random'
 
-const TIMEOUT = 5 * 60 * 1000
+const TIMEOUT = 30 * 1000
 
 const PAYLOAD = { hello: 'world' }
 
@@ -33,7 +32,7 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
         networkNode.addMessageListener((msg) => {
             messages.push(msg.getContent())
         })
-        await waitForCondition(() => messages.length > 0, TIMEOUT - 1000)
+        await waitForCondition(() => messages.length > 0, TIMEOUT - 100)
         return messages
     } finally {
         await networkNode.stop()
@@ -71,8 +70,8 @@ describe('publish-subscribe', () => {
     })
 
     beforeEach(async () => {
-        publisherClient = createTestClient(publisherPk, randomString(16), random(15000, 16000))
-        subscriberClient = createTestClient(subscriberWallet.privateKey, randomString(16), random(16001, 17001))
+        publisherClient = createTestClient(publisherPk, 'e2e-pub-sub-publisher', 15656)
+        subscriberClient = createTestClient(subscriberWallet.privateKey, 'e2e-pub-sub-subscriber', 15657)
     }, TIMEOUT)
 
     afterEach(async () => {
@@ -105,12 +104,12 @@ describe('publish-subscribe', () => {
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
-            await waitForCondition(() => messages.length > 0, TIMEOUT - 1000)
+            await waitForCondition(() => messages.length > 0)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })
 
-    describe.skip('public stream', () => {
+    describe('public stream', () => {
         let stream: Stream
 
         beforeAll(async () => {

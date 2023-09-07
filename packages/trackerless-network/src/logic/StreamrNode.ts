@@ -94,6 +94,8 @@ export interface StreamrNodeConfig {
     acceptProxyConnections?: boolean
 }
 
+const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
+
 export class StreamrNode extends EventEmitter<Events> {
     private P2PTransport?: ITransport
     private connectionLocker?: ConnectionLocker
@@ -135,7 +137,8 @@ export class StreamrNode extends EventEmitter<Events> {
             getEntryPointData: (key) => this.layer0!.getDataFromDht(key),
             getEntryPointDataViaNode: (peerDescriptor, key) => this.layer0!.findDataViaPeer(peerDescriptor, key),
             storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data),
-            deleteEntryPointData: (key) => this.layer0!.deleteDataFromDht(key)
+            deleteEntryPointData: (key) => this.layer0!.deleteDataFromDht(key),
+            networkSplitAvoidanceLimit: NETWORK_SPLIT_AVOIDANCE_LIMIT
         })
         cleanUp = () => this.destroy()
     }
@@ -204,6 +207,7 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         logger.debug(`Joining stream ${streamPartId}`)
         const knownEntryPoints = this.knownStreamEntryPoints.get(streamPartId) ?? []
+        const enableRejoins = knownEntryPoints.length > 0
         let entryPoints = knownEntryPoints.concat(knownEntryPoints)
         const [layer1, layer2] = this.createStream(streamPartId, knownEntryPoints)
         await layer1.start()
@@ -215,10 +219,10 @@ export class StreamrNode extends EventEmitter<Events> {
             forwardingPeer
         )
         entryPoints = knownEntryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await layer1.joinDht(sampleSize(entryPoints, 4))
+        await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT), false, enableRejoins)
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
-            discoveryResult.joiningEmptyStream,
+            layer1.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT,
             discoveryResult.entryPointsFromDht,
             entryPoints.length
         )
@@ -245,8 +249,8 @@ export class StreamrNode extends EventEmitter<Events> {
             peerDescriptor: this.layer0!.getPeerDescriptor(),
             entryPoints,
             numberOfNodesPerKBucket: 4,
-            rpcRequestTimeout: 15000,
-            dhtJoinTimeout: 60000,
+            rpcRequestTimeout: 5000,
+            dhtJoinTimeout: 20000,
             nodeName: this.config.nodeName + ':layer1'
         })
     }
