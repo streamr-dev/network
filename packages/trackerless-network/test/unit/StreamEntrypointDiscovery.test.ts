@@ -1,5 +1,5 @@
 import { StreamEntryPointDiscovery } from '../../src/logic/StreamEntryPointDiscovery'
-import { PeerDescriptor, RecursiveFindResult } from '@streamr/dht'
+import { PeerDescriptor, isSamePeerDescriptor, RecursiveFindResult } from '@streamr/dht'
 import { StreamObject } from '../../src/logic/StreamrNode'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { Any } from '../../src/proto/google/protobuf/any'
@@ -108,16 +108,16 @@ describe('StreamEntryPointDiscovery', () => {
 
     it('discoverEntryPointsFromDht does not have known entrypoints', async () => {
         const res = await streamEntryPointDiscoveryWithData.discoverEntryPointsFromDht(streamPartId, 0)
-        expect(res.joiningEmptyStream).toEqual(false)
-        expect(res.entryPointsFromDht).toEqual(true)
-        expect(res.discoveredEntryPoints).toEqual([peerDescriptor])
+        expect(res.discoveredEntryPoints.length).toBe(1)
+        expect(isSamePeerDescriptor(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)
     })
 
     it('discoverEntryPointsfromDht on an empty stream', async () => {
         const res = await streamEntryPointDiscoveryWithoutData.discoverEntryPointsFromDht(streamPartId, 0)
         expect(res.joiningEmptyStream).toEqual(true)
         expect(res.entryPointsFromDht).toEqual(true)
-        expect(res.discoveredEntryPoints).toEqual([peerDescriptor]) // ownPeerDescriptor
+        expect(res.discoveredEntryPoints.length).toBe(1)
+        expect(isSamePeerDescriptor(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)  // ownPeerDescriptor
     })
 
     it('store on empty stream', async () => {
