@@ -8,7 +8,7 @@ import { IStreamNode } from '../IStreamNode'
 import { EventEmitter } from 'eventemitter3'
 import { ConnectionLocker } from '@streamr/dht/src/exports'
 import { StreamNodeServer } from '../StreamNodeServer'
-import { Logger, wait, binaryToHex } from '@streamr/utils'
+import { Logger, wait, binaryToHex, EthereumAddress } from '@streamr/utils'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
 import { NodeList } from '../NodeList'
 import { Propagation } from '../propagation/Propagation'
@@ -19,7 +19,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { markAndCheckDuplicate } from '../utils'
 import { StreamPartID } from '@streamr/protocol'
-import { NodeID, UserID, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
     // eslint-disable-next-line no-constant-condition
@@ -41,7 +41,7 @@ interface ProxyStreamConnectionClientConfig {
     ownPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     connectionLocker: ConnectionLocker
-    userId: UserID
+    userId: EthereumAddress
     nodeName?: string
 }
 
@@ -49,7 +49,7 @@ interface ProxyDefinition {
     nodes: Map<NodeID, PeerDescriptor>
     connectionCount: number
     direction: ProxyDirection
-    userId: UserID
+    userId: EthereumAddress
 }
 
 const logger = new Logger(module)
@@ -111,7 +111,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         streamPartId: StreamPartID,
         peerDescriptors: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: UserID,
+        userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
         logger.trace('Setting proxies', { streamPartId, peerDescriptors, direction, userId, connectionCount })
@@ -159,7 +159,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         ))
     }
 
-    private async attemptConnection(nodeId: NodeID, direction: ProxyDirection, userId: UserID): Promise<void> {
+    private async attemptConnection(nodeId: NodeID, direction: ProxyDirection, userId: EthereumAddress): Promise<void> {
         const peerDescriptor = this.definition!.nodes.get(nodeId)!
         const client = toProtoRpcClient(new ProxyConnectionRpcClient(this.rpcCommunicator.getRpcClientTransport()))
         const proxyNode = new RemoteProxyServer(peerDescriptor, this.config.streamPartId, client)
