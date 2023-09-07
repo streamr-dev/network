@@ -6,7 +6,7 @@ const logger = new Logger(module)
 const ONE_ETHER = 1e18
 
 export const maintainOperatorPoolValue = async (
-    withdrawLimitSafetyFraction: bigint,
+    withdrawLimitSafetyFraction: bigint,  // TODO this is about unsafety: higher is more unsafe
     driftLimitFraction: bigint,
     helper: MaintainOperatorPoolValueHelper
 ): Promise<void> => {
