@@ -58,7 +58,7 @@ interface StreamEntryPointDiscoveryConfig {
     streams: Map<string, StreamObject>
     ownPeerDescriptor: PeerDescriptor
     getEntryPointData: (key: Uint8Array) => Promise<RecursiveFindResult>
-    getEntryPointDataViaNode: (key: Uint8Array, peer: PeerDescriptor) => Promise<DataEntry[]>
+    getEntryPointDataViaNode: (key: Uint8Array, node: PeerDescriptor) => Promise<DataEntry[]>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
     deleteEntryPointData: (key: Uint8Array) => Promise<void>
     cacheInterval?: number
