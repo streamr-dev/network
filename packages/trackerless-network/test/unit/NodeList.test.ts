@@ -11,7 +11,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { expect } from 'expect'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { createRandomNodeId } from '../utils/utils'
-import { binaryToHex, hexToBinary } from '@streamr/utils'
+import { binaryToHex } from '@streamr/utils'
 
 describe('NodeList', () => {
 
@@ -43,7 +43,7 @@ describe('NodeList', () => {
         nodeList = new NodeList(ownId, 6)
         ids.forEach((id) => {
             const peerDescriptor: PeerDescriptor = {
-                kademliaId: hexToBinary(id),
+                kademliaId: id,
                 type: 0
             }
             nodeList.add(createRemoteGraphNode(peerDescriptor))

@@ -9,22 +9,23 @@ import {
     StreamMessageType as OldStreamMessageType,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, binaryToHex, binaryToUtf8, hexToBinary } from '@streamr/utils'
+import { binaryToHex, binaryToUtf8, toEthereumAddress } from '@streamr/utils'
 
 describe('StreamMessageTranslator', () => {
 
     const signature = '0x1234'
+    const publisherId = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
     const protobufMsg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         StreamPartIDUtils.parse('TEST#0'),
-        hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        publisherId
     )
     const messageId = new MessageID(
         'TEST' as StreamID,
         0,
         Date.now(),
         0,
-        '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
+        publisherId,
         'test',
     )
     const oldProtocolMsg = new OldStreamMessage({

@@ -5,6 +5,7 @@ import { createRandomNodeId, createStreamMessage, mockConnectionLocker } from '.
 import { MockTransport } from '../utils/mock/Transport'
 import { hexToBinary, waitForCondition } from '@streamr/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('StreamrNode', () => {
 
@@ -17,7 +18,7 @@ describe('StreamrNode', () => {
     const message = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }), 
         streamPartId, 
-        peerDescriptor.kademliaId
+        randomEthereumAddress()
     )
 
     beforeEach(async () => {

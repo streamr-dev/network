@@ -1,11 +1,12 @@
 import { PeerDescriptor, NodeType } from '@streamr/dht'
 import { range } from 'lodash'
-import { waitForCondition, utf8ToBinary, hexToBinary } from '@streamr/utils'
+import { waitForCondition, hexToBinary } from '@streamr/utils'
 import { getRandomRegion } from '@streamr/dht'
 import { createRandomNodeId, createStreamMessage } from '../utils/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('Full node network with WebRTC connections', () => {
 
@@ -85,7 +86,7 @@ describe('Full node network with WebRTC connections', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             randomGraphId,
-            utf8ToBinary(getNodeIdFromPeerDescriptor(epPeerDescriptor))
+            randomEthereumAddress()
         )
         entryPoint.getStreamrNode()!.publishToStream(randomGraphId, msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
