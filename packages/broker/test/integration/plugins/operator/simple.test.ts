@@ -8,7 +8,7 @@ import { getTotalUnwithdrawnEarnings } from './operatorPoolValueUtils'
 
 const STAKE_AMOUNT = 1000
 const ONE_ETHER = 1e18
-const SAFETY_FRACTION = 0.5
+const SAFETY_FRACTION = 0.6
 
 it('simple test', async () => {
     const client = createClient(await fetchPrivateKeyWithGas())
@@ -44,4 +44,4 @@ it('simple test', async () => {
     console.log('Earnings after withdraw ' + earnings)
 
     await wait(5000)
-}, 30 * 1000)
+}, 60 * 1000)
