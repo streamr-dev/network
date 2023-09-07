@@ -2,8 +2,7 @@ import {
     ListeningRpcCommunicator,
     Simulator,
     PeerDescriptor,
-    SimulatorTransport,
-    peerIdFromPeerDescriptor
+    SimulatorTransport
 } from '@streamr/dht'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -17,17 +16,18 @@ import { waitForCondition } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('RemoteRandomGraphNode', () => {
     let mockServerRpc: ListeningRpcCommunicator
     let clientRpc: ListeningRpcCommunicator
     let remoteRandomGraphNode: RemoteRandomGraphNode
 
-    const clientPeer: PeerDescriptor = {
+    const clientNode: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
         type: 1
     }
-    const serverPeer: PeerDescriptor = {
+    const serverNode: PeerDescriptor = {
         kademliaId: new Uint8Array([2, 2, 2]),
         type: 1
     }
@@ -41,8 +41,8 @@ describe('RemoteRandomGraphNode', () => {
     beforeEach(() => {
         recvCounter = 0
         simulator = new Simulator()
-        mockConnectionManager1 = new SimulatorTransport(serverPeer, simulator)
-        mockConnectionManager2 = new SimulatorTransport(clientPeer, simulator)
+        mockConnectionManager1 = new SimulatorTransport(serverNode, simulator)
+        mockConnectionManager2 = new SimulatorTransport(clientNode, simulator)
         
         mockServerRpc = new ListeningRpcCommunicator('test', mockConnectionManager1)
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
@@ -66,7 +66,7 @@ describe('RemoteRandomGraphNode', () => {
         )
 
         remoteRandomGraphNode = new RemoteRandomGraphNode(
-            serverPeer,
+            serverNode,
             'test-stream',
             toProtoRpcClient(new NetworkRpcClient(clientRpc.getRpcClientTransport()))
         )
@@ -84,15 +84,15 @@ describe('RemoteRandomGraphNode', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             StreamPartIDUtils.parse('test-stream#0'),
-            peerIdFromPeerDescriptor(clientPeer).value
+            randomEthereumAddress()
         )
 
-        await remoteRandomGraphNode.sendData(clientPeer, msg)
+        await remoteRandomGraphNode.sendData(clientNode, msg)
         await waitForCondition(() => recvCounter === 1)
     })
 
     it('leaveNotice', async () => {
-        await remoteRandomGraphNode.leaveStreamNotice(clientPeer)
+        await remoteRandomGraphNode.leaveStreamNotice(clientNode)
         await waitForCondition(() => recvCounter === 1)
     })
 

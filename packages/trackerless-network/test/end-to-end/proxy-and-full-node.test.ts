@@ -1,10 +1,11 @@
-import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
+import { NodeType, PeerDescriptor } from '@streamr/dht'
 import { NetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamID, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { waitForEvent3, hexToBinary, toEthereumAddress } from '@streamr/utils'
 import { ProxyDirection, StreamMessage as InternalStreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { StreamNodeType } from '../../src/logic/StreamrNode'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { createRandomNodeId } from '../utils/utils'
 
 const PROXIED_NODE_USER_ID = hexToBinary(randomEthereumAddress())
 
@@ -30,13 +31,13 @@ const createMessage = (streamId: StreamID): StreamMessage => {
 describe('proxy and full node', () => {
 
     const proxyNodeDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`proxyNode`).value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         nodeName: 'proxyNode',
         websocket: { ip: 'localhost', port: 23135 }
     }
     const proxiedNodeDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`proxiedNode`).value,
+        kademliaId: hexToBinary(createRandomNodeId())
         type: NodeType.NODEJS,
     }
 

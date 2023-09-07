@@ -1,16 +1,16 @@
 import { StreamrNode } from '../../src/logic/StreamrNode'
 import { MockLayer0 } from '../utils/mock/MockLayer0'
-import { isSamePeerDescriptor, PeerDescriptor, PeerID } from '@streamr/dht'
-import { createStreamMessage, mockConnectionLocker } from '../utils/utils'
+import { isSamePeerDescriptor, PeerDescriptor } from '@streamr/dht'
+import { createRandomNodeId, createStreamMessage, mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
-import { waitForCondition } from '@streamr/utils'
+import { hexToBinary, waitForCondition } from '@streamr/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('StreamrNode', () => {
 
     let node: StreamrNode
     const peerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('streamr-node').value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: 0
     }
     const streamPartId = StreamPartIDUtils.parse('stream#0')

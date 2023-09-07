@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
+import { NodeType, PeerDescriptor } from '@streamr/dht'
 import { 
     EncryptionType,
     GroupKeyRequest,
@@ -13,20 +13,21 @@ import {
 import { NetworkNode } from '../../src/NetworkNode'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { toEthereumAddress, waitForEvent3, hexToBinary } from '@streamr/utils'
+import { createRandomNodeId } from '../utils/utils'
 
 describe('proxy group key exchange', () => {
     const proxyNodeDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`proxyNode1`).value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         nodeName: 'proxyNode',
         websocket: { ip: 'localhost', port: 23134 }
     }
     const publisherDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`publisher`).value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
     }
     const subscriberDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`subscriber`).value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
     }
 

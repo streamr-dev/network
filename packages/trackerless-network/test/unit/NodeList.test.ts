@@ -4,13 +4,14 @@ import {
     PeerDescriptor,
     ListeningRpcCommunicator,
     Simulator,
-    PeerID,
     SimulatorTransport,
 } from '@streamr/dht'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { expect } from 'expect'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { createRandomNodeId } from '../utils/utils'
+import { binaryToHex } from '@streamr/utils'
 
 describe('NodeList', () => {
 
@@ -21,7 +22,7 @@ describe('NodeList', () => {
         new Uint8Array([1, 1, 4]),
         new Uint8Array([1, 1, 5])
     ]
-    const ownId = PeerID.fromString('test')
+    const ownId = createRandomNodeId()
     const graphId = 'test'
     let nodeList: NodeList
     let simulator: Simulator
@@ -40,9 +41,9 @@ describe('NodeList', () => {
         simulator = new Simulator()
         mockTransports = []
         nodeList = new NodeList(ownId, 6)
-        ids.forEach((peerId) => {
+        ids.forEach((id) => {
             const peerDescriptor: PeerDescriptor = {
-                kademliaId: peerId,
+                kademliaId: hexToBinary(id),
                 type: 0
             }
             nodeList.add(createRemoteGraphNode(peerDescriptor))
@@ -91,25 +92,25 @@ describe('NodeList', () => {
     it('getClosest', () => {
         const closest = nodeList.getClosest([])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
-            .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey())
+            .toEqual(binaryToHex(new Uint8Array([1, 1, 1])))
     })
 
     it('getClosest with exclude', () => {
-        const closest = nodeList.getClosest([PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey() as unknown as NodeID])
+        const closest = nodeList.getClosest([binaryToHex(new Uint8Array([1, 1, 1])) as unknown as NodeID])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
-            .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 2])).toKey())
+            .toEqual(binaryToHex(new Uint8Array([1, 1, 2])))
     })
 
     it('getFurthest', () => {
         const closest = nodeList.getFurthest([])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
-            .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey())
+            .toEqual(binaryToHex(new Uint8Array([1, 1, 5])))
     })
 
     it('getFurthest with exclude', () => {
-        const closest = nodeList.getFurthest([PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey() as unknown as NodeID])
+        const closest = nodeList.getFurthest([binaryToHex(new Uint8Array([1, 1, 5])) as unknown as NodeID])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
-            .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 4])).toKey())
+            .toEqual(binaryToHex(new Uint8Array([1, 1, 4])))
     })
 
     it('getClosestAndFurthest', () => {
@@ -139,12 +140,12 @@ describe('NodeList', () => {
 
     it('getClosestAndFurthest with exclude', () => {
         const results = nodeList.getClosestAndFurthest([
-            PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey() as unknown as NodeID,
-            PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey() as unknown as NodeID
+            binaryToHex(new Uint8Array([1, 1, 1])) as unknown as NodeID,
+            binaryToHex(new Uint8Array([1, 1, 5])) as unknown as NodeID
         ])
         expect(results).toEqual([
-            nodeList.getClosest([PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey() as unknown as NodeID]),
-            nodeList.getFurthest([PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey() as unknown as NodeID])
+            nodeList.getClosest([binaryToHex(new Uint8Array([1, 1, 1])) as unknown as NodeID]),
+            nodeList.getFurthest([binaryToHex(new Uint8Array([1, 1, 5])) as unknown as NodeID])
         ])
     })
 })

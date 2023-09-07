@@ -1,8 +1,9 @@
-import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID, LatencyType } from '@streamr/dht'
+import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, LatencyType } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
-import { wait, waitForCondition } from '@streamr/utils'
+import { hexToBinary, wait, waitForCondition } from '@streamr/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { createRandomNodeId } from '../utils/utils'
 
 describe('RandomGraphNode-DhtNode-Latencies', () => {
     const numOfNodes = 64
@@ -13,13 +14,13 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
 
     const streamId = 'Stream1'
     const entrypointDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: 0
     }
 
     const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
         return {
-            kademliaId: PeerID.fromString(`${i}`).value,
+            kademliaId: hexToBinary(createRandomNodeId()),
             type: 0
         }
     })

@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/parameter-properties */
 
-import { DhtNode, Simulator, PeerDescriptor, PeerID, ConnectionManager, getRandomRegion } from '@streamr/dht'
+import { DhtNode, Simulator, PeerDescriptor, ConnectionManager, getRandomRegion } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
-import { wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { hexToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { EventEmitter } from 'eventemitter3'
 import { NodeID } from '../../src/identifiers'
+import { createRandomNodeId } from '../utils/utils'
 
 const logger = new Logger(module)
 
@@ -70,7 +71,7 @@ describe('RandomGraphNode-DhtNode', () => {
 
     const streamId = 'Stream1'
     const entrypointDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         nodeName: 'entrypoint',
         type: 0,
         region: getRandomRegion()
@@ -78,7 +79,7 @@ describe('RandomGraphNode-DhtNode', () => {
 
     const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
         return {
-            kademliaId: PeerID.fromString(`${i}`).value,
+            kademliaId: hexToBinary(createRandomNodeId()),
             nodeName: `node${i}`,
             type: 0,
             region: getRandomRegion()

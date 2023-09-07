@@ -20,11 +20,11 @@ describe('RemoteHandshaker', () => {
     let clientRpc: ListeningRpcCommunicator
     let remoteHandshaker: RemoteHandshaker
 
-    const clientPeer: PeerDescriptor = {
+    const clientNode: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
         type: 1
     }
-    const serverPeer: PeerDescriptor = {
+    const serverNode: PeerDescriptor = {
         kademliaId: new Uint8Array([2, 2, 2]),
         type: 1
     }
@@ -36,8 +36,8 @@ describe('RemoteHandshaker', () => {
     beforeEach(() => {
         Simulator.useFakeTimers()
         simulator = new Simulator()
-        mockConnectionManager1 = new SimulatorTransport(serverPeer, simulator)
-        mockConnectionManager2 = new SimulatorTransport(clientPeer, simulator)
+        mockConnectionManager1 = new SimulatorTransport(serverNode, simulator)
+        mockConnectionManager2 = new SimulatorTransport(clientNode, simulator)
 
         mockServerRpc = new ListeningRpcCommunicator('test', mockConnectionManager1)
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
@@ -56,7 +56,7 @@ describe('RemoteHandshaker', () => {
         )
 
         remoteHandshaker = new RemoteHandshaker(
-            serverPeer,
+            serverNode,
             'test-stream',
             toProtoRpcClient(new HandshakeRpcClient(clientRpc.getRpcClientTransport()))
         )
@@ -72,7 +72,7 @@ describe('RemoteHandshaker', () => {
     })
 
     it('handshake', async () => {
-        const result = await remoteHandshaker.handshake(clientPeer, [])
+        const result = await remoteHandshaker.handshake(clientNode, [])
         expect(result.accepted).toEqual(true)
     })
 })
