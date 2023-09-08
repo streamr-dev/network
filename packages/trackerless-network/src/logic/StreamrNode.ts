@@ -13,7 +13,8 @@ import {
     RateMetric,
     Metric,
     MetricsDefinition,
-    waitForEvent3
+    waitForEvent3,
+    EthereumAddress
 } from '@streamr/utils'
 import { uniq } from 'lodash'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
@@ -24,7 +25,7 @@ import { createRandomGraphNode } from './createRandomGraphNode'
 import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
-import { NodeID, UserID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 
 export enum StreamNodeType {
     RANDOM_GRAPH = 'random-graph',
@@ -94,6 +95,8 @@ export interface StreamrNodeConfig {
     acceptProxyConnections?: boolean
 }
 
+const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
+
 export class StreamrNode extends EventEmitter<Events> {
     private P2PTransport?: ITransport
     private connectionLocker?: ConnectionLocker
@@ -135,7 +138,8 @@ export class StreamrNode extends EventEmitter<Events> {
             getEntryPointData: (key) => this.layer0!.getDataFromDht(key),
             getEntryPointDataViaNode: (peerDescriptor, key) => this.layer0!.findDataViaPeer(peerDescriptor, key),
             storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data),
-            deleteEntryPointData: (key) => this.layer0!.deleteDataFromDht(key)
+            deleteEntryPointData: (key) => this.layer0!.deleteDataFromDht(key),
+            networkSplitAvoidanceLimit: NETWORK_SPLIT_AVOIDANCE_LIMIT
         })
         cleanUp = () => this.destroy()
     }
@@ -204,6 +208,7 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         logger.debug(`Joining stream ${streamPartId}`)
         const knownEntryPoints = this.knownStreamEntryPoints.get(streamPartId) ?? []
+        const enableRejoins = knownEntryPoints.length > 0
         let entryPoints = knownEntryPoints.concat(knownEntryPoints)
         const [layer1, layer2] = this.createStream(streamPartId, knownEntryPoints)
         await layer1.start()
@@ -215,10 +220,10 @@ export class StreamrNode extends EventEmitter<Events> {
             forwardingPeer
         )
         entryPoints = knownEntryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await layer1.joinDht(sampleSize(entryPoints, 4))
+        await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT), false, enableRejoins)
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
-            discoveryResult.joiningEmptyStream,
+            layer1.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT,
             discoveryResult.entryPointsFromDht,
             entryPoints.length
         )
@@ -245,8 +250,8 @@ export class StreamrNode extends EventEmitter<Events> {
             peerDescriptor: this.layer0!.getPeerDescriptor(),
             entryPoints,
             numberOfNodesPerKBucket: 4,
-            rpcRequestTimeout: 15000,
-            dhtJoinTimeout: 60000,
+            rpcRequestTimeout: 5000,
+            dhtJoinTimeout: 20000,
             nodeName: this.config.nodeName + ':layer1'
         })
     }
@@ -303,7 +308,7 @@ export class StreamrNode extends EventEmitter<Events> {
         streamPartId: StreamPartID,
         contactPeerDescriptors: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: UserID,
+        userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
         if (this.streams.get(streamPartId)?.type === StreamNodeType.PROXY && contactPeerDescriptors.length > 0) {
@@ -319,7 +324,7 @@ export class StreamrNode extends EventEmitter<Events> {
         }
     }
 
-    private createProxyStream(streamPartId: StreamPartID, userId: UserID): ProxyStreamConnectionClient {
+    private createProxyStream(streamPartId: StreamPartID, userId: EthereumAddress): ProxyStreamConnectionClient {
         const layer2 = this.createProxyStreamConnectionClient(streamPartId, userId)
         this.streams.set(streamPartId, {
             type: StreamNodeType.PROXY,
@@ -331,7 +336,7 @@ export class StreamrNode extends EventEmitter<Events> {
         return layer2
     }
 
-    private createProxyStreamConnectionClient(streamPartId: StreamPartID, userId: UserID): ProxyStreamConnectionClient {
+    private createProxyStreamConnectionClient(streamPartId: StreamPartID, userId: EthereumAddress): ProxyStreamConnectionClient {
         return new ProxyStreamConnectionClient({
             P2PTransport: this.P2PTransport!,
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
