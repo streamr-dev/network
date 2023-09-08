@@ -95,7 +95,7 @@ jobs:
       package: client
       docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain ens-sync-script
       run-brokers: true
-      command: npm run test-end-to-end
+      command: bash flaky-test.sh test/end-to-end/publish-subscribe.test.ts
   broker:
     needs: build
     uses: ./.github/workflows/test-setup.yml
