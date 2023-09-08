@@ -1,11 +1,10 @@
 import { toStreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, scheduleAtInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Signer } from 'ethers'
 import { CONFIG_TEST } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
-import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
 import { AnnounceNodeToStreamService } from './AnnounceNodeToStreamService'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorPoolValueService } from './MaintainOperatorPoolValueService'
@@ -14,6 +13,8 @@ import { OperatorPoolValueBreachWatcher } from './OperatorPoolValueBreachWatcher
 import { OperatorFleetState } from './OperatorFleetState'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { createIsLeaderFn } from './createIsLeaderFn'
+import { announceNodeToContract } from './announceNodeToContract'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
@@ -35,7 +36,6 @@ const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private announceNodeToStreamService?: AnnounceNodeToStreamService
-    private announceNodeToContractService?: AnnounceNodeToContractService
     private inspectRandomNodeService = new InspectRandomNodeService()
     private voteOnSuspectNodeService?: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
@@ -43,6 +43,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private operatorPoolValueBreachWatcher?: OperatorPoolValueBreachWatcher
     private fleetState?: OperatorFleetState
     private serviceConfig?: OperatorServiceConfig
+    private readonly abortController: AbortController = new AbortController()
 
     async start(): Promise<void> {
         const signer = await this.streamrClient.getSigner()
@@ -61,11 +62,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         this.fleetState = new OperatorFleetState(
             this.streamrClient,
             toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
-        )
-        this.announceNodeToContractService = new AnnounceNodeToContractService(
-            this.streamrClient,
-            new AnnounceNodeToContractHelper(this.serviceConfig),
-            this.fleetState
         )
         this.maintainOperatorPoolValueService = new MaintainOperatorPoolValueService(this.serviceConfig)
         this.operatorPoolValueBreachWatcher = new OperatorPoolValueBreachWatcher(this.serviceConfig)
@@ -87,13 +83,27 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.voteOnSuspectNodeService.start()
         await this.operatorPoolValueBreachWatcher.start()
         await this.fleetState.start()
-        this.announceNodeToContractService.start().catch((err) => {
-            logger.fatal('Encountered fatal error in announceNodeToContractService', { err })
+        await this.fleetState.waitUntilReady()
+        const isLeader = await createIsLeaderFn(this.streamrClient, this.fleetState, logger)
+        const announceNodeToContractHelper = new AnnounceNodeToContractHelper(this.serviceConfig!)
+        try {
+            await scheduleAtInterval(async () => {
+                if (isLeader()) {
+                    await announceNodeToContract(
+                        24 * 60 * 60 * 1000,
+                        announceNodeToContractHelper,
+                        this.streamrClient
+                    )
+                }
+            }, 10 * 60 * 1000, true, this.abortController.signal)
+        } catch (err) {
+            logger.fatal('Encountered fatal error in announceNodeToContract', { err })
             process.exit(1)
-        })
+        }
     }
 
     async stop(): Promise<void> {
+        this.abortController.abort()
         await this.announceNodeToStreamService!.stop()
         await this.inspectRandomNodeService.stop()
         await this.maintainOperatorPoolValueService!.stop()
