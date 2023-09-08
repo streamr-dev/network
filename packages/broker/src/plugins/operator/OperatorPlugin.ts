@@ -75,6 +75,9 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         )
 
         const redundancyFactor = await fetchRedundancyFactor(this.serviceConfig)
+        if (redundancyFactor === undefined) {
+            throw new Error('Failed to retrieve redundancy factor')
+        }
         logger.info('Fetched redundancy factor', { redundancyFactor })
 
         this.maintainTopologyService = await setUpAndStartMaintainTopologyService({

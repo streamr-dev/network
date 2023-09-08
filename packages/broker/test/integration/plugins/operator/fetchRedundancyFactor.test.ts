@@ -1,7 +1,4 @@
-import {
-    fetchRedundancyFactor,
-    RedundancyFactorParseError
-} from '../../../../src/plugins/operator/fetchRedundancyFactor'
+import { fetchRedundancyFactor } from '../../../../src/plugins/operator/fetchRedundancyFactor'
 import { getProvider, setupOperatorContract, SetupOperatorContractReturnType } from './contractUtils'
 import { Contract, Wallet } from 'ethers'
 import { Operator, operatorABI } from '@streamr/network-contracts'
@@ -42,20 +39,23 @@ describe(fetchRedundancyFactor, () => {
         })
     })
 
-    describe('error cases', () => {
+    describe('no result cases', () => {
         it('invalid json', async () => {
             await updateMetadata(deployment, 'invalidjson')
-            await expect(fetchRedundancyFactor(serviceConfig)).rejects.toThrowError(RedundancyFactorParseError)
+            const factor = await fetchRedundancyFactor(serviceConfig)
+            expect(factor).toBeUndefined()
         })
 
         it('valid json but missing field', async () => {
             await updateMetadata(deployment, JSON.stringify({ foo: 'bar' }))
-            await expect(fetchRedundancyFactor(serviceConfig)).rejects.toThrowError(RedundancyFactorParseError)
+            const factor = await fetchRedundancyFactor(serviceConfig)
+            expect(factor).toBeUndefined()
         })
 
         it('valid json but invalid value', async () => {
             await updateMetadata(deployment, JSON.stringify({ redundancyFactor: 0 }))
-            await expect(fetchRedundancyFactor(serviceConfig)).rejects.toThrowError(RedundancyFactorParseError)
+            const factor = await fetchRedundancyFactor(serviceConfig)
+            expect(factor).toBeUndefined()
         })
     })
 })

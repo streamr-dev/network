@@ -12,12 +12,10 @@ const MetadataSchema = z.object({
         .gte(1)
 })
 
-export class RedundancyFactorParseError extends Error {}
-
 export async function fetchRedundancyFactor({
     operatorContractAddress,
     signer
-}: Pick<OperatorServiceConfig, 'operatorContractAddress' | 'signer'>): Promise<number> {
+}: Pick<OperatorServiceConfig, 'operatorContractAddress' | 'signer'>): Promise<number | undefined> {
     const operator = new Contract(operatorContractAddress, operatorABI, signer) as unknown as Operator
     const metadataAsString = await operator.metadata()
 
@@ -30,7 +28,7 @@ export async function fetchRedundancyFactor({
         metadata = JSON.parse(metadataAsString)
     } catch {
         logger.warn('Encountered malformed metadata', { operatorContractAddress, metadataAsString })
-        throw new RedundancyFactorParseError('Encountered malformed metadata')
+        return undefined
     }
 
     let validatedMetadata: z.infer<typeof MetadataSchema>
@@ -42,7 +40,7 @@ export async function fetchRedundancyFactor({
             metadataAsString,
             reason: err?.reason
         })
-        throw new RedundancyFactorParseError('Encountered invalid metadata')
+        return undefined
     }
     return validatedMetadata.redundancyFactor
 }
