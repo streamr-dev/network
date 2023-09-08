@@ -114,10 +114,10 @@ export class DataStore implements IStoreService {
             }
         }
 
-        // if new node is within the 5 closest nodes to the data
+        // if new node is within the storeNumberOfCopies closest nodes to the data
         // do migrate data to it
 
-        if (index < 5) {
+        if (index < this.storeNumberOfCopies) {
             this.localDataStore.setStale(dataId, dataEntry.storer!, false)
             return true
         } else {
@@ -150,7 +150,7 @@ export class DataStore implements IStoreService {
         const successfulNodes: PeerDescriptor[] = []
         const ttl = this.storeHighestTtl // ToDo: make TTL decrease according to some nice curve
         const storerTime = Timestamp.now()
-        for (let i = 0; i < closestNodes.length && successfulNodes.length < 5; i++) {
+        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.storeNumberOfCopies; i++) {
             if (isSamePeerDescriptor(this.ownPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
                     kademliaId: key, 
@@ -188,8 +188,8 @@ export class DataStore implements IStoreService {
 
     private selfIsOneOfClosestPeers(dataId: Uint8Array): boolean {
         const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
-        const closestPeers = this.getNodesClosestToIdFromBucket(dataId, 5)
-        const sortedList = new SortedContactList<Contact>(ownPeerId, 5, undefined, true)
+        const closestPeers = this.getNodesClosestToIdFromBucket(dataId, this.storeNumberOfCopies)
+        const sortedList = new SortedContactList<Contact>(ownPeerId, this.storeNumberOfCopies, undefined, true)
         sortedList.addContact(new Contact(this.ownPeerDescriptor))
         closestPeers.forEach((con) => sortedList.addContact(new Contact(con.getPeerDescriptor())))
         return sortedList.getClosestContacts().some((node) => node.getPeerId().equals(ownPeerId))
@@ -200,7 +200,7 @@ export class DataStore implements IStoreService {
         const result = await this.recursiveFinder.startRecursiveFind(key)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
-        for (let i = 0; i < closestNodes.length && successfulNodes.length < 5; i++) {
+        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.storeNumberOfCopies; i++) {
             if (isSamePeerDescriptor(this.ownPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.markAsDeleted(key, peerIdFromPeerDescriptor(this.ownPeerDescriptor))
                 successfulNodes.push(closestNodes[i])
@@ -283,7 +283,7 @@ export class DataStore implements IStoreService {
         const incomingPeerId = PeerID.fromValue(incomingPeer.kademliaId)
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
 
-        const sortedList = new SortedContactList<Contact>(dataId, 5, undefined, true)
+        const sortedList = new SortedContactList<Contact>(dataId, this.storeNumberOfCopies, undefined, true)
         sortedList.addContact(new Contact(this.ownPeerDescriptor))
 
         closestToData.forEach((con) => {
@@ -304,7 +304,7 @@ export class DataStore implements IStoreService {
                 })
             }
         } else {
-            // if we are the closest to the data, migrate to all 5 nearest
+            // if we are the closest to the data, migrate to all storeNumberOfCopies nearest
 
             sortedList.getAllContacts().forEach((contact) => {
                 const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
