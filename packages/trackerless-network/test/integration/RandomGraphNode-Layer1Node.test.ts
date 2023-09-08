@@ -26,7 +26,7 @@ class SuccessListener extends EventEmitter<SuccessEvents> {
 
         super()
         node.on('targetNeighborConnected', this.onTargetNeighborConnected)
-        node.on('nearbyContactPoolIdAdded', this.onNearbyContactPoolIdAdded)
+        node.on('nearbyNodeViewIdAdded', this.onNearbyNodeViewIdAdded)
     }
 
     private onTargetNeighborConnected = (_nodeId: NodeID) => {
@@ -35,18 +35,18 @@ class SuccessListener extends EventEmitter<SuccessEvents> {
         if (this.numNeighbors >= this.wantedNumNeighbors
             && this.numNearby >= this.wantedNumNearby) {
             this.node.off('targetNeighborConnected', this.onTargetNeighborConnected)
-            this.node.off('nearbyContactPoolIdAdded', this.onNearbyContactPoolIdAdded)
+            this.node.off('nearbyNodeViewIdAdded', this.onNearbyNodeViewIdAdded)
             this.emit('success')
         }
     }
 
-    private onNearbyContactPoolIdAdded = () => {
+    private onNearbyNodeViewIdAdded = () => {
         this.numNearby++
 
         if (this.numNeighbors >= this.wantedNumNeighbors
             && this.numNearby >= this.wantedNumNearby) {
             this.node.off('targetNeighborConnected', this.onTargetNeighborConnected)
-            this.node.off('nearbyContactPoolIdAdded', this.onNearbyContactPoolIdAdded)
+            this.node.off('nearbyNodeViewIdAdded', this.onNearbyNodeViewIdAdded)
             this.emit('success')
         }
     }
@@ -154,7 +154,7 @@ describe('RandomGraphNode-DhtNode', () => {
         await graphNodes[0].start()
 
         await successListener.waitForSuccess(15006)
-        expect(graphNodes[0].getNearbyContactPoolIds().length).toEqual(1)
+        expect(graphNodes[0].getNearbyNodeViewIds().length).toEqual(1)
         expect(graphNodes[0].getTargetNeighborIds().length).toEqual(1)
 
     })
@@ -174,7 +174,7 @@ describe('RandomGraphNode-DhtNode', () => {
         await promise
 
         range(4).map((i) => {
-            expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getNearbyNodeViewIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
 
@@ -182,7 +182,7 @@ describe('RandomGraphNode-DhtNode', () => {
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
         range(5).map((i) => {
-            allNodes[i].getNearbyContactPoolIds().forEach((nodeId) => {
+            allNodes[i].getNearbyNodeViewIds().forEach((nodeId) => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === nodeId
                 })

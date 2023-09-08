@@ -74,10 +74,10 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         entryPointRandomGraphNode.start()
         await graphNodes[0].start()
         await Promise.all([
-            waitForCondition(() => graphNodes[0].getNearbyContactPoolIds().length === 1),
+            waitForCondition(() => graphNodes[0].getNearbyNodeViewIds().length === 1),
             waitForCondition(() => graphNodes[0].getTargetNeighborIds().length === 1)
         ])
-        expect(graphNodes[0].getNearbyContactPoolIds().length).toEqual(1)
+        expect(graphNodes[0].getNearbyNodeViewIds().length).toEqual(1)
         expect(graphNodes[0].getTargetNeighborIds().length).toEqual(1)
     })
 
@@ -93,7 +93,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             }, 10000, 2000)
         }))
         range(4).map((i) => {
-            expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getNearbyNodeViewIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
         // Check bidirectionality
@@ -101,7 +101,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         allNodes.push(entryPointRandomGraphNode)
         range(5).map((i) => {
             const ownNodeId = allNodes[i].getOwnNodeId()
-            allNodes[i].getNearbyContactPoolIds().forEach((nodeId) => {
+            allNodes[i].getNearbyNodeViewIds().forEach((nodeId) => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === ownNodeId
                 })

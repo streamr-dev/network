@@ -17,8 +17,8 @@ describe('Handshaker', () => {
     const stream = 'stream#0'
 
     let targetNeighbors: NodeList
-    let nearbyContactPool: NodeList
-    let randomContactPool: NodeList
+    let nearbyNodeView: NodeList
+    let randomNodeView: NodeList
 
     let simulator: Simulator
     let simulatorTransport: SimulatorTransport
@@ -29,16 +29,16 @@ describe('Handshaker', () => {
         const rpcCommunicator = new ListeningRpcCommunicator(stream, simulatorTransport)
 
         targetNeighbors = new NodeList(peerId, 10)
-        nearbyContactPool = new NodeList(peerId, 20)
-        randomContactPool = new NodeList(peerId, 20)
+        nearbyNodeView = new NodeList(peerId, 20)
+        randomNodeView = new NodeList(peerId, 20)
 
         handshaker = new Handshaker({
             ownPeerDescriptor: peerDescriptor,
             randomGraphId: stream,
             connectionLocker: mockConnectionLocker,
             targetNeighbors,
-            nearbyContactPool,
-            randomContactPool,
+            nearbyNodeView,
+            randomNodeView,
             rpcCommunicator,
             N
         })
@@ -55,7 +55,7 @@ describe('Handshaker', () => {
     })
 
     it('attemptHandshakesOnContact with known nodes that cannot be connected to', async () => {
-        range(2).forEach(() => nearbyContactPool.add(createMockRemoteNode()))
+        range(2).forEach(() => nearbyNodeView.add(createMockRemoteNode()))
         const res = await handshaker.attemptHandshakesOnContacts([])
         expect(res.length).toEqual(2)
     })

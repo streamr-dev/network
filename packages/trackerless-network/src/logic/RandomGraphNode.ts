@@ -39,7 +39,7 @@ import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 export interface Events {
     message: (message: StreamMessage) => void
     targetNeighborConnected: (nodeId: NodeID) => void
-    nearbyContactPoolIdAdded: () => void
+    nearbyNodeViewIdAdded: () => void
 }
 
 export interface StrictRandomGraphNodeConfig {
@@ -49,8 +49,8 @@ export interface StrictRandomGraphNodeConfig {
     connectionLocker: ConnectionLocker
     ownPeerDescriptor: PeerDescriptor
     nodeViewSize: number
-    nearbyContactPool: NodeList
-    randomContactPool: NodeList
+    nearbyNodeView: NodeList
+    randomNodeView: NodeList
     targetNeighbors: NodeList
     handshaker: IHandshaker
     neighborFinder: INeighborFinder
@@ -89,15 +89,15 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
                 const senderId = binaryToHex(notice.senderId) as NodeID
-                const contact = this.config.nearbyContactPool.getNeighborById(senderId)
-                || this.config.randomContactPool.getNeighborById(senderId)
+                const contact = this.config.nearbyNodeView.getNeighborById(senderId)
+                || this.config.randomNodeView.getNeighborById(senderId)
                 || this.config.targetNeighbors.getNeighborById(senderId)
                 || this.config.proxyConnectionServer?.getConnection(senderId )?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
                     this.config.layer1.removeContact(contact.getPeerDescriptor(), true)
                     this.config.targetNeighbors.remove(contact.getPeerDescriptor())
-                    this.config.nearbyContactPool.remove(contact.getPeerDescriptor())
+                    this.config.nearbyNodeView.remove(contact.getPeerDescriptor())
                     this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.randomGraphId)
                     this.config.neighborFinder.start([senderId])
                     this.config.proxyConnectionServer?.removeConnection(senderId)
@@ -147,8 +147,8 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             return
         }
       
-        const oldLength = this.config.nearbyContactPool.getIds().length
-        this.config.nearbyContactPool.replaceAll(closestTen.map((descriptor) =>
+        const oldLength = this.config.nearbyNodeView.getIds().length
+        this.config.nearbyNodeView.replaceAll(closestTen.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,
@@ -156,8 +156,8 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             )
         ))
 
-        if (oldLength < this.config.nearbyContactPool.getIds().length) {
-            this.emit('nearbyContactPoolIdAdded')
+        if (oldLength < this.config.nearbyNodeView.getIds().length) {
+            this.emit('nearbyNodeViewIdAdded')
         }
         
         if (this.config.targetNeighbors.size() < this.config.numOfTargetNeighbors) {
@@ -170,7 +170,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         if (this.stopped) {
             return
         }
-        this.config.nearbyContactPool.replaceAll(closestTen.map((descriptor) =>
+        this.config.nearbyNodeView.replaceAll(closestTen.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,
@@ -183,7 +183,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         if (this.stopped) {
             return
         }
-        this.config.randomContactPool.replaceAll(randomPeers.map((descriptor) =>
+        this.config.randomNodeView.replaceAll(randomPeers.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,
@@ -200,7 +200,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         if (this.stopped) {
             return
         }
-        this.config.randomContactPool.replaceAll(randomPeers.map((descriptor) =>
+        this.config.randomNodeView.replaceAll(randomPeers.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,
@@ -245,9 +245,9 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.config.layer1.off('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
         this.config.layer1.off('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
         this.config.P2PTransport.off('disconnected', (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor))
-        this.config.nearbyContactPool.stop()
+        this.config.nearbyNodeView.stop()
         this.config.targetNeighbors.stop()
-        this.config.randomContactPool.stop()
+        this.config.randomNodeView.stop()
         this.config.neighborFinder.stop()
         this.config.neighborUpdateManager.stop()
         this.config.inspector.stop()
@@ -296,17 +296,17 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         return this.config.targetNeighbors.getIds()
     }
 
-    getNearbyContactPoolIds(): NodeID[] {
+    getNearbyNodeViewIds(): NodeID[] {
         if (!this.started && this.stopped) {
             return []
         }
-        return this.config.nearbyContactPool.getIds()
+        return this.config.nearbyNodeView.getIds()
     }
 
-    getRandomContactPoolIds(): NodeID[] {
+    getRandomNodeViewIds(): NodeID[] {
         if (!this.started && this.stopped) {
             return []
         }
-        return this.config.randomContactPool.getIds()
+        return this.config.randomNodeView.getIds()
     }
 }

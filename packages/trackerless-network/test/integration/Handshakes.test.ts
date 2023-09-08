@@ -34,7 +34,7 @@ describe('Handshakes', () => {
     let rpcCommunicator1: ListeningRpcCommunicator
     let rpcCommunicator2: ListeningRpcCommunicator
     let rpcCommunicator3: ListeningRpcCommunicator
-    let contactPool: NodeList
+    let nodeView: NodeList
     let targetNeighbors: NodeList
     let handshaker: Handshaker
     const randomGraphId = 'handshaker'
@@ -81,13 +81,13 @@ describe('Handshakes', () => {
         rpcCommunicator3 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport3)
 
         const handshakerPeerId = peerIdFromPeerDescriptor(peerDescriptor2)
-        contactPool = new NodeList(handshakerPeerId, 10)
+        nodeView = new NodeList(handshakerPeerId, 10)
         targetNeighbors = new NodeList(handshakerPeerId, 4)
         handshaker = new Handshaker({
             ownPeerDescriptor: peerDescriptor2,
             randomGraphId,
-            nearbyContactPool: contactPool,
-            randomContactPool: contactPool,
+            nearbyNodeView: nodeView,
+            randomNodeView: nodeView,
             targetNeighbors,
             connectionLocker: mockConnectionLocker,
             rpcCommunicator: rpcCommunicator2,
