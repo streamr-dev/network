@@ -9,8 +9,8 @@ const CHECK_VALUE_INTERVAL = 1000 * 60 * 60 // 1 hour
 export class OperatorPoolValueBreachWatcher {
     private driftLimitFractionCached?: bigint
     private readonly abortController: AbortController
-    
-    // public access modifier for tests 
+
+    // public access modifier for tests
     readonly helper: MaintainOperatorPoolValueHelper
 
     constructor(config: OperatorServiceConfig) {
@@ -40,21 +40,13 @@ export class OperatorPoolValueBreachWatcher {
     }
 
     private async checkUnwithdrawnEarningsOf(targetOperatorAddress: EthereumAddress): Promise<void> {
-        const { fraction, sponsorshipAddresses } = await this.helper.getUnwithdrawnEarningsOf(targetOperatorAddress)
-        const limit = await this.getDriftLimitFraction()
-        logger.trace(` -> is ${fraction} > ${limit}?`)
-        if (fraction > limit) {
+        const { sumDataWei, rewardThresholdDataWei, sponsorshipAddresses } = await this.helper.getUnwithdrawnEarningsOf(targetOperatorAddress)
+        logger.trace(` -> is ${sumDataWei} > ${rewardThresholdDataWei}?`)
+        if (sumDataWei > rewardThresholdDataWei) {
             logger.info('Withdraw earnings from sponsorships (target operator value in breach)',
-                { targetOperatorAddress, sponsorshipAddresses, fraction, limit })
+                { targetOperatorAddress, sponsorshipAddresses, sumDataWei, rewardThresholdDataWei })
             await this.helper.triggerWithdraw(targetOperatorAddress, sponsorshipAddresses)
         }
-    }
-
-    private async getDriftLimitFraction(): Promise<bigint> {
-        if (this.driftLimitFractionCached === undefined) {
-            this.driftLimitFractionCached = await this.helper.getDriftLimitFraction()
-        }
-        return this.driftLimitFractionCached
     }
 
     async stop(): Promise<void> {

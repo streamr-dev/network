@@ -5,7 +5,7 @@ import { Logger } from '@streamr/utils'
 const logger = new Logger(module)
 
 export async function getTotalUnwithdrawnEarnings(operatorContract: Operator): Promise<bigint> {
-    const { earnings } = await operatorContract.getEarningsFromSponsorships()
+    const { earnings } = await operatorContract.getSponsorships()
     let unwithdrawnEarnings = BigInt(0)
     for (const e of earnings) {
         unwithdrawnEarnings += e.toBigInt()

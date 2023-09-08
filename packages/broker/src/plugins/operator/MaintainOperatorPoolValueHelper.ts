@@ -11,9 +11,9 @@ const logger = new Logger(module)
 const ONE_ETHER = BigInt(1e18)
 
 interface UnwithdrawnEarningsData {
-    sumDataWei: bigint
-    fraction: bigint
     sponsorshipAddresses: EthereumAddress[]
+    sumDataWei: bigint
+    rewardThresholdDataWei: bigint
 }
 
 export class MaintainOperatorPoolValueHelper {
@@ -41,18 +41,6 @@ export class MaintainOperatorPoolValueHelper {
     }
 
     /**
-     * The "hard limit" for paying out rewards to `withdrawEarningsFromSponsorships` caller.
-     * Operator is expected to call `withdrawEarningsFromSponsorships` before
-     *   `unwithdrawn earnings / (total staked + free funds)` exceeds this limit.
-     * @returns a "wei" fraction: 1e18 or "1 ether" means limit is at unwithdrawn earnings == total staked + free funds
-     */
-    async getDriftLimitFraction(): Promise<bigint> {
-        const streamrConfigAddress = await this.operator.streamrConfig()
-        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, this.config.signer) as unknown as StreamrConfig
-        return (await streamrConfig.poolValueDriftLimitFraction()).toBigInt()
-    }
-
-    /**
      * Find the sum of unwithdrawn earnings in Sponsorships (that the Operator must withdraw before the sum reaches a limit),
      * SUBJECT TO the constraints, set in the OperatorServiceConfig:
      *  - only take at most maxSponsorshipsInWithdraw addresses (those with most earnings), or all if undefined
@@ -62,7 +50,11 @@ export class MaintainOperatorPoolValueHelper {
     async getUnwithdrawnEarningsOf(operatorContractAddress: EthereumAddress): Promise<UnwithdrawnEarningsData> {
         const operator = new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
         const minSponsorshipEarningsInWithdrawWei = BigNumber.from(this.config.minSponsorshipEarningsInWithdraw ?? 0)
-        const { sponsorshipAddresses: allSponsorshipAddresses, earnings } = await operator.getEarningsFromSponsorships()
+        const {
+            addresses: allSponsorshipAddresses,
+            earnings,
+            rewardThreshold,
+        } = await operator.getSponsorships()
 
         const sponsorships = allSponsorshipAddresses
             .map((address, i) => ({ address, earnings: earnings[i] }))
@@ -71,13 +63,9 @@ export class MaintainOperatorPoolValueHelper {
             .slice(0, this.config.maxSponsorshipsInWithdraw) // take all if maxSponsorshipsInWithdraw is undefined
         const sponsorshipAddresses = sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address))
 
-        const approxPoolValue = (await operator.totalStakedIntoSponsorshipsWei()).toBigInt()
-        const sumDataWei = sponsorships.reduce((sum, sponsorship) => sum.add(sponsorship.earnings), BigNumber.from(0)).toBigInt()
-        const fraction = approxPoolValue > 0
-            ? sumDataWei * ONE_ETHER / approxPoolValue
-            : BigInt(0)
+        const sumDataWei = sponsorships.reduce((sum, sponsorship) => sum.add(sponsorship.earnings), 0n).toBigInt()
 
-        return { sumDataWei, fraction, sponsorshipAddresses }
+        return { sponsorshipAddresses, sumDataWei, rewardThresholdDataWei: rewardThreshold.toBigInt() }
     }
 
     async getMyUnwithdrawnEarnings(): Promise<UnwithdrawnEarningsData> {
