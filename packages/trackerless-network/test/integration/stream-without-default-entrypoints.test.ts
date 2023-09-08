@@ -38,7 +38,7 @@ describe('stream without default entrypoints', () => {
             hello: 'world'
         },
         messageType: StreamMessageType.MESSAGE,
-        signature: 'signature',
+        signature: '1234',
     })
 
     beforeEach(async () => {

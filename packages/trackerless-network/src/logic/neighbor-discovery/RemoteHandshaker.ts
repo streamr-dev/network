@@ -1,10 +1,9 @@
 import { Remote } from '../Remote'
 import { DhtRpcOptions, PeerDescriptor, UUID } from '@streamr/dht'
 import { InterleaveNotice, StreamHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { Logger } from '@streamr/utils'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { IHandshakeRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { hexToBinary } from '../utils'
 
 const logger = new Logger(module)
 

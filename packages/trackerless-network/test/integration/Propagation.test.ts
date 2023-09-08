@@ -2,9 +2,8 @@ import { DhtNode, PeerDescriptor, Simulator, PeerID, peerIdFromPeerDescriptor } 
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockRandomGraphNodeAndDhtNode, createRandomNodeId, createStreamMessage } from '../utils/utils'
 import { range } from 'lodash'
-import { waitForCondition } from '@streamr/utils'
+import { waitForCondition, hexToBinary } from '@streamr/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { hexToBinary } from '../../src/logic/utils'
 
 describe('Propagation', () => {
     const entryPointDescriptor: PeerDescriptor = {

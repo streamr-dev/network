@@ -2,8 +2,8 @@ import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
 import { LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/Transport'
+import { utf8ToBinary, hexToBinary } from '@streamr/utils'
 import { createRandomNodeId, createStreamMessage } from '../utils/utils'
-import { hexToBinary, utf8ToBinary } from '../../src/logic/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('StreamNodeServer', () => {

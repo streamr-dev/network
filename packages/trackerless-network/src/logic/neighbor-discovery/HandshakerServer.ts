@@ -7,7 +7,7 @@ import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/N
 import { RemoteHandshaker } from './RemoteHandshaker'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { binaryToHex } from '../utils'
+import { binaryToHex } from '@streamr/utils'
 
 interface HandshakerServerConfig {
     randomGraphId: string

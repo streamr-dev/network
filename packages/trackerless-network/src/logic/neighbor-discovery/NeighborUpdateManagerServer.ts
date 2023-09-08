@@ -8,7 +8,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { getNodeIdFromPeerDescriptor, NodeID } from '../../identifiers'
-import { binaryToHex, hexToBinary } from '../utils'
+import { binaryToHex, hexToBinary } from '@streamr/utils'
 
 interface NeighborUpdateManagerConfig {
     ownNodeId: NodeID

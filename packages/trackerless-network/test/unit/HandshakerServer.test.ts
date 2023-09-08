@@ -4,7 +4,7 @@ import { NodeList } from '../../src/logic/NodeList'
 import { InterleaveNotice, StreamHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockRemoteHandshaker, createMockRemoteNode, createRandomNodeId, mockConnectionLocker } from '../utils/utils'
 import { NodeID } from '../../src/identifiers'
-import { hexToBinary } from '../../src/logic/utils'
+import { hexToBinary } from '@streamr/utils'
 
 describe('HandshakerServer', () => {
 
