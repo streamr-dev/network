@@ -92,7 +92,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                 const contact = this.config.nearbyContactPool.getNeighborById(senderId)
                 || this.config.randomContactPool.getNeighborById(senderId)
                 || this.config.targetNeighbors.getNeighborById(senderId)
-                || this.config.proxyConnectionServer?.getConnection(senderId as NodeID)?.remote
+                || this.config.proxyConnectionServer?.getConnection(senderId )?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
                     this.config.layer1.removeContact(contact.getPeerDescriptor(), true)
@@ -100,7 +100,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                     this.config.nearbyContactPool.remove(contact.getPeerDescriptor())
                     this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.randomGraphId)
                     this.config.neighborFinder.start([senderId])
-                    this.config.proxyConnectionServer?.removeConnection(senderId as NodeID)
+                    this.config.proxyConnectionServer?.removeConnection(senderId)
                 }
             },
             markForInspection: (senderId: NodeID, messageId: MessageID) => this.config.inspector.markMessage(senderId, messageId)
@@ -200,7 +200,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         if (this.stopped) {
             return
         }
-        this.config.randomContactPool!.replaceAll(randomPeers.map((descriptor) =>
+        this.config.randomContactPool.replaceAll(randomPeers.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,
@@ -276,7 +276,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             propagationTargets = propagationTargets.concat(proxyTargets)
         }
 
-        propagationTargets = propagationTargets.filter((target) => !this.config.inspector.isInspected(target as NodeID))
+        propagationTargets = propagationTargets.filter((target) => !this.config.inspector.isInspected(target ))
         propagationTargets = propagationTargets.concat(this.config.temporaryConnectionServer.getNodes().getIds())
         return propagationTargets
     }

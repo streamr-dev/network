@@ -143,7 +143,7 @@ describe('Route Message With Mock Connections', () => {
                 numsOfReceivedMessages[node.getNodeId().toKey()] = numsOfReceivedMessages[node.getNodeId().toKey()] + 1
                 try {
                     const target = receiveMatrix[parseInt(node.getNodeId().toString()) - 1]
-                    target[parseInt(PeerID.fromValue(msg.sourceDescriptor!.kademliaId!).toString()) - 1]++
+                    target[parseInt(PeerID.fromValue(msg.sourceDescriptor!.kademliaId).toString()) - 1]++
                 } catch (e) {
                     console.error(e)
                 }

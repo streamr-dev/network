@@ -269,7 +269,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 } else {
                     logger.trace('handshake of connection not completed, force-closing')
 
-                    waitForEvent3<ManagedConnectionEvents>(peer!, 'disconnected', 2000)
+                    waitForEvent3<ManagedConnectionEvents>(peer, 'disconnected', 2000)
                         .then(() => {
                             logger.trace('resolving after receiving disconnected event from non-handshaked connection')
                             resolve()
@@ -338,7 +338,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const binary = Message.toBinary(message)
         this.metrics.sendBytesPerSecond.record(binary.byteLength)
         this.metrics.sendMessagesPerSecond.record(1)
-        return connection!.send(binary, doNotConnect)
+        return connection.send(binary, doNotConnect)
     }
 
     private isConnectionToSelf(peerDescriptor: PeerDescriptor): boolean { 
@@ -356,7 +356,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     private createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
         if (this.simulatorConnector) {
-            return this.simulatorConnector!.connect(peerDescriptor)
+            return this.simulatorConnector.connect(peerDescriptor)
         } else if (peerDescriptor.websocket || this.ownPeerDescriptor!.websocket) {
             return this.webSocketConnector!.connect(peerDescriptor)
         }
@@ -393,9 +393,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public handleMessage(message: Message): void {
-        logger.trace('Received message of type ' + message!.messageType)
-        if (message!.messageType !== MessageType.RPC) {
-            logger.trace('Filtered out non-RPC message of type ' + message!.messageType)
+        logger.trace('Received message of type ' + message.messageType)
+        if (message.messageType !== MessageType.RPC) {
+            logger.trace('Filtered out non-RPC message of type ' + message.messageType)
             return
         }
         if (this.messageDuplicateDetector.isMostLikelyDuplicate(message.messageId)) {
@@ -501,13 +501,13 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 // replace the current connection
                 const oldConnection = this.connections.get(newPeerID.toKey())!
                 logger.trace('replaced: ' + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' ')
-                const buffer = oldConnection!.stealOutputBuffer()
+                const buffer = oldConnection.stealOutputBuffer()
                 
                 for (const data of buffer) {
                     newConnection.sendNoWait(data)
                 }
                 
-                oldConnection!.reportBufferSentByOtherConnection()
+                oldConnection.reportBufferSentByOtherConnection()
                 oldConnection.replacedByOtherConnection = true
             } else {
                 newConnection.rejectedAsIncoming = true
@@ -607,7 +607,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         const promise = new Promise<void>((resolve, _reject) => {
             // eslint-disable-next-line promise/catch-or-return
-            waitForEvent3<ManagedConnectionEvents>(connection!, 'disconnected', 2000).then(() => {
+            waitForEvent3<ManagedConnectionEvents>(connection, 'disconnected', 2000).then(() => {
                 logger.trace('disconnected event received in gracefullyDisconnectAsync()')
                 return
             })
@@ -649,7 +649,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
         return Array.from(this.connections.values())
             .filter((managedConnection: ManagedConnection) => managedConnection.isHandshakeCompleted())
-            .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor()! as PeerDescriptor)
+            .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor()!)
     }
 
     // IConnectionLocker server implementation

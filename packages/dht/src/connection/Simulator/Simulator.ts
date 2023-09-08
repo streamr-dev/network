@@ -178,7 +178,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
                 throw ('invalid region index given to Simulator')
             }
 
-            latency = this.latencyTable![sourceRegion!][targetRegion!]
+            latency = this.latencyTable![sourceRegion][targetRegion]
         }
         if (this.latencyType === LatencyType.RANDOM) {
             latency = Math.random() * (250 - 5) + 5
@@ -195,7 +195,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             logger.error('source association not found in accept()')
             return
         }
-        sourceAssociation!.setDestinationConnection(targetConnection)
+        sourceAssociation.setDestinationConnection(targetConnection)
 
         const targetAssociation = new Association(targetConnection, sourceConnection)
         this.associations.set(targetConnection.connectionId, targetAssociation)
@@ -215,7 +215,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             return operation.association.connectedCallback!('Target connector not found')
         }
 
-        target!.handleIncomingConnection(operation.sourceConnection)
+        target.handleIncomingConnection(operation.sourceConnection)
     }
 
     private executeCloseOperation(operation: CloseOperation): void {
@@ -229,18 +229,18 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         let counterAssociation: Association | undefined
 
         if (target) {
-            counterAssociation = this.associations.get(target!.connectionId)
+            counterAssociation = this.associations.get(target.connectionId)
         }
 
         if (!target || !counterAssociation) {
             this.associations.delete(operation.association.sourceConnection.connectionId)
 
-        } else if (!counterAssociation!.isClosing()) {
-            target!.handleIncomingDisconnection()
-            this.close(target!)
+        } else if (!counterAssociation.isClosing()) {
+            target.handleIncomingDisconnection()
+            this.close(target)
         } else {
             // this is the 'ack' of the CloseOperation to the original closer
-            this.associations.delete(target!.connectionId)
+            this.associations.delete(target.connectionId)
             this.associations.delete(operation.association.sourceConnection.connectionId)
         }
     }
@@ -303,7 +303,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             return
         }
 
-        const firstOperationTime = firstOperation!.executionTime
+        const firstOperationTime = firstOperation.executionTime
         const timeDifference = firstOperationTime - currentTime
 
         this.simulatorTimeout = setTimeout(this.executeQueuedOperations, timeDifference)

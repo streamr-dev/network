@@ -61,15 +61,15 @@ export class PeerDiscovery {
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         this.config.addContact(entryPointDescriptor)
-        const closest = this.config.bucket.closest(this.config.ownPeerId!.value, this.config.getClosestContactsLimit)
+        const closest = this.config.bucket.closest(this.config.ownPeerId.value, this.config.getClosestContactsLimit)
         this.config.neighborList.addContacts(closest)
         const sessionOptions = {
             bucket: this.config.bucket,
-            neighborList: this.config.neighborList!,
-            targetId: this.config.ownPeerId!.value,
-            ownPeerDescriptor: this.config.ownPeerDescriptor!,
+            neighborList: this.config.neighborList,
+            targetId: this.config.ownPeerId.value,
+            ownPeerDescriptor: this.config.ownPeerDescriptor,
             serviceId: this.config.serviceId,
-            rpcCommunicator: this.config.rpcCommunicator!,
+            rpcCommunicator: this.config.rpcCommunicator,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
             newContactListener: (newPeer: DhtPeer) => this.config.addContact(newPeer.getPeerDescriptor()),
@@ -133,7 +133,7 @@ export class PeerDiscovery {
             return
         }
         await Promise.allSettled(this.config.bucket.closest(this.config.ownPeerId.value, this.config.parallelism).map(async (peer: DhtPeer) => {
-            const contacts = await peer.getClosestPeers(this.config.ownPeerDescriptor.kademliaId!)
+            const contacts = await peer.getClosestPeers(this.config.ownPeerDescriptor.kademliaId)
             contacts.forEach((contact) => {
                 this.config.addContact(contact)
             })
