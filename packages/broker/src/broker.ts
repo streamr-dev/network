@@ -1,17 +1,13 @@
 import { Logger, toEthereumAddress } from '@streamr/utils'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
-import get from 'lodash/get'
-import has from 'lodash/has'
-import isEqual from 'lodash/isEqual'
-import isString from 'lodash/isString'
-import set from 'lodash/set'
 import StreamrClient from 'streamr-client'
 import { version as CURRENT_VERSION } from '../package.json'
 import { HttpServerEndpoint, Plugin } from './Plugin'
-import { Config, StrictConfig } from './config/config'
+import { Config } from './config/config'
 import BROKER_CONFIG_SCHEMA from './config/config.schema.json'
 import { validateConfig } from './config/validateConfig'
+import { applyPluginClientConfigs } from './helpers/applyPluginClientConfigs'
 import { generateMnemonicFromAddress } from './helpers/generateMnemonicFromAddress'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import { createPlugin } from './pluginRegistry'
@@ -22,22 +18,6 @@ export interface Broker {
     getStreamrClient: () => StreamrClient
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
-}
-
-const applyPluginClientConfigs = (plugins: Plugin<any>[], clientConfig: StrictConfig['client']) => {
-    for (const plugin of plugins) {
-        for (const item of plugin.getClientConfig()) {
-            if (!has(clientConfig, item.path)) {
-                set(clientConfig, item.path, item.value)
-            } else {
-                const existingValue = get(clientConfig, item.path)
-                if (!isEqual(item.value, existingValue)) {
-                    const formattedValue = isString(existingValue) ? existingValue : `${JSON.stringify(existingValue)}`
-                    throw new Error(`Plugin ${plugin.name} doesn't support client config value "${formattedValue}" in ${item.path}`)
-                }
-            }
-        }
-    }
 }
 
 export const createBroker = async (configWithoutDefaults: Config): Promise<Broker> => {
