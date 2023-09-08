@@ -63,8 +63,8 @@ async function run(): Promise<void> {
         )
         // eslint-disable-next-line no-console
         console.log(
-            `Layer2: Nearby Contacts ${streamrNode.getStream(streamPartId)?.layer2.getNearbyNodeViewIds().length || 0}, `,
-            `Random Contacts ${streamrNode.getStream(streamPartId)?.layer2.getRandomNodeViewIds().length || 0}, `
+            `Layer2: Nearby Contacts ${streamrNode.getStream(streamPartId)?.layer2.getNearbyNodeView().getIds().length || 0}, `,
+            `Random Contacts ${streamrNode.getStream(streamPartId)?.layer2.getRandomNodeView().getIds().length || 0}, `
         )
         // eslint-disable-next-line no-console
         console.log(

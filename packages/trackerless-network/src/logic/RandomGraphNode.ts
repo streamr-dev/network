@@ -296,17 +296,11 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         return this.config.targetNeighbors.getIds()
     }
 
-    getNearbyNodeViewIds(): NodeID[] {
-        if (!this.started && this.stopped) {
-            return []
-        }
-        return this.config.nearbyNodeView.getIds()
+    getNearbyNodeView(): NodeList {
+        return this.config.nearbyNodeView
     }
 
-    getRandomNodeViewIds(): NodeID[] {
-        if (!this.started && this.stopped) {
-            return []
-        }
-        return this.config.randomNodeView.getIds()
+    getRandomNodeView(): NodeList {
+        return this.config.randomNodeView
     }
 }

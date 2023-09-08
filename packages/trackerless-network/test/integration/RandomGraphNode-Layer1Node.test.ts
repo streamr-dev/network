@@ -154,7 +154,7 @@ describe('RandomGraphNode-DhtNode', () => {
         await graphNodes[0].start()
 
         await successListener.waitForSuccess(15006)
-        expect(graphNodes[0].getNearbyNodeViewIds().length).toEqual(1)
+        expect(graphNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
         expect(graphNodes[0].getTargetNeighborIds().length).toEqual(1)
 
     })
@@ -174,7 +174,7 @@ describe('RandomGraphNode-DhtNode', () => {
         await promise
 
         range(4).map((i) => {
-            expect(graphNodes[i].getNearbyNodeViewIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
 
@@ -182,7 +182,7 @@ describe('RandomGraphNode-DhtNode', () => {
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
         range(5).map((i) => {
-            allNodes[i].getNearbyNodeViewIds().forEach((nodeId) => {
+            allNodes[i].getNearbyNodeView().getIds().forEach((nodeId) => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === nodeId
                 })

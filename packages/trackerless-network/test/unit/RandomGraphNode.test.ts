@@ -57,17 +57,17 @@ describe('RandomGraphNode', () => {
         targetNeighbors.remove(mockRemote.getPeerDescriptor())
     })
 
-    it('getNearbyNodeViewIds', () => {
+    it('getNearbyNodeView', () => {
         const mockRemote = createMockRemoteNode()
         nearbyNodeView.add(mockRemote)
-        const ids = randomGraphNode.getNearbyNodeViewIds()
+        const ids = randomGraphNode.getNearbyNodeView().getIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
-    it('getRandomNodeViewIds', () => {
+    it('getRandomNodeView', () => {
         const mockRemote = createMockRemoteNode()
         randomNodeView.add(mockRemote)
-        const ids = randomGraphNode.getRandomNodeViewIds()
+        const ids = randomGraphNode.getRandomNodeView().getIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
