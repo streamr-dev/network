@@ -12,6 +12,7 @@ import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import Heap from 'heap'
 import { debugVars } from '../../helpers/debugHelpers'
 import * as sinon from 'sinon'
+import { isRunningInElectron } from '@streamr/test-utils'
 
 const logger = new Logger(module)
 
@@ -116,14 +117,16 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private static clock: sinon.SinonFakeTimers | undefined
 
     static useFakeTimers(on = true): void {
-        if (on) {
-            if (!Simulator.clock) {
-                Simulator.clock = sinon.useFakeTimers()
-            }
-        } else {
-            if (Simulator.clock) {
-                Simulator.clock.restore()
-                Simulator.clock = undefined
+        if (!isRunningInElectron()) {  // never use fake timers in browser environment
+            if (on) {
+                if (!Simulator.clock) {
+                    Simulator.clock = sinon.useFakeTimers()
+                }
+            } else {
+                if (Simulator.clock) {
+                    Simulator.clock.restore()
+                    Simulator.clock = undefined
+                }
             }
         }
     }
