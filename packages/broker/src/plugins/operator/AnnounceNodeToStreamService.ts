@@ -1,16 +1,13 @@
-import { EthereumAddress, Logger, setAbortableInterval } from '@streamr/utils'
+import { EthereumAddress, setAbortableInterval } from '@streamr/utils'
 import { StreamrClient } from 'streamr-client'
-import { StreamID, toStreamID } from '@streamr/protocol'
-import { createHeartbeatMessage } from './heartbeatUtils'
-
-const logger = new Logger(module)
+import { announceNodeToStream } from './announceNodeToStream'
 
 export const DEFAULT_INTERVAL_IN_MS = 1000 * 10
 
 export class AnnounceNodeToStreamService {
     private readonly abortController = new AbortController()
     private readonly streamrClient: StreamrClient
-    private readonly coordinationStream: StreamID
+    private readonly operatorContractAddress: EthereumAddress
     private readonly intervalInMs: number
 
     constructor(
@@ -19,25 +16,14 @@ export class AnnounceNodeToStreamService {
         intervalInMs = DEFAULT_INTERVAL_IN_MS
     ) {
         this.streamrClient = streamrClient
-        this.coordinationStream = toStreamID('/operator/coordination', operatorContractAddress)
+        this.operatorContractAddress = operatorContractAddress
         this.intervalInMs = intervalInMs
     }
 
     async start(): Promise<void> {
         setAbortableInterval(() => {
             (async () => {
-                try {
-                    const peerDescriptor = await this.streamrClient.getPeerDescriptor()
-                    await this.streamrClient.publish(this.coordinationStream, createHeartbeatMessage(peerDescriptor))
-                    logger.debug('Published heartbeat to coordination stream', {
-                        streamId: this.coordinationStream
-                    })
-                } catch (err) {
-                    logger.warn('Unable to publish to coordination stream', {
-                        streamId: this.coordinationStream,
-                        reason: err?.message
-                    })
-                }
+                await announceNodeToStream(this.operatorContractAddress, this.streamrClient)
             })()
         }, this.intervalInMs, this.abortController.signal)
     }
