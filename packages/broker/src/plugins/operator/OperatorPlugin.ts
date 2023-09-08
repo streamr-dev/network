@@ -1,11 +1,10 @@
 import { toStreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger, scheduleAtInterval, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Signer } from 'ethers'
 import { CONFIG_TEST } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
-import { AnnounceNodeToStreamService } from './AnnounceNodeToStreamService'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorPoolValueService } from './MaintainOperatorPoolValueService'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
@@ -15,6 +14,7 @@ import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { createIsLeaderFn } from './createIsLeaderFn'
 import { announceNodeToContract } from './announceNodeToContract'
+import { announceNodeToStream } from './announceNodeToStream'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
@@ -35,7 +35,6 @@ export interface OperatorServiceConfig {
 const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
-    private announceNodeToStreamService?: AnnounceNodeToStreamService
     private inspectRandomNodeService = new InspectRandomNodeService()
     private voteOnSuspectNodeService?: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
@@ -55,10 +54,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             maxSponsorshipsInWithdraw: DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW,
             minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
         }
-        this.announceNodeToStreamService = new AnnounceNodeToStreamService(
-            this.streamrClient,
-            toEthereumAddress(this.pluginConfig.operatorContractAddress)
-        )
         this.fleetState = new OperatorFleetState(
             this.streamrClient,
             toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
@@ -76,7 +71,14 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
-        await this.announceNodeToStreamService.start()
+        setAbortableInterval(() => {
+            (async () => {
+                await announceNodeToStream(
+                    toEthereumAddress(this.pluginConfig.operatorContractAddress), 
+                    this.streamrClient
+                )
+            })()
+        }, 1000 * 10, this.abortController.signal)
         await this.inspectRandomNodeService.start()
         await this.maintainOperatorPoolValueService.start()
         await this.maintainTopologyService.start()
@@ -104,7 +106,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
 
     async stop(): Promise<void> {
         this.abortController.abort()
-        await this.announceNodeToStreamService!.stop()
         await this.inspectRandomNodeService.stop()
         await this.maintainOperatorPoolValueService!.stop()
         await this.voteOnSuspectNodeService!.stop()
