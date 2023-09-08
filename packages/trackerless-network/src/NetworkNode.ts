@@ -2,9 +2,9 @@ import { StreamMessage, StreamPartID, StreamMessageType } from '@streamr/protoco
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
-import { MetricsContext } from '@streamr/utils'
+import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
-import { NodeID, UserID } from './identifiers'
+import { NodeID } from './identifiers'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
@@ -56,7 +56,7 @@ export class NetworkNode {
         streamPartId: StreamPartID,
         contactPeerDescriptors: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: UserID,
+        userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
         if (this.options.networkNode.acceptProxyConnections) {

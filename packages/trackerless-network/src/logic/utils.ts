@@ -1,7 +1,6 @@
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector' 
 import { MessageID, MessageRef } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { binaryToHex, areEqualBinaries } from '@streamr/utils'
-import { UserID } from '../identifiers'
+import { binaryToHex } from '@streamr/utils'
 
 export const markAndCheckDuplicate = (
     duplicateDetectors: Map<string, DuplicateMessageDetector>,
@@ -16,8 +15,4 @@ export const markAndCheckDuplicate = (
         duplicateDetectors.set(detectorKey, new DuplicateMessageDetector())
     }
     return duplicateDetectors.get(detectorKey)!.markAndCheck(previousNumberPair, currentNumberPair)
-}
-
-export const areEqualUsers = (userId1: UserID, userId2: UserID): boolean => {
-    return areEqualBinaries(userId1, userId2)
 }

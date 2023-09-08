@@ -78,8 +78,8 @@ describe('proxy group key exchange', () => {
     })
     
     it('happy path request', async () => {
-        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, hexToBinary(publisherUserId))
-        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, hexToBinary(subscriberUserId))
+        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
+        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
 
         const requestContent = new GroupKeyRequest({
             recipient: publisherUserId,
@@ -111,8 +111,8 @@ describe('proxy group key exchange', () => {
     })
 
     it('happy path response', async () => {
-        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, hexToBinary(publisherUserId))
-        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, hexToBinary(subscriberUserId))
+        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
+        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
 
         const responseContent = new GroupKeyResponse({
             recipient: publisherUserId,

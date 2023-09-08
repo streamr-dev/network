@@ -2,7 +2,7 @@ import { Contract } from '@ethersproject/contracts'
 import { parseEther } from '@ethersproject/units'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { OperatorValueBreachWatcher } from '../../../../src/plugins/operator/OperatorValueBreachWatcher'
+import { OperatorPoolValueBreachWatcher } from '../../../../src/plugins/operator/OperatorPoolValueBreachWatcher'
 import { createClient, createTestStream } from '../../../utils'
 import {
     SetupOperatorContractOpts,
@@ -14,14 +14,14 @@ import {
     sponsor,
     stake
 } from './contractUtils'
-import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
+import { getTotalUnwithdrawnEarnings } from './operatorPoolValueUtils'
 
 const logger = new Logger(module)
 
 const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
 const ONE_ETHER = BigInt(1e18)
 
-describe('OperatorValueBreachWatcher', () => {
+describe('OperatorPoolValueBreachWatcher', () => {
 
     let streamId: string
     let deployConfig: SetupOperatorContractOpts
@@ -51,7 +51,7 @@ describe('OperatorValueBreachWatcher', () => {
         await sponsor(sponsorer, sponsorship2.address, 250)
         await stake(operatorContract, sponsorship2.address, 100)
 
-        const operatorValueBreachWatcher = new OperatorValueBreachWatcher({
+        const operatorPoolValueBreachWatcher = new OperatorPoolValueBreachWatcher({
             ...watcherConfig,
             signer: watcherOperatorWallet // TODO should be _watcherWallets[0] when ETH-579 deployed
         })
@@ -63,20 +63,20 @@ describe('OperatorValueBreachWatcher', () => {
         const allowedDifference = poolValueBeforeWithdraw.mul(poolValueDriftLimitFraction).div(ONE_ETHER).toBigInt()
 
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
-        operatorValueBreachWatcher.helper.getRandomOperator = async () => {
+        operatorPoolValueBreachWatcher.helper.getRandomOperator = async () => {
             return toEthereumAddress(operatorContract.address)
         }
 
         logger.debug('Waiting until above', { allowedDifference })
         await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > allowedDifference, 10000, 1000)
-        await operatorValueBreachWatcher.start()
+        await operatorPoolValueBreachWatcher.start()
         logger.debug('Waiting until below', { allowedDifference })
         await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) < allowedDifference, 10000, 1000)
 
         const poolValueAfterWithdraw = await operatorContract.getApproximatePoolValue()
         expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
 
-        await operatorValueBreachWatcher.stop()
+        await operatorPoolValueBreachWatcher.stop()
 
     }, 60 * 1000)
 })
