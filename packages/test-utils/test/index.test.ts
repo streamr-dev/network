@@ -1,7 +1,9 @@
 import {
     waitForStreamToEnd,
     toReadableStream,
-    eventsToArray, eventsWithArgsToArray
+    eventsToArray,
+    eventsWithArgsToArray,
+    isRunningInElectron
 } from '../src'
 import { Readable } from 'stream'
 import { EventEmitter } from 'events'
@@ -151,7 +153,7 @@ describe(toReadableStream, () => {
 })
 
 describe(isRunningInElectron, () => {
-    it("returns false", () => {
+    it('returns false', () => {
         expect(isRunningInElectron()).toEqual(false)
     })
 })
