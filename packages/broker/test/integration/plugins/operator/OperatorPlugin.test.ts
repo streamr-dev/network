@@ -1,6 +1,6 @@
 import type { Operator } from '@streamr/network-contracts'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { waitForCondition } from '@streamr/utils'
+import { collect } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { ProxyDirection, StreamPermission } from 'streamr-client'
 import { Broker, createBroker } from '../../../../src/broker'
@@ -55,14 +55,11 @@ describe('OperatorPlugin', () => {
         })
         const brokerDescriptor = await broker.getStreamrClient().getPeerDescriptor()
         await subscriber.setProxies({ id: stream.id }, [brokerDescriptor], ProxyDirection.SUBSCRIBE)
-        const receivedMessages: any[] = []
-        await subscriber.subscribe(stream.id, (content: any) => {
-            receivedMessages.push(content)
-        })
-        await waitForCondition(() => receivedMessages.length > 0)
+        const subscription = await subscriber.subscribe(stream.id)
+        const receivedMessages = await collect(subscription, 1)
         clearInterval(publishTimer)
 
-        expect(receivedMessages![0]).toEqual({ foo: 'bar' })
+        expect(receivedMessages![0].content).toEqual({ foo: 'bar' })
         await subscriber.destroy()
         await publisher.destroy()
     }, 30 * 1000)
