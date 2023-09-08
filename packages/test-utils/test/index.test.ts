@@ -149,3 +149,9 @@ describe(toReadableStream, () => {
         })
     })
 })
+
+describe(isRunningInElectron, () => {
+    it("returns false", () => {
+        expect(isRunningInElectron()).toEqual(false)
+    })
+})
