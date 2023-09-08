@@ -1,4 +1,4 @@
-import { NetworkNode } from '../../src/NetworkNode'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import {
     MessageID,
@@ -36,7 +36,7 @@ describe('NetworkNode', () => {
         transport1 = new SimulatorTransport(pd1, simulator)
         transport2 = new SimulatorTransport(pd2, simulator)
 
-        node1 = new NetworkNode({
+        node1 = createNetworkNode({
             layer0: {
                 entryPoints: [pd1],
                 peerDescriptor: pd1,
@@ -44,7 +44,7 @@ describe('NetworkNode', () => {
             },
             networkNode: {}
         })
-        node2 = new NetworkNode({
+        node2 = createNetworkNode({
             layer0: {
                 entryPoints: [pd1],
                 peerDescriptor: pd2,

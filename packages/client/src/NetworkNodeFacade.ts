@@ -3,7 +3,7 @@
  */
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NetworkNode, NetworkOptions, NodeID, ProxyDirection } from '@streamr/trackerless-network'
+import { createNetworkNode as createNetworkNode_, NetworkOptions, NodeID, ProxyDirection } from '@streamr/trackerless-network'
 import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -61,7 +61,7 @@ export interface Events {
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFactory {
     createNetworkNode(opts: NetworkOptions): NetworkNodeStub {
-        return new NetworkNode(opts)
+        return createNetworkNode_(opts)
     }
 }
 
