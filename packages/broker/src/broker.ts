@@ -25,8 +25,8 @@ export interface Broker {
 }
 
 const applyPluginClientConfigs = (plugins: Plugin<any>[], clientConfig: StrictConfig['client']) => {
-    plugins.forEach((plugin) => {
-        plugin.getClientConfig().forEach((item) => {
+    for (const plugin of plugins) {
+        for (const item of plugin.getClientConfig()) {
             if (!has(clientConfig, item.path)) {
                 set(clientConfig, item.path, item.value)
             } else {
@@ -36,8 +36,8 @@ const applyPluginClientConfigs = (plugins: Plugin<any>[], clientConfig: StrictCo
                     throw new Error(`Plugin ${plugin.name} doesn't support client config value "${formattedValue}" in ${item.path}`)
                 }
             }
-        })
-    })
+        }
+    }
 }
 
 export const createBroker = async (configWithoutDefaults: Config): Promise<Broker> => {
