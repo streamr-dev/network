@@ -109,7 +109,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         if (this.connection) {
             try {
                 logger.trace(`Setting remote descriptor for peer: ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
-                this.connection!.setRemoteDescription(description, type as DescriptionType)
+                this.connection.setRemoteDescription(description, type as DescriptionType)
                 this.remoteDescriptionSet = true
             } catch (err) {
                 logger.warn(`Failed to set remote descriptor for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
@@ -124,7 +124,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             if (this.remoteDescriptionSet) {
                 try {
                     logger.trace(`Setting remote candidate for peer: ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
-                    this.connection!.addRemoteCandidate(candidate, mid)
+                    this.connection.addRemoteCandidate(candidate, mid)
                 } catch (err) {
                     logger.warn(`Failed to set remote candidate for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
                     this.doClose('OTHER')

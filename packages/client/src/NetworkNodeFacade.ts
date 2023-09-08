@@ -3,12 +3,12 @@
  */
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NetworkNode, NetworkOptions, ProxyDirection, UserID, NodeID } from '@streamr/trackerless-network'
+import { NetworkNode, NetworkOptions, NodeID, ProxyDirection } from '@streamr/trackerless-network'
 import { EthereumAddress, MetricsContext } from '@streamr/utils'
-import { inject, Lifecycle, scoped } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
-import { ConfigInjectionToken, StrictStreamrClientConfig, NetworkPeerDescriptor } from './Config'
+import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { pOnce } from './utils/promises'
 import { peerDescriptorTranslator } from './utils/utils'
@@ -44,7 +44,7 @@ export interface NetworkNodeStub {
         streamPartId: StreamPartID,
         peerDescriptors: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: UserID,
+        userId: EthereumAddress,
         connectionCount?: number
     ) => Promise<void>
     setStreamPartEntryPoints: (streamPartId: StreamPartID, peerDescriptors: PeerDescriptor[]) => void
@@ -52,10 +52,6 @@ export interface NetworkNodeStub {
 
 export interface Events {
     start: () => void
-}
-
-export const toUserID = (address: EthereumAddress): UserID => {
-    return Buffer.from(address.slice(2), 'hex') as UserID
 }
 
 /**
@@ -105,8 +101,8 @@ export class NetworkNodeFacade {
 
     private async getNetworkOptions(): Promise<NetworkOptions> {
         const entryPoints = this.getEntryPoints()
-        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer!.peerDescriptor ? 
-            peerDescriptorTranslator(this.config.network.controlLayer!.peerDescriptor) : undefined
+        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ? 
+            peerDescriptorTranslator(this.config.network.controlLayer.peerDescriptor) : undefined
         return {
             layer0: {
                 ...this.config.network.controlLayer,
@@ -224,7 +220,7 @@ export class NetworkNodeFacade {
             streamPartId,
             peerDescriptors,
             direction,
-            toUserID(await this.authentication.getAddress()),
+            await this.authentication.getAddress(),
             connectionCount
         )
     }
@@ -246,6 +242,6 @@ export class NetworkNodeFacade {
     }
 
     getEntryPoints(): PeerDescriptor[] {
-        return this.config.network.controlLayer!.entryPoints!.map(peerDescriptorTranslator)
+        return this.config.network.controlLayer.entryPoints!.map(peerDescriptorTranslator)
     }
 }

@@ -94,8 +94,8 @@ describe('Config', () => {
         it('can override network.entryPoints arrays', () => {
             const clientDefaults = createStrictConfig()
             const clientOverrides = createStrictConfig(CONFIG_TEST)
-            expect(clientOverrides.network.controlLayer!.entryPoints).not.toEqual(clientDefaults.network.controlLayer!.entryPoints)
-            expect(clientOverrides.network.controlLayer!.entryPoints).toEqual(CONFIG_TEST.network!.controlLayer!.entryPoints)
+            expect(clientOverrides.network.controlLayer.entryPoints).not.toEqual(clientDefaults.network.controlLayer.entryPoints)
+            expect(clientOverrides.network.controlLayer.entryPoints).toEqual(CONFIG_TEST.network!.controlLayer!.entryPoints)
         })
 
         it('network can be empty', () => {
@@ -104,7 +104,7 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.controlLayer!.entryPoints![0].id).toEqual('aaaaaaaaaa')
+            expect(clientOverrides.network.controlLayer.entryPoints![0].id).toEqual('aaaaaaaaaa')
         })
 
         it('can override entryPoints', () => {
@@ -123,9 +123,9 @@ describe('Config', () => {
                     }
                 }
             })
-            expect(clientOverrides.network.controlLayer!.entryPoints!).toEqual(entryPoints)
-            expect(clientOverrides.network.controlLayer!.entryPoints!).not.toBe(entryPoints)
-            expect((clientOverrides.network.controlLayer! as NetworkPeerDescriptor[])[0]).not.toBe(entryPoints[0])
+            expect(clientOverrides.network.controlLayer.entryPoints!).toEqual(entryPoints)
+            expect(clientOverrides.network.controlLayer.entryPoints!).not.toBe(entryPoints)
+            expect((clientOverrides.network.controlLayer as NetworkPeerDescriptor[])[0]).not.toBe(entryPoints[0])
         })
     })
 

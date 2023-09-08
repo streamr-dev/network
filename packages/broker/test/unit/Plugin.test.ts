@@ -12,11 +12,7 @@ const createPlugin = (brokerConfig: StrictConfig) => {
         // eslint-disable-next-line class-methods-use-this
         async stop(): Promise<void> {
         }
-    }({
-        name: PLUGIN_NAME,
-        streamrClient: undefined as any,
-        brokerConfig
-    })
+    }(PLUGIN_NAME, brokerConfig)
 }
 
 describe('Plugin', () => {
