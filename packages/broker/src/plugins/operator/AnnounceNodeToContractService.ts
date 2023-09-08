@@ -3,6 +3,7 @@ import { OperatorFleetState } from './OperatorFleetState'
 import { StreamrClient } from 'streamr-client'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { createIsLeaderFn } from './createIsLeaderFn'
+import { announceNodeToContract } from './announceNodeToContract'
 
 const logger = new Logger(module)
 
@@ -32,40 +33,13 @@ export class AnnounceNodeToContractService {
         await this.operatorFleetState.waitUntilReady()
         const isLeader = await createIsLeaderFn(this.streamrClient, this.operatorFleetState, logger)
         await scheduleAtInterval(async () => {
-            if (isLeader() && await this.isHeartbeatStale()) {
-                await this.writeHeartbeat()
+            if (isLeader()) {
+                await announceNodeToContract(this.writeIntervalInMs, this.helper, this.streamrClient)
             }
         }, this.pollIntervalInMs, true, this.abortController.signal)
     }
 
     async stop(): Promise<void> {
         this.abortController.abort()
-    }
-
-    private async isHeartbeatStale(): Promise<boolean> {
-        logger.debug('Polling last heartbeat timestamp', {
-            operatorContractAddress: this.helper.getOperatorContractAddress()
-        })
-        let lastHeartbeatTs
-        try {
-            lastHeartbeatTs = await this.helper.getTimestampOfLastHeartbeat()
-        } catch (err) {
-            logger.warn('Failed to poll last heartbeat timestamp', { reason: err?.message })
-            return false // we don't know if heartbeat is stale, but we don't want execution to continue
-        }
-        const stale = lastHeartbeatTs !== undefined ? lastHeartbeatTs + this.writeIntervalInMs <= Date.now() : true
-        logger.debug('Polled last heartbeat timestamp', { lastHeartbeatTs, stale })
-        return stale
-    }
-
-    private async writeHeartbeat(): Promise<void> {
-        logger.info('Write heartbeat')
-        try {
-            const nodeDescriptor = await this.streamrClient.getPeerDescriptor()
-            await this.helper.writeHeartbeat(nodeDescriptor)
-            logger.debug('Wrote heartbeat', { nodeDescriptor })
-        } catch (err) {
-            logger.warn('Failed to write heartbeat', { reason: err?.message })
-        }
     }
 }
