@@ -7,6 +7,7 @@ import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/N
 import { RemoteHandshaker } from './RemoteHandshaker'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { binaryToHex } from '@streamr/utils'
 
 interface HandshakerServerConfig {
     randomGraphId: string
@@ -33,14 +34,14 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     private handleRequest(request: StreamHandshakeRequest): StreamHandshakeResponse {
-        const getInterleaveSourceIds = () => (request.interleaveSourceId !== undefined) ? [request.interleaveSourceId as NodeID] : []
-        if (this.config.targetNeighbors!.hasNode(request.senderDescriptor!)
+        const getInterleaveSourceIds = () => (request.interleaveSourceId !== undefined) ? [binaryToHex(request.interleaveSourceId) as NodeID] : []
+        if (this.config.targetNeighbors.hasNode(request.senderDescriptor!)
             || this.config.ongoingHandshakes.has(getNodeIdFromPeerDescriptor(request.senderDescriptor!))
         ) {
             return this.acceptHandshake(request, request.senderDescriptor!)
-        } else if (this.config.targetNeighbors!.size() + this.config.ongoingHandshakes.size < this.config.N) {
+        } else if (this.config.targetNeighbors.size() + this.config.ongoingHandshakes.size < this.config.N) {
             return this.acceptHandshake(request, request.senderDescriptor!)
-        } else if (this.config.targetNeighbors!.size(getInterleaveSourceIds()) >= 2) {
+        } else if (this.config.targetNeighbors.size(getInterleaveSourceIds()) >= 2) {
             return this.acceptHandshakeWithInterleaving(request, request.senderDescriptor!)
         } else {
             return this.rejectHandshake(request)
@@ -67,10 +68,10 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     private acceptHandshakeWithInterleaving(request: StreamHandshakeRequest, requester: PeerDescriptor): StreamHandshakeResponse {
-        const exclude = request.neighborIds as NodeID[]
-        exclude.push(request.senderId as NodeID)
+        const exclude = request.neighborIds.map((id: Uint8Array) => binaryToHex(id) as NodeID)
+        exclude.push(binaryToHex(request.senderId) as NodeID)
         if (request.interleaveSourceId !== undefined) {
-            exclude.push(request.interleaveSourceId as NodeID)
+            exclude.push(binaryToHex(request.interleaveSourceId) as NodeID)
         }
         const furthest = this.config.targetNeighbors.getFurthest(exclude)
         const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
@@ -91,12 +92,13 @@ export class HandshakerServer implements IHandshakeRpc {
 
     async interleaveNotice(message: InterleaveNotice, _context: ServerCallContext): Promise<Empty> {
         if (message.randomGraphId === this.config.randomGraphId) {
-            if (this.config.targetNeighbors.hasNodeById(message.senderId as NodeID)) {
-                const senderDescriptor = this.config.targetNeighbors.getNeighborById(message.senderId as NodeID)!.getPeerDescriptor()
+            const nodeId = binaryToHex(message.senderId) as NodeID
+            if (this.config.targetNeighbors.hasNodeById(nodeId)) {
+                const senderDescriptor = this.config.targetNeighbors.getNeighborById(nodeId)!.getPeerDescriptor()
                 this.config.connectionLocker.unlockConnection(senderDescriptor, this.config.randomGraphId)
                 this.config.targetNeighbors.remove(senderDescriptor)
             }
-            this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, message.senderId as NodeID).catch((_e) => {})
+            this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, nodeId).catch((_e) => {})
         }
         return Empty
     }

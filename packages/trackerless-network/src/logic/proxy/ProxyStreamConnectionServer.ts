@@ -6,16 +6,15 @@ import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { EventEmitter } from 'eventemitter3'
-import { Logger } from '@streamr/utils'
+import { EthereumAddress, Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
-import { NodeID, UserID } from '../../identifiers'
-import { areEqualUsers } from '../utils'
+import { NodeID } from '../../identifiers'
 
 const logger = new Logger(module)
 
 interface ProxyConnection {
     direction: ProxyDirection // Direction is from the client's point of view
-    userId: UserID
+    userId: EthereumAddress
     remote: RemoteRandomGraphNode
 }
 
@@ -71,15 +70,15 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
     }
 
-    public getNodeIdsForUserId(userId: UserID): NodeID[] {
-        return Array.from(this.connections.keys()).filter((nodeId) => areEqualUsers(this.connections.get(nodeId)!.userId, userId))
+    public getNodeIdsForUserId(userId: EthereumAddress): NodeID[] {
+        return Array.from(this.connections.keys()).filter((nodeId) => this.connections.get(nodeId)!.userId === userId)
     }
 
     // IProxyConnectionRpc server method
     async requestConnection(request: ProxyConnectionRequest, _context: ServerCallContext): Promise<ProxyConnectionResponse> {
-        this.connections.set(request.senderId as NodeID, {
+        this.connections.set(binaryToHex(request.senderId) as NodeID, {
             direction: request.direction,
-            userId: request.userId,
+            userId: toEthereumAddress(binaryToHex(request.userId, true)),
             remote: new RemoteRandomGraphNode(
                 request.senderDescriptor!,
                 this.config.streamPartId,
@@ -94,7 +93,7 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
             senderId: request.senderId
         }
         logger.trace(`Accepted connection request from ${request.senderId} to ${request.streamId}/${request.streamPartition}`)
-        this.emit('newConnection', request.senderId as NodeID)
+        this.emit('newConnection', binaryToHex(request.senderId) as NodeID)
         return response
     }
 }

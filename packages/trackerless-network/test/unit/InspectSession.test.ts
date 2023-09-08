@@ -2,7 +2,7 @@ import { PeerID } from '@streamr/dht'
 import { InspectSession, Events } from '../../src/logic/inspect/InspectSession'
 import { MessageID } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent3 } from '../../../utils/dist/src/waitForEvent3'
-import { utf8ToBinary } from '../../src/logic/utils'
+import { utf8ToBinary } from '@streamr/utils'
 import { NodeID } from '../../src/identifiers'
 
 describe('InspectSession', () => {

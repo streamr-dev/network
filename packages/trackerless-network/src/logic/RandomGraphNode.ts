@@ -22,7 +22,7 @@ import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/N
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
-import { Logger } from '@streamr/utils'
+import { Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { IHandshaker } from './neighbor-discovery/Handshaker'
 import { Propagation } from './propagation/Propagation'
@@ -88,11 +88,11 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
-                const senderId = notice.senderId as NodeID
+                const senderId = binaryToHex(notice.senderId) as NodeID
                 const contact = this.config.nearbyContactPool.getNeighborById(senderId)
                 || this.config.randomContactPool.getNeighborById(senderId)
                 || this.config.targetNeighbors.getNeighborById(senderId)
-                || this.config.proxyConnectionServer?.getConnection(senderId as NodeID)?.remote
+                || this.config.proxyConnectionServer?.getConnection(senderId )?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
                     this.config.layer1.removeContact(contact.getPeerDescriptor(), true)
@@ -100,7 +100,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                     this.config.nearbyContactPool.remove(contact.getPeerDescriptor())
                     this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.randomGraphId)
                     this.config.neighborFinder.start([senderId])
-                    this.config.proxyConnectionServer?.removeConnection(senderId as NodeID)
+                    this.config.proxyConnectionServer?.removeConnection(senderId)
                 }
             },
             markForInspection: (senderId: NodeID, messageId: MessageID) => this.config.inspector.markMessage(senderId, messageId)
@@ -200,7 +200,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         if (this.stopped) {
             return
         }
-        this.config.randomContactPool!.replaceAll(randomPeers.map((descriptor) =>
+        this.config.randomContactPool.replaceAll(randomPeers.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,
@@ -269,12 +269,14 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         let propagationTargets = this.config.targetNeighbors.getIds()
         if (this.config.proxyConnectionServer) {
             const proxyTargets = (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST)
-                ? this.config.proxyConnectionServer.getNodeIdsForUserId(GroupKeyRequest.fromBinary(msg.content).recipientId)
+                ? this.config.proxyConnectionServer.getNodeIdsForUserId(
+                    toEthereumAddress(binaryToHex(GroupKeyRequest.fromBinary(msg.content).recipientId, true))
+                )
                 : this.config.proxyConnectionServer.getSubscribers()
             propagationTargets = propagationTargets.concat(proxyTargets)
         }
 
-        propagationTargets = propagationTargets.filter((target) => !this.config.inspector.isInspected(target as NodeID))
+        propagationTargets = propagationTargets.filter((target) => !this.config.inspector.isInspected(target ))
         propagationTargets = propagationTargets.concat(this.config.temporaryConnectionServer.getNodes().getIds())
         return propagationTargets
     }

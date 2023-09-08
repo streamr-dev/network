@@ -21,10 +21,9 @@ import {
     StreamMessageType,
     MessageID
 } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { toEthereumAddress } from '@streamr/utils'
+import { toEthereumAddress, binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
 import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
-import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary } from '../../utils'
 
 const oldToNewEncryptionType = (type: OldEncryptionType): EncryptionType => {
     if (type === OldEncryptionType.AES) {
@@ -132,13 +131,13 @@ export class StreamMessageTranslator {
         )
         let prevMsgRef: OldMessageRef | undefined = undefined
         if (msg.previousMessageRef) {
-            prevMsgRef = new OldMessageRef(Number(msg.previousMessageRef!.timestamp), msg.previousMessageRef!.sequenceNumber)
+            prevMsgRef = new OldMessageRef(Number(msg.previousMessageRef.timestamp), msg.previousMessageRef.sequenceNumber)
         }
         let newGroupKey: OldEncryptedGroupKey | undefined = undefined
         if (msg.newGroupKey) {
             newGroupKey = new OldEncryptedGroupKey(
-                msg.newGroupKey!.id,
-                binaryToHex(msg.newGroupKey!.data),
+                msg.newGroupKey.id,
+                binaryToHex(msg.newGroupKey.data),
             )
         }
         const translated = new OldStreamMessage<T>({

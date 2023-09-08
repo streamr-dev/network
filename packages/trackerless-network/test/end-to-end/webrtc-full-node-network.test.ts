@@ -1,12 +1,11 @@
 import { PeerDescriptor, NodeType, PeerID } from '@streamr/dht'
 import { range } from 'lodash'
-import { waitForCondition } from '@streamr/utils'
+import { waitForCondition, utf8ToBinary } from '@streamr/utils'
 import { getRandomRegion } from '@streamr/dht'
 import { createStreamMessage } from '../utils/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
-import { utf8ToBinary } from '../../src/logic/utils'
 
 describe('Full node network with WebRTC connections', () => {
 
@@ -57,7 +56,7 @@ describe('Full node network with WebRTC connections', () => {
             await node.start()
             node.getStreamrNode().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
             await node.getStreamrNode().joinStream(randomGraphId)
-            node.getStreamrNode!().subscribeToStream(randomGraphId)
+            node.getStreamrNode().subscribeToStream(randomGraphId)
         }))
 
     }, 90000)

@@ -1,5 +1,5 @@
 import { DhtRpcOptions, PeerDescriptor } from '@streamr/dht'
-import { Logger } from '@streamr/utils'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Remote } from '../Remote'
 import { INeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -16,11 +16,11 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
 
     async updateNeighbors(ownPeerDescriptor: PeerDescriptor, neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
         const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
+            sourceDescriptor: ownPeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor,
         }
         const request: NeighborUpdate = {
-            senderId: getNodeIdFromPeerDescriptor(ownPeerDescriptor),
+            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
             randomGraphId: this.graphId,
             neighborDescriptors: neighbors,
             removeMe: false
@@ -28,7 +28,7 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
         try {
             const response = await this.client.neighborUpdate(request, options)
             return {
-                peerDescriptors: response.neighborDescriptors!,
+                peerDescriptors: response.neighborDescriptors,
                 removeMe: response.removeMe
             }
         } catch (err: any) {

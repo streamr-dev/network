@@ -1,7 +1,7 @@
 import { EventEmitter } from 'eventemitter3'
 import { NodeID } from '../../identifiers'
 import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { binaryToHex } from '../utils'
+import { binaryToHex } from '@streamr/utils'
 
 export interface Events {
     done: () => void

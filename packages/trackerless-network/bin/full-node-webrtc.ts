@@ -7,6 +7,7 @@ import {
     StreamMessageType
 } from '../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { program } from 'commander'
+import { hexToBinary } from '@streamr/utils'
 
 program
     .option('--id <id>', 'Ethereum address / node id', 'full-node')
@@ -92,7 +93,7 @@ async function run(): Promise<void> {
             content: ContentMessage.toBinary(content),
             messageRef,
             messageType: StreamMessageType.MESSAGE,
-            signature: 'signature'
+            signature: hexToBinary('0x1111')
         }
         streamrNode.publishToStream(streamPartId, epPeerDescriptor, message)
         sequenceNumber++
