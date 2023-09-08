@@ -113,6 +113,11 @@ export class AutoCertifier implements RestInterface {
             throw new Error('AUTOICERTIFIER_ACCOUNT_PRIVATE_KEY_PATH environment variable is not set')
         }
 
+        const acmeDirectoryUrl = process.env['AUTOCERTIFIER_ACME_DIRECTORY_URL']
+        if (!acmeDirectoryUrl) {
+            throw new Error('AUTOCERTIFIER_ACME_DIRECTORY_URL environment variable is not set')
+        }
+        
         const hmacKid = process.env['AUTOICERTIFIER_HMAC_KID']
         if (!hmacKid) {
             throw new Error('AUTOICERTIFIER_HMAC_KID environment variable is not set')
@@ -132,7 +137,7 @@ export class AutoCertifier implements RestInterface {
         await this.dnsServer.start()
         logger.info('dns server is running for domain ' + this.domainName + ' on port ' + dnsServerPort)
 
-        this.certificateCreator = new CertificateCreator(hmacKid, hmacKey,
+        this.certificateCreator = new CertificateCreator(acmeDirectoryUrl, hmacKid, hmacKey,
             accountPrivateKeyPath, this)
         await this.certificateCreator.start()
         logger.info('certificate creator is running')

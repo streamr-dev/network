@@ -17,10 +17,11 @@
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
-    "test": "jest test/unit test/integration test/end-to-end",
+    "test": "jest test/unit test/integration",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
-    "test-end-to-end": "jest test/end-to-end"
+    "test-production": "jest test/production",
+    "start": "node dist/src/main.js"
   },
   "dependencies": {
     "body-parser": "^1.20.2",

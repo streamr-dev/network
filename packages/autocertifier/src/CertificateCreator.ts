@@ -12,7 +12,9 @@ export class CertificateCreator {
 
     accountPrivateKey?: Buffer
 
-    constructor(private hmacKid: string, private hmacKey: string,
+    constructor(private acmeDirectoryUrl: string, 
+        private hmacKid: string, 
+        private hmacKey: string,
         private accountPrivateKeyPath: string, 
         private challengeInterface: ChallengeInterface) {
     }
@@ -20,7 +22,7 @@ export class CertificateCreator {
     public async createCertificate(fqdn: string): Promise<Certificate> {
 
         const client = new acme.Client({
-            directoryUrl: 'https://acme-provider.example.com/directory-url',
+            directoryUrl: this.acmeDirectoryUrl,
             accountKey: this.accountPrivateKey!,
             externalAccountBinding: {
                 kid: this.hmacKid,
@@ -34,7 +36,7 @@ export class CertificateCreator {
 
         const cert = await client.auto({
             csr,
-            email: 'test@example.com',
+            email: 'autocertifier@streamr.network',
             termsOfServiceAgreed: true,
             challengePriority: ['dns-01'],
             challengeCreateFn: async (authz, _challenge, keyAuthorization) => {
