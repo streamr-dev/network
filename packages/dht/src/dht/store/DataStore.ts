@@ -28,9 +28,9 @@ interface DataStoreConfig {
     ownPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
     serviceId: string
-    storeMaxTtl: number
-    storeHighestTtl: number
-    storeNumberOfCopies: number
+    maxTtl: number
+    highestTtl: number
+    numberOfCopies: number
     dhtNodeEmitter: EventEmitter<Events>
     getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtPeer[]
 }
@@ -44,9 +44,9 @@ export class DataStore implements IStoreService {
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly localDataStore: LocalDataStore
     private readonly serviceId: string
-    private readonly storeMaxTtl: number
-    private readonly storeHighestTtl: number
-    private readonly storeNumberOfCopies: number
+    private readonly maxTtl: number
+    private readonly highestTtl: number
+    private readonly numberOfCopies: number
     private readonly dhtNodeEmitter: EventEmitter<Events>
     private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtPeer[]
 
@@ -56,9 +56,9 @@ export class DataStore implements IStoreService {
         this.ownPeerDescriptor = config.ownPeerDescriptor
         this.localDataStore = config.localDataStore
         this.serviceId = config.serviceId
-        this.storeMaxTtl = config.storeMaxTtl
-        this.storeHighestTtl = config.storeHighestTtl
-        this.storeNumberOfCopies = config.storeNumberOfCopies
+        this.maxTtl = config.maxTtl
+        this.highestTtl = config.highestTtl
+        this.numberOfCopies = config.numberOfCopies
         this.dhtNodeEmitter = config.dhtNodeEmitter
         this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
         this.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
@@ -117,7 +117,7 @@ export class DataStore implements IStoreService {
         // if new node is within the storeNumberOfCopies closest nodes to the data
         // do migrate data to it
 
-        if (index < this.storeNumberOfCopies) {
+        if (index < this.numberOfCopies) {
             this.localDataStore.setStale(dataId, dataEntry.storer!, false)
             return true
         } else {
@@ -148,9 +148,9 @@ export class DataStore implements IStoreService {
         const result = await this.recursiveFinder.startRecursiveFind(key)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
-        const ttl = this.storeHighestTtl // ToDo: make TTL decrease according to some nice curve
+        const ttl = this.highestTtl // ToDo: make TTL decrease according to some nice curve
         const storerTime = Timestamp.now()
-        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.storeNumberOfCopies; i++) {
+        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.numberOfCopies; i++) {
             if (isSamePeerDescriptor(this.ownPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
                     kademliaId: key, 
@@ -188,8 +188,8 @@ export class DataStore implements IStoreService {
 
     private selfIsOneOfClosestPeers(dataId: Uint8Array): boolean {
         const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
-        const closestPeers = this.getNodesClosestToIdFromBucket(dataId, this.storeNumberOfCopies)
-        const sortedList = new SortedContactList<Contact>(ownPeerId, this.storeNumberOfCopies, undefined, true)
+        const closestPeers = this.getNodesClosestToIdFromBucket(dataId, this.numberOfCopies)
+        const sortedList = new SortedContactList<Contact>(ownPeerId, this.numberOfCopies, undefined, true)
         sortedList.addContact(new Contact(this.ownPeerDescriptor))
         closestPeers.forEach((con) => sortedList.addContact(new Contact(con.getPeerDescriptor())))
         return sortedList.getClosestContacts().some((node) => node.getPeerId().equals(ownPeerId))
@@ -200,7 +200,7 @@ export class DataStore implements IStoreService {
         const result = await this.recursiveFinder.startRecursiveFind(key)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
-        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.storeNumberOfCopies; i++) {
+        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.numberOfCopies; i++) {
             if (isSamePeerDescriptor(this.ownPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.markAsDeleted(key, peerIdFromPeerDescriptor(this.ownPeerDescriptor))
                 successfulNodes.push(closestNodes[i])
@@ -228,7 +228,7 @@ export class DataStore implements IStoreService {
 
     // RPC service implementation
     async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {
-        const ttl = Math.min(request.ttl, this.storeMaxTtl)
+        const ttl = Math.min(request.ttl, this.maxTtl)
         const { incomingSourceDescriptor } = context as DhtCallContext
         const { kademliaId, data, storerTime } = request
         this.localDataStore.storeEntry({ 
@@ -283,7 +283,7 @@ export class DataStore implements IStoreService {
         const incomingPeerId = PeerID.fromValue(incomingPeer.kademliaId)
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
 
-        const sortedList = new SortedContactList<Contact>(dataId, this.storeNumberOfCopies, undefined, true)
+        const sortedList = new SortedContactList<Contact>(dataId, this.numberOfCopies, undefined, true)
         sortedList.addContact(new Contact(this.ownPeerDescriptor))
 
         closestToData.forEach((con) => {
