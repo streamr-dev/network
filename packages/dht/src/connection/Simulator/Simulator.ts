@@ -12,7 +12,15 @@ import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import Heap from 'heap'
 import { debugVars } from '../../helpers/debugHelpers'
 import * as sinon from 'sinon'
-import { isRunningInElectron } from '@streamr/test-utils'
+
+// TODO take this from @streamr/test-utils (we can't access devDependencies as Simulator
+// is currently in "src" directory instead of "test" directory)
+// eslint-disable-next-line no-underscore-dangle
+declare let _streamr_electron_test: any
+export function isRunningInElectron(): boolean {
+    // eslint-disable-next-line no-underscore-dangle
+    return typeof _streamr_electron_test !== 'undefined'
+}
 
 const logger = new Logger(module)
 
