@@ -8,7 +8,7 @@ import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorPoolValueService } from './MaintainOperatorPoolValueService'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
-import { OperatorFleetState } from './OperatorFleetState'
+import { DEFAULT_UPDATE_INTERVAL_IN_MS, OperatorFleetState } from './OperatorFleetState'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { createIsLeaderFn } from './createIsLeaderFn'
@@ -77,7 +77,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     this.streamrClient
                 )
             })()
-        }, 1000 * 10, this.abortController.signal)
+        }, DEFAULT_UPDATE_INTERVAL_IN_MS, this.abortController.signal)
         await this.inspectRandomNodeService.start()
         await this.maintainOperatorPoolValueService.start()
         await this.maintainTopologyService.start()
