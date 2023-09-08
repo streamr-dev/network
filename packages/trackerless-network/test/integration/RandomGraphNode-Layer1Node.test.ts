@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/parameter-properties */
-
 import { DhtNode, Simulator, PeerDescriptor, ConnectionManager, getRandomRegion } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
