@@ -1,7 +1,6 @@
 import { DiscoverySession } from './DiscoverySession'
 import { DhtPeer } from '../DhtPeer'
 import crypto from 'crypto'
-import * as Err from '../../helpers/errors'
 import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
@@ -41,13 +40,14 @@ export class PeerDiscovery {
 
     private rejoinTimeoutRef?: NodeJS.Timeout
     private readonly abortController: AbortController
+    private recoveryIntervalStarted = false
 
     constructor(config: PeerDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
     }
 
-    async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin = true): Promise<void> {
+    async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin = true, doRejoin = true): Promise<void> {
         if (this.stopped) {
             return
         }
@@ -90,16 +90,19 @@ export class PeerDiscovery {
             if (randomSession) {
                 await randomSession.findClosestNodes(this.config.joinTimeout)
             }
+        } catch (_e) {
+            logger.debug(`DHT join on ${this.config.serviceId} timed out`)
+        } finally {
             if (!this.stopped) {
                 if (this.config.bucket.count() === 0) {
-                    this.rejoinDht(entryPointDescriptor).catch(() => {})
-                } else {
+                    if (doRejoin) {
+                        setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.abortController.signal)
+                    }
+                } else if (!this.recoveryIntervalStarted) {
+                    this.recoveryIntervalStarted = true
                     await scheduleAtInterval(() => this.getClosestPeersFromBucket(), 60000, true, this.abortController.signal)
                 }
             }
-        } catch (_e) {
-            throw new Err.DhtJoinTimeout('join timed out')
-        } finally {
             this.ongoingDiscoverySessions.delete(session.sessionId)
             if (randomSession) {
                 this.ongoingDiscoverySessions.delete(randomSession.sessionId)
