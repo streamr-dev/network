@@ -80,6 +80,7 @@ export interface DhtNodeOptions {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    webrtcPortRange?: PortRange
     maxConnections?: number
     externalIp?: string
 }
@@ -112,6 +113,7 @@ export class DhtNodeConfig {
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
     externalIp?: string
+    webrtcPortRange?: PortRange
 
     constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
@@ -138,7 +140,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerIdString?: 
     }
     const ret: PeerDescriptor = { kademliaId: peerId, nodeName: nodeName, type: NodeType.NODEJS }
     if (msg && msg.websocket) {
-        ret.websocket = { ip: msg.websocket!.ip, port: msg.websocket!.port }
+        ret.websocket = { ip: msg.websocket.ip, port: msg.websocket.port }
         ret.openInternet = true
     }
     return ret
@@ -207,6 +209,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcDatachannelBufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
+                webrtcPortRange: this.config.webrtcPortRange,
                 nodeName: this.getNodeName(),
                 maxConnections: this.config.maxConnections,
                 externalIp: this.config.externalIp
@@ -240,13 +243,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         this.bindDefaultServerMethods()
         this.ownPeerId = peerIdFromPeerDescriptor(this.ownPeerDescriptor!)
-        this.initKBuckets(this.ownPeerId!)
+        this.initKBuckets(this.ownPeerId)
         this.peerDiscovery = new PeerDiscovery({
-            rpcCommunicator: this.rpcCommunicator!,
+            rpcCommunicator: this.rpcCommunicator,
             ownPeerDescriptor: this.ownPeerDescriptor!,
-            ownPeerId: this.ownPeerId!,
+            ownPeerId: this.ownPeerId,
             bucket: this.bucket!,
-            connections: this.connections!,
+            connections: this.connections,
             neighborList: this.neighborList!,
             randomPeers: this.randomPeers!,
             openInternetPeers: this.openInternetPeers!,
@@ -259,28 +262,28 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connectionManager: this.connectionManager
         })
         this.router = new Router({
-            rpcCommunicator: this.rpcCommunicator!,
+            rpcCommunicator: this.rpcCommunicator,
             connections: this.connections,
             ownPeerDescriptor: this.ownPeerDescriptor!,
-            ownPeerId: this.ownPeerId!,
+            ownPeerId: this.ownPeerId,
             addContact: this.addNewContact.bind(this),
             serviceId: this.config.serviceId,
             connectionManager: this.connectionManager
         })
         this.recursiveFinder = new RecursiveFinder({
-            rpcCommunicator: this.rpcCommunicator!,
-            router: this.router!,
+            rpcCommunicator: this.rpcCommunicator,
+            router: this.router,
             sessionTransport: this,
             connections: this.connections,
             ownPeerDescriptor: this.ownPeerDescriptor!,
             serviceId: this.config.serviceId,
-            ownPeerId: this.ownPeerId!,
+            ownPeerId: this.ownPeerId,
             addContact: this.addNewContact.bind(this),
             isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
             localDataStore: this.localDataStore
         })
         this.dataStore = new DataStore({
-            rpcCommunicator: this.rpcCommunicator!,
+            rpcCommunicator: this.rpcCommunicator,
             recursiveFinder: this.recursiveFinder,
             ownPeerDescriptor: this.ownPeerDescriptor!,
             serviceId: this.config.serviceId,

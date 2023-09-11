@@ -40,7 +40,7 @@ function normalize(privateKeyOrAddress: string): string {
     return privateKeyOrAddress.startsWith('0x') ? privateKeyOrAddress.substring(2) : privateKeyOrAddress
 }
 
-export function sign(payload: string, privateKey: string): string {
+export function sign(payload: string, privateKey: string): Uint8Array {
     const payloadBuffer = Buffer.from(payload, 'utf-8')
     const privateKeyBuffer = Buffer.from(normalize(privateKey), 'hex')
 
@@ -48,15 +48,15 @@ export function sign(payload: string, privateKey: string): string {
     const sigObj = secp256k1.ecdsaSign(msgHash, privateKeyBuffer)
     const result = Buffer.alloc(sigObj.signature.length + 1, Buffer.from(sigObj.signature))
     result.writeInt8(27 + sigObj.recid, result.length - 1)
-    return '0x' + result.toString('hex')
+    return result
 }
 
 export function recover(
-    signature: string,
+    signature: Uint8Array,
     payload: string,
     publicKeyBuffer: Buffer | Uint8Array | undefined = undefined
 ): string {
-    const signatureBuffer = Buffer.from(normalize(signature), 'hex') // remove '0x' prefix
+    const signatureBuffer = Buffer.from(signature)
     const payloadBuffer = Buffer.from(payload, 'utf-8')
 
     if (!publicKeyBuffer) {
@@ -69,7 +69,7 @@ export function recover(
     return '0x' + hashOfPubKey.subarray(12, hashOfPubKey.length).toString('hex')
 }
 
-export function verify(address: EthereumAddress, payload: string, signature: string): boolean {
+export function verify(address: EthereumAddress, payload: string, signature: Uint8Array): boolean {
     try {
         const recoveredAddress = toEthereumAddress(recover(signature, payload))
         return recoveredAddress === address

@@ -165,6 +165,13 @@
                         "externalIp": {
                             "type": "string",
                             "format": "ipv4"
+                        },
+                        "webrtcPortRange": {
+                            "$ref": "#/definitions/portRange",
+                            "default": {
+                                "min": 50000,
+                                "max": 64000
+                            }
                         }
                     },
                     "default": {}

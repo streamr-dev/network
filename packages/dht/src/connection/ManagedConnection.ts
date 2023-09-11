@@ -93,7 +93,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                     ', ' + this.peerDescriptor?.nodeName + ' objectid: ' + this.objectId
                     + ' outputBuffer.length: ' + this.outputBuffer.length)
 
-                this.attachImplementation(outgoingConnection!)
+                this.attachImplementation(outgoingConnection)
                 this.onHandshakeCompleted(peerDescriptor)
             })
 
@@ -105,7 +105,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         } else {
             if (incomingConnection) {
-                this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, incomingConnection!)
+                this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, incomingConnection)
                 this.handshaker.on('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
                     this.setPeerDescriptor(peerDescriptor)
                     this.emit('handshakeRequest', peerDescriptor)
@@ -325,7 +325,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                 this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, this.implementation)
             }
 
-            this.handshaker!.sendHandshakeResponse()
+            this.handshaker.sendHandshakeResponse()
 
         } else {  // This happens to when there is a regular incoming connection
             this.handshaker!.sendHandshakeResponse()

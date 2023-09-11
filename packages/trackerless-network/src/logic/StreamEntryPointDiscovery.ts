@@ -15,7 +15,7 @@ export const streamPartIdToDataKey = (streamPartId: StreamPartID): Uint8Array =>
 }
 
 const parseEntryPointData = (dataEntries: DataEntry[]): PeerDescriptor[] => {
-    return dataEntries!.filter((entry) => !entry.deleted).map((entry) => Any.unpack(entry.data!, PeerDescriptor))
+    return dataEntries.filter((entry) => !entry.deleted).map((entry) => Any.unpack(entry.data!, PeerDescriptor))
 }
 
 interface FindEntryPointsResult {
@@ -109,7 +109,7 @@ export class StreamEntryPointDiscovery {
     }
 
     private async queryEntrypoints(key: Uint8Array): Promise<PeerDescriptor[]> {
-        logger.trace(`Finding data from dht peer ${this.config.ownPeerDescriptor!.nodeName}`)
+        logger.trace(`Finding data from dht peer ${this.config.ownPeerDescriptor.nodeName}`)
         try {
             const results = await this.config.getEntryPointData(key)
             if (results.dataEntries) {
@@ -123,7 +123,7 @@ export class StreamEntryPointDiscovery {
     }
 
     private async queryEntryPointsViaPeer(key: Uint8Array, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
-        logger.trace(`Finding data via peer ${this.config.ownPeerDescriptor!.nodeName}`)
+        logger.trace(`Finding data via peer ${this.config.ownPeerDescriptor.nodeName}`)
         try {
             const results = await this.config.getEntryPointDataViaNode(key, peer)
             if (results) {
@@ -208,7 +208,7 @@ export class StreamEntryPointDiscovery {
     removeSelfAsEntryPoint(streamPartId: StreamPartID): void {
         if (this.servicedStreamParts.has(streamPartId)) {
             setAbortableTimeout(() => this.config.deleteEntryPointData(streamPartIdToDataKey(streamPartId)), 0, this.abortController.signal)
-            clearTimeout(this.servicedStreamParts.get(streamPartId)!)
+            clearTimeout(this.servicedStreamParts.get(streamPartId))
             this.servicedStreamParts.delete(streamPartId)
         }
     }

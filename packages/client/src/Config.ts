@@ -69,6 +69,13 @@ export interface ControlLayerConfig {
     webrtcDatachannelBufferThresholdHigh?: number
 
     /**
+     * Defines a custom UDP port range to be used for WebRTC connections.
+     * This port range should not be restricted by enclosing firewalls
+     * or virtual private cloud configurations. NodeJS only.
+     */
+    webrtcPortRange?: PortRange
+
+    /**
      * Contains connectivity information to the client's Network Node, used in the network layer.
      * Can be used in cases where the client's public IP address is known before
      * starting the network node. If not specified, the PeerDescriptor will be auto-generated.
