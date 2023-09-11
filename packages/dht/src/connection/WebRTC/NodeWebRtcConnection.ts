@@ -60,7 +60,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
     private readonly iceServers: IceServer[]
-    private readonly _bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use
+    private readonly _bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use (NET-938)
     private readonly bufferThresholdLow: number
     private readonly connectingTimeout: number
     private readonly remotePeerDescriptor: PeerDescriptor
