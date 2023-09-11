@@ -38,7 +38,7 @@ export interface StreamMessageOptions<T> {
     encryptionType?: EncryptionType
     groupKeyId?: string | null
     newGroupKey?: EncryptedGroupKey | null
-    signature: string
+    signature: Uint8Array
 }
 
 /**
@@ -62,7 +62,7 @@ export default class StreamMessage<T = unknown> {
     encryptionType: EncryptionType
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
-    signature: string
+    signature: Uint8Array
     parsedContent?: T
     serializedContent: string
 
@@ -119,7 +119,7 @@ export default class StreamMessage<T = unknown> {
         validateIsType('newGroupKey', newGroupKey, 'EncryptedGroupKey', EncryptedGroupKey, true)
         this.newGroupKey = newGroupKey
 
-        validateIsString('signature', signature, false)
+        validateIsType('signature', signature, 'Uint8Array', Uint8Array)
         this.signature = signature
 
         if (typeof content === 'string') {
