@@ -55,10 +55,6 @@ describe('Propagation', () => {
         await Promise.all(dhtNodes.map((node) => node.stop()))
     })
 
-    it('this should fail', () => {
-        expect(1).toBeGreaterThan(2)
-    })
-
     it('All nodes receive messages', async () => {
         await waitForCondition(
             () => randomGraphNodes.every((node) => node.getTargetNeighborIds().length >= 3), 30000
