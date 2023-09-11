@@ -223,6 +223,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
             const connectionManager = new ConnectionManager(connectionManagerConfig)
             await connectionManager.start(this.generatePeerDescriptorCallBack)
+            logger.info(`Running WebSocket server in port ${this.getPeerDescriptor()?.websocket?.port}`)
             this.connectionManager = connectionManager
             this.transportLayer = connectionManager
         }

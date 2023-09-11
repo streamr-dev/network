@@ -40,7 +40,8 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
                 interleaveTargetDescriptor: response.interleaveTargetDescriptor
             }
         } catch (err: any) {
-            logger.debug(`handshake to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
+            // eslint-disable-next-line max-len
+            logger.warn(`handshake to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed ${JSON.stringify(this.getPeerDescriptor().websocket)}: ${err}`)
             return {
                 accepted: false
             }
