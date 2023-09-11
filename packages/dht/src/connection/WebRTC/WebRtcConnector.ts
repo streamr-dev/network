@@ -24,6 +24,7 @@ import {
     peerIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
+import { PortRange } from '../ConnectionManager'
 
 const logger = new Logger(module)
 
@@ -35,6 +36,7 @@ export interface WebRtcConnectorConfig {
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
     connectionTimeout?: number
+    portRange?: PortRange
 }
 
 export interface IceServer {
@@ -96,7 +98,8 @@ export class WebRtcConnector implements IWebRtcConnectorService {
             iceServers: this.iceServers,
             bufferThresholdLow: this.config.bufferThresholdLow,
             bufferThresholdHigh: this.config.bufferThresholdHigh,
-            connectingTimeout: this.config.connectionTimeout
+            connectingTimeout: this.config.connectionTimeout,
+            portRange: this.config.portRange
         })
 
         const offering = this.isOffering(targetPeerDescriptor)
@@ -207,7 +210,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         connection!.setConnectionId(connectionId)
         connection!.setRemoteDescription(description, 'offer')
         
-        managedConnection!.on('handshakeRequest', () => {
+        managedConnection.on('handshakeRequest', () => {
             if (this.ongoingConnectAttempts.has(peerKey)) {
                 this.ongoingConnectAttempts.delete(peerKey)
             }

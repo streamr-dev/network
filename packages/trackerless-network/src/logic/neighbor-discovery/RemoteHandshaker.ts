@@ -30,8 +30,8 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
             senderDescriptor: ownPeerDescriptor
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor
+            sourceDescriptor: ownPeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor 
         }
         try {
             const response = await this.client.handshake(request, options)
@@ -49,8 +49,8 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
 
     interleaveNotice(ownPeerDescriptor: PeerDescriptor, originatorDescriptor: PeerDescriptor): void {
         const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
+            sourceDescriptor: ownPeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor,
             notification: true
         }
         const notification: InterleaveNotice = {
