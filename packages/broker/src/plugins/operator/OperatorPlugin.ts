@@ -2,7 +2,7 @@ import { toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, scheduleAtInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Signer } from 'ethers'
-import StreamrClient, { CONFIG_TEST } from 'streamr-client'
+import { CONFIG_TEST, StreamrClient } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
@@ -123,5 +123,12 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    override getClientConfig(): { path: string, value: any }[] {
+        return [{
+            path: 'network.node.acceptProxyConnections', value: true
+        }]
     }
 }
