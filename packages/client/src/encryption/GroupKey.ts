@@ -2,7 +2,6 @@ import crypto from 'crypto'
 import { EncryptedGroupKey } from '@streamr/protocol'
 import { uuid } from '../utils/uuid'
 import { EncryptionUtil } from './EncryptionUtil'
-import { binaryToHex } from '@streamr/utils'
 export class GroupKeyError extends Error {
 
     public groupKey?: GroupKey
