@@ -293,8 +293,4 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     getNearbyNodeView(): NodeList {
         return this.config.nearbyNodeView
     }
-
-    getRandomNodeView(): NodeList {
-        return this.config.randomNodeView
-    }
 }

@@ -64,11 +64,4 @@ describe('RandomGraphNode', () => {
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
-    it('getRandomNodeView', () => {
-        const mockRemote = createMockRemoteNode()
-        randomNodeView.add(mockRemote)
-        const ids = randomGraphNode.getRandomNodeView().getIds()
-        expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
-    })
-
 })
