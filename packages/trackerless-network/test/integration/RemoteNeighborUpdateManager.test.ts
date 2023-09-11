@@ -19,11 +19,11 @@ describe('RemoteNeighborUpdateManager', () => {
     let clientRpc: ListeningRpcCommunicator
     let neighborUpdateRpcClient: RemoteNeighborUpdateManager
 
-    const clientPeer: PeerDescriptor = {
+    const clientNode: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
         type: 1
     }
-    const serverPeer: PeerDescriptor = {
+    const serverNode: PeerDescriptor = {
         kademliaId: new Uint8Array([2, 2, 2]),
         type: 1
     }
@@ -34,8 +34,8 @@ describe('RemoteNeighborUpdateManager', () => {
 
     beforeEach(() => {
         simulator = new Simulator()
-        mockConnectionManager1 = new SimulatorTransport(serverPeer, simulator)
-        mockConnectionManager2 = new SimulatorTransport(clientPeer, simulator)
+        mockConnectionManager1 = new SimulatorTransport(serverNode, simulator)
+        mockConnectionManager2 = new SimulatorTransport(clientNode, simulator)
 
         mockServerRpc = new ListeningRpcCommunicator('test', mockConnectionManager1)
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
@@ -45,16 +45,16 @@ describe('RemoteNeighborUpdateManager', () => {
             NeighborUpdate,
             'neighborUpdate',
             async (_msg: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> => {
-                const peer: PeerDescriptor = {
+                const node: PeerDescriptor = {
                     kademliaId: new Uint8Array([4, 2, 4]),
                     type: 0
                 }
 
                 const update: NeighborUpdate = {
-                    senderId: hexToBinary(getNodeIdFromPeerDescriptor(peer)),
+                    senderId: hexToBinary(getNodeIdFromPeerDescriptor(node)),
                     randomGraphId: 'testStream',
                     neighborDescriptors: [
-                        peer
+                        node
                     ],
                     removeMe: false
                 }
@@ -62,7 +62,7 @@ describe('RemoteNeighborUpdateManager', () => {
             }
         )
         neighborUpdateRpcClient = new RemoteNeighborUpdateManager(
-            serverPeer,
+            serverNode,
             'test-stream',
             toProtoRpcClient(new NeighborUpdateRpcClient(clientRpc.getRpcClientTransport()))
         )
@@ -77,7 +77,7 @@ describe('RemoteNeighborUpdateManager', () => {
     })
 
     it('updateNeighbors', async () => {
-        const res = await neighborUpdateRpcClient.updateNeighbors(clientPeer, [])
+        const res = await neighborUpdateRpcClient.updateNeighbors(clientNode, [])
         expect(res.peerDescriptors.length).toEqual(1)
     })
 })

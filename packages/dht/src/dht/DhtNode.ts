@@ -284,9 +284,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             recursiveFinder: this.recursiveFinder,
             ownPeerDescriptor: this.ownPeerDescriptor!,
             serviceId: this.config.serviceId,
-            storeHighestTtl: this.config.storeHighestTtl,
-            storeMaxTtl: this.config.storeMaxTtl,
-            storeNumberOfCopies: this.config.storeNumberOfCopies,
+            highestTtl: this.config.storeHighestTtl,
+            maxTtl: this.config.storeMaxTtl,
+            numberOfCopies: this.config.storeNumberOfCopies,
             localDataStore: this.localDataStore,
             dhtNodeEmitter: this,
             getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {

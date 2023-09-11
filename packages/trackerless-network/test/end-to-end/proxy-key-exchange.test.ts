@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
+import { NodeType, PeerDescriptor } from '@streamr/dht'
 import { 
     EncryptionType,
     GroupKeyRequest,
@@ -10,23 +10,24 @@ import {
     toStreamID,
     toStreamPartID
 } from '@streamr/protocol'
-import { NetworkNode } from '../../src/NetworkNode'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { toEthereumAddress, waitForEvent3, hexToBinary } from '@streamr/utils'
+import { createRandomNodeId } from '../utils/utils'
 
 describe('proxy group key exchange', () => {
     const proxyNodeDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`proxyNode1`).value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         nodeName: 'proxyNode',
         websocket: { ip: 'localhost', port: 23134 }
     }
     const publisherDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`publisher`).value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
     }
     const subscriberDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`subscriber`).value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
     }
 
@@ -40,7 +41,7 @@ describe('proxy group key exchange', () => {
     let subscriber: NetworkNode
 
     beforeEach(async () => {
-        proxyNode = new NetworkNode({
+        proxyNode = createNetworkNode({
             layer0: {
                 entryPoints: [proxyNodeDescriptor],
                 peerDescriptor: proxyNodeDescriptor,
@@ -52,7 +53,7 @@ describe('proxy group key exchange', () => {
         await proxyNode.start()
         proxyNode.setStreamPartEntryPoints(streamPartId, [proxyNodeDescriptor])
         await proxyNode.stack.getStreamrNode()!.joinStream(streamPartId)
-        publisher = new NetworkNode({
+        publisher = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: publisherDescriptor,
@@ -61,7 +62,7 @@ describe('proxy group key exchange', () => {
         })
         await publisher.start(false)
 
-        subscriber = new NetworkNode({
+        subscriber = createNetworkNode({
             layer0: {
                 entryPoints: [subscriberDescriptor],
                 peerDescriptor: subscriberDescriptor,

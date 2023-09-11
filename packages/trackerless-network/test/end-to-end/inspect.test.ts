@@ -1,13 +1,14 @@
-import { PeerDescriptor, NodeType, PeerID } from '@streamr/dht'
-import { NetworkNode } from '../../src/NetworkNode'
+import { PeerDescriptor, NodeType } from '@streamr/dht'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { waitForCondition, hexToBinary } from '@streamr/utils'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { createRandomNodeId } from '../utils/utils'
 
 describe('inspect', () => {
 
     const publisherDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('publisher').value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         websocket: {
             ip: 'localhost',
@@ -16,7 +17,7 @@ describe('inspect', () => {
     }
 
     const inspectedDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('inspected').value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         websocket: {
             ip: 'localhost',
@@ -25,7 +26,7 @@ describe('inspect', () => {
     }
 
     const inspectorDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('inspector').value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         websocket: {
             ip: 'localhost',
@@ -59,7 +60,7 @@ describe('inspect', () => {
     })
     
     beforeEach(async () => {
-        publisherNode = new NetworkNode({
+        publisherNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: publisherDescriptor
@@ -67,7 +68,7 @@ describe('inspect', () => {
             networkNode: {}
         })
 
-        inspectedNode = new NetworkNode({
+        inspectedNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: inspectedDescriptor
@@ -75,7 +76,7 @@ describe('inspect', () => {
             networkNode: {}
         })
 
-        inspectorNode = new NetworkNode({
+        inspectorNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: inspectorDescriptor
