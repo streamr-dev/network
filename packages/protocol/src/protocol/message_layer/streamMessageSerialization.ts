@@ -2,6 +2,7 @@ import StreamMessage, { VERSION } from './StreamMessage'
 import MessageRef from './MessageRef'
 import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
+import { binaryToHex, hexToBinary } from '@streamr/utils'
 
 import ValidationError from '../../errors/ValidationError'
 
@@ -19,7 +20,7 @@ export function toArray(streamMessage: StreamMessage): any[] {
         streamMessage.serializedContent,
         streamMessage.newGroupKey ? streamMessage.newGroupKey.serialize() : null,
         SIGNATURE_TYPE_ETH,
-        streamMessage.signature,
+        binaryToHex(streamMessage.signature),
     ]
 }
 
@@ -51,6 +52,6 @@ export function fromArray(arr: any[]): StreamMessage<any> {
         encryptionType,
         groupKeyId,
         newGroupKey: serializedNewGroupKey ? EncryptedGroupKey.deserialize(serializedNewGroupKey) : null,
-        signature
+        signature: hexToBinary(signature)
     })
 }

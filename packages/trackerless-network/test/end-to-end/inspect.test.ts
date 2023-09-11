@@ -1,7 +1,7 @@
 import { PeerDescriptor, NodeType, PeerID } from '@streamr/dht'
 import { NetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { waitForCondition } from '@streamr/utils'
+import { waitForCondition, hexToBinary } from '@streamr/utils'
 import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('inspect', () => {
@@ -55,7 +55,7 @@ describe('inspect', () => {
             hello: 'world'
         },
         messageType: StreamMessageType.MESSAGE,
-        signature: '0x1234',
+        signature: hexToBinary('0x1234'),
     })
     
     beforeEach(async () => {

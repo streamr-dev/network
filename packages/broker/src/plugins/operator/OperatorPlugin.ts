@@ -2,7 +2,7 @@ import { toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Signer } from 'ethers'
-import StreamrClient, { CONFIG_TEST } from 'streamr-client'
+import { CONFIG_TEST, StreamrClient } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
@@ -16,13 +16,13 @@ import { announceNodeToContract } from './announceNodeToContract'
 import { announceNodeToStream } from './announceNodeToStream'
 import { checkOperatorPoolValueBreach } from './checkOperatorPoolValueBreach'
 import { MaintainOperatorPoolValueHelper } from './MaintainOperatorPoolValueHelper'
+import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
-    redundancyFactor: number
 }
 
 export interface OperatorServiceConfig {
@@ -64,9 +64,15 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             this.serviceConfig
         )
 
+        const redundancyFactor = await fetchRedundancyFactor(this.serviceConfig)
+        if (redundancyFactor === undefined) {
+            throw new Error('Failed to retrieve redundancy factor')
+        }
+        logger.info('Fetched redundancy factor', { redundancyFactor })
+
         this.maintainTopologyService = await setUpAndStartMaintainTopologyService({
             streamrClient,
-            redundancyFactor: this.pluginConfig.redundancyFactor,
+            redundancyFactor,
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
