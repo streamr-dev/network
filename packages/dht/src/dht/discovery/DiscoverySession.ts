@@ -53,15 +53,15 @@ export class DiscoverySession {
             const dhtPeer = new DhtPeer(
                 this.config.ownPeerDescriptor,
                 contact,
-                toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator!.getRpcClientTransport())),
+                toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
                 this.config.serviceId
             )
-            if (!dhtPeer.getPeerId().equals(this.ownPeerId!)) {
+            if (!dhtPeer.getPeerId().equals(this.ownPeerId)) {
                 if (this.config.newContactListener) {
                     this.config.newContactListener(dhtPeer)
                 }
                 if (!this.config.neighborList.getContact(dhtPeer.getPeerId())) {
-                    this.config.neighborList!.addContact(dhtPeer)
+                    this.config.neighborList.addContact(dhtPeer)
                 }
             }
         })
@@ -73,9 +73,9 @@ export class DiscoverySession {
         }
         logger.trace(`Getting closest peers from contact: ${contact.getPeerId().toKey()}`)
         this.outgoingClosestPeersRequestsCounter++
-        this.config.neighborList!.setContacted(contact.getPeerId())
+        this.config.neighborList.setContacted(contact.getPeerId())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)
-        this.config.neighborList!.setActive(contact.getPeerId())
+        this.config.neighborList.setActive(contact.getPeerId())
         return returnedContacts
     }
 
@@ -84,9 +84,9 @@ export class DiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(peerId.toKey())
-        const oldClosestContact = this.config.neighborList!.getClosestContactId()
+        const oldClosestContact = this.config.neighborList.getClosestContactId()
         this.addNewContacts(contacts)
-        if (this.config.neighborList!.getClosestContactId().equals(oldClosestContact)) {
+        if (this.config.neighborList.getClosestContactId().equals(oldClosestContact)) {
             this.noProgressCounter++
         } else {
             this.noProgressCounter = 0
@@ -99,14 +99,14 @@ export class DiscoverySession {
         }
         this.ongoingClosestPeersRequests.delete(peer.getPeerId().toKey())
         this.config.bucket.remove(peer.getPeerId().value)
-        this.config.neighborList!.removeContact(peer.getPeerId())
+        this.config.neighborList.removeContact(peer.getPeerId())
     }
 
     private findMoreContacts(): void {
         if (this.stopped) {
             return
         }
-        const uncontacted = this.config.neighborList!.getUncontactedContacts(this.config.parallelism)
+        const uncontacted = this.config.neighborList.getUncontactedContacts(this.config.parallelism)
         if (uncontacted.length < 1 || this.noProgressCounter >= this.config.noProgressLimit) {
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
@@ -116,11 +116,11 @@ export class DiscoverySession {
             if (this.ongoingClosestPeersRequests.size >= this.config.parallelism) {
                 break
             }
-            this.ongoingClosestPeersRequests.add(nextPeer!.getPeerId().toKey())
+            this.ongoingClosestPeersRequests.add(nextPeer.getPeerId().toKey())
             // eslint-disable-next-line promise/catch-or-return
-            this.getClosestPeersFromContact(nextPeer!)
-                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer!.getPeerId(), contacts))
-                .catch((err) => this.onClosestPeersRequestFailed(nextPeer!, err))
+            this.getClosestPeersFromContact(nextPeer)
+                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer.getPeerId(), contacts))
+                .catch((err) => this.onClosestPeersRequestFailed(nextPeer, err))
                 .finally(() => {
                     this.outgoingClosestPeersRequestsCounter--
                     this.findMoreContacts()
@@ -129,7 +129,7 @@ export class DiscoverySession {
     }
 
     public async findClosestNodes(timeout: number): Promise<SortedContactList<DhtPeer>> {
-        if (this.config.neighborList!.getUncontactedContacts(this.config.parallelism).length < 1) {
+        if (this.config.neighborList.getUncontactedContacts(this.config.parallelism).length < 1) {
             logger.trace('getUncontactedContacts length was 0 in beginning of discovery, this.neighborList.size: '
                 + this.config.neighborList.getSize())
             return this.config.neighborList

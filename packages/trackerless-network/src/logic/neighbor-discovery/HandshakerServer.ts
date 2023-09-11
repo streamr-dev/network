@@ -34,14 +34,14 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     private handleRequest(request: StreamHandshakeRequest): StreamHandshakeResponse {
-        const getInterleaveSourceIds = () => (request.interleaveSourceId !== undefined) ? [binaryToHex(request.interleaveSourceId!) as NodeID] : []
-        if (this.config.targetNeighbors!.hasNode(request.senderDescriptor!)
+        const getInterleaveSourceIds = () => (request.interleaveSourceId !== undefined) ? [binaryToHex(request.interleaveSourceId) as NodeID] : []
+        if (this.config.targetNeighbors.hasNode(request.senderDescriptor!)
             || this.config.ongoingHandshakes.has(getNodeIdFromPeerDescriptor(request.senderDescriptor!))
         ) {
             return this.acceptHandshake(request, request.senderDescriptor!)
-        } else if (this.config.targetNeighbors!.size() + this.config.ongoingHandshakes.size < this.config.N) {
+        } else if (this.config.targetNeighbors.size() + this.config.ongoingHandshakes.size < this.config.N) {
             return this.acceptHandshake(request, request.senderDescriptor!)
-        } else if (this.config.targetNeighbors!.size(getInterleaveSourceIds()) >= 2) {
+        } else if (this.config.targetNeighbors.size(getInterleaveSourceIds()) >= 2) {
             return this.acceptHandshakeWithInterleaving(request, request.senderDescriptor!)
         } else {
             return this.rejectHandshake(request)

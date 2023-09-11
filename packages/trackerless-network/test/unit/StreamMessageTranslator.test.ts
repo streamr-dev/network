@@ -9,7 +9,7 @@ import {
     StreamMessageType as OldStreamMessageType,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, binaryToHex, binaryToUtf8, hexToBinary, areEqualBinaries } from '@streamr/utils'
+import { EthereumAddress, binaryToHex, binaryToUtf8, hexToBinary } from '@streamr/utils'
 
 describe('StreamMessageTranslator', () => {
 
@@ -46,9 +46,8 @@ describe('StreamMessageTranslator', () => {
         expect(translated.previousMessageRef).toEqual(undefined)
         expect(translated.messageType).toEqual(StreamMessageType.MESSAGE)
         expect(translated.groupKeyId).toEqual(undefined)
-        expect(areEqualBinaries(translated.signature, signature)).toEqual(true)
+        expect(translated.signature).toStrictEqual(signature)
         expect(JSON.parse(binaryToUtf8(translated.content))).toEqual({ hello: 'WORLD' })
-
     })
 
     it('translates protobuf to old protocol', () => {
@@ -62,7 +61,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageType).toEqual(OldStreamMessageType.MESSAGE)
         expect(translated.contentType).toEqual(0)
         expect(translated.groupKeyId).toEqual(null)
-        expect(areEqualBinaries(translated.signature, signature)).toEqual(true)
+        expect(translated.signature).toStrictEqual(signature)
         expect(translated.getParsedContent()).toEqual({ hello: 'WORLD' })
     })
 })

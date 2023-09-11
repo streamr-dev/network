@@ -9,7 +9,7 @@ import { toStreamID } from '../../../../src/utils/StreamID'
 import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/streamMessageSerialization'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-const signature = '0x111233'
+const signature = '111233'
 
 // Message definitions
 const message = new StreamMessage({

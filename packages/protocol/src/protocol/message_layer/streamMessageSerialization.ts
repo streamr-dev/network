@@ -20,7 +20,7 @@ export function toArray(streamMessage: StreamMessage): any[] {
         binaryToHex(streamMessage.serializedContent),
         streamMessage.newGroupKey ? streamMessage.newGroupKey.serialize() : null,
         SIGNATURE_TYPE_ETH,
-        binaryToHex(streamMessage.signature, true),
+        binaryToHex(streamMessage.signature),
     ]
 }
 

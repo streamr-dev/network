@@ -42,7 +42,7 @@ export const toObject = (msg: StreamMessage<any>): any => {
         encryptionType: msg.encryptionType,
         groupKeyId: msg.groupKeyId,
         content: (msg.encryptionType === EncryptionType.NONE ? msg.getParsedContent() : msg.getSerializedContent()),
-        signature: binaryToHex(msg.signature, true),
+        signature: binaryToHex(msg.signature),
     }
 }
 

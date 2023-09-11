@@ -10,7 +10,7 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, Logger, hexToBinary } from '@streamr/utils'
+import { EthereumAddress, Logger } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -101,8 +101,8 @@ export class PublisherKeyExchange {
         requestId: string
     ): Promise<StreamMessage<GroupKeyResponseSerialized>> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {
-            const encryptedGroupKeyHex = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey, true)
-            return new EncryptedGroupKey(key.id, hexToBinary(encryptedGroupKeyHex))
+            const encryptedGroupKey = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey)
+            return new EncryptedGroupKey(key.id, encryptedGroupKey)
         }))
         const responseContent = new GroupKeyResponse({
             recipient,

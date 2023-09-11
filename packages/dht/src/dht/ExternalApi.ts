@@ -8,7 +8,7 @@ export class ExternalApi {
 
     constructor(dhtNode: DhtNode) {
         this.dhtNode = dhtNode
-        const rpcCommunicator = this.dhtNode.getRpcCommunicator!()
+        const rpcCommunicator = this.dhtNode.getRpcCommunicator()
         rpcCommunicator.registerRpcMethod(FindDataRequest, FindDataResponse, 'findData', 
             (req: FindDataRequest, context) => this.findData(req, context), { timeout: 15000 })
     }
