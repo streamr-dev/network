@@ -205,7 +205,7 @@ export class StreamEntryPointDiscovery {
                 logger.error(`${keyFromPeerDescriptor(this.config.ownPeerDescriptor)} avoid network split found entry points ${rediscoveredEntrypoints.map((peer) => keyFromPeerDescriptor(peer))}`)
                 await stream!.layer1!.joinDht(rediscoveredEntrypoints, false, false)
                 // eslint-disable-next-line max-len
-                logger.error(`${keyFromPeerDescriptor(this.config.ownPeerDescriptor)} avoid network split join completed, bucket size: ${stream!.layer1!.getBucketSize()}`)
+                logger.error(`${keyFromPeerDescriptor(this.config.ownPeerDescriptor)} avoid network split join completed, bucket size: ${stream!.layer1!.getBucketSize()} ${stream!.layer2.getTargetNeighborIds().length}`)
                 if (stream!.layer1!.getBucketSize() < this.config.networkSplitAvoidanceLimit) {
                     throw new Error(`Network split is still possible`)
                 }
