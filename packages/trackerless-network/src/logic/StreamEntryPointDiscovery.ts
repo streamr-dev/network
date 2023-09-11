@@ -3,7 +3,8 @@ import {
     isSamePeerDescriptor,
     PeerDescriptor,
     RecursiveFindResult,
-    DataEntry
+    DataEntry,
+    keyFromPeerDescriptor
 } from '@streamr/dht'
 import { Any } from '../proto/google/protobuf/any'
 import { Logger, setAbortableTimeout, wait } from '@streamr/utils'
@@ -96,6 +97,8 @@ export class StreamEntryPointDiscovery {
             joiningEmptyStream = true
             discoveredEntryPoints.push(this.config.ownPeerDescriptor)
         }
+        // eslint-disable-next-line max-len
+        logger.error(`${keyFromPeerDescriptor(this.config.ownPeerDescriptor)} discovered stream entry points ${discoveredEntryPoints.map((peer) => keyFromPeerDescriptor(peer))}`)
         return {
             joiningEmptyStream,
             discoveredEntryPoints,
@@ -193,6 +196,7 @@ export class StreamEntryPointDiscovery {
     }
 
     private async avoidNetworkSplit(streamPartId: StreamPartID): Promise<void> {
+        logger.error(`${keyFromPeerDescriptor(this.config.ownPeerDescriptor)} avoiding network split`)
         await exponentialRunOff(async () => {
             if (this.config.streams.has(streamPartId)) {
                 const stream = this.config.streams.get(streamPartId)

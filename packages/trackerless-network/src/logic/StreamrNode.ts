@@ -3,7 +3,8 @@ import {
     PeerDescriptor,
     ConnectionLocker,
     DhtNode,
-    ITransport
+    ITransport,
+    keyFromPeerDescriptor
 } from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'eventemitter3'
@@ -221,6 +222,8 @@ export class StreamrNode extends EventEmitter<Events> {
         )
         entryPoints = knownEntryPoints.concat(discoveryResult.discoveredEntryPoints)
         await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT), false, enableRejoins)
+        // eslint-disable-next-line max-len
+        logger.error(`${keyFromPeerDescriptor(this.getPeerDescriptor())} initial DHT join completed with bucket size ${layer1.getBucketSize()} known entry points ${entryPoints.length}`)
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
             layer1.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT,
