@@ -1,15 +1,14 @@
 import { NeighborFinder } from '../../src/logic/neighbor-discovery/NeighborFinder'
 import { NodeList } from '../../src/logic/NodeList'
-import { PeerID } from '@streamr/dht'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
-import { createMockRemoteNode } from '../utils/utils'
+import { createMockRemoteNode, createRandomNodeId } from '../utils/utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('NeighborFinder', () => {
 
-    const peerId = PeerID.fromString('NeighborFinder')
+    const nodeId = createRandomNodeId()
     let targetNeighbors: NodeList
     let nearbyContactPool: NodeList
     let neighborFinder: NeighborFinder
@@ -17,8 +16,8 @@ describe('NeighborFinder', () => {
     const N = 4
 
     beforeEach(() => {
-        targetNeighbors = new NodeList(peerId, 15)
-        nearbyContactPool = new NodeList(peerId, 30)
+        targetNeighbors = new NodeList(nodeId, 15)
+        nearbyContactPool = new NodeList(nodeId, 30)
         range(30).forEach(() => nearbyContactPool.add(createMockRemoteNode()))
         const mockDoFindNeighbors = async (excluded: NodeID[]) => {
             const target = nearbyContactPool.getRandom(excluded)

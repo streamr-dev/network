@@ -136,7 +136,7 @@ describe('Validator2', () => {
         })
 
         it('rejects invalid signatures', async () => {
-            msg.signature = msg.signature.replace('a', 'b')
+            msg.signature = Buffer.from(msg.signature).reverse()
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -207,7 +207,7 @@ describe('Validator2', () => {
         })
 
         it('rejects invalid signatures', async () => {
-            groupKeyRequest.signature = groupKeyRequest.signature.replace('a', 'b')
+            groupKeyRequest.signature = Buffer.from(groupKeyRequest.signature).reverse()
 
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -262,7 +262,7 @@ describe('Validator2', () => {
         })
 
         it('rejects invalid signatures', async () => {
-            groupKeyResponse.signature = groupKeyResponse.signature.replace('a', 'b')
+            groupKeyResponse.signature = Buffer.from(groupKeyResponse.signature).reverse()
 
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)

@@ -11,8 +11,8 @@ import {
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
-import { NetworkNode } from '../../src/NetworkNode'
-import { hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
+import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { NodeID } from '../../src/identifiers'
 
@@ -49,7 +49,7 @@ export const createMockRandomGraphNodeAndDhtNode = (
 export const createStreamMessage = (
     content: string,
     streamPartId: StreamPartID,
-    publisherId: Uint8Array,
+    publisherId: EthereumAddress,
     timestamp?: number,
     sequenceNumber?: number
 ): StreamMessage => {
@@ -58,7 +58,7 @@ export const createStreamMessage = (
         streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
         sequenceNumber: sequenceNumber || 0,
         timestamp: timestamp || Date.now(),
-        publisherId,
+        publisherId: hexToBinary(publisherId),
         messageChainId: 'messageChain0',
     }
     const msg: StreamMessage = {
@@ -101,7 +101,7 @@ export const createNetworkNodeWithSimulator = (
     entryPoints: PeerDescriptor[]
 ): NetworkNode => {
     const transport = new SimulatorTransport(peerDescriptor, simulator)
-    return new NetworkNode({
+    return createNetworkNode({
         layer0: {
             peerDescriptor,
             entryPoints,

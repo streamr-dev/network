@@ -189,6 +189,13 @@ export function randomEthereumAddress(): EthereumAddress {
     return toEthereumAddress('0x' + crypto.randomBytes(20).toString('hex'))
 }
 
+// eslint-disable-next-line no-underscore-dangle
+declare let _streamr_electron_test: any
+export function isRunningInElectron(): boolean {
+    // eslint-disable-next-line no-underscore-dangle
+    return typeof _streamr_electron_test !== 'undefined'
+}
+
 /**
  * Used to spin up an HTTP server used by integration tests to fetch private keys having non-zero ERC-20 token
  * balances in streamr-docker-dev environment.

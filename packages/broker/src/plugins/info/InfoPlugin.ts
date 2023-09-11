@@ -1,19 +1,21 @@
+import { Schema } from 'ajv'
 import { Request, Response } from 'express'
+import { StreamrClient } from 'streamr-client'
 import { ApiPluginConfig, HttpServerEndpoint, Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { Schema } from 'ajv'
 
 export class InfoPlugin extends Plugin<ApiPluginConfig> {
-    async start(): Promise<void> {
-        this.addHttpServerEndpoint(this.createEndpoint())
+
+    async start(streamrClient: StreamrClient): Promise<void> {
+        this.addHttpServerEndpoint(InfoPlugin.createEndpoint(streamrClient))
     }
 
-    private createEndpoint(): HttpServerEndpoint {
+    private static createEndpoint(streamrClient: StreamrClient): HttpServerEndpoint {
         return {
             path: '/info',
             method: 'get',
             requestHandlers: [async (_req: Request, res: Response) => {
-                res.json(await this.streamrClient.getDiagnosticInfo())
+                res.json(await streamrClient.getDiagnosticInfo())
             }]
         }
     }

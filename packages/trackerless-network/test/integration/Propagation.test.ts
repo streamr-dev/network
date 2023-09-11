@@ -1,13 +1,14 @@
-import { DhtNode, PeerDescriptor, Simulator, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtNode, PeerDescriptor, Simulator } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockRandomGraphNodeAndDhtNode, createRandomNodeId, createStreamMessage } from '../utils/utils'
 import { range } from 'lodash'
 import { waitForCondition, hexToBinary } from '@streamr/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('Propagation', () => {
     const entryPointDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`entrypoint`).value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: 1
     }
     let dhtNodes: DhtNode[]
@@ -68,7 +69,7 @@ describe('Propagation', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             STREAM_PART_ID,
-            peerIdFromPeerDescriptor(dhtNodes[0].getPeerDescriptor()).value
+            randomEthereumAddress()
         )
         randomGraphNodes[0].broadcast(msg)
         await waitForCondition(() => totalReceived >= NUM_OF_NODES, 10000)

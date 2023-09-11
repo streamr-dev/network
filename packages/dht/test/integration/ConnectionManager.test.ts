@@ -308,4 +308,34 @@ describe('ConnectionManager', () => {
         await connectionManager4.stop()
     })
 
+    it('Cannot send to own WebSocketServer if kademliaIds do not match', async () => {
+        const connectionManager1 = new ConnectionManager({
+            transportLayer: mockTransport,
+            websocketHost: '127.0.0.1',
+            websocketPortRange: { min: 10001, max: 10001 }
+        })
+
+        await connectionManager1.start((report) => {
+            expect(report.ip).toEqual('127.0.0.1')
+            expect(report.openInternet).toEqual(true)
+            return createPeerDescriptor(report)
+        })
+        const peerDescriptor = connectionManager1.getPeerDescriptor()
+        peerDescriptor.kademliaId = new Uint8Array([12, 12, 12, 12])
+        const msg: Message = {
+            serviceId,
+            messageType: MessageType.RPC,
+            messageId: '1',
+            targetDescriptor: peerDescriptor,
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            } 
+        }
+        await expect(connectionManager1.send(msg))
+            .rejects
+            .toThrow('Cannot send to self')
+        
+        await connectionManager1.stop()
+    })
 })

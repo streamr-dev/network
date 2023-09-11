@@ -7,7 +7,7 @@ import {
     toStreamID
 } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, wait, waitForCondition, hexToBinary } from '@streamr/utils'
 import { shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
@@ -90,7 +90,7 @@ function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
         messageId,
         prevMsgRef,
         content: {},
-        signature: 'signature'
+        signature: hexToBinary('0x1234')
     })
 }
 

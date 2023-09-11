@@ -1,18 +1,19 @@
-import { PeerDescriptor, NodeType, PeerID } from '@streamr/dht'
+import { PeerDescriptor, NodeType } from '@streamr/dht'
 import { range } from 'lodash'
-import { waitForCondition, utf8ToBinary } from '@streamr/utils'
+import { waitForCondition, hexToBinary } from '@streamr/utils'
 import { getRandomRegion } from '@streamr/dht'
-import { createStreamMessage } from '../utils/utils'
+import { createRandomNodeId, createStreamMessage } from '../utils/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('Full node network with WebRTC connections', () => {
 
     const NUM_OF_NODES = 22
 
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`entrypoint`).value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         websocket: { ip: 'localhost', port: 14444 },
         region: getRandomRegion()
@@ -39,10 +40,9 @@ describe('Full node network with WebRTC connections', () => {
         entryPoint.getStreamrNode()!.setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
         await entryPoint.getStreamrNode()!.joinStream(randomGraphId)
 
-        await Promise.all(range(NUM_OF_NODES).map(async (i) => {
-            const peerId = PeerID.fromString(`${i}`)
+        await Promise.all(range(NUM_OF_NODES).map(async () => {
             const peerDescriptor: PeerDescriptor = {
-                kademliaId: peerId.value,
+                kademliaId: hexToBinary(createRandomNodeId()),
                 type: NodeType.NODEJS,
             }
             const node = new NetworkStack({
@@ -56,7 +56,7 @@ describe('Full node network with WebRTC connections', () => {
             await node.start()
             node.getStreamrNode().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
             await node.getStreamrNode().joinStream(randomGraphId)
-            node.getStreamrNode!().subscribeToStream(randomGraphId)
+            node.getStreamrNode().subscribeToStream(randomGraphId)
         }))
 
     }, 90000)
@@ -86,7 +86,7 @@ describe('Full node network with WebRTC connections', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             randomGraphId,
-            utf8ToBinary(getNodeIdFromPeerDescriptor(epPeerDescriptor))
+            randomEthereumAddress()
         )
         entryPoint.getStreamrNode()!.publishToStream(randomGraphId, msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
