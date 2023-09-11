@@ -22,7 +22,7 @@
     "test": "jest",
     "test-browser": "karma start karma.config.js",
     "test-unit": "jest test/unit",
-    "test-integration": "jest test/integration"
+    "test-integration": "jest --bail test/integration"
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
