@@ -54,7 +54,7 @@ describe('Resends2', () => {
             permissions: [StreamPermission.SUBSCRIBE]
         })
         storageNode = await environment.startStorageNode()
-        await stream.addToStorageNode(storageNode.id)
+        await stream.addToStorageNode(storageNode.getAddress())
         client = environment.createClient()
     })
 
@@ -67,7 +67,7 @@ describe('Resends2', () => {
     })
 
     it('throws if no storage assigned', async () => {
-        await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
+        await stream.removeFromStorageNode(storageNode.getAddress())  // remove the default storage node added in beforeEach
         await expect(async () => {
             await client.resend({
                 streamId: stream.id,
@@ -134,9 +134,9 @@ describe('Resends2', () => {
             })
 
             it('can ignore errors in resend', async () => {
-                await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
+                await stream.removeFromStorageNode(storageNode.getAddress())  // remove the default storage node added in beforeEach
                 const storageNode2 = await startFailingStorageNode(new Error('expected'), environment)
-                await stream.addToStorageNode(storageNode2.id)
+                await stream.addToStorageNode(storageNode2.getAddress())
                 const sub = await client.subscribe({
                     streamId: stream.id,
                     resend: {
@@ -158,9 +158,9 @@ describe('Resends2', () => {
             })
 
             it('can handle errors in resend', async () => {
-                await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
+                await stream.removeFromStorageNode(storageNode.getAddress())  // remove the default storage node added in beforeEach
                 const storageNode2 = await startFailingStorageNode(new Error('expected'), environment)
-                await stream.addToStorageNode(storageNode2.id)
+                await stream.addToStorageNode(storageNode2.getAddress())
                 const sub = await client.subscribe({
                     streamId: stream.id,
                     resend: {
@@ -183,7 +183,7 @@ describe('Resends2', () => {
             })
 
             it('no storage assigned', async () => {
-                await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
+                await stream.removeFromStorageNode(storageNode.getAddress())  // remove the default storage node added in beforeEach
                 const sub = await client.subscribe({
                     streamId: stream.id,
                     resend: {

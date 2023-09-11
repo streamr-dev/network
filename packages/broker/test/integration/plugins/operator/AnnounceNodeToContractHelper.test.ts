@@ -12,7 +12,7 @@ describe(AnnounceNodeToContractHelper, () => {
         })
         helper = new AnnounceNodeToContractHelper({
             ...operatorServiceConfig,
-            nodeWallet: nodeWallets[0]
+            signer: nodeWallets[0]
         })
     })
 
@@ -26,8 +26,8 @@ describe(AnnounceNodeToContractHelper, () => {
         await waitForCondition(async () => await helper.getTimestampOfLastHeartbeat() !== undefined, 10 * 1000, 1000)
 
         // account for (1) the graph to pick up and (2) un-synced time between Docker box and this machine,
-        // TODO: why is drift so large?
-        const DELTA = 60 * 5 * 1000
+        // TODO: why is drift so large (ETH-577)?
+        const DELTA = 60 * 15 * 1000
 
         expect(await helper.getTimestampOfLastHeartbeat()).toBeWithin(
             approximateWriteTimestamp - DELTA,

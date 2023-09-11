@@ -20,7 +20,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
-import { ConnectionManager, ConnectionManagerConfig } from '../connection/ConnectionManager'
+import { ConnectionManager, ConnectionManagerConfig, PortRange } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
@@ -41,6 +41,7 @@ import { IceServer } from '../connection/WebRTC/WebRtcConnector'
 import { ExternalApi } from './ExternalApi'
 import { RemoteExternalApi } from './RemoteExternalApi'
 import { UUID } from '../exports'
+import { isNodeJS } from '../helpers/browser/isNodeJS'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -68,8 +69,8 @@ export interface DhtNodeOptions {
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
-    webSocketHost?: string
-    webSocketPort?: number
+    websocketHost?: string
+    websocketPortRange?: PortRange
     peerIdString?: string
 
     nodeName?: string
@@ -95,13 +96,13 @@ export class DhtNodeConfig {
     storeMaxTtl = 60000
     storeNumberOfCopies = 5
     metricsContext = new MetricsContext()
-    peerIdString = new UUID().toString()
+    peerIdString = new UUID().toHex()
 
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
-    webSocketHost?: string
-    webSocketPort?: number
+    websocketHost?: string
+    websocketPortRange?: PortRange
     nodeName?: string
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
@@ -135,7 +136,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerIdString?: 
     }
     const ret: PeerDescriptor = { kademliaId: peerId, nodeName: nodeName, type: NodeType.NODEJS }
     if (msg && msg.websocket) {
-        ret.websocket = { ip: msg.websocket!.ip, port: msg.websocket!.port }
+        ret.websocket = { ip: msg.websocket.ip, port: msg.websocket.port }
         ret.openInternet = true
     }
     return ret
@@ -181,6 +182,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         logger.trace(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
         this.started = true
 
+        if (!isNodeJS()) {
+            this.config.websocketPortRange = undefined
+            if (this.config.peerDescriptor) {
+                this.config.peerDescriptor.websocket = undefined
+            }
+        }
         // If transportLayer is given, do not create a ConnectionManager
         if (this.config.transportLayer) {
             this.transportLayer = this.config.transportLayer
@@ -202,15 +209,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 maxConnections: this.config.maxConnections
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
-            if (this.config.peerDescriptor && this.config.peerDescriptor.websocket) {
-                connectionManagerConfig.webSocketHost = this.config.peerDescriptor.websocket.ip
-                connectionManagerConfig.webSocketPort = this.config.peerDescriptor.websocket.port
-            } else {
-                // If webSocketPort is given, create ws server using it, webSocketHost can be undefined
-                if (this.config.webSocketPort) {
-                    connectionManagerConfig.webSocketHost = this.config.webSocketHost
-                    connectionManagerConfig.webSocketPort = this.config.webSocketPort
+            if (this.config.peerDescriptor?.websocket) {
+                connectionManagerConfig.websocketHost = this.config.peerDescriptor.websocket.ip
+                connectionManagerConfig.websocketPortRange = { 
+                    min: this.config.peerDescriptor.websocket.port,
+                    max: this.config.peerDescriptor.websocket.port
                 }
+            // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
+            } else if (this.config.websocketPortRange) { 
+                connectionManagerConfig.websocketHost = this.config.websocketHost
+                connectionManagerConfig.websocketPortRange = this.config.websocketPortRange
             }
 
             const connectionManager = new ConnectionManager(connectionManagerConfig)
@@ -229,13 +237,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         this.bindDefaultServerMethods()
         this.ownPeerId = peerIdFromPeerDescriptor(this.ownPeerDescriptor!)
-        this.initKBuckets(this.ownPeerId!)
+        this.initKBuckets(this.ownPeerId)
         this.peerDiscovery = new PeerDiscovery({
-            rpcCommunicator: this.rpcCommunicator!,
+            rpcCommunicator: this.rpcCommunicator,
             ownPeerDescriptor: this.ownPeerDescriptor!,
-            ownPeerId: this.ownPeerId!,
+            ownPeerId: this.ownPeerId,
             bucket: this.bucket!,
-            connections: this.connections!,
+            connections: this.connections,
             neighborList: this.neighborList!,
             randomPeers: this.randomPeers!,
             openInternetPeers: this.openInternetPeers!,
@@ -248,28 +256,28 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connectionManager: this.connectionManager
         })
         this.router = new Router({
-            rpcCommunicator: this.rpcCommunicator!,
+            rpcCommunicator: this.rpcCommunicator,
             connections: this.connections,
             ownPeerDescriptor: this.ownPeerDescriptor!,
-            ownPeerId: this.ownPeerId!,
+            ownPeerId: this.ownPeerId,
             addContact: this.addNewContact.bind(this),
             serviceId: this.config.serviceId,
             connectionManager: this.connectionManager
         })
         this.recursiveFinder = new RecursiveFinder({
-            rpcCommunicator: this.rpcCommunicator!,
-            router: this.router!,
+            rpcCommunicator: this.rpcCommunicator,
+            router: this.router,
             sessionTransport: this,
             connections: this.connections,
             ownPeerDescriptor: this.ownPeerDescriptor!,
             serviceId: this.config.serviceId,
-            ownPeerId: this.ownPeerId!,
+            ownPeerId: this.ownPeerId,
             addContact: this.addNewContact.bind(this),
             isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
             localDataStore: this.localDataStore
         })
         this.dataStore = new DataStore({
-            rpcCommunicator: this.rpcCommunicator!,
+            rpcCommunicator: this.rpcCommunicator,
             recursiveFinder: this.recursiveFinder,
             ownPeerDescriptor: this.ownPeerDescriptor!,
             serviceId: this.config.serviceId,

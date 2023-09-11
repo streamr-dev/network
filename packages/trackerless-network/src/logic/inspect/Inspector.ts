@@ -1,10 +1,11 @@
-import { PeerIDKey, PeerDescriptor, keyFromPeerDescriptor, ConnectionLocker } from '@streamr/dht'
-import { MessageRef } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { PeerDescriptor, ConnectionLocker } from '@streamr/dht'
+import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger, waitForEvent3 } from '@streamr/utils'
 import { RemoteTemporaryConnectionRpcServer } from '../temporary-connection/RemoteTemporaryConnectionRpcServer'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 interface InspectorConfig {
     ownPeerDescriptor: PeerDescriptor
@@ -17,8 +18,8 @@ interface InspectorConfig {
 
 export interface IInspector {
     inspect(peerDescriptor: PeerDescriptor): Promise<boolean>
-    markMessage(sender: PeerIDKey, messageId: MessageRef): void
-    isInspected(nodeId: PeerIDKey): boolean
+    markMessage(sender: NodeID, messageId: MessageID): void
+    isInspected(nodeId: NodeID): boolean
     stop(): void
 }
 
@@ -27,7 +28,7 @@ const DEFAULT_TIMEOUT = 60 * 1000
 
 export class Inspector implements IInspector {
 
-    private readonly sessions: Map<PeerIDKey, InspectSession> = new Map()
+    private readonly sessions: Map<NodeID, InspectSession> = new Map()
     private readonly graphId: string
     private readonly client: ProtoRpcClient<TemporaryConnectionRpcClient>
     private readonly ownPeerDescriptor: PeerDescriptor
@@ -51,9 +52,9 @@ export class Inspector implements IInspector {
     }
 
     async inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
-        const nodeId = keyFromPeerDescriptor(peerDescriptor)
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         const session = new InspectSession({
-            inspectedPeer: nodeId
+            inspectedNode: nodeId
         })
         const lockId = `inspector-${this.graphId}`
         this.sessions.set(nodeId, session)
@@ -71,11 +72,11 @@ export class Inspector implements IInspector {
         return success || session.getInspectedMessageCount() < 1
     }
 
-    markMessage(sender: PeerIDKey, messageId: MessageRef): void {
+    markMessage(sender: NodeID, messageId: MessageID): void {
         this.sessions.forEach((session) => session.markMessage(sender, messageId))
     }
 
-    isInspected(nodeId: PeerIDKey): boolean {
+    isInspected(nodeId: NodeID): boolean {
         return this.sessions.has(nodeId)
     }
 

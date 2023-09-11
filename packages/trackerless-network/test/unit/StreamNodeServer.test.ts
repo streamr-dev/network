@@ -1,26 +1,29 @@
-import { ListeningRpcCommunicator, PeerDescriptor, PeerID } from '@streamr/dht'
+import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
-import { ContentMessage, LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/Transport'
-import { createStreamMessage } from '../utils/utils'
+import { utf8ToBinary, hexToBinary } from '@streamr/utils'
+import { createRandomNodeId, createStreamMessage } from '../utils/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('StreamNodeServer', () => {
 
     let streamNodeServer: StreamNodeServer
     const peerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('random-graph-node').value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: 0
     }
 
     const mockSender: PeerDescriptor = {
-        kademliaId: PeerID.fromString('mock-sender').value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: 0
     }
 
-    const content: ContentMessage = {
-        body: JSON.stringify({ hello: 'WORLD' })
-    }
-    const message = createStreamMessage(content, 'random-graph', 'publisher')
+    const message = createStreamMessage(
+        JSON.stringify({ hello: 'WORLD' }),
+        StreamPartIDUtils.parse('random-graph#0'),
+        utf8ToBinary('publisher')
+    )
 
     let mockBroadcast: jest.Mock
     let mockDuplicateCheck: jest.Mock
@@ -53,7 +56,7 @@ describe('StreamNodeServer', () => {
 
     it('Server leaveStreamNotice()', async () => {
         const leaveNotice: LeaveStreamNotice = {
-            senderId: 'sender',
+            senderId: hexToBinary(createRandomNodeId()),
             randomGraphId: 'random-graph'
         }
         await streamNodeServer.leaveStreamNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)

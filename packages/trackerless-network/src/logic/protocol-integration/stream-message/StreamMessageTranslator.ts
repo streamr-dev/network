@@ -1,5 +1,5 @@
 import {
-    MessageID,
+    MessageID as OldMessageID,
     StreamMessage as OldStreamMessage,
     StreamMessageType as OldStreamMessageType,
     MessageRef as OldMessageRef,
@@ -7,30 +7,47 @@ import {
     GroupKeyRequest as OldGroupKeyRequest,
     GroupKeyResponse as OldGroupKeyResponse,
     StreamID,
+    EncryptionType as OldEncryptionType,
+    ContentType as OldContentType
 } from '@streamr/protocol'
 import {
-    ContentMessage,
-    EncryptedGroupKey,
+    ContentType,
+    GroupKey,
+    EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
     MessageRef,
     StreamMessage,
-    StreamMessageType
+    StreamMessageType,
+    MessageID
 } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentMessageTranslator } from './ContentMessageTranslator'
-import { EthereumAddress } from '@streamr/utils'
+import { toEthereumAddress, binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
 import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
+
+const oldToNewEncryptionType = (type: OldEncryptionType): EncryptionType => {
+    if (type === OldEncryptionType.AES) {
+        return EncryptionType.AES
+    }
+    return EncryptionType.NONE
+}
+
+const newToOldEncryptionType = (type: EncryptionType): OldEncryptionType => {
+    if (type === EncryptionType.AES) {
+        return OldEncryptionType.AES
+    }
+    return OldEncryptionType.NONE
+}
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class StreamMessageTranslator {
 
     static toProtobuf(msg: OldStreamMessage): StreamMessage {
         let content: Uint8Array
-        let contentType: StreamMessageType
+        let messageType: StreamMessageType
         if (msg.messageType === OldStreamMessageType.MESSAGE) {
-            content = ContentMessage.toBinary(ContentMessageTranslator.toProtobuf(msg.serializedContent))
-            contentType = StreamMessageType.MESSAGE
+            content = utf8ToBinary(msg.serializedContent)
+            messageType = StreamMessageType.MESSAGE
         } else if (msg.messageType === OldStreamMessageType.GROUP_KEY_REQUEST) {
             content = GroupKeyRequest.toBinary(
                 GroupKeyRequestTranslator.toProtobuf(
@@ -39,7 +56,7 @@ export class StreamMessageTranslator {
                         OldStreamMessageType.GROUP_KEY_REQUEST) as OldGroupKeyRequest
                 )
             )
-            contentType = StreamMessageType.GROUP_KEY_REQUEST
+            messageType = StreamMessageType.GROUP_KEY_REQUEST
         } else if (msg.messageType === OldStreamMessageType.GROUP_KEY_RESPONSE) {
             content = GroupKeyResponse.toBinary(
                 GroupKeyResponseTranslator.toProtobuf(
@@ -48,16 +65,16 @@ export class StreamMessageTranslator {
                         OldStreamMessageType.GROUP_KEY_RESPONSE) as OldGroupKeyResponse
                 )
             )
-            contentType = StreamMessageType.GROUP_KEY_RESPONSE
+            messageType = StreamMessageType.GROUP_KEY_RESPONSE
         } else {
             throw new Error('invalid message type')
         }
-        const messageRef: MessageRef = {
+        const messageId: MessageID = {
             timestamp: msg.getTimestamp(),
             sequenceNumber: msg.getSequenceNumber(),
             streamId: msg.getStreamId() as string,
             streamPartition: msg.getStreamPartition(),
-            publisherId: msg.getPublisherId(),
+            publisherId: hexToBinary(msg.getPublisherId()),
             messageChainId: msg.getMsgChainId()
         }
         let previousMessageRef: MessageRef | undefined = undefined
@@ -65,77 +82,74 @@ export class StreamMessageTranslator {
             previousMessageRef = {
                 timestamp: msg.getPreviousMessageRef()!.timestamp,
                 sequenceNumber: msg.getPreviousMessageRef()!.sequenceNumber,
-                streamId: msg.getStreamId() as string,
-                streamPartition: msg.getStreamPartition(),
-                publisherId: msg.getPublisherId(),
-                messageChainId: msg.getMsgChainId()
             }
         }
-        let newGroupKey: EncryptedGroupKey | undefined = undefined
+        let newGroupKey: GroupKey | undefined = undefined
         if (msg.getNewGroupKey()) {
             newGroupKey = {
-                encryptedGroupKeyHex: msg.getNewGroupKey()!.encryptedGroupKeyHex,
-                groupKeyId: msg.getNewGroupKey()!.groupKeyId,
-                serialized: msg.getNewGroupKey()!.serialized ?? undefined
+                id: msg.getNewGroupKey()!.groupKeyId,
+                data: hexToBinary(msg.getNewGroupKey()!.encryptedGroupKeyHex)
             }
         }
         const translated: StreamMessage = {
-            content: content,
-            encryptionType: msg.encryptionType,
-            messageRef: messageRef,
+            messageId,
             previousMessageRef,
-            messageType: contentType,
-            signature: msg.signature,
+            content,
+            messageType,
+            contentType: ContentType.JSON,
+            encryptionType: oldToNewEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId ?? undefined,
             newGroupKey,
+            signature: hexToBinary(msg.signature)
+
         }
         return translated
     }
 
     static toClientProtocol<T>(msg: StreamMessage): OldStreamMessage<T> {
         let content: string
-        let contentType: OldStreamMessageType
+        let messageType: OldStreamMessageType
         if (msg.messageType === StreamMessageType.MESSAGE) {
-            contentType = OldStreamMessageType.MESSAGE
-            content = ContentMessageTranslator.toClientProtocol(ContentMessage.fromBinary(msg.content))
+            messageType = OldStreamMessageType.MESSAGE
+            content = binaryToUtf8(msg.content)
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
-            contentType = OldStreamMessageType.GROUP_KEY_REQUEST
+            messageType = OldStreamMessageType.GROUP_KEY_REQUEST
             content = GroupKeyRequestTranslator.toClientProtocol(GroupKeyRequest.fromBinary(msg.content)).serialize()
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_RESPONSE) {
-            contentType = OldStreamMessageType.GROUP_KEY_RESPONSE
+            messageType = OldStreamMessageType.GROUP_KEY_RESPONSE
             content = GroupKeyResponseTranslator.toClientProtocol(GroupKeyResponse.fromBinary(msg.content)).serialize()
         } else {
             throw new Error('invalid message type')
         }
-        const messageId = new MessageID(
-            msg.messageRef!.streamId as StreamID,
-            msg.messageRef!.streamPartition,
-            Number(msg.messageRef!.timestamp),
-            msg.messageRef!.sequenceNumber,
-            msg.messageRef!.publisherId as EthereumAddress,
-            msg.messageRef!.messageChainId
+        const messageId = new OldMessageID(
+            msg.messageId!.streamId as StreamID,
+            msg.messageId!.streamPartition,
+            Number(msg.messageId!.timestamp),
+            msg.messageId!.sequenceNumber,
+            toEthereumAddress(binaryToHex(msg.messageId!.publisherId, true)),
+            msg.messageId!.messageChainId
         )
         let prevMsgRef: OldMessageRef | undefined = undefined
         if (msg.previousMessageRef) {
-            prevMsgRef = new OldMessageRef(Number(msg.previousMessageRef!.timestamp), msg.previousMessageRef!.sequenceNumber)
+            prevMsgRef = new OldMessageRef(Number(msg.previousMessageRef.timestamp), msg.previousMessageRef.sequenceNumber)
         }
         let newGroupKey: OldEncryptedGroupKey | undefined = undefined
         if (msg.newGroupKey) {
             newGroupKey = new OldEncryptedGroupKey(
-                msg.newGroupKey!.groupKeyId,
-                msg.newGroupKey!.encryptedGroupKeyHex,
-                msg.newGroupKey!.serialized
+                msg.newGroupKey.id,
+                binaryToHex(msg.newGroupKey.data),
             )
         }
         const translated = new OldStreamMessage<T>({
-            signature: msg.signature,
-            newGroupKey,
-            groupKeyId: msg.groupKeyId,
-            content,
-            messageType: contentType,
-            encryptionType: msg.encryptionType,
             messageId,
-            prevMsgRef
+            prevMsgRef,
+            content,
+            messageType,
+            contentType: OldContentType.JSON,
+            encryptionType: newToOldEncryptionType(msg.encryptionType),
+            groupKeyId: msg.groupKeyId,
+            newGroupKey,
+            signature: binaryToHex(msg.signature, true),
         })
         return translated
     }

@@ -4,6 +4,7 @@ import { StreamObject } from '../../src/logic/StreamrNode'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { wait } from '@streamr/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('StreamEntryPointDiscovery', () => {
 
@@ -42,7 +43,7 @@ describe('StreamEntryPointDiscovery', () => {
         deleted: true
     }
 
-    const stream = 'stream#0'
+    const streamPartId = StreamPartIDUtils.parse('stream#0')
 
     const fakeGetEntryPointData = async (_key: Uint8Array): Promise<RecursiveFindResult> => {
         return {
@@ -51,7 +52,7 @@ describe('StreamEntryPointDiscovery', () => {
         }
     }
 
-    const fakeGetEntryPointDataViaPeer = async (_key: Uint8Array, _peer: PeerDescriptor): Promise<DataEntry[]> => {
+    const fakegetEntryPointDataViaNode = async (_key: Uint8Array, _peer: PeerDescriptor): Promise<DataEntry[]> => {
         return [fakeData]
     }
 
@@ -72,12 +73,12 @@ describe('StreamEntryPointDiscovery', () => {
     beforeEach(() => {
         storeCalled = 0
         streams = new Map()
-        streams.set(stream, {} as any)
+        streams.set(streamPartId, {} as any)
         streamEntryPointDiscoveryWithData = new StreamEntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
             streams,
             getEntryPointData: fakeGetEntryPointData,
-            getEntryPointDataViaPeer: fakeGetEntryPointDataViaPeer,
+            getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
             cacheInterval: 2000
@@ -86,7 +87,7 @@ describe('StreamEntryPointDiscovery', () => {
             ownPeerDescriptor: peerDescriptor,
             streams: new Map<string, StreamObject>(),
             getEntryPointData: fakeEmptyGetEntryPointData,
-            getEntryPointDataViaPeer: fakeGetEntryPointDataViaPeer,
+            getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
             cacheInterval: 2000
@@ -98,53 +99,53 @@ describe('StreamEntryPointDiscovery', () => {
     })
 
     it('discoverEntryPointsFromDht has known entrypoints', async () => {
-        const res = await streamEntryPointDiscoveryWithData.discoverEntryPointsFromDht(stream, 1)
+        const res = await streamEntryPointDiscoveryWithData.discoverEntryPointsFromDht(streamPartId, 1)
         expect(res.joiningEmptyStream).toEqual(false)
         expect(res.entryPointsFromDht).toEqual(false)
         expect(res.discoveredEntryPoints).toEqual([])
     })
 
     it('discoverEntryPointsFromDht does not have known entrypoints', async () => {
-        const res = await streamEntryPointDiscoveryWithData.discoverEntryPointsFromDht(stream, 0)
+        const res = await streamEntryPointDiscoveryWithData.discoverEntryPointsFromDht(streamPartId, 0)
         expect(res.joiningEmptyStream).toEqual(false)
         expect(res.entryPointsFromDht).toEqual(true)
         expect(res.discoveredEntryPoints).toEqual([peerDescriptor])
     })
 
     it('discoverEntryPointsfromDht on an empty stream', async () => {
-        const res = await streamEntryPointDiscoveryWithoutData.discoverEntryPointsFromDht(stream, 0)
+        const res = await streamEntryPointDiscoveryWithoutData.discoverEntryPointsFromDht(streamPartId, 0)
         expect(res.joiningEmptyStream).toEqual(true)
         expect(res.entryPointsFromDht).toEqual(true)
         expect(res.discoveredEntryPoints).toEqual([peerDescriptor]) // ownPeerDescriptor
     })
 
     it('store on empty stream', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(stream, true, true, 0)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, true, 0)
         expect(storeCalled).toEqual(1)
     })
 
     it('store on non-empty stream without known entry points', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(stream, false, false, 0)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, false, false, 0)
         expect(storeCalled).toEqual(0)
     })
 
     it('store on stream without saturated entrypoint count', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(stream, false, true, 0)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, false, true, 0)
         expect(storeCalled).toEqual(1)
     })
 
     it('will keep recaching until stream stopped', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(stream, true, true, 0)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, true, 0)
         expect(storeCalled).toEqual(1)
         await wait(4500)
-        streamEntryPointDiscoveryWithData.removeSelfAsEntryPoint(stream)
+        streamEntryPointDiscoveryWithData.removeSelfAsEntryPoint(streamPartId)
         expect(storeCalled).toEqual(3)
     })
 
     it('will stop recaching is stream is left', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(stream, true, true, 0)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, true, 0)
         expect(storeCalled).toEqual(1)
-        streams.delete(stream)
+        streams.delete(streamPartId)
         await wait(4500)
         expect(storeCalled).toEqual(1)
     })

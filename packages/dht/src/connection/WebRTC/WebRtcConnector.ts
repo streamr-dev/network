@@ -207,7 +207,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         connection!.setConnectionId(connectionId)
         connection!.setRemoteDescription(description, 'offer')
         
-        managedConnection!.on('handshakeRequest', () => {
+        managedConnection.on('handshakeRequest', () => {
             if (this.ongoingConnectAttempts.has(peerKey)) {
                 this.ongoingConnectAttempts.delete(peerKey)
             }

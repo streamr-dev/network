@@ -1,7 +1,8 @@
+import { NodeID } from '../../identifiers'
 import { StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
 
-type SendToNeighborFn = (neighborId: string, msg: StreamMessage) => Promise<void>
+type SendToNeighborFn = (neighborId: NodeID, msg: StreamMessage) => Promise<void>
 
 interface ConstructorOptions {
     sendToNeighbor: SendToNeighborFn
@@ -40,11 +41,11 @@ export class Propagation {
     /**
      * Node should invoke this when it learns about a new message
      */
-    feedUnseenMessage(message: StreamMessage, targets: string[], source: string | null): void {
+    feedUnseenMessage(message: StreamMessage, targets: NodeID[], source: NodeID | null): void {
         const task = {
             message,
             source,
-            handledNeighbors: new Set<string>()
+            handledNeighbors: new Set<NodeID>()
         }
         this.activeTaskStore.add(task)
         for (const target of targets) {
@@ -55,14 +56,14 @@ export class Propagation {
     /**
      * Node should invoke this when it learns about a new node stream assignment
      */
-    onNeighborJoined(neighborId: string): void {
+    onNeighborJoined(neighborId: NodeID): void {
         const tasksOfStream = this.activeTaskStore.get()
         for (const task of tasksOfStream) {
             this.sendAndAwaitThenMark(task, neighborId)
         }
     }
 
-    private sendAndAwaitThenMark({ message, source, handledNeighbors }: PropagationTask, neighborId: string): void {
+    private sendAndAwaitThenMark({ message, source, handledNeighbors }: PropagationTask, neighborId: NodeID): void {
         if (!handledNeighbors.has(neighborId) && neighborId !== source) {
             (async () => {
                 try {
@@ -75,7 +76,7 @@ export class Propagation {
                 // inconsequential at this point, leaving the logic as is.
                 handledNeighbors.add(neighborId)
                 if (handledNeighbors.size >= this.minPropagationTargets) {
-                    this.activeTaskStore.delete(message.messageRef!)
+                    this.activeTaskStore.delete(message.messageId!)
                 }
             })()
         }

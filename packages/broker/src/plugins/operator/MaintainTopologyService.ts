@@ -1,5 +1,5 @@
 import { Logger } from '@streamr/utils'
-import StreamrClient, { Subscription } from 'streamr-client'
+import { StreamrClient, Subscription } from 'streamr-client'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import pLimit from 'p-limit'
 import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
@@ -15,12 +15,12 @@ const logger = new Logger(module)
  */
 export async function setUpAndStartMaintainTopologyService({
     streamrClient,
-    replicationFactor,
+    redundancyFactor,
     serviceHelperConfig,
     operatorFleetState
 }: {
     streamrClient: StreamrClient
-    replicationFactor: number
+    redundancyFactor: number
     serviceHelperConfig: OperatorServiceConfig
     operatorFleetState: OperatorFleetState
 }): Promise<MaintainTopologyService> {
@@ -31,7 +31,7 @@ export async function setUpAndStartMaintainTopologyService({
         streamrClient,
         new StreamAssignmentLoadBalancer(
             nodeId,
-            replicationFactor,
+            redundancyFactor,
             async (streamId) => {
                 const stream = await streamrClient.getStream(streamId)
                 return stream.getStreamParts()

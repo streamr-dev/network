@@ -13,7 +13,7 @@ export class InspectRandomNodeHelper {
     private readonly theGraphClient: TheGraphClient
 
     constructor(config: OperatorServiceConfig) {
-        this.operatorContract = new Contract(config.operatorContractAddress, operatorABI, config.nodeWallet) as unknown as Operator
+        this.operatorContract = new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator
         this.theGraphClient = new TheGraphClient({
             serverUrl: config.theGraphUrl,
             fetch,
@@ -88,8 +88,9 @@ export class InspectRandomNodeHelper {
         return Array.from(operatorIds)
     }
 
-    async flag(sponsorship: EthereumAddress, operator: EthereumAddress): Promise<void> {
-        await (await this.operatorContract.flag(sponsorship, operator)).wait()
+    async flagWithMetadata(sponsorship: EthereumAddress, operator: EthereumAddress, partition: number): Promise<void> {
+        const metadata = JSON.stringify({ partition })
+        await (await this.operatorContract.flagWithMetadata(sponsorship, operator, metadata)).wait()
     }
     
 }

@@ -61,11 +61,11 @@ export class DataStore implements IStoreService {
         this.storeNumberOfCopies = config.storeNumberOfCopies
         this.dhtNodeEmitter = config.dhtNodeEmitter
         this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
-        this.rpcCommunicator!.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
+        this.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
             (request: StoreDataRequest, context: ServerCallContext) => this.storeData(request, context))
-        this.rpcCommunicator!.registerRpcMethod(MigrateDataRequest, MigrateDataResponse, 'migrateData',
+        this.rpcCommunicator.registerRpcMethod(MigrateDataRequest, MigrateDataResponse, 'migrateData',
             (request: MigrateDataRequest, context: ServerCallContext) => this.migrateData(request, context))
-        this.rpcCommunicator!.registerRpcMethod(DeleteDataRequest, DeleteDataResponse, 'deleteData',
+        this.rpcCommunicator.registerRpcMethod(DeleteDataRequest, DeleteDataResponse, 'deleteData',
             (request: DeleteDataRequest, context: ServerCallContext) => this.deleteData(request, context))
 
         this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor, _closestPeers: PeerDescriptor[]) => {
@@ -88,7 +88,7 @@ export class DataStore implements IStoreService {
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
 
         const sortedList = new SortedContactList<Contact>(dataId, 20, undefined, true)
-        sortedList.addContact(new Contact(this.ownPeerDescriptor!))
+        sortedList.addContact(new Contact(this.ownPeerDescriptor))
 
         closestToData.forEach((con) => {
             if (!newNodeId.equals(PeerID.fromValue(con.getPeerDescriptor().kademliaId))) {
@@ -96,7 +96,7 @@ export class DataStore implements IStoreService {
             }
         })
 
-        if (!sortedList.getAllContacts()[0].getPeerId().equals(ownPeerId!)) {
+        if (!sortedList.getAllContacts()[0].getPeerId().equals(ownPeerId)) {
             // If we are not the closes node to the data, do not migrate
             return false
         }
@@ -145,7 +145,7 @@ export class DataStore implements IStoreService {
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.serviceId}`)
-        const result = await this.recursiveFinder!.startRecursiveFind(key)
+        const result = await this.recursiveFinder.startRecursiveFind(key)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         const ttl = this.storeHighestTtl // ToDo: make TTL decrease according to some nice curve
@@ -197,7 +197,7 @@ export class DataStore implements IStoreService {
 
     public async deleteDataFromDht(key: Uint8Array): Promise<void> {
         logger.debug(`Deleting data from DHT ${this.serviceId}`)
-        const result = await this.recursiveFinder!.startRecursiveFind(key)
+        const result = await this.recursiveFinder.startRecursiveFind(key)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         for (let i = 0; i < closestNodes.length && successfulNodes.length < 5; i++) {
@@ -232,7 +232,7 @@ export class DataStore implements IStoreService {
         const { incomingSourceDescriptor } = context as DhtCallContext
         const { kademliaId, data, storerTime } = request
         this.localDataStore.storeEntry({ 
-            kademliaId: kademliaId, 
+            kademliaId, 
             storer: incomingSourceDescriptor!, 
             ttl,
             storedAt: Timestamp.now(),
@@ -278,13 +278,13 @@ export class DataStore implements IStoreService {
     private migrateDataToNeighborsIfNeeded(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
 
         // sort own contact list according to data id
-        const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor!.kademliaId)
+        const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
         const dataId = PeerID.fromValue(dataEntry.kademliaId)
         const incomingPeerId = PeerID.fromValue(incomingPeer.kademliaId)
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
 
         const sortedList = new SortedContactList<Contact>(dataId, 5, undefined, true)
-        sortedList.addContact(new Contact(this.ownPeerDescriptor!))
+        sortedList.addContact(new Contact(this.ownPeerDescriptor))
 
         closestToData.forEach((con) => {
             sortedList.addContact(new Contact(con.getPeerDescriptor()))

@@ -1,15 +1,18 @@
 import { StreamPartID, toStreamID } from '@streamr/protocol'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import StreamrClient, { Stream } from 'streamr-client'
+import { Stream, StreamrClient } from 'streamr-client'
 import {
     setUpAndStartMaintainTopologyService
 } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { createClient, createTestStream } from '../../../utils'
 import {
-    THE_GRAPH_URL, delegate, deployOperatorContract, deploySponsorshipContract, generateWalletWithGasAndTokens,
-    getProvider,
+    TEST_CHAIN_CONFIG,
+    delegate,
+    deployOperatorContract,
+    deploySponsorshipContract,
+    generateWalletWithGasAndTokens,
     stake
 } from './contractUtils'
 
@@ -68,16 +71,15 @@ describe('MaintainTopologyService', () => {
         await stake(operatorContract, sponsorship1.address, 100)
 
         const serviceHelperConfig = {
-            provider: getProvider(),
-            nodeWallet: operatorWallet,
+            signer: operatorWallet,
             operatorContractAddress: toEthereumAddress(operatorContract.address),
-            theGraphUrl: THE_GRAPH_URL
+            theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl
         }
 
         operatorFleetState = new OperatorFleetState(client, toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress))
         await setUpAndStartMaintainTopologyService({
             streamrClient: client,
-            replicationFactor: 3,
+            redundancyFactor: 3,
             serviceHelperConfig,
             operatorFleetState
         })

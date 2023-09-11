@@ -8,7 +8,6 @@ import {
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
-    ContentMessage,
     LeaveStreamNotice,
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -17,6 +16,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { waitForCondition } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { createStreamMessage } from '../utils/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('RemoteRandomGraphNode', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -81,13 +81,10 @@ describe('RemoteRandomGraphNode', () => {
     })
 
     it('sendData', async () => {
-        const content: ContentMessage = {
-            body: JSON.stringify({ hello: 'WORLD' })
-        }
         const msg = createStreamMessage(
-            content,
-            'test-stream',
-            peerIdFromPeerDescriptor(clientPeer).toString()
+            JSON.stringify({ hello: 'WORLD' }),
+            StreamPartIDUtils.parse('test-stream#0'),
+            peerIdFromPeerDescriptor(clientPeer).value
         )
 
         await remoteRandomGraphNode.sendData(clientPeer, msg)

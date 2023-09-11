@@ -78,8 +78,8 @@ describe('proxy group key exchange', () => {
     })
     
     it('happy path request', async () => {
-        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, async () => publisherUserId)
-        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, async () => subscriberUserId)
+        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
+        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
 
         const requestContent = new GroupKeyRequest({
             recipient: publisherUserId,
@@ -101,7 +101,7 @@ describe('proxy group key exchange', () => {
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             encryptionType: EncryptionType.NONE,
             content: requestContent,
-            signature: 'signature'
+            signature: '0x1234'
         })
 
         await Promise.all([
@@ -111,8 +111,8 @@ describe('proxy group key exchange', () => {
     })
 
     it('happy path response', async () => {
-        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, async () => publisherUserId)
-        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, async () => subscriberUserId)
+        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
+        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
 
         const responseContent = new GroupKeyResponse({
             recipient: publisherUserId,
@@ -131,7 +131,7 @@ describe('proxy group key exchange', () => {
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.RSA,
             content: responseContent,
-            signature: 'signature'
+            signature: '1234'
         })
 
         await Promise.all([

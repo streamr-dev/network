@@ -77,7 +77,7 @@ class OngoingRequest {
 
     private resolveDeferredPromises(response: RpcMessage): void {
         if (this.deferredPromises.message.state === DeferredState.PENDING) {
-            const parsedResponse = this.deferredPromises.messageParser(response.body!.value!)
+            const parsedResponse = this.deferredPromises.messageParser(response.body!.value)
             this.deferredPromises.message.resolve(parsedResponse)
             this.deferredPromises.header.resolve({})
             this.deferredPromises.status.resolve({ code: StatusCode.OK, detail: '' })
@@ -191,7 +191,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
 
         // do not register a notification
         if (deferredPromises && (!callContext || !callContext.notification)) {
-            this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
+            this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions.timeout as number)
         }
 
         logger.trace(`onOutGoingMessage, messageId: ${rpcMessage.requestId}`)
@@ -357,7 +357,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
             RpcResponseParams
     ): RpcMessage {
         return {
-            body: body,
+            body,
             header: {
                 response: 'response',
                 method: request.header.method

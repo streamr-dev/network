@@ -1,8 +1,11 @@
 import { createIsLeaderFn } from '../../../../src/plugins/operator/createIsLeaderFn'
-import StreamrClient from 'streamr-client'
+import { NodeID, StreamrClient } from 'streamr-client'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { Logger } from '@streamr/utils'
+
+const MY_NODE_ID = '0x1111' as NodeID
+const LEADER_NODE_ID = '0x2222' as NodeID
 
 describe(createIsLeaderFn, () => {
     let client: MockProxy<StreamrClient>
@@ -11,16 +14,16 @@ describe(createIsLeaderFn, () => {
     beforeEach(() => {
         client = mock<StreamrClient>()
         operatorFleetState = mock<OperatorFleetState>()
-        client.getNodeId.mockResolvedValue('myNodeId')
+        client.getNodeId.mockResolvedValue(MY_NODE_ID)
     })
 
     it('equality check works on newest info', async () => {
         const isLeader = await createIsLeaderFn(client, operatorFleetState)
 
-        operatorFleetState.getLeaderNodeId.mockReturnValueOnce('leaderNodeId')
+        operatorFleetState.getLeaderNodeId.mockReturnValueOnce(LEADER_NODE_ID)
         expect(isLeader()).toBeFalse()
 
-        operatorFleetState.getLeaderNodeId.mockReturnValueOnce('myNodeId')
+        operatorFleetState.getLeaderNodeId.mockReturnValueOnce(MY_NODE_ID)
         expect(isLeader()).toBeTrue()
 
         operatorFleetState.getLeaderNodeId.mockReturnValueOnce(undefined)
@@ -31,7 +34,7 @@ describe(createIsLeaderFn, () => {
         const logger = mock<Logger>()
         const isLeader = await createIsLeaderFn(client, operatorFleetState, logger)
 
-        operatorFleetState.getLeaderNodeId.mockReturnValueOnce('leaderNodeId')
+        operatorFleetState.getLeaderNodeId.mockReturnValueOnce('leaderNodeId' as NodeID)
         isLeader()
         expect(logger.debug).toHaveBeenCalled()
     })

@@ -58,8 +58,8 @@ export class RemoteConnectionLocker {
             serviceId
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor as PeerDescriptor,
-            targetDescriptor: this.targetPeerDescriptor as PeerDescriptor,
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.targetPeerDescriptor,
             notification: true
         }
 
@@ -74,7 +74,7 @@ export class RemoteConnectionLocker {
         const request: DisconnectNotice = {
             peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,
-            disconnecMode: disconnecMode
+            disconnecMode
         }
         const options = {
             sourceDescriptor: this.ownPeerDescriptor,

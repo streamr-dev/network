@@ -1,5 +1,4 @@
 import { Contract } from '@ethersproject/contracts'
-import { Provider } from '@ethersproject/providers'
 import type { Operator, Sponsorship } from '@streamr/network-contracts'
 import { operatorABI, sponsorshipABI } from '@streamr/network-contracts'
 import { StreamID, toStreamID } from '@streamr/protocol'
@@ -37,10 +36,10 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     private readonly operatorContract: Operator
     private readonly theGraphClient: TheGraphClient
 
-    constructor({ operatorContractAddress, nodeWallet, theGraphUrl }: OperatorServiceConfig) {
+    constructor({ operatorContractAddress, signer, theGraphUrl }: OperatorServiceConfig) {
         super()
         this.operatorContractAddress = operatorContractAddress
-        this.operatorContract = new Contract(operatorContractAddress, operatorABI, nodeWallet) as unknown as Operator
+        this.operatorContract = new Contract(operatorContractAddress, operatorABI, signer) as unknown as Operator
         this.theGraphClient = new TheGraphClient({
             serverUrl: theGraphUrl,
             fetch,
@@ -92,7 +91,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     }
 
     async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
-        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, this.operatorContract.provider as Provider) as unknown as Sponsorship
+        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, this.operatorContract.provider) as unknown as Sponsorship
         return toStreamID(await sponsorship.streamId())
     }
 
@@ -144,7 +143,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     }
 
     stop(): void {
-        // TODO: remove our listeners from operatorContract
+        this.operatorContract.removeAllListeners()
         this.removeAllListeners()
     }
 }

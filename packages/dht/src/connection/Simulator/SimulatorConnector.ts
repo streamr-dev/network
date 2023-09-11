@@ -41,11 +41,11 @@ export class SimulatorConnector {
             return existingConnection
         }
 
-        const connection = new SimulatorConnection(this.ownPeerDescriptor!, targetPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, this.simulator)
+        const connection = new SimulatorConnection(this.ownPeerDescriptor, targetPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, this.simulator)
 
-        const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
+        const managedConnection = new ManagedConnection(this.ownPeerDescriptor, this.protocolVersion,
             ConnectionType.SIMULATOR_CLIENT, connection, undefined)
-        managedConnection.setPeerDescriptor(targetPeerDescriptor!)
+        managedConnection.setPeerDescriptor(targetPeerDescriptor)
 
         this.connectingConnections.set(peerKey, managedConnection)
         connection.once('disconnected', () => {
@@ -70,10 +70,10 @@ export class SimulatorConnector {
         if (this.stopped) {
             return
         }
-        const connection = new SimulatorConnection(this.ownPeerDescriptor!,
+        const connection = new SimulatorConnection(this.ownPeerDescriptor,
             sourceConnection.ownPeerDescriptor, ConnectionType.SIMULATOR_SERVER, this.simulator)
 
-        const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
+        const managedConnection = new ManagedConnection(this.ownPeerDescriptor, this.protocolVersion,
             ConnectionType.SIMULATOR_SERVER, undefined, connection)
 
         logger.trace('connected, objectId: ' + managedConnection.objectId)
