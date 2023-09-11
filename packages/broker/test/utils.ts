@@ -122,7 +122,7 @@ export const createClient = (
                 },
                 node:
                     merge(
-                        CONFIG_TEST!.network!.node,
+                        CONFIG_TEST.network!.node,
                         clientOptions?.network?.node
                     )
             }

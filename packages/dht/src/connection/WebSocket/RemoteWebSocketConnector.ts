@@ -29,8 +29,8 @@ export class RemoteWebSocketConnector {
             port
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor
+            sourceDescriptor: sourceDescriptor,
+            targetDescriptor: this.peerDescriptor 
         }
         try {
             const res = await this.client.requestConnection(request, options)

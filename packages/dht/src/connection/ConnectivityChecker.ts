@@ -119,7 +119,7 @@ export class ConnectivityChecker {
             logger.debug('error', { err })
             connectivityResponseMessage = {
                 openInternet: false,
-                ip: (connection as ServerWebSocket).getRemoteAddress(),
+                ip: connection.getRemoteAddress(),
                 natType: NatType.UNKNOWN
             }
         }
@@ -128,9 +128,9 @@ export class ConnectivityChecker {
             logger.trace('Connectivity test produced positive result, communicating reply to the requester')
             connectivityResponseMessage = {
                 openInternet: true,
-                ip: (connection as ServerWebSocket).getRemoteAddress(),
+                ip: connection.getRemoteAddress(),
                 natType: NatType.OPEN_INTERNET,
-                websocket: { ip: (connection as ServerWebSocket).getRemoteAddress(), port: connectivityRequest.port }
+                websocket: { ip: connection.getRemoteAddress(), port: connectivityRequest.port }
             }
         }
         const msg: Message = {

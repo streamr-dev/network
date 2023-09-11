@@ -2,7 +2,7 @@ import { toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Signer } from 'ethers'
-import { CONFIG_TEST } from 'streamr-client'
+import { CONFIG_TEST, StreamrClient } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
@@ -14,13 +14,13 @@ import { OperatorPoolValueBreachWatcher } from './OperatorPoolValueBreachWatcher
 import { OperatorFleetState } from './OperatorFleetState'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
-    redundancyFactor: number
 }
 
 export interface OperatorServiceConfig {
@@ -44,8 +44,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private fleetState?: OperatorFleetState
     private serviceConfig?: OperatorServiceConfig
 
-    async start(): Promise<void> {
-        const signer = await this.streamrClient.getSigner()
+    async start(streamrClient: StreamrClient): Promise<void> {
+        const signer = await streamrClient.getSigner()
         this.serviceConfig = {
             signer,
             operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
@@ -55,28 +55,34 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
         }
         this.announceNodeToStreamService = new AnnounceNodeToStreamService(
-            this.streamrClient,
+            streamrClient,
             toEthereumAddress(this.pluginConfig.operatorContractAddress)
         )
         this.fleetState = new OperatorFleetState(
-            this.streamrClient,
+            streamrClient,
             toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
         )
         this.announceNodeToContractService = new AnnounceNodeToContractService(
-            this.streamrClient,
+            streamrClient,
             new AnnounceNodeToContractHelper(this.serviceConfig),
             this.fleetState
         )
         this.maintainOperatorPoolValueService = new MaintainOperatorPoolValueService(this.serviceConfig)
         this.operatorPoolValueBreachWatcher = new OperatorPoolValueBreachWatcher(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
-            this.streamrClient,
+            streamrClient,
             this.serviceConfig
         )
 
+        const redundancyFactor = await fetchRedundancyFactor(this.serviceConfig)
+        if (redundancyFactor === undefined) {
+            throw new Error('Failed to retrieve redundancy factor')
+        }
+        logger.info('Fetched redundancy factor', { redundancyFactor })
+
         this.maintainTopologyService = await setUpAndStartMaintainTopologyService({
-            streamrClient: this.streamrClient,
-            redundancyFactor: this.pluginConfig.redundancyFactor,
+            streamrClient,
+            redundancyFactor,
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
@@ -104,5 +110,12 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    override getClientConfig(): { path: string, value: any }[] {
+        return [{
+            path: 'network.node.acceptProxyConnections', value: true
+        }]
     }
 }
