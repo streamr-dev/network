@@ -101,8 +101,8 @@ export class NetworkNodeFacade {
 
     private async getNetworkOptions(): Promise<NetworkOptions> {
         const entryPoints = this.getEntryPoints()
-        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer!.peerDescriptor ? 
-            peerDescriptorTranslator(this.config.network.controlLayer!.peerDescriptor) : undefined
+        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ? 
+            peerDescriptorTranslator(this.config.network.controlLayer.peerDescriptor) : undefined
         return {
             layer0: {
                 ...this.config.network.controlLayer,
@@ -242,6 +242,6 @@ export class NetworkNodeFacade {
     }
 
     getEntryPoints(): PeerDescriptor[] {
-        return this.config.network.controlLayer!.entryPoints!.map(peerDescriptorTranslator)
+        return this.config.network.controlLayer.entryPoints!.map(peerDescriptorTranslator)
     }
 }

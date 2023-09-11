@@ -1,5 +1,4 @@
 import { Contract } from '@ethersproject/contracts'
-import { Provider } from '@ethersproject/providers'
 import type { Operator, Sponsorship } from '@streamr/network-contracts'
 import { operatorABI, sponsorshipABI } from '@streamr/network-contracts'
 import { StreamID, toStreamID } from '@streamr/protocol'
@@ -92,7 +91,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     }
 
     async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
-        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, this.operatorContract.provider as Provider) as unknown as Sponsorship
+        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, this.operatorContract.provider) as unknown as Sponsorship
         return toStreamID(await sponsorship.streamId())
     }
 

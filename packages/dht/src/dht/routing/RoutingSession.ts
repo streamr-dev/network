@@ -64,7 +64,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.mode = mode
         const previousId = messageToRoute.previousPeer ? PeerID.fromValue(messageToRoute.previousPeer.kademliaId) : undefined
         this.contactList = new SortedContactList(
-            destinationId ? PeerID.fromValue(destinationId) : PeerID.fromValue(this.messageToRoute!.destinationPeer!.kademliaId),
+            destinationId ? PeerID.fromValue(destinationId) : PeerID.fromValue(this.messageToRoute.destinationPeer!.kademliaId),
             10000,
             undefined,
             true,
@@ -149,7 +149,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 return new RemoteRouter(
                     this.ownPeerDescriptor,
                     contact.getPeerDescriptor(),
-                    toProtoRpcClient(new RoutingServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                    toProtoRpcClient(new RoutingServiceClient(this.rpcCommunicator.getRpcClientTransport())),
                     contact.getServiceId()
                 )  
             })

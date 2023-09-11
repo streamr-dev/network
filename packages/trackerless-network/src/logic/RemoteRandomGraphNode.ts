@@ -14,8 +14,8 @@ export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
 
     async sendData(ownPeerDescriptor: PeerDescriptor, msg: StreamMessage): Promise<void> {
         const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
+            sourceDescriptor: ownPeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor,
             notification: true
         }
         this.client.sendData(msg, options).catch(() => {
@@ -25,8 +25,8 @@ export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
 
     leaveStreamNotice(ownPeerDescriptor: PeerDescriptor): void {
         const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
+            sourceDescriptor: ownPeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor,
             notification: true
         }
         const notification: LeaveStreamNotice = {

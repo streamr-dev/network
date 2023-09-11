@@ -2,7 +2,7 @@ import { toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Signer } from 'ethers'
-import { CONFIG_TEST } from 'streamr-client'
+import StreamrClient, { CONFIG_TEST } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
@@ -44,8 +44,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private serviceConfig?: OperatorServiceConfig
     private readonly abortController: AbortController = new AbortController()
 
-    async start(): Promise<void> {
-        const signer = await this.streamrClient.getSigner()
+    async start(streamrClient: StreamrClient): Promise<void> {
+        const signer = await streamrClient.getSigner()
         this.serviceConfig = {
             signer,
             operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
@@ -55,17 +55,17 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
         }
         this.fleetState = new OperatorFleetState(
-            this.streamrClient,
+            streamrClient,
             toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
         )
         this.maintainOperatorPoolValueService = new MaintainOperatorPoolValueService(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
-            this.streamrClient,
+            streamrClient,
             this.serviceConfig
         )
 
         this.maintainTopologyService = await setUpAndStartMaintainTopologyService({
-            streamrClient: this.streamrClient,
+            streamrClient,
             redundancyFactor: this.pluginConfig.redundancyFactor,
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
@@ -74,7 +74,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             (async () => {
                 await announceNodeToStream(
                     toEthereumAddress(this.pluginConfig.operatorContractAddress), 
-                    this.streamrClient
+                    streamrClient
                 )
             })()
         }, DEFAULT_UPDATE_INTERVAL_IN_MS, this.abortController.signal)
@@ -97,7 +97,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         )
         await this.fleetState.start()
         await this.fleetState.waitUntilReady()
-        const isLeader = await createIsLeaderFn(this.streamrClient, this.fleetState, logger)
+        const isLeader = await createIsLeaderFn(streamrClient, this.fleetState, logger)
         const announceNodeToContractHelper = new AnnounceNodeToContractHelper(this.serviceConfig!)
         try {
             await scheduleAtInterval(async () => {
@@ -105,7 +105,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     await announceNodeToContract(
                         24 * 60 * 60 * 1000,
                         announceNodeToContractHelper,
-                        this.streamrClient
+                        streamrClient
                     )
                 }
             }, 10 * 60 * 1000, true, this.abortController.signal)
@@ -125,5 +125,12 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    override getClientConfig(): { path: string, value: any }[] {
+        return [{
+            path: 'network.node.acceptProxyConnections', value: true
+        }]
     }
 }

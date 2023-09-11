@@ -131,13 +131,13 @@ export class StreamMessageTranslator {
         )
         let prevMsgRef: OldMessageRef | undefined = undefined
         if (msg.previousMessageRef) {
-            prevMsgRef = new OldMessageRef(Number(msg.previousMessageRef!.timestamp), msg.previousMessageRef!.sequenceNumber)
+            prevMsgRef = new OldMessageRef(Number(msg.previousMessageRef.timestamp), msg.previousMessageRef.sequenceNumber)
         }
         let newGroupKey: OldEncryptedGroupKey | undefined = undefined
         if (msg.newGroupKey) {
             newGroupKey = new OldEncryptedGroupKey(
-                msg.newGroupKey!.id,
-                binaryToHex(msg.newGroupKey!.data),
+                msg.newGroupKey.id,
+                binaryToHex(msg.newGroupKey.data),
             )
         }
         const translated = new OldStreamMessage<T>({
