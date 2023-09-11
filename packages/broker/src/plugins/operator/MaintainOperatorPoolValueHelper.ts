@@ -54,7 +54,7 @@ export class MaintainOperatorPoolValueHelper {
             addresses: allSponsorshipAddresses,
             earnings,
             rewardThreshold,
-        } = await operator.getSponsorships()
+        } = await operator.getSponsorshipsAndEarnings()
 
         const sponsorships = allSponsorshipAddresses
             .map((address, i) => ({ address, earnings: earnings[i] }))
