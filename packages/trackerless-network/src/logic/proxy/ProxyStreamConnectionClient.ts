@@ -1,8 +1,7 @@
 import { 
     ITransport,
     ListeningRpcCommunicator,
-    PeerDescriptor,
-    peerIdFromPeerDescriptor
+    PeerDescriptor
 } from '@streamr/dht'
 import { LeaveStreamNotice, MessageID, MessageRef, ProxyDirection, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IStreamNode } from '../IStreamNode'
@@ -71,7 +70,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         super()
         this.config = config
         this.rpcCommunicator = new ListeningRpcCommunicator(`layer2-${config.streamPartId}`, config.P2PTransport)
-        this.targetNeighbors = new NodeList(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor), 1000)
+        this.targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor), 1000)
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.streamPartId,

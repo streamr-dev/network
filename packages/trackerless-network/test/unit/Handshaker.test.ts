@@ -1,15 +1,16 @@
 import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
-import { ListeningRpcCommunicator, PeerDescriptor, PeerID, Simulator, SimulatorTransport } from '@streamr/dht'
-import { mockConnectionLocker, createMockRemoteNode } from '../utils/utils'
+import { ListeningRpcCommunicator, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { mockConnectionLocker, createMockRemoteNode, createRandomNodeId } from '../utils/utils'
 import { NodeList } from '../../src/logic/NodeList'
 import { range } from 'lodash'
+import { hexToBinary } from '@streamr/utils'
 
 describe('Handshaker', () => {
 
     let handshaker: Handshaker
-    const peerId = PeerID.fromString('Handshaker')
+    const nodeId = createRandomNodeId()
     const peerDescriptor: PeerDescriptor = {
-        kademliaId: peerId.value,
+        kademliaId: hexToBinary(nodeId),
         type: 0
     }
 
@@ -28,9 +29,9 @@ describe('Handshaker', () => {
         simulatorTransport = new SimulatorTransport(peerDescriptor, simulator)
         const rpcCommunicator = new ListeningRpcCommunicator(stream, simulatorTransport)
 
-        targetNeighbors = new NodeList(peerId, 10)
-        nearbyContactPool = new NodeList(peerId, 20)
-        randomContactPool = new NodeList(peerId, 20)
+        targetNeighbors = new NodeList(nodeId, 10)
+        nearbyContactPool = new NodeList(nodeId, 20)
+        randomContactPool = new NodeList(nodeId, 20)
 
         handshaker = new Handshaker({
             ownPeerDescriptor: peerDescriptor,

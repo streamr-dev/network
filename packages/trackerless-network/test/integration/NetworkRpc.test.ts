@@ -6,13 +6,14 @@ import {
 } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { waitForCondition, utf8ToBinary } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { createStreamMessage } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Simulator } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('Network RPC', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -48,7 +49,7 @@ describe('Network RPC', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             StreamPartIDUtils.parse('testStream#0'),
-            utf8ToBinary('node1')
+            randomEthereumAddress()
         )
         await client.sendData(msg)
         await waitForCondition(() => recvCounter === 1)
