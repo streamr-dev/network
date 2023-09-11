@@ -1,5 +1,5 @@
 import { StreamID, StreamMessage, toStreamPartID } from '@streamr/protocol'
-import { Logger, collect, wait } from '@streamr/utils'
+import { Logger, collect, wait, areEqualBinaries } from '@streamr/utils'
 import { Message, convertStreamMessageToMessage } from '../Message'
 import { StreamrClientError } from '../StreamrClientError'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
@@ -21,7 +21,7 @@ export const waitForStorage = async (
     if (!message) {
         throw new StreamrClientError('waitForStorage requires a Message', 'INVALID_ARGUMENT')
     }
-    const macher = opts.messageMatchFn ?? ((msgTarget: Message, msgGot: Message) => (msgTarget.signature === msgGot.signature))
+    const matcher = opts.messageMatchFn ?? ((msgTarget: Message, msgGot: Message) => (areEqualBinaries(msgTarget.signature, msgGot.signature)))
     const start = Date.now()
     let last: StreamMessage[] | undefined
     let found = false
@@ -38,7 +38,7 @@ export const waitForStorage = async (
         const resendStream = await resends.resend(toStreamPartID(message.streamId, message.streamPartition), { last: opts.count }, getStorageNodes)
         last = await collect(resendStream)
         for (const lastMsg of last) {
-            if (macher(message, convertStreamMessageToMessage(lastMsg))) {
+            if (matcher(message, convertStreamMessageToMessage(lastMsg))) {
                 found = true
                 logger.debug('Found matching message')
                 return

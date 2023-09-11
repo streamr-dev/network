@@ -71,7 +71,7 @@ describe('MessageFactory', () => {
             encryptionType: EncryptionType.AES,
             groupKeyId: GROUP_KEY.id,
             newGroupKey: null,
-            signature: expect.stringMatching(/^0x[0-9a-f]+$/),
+            signature: expect.any(Uint8Array),
             contentType: ContentType.JSON,
             serializedContent: expect.stringMatching(/^[0-9a-f]+$/)
         })

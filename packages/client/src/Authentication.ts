@@ -6,7 +6,7 @@ import { getStreamRegistryChainProviders } from './Ethereum'
 import { PrivateKeyAuthConfig, ProviderAuthConfig } from './Config'
 import { pLimitFn } from './utils/promises'
 import pMemoize from 'p-memoize'
-import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, wait, hexToBinary } from '@streamr/utils'
 import { sign } from './utils/signingUtils'
 import { StrictStreamrClientConfig } from './Config'
 
@@ -15,7 +15,7 @@ export const AuthenticationInjectionToken = Symbol('Authentication')
 export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
-    createMessageSignature: (payload: string) => Promise<string>
+    createMessageSignature: (payload: string) => Promise<Uint8Array>
     getStreamRegistryChainSigner: () => Promise<Signer>
 }
 
@@ -59,7 +59,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                 // otherwise MetaMask extension may not show the prompt window
                 const sig = await signer.signMessage(payload)
                 await wait(50)
-                return sig
+                return hexToBinary(sig)
             }, 1),
             getStreamRegistryChainSigner: async () => {
                 if (config.contracts.streamRegistryChainRPCs.chainId === undefined) {

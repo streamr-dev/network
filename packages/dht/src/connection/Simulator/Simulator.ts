@@ -13,6 +13,15 @@ import Heap from 'heap'
 import { debugVars } from '../../helpers/debugHelpers'
 import * as sinon from 'sinon'
 
+// TODO take this from @streamr/test-utils (we can't access devDependencies as Simulator
+// is currently in "src" directory instead of "test" directory)
+// eslint-disable-next-line no-underscore-dangle
+declare let _streamr_electron_test: any
+export function isRunningInElectron(): boolean {
+    // eslint-disable-next-line no-underscore-dangle
+    return typeof _streamr_electron_test !== 'undefined'
+}
+
 const logger = new Logger(module)
 
 export enum LatencyType { NONE = 'NONE', RANDOM = 'RANDOM', REAL = 'REAL', FIXED = 'FIXED' }
@@ -116,14 +125,16 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private static clock: sinon.SinonFakeTimers | undefined
 
     static useFakeTimers(on = true): void {
-        if (on) {
-            if (!Simulator.clock) {
-                Simulator.clock = sinon.useFakeTimers()
-            }
-        } else {
-            if (Simulator.clock) {
-                Simulator.clock.restore()
-                Simulator.clock = undefined
+        if (!isRunningInElectron()) {  // never use fake timers in browser environment
+            if (on) {
+                if (!Simulator.clock) {
+                    Simulator.clock = sinon.useFakeTimers()
+                }
+            } else {
+                if (Simulator.clock) {
+                    Simulator.clock.restore()
+                    Simulator.clock = undefined
+                }
             }
         }
     }
