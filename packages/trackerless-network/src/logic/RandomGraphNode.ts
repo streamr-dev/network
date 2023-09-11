@@ -39,7 +39,6 @@ import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 export interface Events {
     message: (message: StreamMessage) => void
     targetNeighborConnected: (nodeId: NodeID) => void
-    nearbyNodeViewIdAdded: () => void
 }
 
 export interface StrictRandomGraphNodeConfig {
@@ -147,7 +146,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             return
         }
       
-        const oldLength = this.config.nearbyNodeView.getIds().length
         this.config.nearbyNodeView.replaceAll(closestTen.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
@@ -155,10 +153,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
-
-        if (oldLength < this.config.nearbyNodeView.getIds().length) {
-            this.emit('nearbyNodeViewIdAdded')
-        }
         
         if (this.config.targetNeighbors.size() < this.config.numOfTargetNeighbors) {
             this.config.neighborFinder.start()
