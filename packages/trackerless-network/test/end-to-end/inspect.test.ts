@@ -1,7 +1,7 @@
 import { PeerDescriptor, NodeType } from '@streamr/dht'
-import { NetworkNode } from '../../src/NetworkNode'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { hexToBinary, waitForCondition } from '@streamr/utils'
+import { waitForCondition, hexToBinary } from '@streamr/utils'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { createRandomNodeId } from '../utils/utils'
 
@@ -56,11 +56,11 @@ describe('inspect', () => {
             hello: 'world'
         },
         messageType: StreamMessageType.MESSAGE,
-        signature: '0x1234',
+        signature: hexToBinary('0x1234'),
     })
     
     beforeEach(async () => {
-        publisherNode = new NetworkNode({
+        publisherNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: publisherDescriptor
@@ -68,7 +68,7 @@ describe('inspect', () => {
             networkNode: {}
         })
 
-        inspectedNode = new NetworkNode({
+        inspectedNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: inspectedDescriptor
@@ -76,7 +76,7 @@ describe('inspect', () => {
             networkNode: {}
         })
 
-        inspectorNode = new NetworkNode({
+        inspectorNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: inspectorDescriptor

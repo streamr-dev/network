@@ -12,12 +12,6 @@
       "type": "string",
       "description": "Operator contract Ethereum address",
       "format": "ethereum-address"
-    },
-    "redundancyFactor": {
-      "type": "integer",
-      "description": "How many nodes a stream partition should be assigned to",
-      "default": 1,
-      "minimum": 1
     }
   }
 }

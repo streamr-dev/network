@@ -91,7 +91,7 @@ const measureJoiningTime = async (count: number) => {
                 hello: 'world'
             },
             messageType: StreamMessageType.MESSAGE,
-            signature: '0x1111',
+            signature: hexToBinary('0x1234'),
         })
         streams.get(stream)!.publish(streamMessage)
     }, 1000)
