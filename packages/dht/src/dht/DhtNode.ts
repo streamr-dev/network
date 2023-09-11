@@ -38,7 +38,7 @@ import { DataStore } from './store/DataStore'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/WebRTC/WebRtcConnector'
-import { ExternalApi } from './ExternalApi'
+import { registerExternalApiRpcMethod } from './registerExternalApiRpcMethod'
 import { RemoteExternalApi } from './RemoteExternalApi'
 import { UUID } from '../exports'
 import { isNodeJS } from '../helpers/browser/isNodeJS'
@@ -292,8 +292,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.bucket!.closest(id, n)
             }
         })
-        // TODO description why we create this instance? (if because of a side effect, could we just call some function?)
-        new ExternalApi(this)
+        registerExternalApiRpcMethod(this)
         if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
             && !isSamePeerDescriptor(this.config.entryPoints[0], this.ownPeerDescriptor!)) {
             this.connectToEntryPoint(this.config.entryPoints[0])
