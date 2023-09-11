@@ -16,11 +16,26 @@ import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 
-export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
-export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
-
 export interface OperatorPluginConfig {
     operatorContractAddress: string
+    heartbeatIntervalInMs: number // 1000 * 10
+    withdrawParameters: {
+        maxSponsorships: number // 20 max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
+        minSponsorshipEarnings: number // 1 token value, not wei
+    }
+    fleetStateParameters: {
+        pruneAgeInMs: number // 5 * 60 * 1000
+        pruneIntervalInMs: number // 30 * 1000
+        latencyExtraInMs: number // 2 * 1000
+    }
+    announceToContractParameters: {
+        writeIntervalInMs: number // 24 * 60 * 60 * 1000
+        pollIntervalInMs: number // 10 * 60 * 1000
+    }
+    maintainOperatorPoolValueParameters: {
+        checkValueIntervalInMs: number // 24 * 60 * 60 * 1000
+        withdrawLimitSafetyFraction: number // 0.5
+    }
 }
 
 export interface OperatorServiceConfig {
@@ -51,23 +66,34 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
             // TODO read from client, as we need to use production value in production environment (not ConfigTest)
             theGraphUrl: CONFIG_TEST.contracts!.theGraphUrl!,
-            maxSponsorshipsInWithdraw: DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW,
-            minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
+            maxSponsorshipsInWithdraw: this.pluginConfig.withdrawParameters.maxSponsorships,
+            minSponsorshipEarningsInWithdraw: this.pluginConfig.withdrawParameters.minSponsorshipEarnings
         }
         this.announceNodeToStreamService = new AnnounceNodeToStreamService(
             streamrClient,
-            toEthereumAddress(this.pluginConfig.operatorContractAddress)
+            toEthereumAddress(this.pluginConfig.operatorContractAddress),
+            this.pluginConfig.heartbeatIntervalInMs
         )
         this.fleetState = new OperatorFleetState(
             streamrClient,
-            toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
+            toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress),
+            this.pluginConfig.fleetStateParameters.pruneAgeInMs,
+            this.pluginConfig.fleetStateParameters.pruneIntervalInMs,
+            this.pluginConfig.fleetStateParameters.latencyExtraInMs,
+            this.pluginConfig.heartbeatIntervalInMs
         )
         this.announceNodeToContractService = new AnnounceNodeToContractService(
             streamrClient,
             new AnnounceNodeToContractHelper(this.serviceConfig),
-            this.fleetState
+            this.fleetState,
+            this.pluginConfig.announceToContractParameters.writeIntervalInMs,
+            this.pluginConfig.announceToContractParameters.pollIntervalInMs
         )
-        this.maintainOperatorPoolValueService = new MaintainOperatorPoolValueService(this.serviceConfig)
+        this.maintainOperatorPoolValueService = new MaintainOperatorPoolValueService(
+            this.serviceConfig,
+            this.pluginConfig.maintainOperatorPoolValueParameters.withdrawLimitSafetyFraction,
+            this.pluginConfig.maintainOperatorPoolValueParameters.checkValueIntervalInMs
+        )
         this.operatorPoolValueBreachWatcher = new OperatorPoolValueBreachWatcher(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
             streamrClient,

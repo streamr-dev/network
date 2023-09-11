@@ -18,8 +18,8 @@ export class AnnounceNodeToContractService {
         streamrClient: StreamrClient,
         helper: AnnounceNodeToContractHelper,
         operatorFleetState: OperatorFleetState,
-        writeIntervalInMs = 24 * 60 * 60 * 1000,
-        pollIntervalInMs = 10 * 60 * 1000
+        writeIntervalInMs: number,
+        pollIntervalInMs: number
     ) {
         this.streamrClient = streamrClient
         this.helper = helper

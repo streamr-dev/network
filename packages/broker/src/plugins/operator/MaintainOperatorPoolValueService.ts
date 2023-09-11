@@ -4,8 +4,6 @@ import { OperatorServiceConfig } from './OperatorPlugin'
 
 const logger = new Logger(module)
 
-const DEFAULT_CHECK_VALUE_INTERVAL_MS = 1000 * 60 * 60 * 24 // 1 day
-const DEFAULT_WITHDRAW_LIMIT_SAFETY_FRACTION = 0.5 // 50%
 const ONE_ETHER = 1e18
 
 export class MaintainOperatorPoolValueService {
@@ -17,8 +15,8 @@ export class MaintainOperatorPoolValueService {
 
     constructor(
         config: OperatorServiceConfig,
-        withdrawLimitSafetyFraction = DEFAULT_WITHDRAW_LIMIT_SAFETY_FRACTION,
-        checkValueIntervalMs = DEFAULT_CHECK_VALUE_INTERVAL_MS
+        withdrawLimitSafetyFraction: number,
+        checkValueIntervalMs: number
     ) {
         this.withdrawLimitSafetyFraction = BigInt(withdrawLimitSafetyFraction * ONE_ETHER)
         this.helper = new MaintainOperatorPoolValueHelper(config)

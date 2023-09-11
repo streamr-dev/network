@@ -5,8 +5,6 @@ import { createHeartbeatMessage } from './heartbeatUtils'
 
 const logger = new Logger(module)
 
-export const DEFAULT_INTERVAL_IN_MS = 1000 * 10
-
 export class AnnounceNodeToStreamService {
     private readonly abortController = new AbortController()
     private readonly streamrClient: StreamrClient
@@ -16,7 +14,7 @@ export class AnnounceNodeToStreamService {
     constructor(
         streamrClient: StreamrClient,
         operatorContractAddress: EthereumAddress,
-        intervalInMs = DEFAULT_INTERVAL_IN_MS
+        intervalInMs: number
     ) {
         this.streamrClient = streamrClient
         this.coordinationStream = toStreamID('/operator/coordination', operatorContractAddress)

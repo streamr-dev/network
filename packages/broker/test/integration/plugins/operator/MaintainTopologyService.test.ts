@@ -76,7 +76,14 @@ describe('MaintainTopologyService', () => {
             theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl
         }
 
-        operatorFleetState = new OperatorFleetState(client, toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress))
+        operatorFleetState = new OperatorFleetState(
+            client,
+            toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress),
+            5 * 60 * 1000,
+            30 * 1000,
+            2 * 1000,
+            10 * 1000
+        )
         await setUpAndStartMaintainTopologyService({
             streamrClient: client,
             redundancyFactor: 3,

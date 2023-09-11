@@ -5,17 +5,10 @@ import { EventEmitter } from 'eventemitter3'
 import { NodeID } from '@streamr/trackerless-network'
 import min from 'lodash/min'
 import once from 'lodash/once'
-import { DEFAULT_INTERVAL_IN_MS } from './AnnounceNodeToStreamService'
 import { NetworkPeerDescriptor } from 'streamr-client'
 import { HeartbeatMessage, HeartbeatMessageSchema } from './heartbeatUtils'
 
 const logger = new Logger(module)
-
-const DEFAULT_PRUNE_AGE_IN_MS = 5 * 60 * 1000
-
-const DEFAULT_PRUNE_INTERVAL_IN_MS = 30 * 1000
-
-const DEFAULT_LATENCY_EXTRA_MS = 2000
 
 export interface OperatorFleetStateEvents {
     added: (nodeId: NodeID) => void
@@ -33,8 +26,8 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly timeProvider: () => number
     private readonly pruneAgeInMs: number
     private readonly pruneIntervalInMs: number
-    private readonly heartbeatIntervalInMs: number
     private readonly latencyExtraInMs: number
+    private readonly heartbeatIntervalInMs: number
     private readonly latestHeartbeats = new Map<NodeID, Heartbeat>()
     private readonly abortController = new AbortController()
     private readonly ready = new Gate(false)
@@ -43,11 +36,11 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     constructor(
         streamrClient: StreamrClient,
         coordinationStreamId: StreamID,
-        timeProvider = Date.now,
-        pruneAgeInMs = DEFAULT_PRUNE_AGE_IN_MS,
-        pruneIntervalInMs = DEFAULT_PRUNE_INTERVAL_IN_MS,
-        heartbeatIntervalInMs = DEFAULT_INTERVAL_IN_MS,
-        latencyExtraInMs = DEFAULT_LATENCY_EXTRA_MS
+        pruneAgeInMs: number,
+        pruneIntervalInMs: number,
+        latencyExtraInMs: number,
+        heartbeatIntervalInMs: number,
+        timeProvider = Date.now
     ) {
         super()
         this.streamrClient = streamrClient
@@ -55,8 +48,8 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         this.timeProvider = timeProvider
         this.pruneAgeInMs = pruneAgeInMs
         this.pruneIntervalInMs = pruneIntervalInMs
-        this.heartbeatIntervalInMs = heartbeatIntervalInMs
         this.latencyExtraInMs = latencyExtraInMs
+        this.heartbeatIntervalInMs = heartbeatIntervalInMs
     }
 
     async start(): Promise<void> {

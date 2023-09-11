@@ -38,7 +38,7 @@ describe(OperatorFleetState, () => {
             return subscription
         })
         currentTime = 0
-        state = new OperatorFleetState(streamrClient, coordinationStreamId, () => currentTime, 10, 100, READY_WAIT_MS, 0)
+        state = new OperatorFleetState(streamrClient, coordinationStreamId, 10, 100, 0, READY_WAIT_MS, () => currentTime)
     })
 
     afterEach(() => {
