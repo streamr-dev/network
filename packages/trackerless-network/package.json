@@ -19,7 +19,7 @@
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "test": "jest",
+    "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
     "test-browser": "karma start karma.config.js",
     "test-unit": "jest test/unit",
     "test-integration": "jest --bail test/integration",

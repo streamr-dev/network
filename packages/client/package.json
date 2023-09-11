@@ -29,7 +29,7 @@
     "clean": "jest --clearCache || true; rm -rf dist vendor *.tsbuildinfo node_modules/.cache || true",
     "docs": "typedoc --options typedoc.js",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "test": "jest --detectOpenHandles",
+    "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
     "test-unit": "jest --useStderr --forceExit test/unit",
     "test-integration": "jest --bail --useStderr --forceExit --testTimeout=40000 test/integration/*.test.*",
     "test-end-to-end": "jest --bail --useStderr --forceExit --testTimeout=40000 test/end-to-end/*.test.*",
