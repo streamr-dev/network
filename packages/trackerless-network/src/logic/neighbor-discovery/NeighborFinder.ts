@@ -1,6 +1,7 @@
-import { setAbortableTimeout } from '@streamr/utils'
+import { Logger, setAbortableTimeout } from '@streamr/utils'
 import { NodeList } from '../NodeList'
 import { NodeID } from '../../identifiers'
+import { keyFromPeerDescriptor } from '@streamr/dht'
 
 interface FindNeighborsSessionConfig {
     targetNeighbors: NodeList
@@ -18,6 +19,8 @@ export interface INeighborFinder {
     isRunning(): boolean
 }
 
+const logger = new Logger(module)
+
 export class NeighborFinder implements INeighborFinder {
     private readonly abortController: AbortController
     private readonly config: FindNeighborsSessionConfig
@@ -32,6 +35,8 @@ export class NeighborFinder implements INeighborFinder {
         if (!this.running) {
             return
         }
+        // eslint-disable-next-line max-len
+        logger.error(`Finding neighbors, excluding ${excluded} nodes, current neighbors ${this.config.targetNeighbors.getNodes().map((node) => keyFromPeerDescriptor(node.getPeerDescriptor()))}, contacts: ${this.config.nearbyContactPool.getNodes().map((node) => keyFromPeerDescriptor(node.getPeerDescriptor()))}`)
         const newExcludes = await this.config.doFindNeighbors(excluded)
         if (this.config.targetNeighbors!.size() < this.config.N && newExcludes.length < this.config.nearbyContactPool!.size()) {
             setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL_TIMEOUT, this.abortController.signal)
