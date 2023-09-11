@@ -63,62 +63,64 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             streamrClient,
             this.serviceConfig
         )
-
         const redundancyFactor = await fetchRedundancyFactor(this.serviceConfig)
         if (redundancyFactor === undefined) {
             throw new Error('Failed to retrieve redundancy factor')
         }
         logger.info('Fetched redundancy factor', { redundancyFactor })
-
         this.maintainTopologyService = await setUpAndStartMaintainTopologyService({
             streamrClient,
             redundancyFactor,
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
-        setAbortableInterval(() => {
-            (async () => {
-                await announceNodeToStream(
-                    toEthereumAddress(this.pluginConfig.operatorContractAddress), 
-                    streamrClient
-                )
-            })()
-        }, DEFAULT_UPDATE_INTERVAL_IN_MS, this.abortController.signal)
         await this.inspectRandomNodeService.start()
         await this.maintainOperatorPoolValueService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
         const maintainOperatorPoolValueHelper = new MaintainOperatorPoolValueHelper(this.serviceConfig)
         const driftLimitFraction = await maintainOperatorPoolValueHelper.getDriftLimitFraction()
-        await scheduleAtInterval(
-            async () => checkOperatorPoolValueBreach(
-                driftLimitFraction,
-                maintainOperatorPoolValueHelper
-            ).catch((err) => {
-                logger.warn('Encountered error', { err })
-            }),
-            1000 * 60 * 60, // 1 hour
-            true,
-            this.abortController.signal
-        )
-        await this.fleetState.start()
-        await this.fleetState.waitUntilReady()
-        const isLeader = await createIsLeaderFn(streamrClient, this.fleetState, logger)
         const announceNodeToContractHelper = new AnnounceNodeToContractHelper(this.serviceConfig!)
-        try {
-            await scheduleAtInterval(async () => {
-                if (isLeader()) {
-                    await announceNodeToContract(
-                        24 * 60 * 60 * 1000,
-                        announceNodeToContractHelper,
+        await this.fleetState.start()
+        // start tasks in background so that operations which take significant amount of time (e.g. fleetState.waitUntilReady())
+        // don't block the startup of Broker
+        setImmediate(async () => {
+            setAbortableInterval(() => {
+                (async () => {
+                    await announceNodeToStream(
+                        toEthereumAddress(this.pluginConfig.operatorContractAddress), 
                         streamrClient
                     )
-                }
-            }, 10 * 60 * 1000, true, this.abortController.signal)
-        } catch (err) {
-            logger.fatal('Encountered fatal error in announceNodeToContract', { err })
-            process.exit(1)
-        }
+                })()
+            }, DEFAULT_UPDATE_INTERVAL_IN_MS, this.abortController.signal)
+            await scheduleAtInterval(
+                async () => checkOperatorPoolValueBreach(
+                    driftLimitFraction,
+                    maintainOperatorPoolValueHelper
+                ).catch((err) => {
+                    logger.warn('Encountered error', { err })
+                }),
+                1000 * 60 * 60, // 1 hour
+                true,
+                this.abortController.signal
+            )
+            await this.fleetState.waitUntilReady()
+            const isLeader = await createIsLeaderFn(streamrClient, this.fleetState, logger)
+            try {
+                await scheduleAtInterval(async () => {
+                    if (isLeader()) {
+                        await announceNodeToContract(
+                            24 * 60 * 60 * 1000,
+                            announceNodeToContractHelper,
+                            streamrClient
+                        )
+                    }
+                }, 10 * 60 * 1000, true, this.abortController.signal)
+            } catch (err) {
+                logger.fatal('Encountered fatal error in announceNodeToContract', { err })
+                process.exit(1)
+            }
+        })
     }
 
     async stop(): Promise<void> {
