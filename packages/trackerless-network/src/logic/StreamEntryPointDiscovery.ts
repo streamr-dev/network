@@ -201,7 +201,11 @@ export class StreamEntryPointDiscovery {
             if (this.config.streams.has(streamPartId)) {
                 const stream = this.config.streams.get(streamPartId)
                 const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartId)
+                // eslint-disable-next-line max-len
+                logger.error(`${keyFromPeerDescriptor(this.config.ownPeerDescriptor)} avoid network split found entry points ${rediscoveredEntrypoints.map((peer) => keyFromPeerDescriptor(peer))}`)
                 await stream!.layer1!.joinDht(rediscoveredEntrypoints, false, false)
+                // eslint-disable-next-line max-len
+                logger.error(`${keyFromPeerDescriptor(this.config.ownPeerDescriptor)} avoid network split join completed, bucket size: ${stream!.layer1!.getBucketSize()}`)
                 if (stream!.layer1!.getBucketSize() < this.config.networkSplitAvoidanceLimit) {
                     throw new Error(`Network split is still possible`)
                 }
