@@ -22,7 +22,7 @@ import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/N
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
-import { Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
+import { Logger, addManagedEventListener, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { IHandshaker } from './neighbor-discovery/Handshaker'
 import { Propagation } from './propagation/Propagation'
@@ -76,6 +76,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
     private config: StrictRandomGraphNodeConfig
     private readonly server: INetworkRpc
+    private abortController: AbortController = new AbortController()
 
     constructor(config: StrictRandomGraphNodeConfig) {
         super()
@@ -110,11 +111,36 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     async start(): Promise<void> {
         this.started = true
         this.registerDefaultServerMethods()
-        this.config.layer1.on('newContact', (peerDescriptor, closestPeers) => this.newContact(peerDescriptor, closestPeers))
-        this.config.layer1.on('contactRemoved', (peerDescriptor, closestPeers) => this.removedContact(peerDescriptor, closestPeers))
-        this.config.layer1.on('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
-        this.config.layer1.on('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
-        this.config.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor))
+        addManagedEventListener(
+            this.config.layer1,
+            'newContact',
+            (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.newContact(peerDescriptor, closestPeers),
+            this.abortController.signal
+        )
+        addManagedEventListener(
+            this.config.layer1,
+            'contactRemoved',
+            (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.removedContact(peerDescriptor, closestPeers),
+            this.abortController.signal
+        )
+        addManagedEventListener(
+            this.config.layer1,
+            'newRandomContact',
+            (peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.newRandomContact(peerDescriptor, randomPeers),
+            this.abortController.signal
+        )   
+        addManagedEventListener(
+            this.config.layer1,
+            'randomContactRemoved',
+            (peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.removedRandomContact(peerDescriptor, randomPeers),
+            this.abortController.signal
+        )   
+        addManagedEventListener<any, any>(
+            this.config.P2PTransport as any,
+            'disconnected',
+            (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor),
+            this.abortController.signal
+        )
         this.config.targetNeighbors.on('nodeAdded', (id, _remote) => {
             this.config.propagation.onNeighborJoined(id)
             this.emit('targetNeighborConnected', id)
@@ -236,6 +262,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             return
         }
         this.stopped = true
+        this.abortController.abort()
         this.config.proxyConnectionServer?.stop()
         this.config.targetNeighbors.getNodes().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor))
         this.config.rpcCommunicator.stop()
