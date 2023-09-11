@@ -70,7 +70,7 @@ jobs:
       command: |
         npm run test-unit
         npm run test-integration
-        npm run test-e2e
+        npm run test-end-to-end
   trackerless-network-browser:
     needs: build
     uses: ./.github/workflows/test-setup.yml

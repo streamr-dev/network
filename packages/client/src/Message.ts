@@ -35,7 +35,7 @@ export interface Message {
     /**
      * Signature of message signed by publisher.
      */
-    signature: string
+    signature: Uint8Array
 
     /**
      * Publisher of message.
