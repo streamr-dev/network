@@ -6,18 +6,22 @@ import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { NodeID } from './identifiers'
 
+export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
+    return new NetworkNode(new NetworkStack(opts))
+}
+
 /*
-Convenience wrapper for building client-facing functionality. Used by client.
-*/
+ * Convenience wrapper for building client-facing functionality. Used by client.
+ **/
 
 export class NetworkNode {
 
     readonly stack: NetworkStack
-    private readonly options: NetworkOptions
     private stopped = false
-    constructor(opts: NetworkOptions) {
-        this.options = opts
-        this.stack = new NetworkStack(opts)
+
+    /** @internal */
+    constructor(stack: NetworkStack) {
+        this.stack = stack
     }
 
     async start(doJoin?: boolean): Promise<void> {
@@ -59,9 +63,6 @@ export class NetworkNode {
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
-        if (this.options.networkNode.acceptProxyConnections) {
-            throw new Error('cannot set proxies when acceptProxyConnections=true')
-        }
         await this.stack.getStreamrNode().setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
     }
 

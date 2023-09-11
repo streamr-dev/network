@@ -1,6 +1,7 @@
 import { Plugin } from '../../Plugin'
 import { pTransaction, Logger } from '@streamr/utils'
 import { Subscription } from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 
 interface ConfigStream {
     streamId: string
@@ -14,16 +15,17 @@ export interface SubscriberPluginConfig {
 const logger = new Logger(module)
 
 export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
+
     private subscriptions: Subscription[] = []
 
-    private async subscribeToStreamParts(): Promise<void> {
+    private async subscribeToStreamParts(streamrClient: StreamrClient): Promise<void> {
         this.subscriptions = await pTransaction(this.pluginConfig.streams.map(({ streamId, streamPartition }) => (
-            this.streamrClient.subscribe({ id: streamId, partition: streamPartition, raw: true })
+            streamrClient.subscribe({ id: streamId, partition: streamPartition, raw: true })
         )), (sub) => sub.unsubscribe())
     }
 
-    async start(): Promise<void> {
-        await this.subscribeToStreamParts()
+    async start(streamrClient: StreamrClient): Promise<void> {
+        await this.subscribeToStreamParts(streamrClient)
         logger.info('Started subscriber plugin')
     }
 
