@@ -7,7 +7,7 @@ import {
     keyFromPeerDescriptor
 } from '@streamr/dht'
 import { Any } from '../proto/google/protobuf/any'
-import { Logger, setAbortableTimeout, wait } from '@streamr/utils'
+import { Logger, binaryToHex, setAbortableTimeout, wait } from '@streamr/utils'
 import { StreamObject } from './StreamrNode'
 import { StreamPartID } from '@streamr/protocol'
 
@@ -205,7 +205,7 @@ export class StreamEntryPointDiscovery {
                 logger.error(`${keyFromPeerDescriptor(this.config.ownPeerDescriptor)} avoid network split found entry points ${rediscoveredEntrypoints.map((peer) => keyFromPeerDescriptor(peer))}`)
                 await stream!.layer1!.joinDht(rediscoveredEntrypoints, false, false)
                 // eslint-disable-next-line max-len
-                logger.error(`${keyFromPeerDescriptor(this.config.ownPeerDescriptor)} avoid network split join completed, bucket size: ${stream!.layer1!.getBucketSize()} ${stream!.layer2.getTargetNeighborIds().length}`)
+                logger.error(`${keyFromPeerDescriptor(this.config.ownPeerDescriptor)} avoid network split join completed, bucket: ${stream!.layer1!.getKBucketPeers().map((peer) => binaryToHex(peer.kademliaId))}, neighbors: ${stream!.layer2.getTargetNeighborIds()}`)
                 if (stream!.layer1!.getBucketSize() < this.config.networkSplitAvoidanceLimit) {
                     throw new Error(`Network split is still possible`)
                 }
