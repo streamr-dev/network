@@ -1,10 +1,11 @@
 import { NetworkStack } from '../../src/NetworkStack'
-import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
+import { NodeType, PeerDescriptor } from '@streamr/dht'
 import {
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { waitForCondition } from '@streamr/utils'
-import { createStreamMessage } from '../utils/utils'
+import { hexToBinary, waitForCondition } from '@streamr/utils'
+import { createRandomNodeId, createStreamMessage } from '../utils/utils'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('NetworkStack', () => {
 
@@ -13,7 +14,7 @@ describe('NetworkStack', () => {
     const streamPartId = StreamPartIDUtils.parse('stream1#0')
 
     const epDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         websocket: { ip: 'localhost', port: 32222 },
         nodeName: 'entrypoint'
@@ -60,7 +61,7 @@ describe('NetworkStack', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId,
-            PeerID.fromString('network-stack').value
+            randomEthereumAddress()
         )
         await stack2.getStreamrNode().waitForJoinAndPublish(streamPartId, msg)
         await waitForCondition(() => receivedMessages === 1)

@@ -1,16 +1,17 @@
-import { PeerDescriptor, NodeType, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, NodeType } from '@streamr/dht'
 import { range } from 'lodash'
-import { waitForCondition } from '@streamr/utils'
-import { createStreamMessage } from '../utils/utils'
+import { hexToBinary, waitForCondition } from '@streamr/utils'
+import { createRandomNodeId, createStreamMessage } from '../utils/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('Full node network with WebSocket connections only', () => {
 
     const NUM_OF_NODES = 48
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`entrypoint`).value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         nodeName: 'entrypoint',
         websocket: { ip: 'localhost', port: 15555 }
@@ -83,7 +84,7 @@ describe('Full node network with WebSocket connections only', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             randomGraphId,
-            peerIdFromPeerDescriptor(epPeerDescriptor).value
+            randomEthereumAddress()
         )
         entryPoint.getStreamrNode()!.publishToStream(randomGraphId, msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
