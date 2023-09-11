@@ -80,6 +80,7 @@ export interface DhtNodeOptions {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    webrtcPortRange?: PortRange
     maxConnections?: number
 }
 
@@ -110,6 +111,7 @@ export class DhtNodeConfig {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    webrtcPortRange?: PortRange
 
     constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
@@ -205,6 +207,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcDatachannelBufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
+                webrtcPortRange: this.config.webrtcPortRange,
                 nodeName: this.getNodeName(),
                 maxConnections: this.config.maxConnections
             }
