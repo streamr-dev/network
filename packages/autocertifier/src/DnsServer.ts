@@ -101,6 +101,7 @@ export class DnsServer {
     private handleNormalQuery = async (name: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
 
+        logger.info('handleNormalQuery() ' + name)
         const parts = name.split('.')
         if (parts.length < 3) {
             // @ts-ignore private field
@@ -117,9 +118,12 @@ export class DnsServer {
             let subdomainRecord: Subdomain | undefined
             try {
                 subdomainRecord = await this.db.getSubdomain(subdomain)
-            } catch (e) { }
+            } catch (e) { 
+                logger.error('handleNormalQuery exception')
+            }
 
             if (!subdomainRecord) {
+                logger.info('handleNormalQuery() not found: ' + name)
                 // @ts-ignore private field
                 response.header.rcode = 3
                 return send(response)
