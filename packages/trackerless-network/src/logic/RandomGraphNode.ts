@@ -141,13 +141,23 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor),
             this.abortController.signal
         )
-        this.config.targetNeighbors.on('nodeAdded', (id, _remote) => {
-            this.config.propagation.onNeighborJoined(id)
-            this.emit('targetNeighborConnected', id)
-        })
-        this.config.proxyConnectionServer?.on('newConnection', (id: NodeID) => {
-            this.config.propagation.onNeighborJoined(id)
-        })
+        addManagedEventListener(
+            this.config.targetNeighbors,
+            'nodeAdded',
+            (id, _remote) => {
+                this.config.propagation.onNeighborJoined(id)
+                this.emit('targetNeighborConnected', id)
+            },
+            this.abortController.signal
+        )
+        if (this.config.proxyConnectionServer !== undefined) {
+            addManagedEventListener(
+                this.config.proxyConnectionServer,
+                'newConnection',
+                (id: NodeID) => this.config.propagation.onNeighborJoined(id),
+                this.abortController.signal
+            )
+        }
         const candidates = this.getNewNeighborCandidates()
         if (candidates.length > 0) {
             this.newContact(candidates[0], candidates)
