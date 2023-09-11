@@ -10,17 +10,17 @@ describe('NeighborFinder', () => {
 
     const nodeId = createRandomNodeId()
     let targetNeighbors: NodeList
-    let nearbyContactPool: NodeList
+    let nearbyNodeView: NodeList
     let neighborFinder: NeighborFinder
 
     const N = 4
 
     beforeEach(() => {
         targetNeighbors = new NodeList(nodeId, 15)
-        nearbyContactPool = new NodeList(nodeId, 30)
-        range(30).forEach(() => nearbyContactPool.add(createMockRemoteNode()))
+        nearbyNodeView = new NodeList(nodeId, 30)
+        range(30).forEach(() => nearbyNodeView.add(createMockRemoteNode()))
         const mockDoFindNeighbors = async (excluded: NodeID[]) => {
-            const target = nearbyContactPool.getRandom(excluded)
+            const target = nearbyNodeView.getRandom(excluded)
             if (Math.random() < 0.5) {
                 targetNeighbors.add(target!)
             } else {
@@ -30,7 +30,7 @@ describe('NeighborFinder', () => {
         }
         neighborFinder = new NeighborFinder({
             targetNeighbors,
-            nearbyContactPool,
+            nearbyNodeView,
             doFindNeighbors: (excluded) => mockDoFindNeighbors(excluded),
             N
         })
