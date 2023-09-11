@@ -4,6 +4,8 @@ import sqlite3 from 'sqlite3'
 import { open, Statement, Database as SqliteDatabase } from 'sqlite'
 import { Logger } from '@streamr/utils'
 import { DatabaseError, InvalidSubdomainOrToken } from './errors'
+import os from 'os'
+import e from 'express'
 
 const logger = new Logger(module)
 
@@ -17,7 +19,14 @@ export class Database {
     private getSubdomainAcmeChallengeStatement?: Statement
     private updateSubdomainAcmeChallengeStatement?: Statement
 
-    constructor(private databaseFilePath: string) {
+    private databaseFilePath: string
+
+    constructor(filePath: string) {
+        if (filePath.startsWith('~/')) {
+            this.databaseFilePath = filePath.replace('~', os.homedir())
+        } else {
+            this.databaseFilePath = filePath
+        }
     }
 
     public async createSubdomain(subdomain: string, ip: string, port: string, token: string): Promise<void> {
@@ -27,7 +36,7 @@ export class Database {
             const err = new DatabaseError('Failed to create subdomain ' + subdomain, e)
             throw err
         }
-       
+
         logger.info('Subdomain created: ' + subdomain)
     }
 
@@ -39,7 +48,7 @@ export class Database {
             const err = new DatabaseError('Failed to get subdomain ' + subdomain, e)
             throw err
         }
-        if (!ret) { 
+        if (!ret) {
             const err = new DatabaseError('Subdomain not found ' + subdomain)
             throw err
         }
@@ -54,7 +63,7 @@ export class Database {
             const err = new DatabaseError('Failed to get subdomain ' + subdomain, e)
             throw err
         }
-        if (!ret) { 
+        if (!ret) {
             const err = new DatabaseError('Subdomain not found ' + subdomain)
             throw err
         }
@@ -63,7 +72,7 @@ export class Database {
 
     public async updateSubdomainIpAndPort(subdomain: string, ip: string, port: string, token: string): Promise<void> {
         //let result: Awaited<ReturnType<Statement<sqlite3.Statement>['run']>> | undefined  
-        
+
         try {
             await this.getSubdomainWithToken(subdomain, token)
         } catch (e) {

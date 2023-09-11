@@ -5,18 +5,26 @@ import fs from 'fs'
 import path from 'path'
 import { ChallengeInterface } from './ChallengeInterface'
 import { Certificate } from './data/Certificate'
+import os from 'os'
 
 const logger = new Logger(module)
 
 export class CertificateCreator {
 
-    accountPrivateKey?: Buffer
+    private accountPrivateKey?: Buffer
+    private accountPrivateKeyPath: string
 
     constructor(private acmeDirectoryUrl: string, 
         private hmacKid: string, 
         private hmacKey: string,
-        private accountPrivateKeyPath: string, 
+        privateKeyPath: string, 
         private challengeInterface: ChallengeInterface) {
+            
+        if (privateKeyPath.startsWith('~/')) {
+            this.accountPrivateKeyPath = privateKeyPath.replace('~', os.homedir())
+        } else {
+            this.accountPrivateKeyPath = privateKeyPath
+        }
     }
 
     public async createCertificate(fqdn: string): Promise<Certificate> {
