@@ -11,7 +11,7 @@ import {
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
-import { NetworkNode } from '../../src/NetworkNode'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { NodeID } from '../../src/identifiers'
@@ -101,7 +101,7 @@ export const createNetworkNodeWithSimulator = (
     entryPoints: PeerDescriptor[]
 ): NetworkNode => {
     const transport = new SimulatorTransport(peerDescriptor, simulator)
-    return new NetworkNode({
+    return createNetworkNode({
         layer0: {
             peerDescriptor,
             entryPoints,

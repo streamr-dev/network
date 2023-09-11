@@ -1,4 +1,4 @@
-import { NetworkNode } from '../../src/NetworkNode'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { range } from 'lodash'
 import { NodeType, PeerDescriptor, PeerID, Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
 import {
@@ -47,7 +47,7 @@ describe('stream without default entrypoints', () => {
         nodes = []
         numOfReceivedMessages = 0
         const entryPointTransport = new SimulatorTransport(entryPointPeerDescriptor, simulator)
-        entrypoint = new NetworkNode({
+        entrypoint = createNetworkNode({
             layer0: {
                 transportLayer: entryPointTransport,
                 peerDescriptor: entryPointPeerDescriptor,
@@ -63,7 +63,7 @@ describe('stream without default entrypoints', () => {
                 nodeName: `${i}`
             }
             const transport = new SimulatorTransport(peerDescriptor, simulator)
-            const node = new NetworkNode({
+            const node = createNetworkNode({
                 layer0: {
                     peerDescriptor,
                     transportLayer: transport,

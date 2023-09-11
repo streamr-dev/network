@@ -1,7 +1,7 @@
 import { NodeType, PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForCondition, waitForEvent3, hexToBinary } from '@streamr/utils'
-import { NetworkNode } from '../../src/NetworkNode'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
@@ -52,7 +52,7 @@ describe('Proxy connections', () => {
     let proxiedNode: NetworkNode
 
     beforeEach(async () => {
-        proxyNode1 = new NetworkNode({
+        proxyNode1 = createNetworkNode({
             layer0: {
                 entryPoints: [proxyNodeDescriptor1],
                 peerDescriptor: proxyNodeDescriptor1,
@@ -65,7 +65,7 @@ describe('Proxy connections', () => {
         await proxyNode1.setStreamPartEntryPoints(streamPartId, [proxyNodeDescriptor1])
         await proxyNode1.stack.getStreamrNode()!.joinStream(streamPartId)
        
-        proxyNode2 = new NetworkNode({
+        proxyNode2 = createNetworkNode({
             layer0: {
                 entryPoints: [proxyNodeDescriptor1],
                 peerDescriptor: proxyNodeDescriptor2,
@@ -78,7 +78,7 @@ describe('Proxy connections', () => {
         proxyNode2.setStreamPartEntryPoints(streamPartId, [proxyNodeDescriptor1])
         await proxyNode2.stack.getStreamrNode()!.joinStream(streamPartId)
 
-        proxiedNode = new NetworkNode({
+        proxiedNode = createNetworkNode({
             layer0: {
                 entryPoints: [proxyNodeDescriptor1],
                 peerDescriptor: proxiedNodeDescriptor,

@@ -307,6 +307,9 @@ export class StreamrNode extends EventEmitter<Events> {
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
+        if (this.config.acceptProxyConnections) {
+            throw new Error('cannot set proxies when acceptProxyConnections=true')
+        }
         if (this.streams.get(streamPartId)?.type === StreamNodeType.PROXY && contactPeerDescriptors.length > 0) {
             const proxyClient = this.streams.get(streamPartId)!.layer2 as ProxyStreamConnectionClient
             await proxyClient.setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
