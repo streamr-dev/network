@@ -10,11 +10,12 @@ export const addManagedEventListener = <E extends Events<E>, T extends EventEmit
     listener: EventEmitter.EventListener<E, T>,
     abortSignal: AbortSignal
 ): void => {
-    // TODO if already aborted!
-    emitter.on(eventName, listener)
-    abortSignal.addEventListener('abort', () => {
-        emitter.off(eventName, listener)
-    }, { 
-        once: true
-    })
+    if (!abortSignal.aborted) {
+        emitter.on(eventName, listener)
+        abortSignal.addEventListener('abort', () => {
+            emitter.off(eventName, listener)
+        }, { 
+            once: true
+        })
+    }
 }

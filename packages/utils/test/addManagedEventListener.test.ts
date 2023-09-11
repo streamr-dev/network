@@ -26,4 +26,19 @@ describe('addManagedEventListener', () => {
         emitter.emit('foo', 'bar', 333)
         expect(listener).toBeCalledTimes(2)
     })
+
+    it('already aborted', () => {
+        const abortController = new AbortController()
+        const emitter = new EventEmitter<Events>
+        const listener = jest.fn()
+        abortController.abort()
+        addManagedEventListener(
+            emitter,
+            'foo',
+            listener,
+            abortController.signal
+        )
+        emitter.emit('foo', 'bar', 111)
+        expect(listener).not.toBeCalled()
+    })
 })
