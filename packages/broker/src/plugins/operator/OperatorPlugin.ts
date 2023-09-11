@@ -104,8 +104,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 true,
                 this.abortController.signal
             )
-            await this.fleetState.waitUntilReady()
-            const isLeader = await createIsLeaderFn(streamrClient, this.fleetState, logger)
+            await this.fleetState!.waitUntilReady()
+            const isLeader = await createIsLeaderFn(streamrClient, this.fleetState!, logger)
             try {
                 await scheduleAtInterval(async () => {
                     if (isLeader()) {
@@ -125,6 +125,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
 
     async stop(): Promise<void> {
         this.abortController.abort()
+        this.fleetState!.destroy()
         await this.inspectRandomNodeService.stop()
         await this.maintainOperatorPoolValueService!.stop()
         await this.voteOnSuspectNodeService!.stop()
