@@ -91,7 +91,7 @@ export class PeerDiscovery {
                 await randomSession.findClosestNodes(this.config.joinTimeout)
             }
         } catch (_e) {
-            logger.debug(`DHT join on ${this.config.serviceId} timed out`)
+            logger.error(`DHT join on ${this.config.serviceId} timed out`)
         } finally {
             if (!this.stopped) {
                 if (this.config.bucket.count() === 0) {
