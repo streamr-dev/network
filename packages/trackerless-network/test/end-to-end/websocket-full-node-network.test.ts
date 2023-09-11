@@ -1,9 +1,10 @@
-import { PeerDescriptor, NodeType, PeerID, peerIdFromPeerDescriptor, keyFromPeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, NodeType, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('Full node network with WebSocket connections only', () => {
 
@@ -49,9 +50,9 @@ describe('Full node network with WebSocket connections only', () => {
             })
             nodes.push(node)
             await node.start()
-            node.getStreamrNode!().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
+            node.getStreamrNode().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
             await node.getStreamrNode().joinStream(randomGraphId)
-            node.getStreamrNode!().subscribeToStream(randomGraphId)
+            node.getStreamrNode().subscribeToStream(randomGraphId)
         }))
 
     }, 120000)
@@ -66,7 +67,7 @@ describe('Full node network with WebSocket connections only', () => {
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
             waitForCondition(() => {
-                return node.getStreamrNode()!.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
+                return node.getStreamrNode()!.getStream(randomGraphId)!.layer2.getTargetNeighborIds().length >= 3
             }
             , 120000)
         ))
@@ -74,7 +75,7 @@ describe('Full node network with WebSocket connections only', () => {
         const successIds: string[] = []
         nodes.map((node) => {
             node.getStreamrNode()!.on('newMessage', () => {
-                successIds.push(keyFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
+                successIds.push(getNodeIdFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
                 numOfMessagesReceived += 1
             })
         })

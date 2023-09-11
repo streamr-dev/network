@@ -6,7 +6,7 @@ import { createNetworkNodeWithSimulator } from '../utils/utils'
 import { NetworkNode } from '../../src/NetworkNode'
 import { PeerDescriptor } from '../../../dht/src/exports'
 import { StreamMessage, toStreamID, MessageID, StreamPartIDUtils, StreamMessageType, toStreamPartID, StreamPartID } from '@streamr/protocol'
-import { waitForEvent3 } from '@streamr/utils'
+import { hexToBinary, waitForEvent3 } from '@streamr/utils'
 import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
 
 const numNodes = 10000
@@ -85,7 +85,7 @@ const measureJoiningTime = async (count: number) => {
                 0,
                 i,
                 Math.floor(Math.random() * 20000),
-                'peer' as any,
+                'node' as any,
                 'msgChainId'
             ),
             prevMsgRef: null,
@@ -93,7 +93,7 @@ const measureJoiningTime = async (count: number) => {
                 hello: 'world'
             },
             messageType: StreamMessageType.MESSAGE,
-            signature: 'signature',
+            signature: hexToBinary('0x1234'),
         })
         streams.get(stream)!.publish(streamMessage)
     }, 1000)
@@ -147,7 +147,7 @@ run().then(() => {
     console.log(currentNode.stack.getLayer0DhtNode().getKBucketPeers().length)
     console.log(currentNode.stack.getLayer0DhtNode().getNumberOfConnections())
     console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer1!.getKBucketPeers())
-    console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer2.getTargetNeighborStringIds())
+    console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer2.getTargetNeighborIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {
         clearInterval(publishInterval)

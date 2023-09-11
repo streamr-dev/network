@@ -4,7 +4,7 @@ import fetch from 'node-fetch'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { createClient, createTestStream } from '../../../utils'
 import {
-    THE_GRAPH_URL,
+    TEST_CHAIN_CONFIG,
     delegate,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
@@ -28,7 +28,7 @@ describe('InspectRandomNodeHelper', () => {
         await client.destroy()
 
         graphClient = new TheGraphClient({
-            serverUrl: THE_GRAPH_URL,
+            serverUrl: TEST_CHAIN_CONFIG.theGraphUrl,
             fetch,
             logger: new Logger(module)
         })
@@ -38,7 +38,7 @@ describe('InspectRandomNodeHelper', () => {
         const { operatorWallet, operatorContract, operatorServiceConfig } = await setupOperatorContract()
         const inspectRandomNodeHelper = new InspectRandomNodeHelper({
             ...operatorServiceConfig,
-            nodeWallet: undefined as any
+            signer: undefined as any
         })
 
         const sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
@@ -74,7 +74,7 @@ describe('InspectRandomNodeHelper', () => {
 
         const inspectRandomNodeHelper = new InspectRandomNodeHelper({
             ...flagger.operatorServiceConfig,
-            nodeWallet: flagger.nodeWallets[0]
+            signer: flagger.nodeWallets[0]
         })
         await inspectRandomNodeHelper.flagWithMetadata(toEthereumAddress(sponsorship.address), toEthereumAddress(target.operatorContract.address), 2)
 

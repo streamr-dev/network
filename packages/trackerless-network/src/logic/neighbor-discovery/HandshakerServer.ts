@@ -1,22 +1,24 @@
 import { Empty } from '../../proto/google/protobuf/empty'
 import { InterleaveNotice, StreamHandshakeRequest, StreamHandshakeResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { PeerList } from '../PeerList'
-import { ConnectionLocker, keyFromPeerDescriptor, PeerDescriptor } from '@streamr/dht'
+import { NodeList } from '../NodeList'
+import { ConnectionLocker, PeerDescriptor } from '@streamr/dht'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { RemoteHandshaker } from './RemoteHandshaker'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { binaryToHex } from '@streamr/utils'
 
 interface HandshakerServerConfig {
     randomGraphId: string
     ownPeerDescriptor: PeerDescriptor
-    targetNeighbors: PeerList
+    targetNeighbors: NodeList
     connectionLocker: ConnectionLocker
-    ongoingHandshakes: Set<string>
+    ongoingHandshakes: Set<NodeID>
     N: number
     createRemoteHandshaker: (target: PeerDescriptor) => RemoteHandshaker
     createRemoteNode: (peerDescriptor: PeerDescriptor) => RemoteRandomGraphNode
-    handshakeWithInterleaving: (target: PeerDescriptor, senderId: string) => Promise<boolean>
+    handshakeWithInterleaving: (target: PeerDescriptor, senderId: NodeID) => Promise<boolean>
 }
 
 export class HandshakerServer implements IHandshakeRpc {
@@ -32,13 +34,14 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     private handleRequest(request: StreamHandshakeRequest): StreamHandshakeResponse {
-        if (this.config.targetNeighbors!.hasPeer(request.senderDescriptor!)
-            || this.config.ongoingHandshakes.has(keyFromPeerDescriptor(request.senderDescriptor!))
+        const getInterleaveSourceIds = () => (request.interleaveSourceId !== undefined) ? [binaryToHex(request.interleaveSourceId) as NodeID] : []
+        if (this.config.targetNeighbors.hasNode(request.senderDescriptor!)
+            || this.config.ongoingHandshakes.has(getNodeIdFromPeerDescriptor(request.senderDescriptor!))
         ) {
             return this.acceptHandshake(request, request.senderDescriptor!)
-        } else if (this.config.targetNeighbors!.size() + this.config.ongoingHandshakes.size < this.config.N) {
+        } else if (this.config.targetNeighbors.size() + this.config.ongoingHandshakes.size < this.config.N) {
             return this.acceptHandshake(request, request.senderDescriptor!)
-        } else if (this.config.targetNeighbors!.size([request.interleaveSourceId!]) >= 2) {
+        } else if (this.config.targetNeighbors.size(getInterleaveSourceIds()) >= 2) {
             return this.acceptHandshakeWithInterleaving(request, request.senderDescriptor!)
         } else {
             return this.rejectHandshake(request)
@@ -65,9 +68,11 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     private acceptHandshakeWithInterleaving(request: StreamHandshakeRequest, requester: PeerDescriptor): StreamHandshakeResponse {
-        const exclude = request.neighborIds
-        exclude.push(request.senderId)
-        exclude.push(request.interleaveSourceId!)
+        const exclude = request.neighborIds.map((id: Uint8Array) => binaryToHex(id) as NodeID)
+        exclude.push(binaryToHex(request.senderId) as NodeID)
+        if (request.interleaveSourceId !== undefined) {
+            exclude.push(binaryToHex(request.interleaveSourceId) as NodeID)
+        }
         const furthest = this.config.targetNeighbors.getFurthest(exclude)
         const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
         if (furthest) {
@@ -87,12 +92,13 @@ export class HandshakerServer implements IHandshakeRpc {
 
     async interleaveNotice(message: InterleaveNotice, _context: ServerCallContext): Promise<Empty> {
         if (message.randomGraphId === this.config.randomGraphId) {
-            if (this.config.targetNeighbors.hasPeerWithStringId(message.senderId)) {
-                const senderDescriptor = this.config.targetNeighbors.getNeighborById(message.senderId)!.getPeerDescriptor()
+            const nodeId = binaryToHex(message.senderId) as NodeID
+            if (this.config.targetNeighbors.hasNodeById(nodeId)) {
+                const senderDescriptor = this.config.targetNeighbors.getNeighborById(nodeId)!.getPeerDescriptor()
                 this.config.connectionLocker.unlockConnection(senderDescriptor, this.config.randomGraphId)
                 this.config.targetNeighbors.remove(senderDescriptor)
             }
-            this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, message.senderId).catch((_e) => {})
+            this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, nodeId).catch((_e) => {})
         }
         return Empty
     }

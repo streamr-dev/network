@@ -1,10 +1,11 @@
-import { PeerDescriptor, NodeType, PeerID, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, NodeType, PeerID } from '@streamr/dht'
 import { range } from 'lodash'
-import { waitForCondition } from '@streamr/utils'
+import { waitForCondition, utf8ToBinary } from '@streamr/utils'
 import { getRandomRegion } from '@streamr/dht'
 import { createStreamMessage } from '../utils/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('Full node network with WebRTC connections', () => {
 
@@ -55,7 +56,7 @@ describe('Full node network with WebRTC connections', () => {
             await node.start()
             node.getStreamrNode().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
             await node.getStreamrNode().joinStream(randomGraphId)
-            node.getStreamrNode!().subscribeToStream(randomGraphId)
+            node.getStreamrNode().subscribeToStream(randomGraphId)
         }))
 
     }, 90000)
@@ -70,7 +71,7 @@ describe('Full node network with WebRTC connections', () => {
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
             waitForCondition(() => {
-                return node.getStreamrNode()!.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
+                return node.getStreamrNode()!.getStream(randomGraphId)!.layer2.getTargetNeighborIds().length >= 3
             }
             , 120000)
         ))
@@ -78,14 +79,14 @@ describe('Full node network with WebRTC connections', () => {
         const successIds: string[] = []
         nodes.map((node) => {
             node.getStreamrNode()!.on('newMessage', () => {
-                successIds.push(keyFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
+                successIds.push(getNodeIdFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
                 numOfMessagesReceived += 1
             })
         })
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             randomGraphId,
-            peerIdFromPeerDescriptor(epPeerDescriptor).value
+            utf8ToBinary(getNodeIdFromPeerDescriptor(epPeerDescriptor))
         )
         entryPoint.getStreamrNode()!.publishToStream(randomGraphId, msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)

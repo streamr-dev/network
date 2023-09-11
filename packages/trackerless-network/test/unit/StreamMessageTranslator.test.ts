@@ -9,12 +9,11 @@ import {
     StreamMessageType as OldStreamMessageType,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
-import { binaryToHex, binaryToUtf8, hexToBinary } from '../../src/logic/utils'
+import { EthereumAddress, binaryToHex, binaryToUtf8, hexToBinary } from '@streamr/utils'
 
 describe('StreamMessageTranslator', () => {
 
-    const signature = '0x1234'
+    const signature = hexToBinary('0x1234')
     const protobufMsg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         StreamPartIDUtils.parse('TEST#0'),
@@ -47,9 +46,8 @@ describe('StreamMessageTranslator', () => {
         expect(translated.previousMessageRef).toEqual(undefined)
         expect(translated.messageType).toEqual(StreamMessageType.MESSAGE)
         expect(translated.groupKeyId).toEqual(undefined)
-        expect(binaryToHex(translated.signature, true)).toEqual(signature)
+        expect(translated.signature).toStrictEqual(signature)
         expect(JSON.parse(binaryToUtf8(translated.content))).toEqual({ hello: 'WORLD' })
-
     })
 
     it('translates protobuf to old protocol', () => {
@@ -63,7 +61,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageType).toEqual(OldStreamMessageType.MESSAGE)
         expect(translated.contentType).toEqual(0)
         expect(translated.groupKeyId).toEqual(null)
-        expect(translated.signature).toEqual(signature)
+        expect(translated.signature).toStrictEqual(signature)
         expect(translated.getParsedContent()).toEqual({ hello: 'WORLD' })
     })
 })
