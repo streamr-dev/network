@@ -141,6 +141,11 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         if (this.stopped) {
             return
         }
+        if (closestTen.length < this.config.nodeViewSize) {
+            this.config.layer1.getKBucketPeers().forEach((descriptor) => {
+                closestTen.push(descriptor)
+            })
+        }
       
         const oldLength = this.config.nearbyContactPool.getIds().length
         this.config.nearbyContactPool.replaceAll(closestTen.map((descriptor) =>
