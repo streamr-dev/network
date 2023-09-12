@@ -2,7 +2,7 @@ import { toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Signer } from 'ethers'
-import { CONFIG_TEST, StreamrClient } from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
@@ -49,8 +49,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         this.serviceConfig = {
             signer,
             operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
-            // TODO read from client, as we need to use production value in production environment (not ConfigTest)
-            theGraphUrl: CONFIG_TEST.contracts!.theGraphUrl!,
+            theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl,
             maxSponsorshipsInWithdraw: DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW,
             minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
         }
