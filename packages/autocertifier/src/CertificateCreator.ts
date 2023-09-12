@@ -31,14 +31,23 @@ export class CertificateCreator {
 
         logger.info(`Creating certificate for ${fqdn}`)
         logger.info('Creating acme client')
-        const client = new acme.Client({
+        
+        const clientOptions: acme.ClientOptions = {
             directoryUrl: this.acmeDirectoryUrl,
-            accountKey: this.accountPrivateKey!,
-            externalAccountBinding: {
+            accountKey: this.accountPrivateKey!
+        }
+
+        const wasNewKeyCreated = await this.createPrivateKey()
+        
+        if (wasNewKeyCreated) { 
+            clientOptions.externalAccountBinding = {
                 kid: this.hmacKid,
                 hmacKey: this.hmacKey
             }
-        })
+        }
+        
+        const client = new acme.Client(clientOptions)
+
         logger.info('Creating CSR')
         const [key, csr] = await acme.crypto.createCsr({
             commonName: fqdn
@@ -72,7 +81,7 @@ export class CertificateCreator {
         return { cert: cert.toString(), key: key.toString() }
     }
 
-    public async start(): Promise<void> {
+    private createPrivateKey = async (): Promise<boolean> => { 
         // try to read private key from file
         try {
             // try to read private key from file
@@ -87,6 +96,12 @@ export class CertificateCreator {
             } else {
                 throw err
             }
+            return true
         }
+        return false
+    }
+
+
+    public async start(): Promise<void> {
     }
 }

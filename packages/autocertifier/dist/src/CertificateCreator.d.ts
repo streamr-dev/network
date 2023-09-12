@@ -9,5 +9,6 @@ export declare class CertificateCreator {
     private accountPrivateKeyPath;
     constructor(acmeDirectoryUrl: string, hmacKid: string, hmacKey: string, privateKeyPath: string, challengeInterface: ChallengeInterface);
     createCertificate(fqdn: string): Promise<Certificate>;
+    private createPrivateKey;
     start(): Promise<void>;
 }

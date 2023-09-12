@@ -40,6 +40,26 @@ class CertificateCreator {
         this.hmacKid = hmacKid;
         this.hmacKey = hmacKey;
         this.challengeInterface = challengeInterface;
+        this.createPrivateKey = async () => {
+            // try to read private key from file
+            try {
+                // try to read private key from file
+                this.accountPrivateKey = fs_1.default.readFileSync(this.accountPrivateKeyPath);
+            }
+            catch (err) {
+                if (err.code === 'ENOENT') {
+                    // if not found, create new private key and save it to file
+                    this.accountPrivateKey = await acme.crypto.createPrivateKey();
+                    fs_1.default.mkdirSync(path_1.default.dirname(this.accountPrivateKeyPath), { recursive: true });
+                    fs_1.default.writeFileSync(this.accountPrivateKeyPath, this.accountPrivateKey, { mode: 0o600 });
+                }
+                else {
+                    throw err;
+                }
+                return true;
+            }
+            return false;
+        };
         if (privateKeyPath.startsWith('~/')) {
             this.accountPrivateKeyPath = privateKeyPath.replace('~', os_1.default.homedir());
         }
@@ -50,14 +70,18 @@ class CertificateCreator {
     async createCertificate(fqdn) {
         logger.info(`Creating certificate for ${fqdn}`);
         logger.info('Creating acme client');
-        const client = new acme.Client({
+        const clientOptions = {
             directoryUrl: this.acmeDirectoryUrl,
-            accountKey: this.accountPrivateKey,
-            externalAccountBinding: {
+            accountKey: this.accountPrivateKey
+        };
+        const wasNewKeyCreated = await this.createPrivateKey();
+        if (wasNewKeyCreated) {
+            clientOptions.externalAccountBinding = {
                 kid: this.hmacKid,
                 hmacKey: this.hmacKey
-            }
-        });
+            };
+        }
+        const client = new acme.Client(clientOptions);
         logger.info('Creating CSR');
         const [key, csr] = await acme.crypto.createCsr({
             commonName: fqdn
@@ -88,22 +112,6 @@ class CertificateCreator {
         return { cert: cert.toString(), key: key.toString() };
     }
     async start() {
-        // try to read private key from file
-        try {
-            // try to read private key from file
-            this.accountPrivateKey = fs_1.default.readFileSync(this.accountPrivateKeyPath);
-        }
-        catch (err) {
-            if (err.code === 'ENOENT') {
-                // if not found, create new private key and save it to file
-                this.accountPrivateKey = await acme.crypto.createPrivateKey();
-                fs_1.default.mkdirSync(path_1.default.dirname(this.accountPrivateKeyPath), { recursive: true });
-                fs_1.default.writeFileSync(this.accountPrivateKeyPath, this.accountPrivateKey, { mode: 0o600 });
-            }
-            else {
-                throw err;
-            }
-        }
     }
 }
 exports.CertificateCreator = CertificateCreator;
