@@ -117,6 +117,12 @@ export class DnsServer {
         await send(response)
     }
 
+    private handleCAAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
+    response: DnsResponse): Promise<void> => {
+    logger.info('handleCAAQuery() ' + mixedCaseName)
+    await send(response)
+}
+
     private handleNormalQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
 
@@ -199,6 +205,9 @@ export class DnsServer {
             // @ts-ignore private field
         } else if (question.type == Packet.TYPE.CNAME) {
             return this.handleCNAMEQuery(mixedCaseName, send, response)
+            // @ts-ignore private field
+        } else if (question.type == Packet.TYPE.CAA) {
+            return this.handleCAAQuery(mixedCaseName, send, response)
         } else {
             return this.handleNormalQuery(mixedCaseName, send, response)
         }
