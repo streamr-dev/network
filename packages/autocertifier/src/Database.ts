@@ -90,7 +90,7 @@ export class Database {
     }
 
     public async updateSubdomainAcmeChallenge(subdomain: string, acmeChallenge: string): Promise<void> {
-        logger.info('Updating subdomain acme challenge for ' + subdomain)
+        logger.info('Updating subdomain acme challenge' + acmeChallenge +  '  for ' + subdomain)
         try {
             await this.updateSubdomainAcmeChallengeStatement!.run(acmeChallenge, subdomain)
         } catch (e) {
