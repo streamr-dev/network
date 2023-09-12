@@ -75,3 +75,73 @@ npm test
 ```bash
 npm run test-production
 ```
+
+# REST API
+
+This is the REST API for the Streamr AutoCertifier. The API allows you to create and manage subdomains and certificates for use with the Streamr platform.
+
+## Base URL
+
+The base URL for the API is `http://{ip}:{port}`, where `{ip}` is the IP address of the server and `{port}` is the port number.
+
+## Endpoints
+
+The API provides the following endpoints:
+
+### `PATCH /certifiedsubdomains`
+
+Create a new subdomain and certificate.
+
+#### Request Body
+
+The request body must be a JSON object with the following properties:
+
+- `streamrWebSocketPort` (required): The port number for the Streamr WebSocket server.
+
+#### Response Body
+
+The response body is a JSON object with the following properties:
+
+- `subdomain`: The name of the new subdomain.
+- `certificate`: The certificate for the new subdomain.
+
+### `PATCH /certifiedsubdomains/:subdomain`
+
+Get a new certificate for an existing subdomain.
+
+#### Request Parameters
+
+- `subdomain` (required): The name of the subdomain.
+
+#### Request Body
+
+The request body must be a JSON object with the following properties:
+
+- `streamrWebSocketPort` (required): The port number for the Streamr WebSocket server.
+- `token` (required): The authentication token for the subdomain.
+
+#### Response Body
+
+The response body is a JSON object with the following properties:
+
+- `subdomain`: The name of the subdomain.
+- `certificate`: The new certificate for the subdomain.
+
+### `PUT /certifiedsubdomains/:subdomain/ip`
+
+Update the IP address and port number for an existing subdomain.
+
+#### Request Parameters
+
+- `subdomain` (required): The name of the subdomain.
+
+#### Request Body
+
+The request body must be a JSON object with the following properties:
+
+- `streamrWebSocketPort` (required): The port number for the Streamr WebSocket server.
+- `token` (required): The authentication token for the subdomain.
+
+#### Response Body
+
+The response body is an empty JSON object.
