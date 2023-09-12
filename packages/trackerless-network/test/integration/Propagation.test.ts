@@ -43,6 +43,7 @@ describe('Propagation', () => {
             )
             await dht.start()
             await graph.start()
+            // eslint-disable-next-line promise/always-return
             await dht.joinDht([entryPointDescriptor]).then(() => {
                 graph.on('message', () => { totalReceived += 1 })
                 dhtNodes.push(dht)

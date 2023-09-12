@@ -6,6 +6,7 @@ import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, se
 import { getTotalUnwithdrawnEarnings } from './operatorPoolValueUtils'
 import { MaintainOperatorPoolValueHelper } from '../../../../src/plugins/operator/MaintainOperatorPoolValueHelper'
 import { maintainOperatorPoolValue } from '../../../../src/plugins/operator/maintainOperatorPoolValue'
+import { multiply } from '../../../../src/helpers/multiply'
 
 const logger = new Logger(module)
 
@@ -43,18 +44,16 @@ describe('maintainOperatorPoolValue', () => {
         await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
         await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
         const helper = new MaintainOperatorPoolValueHelper({ ...operatorServiceConfig, signer: nodeWallets[0] })
-        const driftLimitFraction = await helper.getDriftLimitFraction()
-        const driftLimit = STAKE_AMOUNT * Number(driftLimitFraction) / ONE_ETHER
-        const safeDriftLimit = driftLimit * SAFETY_FRACTION
+        const { rewardThresholdDataWei } = await helper.getMyUnwithdrawnEarnings()
+        const safeRewardThresholdDataWei = multiply(rewardThresholdDataWei, SAFETY_FRACTION)
         await waitForCondition(async () => {
             const unwithdrawnEarnings = Number(await getTotalUnwithdrawnEarnings(operatorContract)) / ONE_ETHER
-            return unwithdrawnEarnings > safeDriftLimit
+            return unwithdrawnEarnings > safeRewardThresholdDataWei
         }, 10000, 1000)
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
 
         await maintainOperatorPoolValue(
-            BigInt(SAFETY_FRACTION * ONE_ETHER),
-            driftLimitFraction,
+            SAFETY_FRACTION,
             helper
         )
         // TODO do we know what the approximate pool value should be?

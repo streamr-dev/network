@@ -20,20 +20,20 @@ describe('RandomGraphNode', () => {
     }
 
     let targetNeighbors: NodeList
-    let nearbyContactPool: NodeList
-    let randomContactPool: NodeList
+    let nearbyNodeView: NodeList
+    let randomNodeView: NodeList
 
     beforeEach(async () => {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
 
         targetNeighbors = new NodeList(nodeId, 10)
-        randomContactPool = new NodeList(nodeId, 10)
-        nearbyContactPool = new NodeList(nodeId, 10)
+        randomNodeView = new NodeList(nodeId, 10)
+        nearbyNodeView = new NodeList(nodeId, 10)
 
         randomGraphNode = createRandomGraphNode({
             targetNeighbors,
-            randomContactPool,
-            nearbyContactPool,
+            randomNodeView,
+            nearbyNodeView,
             P2PTransport: new MockTransport(),
             ownPeerDescriptor: peerDescriptor,
             layer1: mockLayer1 as any,
@@ -58,17 +58,10 @@ describe('RandomGraphNode', () => {
         targetNeighbors.remove(mockRemote.getPeerDescriptor())
     })
 
-    it('getNearbyContactPoolIds', () => {
+    it('getNearbyNodeView', () => {
         const mockRemote = createMockRemoteNode()
-        nearbyContactPool.add(mockRemote)
-        const ids = randomGraphNode.getNearbyContactPoolIds()
-        expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
-    })
-
-    it('getRandomContactPoolIds', () => {
-        const mockRemote = createMockRemoteNode()
-        randomContactPool.add(mockRemote)
-        const ids = randomGraphNode.getRandomContactPoolIds()
+        nearbyNodeView.add(mockRemote)
+        const ids = randomGraphNode.getNearbyNodeView().getIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 

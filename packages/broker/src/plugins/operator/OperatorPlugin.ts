@@ -19,7 +19,6 @@ import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
-const ONE_ETHER = 1e18
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -70,12 +69,9 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             this.fleetState
         )
         const maintainOperatorPoolValueHelper = new MaintainOperatorPoolValueHelper(this.serviceConfig)
-        const driftLimitFraction = await maintainOperatorPoolValueHelper.getDriftLimitFraction()
         await scheduleAtInterval(
             () => maintainOperatorPoolValue(
-                // TODO maybe we should handle fractions as 0..1 and not 0..ONE_ETHER
-                BigInt(0.5 * ONE_ETHER), // 50%
-                driftLimitFraction,
+                0.5,
                 maintainOperatorPoolValueHelper
             ).catch((err) => {
                 logger.error('Encountered error while checking unwithdrawn earnings', { err })

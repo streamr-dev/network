@@ -3,21 +3,18 @@ import { MaintainOperatorPoolValueHelper } from './MaintainOperatorPoolValueHelp
 
 const logger = new Logger(module)
 
-const ONE_ETHER = 1e18
-
 export const maintainOperatorPoolValue = async (
-    withdrawLimitSafetyFraction: bigint,  // TODO this is about unsafety: higher is more unsafe
-    driftLimitFraction: bigint,
+    withdrawLimitSafetyFraction: number,  // TODO this is about unsafety: higher is more unsafe
     helper: MaintainOperatorPoolValueHelper
 ): Promise<void> => {
     logger.info('Check whether it is time to withdraw my earnings')
-    const { fraction, sponsorshipAddresses } = await helper.getUnwithdrawnEarnings()
-    const safeUnwithdrawnEarningsFraction = driftLimitFraction * withdrawLimitSafetyFraction / BigInt(ONE_ETHER)
-    logger.trace(` -> is ${Number(fraction) / ONE_ETHER * 100}% > ${Number(safeUnwithdrawnEarningsFraction) / ONE_ETHER * 100}% ?`)
-    if (fraction > safeUnwithdrawnEarningsFraction) {
+    const { sumDataWei, rewardThresholdDataWei, sponsorshipAddresses } = await helper.getMyUnwithdrawnEarnings()
+    const triggerWithdrawLimitDataWei = rewardThresholdDataWei * BigInt(1e18 * (1 - withdrawLimitSafetyFraction)) / BigInt(1e18)
+    logger.trace(` -> is ${sumDataWei} > ${triggerWithdrawLimitDataWei} ?`)
+    if (sumDataWei > triggerWithdrawLimitDataWei) {
         logger.info('Withdraw earnings from sponsorships', { sponsorshipAddresses })
-        await helper.withdrawEarningsFromSponsorshipsToOperatorContract(sponsorshipAddresses)
+        await helper.withdrawMyEarningsFromSponsorships(sponsorshipAddresses)
     } else {
-        logger.info('Skip withdrawing earnings', { fraction, safeUnwithdrawnEarningsFraction })
+        logger.info('Skip withdrawing earnings')
     }
 }
