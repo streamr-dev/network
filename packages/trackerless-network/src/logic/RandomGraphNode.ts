@@ -157,7 +157,10 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                 this.abortController.signal
             )
         }
-        this.updateNeighborCandidatesFromLayer1()
+        const candidates = this.getNeighborCandidatesFromLayer1()
+        if (candidates.length > 0) {
+            this.newContact(candidates[0], candidates)
+        }
         this.config.neighborFinder.start()
         await this.config.neighborUpdateManager.start()
     }
@@ -176,21 +179,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         if (this.stopped) {
             return
         }
-
-        if (closestNodes.length < this.config.nodeViewSize) {
-            this.config.layer1.getKBucketPeers().forEach((descriptor) => {
-                closestNodes.push(descriptor)
-            })
-        }
-      
-        this.config.nearbyNodeView.replaceAll(closestNodes.map((descriptor) =>
-            new RemoteRandomGraphNode(
-                descriptor,
-                this.config.randomGraphId,
-                toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
-            )
-        ))
-        
+        this.updateNearbyNodeView(closestNodes)
         if (this.config.targetNeighbors.size() < this.config.numOfTargetNeighbors) {
             this.config.neighborFinder.start()
         }
@@ -201,7 +190,16 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         if (this.stopped) {
             return
         }
-        this.config.nearbyNodeView.replaceAll(closestNodes.map((descriptor) =>
+        this.updateNearbyNodeView(closestNodes)
+    }
+
+    private updateNearbyNodeView(nodes: PeerDescriptor[]) {
+        if (nodes.length < this.config.nodeViewSize) {
+            this.config.layer1.getKBucketPeers().forEach((descriptor) => {
+                nodes.push(descriptor)
+            })
+        }
+        this.config.nearbyNodeView.replaceAll(nodes.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,
@@ -249,7 +247,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         }
     }
 
-    private updateNeighborCandidatesFromLayer1(): void {
+    private getNeighborCandidatesFromLayer1(): PeerDescriptor[] {
         const uniqueNodes = new Set<PeerDescriptor>()
         this.config.layer1.getNeighborList().getClosestContacts(this.config.nodeViewSize).forEach((contact: DhtPeer) => {
             uniqueNodes.add(contact.getPeerDescriptor())
@@ -257,10 +255,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.config.layer1.getKBucketPeers().forEach((peer: PeerDescriptor) => {
             uniqueNodes.add(peer)
         })
-        const candidates = Array.from(uniqueNodes)
-        if (candidates.length > 0) {
-            this.newContact(candidates[0], candidates)
-        }
+        return Array.from(uniqueNodes)
     }
 
     public hasProxyConnection(nodeId: NodeID): boolean {
