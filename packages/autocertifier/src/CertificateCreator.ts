@@ -32,13 +32,13 @@ export class CertificateCreator {
         logger.info(`Creating certificate for ${fqdn}`)
         logger.info('Creating acme client')
         
+        const wasNewKeyCreated = await this.createPrivateKey()
+
         const clientOptions: acme.ClientOptions = {
             directoryUrl: this.acmeDirectoryUrl,
             accountKey: this.accountPrivateKey!
         }
 
-        const wasNewKeyCreated = await this.createPrivateKey()
-        
         if (wasNewKeyCreated) { 
             clientOptions.externalAccountBinding = {
                 kid: this.hmacKid,
