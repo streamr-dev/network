@@ -63,6 +63,7 @@ export class PeerDiscovery {
         this.config.addContact(entryPointDescriptor)
         const closest = this.config.bucket.closest(this.config.ownPeerId!.value, this.config.getClosestContactsLimit)
         this.config.neighborList.addContacts(closest)
+        logger.error(`NeighborList before join ${this.config.neighborList.getStringIds()}`)
         const sessionOptions = {
             bucket: this.config.bucket,
             neighborList: this.config.neighborList!,
