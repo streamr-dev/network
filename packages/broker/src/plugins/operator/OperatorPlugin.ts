@@ -1,19 +1,20 @@
 import { toStreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger, scheduleAtInterval, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Signer } from 'ethers'
-import { CONFIG_TEST, StreamrClient } from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
-import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
-import { AnnounceNodeToStreamService } from './AnnounceNodeToStreamService'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { maintainOperatorPoolValue } from './maintainOperatorPoolValue'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
-import { OperatorPoolValueBreachWatcher } from './OperatorPoolValueBreachWatcher'
-import { OperatorFleetState } from './OperatorFleetState'
+import { DEFAULT_UPDATE_INTERVAL_IN_MS, OperatorFleetState } from './OperatorFleetState'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { createIsLeaderFn } from './createIsLeaderFn'
+import { announceNodeToContract } from './announceNodeToContract'
+import { announceNodeToStream } from './announceNodeToStream'
+import { checkOperatorPoolValueBreach } from './checkOperatorPoolValueBreach'
 import { MaintainOperatorPoolValueHelper } from './MaintainOperatorPoolValueHelper'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 
@@ -35,52 +36,26 @@ export interface OperatorServiceConfig {
 const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
-    private announceNodeToStreamService?: AnnounceNodeToStreamService
-    private announceNodeToContractService?: AnnounceNodeToContractService
     private inspectRandomNodeService = new InspectRandomNodeService()
     private voteOnSuspectNodeService?: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
-    private operatorPoolValueBreachWatcher?: OperatorPoolValueBreachWatcher
     private fleetState?: OperatorFleetState
     private serviceConfig?: OperatorServiceConfig
-    private abortController: AbortController = new AbortController()
+    private readonly abortController: AbortController = new AbortController()
 
     async start(streamrClient: StreamrClient): Promise<void> {
         const signer = await streamrClient.getSigner()
         this.serviceConfig = {
             signer,
             operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
-            // TODO read from client, as we need to use production value in production environment (not ConfigTest)
-            theGraphUrl: CONFIG_TEST.contracts!.theGraphUrl!,
+            theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl,
             maxSponsorshipsInWithdraw: DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW,
             minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
         }
-        this.announceNodeToStreamService = new AnnounceNodeToStreamService(
-            streamrClient,
-            toEthereumAddress(this.pluginConfig.operatorContractAddress)
-        )
         this.fleetState = new OperatorFleetState(
             streamrClient,
             toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
         )
-        this.announceNodeToContractService = new AnnounceNodeToContractService(
-            streamrClient,
-            new AnnounceNodeToContractHelper(this.serviceConfig),
-            this.fleetState
-        )
-        const maintainOperatorPoolValueHelper = new MaintainOperatorPoolValueHelper(this.serviceConfig)
-        await scheduleAtInterval(
-            () => maintainOperatorPoolValue(
-                0.5,
-                maintainOperatorPoolValueHelper
-            ).catch((err) => {
-                logger.error('Encountered error while checking unwithdrawn earnings', { err })
-            }),
-            1000 * 60 * 60 * 24, // 1 day
-            true,
-            this.abortController.signal
-        )
-        this.operatorPoolValueBreachWatcher = new OperatorPoolValueBreachWatcher(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
             streamrClient,
             this.serviceConfig
@@ -96,24 +71,68 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
-        await this.announceNodeToStreamService.start()
         await this.inspectRandomNodeService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
-        await this.operatorPoolValueBreachWatcher.start()
+        const maintainOperatorPoolValueHelper = new MaintainOperatorPoolValueHelper(this.serviceConfig)
+        const announceNodeToContractHelper = new AnnounceNodeToContractHelper(this.serviceConfig!)
         await this.fleetState.start()
-        this.announceNodeToContractService.start().catch((err) => {
-            logger.fatal('Encountered fatal error in announceNodeToContractService', { err })
-            process.exit(1)
+        // start tasks in background so that operations which take significant amount of time (e.g. fleetState.waitUntilReady())
+        // don't block the startup of Broker
+        setImmediate(async () => {
+            setAbortableInterval(() => {
+                (async () => {
+                    await announceNodeToStream(
+                        toEthereumAddress(this.pluginConfig.operatorContractAddress), 
+                        streamrClient
+                    )
+                })()
+            }, DEFAULT_UPDATE_INTERVAL_IN_MS, this.abortController.signal)
+            await scheduleAtInterval(
+                () => maintainOperatorPoolValue(
+                    0.5,
+                    maintainOperatorPoolValueHelper
+                ).catch((err) => {
+                    logger.error('Encountered error while checking unwithdrawn earnings', { err })
+                }),
+                1000 * 60 * 60 * 24, // 1 day
+                true,
+                this.abortController.signal
+            )
+            await scheduleAtInterval(
+                async () => checkOperatorPoolValueBreach(
+                    maintainOperatorPoolValueHelper
+                ).catch((err) => {
+                    logger.warn('Encountered error', { err })
+                }),
+                1000 * 60 * 60, // 1 hour
+                true,
+                this.abortController.signal
+            )
+            await this.fleetState!.waitUntilReady()
+            const isLeader = await createIsLeaderFn(streamrClient, this.fleetState!, logger)
+            try {
+                await scheduleAtInterval(async () => {
+                    if (isLeader()) {
+                        await announceNodeToContract(
+                            24 * 60 * 60 * 1000,
+                            announceNodeToContractHelper,
+                            streamrClient
+                        )
+                    }
+                }, 10 * 60 * 1000, true, this.abortController.signal)
+            } catch (err) {
+                logger.fatal('Encountered fatal error in announceNodeToContract', { err })
+                process.exit(1)
+            }
         })
     }
 
     async stop(): Promise<void> {
         this.abortController.abort()
-        await this.announceNodeToStreamService!.stop()
+        this.fleetState!.destroy()
         await this.inspectRandomNodeService.stop()
         await this.voteOnSuspectNodeService!.stop()
-        await this.operatorPoolValueBreachWatcher!.stop()
     }
 
     // eslint-disable-next-line class-methods-use-this
