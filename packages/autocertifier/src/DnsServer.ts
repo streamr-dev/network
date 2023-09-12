@@ -165,6 +165,8 @@ export class DnsServer {
         const mixedCaseDomainName = parts[parts.length - 2] + '.' + parts[parts.length - 1]
 
         // @ts-ignore private field
+        logger.info('DNS packet type was 0x' + Number(question.type).toString(16))
+        // @ts-ignore private field
         if (question.type == Packet.TYPE.SOA) {
             return this.handleSOAQuery(mixedCaseDomainName, send, response)
             // @ts-ignore private field
