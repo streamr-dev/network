@@ -41,9 +41,9 @@ class AutoCertifier {
         await this.dnsServer.updateSubdomainIpAndPort(subdomain, ipAddress, port, token);
     }
     // ChallengeInterface implementation
-    async createChallenge(name, value) {
-        logger.info('creating challenge for ' + name + ' with value ' + value);
-        this.dnsServer.updateSubdomainAcmeChallenge(name, value);
+    async createChallenge(fqdn, value) {
+        logger.info('creating challenge for ' + fqdn + ' with value ' + value);
+        this.dnsServer.updateSubdomainAcmeChallenge(fqdn, value);
     }
     async deleteChallenge(_name) {
     }
@@ -99,7 +99,7 @@ class AutoCertifier {
         this.certificateCreator = new CertificateCreator_1.CertificateCreator(acmeDirectoryUrl, hmacKid, hmacKey, accountPrivateKeyPath, this);
         await this.certificateCreator.start();
         logger.info('certificate creator is running');
-        this.restServer = new RestServer_1.RestServer(restServerPort, this);
+        this.restServer = new RestServer_1.RestServer(ownIpAddress, restServerPort, this);
         await this.restServer.start();
         logger.info('rest server is running on port ' + restServerPort);
     }

@@ -143,7 +143,7 @@ export class AutoCertifier implements RestInterface {
         await this.certificateCreator.start()
         logger.info('certificate creator is running')
 
-        this.restServer = new RestServer(restServerPort, this)
+        this.restServer = new RestServer(ownIpAddress, restServerPort, this)
         await this.restServer.start()
         logger.info('rest server is running on port ' + restServerPort)
     }

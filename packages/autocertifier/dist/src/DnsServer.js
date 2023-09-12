@@ -81,6 +81,10 @@ class DnsServer {
             logger.info('handleCNAMEQuery() ' + mixedCaseName);
             await send(response);
         };
+        this.handleCAAQuery = async (mixedCaseName, send, response) => {
+            logger.info('handleCAAQuery() ' + mixedCaseName);
+            await send(response);
+        };
         this.handleNormalQuery = async (mixedCaseName, send, response) => {
             const name = mixedCaseName.toLowerCase();
             logger.info('handleNormalQuery() ' + name);
@@ -156,6 +160,10 @@ class DnsServer {
             }
             else if (question.type == dns2_1.Packet.TYPE.CNAME) {
                 return this.handleCNAMEQuery(mixedCaseName, send, response);
+                // @ts-ignore private field
+            }
+            else if (question.type == dns2_1.Packet.TYPE.CAA) {
+                return this.handleCAAQuery(mixedCaseName, send, response);
             }
             else {
                 return this.handleNormalQuery(mixedCaseName, send, response);
@@ -168,8 +176,9 @@ class DnsServer {
     async updateSubdomainIpAndPort(subdomain, ipAddress, port, token) {
         await this.db.updateSubdomainIpAndPort(subdomain, ipAddress, port, token);
     }
-    async updateSubdomainAcmeChallenge(subdomain, acmeChallenge) {
-        await this.db.updateSubdomainAcmeChallenge(subdomain, acmeChallenge);
+    async updateSubdomainAcmeChallenge(fqdn, acmeChallenge) {
+        const parts = fqdn.split('.');
+        await this.db.updateSubdomainAcmeChallenge(parts[0], acmeChallenge);
     }
     async start() {
         this.server = (0, dns2_1.createServer)({

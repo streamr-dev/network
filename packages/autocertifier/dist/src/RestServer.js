@@ -11,7 +11,8 @@ const errors_1 = require("./errors");
 const body_parser_1 = __importDefault(require("body-parser"));
 const logger = new utils_1.Logger(module);
 class RestServer {
-    constructor(port, engine) {
+    constructor(ownIpAddress, port, engine) {
+        this.ownIpAddress = ownIpAddress;
         this.port = port;
         this.engine = engine;
         this.extractIpAndPort = (req) => {
@@ -38,6 +39,7 @@ class RestServer {
                     return undefined;
                 }
             }
+            logger.info('extracted ip: ' + ip + ' port: ' + port + ' from request');
             return { ip: '' + ip, port: '' + port };
         };
     }
@@ -150,7 +152,7 @@ class RestServer {
                     sendError(res, err);
                 }
             });
-            this.server = app.listen(this.port, () => {
+            this.server = app.listen(parseInt(this.port), this.ownIpAddress, () => {
                 logger.info('Rest server is running on port ' + this.port);
                 resolve();
             });

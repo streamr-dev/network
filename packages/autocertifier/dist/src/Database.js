@@ -79,7 +79,7 @@ class Database {
         logger.info('Subdomain ip and port updated');
     }
     async updateSubdomainAcmeChallenge(subdomain, acmeChallenge) {
-        logger.info('Updating subdomain acme challenge for ' + subdomain);
+        logger.info('Updating subdomain acme challenge' + acmeChallenge + '  for ' + subdomain);
         try {
             await this.updateSubdomainAcmeChallengeStatement.run(acmeChallenge, subdomain);
         }

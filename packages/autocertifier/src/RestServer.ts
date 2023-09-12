@@ -15,7 +15,7 @@ export class RestServer {
 
     private server?: ServerType
 
-    constructor(private port: string, private engine: RestInterface) {
+    constructor(private ownIpAddress: string, private port: string, private engine: RestInterface) {
     }
 
     private extractIpAndPort = (req: express.Request): { ip: string, port: string } | undefined => {
@@ -43,6 +43,8 @@ export class RestServer {
             }
         }
 
+        logger.info('extracted ip: ' + ip + ' port: ' + port + ' from request')
+        
         return { ip: '' + ip, port: '' + port }
     }
 
@@ -176,7 +178,7 @@ export class RestServer {
                 }
             })
 
-            this.server = app.listen(this.port, () => {
+            this.server = app.listen(parseInt(this.port), this.ownIpAddress, () => {
                 logger.info('Rest server is running on port ' + this.port)
                 resolve()
             })
