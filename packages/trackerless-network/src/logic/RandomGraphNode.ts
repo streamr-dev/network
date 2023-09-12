@@ -194,12 +194,13 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     }
 
     private updateNearbyNodeView(nodes: PeerDescriptor[]) {
-        if (nodes.length < this.config.nodeViewSize) {
+        const uniqueNodes = new Set(nodes)
+        if (uniqueNodes.size < this.config.nodeViewSize) {
             this.config.layer1.getKBucketPeers().forEach((descriptor) => {
-                nodes.push(descriptor)
+                uniqueNodes.add(descriptor)
             })
         }
-        this.config.nearbyNodeView.replaceAll(nodes.map((descriptor) =>
+        this.config.nearbyNodeView.replaceAll(Array.from(uniqueNodes).map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,
