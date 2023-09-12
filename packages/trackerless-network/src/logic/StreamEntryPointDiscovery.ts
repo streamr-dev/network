@@ -134,11 +134,11 @@ export class StreamEntryPointDiscovery {
 
     async storeSelfAsEntryPointIfNecessary(
         streamPartId: StreamPartID,
-        joiningEmptyStream: boolean,
+        avoidNetworkSplit: boolean,
         entryPointsFromDht: boolean,
         currentEntrypointCount: number
     ): Promise<void> {
-        if (joiningEmptyStream) {
+        if (avoidNetworkSplit) {
             await this.storeSelfAsEntryPoint(streamPartId)
             setImmediate(() => this.avoidNetworkSplit(streamPartId))
         } else if (entryPointsFromDht && currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) {
