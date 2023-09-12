@@ -2,7 +2,7 @@ import { Message, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '.
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
-import { Logger, raceEvents3 } from '@streamr/utils'
+import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DuplicateDetector } from './DuplicateDetector'
@@ -122,15 +122,23 @@ export class Router implements IRouter {
         try {
             // eslint-disable-next-line promise/catch-or-return
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
-            raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped', 'noCandidatesFound'], 10000)
-                .then(() => {
+            let eventReceived: Promise<unknown>
+            executeSafePromise(async () => {
+                eventReceived = raceEvents3<RoutingSessionEvents>(
+                    session,
+                    ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped', 'noCandidatesFound'],
+                    null
+                )
+            })
+            setImmediate(async () => {
+                try {
+                    await withTimeout(eventReceived, 10000)
                     logger.trace('raceEvents ended from routingSession: ' + session.sessionId)
-                    this.removeRoutingSession(session.sessionId)
-                })
-                .catch(() => {
+                } catch (e) {
                     logger.trace('raceEvents timed out for routingSession ' + session.sessionId) 
-                    this.removeRoutingSession(session.sessionId) 
-                })
+                }
+                this.removeRoutingSession(session.sessionId) 
+            })
             session.start()
         } catch (e) {
             if (peerIdFromPeerDescriptor(routedMessage.sourcePeer!).equals(this.ownPeerId)) {
