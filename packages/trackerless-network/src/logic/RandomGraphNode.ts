@@ -194,19 +194,25 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     }
 
     private updateNearbyNodeView(nodes: PeerDescriptor[]) {
-        const uniqueNodes = new Set(nodes)
-        if (uniqueNodes.size < this.config.nodeViewSize) {
-            this.config.layer1.getKBucketPeers().forEach((descriptor) => {
-                uniqueNodes.add(descriptor)
-            })
-        }
-        this.config.nearbyNodeView.replaceAll(Array.from(uniqueNodes).map((descriptor) =>
+        this.config.nearbyNodeView.replaceAll(Array.from(nodes).map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.config.randomGraphId,
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
+        for (const descriptor of this.config.layer1.getKBucketPeers()) {
+            if (this.config.nearbyNodeView.size() < this.config.nodeViewSize) {
+                break
+            }
+            this.config.nearbyNodeView.add(
+                new RemoteRandomGraphNode(
+                    descriptor,
+                    this.config.randomGraphId,
+                    toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                )
+            )
+        }
     }
 
     private newRandomContact(_newDescriptor: PeerDescriptor, randomNodes: PeerDescriptor[]): void {
