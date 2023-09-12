@@ -103,7 +103,6 @@ describe('StreamEntryPointDiscovery', () => {
 
     it('discoverEntryPointsFromDht has known entrypoints', async () => {
         const res = await streamEntryPointDiscoveryWithData.discoverEntryPointsFromDht(streamPartId, 1)
-        expect(res.joiningEmptyStream).toEqual(false)
         expect(res.entryPointsFromDht).toEqual(false)
         expect(res.discoveredEntryPoints).toEqual([])
     })
@@ -116,7 +115,6 @@ describe('StreamEntryPointDiscovery', () => {
 
     it('discoverEntryPointsfromDht on an empty stream', async () => {
         const res = await streamEntryPointDiscoveryWithoutData.discoverEntryPointsFromDht(streamPartId, 0)
-        expect(res.joiningEmptyStream).toEqual(true)
         expect(res.entryPointsFromDht).toEqual(true)
         expect(res.discoveredEntryPoints.length).toBe(1)
         expect(isSamePeerDescriptor(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)  // ownPeerDescriptor

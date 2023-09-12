@@ -19,7 +19,6 @@ const parseEntryPointData = (dataEntries: DataEntry[]): PeerDescriptor[] => {
 }
 
 interface FindEntryPointsResult {
-    joiningEmptyStream: boolean
     entryPointsFromDht: boolean
     discoveredEntryPoints: PeerDescriptor[]
 }
@@ -85,19 +84,15 @@ export class StreamEntryPointDiscovery {
     ): Promise<FindEntryPointsResult> {
         if (knownEntryPointCount > 0) {
             return {
-                joiningEmptyStream: false,
                 entryPointsFromDht: false,
                 discoveredEntryPoints: []
             }
         }
-        let joiningEmptyStream = false
         const discoveredEntryPoints = await this.discoverEntryPoints(streamPartId, forwardingNode)
         if (discoveredEntryPoints.length === 0) {
-            joiningEmptyStream = true
             discoveredEntryPoints.push(this.config.ownPeerDescriptor)
         }
         return {
-            joiningEmptyStream,
             discoveredEntryPoints,
             entryPointsFromDht: true
         }
