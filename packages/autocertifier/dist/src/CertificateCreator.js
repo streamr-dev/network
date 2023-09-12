@@ -70,11 +70,11 @@ class CertificateCreator {
     async createCertificate(fqdn) {
         logger.info(`Creating certificate for ${fqdn}`);
         logger.info('Creating acme client');
+        const wasNewKeyCreated = await this.createPrivateKey();
         const clientOptions = {
             directoryUrl: this.acmeDirectoryUrl,
             accountKey: this.accountPrivateKey
         };
-        const wasNewKeyCreated = await this.createPrivateKey();
         if (wasNewKeyCreated) {
             clientOptions.externalAccountBinding = {
                 kid: this.hmacKid,
@@ -111,6 +111,7 @@ class CertificateCreator {
         logger.info(`Certificate:\n${cert.toString()}`);
         return { cert: cert.toString(), key: key.toString() };
     }
+    // eslint-disable-next-line class-methods-use-this
     async start() {
     }
 }

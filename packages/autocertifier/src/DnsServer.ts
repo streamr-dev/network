@@ -65,6 +65,8 @@ export class DnsServer {
         response: DnsResponse): Promise<void> => {
 
         const name = mixedCaseName.toLowerCase()
+        logger.info('handleTextQuery() ' + name)
+
         const parts = name.split('.')
 
         if (parts.length < 4 || parts[0] !== '_acme-challenge') {
@@ -78,7 +80,9 @@ export class DnsServer {
         let subdomainRecord: Subdomain | undefined
         try {
             subdomainRecord = await this.db.getSubdomain(subdomain)
-        } catch (e) { }
+        } catch (e) {
+            logger.error('handleTextQuery exception, subdomain record not found ' + e)
+        }
 
         if (!subdomainRecord) {
             // @ts-ignore private field
@@ -88,6 +92,7 @@ export class DnsServer {
 
         const acmeChallenge = subdomainRecord.acmeChallenge
 
+        logger.info('handleTextQuery() sending back acme challenge ' + acmeChallenge + ' for ' + mixedCaseName)
         response.answers.push({
             name: mixedCaseName,
             type: Packet.TYPE.TXT,
@@ -99,14 +104,26 @@ export class DnsServer {
         await send(response)
     }
 
+    private handleAAAAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
+        response: DnsResponse): Promise<void> => {
+        logger.info('handleAAAAQuery() ' + mixedCaseName) 
+        await send(response)
+    }
+
+    private handleCNAMEQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
+        response: DnsResponse): Promise<void> => {
+        logger.info('handleCNAMEQuery() ' + mixedCaseName)
+        await send(response)
+    }
+
     private handleNormalQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
 
         const name = mixedCaseName.toLowerCase()
         logger.info('handleNormalQuery() ' + name)
-        
+
         const parts = name.split('.')
-        
+
         if (parts.length < 3) {
             // @ts-ignore private field
             response.header.rcode = 3
@@ -122,7 +139,7 @@ export class DnsServer {
             let subdomainRecord: Subdomain | undefined
             try {
                 subdomainRecord = await this.db.getSubdomain(subdomain)
-            } catch (e) { 
+            } catch (e) {
                 logger.error('handleNormalQuery exception')
             }
 
@@ -165,7 +182,7 @@ export class DnsServer {
         const mixedCaseDomainName = parts[parts.length - 2] + '.' + parts[parts.length - 1]
 
         // @ts-ignore private field
-        logger.info('DNS packet type was 0x' + Number(question.type).toString(16))
+        logger.info(mixedCaseDomainName+ ' question type 0x' + Number(question.type).toString(16))
         // @ts-ignore private field
         if (question.type == Packet.TYPE.SOA) {
             return this.handleSOAQuery(mixedCaseDomainName, send, response)
@@ -175,6 +192,12 @@ export class DnsServer {
             // @ts-ignore private field
         } else if (question.type == Packet.TYPE.TXT) {
             return this.handleTextQuery(mixedCaseName, send, response)
+            // @ts-ignore private field
+        } else if (question.type == Packet.TYPE.AAAA) {
+            return this.handleAAAAQuery(mixedCaseName, send, response)
+            // @ts-ignore private field
+        } else if (question.type == Packet.TYPE.CNAME) {
+            return this.handleCNAMEQuery(mixedCaseName, send, response)
         } else {
             return this.handleNormalQuery(mixedCaseName, send, response)
         }

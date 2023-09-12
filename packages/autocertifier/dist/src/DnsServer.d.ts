@@ -13,6 +13,8 @@ export declare class DnsServer {
     private handleSOAQuery;
     private handleNSQuery;
     private handleTextQuery;
+    private handleAAAAQuery;
+    private handleCNAMEQuery;
     private handleNormalQuery;
     private handleQuery;
     start(): Promise<void>;
