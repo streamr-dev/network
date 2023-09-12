@@ -4,7 +4,8 @@ import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { createStreamMessage } from '../utils/utils'
-import { hexToBinary, waitForCondition } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('Joining streams on offline nodes', () => {
     const streamPartId = StreamPartIDUtils.parse('stream#0')
@@ -95,7 +96,7 @@ describe('Joining streams on offline nodes', () => {
         
         await node1.getStreamrNode().subscribeToStream(streamPartId)
         await node1.getStreamrNode().on('newMessage', () => {numOfMessages += 1})
-        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), streamPartId, hexToBinary('0x1111'))
+        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), streamPartId, randomEthereumAddress())
         await node2.getStreamrNode().publishToStream(streamPartId, msg)
         await waitForCondition(() => numOfMessages === 1, 30000)
     }, 30000)

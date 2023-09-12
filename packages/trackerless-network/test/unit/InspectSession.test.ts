@@ -1,9 +1,9 @@
-import { PeerID } from '@streamr/dht'
 import { InspectSession, Events } from '../../src/logic/inspect/InspectSession'
 import { MessageID } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent3 } from '../../../utils/dist/src/waitForEvent3'
 import { utf8ToBinary } from '@streamr/utils'
 import { NodeID } from '../../src/identifiers'
+import { createRandomNodeId } from '../utils/utils'
 
 describe('InspectSession', () => {
 
@@ -31,8 +31,8 @@ describe('InspectSession', () => {
     }
 
     beforeEach(() => {
-        inspectedNode = PeerID.fromString('inspectedNode').toKey() as unknown as NodeID
-        anotherNode = PeerID.fromString('anotherNode').toKey() as unknown as NodeID
+        inspectedNode = createRandomNodeId()
+        anotherNode = createRandomNodeId()
         inspectSession = new InspectSession({
             inspectedNode
         })

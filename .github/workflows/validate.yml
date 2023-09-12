@@ -17,7 +17,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v4
       - name: build
         uses: ./.github/workflows/reusable/cached-build
       - run: npm run versions
@@ -70,7 +70,7 @@ jobs:
       command: |
         npm run test-unit
         npm run test-integration
-        npm run test-e2e
+        npm run test-end-to-end
   trackerless-network-browser:
     needs: build
     uses: ./.github/workflows/test-setup.yml

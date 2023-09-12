@@ -29,8 +29,8 @@ export class RemoteWebrtcConnector {
             connectionId
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            sourceDescriptor: sourceDescriptor,
+            targetDescriptor: this.peerDescriptor,
             notification: true
         }
 
@@ -47,8 +47,8 @@ export class RemoteWebrtcConnector {
             description
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            sourceDescriptor: sourceDescriptor,
+            targetDescriptor: this.peerDescriptor,
         }
 
         this.client.rtcOffer(request, options).catch((_e) => {
@@ -64,8 +64,8 @@ export class RemoteWebrtcConnector {
             description
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            sourceDescriptor: sourceDescriptor,
+            targetDescriptor: this.peerDescriptor,
         }
 
         this.client.rtcAnswer(request, options).catch((_e) => {
@@ -82,8 +82,8 @@ export class RemoteWebrtcConnector {
             candidate
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            sourceDescriptor: sourceDescriptor,
+            targetDescriptor: this.peerDescriptor,
         }
         this.client.iceCandidate(request, options).catch((_e) => {
             logger.trace('Failed to send iceCandidate')

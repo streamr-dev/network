@@ -14,8 +14,8 @@ export class RemoteProxyServer extends Remote<IProxyConnectionRpcClient> {
     async requestConnection(ownPeerDescriptor: PeerDescriptor, direction: ProxyDirection, userId: EthereumAddress): Promise<boolean> {
         const streamPartId = StreamPartIDUtils.parse(this.graphId)
         const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
+            sourceDescriptor: ownPeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor,
             timeout: 5000
         }
         const request: ProxyConnectionRequest = {

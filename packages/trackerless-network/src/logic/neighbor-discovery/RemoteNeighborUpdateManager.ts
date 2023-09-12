@@ -16,8 +16,8 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
 
     async updateNeighbors(ownPeerDescriptor: PeerDescriptor, neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
         const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
+            sourceDescriptor: ownPeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor,
         }
         const request: NeighborUpdate = {
             senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
@@ -28,7 +28,7 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
         try {
             const response = await this.client.neighborUpdate(request, options)
             return {
-                peerDescriptors: response.neighborDescriptors!,
+                peerDescriptors: response.neighborDescriptors,
                 removeMe: response.removeMe
             }
         } catch (err: any) {

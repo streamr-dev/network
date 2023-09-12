@@ -1,12 +1,12 @@
 /* eslint-disable no-console */
 
-import { PeerID, LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
+import { LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
 import fs from 'fs'
-import { createNetworkNodeWithSimulator } from '../utils/utils'
+import { createNetworkNodeWithSimulator, createRandomNodeId } from '../utils/utils'
 import { NetworkNode } from '../../src/NetworkNode'
 import { PeerDescriptor } from '../../../dht/src/exports'
 import { StreamMessage, toStreamID, MessageID, StreamPartIDUtils, StreamMessageType, toStreamPartID, StreamPartID } from '@streamr/protocol'
-import { waitForEvent3 } from '@streamr/utils'
+import { hexToBinary, waitForEvent3 } from '@streamr/utils'
 import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
 
 const numNodes = 10000
@@ -24,9 +24,8 @@ const prepareLayer0 = async () => {
     console.log('Preparing network')
     nodes = []
     simulator = new Simulator(LatencyType.REAL)
-    const entryPointId = PeerID.generateRandom()
     const peerDescriptor = {
-        kademliaId: entryPointId.value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         region: getRandomRegion(),
         type: 0,
         nodeName: 'entrypoint'
@@ -41,9 +40,8 @@ const prepareLayer0 = async () => {
 
 const prepareStream = async (streamId: string) => {
     console.log('Preparing stream ')
-    const publisherId = PeerID.generateRandom()
     const peerDescriptor = {
-        kademliaId: publisherId.value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         region: getRandomRegion(),
         type: 0,
         nodeName: streamId
@@ -65,14 +63,14 @@ const shutdownNetwork = async () => {
 }
 
 const measureJoiningTime = async (count: number) => {
-    const nodeId = PeerID.generateRandom()
+    const nodeId = createRandomNodeId()
     const peerDescriptor = {
-        kademliaId: nodeId.value,
+        kademliaId: hexToBinary(nodeId),
         type: 0,
         region: getRandomRegion(),
         nodeName: `${count}`
     }
-    console.log('starting node with id ', nodeId.toKey())
+    console.log('starting node with id ', nodeId)
 
     // start publishing ons stream
     const stream = Array.from(streams.keys())[Math.floor(Math.random() * streams.size)]
@@ -93,7 +91,7 @@ const measureJoiningTime = async (count: number) => {
                 hello: 'world'
             },
             messageType: StreamMessageType.MESSAGE,
-            signature: '0x1111',
+            signature: hexToBinary('0x1234'),
         })
         streams.get(stream)!.publish(streamMessage)
     }, 1000)

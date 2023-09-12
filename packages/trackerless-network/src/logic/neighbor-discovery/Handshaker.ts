@@ -22,8 +22,8 @@ interface HandshakerConfig {
     randomGraphId: string
     connectionLocker: ConnectionLocker
     targetNeighbors: NodeList
-    nearbyContactPool: NodeList
-    randomContactPool: NodeList
+    nearbyNodeView: NodeList
+    randomNodeView: NodeList
     rpcCommunicator: RpcCommunicator
     N: number
 }
@@ -65,10 +65,10 @@ export class Handshaker implements IHandshaker {
     }
 
     public async attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]> {
-        if (this.config.targetNeighbors!.size() + this.ongoingHandshakes.size < this.config.N - 2) {
+        if (this.config.targetNeighbors.size() + this.ongoingHandshakes.size < this.config.N - 2) {
             logger.trace(`Attempting parallel handshakes with ${PARALLEL_HANDSHAKE_COUNT} targets`)
             return this.selectParallelTargetsAndHandshake(excludedIds)
-        } else if (this.config.targetNeighbors!.size() + this.ongoingHandshakes.size < this.config.N) {
+        } else if (this.config.targetNeighbors.size() + this.ongoingHandshakes.size < this.config.N) {
             logger.trace(`Attempting handshake with new target`)
             return this.selectNewTargetAndHandshake(excludedIds)
         }
@@ -83,9 +83,9 @@ export class Handshaker implements IHandshaker {
     }
 
     private selectParallelTargets(excludedIds: NodeID[]): RemoteHandshaker[] {
-        const targetNeighbors = this.config.nearbyContactPool.getClosestAndFurthest(excludedIds)
-        while (targetNeighbors.length < PARALLEL_HANDSHAKE_COUNT && this.config.randomContactPool.size(excludedIds) > 0) {
-            const random = this.config.randomContactPool.getRandom(excludedIds)
+        const targetNeighbors = this.config.nearbyNodeView.getClosestAndFurthest(excludedIds)
+        while (targetNeighbors.length < PARALLEL_HANDSHAKE_COUNT && this.config.randomNodeView.size(excludedIds) > 0) {
+            const random = this.config.randomNodeView.getRandom(excludedIds)
             if (random) {
                 targetNeighbors.push(random)
             }
@@ -111,7 +111,7 @@ export class Handshaker implements IHandshaker {
 
     private async selectNewTargetAndHandshake(excludedIds: NodeID[]): Promise<NodeID[]> {
         const exclude = excludedIds.concat(this.config.targetNeighbors.getIds())
-        const targetNeighbor = this.config.nearbyContactPool.getClosest(exclude) ?? this.config.randomContactPool.getRandom(exclude)
+        const targetNeighbor = this.config.nearbyNodeView.getClosest(exclude) ?? this.config.randomNodeView.getRandom(exclude)
         if (targetNeighbor) {
             const accepted = await this.handshakeWithTarget(this.createRemoteHandshaker(targetNeighbor.getPeerDescriptor()))
             if (!accepted) {
@@ -170,7 +170,7 @@ export class Handshaker implements IHandshaker {
         return new RemoteRandomGraphNode(
             targetPeerDescriptor,
             this.config.randomGraphId,
-            toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator!.getRpcClientTransport()))
+            toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
         )
     }
 

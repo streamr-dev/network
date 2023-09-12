@@ -5,19 +5,33 @@ import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { NodeID } from './identifiers'
+import { pull } from 'lodash'
 
-/*
-Convenience wrapper for building client-facing functionality. Used by client.
-*/
+export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
+    return new NetworkNode(new NetworkStack(opts))
+}
+
+/**
+ * Convenience wrapper for building client-facing functionality. Used by client.
+ */
 
 export class NetworkNode {
 
     readonly stack: NetworkStack
-    private readonly options: NetworkOptions
+    private readonly messageListeners: ((msg: StreamMessage<any>) => void)[] = []
     private stopped = false
-    constructor(opts: NetworkOptions) {
-        this.options = opts
-        this.stack = new NetworkStack(opts)
+
+    /** @internal */
+    constructor(stack: NetworkStack) {
+        this.stack = stack
+        this.stack.getStreamrNode().on('newMessage', (msg) => {
+            if (this.messageListeners.length > 0) {
+                const translated = StreamMessageTranslator.toClientProtocol<any>(msg)
+                for (const listener of this.messageListeners) {
+                    listener(translated)
+                }
+            }
+        })
     }
 
     async start(doJoin?: boolean): Promise<void> {
@@ -59,17 +73,11 @@ export class NetworkNode {
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
-        if (this.options.networkNode.acceptProxyConnections) {
-            throw new Error('cannot set proxies when acceptProxyConnections=true')
-        }
         await this.stack.getStreamrNode().setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
     }
 
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
-        this.stack.getStreamrNode().on('newMessage', (msg) => {
-            const translated = StreamMessageTranslator.toClientProtocol<T>(msg)
-            return cb(translated)
-        })
+        this.messageListeners.push(cb)
     }
 
     setStreamPartEntryPoints(streamPartId: StreamPartID, contactPeerDescriptors: PeerDescriptor[]): void {
@@ -80,10 +88,7 @@ export class NetworkNode {
         if (this.stopped) {
             return
         }
-        this.stack.getStreamrNode().off('newMessage', (msg) => {
-            const translated = StreamMessageTranslator.toClientProtocol<T>(msg)
-            return cb(translated)
-        })
+        pull(this.messageListeners, cb)
     }
 
     async subscribeAndWaitForJoin(

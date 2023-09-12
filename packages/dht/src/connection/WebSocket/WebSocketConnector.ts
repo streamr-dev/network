@@ -103,7 +103,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             })
             const port = await this.webSocketServer.start(this.portRange!, this.host)
             this.selectedPort = port
-            this.connectivityChecker = new ConnectivityChecker(this.selectedPort!)
+            this.connectivityChecker = new ConnectivityChecker(this.selectedPort)
         }
     }
 
@@ -163,7 +163,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
             const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
                 ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
-            managedConnection.setPeerDescriptor(targetPeerDescriptor!)
+            managedConnection.setPeerDescriptor(targetPeerDescriptor)
 
             this.connectingConnections.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
 
