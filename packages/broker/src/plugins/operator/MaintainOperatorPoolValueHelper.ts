@@ -1,5 +1,5 @@
-import { BigNumber, Contract } from 'ethers'
-import { Operator, StreamrConfig, operatorABI, streamrConfigABI } from '@streamr/network-contracts'
+import { Contract } from 'ethers'
+import { Operator, operatorABI } from '@streamr/network-contracts'
 import { OperatorServiceConfig } from './OperatorPlugin'
 import { EthereumAddress } from 'streamr-client'
 import { Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
@@ -7,8 +7,6 @@ import fetch from 'node-fetch'
 import sample from 'lodash/sample'
 
 const logger = new Logger(module)
-
-const ONE_ETHER = BigInt(1e18)
 
 interface UnwithdrawnEarningsData {
     sponsorshipAddresses: EthereumAddress[]
@@ -49,7 +47,7 @@ export class MaintainOperatorPoolValueHelper {
      */
     async getUnwithdrawnEarningsOf(operatorContractAddress: EthereumAddress): Promise<UnwithdrawnEarningsData> {
         const operator = new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
-        const minSponsorshipEarningsInWithdrawWei = BigNumber.from(this.config.minSponsorshipEarningsInWithdraw ?? 0)
+        const minSponsorshipEarningsInWithdrawWei = BigInt(this.config.minSponsorshipEarningsInWithdraw ?? 0)
         const {
             addresses: allSponsorshipAddresses,
             earnings,
@@ -57,15 +55,16 @@ export class MaintainOperatorPoolValueHelper {
         } = await operator.getSponsorshipsAndEarnings()
 
         const sponsorships = allSponsorshipAddresses
-            .map((address, i) => ({ address, earnings: earnings[i] }))
-            .filter((sponsorship) => sponsorship.earnings.gte(minSponsorshipEarningsInWithdrawWei))
-            .sort((a, b) => Number(b.earnings.sub(a.earnings).toBigInt())) // TODO: after Node 20, use .toSorted() instead
+            .map((address, i) => ({ address, earnings: earnings[i].toBigInt() }))
+            .filter((sponsorship) => sponsorship.earnings >= minSponsorshipEarningsInWithdrawWei)
+            .sort((a, b) => Number(b.earnings - a.earnings)) // TODO: after Node 20, use .toSorted() instead
             .slice(0, this.config.maxSponsorshipsInWithdraw) // take all if maxSponsorshipsInWithdraw is undefined
-        const sponsorshipAddresses = sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address))
 
-        const sumDataWei = sponsorships.reduce((sum, sponsorship) => sum.add(sponsorship.earnings), 0n).toBigInt()
-
-        return { sponsorshipAddresses, sumDataWei, rewardThresholdDataWei: rewardThreshold.toBigInt() }
+        return {
+            sponsorshipAddresses: sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address)),
+            sumDataWei: sponsorships.reduce((sum, sponsorship) => sum += sponsorship.earnings, 0n),
+            rewardThresholdDataWei: rewardThreshold.toBigInt()
+        }
     }
 
     async getMyUnwithdrawnEarnings(): Promise<UnwithdrawnEarningsData> {
