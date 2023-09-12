@@ -14,7 +14,7 @@ interface NeighborUpdateManagerConfig {
     ownNodeId: NodeID
     randomGraphId: string
     targetNeighbors: NodeList
-    nearbyContactPool: NodeList
+    nearbyNodeView: NodeList
     neighborFinder: INeighborFinder
     rpcCommunicator: ListeningRpcCommunicator
 }
@@ -35,7 +35,7 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
                     const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
                     return nodeId !== this.config.ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
                 })
-            newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyContactPool.add(
+            newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
                 new RemoteRandomGraphNode(
                     peerDescriptor,
                     this.config.randomGraphId,

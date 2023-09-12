@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@types/lodash": "^4.14.197",
+    "@types/lodash": "^4.14.198",
     "@types/yallist": "^4.0.1",
     "commander": "^11.0.0",
     "expect": "^29.6.2",

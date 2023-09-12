@@ -4,7 +4,6 @@ import { MaintainOperatorPoolValueHelper } from './MaintainOperatorPoolValueHelp
 const logger = new Logger(module)
 
 export const checkOperatorPoolValueBreach = async (
-    driftLimitFraction: bigint,
     helper: MaintainOperatorPoolValueHelper
 ): Promise<void> => {
     const targetOperatorAddress = await helper.getRandomOperator()
@@ -13,11 +12,11 @@ export const checkOperatorPoolValueBreach = async (
         return
     }
     logger.info('Check unwithdrawn earnings', { targetOperatorAddress })
-    const { fraction, sponsorshipAddresses } = await helper.getUnwithdrawnEarningsOf(targetOperatorAddress)
-    logger.trace(` -> is ${fraction} > ${driftLimitFraction}?`)
-    if (fraction > driftLimitFraction) {
+    const { sumDataWei, rewardThresholdDataWei, sponsorshipAddresses } = await helper.getUnwithdrawnEarningsOf(targetOperatorAddress)
+    logger.trace(` -> is ${sumDataWei} > ${rewardThresholdDataWei}?`)
+    if (sumDataWei > rewardThresholdDataWei) {
         logger.info('Withdraw earnings from sponsorships (target operator value in breach)',
-            { targetOperatorAddress, sponsorshipAddresses, fraction, driftLimitFraction })
+            { targetOperatorAddress, sponsorshipAddresses, sumDataWei, rewardThresholdDataWei })
         await helper.triggerWithdraw(targetOperatorAddress, sponsorshipAddresses)
     }
 }

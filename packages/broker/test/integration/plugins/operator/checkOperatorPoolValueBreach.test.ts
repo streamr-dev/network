@@ -67,7 +67,6 @@ describe('checkOperatorPoolValueBreach', () => {
         logger.debug('Waiting until above', { allowedDifference })
         await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > allowedDifference, 10000, 1000)
         await checkOperatorPoolValueBreach(
-            await helper.getDriftLimitFraction(),
             helper
         )
 
