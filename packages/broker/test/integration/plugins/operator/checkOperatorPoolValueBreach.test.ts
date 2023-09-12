@@ -1,6 +1,6 @@
 import { Contract } from '@ethersproject/contracts'
 import { parseEther } from '@ethersproject/units'
-import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
+import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { MaintainOperatorPoolValueHelper } from '../../../../src/plugins/operator/MaintainOperatorPoolValueHelper'
 import { checkOperatorPoolValueBreach } from '../../../../src/plugins/operator/checkOperatorPoolValueBreach'
@@ -15,12 +15,16 @@ import {
     sponsor,
     stake
 } from './contractUtils'
-import { getTotalUnwithdrawnEarnings } from './operatorPoolValueUtils'
 
 const logger = new Logger(module)
 
 const STREAM_CREATION_KEY = '0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7'
 const ONE_ETHER = BigInt(1e18)
+
+const getEarnings = async (operatorContract: Operator): Promise<bigint> => {
+    const { earnings } = await operatorContract.getSponsorshipsAndEarnings()
+    return earnings[0].toBigInt()
+}
 
 describe('checkOperatorPoolValueBreach', () => {
 
@@ -65,13 +69,13 @@ describe('checkOperatorPoolValueBreach', () => {
         }
 
         logger.debug('Waiting until above', { allowedDifference })
-        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > allowedDifference, 10000, 1000)
+        await waitForCondition(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
         await checkOperatorPoolValueBreach(
             helper
         )
 
-        const unwithdrawnEarnings = await getTotalUnwithdrawnEarnings(operatorContract)
-        expect(unwithdrawnEarnings).toBeLessThan(allowedDifference)
+        const earnings = await getEarnings(operatorContract)
+        expect(earnings).toBeLessThan(allowedDifference)
         const poolValueAfterWithdraw = await operatorContract.getApproximatePoolValue()
         expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
 
