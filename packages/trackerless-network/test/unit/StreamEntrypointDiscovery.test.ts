@@ -82,8 +82,7 @@ describe('StreamEntryPointDiscovery', () => {
             getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
-            cacheInterval: 2000,
-            networkSplitAvoidanceLimit: 4
+            cacheInterval: 2000
         })
         streamEntryPointDiscoveryWithoutData = new StreamEntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
@@ -92,8 +91,7 @@ describe('StreamEntryPointDiscovery', () => {
             getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
-            cacheInterval: 2000,
-            networkSplitAvoidanceLimit: 4
+            cacheInterval: 2000
         })
     })
 

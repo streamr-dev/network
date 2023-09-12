@@ -19,7 +19,7 @@ import {
 import { uniq } from 'lodash'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { sampleSize } from 'lodash'
-import { StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
+import { NETWORK_SPLIT_AVOIDANCE_LIMIT, StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
 import { ILayer0 } from './ILayer0'
 import { createRandomGraphNode } from './createRandomGraphNode'
 import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
@@ -95,8 +95,6 @@ export interface StreamrNodeConfig {
     acceptProxyConnections?: boolean
 }
 
-const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
-
 export class StreamrNode extends EventEmitter<Events> {
     private P2PTransport?: ITransport
     private connectionLocker?: ConnectionLocker
@@ -138,8 +136,7 @@ export class StreamrNode extends EventEmitter<Events> {
             getEntryPointData: (key) => this.layer0!.getDataFromDht(key),
             getEntryPointDataViaNode: (key, node) => this.layer0!.findDataViaPeer(key, node),
             storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data),
-            deleteEntryPointData: (key) => this.layer0!.deleteDataFromDht(key),
-            networkSplitAvoidanceLimit: NETWORK_SPLIT_AVOIDANCE_LIMIT
+            deleteEntryPointData: (key) => this.layer0!.deleteDataFromDht(key)
         })
         cleanUp = () => this.destroy()
     }
@@ -208,7 +205,6 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         logger.debug(`Joining stream ${streamPartId}`)
         const knownEntryPoints = this.knownStreamEntryPoints.get(streamPartId) ?? []
-        const enableRejoins = knownEntryPoints.length > 0
         let entryPoints = knownEntryPoints.concat(knownEntryPoints)
         const [layer1, layer2] = this.createStream(streamPartId, knownEntryPoints)
         await layer1.start()
@@ -220,7 +216,7 @@ export class StreamrNode extends EventEmitter<Events> {
             forwardingNode
         )
         entryPoints = knownEntryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT), false, enableRejoins)
+        await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT), false, knownEntryPoints.length > 0)
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
             layer1.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT,

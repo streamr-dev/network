@@ -88,17 +88,17 @@ describe('Joining streams on offline nodes', () => {
     })
 
     it('should recover if discovered nodes are offline', async () => {
-        let numOfMessages = 0
+        let messageReceived = false
 
         // store invalid peer descriptors to DHT
         await entryPoint.getLayer0DhtNode().storeDataToDht(streamPartIdToDataKey(streamPartId), Any.pack(offlineDescriptor1, PeerDescriptor))
         await entryPoint.getLayer0DhtNode().storeDataToDht(streamPartIdToDataKey(streamPartId), Any.pack(offlineDescriptor2, PeerDescriptor))
         
         await node1.getStreamrNode().subscribeToStream(streamPartId)
-        await node1.getStreamrNode().on('newMessage', () => { numOfMessages += 1 })
+        await node1.getStreamrNode().on('newMessage', () => { messageReceived = true })
         const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), streamPartId, randomEthereumAddress())
         await node2.getStreamrNode().publishToStream(streamPartId, msg)
-        await waitForCondition(() => numOfMessages === 1, 15000)
+        await waitForCondition(() => messageReceived, 15000)
     }, 20000)
 
 })

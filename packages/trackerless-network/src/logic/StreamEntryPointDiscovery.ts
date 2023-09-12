@@ -52,6 +52,7 @@ const exponentialRunOff = async (
 const logger = new Logger(module)
 
 const ENTRYPOINT_STORE_LIMIT = 8
+export const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 
 interface StreamEntryPointDiscoveryConfig {
     streams: Map<string, StreamObject>
@@ -60,7 +61,6 @@ interface StreamEntryPointDiscoveryConfig {
     getEntryPointDataViaNode: (key: Uint8Array, node: PeerDescriptor) => Promise<DataEntry[]>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
     deleteEntryPointData: (key: Uint8Array) => Promise<void>
-    networkSplitAvoidanceLimit: number
     cacheInterval?: number
 }
 
@@ -193,7 +193,7 @@ export class StreamEntryPointDiscovery {
                 const stream = this.config.streams.get(streamPartId)!
                 const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartId)
                 await stream.layer1!.joinDht(rediscoveredEntrypoints, false, false)
-                if (stream.layer1!.getBucketSize() < this.config.networkSplitAvoidanceLimit) {
+                if (stream.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
                     throw new Error(`Network split is still possible`)
                 }
             }
