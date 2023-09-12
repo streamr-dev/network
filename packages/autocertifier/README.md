@@ -103,6 +103,7 @@ The request body must be a JSON object with the following properties:
 The response body is a JSON object with the following properties:
 
 - `subdomain`: The name of the new subdomain.
+- `token`: The authentication token for managing the created subdomain.
 - `certificate`: The certificate for the new subdomain.
 
 ### `PATCH /certifiedsubdomains/:subdomain`
