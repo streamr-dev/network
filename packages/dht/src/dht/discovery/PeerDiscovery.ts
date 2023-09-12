@@ -47,7 +47,7 @@ export class PeerDiscovery {
         this.abortController = new AbortController()
     }
 
-    async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin = true, doRejoin = true): Promise<void> {
+    async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin = true, retry = true): Promise<void> {
         if (this.stopped) {
             return
         }
@@ -95,12 +95,11 @@ export class PeerDiscovery {
         } finally {
             if (!this.stopped) {
                 if (this.config.bucket.count() === 0) {
-                    if (doRejoin) {
+                    if (retry) {
                         setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.abortController.signal)
                     }
-                } else if (!this.recoveryIntervalStarted) {
-                    this.recoveryIntervalStarted = true
-                    await scheduleAtInterval(() => this.getClosestPeersFromBucket(), 60000, true, this.abortController.signal)
+                } else {
+                    await this.ensureClosestPeersIntervalIsRunning()
                 }
             }
             this.ongoingDiscoverySessions.delete(session.sessionId)
@@ -131,7 +130,14 @@ export class PeerDiscovery {
         }
     }
 
-    private async getClosestPeersFromBucket(): Promise<void> {
+    private async ensureClosestPeersIntervalIsRunning(): Promise<void> {
+        if (!this.recoveryIntervalStarted) {
+            this.recoveryIntervalStarted = true
+            await scheduleAtInterval(() => this.fetchClosestPeersFromBucket(), 60000, true, this.abortController.signal)
+        }
+    }
+
+    private async fetchClosestPeersFromBucket(): Promise<void> {
         if (this.stopped) {
             return
         }

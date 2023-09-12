@@ -95,10 +95,10 @@ describe('Joining streams on offline nodes', () => {
         await entryPoint.getLayer0DhtNode().storeDataToDht(streamPartIdToDataKey(streamPartId), Any.pack(offlineDescriptor2, PeerDescriptor))
         
         await node1.getStreamrNode().subscribeToStream(streamPartId)
-        await node1.getStreamrNode().on('newMessage', () => {numOfMessages += 1})
+        await node1.getStreamrNode().on('newMessage', () => { numOfMessages += 1 })
         const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), streamPartId, randomEthereumAddress())
         await node2.getStreamrNode().publishToStream(streamPartId, msg)
-        await waitForCondition(() => numOfMessages === 1, 30000)
-    }, 30000)
+        await waitForCondition(() => numOfMessages === 1, 15000)
+    }, 20000)
 
 })
