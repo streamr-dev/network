@@ -29,6 +29,8 @@ export class CertificateCreator {
 
     public async createCertificate(fqdn: string): Promise<Certificate> {
 
+        logger.info(`Creating certificate for ${fqdn}`)
+        logger.info('Creating acme client')
         const client = new acme.Client({
             directoryUrl: this.acmeDirectoryUrl,
             accountKey: this.accountPrivateKey!,
@@ -37,11 +39,12 @@ export class CertificateCreator {
                 hmacKey: this.hmacKey
             }
         })
-
+        logger.info('Creating CSR')
         const [key, csr] = await acme.crypto.createCsr({
             commonName: fqdn
         })
 
+        logger.info('Creating certificate using cliet.auto')
         const cert = await client.auto({
             csr,
             email: 'autocertifier@streamr.network',

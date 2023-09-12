@@ -54,7 +54,7 @@ export class RestServer {
                     logger.error('Error ' + JSON.stringify(err))
                     res.status(err.httpStatus).send(err.toApiError())
                 } else {
-                    logger.error('Unspecified error' + JSON.stringify(err))
+                    logger.error('Unspecified error ' + JSON.stringify(err))
                     const unspecifiedError = new UnspecifiedError('Unspecified error')
                     res.status(unspecifiedError.httpStatus).send(unspecifiedError.toApiError())
                 }

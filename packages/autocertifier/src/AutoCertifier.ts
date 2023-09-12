@@ -69,6 +69,7 @@ export class AutoCertifier implements RestInterface {
     // ChallengeInterface implementation
 
     public async createChallenge(name: string, value: string): Promise<void> {
+        logger.info('creating challenge for ' + name + ' with value ' + value)
         this.dnsServer!.updateSubdomainAcmeChallenge(name, value)
     }
     public async deleteChallenge(_name: string): Promise<void> {
