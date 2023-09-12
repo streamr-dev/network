@@ -142,11 +142,7 @@ export class StreamEntryPointDiscovery {
             await this.storeSelfAsEntryPoint(streamPartId)
             setImmediate(() => this.avoidNetworkSplit(streamPartId))
         } else if (entryPointsFromDht && currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) {
-            try {
-                await this.storeSelfAsEntryPoint(streamPartId)
-            } catch (err) {
-                logger.trace(`Failed to store self as entrypoint on stream `)
-            }
+            await this.storeSelfAsEntryPoint(streamPartId)
         }
     }
 
