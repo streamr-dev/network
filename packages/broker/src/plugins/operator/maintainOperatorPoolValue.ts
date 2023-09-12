@@ -4,7 +4,7 @@ import { MaintainOperatorPoolValueHelper } from './MaintainOperatorPoolValueHelp
 const logger = new Logger(module)
 
 export const maintainOperatorPoolValue = async (
-    withdrawLimitSafetyFraction: number,  // TODO this is about unsafety: higher is more unsafe
+    withdrawLimitSafetyFraction: number,
     helper: MaintainOperatorPoolValueHelper
 ): Promise<void> => {
     logger.info('Check whether it is time to withdraw my earnings')
