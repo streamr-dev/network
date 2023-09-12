@@ -44,7 +44,7 @@ describe('checkOperatorPoolValueBreach', () => {
 
     it('withdraws the other Operators earnings when they are above the penalty limit', async () => {
         // eslint-disable-next-line max-len
-        const { operatorServiceConfig: watcherConfig, operatorWallet: watcherOperatorWallet, nodeWallets: _watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
+        const { operatorServiceConfig: watcherConfig, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         const sponsorer = await generateWalletWithGasAndTokens()
         await delegate(operatorWallet, operatorContract.address, 200)
@@ -61,7 +61,7 @@ describe('checkOperatorPoolValueBreach', () => {
         const allowedDifference = poolValueBeforeWithdraw.mul(poolValueDriftLimitFraction).div(ONE_ETHER).toBigInt()
         const helper = new MaintainOperatorPoolValueHelper({
             ...watcherConfig,
-            signer: watcherOperatorWallet // TODO should be _watcherWallets[0] when ETH-579 deployed
+            signer: watcherWallets[0]
         })
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
         helper.getRandomOperator = async () => {
