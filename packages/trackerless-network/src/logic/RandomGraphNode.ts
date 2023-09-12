@@ -157,12 +157,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                 this.abortController.signal
             )
         }
-        const candidates = this.getNewNeighborCandidates()
-        if (candidates.length > 0) {
-            this.newContact(candidates[0], candidates)
-        } else {
-            logger.debug('layer1 had no closest contacts in the beginning')
-        }
+        this.updateNeighborCandidatesFromLayer1()
         this.config.neighborFinder.start()
         await this.config.neighborUpdateManager.start()
     }
@@ -180,6 +175,12 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         logger.trace(`New nearby contact found`)
         if (this.stopped) {
             return
+        }
+
+        if (closestNodes.length < this.config.nodeViewSize) {
+            this.config.layer1.getKBucketPeers().forEach((descriptor) => {
+                closestNodes.push(descriptor)
+            })
         }
       
         this.config.nearbyNodeView.replaceAll(closestNodes.map((descriptor) =>
@@ -248,10 +249,18 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         }
     }
 
-    private getNewNeighborCandidates(): PeerDescriptor[] {
-        return this.config.layer1.getNeighborList().getClosestContacts(this.config.nodeViewSize).map((contact: DhtPeer) => {
-            return contact.getPeerDescriptor()
+    private updateNeighborCandidatesFromLayer1(): void {
+        const uniqueNodes = new Set<PeerDescriptor>()
+        this.config.layer1.getNeighborList().getClosestContacts(this.config.nodeViewSize).forEach((contact: DhtPeer) => {
+            uniqueNodes.add(contact.getPeerDescriptor())
         })
+        this.config.layer1.getKBucketPeers().forEach((peer: PeerDescriptor) => {
+            uniqueNodes.add(peer)
+        })
+        const candidates = Array.from(uniqueNodes)
+        if (candidates.length > 0) {
+            this.newContact(candidates[0], candidates)
+        }
     }
 
     public hasProxyConnection(nodeId: NodeID): boolean {
