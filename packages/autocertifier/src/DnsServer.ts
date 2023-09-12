@@ -27,11 +27,11 @@ export class DnsServer {
         await this.db.updateSubdomainAcmeChallenge(subdomain, acmeChallenge)
     }
 
-    private handleSOAQuery = async (send: (response: DnsResponse) => void,
+    private handleSOAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
         // @ts-ignore private field 
         response.answers.push({
-            name: this.domainName,
+            name: mixedCaseName,
             type: Packet.TYPE.SOA,
             class: Packet.CLASS.IN,
             ttl: 86400,
@@ -47,11 +47,11 @@ export class DnsServer {
         await send(response)
     }
 
-    private handleNSQuery = async (send: (response: DnsResponse) => void,
+    private handleNSQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
         // @ts-ignore private field 
         response.answers.push({
-            name: this.domainName,
+            name: mixedCaseName,
             type: Packet.TYPE.NS,
             class: Packet.CLASS.IN,
             ttl: 86400,
@@ -61,9 +61,10 @@ export class DnsServer {
         await send(response)
     }
 
-    private handleTextQuery = async (name: string, send: (response: DnsResponse) => void,
+    private handleTextQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
 
+        const name = mixedCaseName.toLowerCase()
         const parts = name.split('.')
 
         if (parts.length < 4 || parts[0] !== '_acme-challenge') {
@@ -88,7 +89,7 @@ export class DnsServer {
         const acmeChallenge = subdomainRecord.acmeChallenge
 
         response.answers.push({
-            name,
+            name: mixedCaseName,
             type: Packet.TYPE.TXT,
             class: Packet.CLASS.IN,
             ttl: 300,
@@ -98,11 +99,14 @@ export class DnsServer {
         await send(response)
     }
 
-    private handleNormalQuery = async (name: string, send: (response: DnsResponse) => void,
+    private handleNormalQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
 
+        const name = mixedCaseName.toLowerCase()
         logger.info('handleNormalQuery() ' + name)
+        
         const parts = name.split('.')
+        
         if (parts.length < 3) {
             // @ts-ignore private field
             response.header.rcode = 3
@@ -132,7 +136,7 @@ export class DnsServer {
         }
 
         response.answers.push({
-            name,
+            name: mixedCaseName,
             type: Packet.TYPE.A,
             class: Packet.CLASS.IN,
             ttl: 300,
@@ -147,7 +151,8 @@ export class DnsServer {
         // @ts-ignore private field
         response.header.aa = 1
         const question = request.questions[0]
-        const name = question.name
+        const mixedCaseName = question.name
+        const name = mixedCaseName.toLowerCase()
 
         if (!name.endsWith(this.domainName)) {
             logger.warn('invalid domain name in query: ' + name)
@@ -156,17 +161,20 @@ export class DnsServer {
             return send(response)
         }
 
+        const parts = mixedCaseName.split('.')
+        const mixedCaseDomainName = parts[parts.length - 2] + '.' + parts[parts.length - 1]
+
         // @ts-ignore private field
         if (question.type == Packet.TYPE.SOA) {
-            return this.handleSOAQuery(send, response)
+            return this.handleSOAQuery(mixedCaseDomainName, send, response)
             // @ts-ignore private field
         } else if (question.type == Packet.TYPE.NS) {
-            return this.handleNSQuery(send, response)
+            return this.handleNSQuery(mixedCaseDomainName, send, response)
             // @ts-ignore private field
         } else if (question.type == Packet.TYPE.TXT) {
-            return this.handleTextQuery(name, send, response)
+            return this.handleTextQuery(mixedCaseName, send, response)
         } else {
-            return this.handleNormalQuery(name, send, response)
+            return this.handleNormalQuery(mixedCaseName, send, response)
         }
     }
 

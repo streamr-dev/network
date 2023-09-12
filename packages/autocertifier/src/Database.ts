@@ -5,7 +5,6 @@ import { open, Statement, Database as SqliteDatabase } from 'sqlite'
 import { Logger } from '@streamr/utils'
 import { DatabaseError, InvalidSubdomainOrToken } from './errors'
 import os from 'os'
-import e from 'express'
 
 const logger = new Logger(module)
 
