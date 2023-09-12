@@ -6,10 +6,11 @@ import random from 'lodash/random'
  *
  * @param items The items to sample from
  * @param weight The weight function, should return a positive integer (strictly greater than zero)
+ * @param sampleFn The function to use for sampling, defaults to lodash/random
  * @returns The sampled item, or undefined if the array is empty
  *
  */
-export function weightedSample<T>(items: T[], weight: (t: T) => number): T | undefined {
+export function weightedSample<T>(items: T[], weight: (t: T) => number, sampleFn = random): T | undefined {
     if (items.length === 0) {
         return undefined
     }
@@ -19,7 +20,7 @@ export function weightedSample<T>(items: T[], weight: (t: T) => number): T | und
         cumulativeWeights[i] = cumulativeWeights[i - 1] + weight(items[i])
     }
 
-    const sample = random(0, cumulativeWeights[cumulativeWeights.length - 1] - 1)
+    const sample = sampleFn(0, cumulativeWeights[cumulativeWeights.length - 1] - 1)
 
     for (let i = 0; i < cumulativeWeights.length; ++i) {
         if (cumulativeWeights[i] > sample) {
