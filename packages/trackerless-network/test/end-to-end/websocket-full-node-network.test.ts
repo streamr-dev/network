@@ -30,8 +30,7 @@ describe('Full node network with WebSocket connections only', () => {
             layer0: {
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: epPeerDescriptor,
-            },
-            networkNode: {}
+            }
         })
         await entryPoint.start()
         entryPoint.getStreamrNode()!.setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
@@ -46,8 +45,7 @@ describe('Full node network with WebSocket connections only', () => {
                     peerIdString: `${i}`,
                     nodeName: `${i}`,
                     numberOfNodesPerKBucket: 4
-                }, 
-                networkNode: {}
+                }
             })
             nodes.push(node)
             await node.start()

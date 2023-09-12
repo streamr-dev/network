@@ -53,8 +53,7 @@ describe('stream without default entrypoints', () => {
                 transportLayer: entryPointTransport,
                 peerDescriptor: entryPointPeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
-            },
-            networkNode: {}
+            }
         })
         await entrypoint.start()
         await Promise.all(range(20).map(async (i) => {
@@ -69,8 +68,7 @@ describe('stream without default entrypoints', () => {
                     peerDescriptor,
                     transportLayer: transport,
                     entryPoints: [entryPointPeerDescriptor]
-                },
-                networkNode: {}
+                }
             })
             nodes.push(node)
             await node.start()

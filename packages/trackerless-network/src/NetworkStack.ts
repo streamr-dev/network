@@ -44,7 +44,7 @@ class ReadynessListener {
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
-    networkNode: StreamrNodeConfig
+    networkNode?: StreamrNodeConfig
     metricsContext?: MetricsContext
 }
 
@@ -72,10 +72,10 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         })
         this.streamrNode = new StreamrNode({
             ...options.networkNode,
-            nodeName: options.networkNode.nodeName ?? options.layer0?.nodeName,
+            nodeName: options.networkNode?.nodeName ?? options.layer0?.nodeName,
             metricsContext: this.metricsContext
         })
-        this.firstConnectionTimeout = options.networkNode.firstConnectionTimeout ?? 5000
+        this.firstConnectionTimeout = options.networkNode?.firstConnectionTimeout ?? 5000
     }
 
     async start(doJoin = true): Promise<void> {
