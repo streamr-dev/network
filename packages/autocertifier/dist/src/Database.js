@@ -9,10 +9,16 @@ const sqlite3_1 = __importDefault(require("sqlite3"));
 const sqlite_1 = require("sqlite");
 const utils_1 = require("@streamr/utils");
 const errors_1 = require("./errors");
+const os_1 = __importDefault(require("os"));
 const logger = new utils_1.Logger(module);
 class Database {
-    constructor(databaseFilePath) {
-        this.databaseFilePath = databaseFilePath;
+    constructor(filePath) {
+        if (filePath.startsWith('~/')) {
+            this.databaseFilePath = filePath.replace('~', os_1.default.homedir());
+        }
+        else {
+            this.databaseFilePath = filePath;
+        }
     }
     async createSubdomain(subdomain, ip, port, token) {
         try {
@@ -73,6 +79,7 @@ class Database {
         logger.info('Subdomain ip and port updated');
     }
     async updateSubdomainAcmeChallenge(subdomain, acmeChallenge) {
+        logger.info('Updating subdomain acme challenge for ' + subdomain);
         try {
             await this.updateSubdomainAcmeChallengeStatement.run(acmeChallenge, subdomain);
         }

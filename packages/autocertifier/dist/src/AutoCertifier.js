@@ -42,6 +42,7 @@ class AutoCertifier {
     }
     // ChallengeInterface implementation
     async createChallenge(name, value) {
+        logger.info('creating challenge for ' + name + ' with value ' + value);
         this.dnsServer.updateSubdomainAcmeChallenge(name, value);
     }
     async deleteChallenge(_name) {

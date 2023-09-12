@@ -32,16 +32,24 @@ const utils_1 = require("@streamr/utils");
 const acme = __importStar(require("acme-client"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const os_1 = __importDefault(require("os"));
 const logger = new utils_1.Logger(module);
 class CertificateCreator {
-    constructor(acmeDirectoryUrl, hmacKid, hmacKey, accountPrivateKeyPath, challengeInterface) {
+    constructor(acmeDirectoryUrl, hmacKid, hmacKey, privateKeyPath, challengeInterface) {
         this.acmeDirectoryUrl = acmeDirectoryUrl;
         this.hmacKid = hmacKid;
         this.hmacKey = hmacKey;
-        this.accountPrivateKeyPath = accountPrivateKeyPath;
         this.challengeInterface = challengeInterface;
+        if (privateKeyPath.startsWith('~/')) {
+            this.accountPrivateKeyPath = privateKeyPath.replace('~', os_1.default.homedir());
+        }
+        else {
+            this.accountPrivateKeyPath = privateKeyPath;
+        }
     }
     async createCertificate(fqdn) {
+        logger.info(`Creating certificate for ${fqdn}`);
+        logger.info('Creating acme client');
         const client = new acme.Client({
             directoryUrl: this.acmeDirectoryUrl,
             accountKey: this.accountPrivateKey,
@@ -50,21 +58,30 @@ class CertificateCreator {
                 hmacKey: this.hmacKey
             }
         });
+        logger.info('Creating CSR');
         const [key, csr] = await acme.crypto.createCsr({
             commonName: fqdn
         });
-        const cert = await client.auto({
-            csr,
-            email: 'autocertifier@streamr.network',
-            termsOfServiceAgreed: true,
-            challengePriority: ['dns-01'],
-            challengeCreateFn: async (authz, _challenge, keyAuthorization) => {
-                await this.challengeInterface.createChallenge(authz.identifier.value, keyAuthorization);
-            },
-            challengeRemoveFn: async (authz, _challenge, _keyAuthorization) => {
-                await this.challengeInterface.deleteChallenge(authz.identifier.value);
-            },
-        });
+        logger.info('Creating certificate using client.auto');
+        let cert;
+        try {
+            cert = await client.auto({
+                csr,
+                email: 'autocertifier@streamr.network',
+                termsOfServiceAgreed: true,
+                challengePriority: ['dns-01'],
+                challengeCreateFn: async (authz, _challenge, keyAuthorization) => {
+                    await this.challengeInterface.createChallenge(authz.identifier.value, keyAuthorization);
+                },
+                challengeRemoveFn: async (authz, _challenge, _keyAuthorization) => {
+                    await this.challengeInterface.deleteChallenge(authz.identifier.value);
+                },
+            });
+        }
+        catch (e) {
+            logger.error('Failed to create certificate: ' + e.message);
+            throw e;
+        }
         logger.info(`CSR:\n${csr.toString()}`);
         logger.info(`Private key:\n${key.toString()}`);
         logger.info(`Certificate:\n${cert.toString()}`);

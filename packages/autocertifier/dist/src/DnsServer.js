@@ -69,6 +69,7 @@ class DnsServer {
             await send(response);
         };
         this.handleNormalQuery = async (name, send, response) => {
+            logger.info('handleNormalQuery() ' + name);
             const parts = name.split('.');
             if (parts.length < 3) {
                 // @ts-ignore private field
@@ -85,8 +86,11 @@ class DnsServer {
                 try {
                     subdomainRecord = await this.db.getSubdomain(subdomain);
                 }
-                catch (e) { }
+                catch (e) {
+                    logger.error('handleNormalQuery exception');
+                }
                 if (!subdomainRecord) {
+                    logger.info('handleNormalQuery() not found: ' + name);
                     // @ts-ignore private field
                     response.header.rcode = 3;
                     return send(response);

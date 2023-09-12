@@ -49,7 +49,7 @@ class RestServer {
                     res.status(err.httpStatus).send(err.toApiError());
                 }
                 else {
-                    logger.error('Unspecified error' + JSON.stringify(err));
+                    logger.error('Unspecified error ' + JSON.stringify(err));
                     const unspecifiedError = new errors_1.UnspecifiedError('Unspecified error');
                     res.status(unspecifiedError.httpStatus).send(unspecifiedError.toApiError());
                 }

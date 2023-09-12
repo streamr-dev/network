@@ -44,8 +44,11 @@ export class CertificateCreator {
             commonName: fqdn
         })
 
-        logger.info('Creating certificate using cliet.auto')
-        const cert = await client.auto({
+        logger.info('Creating certificate using client.auto')
+        let cert: string 
+        
+        try {
+        cert = await client.auto({
             csr,
             email: 'autocertifier@streamr.network',
             termsOfServiceAgreed: true,
@@ -57,7 +60,10 @@ export class CertificateCreator {
             challengeRemoveFn: async (authz, _challenge, _keyAuthorization) => {
                 await this.challengeInterface.deleteChallenge(authz.identifier.value)
             },
-        })
+        })} catch (e) {
+            logger.error('Failed to create certificate: ' + e.message)
+            throw e
+        }
     
         logger.info(`CSR:\n${csr.toString()}`)
         logger.info(`Private key:\n${key.toString()}`)

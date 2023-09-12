@@ -1,5 +1,4 @@
 export declare class Database {
-    private databaseFilePath;
     private db?;
     private createSubdomainStatement?;
     private getSubdomainStatement?;
@@ -7,7 +6,8 @@ export declare class Database {
     private updateSubdomainIpAndPortStatement?;
     private getSubdomainAcmeChallengeStatement?;
     private updateSubdomainAcmeChallengeStatement?;
-    constructor(databaseFilePath: string);
+    private databaseFilePath;
+    constructor(filePath: string);
     createSubdomain(subdomain: string, ip: string, port: string, token: string): Promise<void>;
     getSubdomain(subdomain: string): Promise<Subdomain | undefined>;
     private getSubdomainWithToken;
