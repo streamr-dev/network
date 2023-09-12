@@ -3,7 +3,6 @@ import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, waitForCondition } from '@streamr/utils'
 import { createClient, createTestStream } from '../../../utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
-import { getTotalUnwithdrawnEarnings } from './operatorPoolValueUtils'
 import { MaintainOperatorPoolValueHelper } from '../../../../src/plugins/operator/MaintainOperatorPoolValueHelper'
 import { maintainOperatorPoolValue } from '../../../../src/plugins/operator/maintainOperatorPoolValue'
 import { multiply } from '../../../../src/helpers/multiply'
@@ -47,7 +46,8 @@ describe('maintainOperatorPoolValue', () => {
         const { rewardThresholdDataWei } = await helper.getMyUnwithdrawnEarnings()
         const safeRewardThresholdDataWei = multiply(rewardThresholdDataWei, SAFETY_FRACTION)
         await waitForCondition(async () => {
-            const unwithdrawnEarnings = Number(await getTotalUnwithdrawnEarnings(operatorContract)) / ONE_ETHER
+            const { sumDataWei } = await helper.getMyUnwithdrawnEarnings()
+            const unwithdrawnEarnings = sumDataWei / BigInt(ONE_ETHER)
             return unwithdrawnEarnings > safeRewardThresholdDataWei
         }, 10000, 1000)
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()

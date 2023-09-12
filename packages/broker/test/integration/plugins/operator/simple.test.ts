@@ -28,16 +28,10 @@ it('simple test', async () => {
     await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
     await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
 
-    const cut = await operatorContract.operatorsCutFraction()
-    const cfg = new Contract(CHAIN_CONFIG.dev2.contracts.StreamrConfig, streamrConfigABI).connect(operatorWallet) as StreamrConfig
-    const penaltyFraction = await cfg.poolValueDriftPenaltyFraction()
-    console.log('Cut: ' + formatEther(cut))
-    console.log('Penalty fraction: ' + formatEther(penaltyFraction))
-    
     console.log('Min earnings ' + MIN_EARNINGS)
     console.log('Poll for earnings')
     await waitForCondition(async () => {
-        const earnings = Number(await operatorContract.getEarningsFromSponsorship(sponsorship.address)) / ONE_ETHER
+        const earnings = Number(await operatorContract.getSponsorshipsAndEarnings()) / ONE_ETHER
         console.log('Earnings: ' + earnings)
         return earnings >= MIN_EARNINGS
     }, 10000, 1000)
@@ -46,7 +40,7 @@ it('simple test', async () => {
 
     await (await operatorContract.connect(nodeWallets[0]).withdrawEarningsFromSponsorships([sponsorship.address])).wait()
     
-    const earnings = Number(await operatorContract.getEarningsFromSponsorship(sponsorship.address)) / ONE_ETHER
+    const earnings = Number(await operatorContract.getSponsorshipsAndEarnings()) / ONE_ETHER
     console.log('Earnings after withdraw ' + earnings)
 
     await wait(5000)
