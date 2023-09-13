@@ -26,7 +26,6 @@ describe('overrideConfigToEnvVarsIfGiven', () => {
         process.env.STREAMR__BROKER__CLIENT__ORDER_MESSAGES = 'true'
         process.env.STREAMR__BROKER__CLIENT__GAP_FILL = 'false'
         process.env.STREAMR__BROKER__CLIENT__NETWORK__CONTROL_LAYER__PEER_DESCRIPTOR__ID = 'kademliaID'
-        process.env.STREAMR__BROKER__CLIENT__NETWORK__CONTROL_LAYER__PEER_DESCRIPTOR__TYPE = '0'
         process.env.STREAMR__BROKER__AUTHENTICATION__KEYS_1 = 'key-1'
         process.env.STREAMR__BROKER__AUTHENTICATION__KEYS_2 = 'key-2'
         overrideConfigToEnvVarsIfGiven(config)
