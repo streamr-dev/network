@@ -119,7 +119,10 @@ export class ConnectivityChecker {
         try {
             outgoingConnection = await this.connectAsync({
                 host: connection.getRemoteAddress(),
-                port: connectivityRequest.port, timeoutMs: 1000, mode: ConnectionMode.PROBE
+                port: connectivityRequest.port,
+                tls: connectivityRequest.tls,
+                timeoutMs: 1000, 
+                mode: ConnectionMode.PROBE
             })
         } catch (err) {
             logger.debug('error', { err })
