@@ -39,11 +39,12 @@ export class ConnectivityChecker {
             outgoingConnection = await this.connectAsync({
                 host: entryPoint.websocket?.ip, 
                 port: entryPoint.websocket?.port,
+                tls: entryPoint.websocket?.tls,
                 timeoutMs: 1000,
                 mode: ConnectionMode.REQUEST
             })
         } catch (e) {
-            logger.error('Failed to connect to the entrypoints')
+            logger.error('Failed to connect to the entrypoints: ' + e)
             throw new Err.ConnectionFailed('Failed to connect to the entrypoints', e)
         }
         // send connectivity request
