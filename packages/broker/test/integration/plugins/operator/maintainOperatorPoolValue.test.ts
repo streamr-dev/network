@@ -10,7 +10,6 @@ import { multiply } from '../../../../src/helpers/multiply'
 const logger = new Logger(module)
 
 const STAKE_AMOUNT = 100
-const ONE_ETHER = 1e18
 const SAFETY_FRACTION = 0.5  // 50%
 
 describe('maintainOperatorPoolValue', () => {
@@ -44,10 +43,10 @@ describe('maintainOperatorPoolValue', () => {
         await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
         const helper = new MaintainOperatorPoolValueHelper({ ...operatorServiceConfig, signer: nodeWallets[0] })
         const { rewardThresholdDataWei } = await helper.getMyUnwithdrawnEarnings()
-        const safeRewardThresholdDataWei = multiply(rewardThresholdDataWei, SAFETY_FRACTION) / BigInt(ONE_ETHER)
+        const safeRewardThresholdDataWei = multiply(rewardThresholdDataWei, SAFETY_FRACTION)
         await waitForCondition(async () => {
             const { sumDataWei } = await helper.getMyUnwithdrawnEarnings()
-            const unwithdrawnEarnings = sumDataWei / BigInt(ONE_ETHER)
+            const unwithdrawnEarnings = sumDataWei
             return unwithdrawnEarnings > safeRewardThresholdDataWei
         }, 10000, 1000)
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
