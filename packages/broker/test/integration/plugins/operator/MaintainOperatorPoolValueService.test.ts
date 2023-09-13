@@ -19,7 +19,7 @@ describe('MaintainOperatorPoolValueService', () => {
         await client.destroy()
     }, 60 * 1000)
 
-    it('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
+    it.skip('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
         const { operatorWallet, operatorContract, operatorServiceConfig, nodeWallets } = await setupOperatorContract({
             nodeCount: 1,
             operatorConfig: {

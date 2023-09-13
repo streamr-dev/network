@@ -99,7 +99,7 @@ describe('RandomGraphNode-DhtNode', () => {
         await graphNodes[0].start()
 
         await waitForCondition(() => graphNodes[0].getTargetNeighborIds().length === 1)
-        expect(graphNodes[0].getNearbyContactPoolIds().length).toEqual(1)
+        expect(graphNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
         expect(graphNodes[0].getTargetNeighborIds().length).toEqual(1)
     })
 
@@ -112,7 +112,7 @@ describe('RandomGraphNode-DhtNode', () => {
 
         await waitForCondition(() => range(4).every((i) => graphNodes[i].getTargetNeighborIds().length === 4))
         range(4).map((i) => {
-            expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
 
@@ -120,7 +120,7 @@ describe('RandomGraphNode-DhtNode', () => {
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
         range(5).map((i) => {
-            allNodes[i].getNearbyContactPoolIds().forEach((nodeId) => {
+            allNodes[i].getNearbyNodeView().getIds().forEach((nodeId) => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === nodeId
                 })

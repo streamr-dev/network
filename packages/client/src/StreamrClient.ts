@@ -659,6 +659,13 @@ export class StreamrClient {
         return (await this.node.getNode()).getDiagnosticInfo()
     }
 
+    /**
+     * @deprecated This in an internal method
+     */
+    getConfig(): StrictStreamrClientConfig {
+        return this.config
+    }
+
     // --------------------------------------------------------------------------------------------
     // Events
     // --------------------------------------------------------------------------------------------
