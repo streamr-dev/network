@@ -3,7 +3,6 @@ import {
     PeerDescriptor,
     Simulator,
     SimulatorTransport,
-    NodeType
 } from '@streamr/dht'
 import { StreamrNode, Events } from '../../src/logic/StreamrNode'
 import { waitForEvent3, waitForCondition } from '@streamr/utils'
@@ -22,11 +21,9 @@ describe('StreamrNode', () => {
 
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS
     }
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
     }
     const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 

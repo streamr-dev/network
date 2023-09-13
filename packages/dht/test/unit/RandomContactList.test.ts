@@ -3,7 +3,7 @@ import type { ServiceInfo, MethodInfo } from '@protobuf-ts/runtime-rpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { IDhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { LeaveNotice, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { LeaveNotice, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import type { FindDataRequest, FindDataResponse, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
 import type { PingRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
 import type { ClosestPeersResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -53,11 +53,11 @@ describe('RandomContactList', () => {
     const id3 = PeerID.fromValue(Buffer.from([0, 0, 0, 3]))
     const id4 = PeerID.fromValue(Buffer.from([0, 0, 0, 4]))
 
-    const descriptor0: PeerDescriptor = { kademliaId: id0.value, type: NodeType.NODEJS }
-    const descriptor1: PeerDescriptor = { kademliaId: id1.value, type: NodeType.NODEJS }
-    const descriptor2: PeerDescriptor = { kademliaId: id2.value, type: NodeType.NODEJS }
-    const descriptor3: PeerDescriptor = { kademliaId: id3.value, type: NodeType.NODEJS }
-    const descriptor4: PeerDescriptor = { kademliaId: id4.value, type: NodeType.NODEJS }
+    const descriptor0: PeerDescriptor = { kademliaId: id0.value }
+    const descriptor1: PeerDescriptor = { kademliaId: id1.value }
+    const descriptor2: PeerDescriptor = { kademliaId: id2.value }
+    const descriptor3: PeerDescriptor = { kademliaId: id3.value }
+    const descriptor4: PeerDescriptor = { kademliaId: id4.value }
 
     const peer1 = new DhtPeer(descriptor0, descriptor1, toProtoRpcClient(new MockRpcClient()), serviceId)
     const peer2 = new DhtPeer(descriptor0, descriptor2, toProtoRpcClient(new MockRpcClient()), serviceId)

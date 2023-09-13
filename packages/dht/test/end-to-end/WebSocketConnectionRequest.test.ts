@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -8,7 +8,6 @@ import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor
 describe('WebSocket IConnection Requests', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('3').value,
-        type: NodeType.NODEJS,
         websocket: { ip: '127.0.0.1', port: 10021 }
     }
     let epDhtNode: DhtNode

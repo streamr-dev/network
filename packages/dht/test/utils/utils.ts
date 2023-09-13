@@ -5,7 +5,6 @@ import {
     LeaveNotice,
     MigrateDataRequest,
     MigrateDataResponse,
-    NodeType,
     PeerDescriptor,
     PingRequest,
     PingResponse,
@@ -59,7 +58,6 @@ export const createMockConnectionDhtNode = async (stringId: string,
     }
     const peerDescriptor: PeerDescriptor = {
         kademliaId: id.value,
-        type: NodeType.NODEJS,
         region: getRandomRegion(),
         nodeName: nodeName ? nodeName : stringId
     }
@@ -87,7 +85,6 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
     const id = PeerID.fromString(stringId)
     const descriptor: PeerDescriptor = {
         kademliaId: id.value,
-        type: NodeType.NODEJS,
         nodeName: stringId
     }
 
@@ -245,20 +242,16 @@ export const MockWebSocketConnectorRpc: IWebSocketConnectorService = {
 
 export const getMockPeers = (): PeerDescriptor[] => {
     const n1: PeerDescriptor = {
-        kademliaId: generateId('Neighbor1'),
-        type: NodeType.NODEJS,
+        kademliaId: generateId('Neighbor1')
     }
     const n2: PeerDescriptor = {
-        kademliaId: generateId('Neighbor2'),
-        type: NodeType.NODEJS,
+        kademliaId: generateId('Neighbor2')
     }
     const n3: PeerDescriptor = {
-        kademliaId: generateId('Neighbor3'),
-        type: NodeType.NODEJS,
+        kademliaId: generateId('Neighbor3')
     }
     const n4: PeerDescriptor = {
-        kademliaId: generateId('Neighbor1'),
-        type: NodeType.BROWSER,
+        kademliaId: generateId('Neighbor1')  // TODO change kademliaId?
     }
     return [
         n1, n2, n3, n4

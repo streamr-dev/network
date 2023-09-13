@@ -2,7 +2,7 @@
 
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
-import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, MessageType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
@@ -20,7 +20,6 @@ describe('WebSocket Connection Management', () => {
 
     const wsServerConnectorPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('peerWithServer').value,
-        type: NodeType.NODEJS,
         websocket: {
             ip: '127.0.0.1',
             port: 12223
@@ -29,7 +28,6 @@ describe('WebSocket Connection Management', () => {
 
     const noWsServerConnectorPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('peerWithoutServer').value,
-        type: NodeType.NODEJS,
     }
 
     let connectorTransport1: ITransport

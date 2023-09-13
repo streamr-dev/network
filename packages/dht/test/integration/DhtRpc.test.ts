@@ -2,7 +2,7 @@ import { getMockPeers, MockDhtRpc } from '../utils/utils'
 import { ProtoRpcClient, RpcCommunicator, RpcError, toProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { generateId } from '../utils/utils'
-import { ClosestPeersRequest, ClosestPeersResponse, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { wait } from '@streamr/utils'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
@@ -15,13 +15,11 @@ describe('DhtRpc', () => {
     let client2: ProtoRpcClient<DhtRpcServiceClient>
 
     const peerDescriptor1: PeerDescriptor = {
-        kademliaId: generateId('peer1'),
-        type: NodeType.NODEJS
+        kademliaId: generateId('peer1')
     }
 
     const peerDescriptor2: PeerDescriptor = {
-        kademliaId: generateId('peer2'),
-        type: NodeType.NODEJS
+        kademliaId: generateId('peer2')
     }
 
     const outgoingListener2 = (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {

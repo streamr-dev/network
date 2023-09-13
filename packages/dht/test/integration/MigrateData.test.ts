@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
@@ -47,7 +47,6 @@ describe('Migrating data from node to node in DHT', () => {
 
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
             nodeName: entryPointId
         }
 

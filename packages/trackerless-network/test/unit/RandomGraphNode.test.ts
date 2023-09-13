@@ -1,5 +1,5 @@
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { NodeType, PeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockRemoteNode, createRandomNodeId, mockConnectionLocker } from '../utils/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
@@ -16,7 +16,6 @@ describe('RandomGraphNode', () => {
     let randomGraphNode: RandomGraphNode
     const peerDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
     }
 
     let targetNeighbors: NodeList

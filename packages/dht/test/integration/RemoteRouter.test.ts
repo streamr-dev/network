@@ -1,6 +1,6 @@
 import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { RemoteRouter } from '../../src/dht/routing/RemoteRouter'
-import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, MessageType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RoutingServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
@@ -13,12 +13,10 @@ describe('RemoteRouter', () => {
     let serverRpcCommunicator: RpcCommunicator
     const serviceId = 'test'
     const clientPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('dhtPeer'),
-        type: NodeType.NODEJS
+        kademliaId: generateId('dhtPeer')
     }
     const serverPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('server'),
-        type: NodeType.NODEJS
+        kademliaId: generateId('server')
     }
 
     beforeEach(() => {

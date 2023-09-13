@@ -1,5 +1,5 @@
 import { Router } from '../../src/dht/routing/Router'
-import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { createWrappedClosestPeersRequest, createMockRoutingRpcCommunicator } from '../utils/utils'
@@ -12,12 +12,10 @@ describe('Router', () => {
     const peerId = PeerID.fromString('router')
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: peerId.value,
-        type: NodeType.NODEJS,
         nodeName: 'router'
     }
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('destination').value,
-        type: NodeType.NODEJS,
     }
     const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1, peerDescriptor2)
     const message: Message = {

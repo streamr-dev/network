@@ -2,7 +2,6 @@ import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/prot
 import { WebSocketConnectorServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { generateId } from '../utils/utils'
 import {
-    NodeType,
     PeerDescriptor,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
@@ -19,12 +18,10 @@ describe('WebSocketConnectorRpc', () => {
 
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: generateId('peer1'),
-        type: NodeType.NODEJS
     }
 
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: generateId('peer2'),
-        type: NodeType.NODEJS
     }
 
     beforeEach(() => {

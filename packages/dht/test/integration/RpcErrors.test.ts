@@ -7,7 +7,7 @@ import { DhtRpcOptions, ListeningRpcCommunicator, SimulatorTransport } from '../
 import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { NodeType, PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
 
 describe('RPC errors', () => {
 
@@ -23,13 +23,11 @@ describe('RPC errors', () => {
     let simulator: Simulator
 
     const peerDescriptor1: PeerDescriptor = {
-        kademliaId: PeerID.fromString('peer1').value,
-        type: NodeType.NODEJS,
+        kademliaId: PeerID.fromString('peer1').value
     }
 
     const peerDescriptor2: PeerDescriptor = {
-        kademliaId: PeerID.fromString('peer2').value,
-        type: NodeType.NODEJS,
+        kademliaId: PeerID.fromString('peer2').value
     }
 
     let connectorTransport1: ITransport

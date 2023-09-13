@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { waitForEvent3 } from '@streamr/utils'
 import { ConnectionManager, Events as ConnectionManagerEvents } from '../../src/connection/ConnectionManager'
@@ -7,7 +7,6 @@ describe('Layer0MixedConnectionTypes', () => {
 
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: Uint8Array.from([1, 2, 3]),
-        type: NodeType.NODEJS,
         websocket: { ip: '127.0.0.1', port: 11221 }
     }
 

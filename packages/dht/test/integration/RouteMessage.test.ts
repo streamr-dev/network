@@ -1,5 +1,5 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
-import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Logger, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils/utils'
@@ -34,8 +34,7 @@ describe('Route Message With Mock Connections', () => {
 
         entryPointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            nodeName: 'entrypoint',
-            type: NodeType.NODEJS
+            nodeName: 'entrypoint'
         }
 
         sourceNode = await createMockConnectionDhtNode(sourceId, simulator)

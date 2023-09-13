@@ -1,5 +1,5 @@
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import {
     MessageID,
     MessageRef,
@@ -20,12 +20,10 @@ describe('NetworkNode', () => {
 
     const pd1: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS
     }
 
     const pd2: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
     }
 
     const STREAM_ID = StreamPartIDUtils.parse('test#0')

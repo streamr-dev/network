@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import { LatencyType, NodeType, Simulator, getRandomRegion } from '@streamr/dht'
+import { LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
 import fs from 'fs'
 import { createNetworkNodeWithSimulator, createRandomNodeId } from '../utils/utils'
 import { NetworkNode } from '../../src/NetworkNode'
@@ -27,7 +27,6 @@ const prepareLayer0 = async () => {
     const peerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
         region: getRandomRegion(),
-        type: NodeType.NODEJS,
         nodeName: 'entrypoint'
     }
     layer0Ep = peerDescriptor
@@ -43,7 +42,6 @@ const prepareStream = async (streamId: string) => {
     const peerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
         region: getRandomRegion(),
-        type: NodeType.NODEJS,
         nodeName: streamId
     }
     const streamPartId = toStreamPartID(toStreamID(streamId), 0)
@@ -66,7 +64,6 @@ const measureJoiningTime = async (count: number) => {
     const nodeId = createRandomNodeId()
     const peerDescriptor = {
         kademliaId: hexToBinary(nodeId),
-        type: NodeType.NODEJS,
         region: getRandomRegion(),
         nodeName: `${count}`
     }

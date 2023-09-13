@@ -483,20 +483,10 @@
                 "id": {
                     "type": "string"
                 },
-                "type": {
-                    "$ref": "#/definitions/nodeType"
-                },
                 "websocket": {
                     "$ref": "#/definitions/connectivityMethod"
                 }
             }
-        },
-        "nodeType": {
-            "type": "string",
-            "enum": [
-                "browser",
-                "nodejs"
-            ]
         },
         "connectivityMethod": {
             "type": "object",

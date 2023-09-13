@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForCondition, waitForEvent3, hexToBinary } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
@@ -13,19 +13,16 @@ describe('Proxy connections', () => {
 
     const proxyNodeDescriptor1: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
         nodeName: 'proxyNode',
         websocket: { ip: 'localhost', port: 23132 }
     }
     const proxyNodeDescriptor2: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
         nodeName: 'proxyNode',
         websocket: { ip: 'localhost', port: 23133 }
     }
     const proxiedNodeDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
     }
     const proxiedNodeId = getNodeIdFromPeerDescriptor(proxiedNodeDescriptor)
 

@@ -1,11 +1,10 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 
 describe('Layer1 Scale', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('entrypoint').value,
-        type: NodeType.NODEJS,
         websocket: { ip: '127.0.0.1', port: 43225 },
         nodeName: 'entrypoint'
     }

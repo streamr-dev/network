@@ -1,5 +1,5 @@
 import { Any } from '../../src/proto/google/protobuf/any'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import {
     isSamePeerDescriptor,
     keyFromPeerDescriptor,
@@ -13,12 +13,10 @@ describe('LocalDataStore', () => {
     let localDataStore: LocalDataStore
     const storer1: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS,
         nodeName: 'storer1'
     }
     const storer2: PeerDescriptor = {
         kademliaId: new Uint8Array([3, 2, 1]),
-        type: NodeType.NODEJS,
         nodeName: 'storer2'
     }
     const data1 = Any.pack(storer1, PeerDescriptor)

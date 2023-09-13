@@ -132,24 +132,17 @@ message LeaveNotice {
 
 message PeerDescriptor {
   bytes kademliaId = 1;
-  NodeType type = 2;
-  ConnectivityMethod udp = 3;
-  ConnectivityMethod tcp = 4;
-  ConnectivityMethod websocket = 5;
-  optional bool openInternet = 6;
-  optional uint32 region = 7;
-  optional string nodeName = 8;
+  ConnectivityMethod udp = 2;
+  ConnectivityMethod tcp = 3;
+  ConnectivityMethod websocket = 4;
+  optional bool openInternet = 5;
+  optional uint32 region = 6;
+  optional string nodeName = 7;
 }
 
 message ConnectivityMethod {
   uint32 port = 2;
   string ip = 3;
-}
-
-enum NodeType {
-  NODEJS = 0;
-  BROWSER = 1;
-  VIRTUAL = 3;
 }
 
 message ConnectivityReportRequest {

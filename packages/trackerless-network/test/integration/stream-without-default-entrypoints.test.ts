@@ -1,6 +1,6 @@
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { range } from 'lodash'
-import { NodeType, PeerDescriptor, Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
+import { PeerDescriptor, Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
 import {
     MessageID,
     MessageRef,
@@ -21,7 +21,6 @@ describe('stream without default entrypoints', () => {
     const entryPointPeerDescriptor: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 2, 3]),
         nodeName: 'entrypoint',
-        type: NodeType.NODEJS
     }
 
     const STREAM_ID = StreamPartIDUtils.parse('test#0')
@@ -60,7 +59,6 @@ describe('stream without default entrypoints', () => {
         await Promise.all(range(20).map(async (i) => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: hexToBinary(createRandomNodeId()),
-                type: NodeType.NODEJS,
                 nodeName: `${i}`
             }
             const transport = new SimulatorTransport(peerDescriptor, simulator)

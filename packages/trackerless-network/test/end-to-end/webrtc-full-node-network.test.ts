@@ -1,4 +1,4 @@
-import { PeerDescriptor, NodeType } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import { range } from 'lodash'
 import { waitForCondition, hexToBinary } from '@streamr/utils'
 import { getRandomRegion } from '@streamr/dht'
@@ -14,7 +14,6 @@ describe('Full node network with WebRTC connections', () => {
 
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
         websocket: { ip: 'localhost', port: 14444 },
         region: getRandomRegion()
     }
@@ -43,7 +42,6 @@ describe('Full node network with WebRTC connections', () => {
         await Promise.all(range(NUM_OF_NODES).map(async () => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: hexToBinary(createRandomNodeId()),
-                type: NodeType.NODEJS,
             }
             const node = new NetworkStack({
                 layer0: {

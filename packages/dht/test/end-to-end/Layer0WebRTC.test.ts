@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
@@ -10,7 +10,6 @@ describe('Layer0 with WebRTC connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('entrypoint').value,
         nodeName: 'entrypoint',
-        type: NodeType.NODEJS,
         websocket: { ip: '127.0.0.1', port: 10029 }
     }
     let epDhtNode: DhtNode

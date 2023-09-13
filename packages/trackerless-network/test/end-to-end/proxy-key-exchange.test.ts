@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import { 
     EncryptionType,
     GroupKeyRequest,
@@ -18,17 +18,14 @@ import { createRandomNodeId } from '../utils/utils'
 describe('proxy group key exchange', () => {
     const proxyNodeDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
         nodeName: 'proxyNode',
         websocket: { ip: 'localhost', port: 23134 }
     }
     const publisherDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
     }
     const subscriberDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
     }
 
     const publisherUserId = toEthereumAddress('0x823A026e226EB47980c88616e01E1D3305Ef8Ecb')

@@ -208,31 +208,27 @@ export interface PeerDescriptor {
      */
     kademliaId: Uint8Array;
     /**
-     * @generated from protobuf field: dht.NodeType type = 2;
-     */
-    type: NodeType;
-    /**
-     * @generated from protobuf field: dht.ConnectivityMethod udp = 3;
+     * @generated from protobuf field: dht.ConnectivityMethod udp = 2;
      */
     udp?: ConnectivityMethod;
     /**
-     * @generated from protobuf field: dht.ConnectivityMethod tcp = 4;
+     * @generated from protobuf field: dht.ConnectivityMethod tcp = 3;
      */
     tcp?: ConnectivityMethod;
     /**
-     * @generated from protobuf field: dht.ConnectivityMethod websocket = 5;
+     * @generated from protobuf field: dht.ConnectivityMethod websocket = 4;
      */
     websocket?: ConnectivityMethod;
     /**
-     * @generated from protobuf field: optional bool openInternet = 6;
+     * @generated from protobuf field: optional bool openInternet = 5;
      */
     openInternet?: boolean;
     /**
-     * @generated from protobuf field: optional uint32 region = 7;
+     * @generated from protobuf field: optional uint32 region = 6;
      */
     region?: number;
     /**
-     * @generated from protobuf field: optional string nodeName = 8;
+     * @generated from protobuf field: optional string nodeName = 7;
      */
     nodeName?: string;
 }
@@ -719,23 +715,6 @@ export enum FindMode {
     DATA = 1
 }
 /**
- * @generated from protobuf enum dht.NodeType
- */
-export enum NodeType {
-    /**
-     * @generated from protobuf enum value: NODEJS = 0;
-     */
-    NODEJS = 0,
-    /**
-     * @generated from protobuf enum value: BROWSER = 1;
-     */
-    BROWSER = 1,
-    /**
-     * @generated from protobuf enum value: VIRTUAL = 3;
-     */
-    VIRTUAL = 3
-}
-/**
  * @generated from protobuf enum dht.RpcResponseError
  */
 export enum RpcResponseError {
@@ -989,13 +968,12 @@ class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
     constructor() {
         super("dht.PeerDescriptor", [
             { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "type", kind: "enum", T: () => ["dht.NodeType", NodeType] },
-            { no: 3, name: "udp", kind: "message", T: () => ConnectivityMethod },
-            { no: 4, name: "tcp", kind: "message", T: () => ConnectivityMethod },
-            { no: 5, name: "websocket", kind: "message", T: () => ConnectivityMethod },
-            { no: 6, name: "openInternet", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
-            { no: 7, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ },
-            { no: 8, name: "nodeName", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "udp", kind: "message", T: () => ConnectivityMethod },
+            { no: 3, name: "tcp", kind: "message", T: () => ConnectivityMethod },
+            { no: 4, name: "websocket", kind: "message", T: () => ConnectivityMethod },
+            { no: 5, name: "openInternet", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
+            { no: 6, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ },
+            { no: 7, name: "nodeName", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

@@ -1,6 +1,5 @@
 import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
 import {
-    NodeType,
     PeerDescriptor,
     ListeningRpcCommunicator,
     Simulator,
@@ -21,15 +20,12 @@ describe('Handshakes', () => {
 
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
     }
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: new Uint8Array([2, 1, 1]),
-        type: NodeType.NODEJS
     }
     const peerDescriptor3: PeerDescriptor = {
         kademliaId: new Uint8Array([3, 1, 1]),
-        type: NodeType.NODEJS
     }
     let rpcCommunicator1: ListeningRpcCommunicator
     let rpcCommunicator2: ListeningRpcCommunicator

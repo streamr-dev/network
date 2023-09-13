@@ -1,6 +1,6 @@
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { waitForCondition } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { SimulatorTransport } from '../../src/exports'
@@ -9,13 +9,11 @@ describe('Connection Locking', () => {
 
     const mockPeerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('mock1').value,
-        nodeName: 'mock1',
-        type: NodeType.NODEJS
+        nodeName: 'mock1'
     }
     const mockPeerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('mock2').value,
-        nodeName: 'mock2',
-        type: NodeType.NODEJS
+        nodeName: 'mock2'
     }
 
     let mockConnectorTransport1: ConnectionManager

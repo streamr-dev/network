@@ -1,4 +1,4 @@
-import { PeerDescriptor, NodeType } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { waitForCondition, hexToBinary } from '@streamr/utils'
@@ -9,7 +9,6 @@ describe('inspect', () => {
 
     const publisherDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
         websocket: {
             ip: 'localhost',
             port: 15478
@@ -18,7 +17,6 @@ describe('inspect', () => {
 
     const inspectedDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
         websocket: {
             ip: 'localhost',
             port: 15479
@@ -27,7 +25,6 @@ describe('inspect', () => {
 
     const inspectorDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
         websocket: {
             ip: 'localhost',
             port: 15480

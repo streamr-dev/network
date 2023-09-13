@@ -1,6 +1,6 @@
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
@@ -25,7 +25,6 @@ describe('Scaling down a Dht network', () => {
 
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
             nodeName: entryPointId
         }
 

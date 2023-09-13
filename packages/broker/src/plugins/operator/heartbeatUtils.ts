@@ -1,11 +1,10 @@
 import { z } from 'zod'
-import { NetworkNodeType, NetworkPeerDescriptor } from 'streamr-client'
+import { NetworkPeerDescriptor } from 'streamr-client'
 
 export const HeartbeatMessageSchema = z.object({
     msgType: z.enum(['heartbeat']),
     peerDescriptor: z.object({
         id: z.string(),
-        type: z.optional(z.nativeEnum(NetworkNodeType)),
         websocket: z.optional(z.object({
             ip: z.string(),
             port: z.number()

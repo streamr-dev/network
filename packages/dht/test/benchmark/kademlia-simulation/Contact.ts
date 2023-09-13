@@ -1,6 +1,6 @@
 import { PeerID } from '../../../src/helpers/PeerID'
 import type { SimulationNode } from './SimulationNode'
-import { NodeType, PeerDescriptor } from '../../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../src/proto/packages/dht/protos/DhtRpc'
 
 export class Contact {
     private static counter = 0
@@ -19,8 +19,7 @@ export class Contact {
 
     getPeerDescriptor(): PeerDescriptor {
         const peerDescriptor: PeerDescriptor = {
-            kademliaId: this.peerId.value,
-            type: NodeType.NODEJS
+            kademliaId: this.peerId.value
         }
         return peerDescriptor
     }

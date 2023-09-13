@@ -3,7 +3,6 @@ import {
     FindMode,
     Message,
     MessageType,
-    NodeType,
     PeerDescriptor,
     RecursiveFindRequest,
     RouteMessageAck,
@@ -126,8 +125,7 @@ export class RecursiveFinder implements IRecursiveFinder {
 
     private wrapRecursiveFindRequest(idToFind: Uint8Array, sessionId: string, findMode: FindMode): RouteMessageWrapper {
         const targetDescriptor: PeerDescriptor = {
-            kademliaId: idToFind,
-            type: NodeType.VIRTUAL
+            kademliaId: idToFind
         }
         const request: RecursiveFindRequest = {
             recursiveFindSessionId: sessionId,

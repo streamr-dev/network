@@ -11,7 +11,6 @@ import {
     LeaveNotice,
     ConnectivityResponse,
     Message,
-    NodeType,
     PeerDescriptor,
     PingRequest,
     PingResponse,
@@ -136,7 +135,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerIdString?: 
     } else {
         peerId = PeerID.fromString(peerIdString!).value
     }
-    const ret: PeerDescriptor = { kademliaId: peerId, nodeName: nodeName, type: NodeType.NODEJS }
+    const ret: PeerDescriptor = { kademliaId: peerId, nodeName: nodeName }
     if (msg && msg.websocket) {
         ret.websocket = { ip: msg.websocket.ip, port: msg.websocket.port }
         ret.openInternet = true

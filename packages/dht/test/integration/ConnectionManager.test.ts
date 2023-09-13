@@ -1,5 +1,5 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, MessageType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { createPeerDescriptor } from '../../src/dht/DhtNode'
@@ -13,24 +13,20 @@ describe('ConnectionManager', () => {
 
     const mockPeerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('tester1').value,
-        nodeName: 'tester1',
-        type: NodeType.NODEJS
+        nodeName: 'tester1'
     }
     const mockPeerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('tester2').value,
-        nodeName: 'tester2',
-        type: NodeType.NODEJS
+        nodeName: 'tester2'
     }
 
     const mockPeerDescriptor3: PeerDescriptor = {
         kademliaId: PeerID.fromString('tester3').value,
-        nodeName: 'tester3',
-        type: NodeType.NODEJS
+        nodeName: 'tester3'
     }
     const mockPeerDescriptor4: PeerDescriptor = {
         kademliaId: PeerID.fromString('tester4').value,
-        nodeName: 'tester4',
-        type: NodeType.NODEJS
+        nodeName: 'tester4'
     }
     const simulator = new Simulator()
 
@@ -66,7 +62,7 @@ describe('ConnectionManager', () => {
             transportLayer: mockTransport,
             websocketPortRange: { min: 9992, max: 9992 },
             entryPoints: [
-                { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 12345 } }
+                { kademliaId: Uint8Array.from([1, 2, 3]), websocket: { ip: '127.0.0.1', port: 12345 } }
             ]
         })
 
@@ -94,7 +90,7 @@ describe('ConnectionManager', () => {
             transportLayer: mockConnectorTransport2,
             websocketPortRange: { min: 9994, max: 9994 },
             entryPoints: [
-                { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 9993 } }
+                { kademliaId: Uint8Array.from([1, 2, 3]), websocket: { ip: '127.0.0.1', port: 9993 } }
             ]
         })
 

@@ -21,12 +21,10 @@ describe('RemoteHandshaker', () => {
     let remoteHandshaker: RemoteHandshaker
 
     const clientNode: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 1, 1]),
-        type: 1
+        kademliaId: new Uint8Array([1, 1, 1])
     }
     const serverNode: PeerDescriptor = {
-        kademliaId: new Uint8Array([2, 2, 2]),
-        type: 1
+        kademliaId: new Uint8Array([2, 2, 2])
     }
 
     let simulator: Simulator

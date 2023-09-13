@@ -1,6 +1,6 @@
 import { StreamrNode } from '../../src/logic/StreamrNode'
 import { MockLayer0 } from '../utils/mock/MockLayer0'
-import { isSamePeerDescriptor, NodeType, PeerDescriptor } from '@streamr/dht'
+import { isSamePeerDescriptor, PeerDescriptor } from '@streamr/dht'
 import { createRandomNodeId, createStreamMessage, mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
 import { hexToBinary, waitForCondition } from '@streamr/utils'
@@ -12,7 +12,6 @@ describe('StreamrNode', () => {
     let node: StreamrNode
     const peerDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
     }
     const streamPartId = StreamPartIDUtils.parse('stream#0')
     const message = createStreamMessage(

@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamID, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { waitForEvent3, hexToBinary } from '@streamr/utils'
@@ -32,13 +32,11 @@ describe('proxy and full node', () => {
 
     const proxyNodeDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
         nodeName: 'proxyNode',
         websocket: { ip: 'localhost', port: 23135 }
     }
     const proxiedNodeDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
     }
 
     const proxyStreamId = toStreamPartID(toStreamID('proxy-stream'), 0)

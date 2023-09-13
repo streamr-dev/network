@@ -1,5 +1,5 @@
 import { NetworkStack } from '../../src/NetworkStack'
-import { NodeType, PeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import {
     StreamPartIDUtils
 } from '@streamr/protocol'
@@ -15,7 +15,6 @@ describe('NetworkStack', () => {
 
     const epDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
         websocket: { ip: 'localhost', port: 32222 },
         nodeName: 'entrypoint'
     }

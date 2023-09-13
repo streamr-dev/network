@@ -1,6 +1,6 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
-import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, MessageType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
@@ -18,13 +18,11 @@ describe('WebRTC Connection Management', () => {
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('peer1').value,
         nodeName: 'peer1',
-        type: NodeType.NODEJS,
     }
 
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('peer2').value,
         nodeName: 'peer2',
-        type: NodeType.NODEJS,
     }
 
     let connectorTransport1: ITransport

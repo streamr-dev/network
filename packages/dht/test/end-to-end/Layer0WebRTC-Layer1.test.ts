@@ -1,5 +1,5 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/exports'
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
@@ -7,7 +7,6 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
     const entrypointDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString(entryPointId).value,
-        type: NodeType.NODEJS,
         websocket: {
             ip: '127.0.0.1',
             port: 23232

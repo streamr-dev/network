@@ -1,4 +1,4 @@
-import { PeerDescriptor, NodeType } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import { range } from 'lodash'
 import { hexToBinary, waitForCondition } from '@streamr/utils'
 import { createRandomNodeId, createStreamMessage } from '../utils/utils'
@@ -12,7 +12,6 @@ describe('Full node network with WebSocket connections only', () => {
     const NUM_OF_NODES = 48
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
         nodeName: 'entrypoint',
         websocket: { ip: 'localhost', port: 15555 }
     }

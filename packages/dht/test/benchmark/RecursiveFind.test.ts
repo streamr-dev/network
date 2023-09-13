@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
@@ -36,7 +36,6 @@ describe('Recursive find correctness', () => {
         nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
             nodeName: entryPointId
         }
 

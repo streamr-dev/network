@@ -1,4 +1,4 @@
-import { createStrictConfig, NetworkPeerDescriptor, redactConfig, NetworkNodeType } from '../../src/Config'
+import { createStrictConfig, NetworkPeerDescriptor, redactConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -110,7 +110,6 @@ describe('Config', () => {
         it('can override entryPoints', () => {
             const entryPoints = [{
                 id: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
-                type: NetworkNodeType.NODEJS,
                 websocket: {
                     ip: 'brubeck3.streamr.network',
                     port: 30401

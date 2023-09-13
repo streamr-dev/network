@@ -1,13 +1,11 @@
 import { hexToBinary } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
-import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createRandomNodeId } from '../utils/utils'
 
 describe('NetworkStack can be stopped during start', () => {
     
     const epDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
         websocket: { ip: 'localhost', port: 32224 },
     }
     let entryPoint: NetworkStack
@@ -25,7 +23,6 @@ describe('NetworkStack can be stopped during start', () => {
             layer0: {
                 peerDescriptor: {
                     kademliaId: hexToBinary(createRandomNodeId()),
-                    type: NodeType.NODEJS
                 },
                 entryPoints: [epDescriptor]
             },

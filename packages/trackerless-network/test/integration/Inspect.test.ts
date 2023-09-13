@@ -1,4 +1,4 @@
-import { LatencyType, NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
 import { range } from 'lodash'
 import { createRandomNodeId, createStreamMessage } from '../utils/utils'
@@ -15,12 +15,10 @@ describe('inspect', () => {
 
     const publisherDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
     }
 
     const inspectorPeerDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
     }
 
     const inspectedNodeCount = 12
@@ -56,7 +54,6 @@ describe('inspect', () => {
         await Promise.all(range(inspectedNodeCount).map(async () => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: hexToBinary(createRandomNodeId()),
-                type: NodeType.NODEJS
             }
             const node = await initiateNode(peerDescriptor, simulator)
             inspectedNodes.push(node)

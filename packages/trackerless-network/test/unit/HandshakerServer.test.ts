@@ -4,7 +4,6 @@ import { InterleaveNotice, StreamHandshakeRequest } from '../../src/proto/packag
 import { createMockRemoteHandshaker, createMockRemoteNode, createRandomNodeId, mockConnectionLocker } from '../utils/utils'
 import { NodeID } from '../../src/identifiers'
 import { hexToBinary } from '@streamr/utils'
-import { NodeType } from '@streamr/dht'
 
 describe('HandshakerServer', () => {
 
@@ -13,7 +12,6 @@ describe('HandshakerServer', () => {
     const nodeId = createRandomNodeId()
     const ownPeerDescriptor = {
         kademliaId: hexToBinary(nodeId),
-        type: NodeType.NODEJS
     }
 
     let targetNeighbors: NodeList
@@ -50,7 +48,6 @@ describe('HandshakerServer', () => {
             requestId: 'requestId',
             senderDescriptor: {
                 kademliaId: senderId,
-                type: NodeType.NODEJS
             }
         })
         const res = await handshakerServer.handshake(req, {} as any)
@@ -71,7 +68,6 @@ describe('HandshakerServer', () => {
             requestId: 'requestId',
             senderDescriptor: {
                 kademliaId: senderId,
-                type: NodeType.NODEJS
             }
         })
         const res = await handshakerServer.handshake(req, {} as any)
@@ -91,7 +87,6 @@ describe('HandshakerServer', () => {
             requestId: 'requestId',
             senderDescriptor: {
                 kademliaId: senderId,
-                type: NodeType.NODEJS
             }
         })
         const res = await handshakerServer.handshake(req, {} as any)
@@ -104,7 +99,6 @@ describe('HandshakerServer', () => {
             senderId: hexToBinary('0x1111'),
             interleaveTargetDescriptor: {
                 kademliaId: hexToBinary('0x2222'),
-                type: NodeType.NODEJS
             }
 
         }
@@ -118,7 +112,6 @@ describe('HandshakerServer', () => {
             senderId: hexToBinary('0x1111'),
             interleaveTargetDescriptor: {
                 kademliaId: hexToBinary('0x2222'),
-                type: NodeType.NODEJS
             }
         }
         await handshakerServer.interleaveNotice(req, {} as any)

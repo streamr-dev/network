@@ -1,7 +1,7 @@
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
 import { PeerID } from '../../src/helpers/PeerID'
-import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, MessageType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { waitForCondition } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
@@ -14,13 +14,11 @@ describe('SimultaneousConnections', () => {
 
     const peerDescriptor1 = {
         kademliaId: PeerID.fromString('mock1').value,
-        type: NodeType.NODEJS,
         nodeName: 'mock1'
     }
 
     const peerDescriptor2 = {
         kademliaId: PeerID.fromString('mock2').value,
-        type: NodeType.NODEJS,
         nodeName: 'mock2'
     }
 
@@ -85,7 +83,6 @@ describe('SimultaneousConnections', () => {
         const wsPeer1: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock1').value,
             nodeName: 'mock1WebSocket',
-            type: NodeType.NODEJS,
             websocket: {
                 ip: '127.0.0.1',
                 port: 43432
@@ -95,7 +92,6 @@ describe('SimultaneousConnections', () => {
         const wsPeer2: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock2').value,
             nodeName: 'mock2WebSocket',
-            type: NodeType.NODEJS,
             websocket: {
                 ip: '127.0.0.1',
                 port: 43433
@@ -168,7 +164,6 @@ describe('SimultaneousConnections', () => {
         const wsPeer1: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock1').value,
             nodeName: 'mock1WebSocketServer',
-            type: NodeType.NODEJS,
             websocket: {
                 ip: '127.0.0.1',
                 port: 43432
@@ -177,8 +172,7 @@ describe('SimultaneousConnections', () => {
 
         const wsPeer2: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock2').value,
-            nodeName: 'mock2WebSocketClient',
-            type: NodeType.NODEJS
+            nodeName: 'mock2WebSocketClient'
         }
 
         beforeEach(async () => {
@@ -243,14 +237,12 @@ describe('SimultaneousConnections', () => {
 
         const wrtcPeer1: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock1').value,
-            nodeName: 'mock1WebRTC',
-            type: NodeType.NODEJS
+            nodeName: 'mock1WebRTC'
         }
 
         const wrtcPeer2: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock2').value,
-            nodeName: 'mock2WebRTC',
-            type: NodeType.NODEJS
+            nodeName: 'mock2WebRTC'
         }
 
         beforeEach(async () => {
