@@ -163,7 +163,7 @@ export class ConnectivityChecker {
         }
 
         address += '?' + mode + '=true'
-
+        console.log(address)
         let result: RunAndRaceEventsReturnType<ConnectionEvents>
         try {
             result = await runAndRaceEvents3<ConnectionEvents>([
