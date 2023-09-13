@@ -49,6 +49,7 @@ export class ConnectivityChecker {
         }
         // send connectivity request
         const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort, tls: this.tls }
+        console.log(connectivityRequestMessage)
         const msg: Message = {
             serviceId: ConnectivityChecker.CONNECTIVITY_CHECKER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_REQUEST, messageId: v4(),
