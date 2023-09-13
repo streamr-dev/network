@@ -2,6 +2,7 @@ import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/prot
 import { WebRtcConnectorServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import {
     IceCandidate,
+    NodeType,
     PeerDescriptor,
     RtcAnswer,
     RtcOffer,
@@ -27,12 +28,12 @@ describe('WebRTC rpc messages', () => {
 
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: generateId('peer1'),
-        type: 0
+        type: NodeType.NODEJS
     }
 
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: generateId('peer2'),
-        type: 0
+        type: NodeType.NODEJS
     }
 
     beforeEach(() => {

@@ -2,6 +2,7 @@ import { NeighborUpdate } from '../../src/proto/packages/trackerless-network/pro
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     ListeningRpcCommunicator,
+    NodeType,
     PeerDescriptor,
     Simulator,
     SimulatorTransport
@@ -47,7 +48,7 @@ describe('RemoteNeighborUpdateManager', () => {
             async (_msg: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> => {
                 const node: PeerDescriptor = {
                     kademliaId: new Uint8Array([4, 2, 4]),
-                    type: 0
+                    type: NodeType.NODEJS
                 }
 
                 const update: NeighborUpdate = {
