@@ -55,7 +55,6 @@ describe('maintainOperatorPoolValue', () => {
             SAFETY_FRACTION,
             helper
         )
-        // TODO do we know what the approximate pool value should be?
         const poolValueAfterWithdraw = await operatorContract.getApproximatePoolValue()
         expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
     }, 60 * 1000)
