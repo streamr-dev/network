@@ -1,6 +1,6 @@
 import { ClosestPeersRequest, ClosestPeersResponse, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper } from './proto/TestProtos'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { PeerDescriptor } from './proto/TestProtos'
+import { NodeType, PeerDescriptor } from './proto/TestProtos'
 import { IDhtRpcService } from './proto/TestProtos.server'
 
 interface IDhtRpcWithError extends IDhtRpcService {
@@ -73,16 +73,20 @@ export const generateId = (stringId: string): Uint8Array => {
 
 export const getMockPeers = (): PeerDescriptor[] => {
     const n1: PeerDescriptor = {
-        peerId: generateId('Neighbor1')
+        peerId: generateId('Neighbor1'),
+        type: NodeType.NODEJS,
     }
     const n2: PeerDescriptor = {
-        peerId: generateId('Neighbor2')
+        peerId: generateId('Neighbor2'),
+        type: NodeType.NODEJS,
     }
     const n3: PeerDescriptor = {
-        peerId: generateId('Neighbor3')
+        peerId: generateId('Neighbor3'),
+        type: NodeType.NODEJS,
     }
     const n4: PeerDescriptor = {
-        peerId: generateId('Neighbor4')
+        peerId: generateId('Neighbor1'),
+        type: NodeType.BROWSER,
     }
     return [
         n1, n2, n3, n4

@@ -43,10 +43,11 @@ message ClosestPeersResponse {
 
 message PeerDescriptor {
     bytes peerId = 1;
-    ConnectivityMethod udp = 2;
-    ConnectivityMethod tcp = 3;
-    ConnectivityMethod websocket = 4;
-    optional bool openInternet = 5;
+    NodeType type = 2;
+    ConnectivityMethod udp = 3;
+    ConnectivityMethod tcp = 4;
+    ConnectivityMethod websocket = 5;
+    optional bool openInternet = 6;
   }
   
   message ConnectivityMethod {
