@@ -26,7 +26,7 @@ export async function findTarget(
     // choose sponsorship
     const sponsorships = await helper.getSponsorshipsOfOperator(myOperatorContractAddress)
     const suitableSponsorships = sponsorships
-        .filter(({ operatorCount }) => operatorCount >= 2)  // TODO: could this filtering be done in the graphql query?
+        .filter(({ operatorCount }) => operatorCount >= 2)  // exclude sponsorships with only self
         .filter(({ streamId }) => loadBalancer.isAnyPartitionOfStreamAssignedToMe(streamId))
     if (suitableSponsorships.length === 0) {
         logger.info('Skip inspection (no suitable sponsorship)', { totalSponsorships: sponsorships.length })
