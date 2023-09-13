@@ -89,17 +89,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 })()
             }, DEFAULT_UPDATE_INTERVAL_IN_MS, this.abortController.signal)
             await scheduleAtInterval(
-                () => maintainOperatorPoolValue(
-                    0.5,
-                    maintainOperatorPoolValueHelper
-                ).catch((err) => {
-                    logger.error('Encountered error while checking unwithdrawn earnings', { err })
-                }),
-                1000 * 60 * 60 * 24, // 1 day
-                true,
-                this.abortController.signal
-            )
-            await scheduleAtInterval(
                 async () => checkOperatorPoolValueBreach(
                     maintainOperatorPoolValueHelper
                 ).catch((err) => {
@@ -125,6 +114,20 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 logger.fatal('Encountered fatal error in announceNodeToContract', { err })
                 process.exit(1)
             }
+            await scheduleAtInterval(
+                async () => {
+                    if (isLeader()) {
+                        try {
+                            await maintainOperatorPoolValue(0.5, maintainOperatorPoolValueHelper)
+                        } catch (err) {
+                            logger.error('Encountered error while checking unwithdrawn earnings', { err })
+                        }
+                    }
+                },
+                1000 * 60 * 60 * 24, // 1 day
+                true,
+                this.abortController.signal
+            )
         })
     }
 
