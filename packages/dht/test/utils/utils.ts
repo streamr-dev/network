@@ -251,7 +251,7 @@ export const getMockPeers = (): PeerDescriptor[] => {
         kademliaId: generateId('Neighbor3')
     }
     const n4: PeerDescriptor = {
-        kademliaId: generateId('Neighbor1')  // TODO change kademliaId?
+        kademliaId: generateId('Neighbor4')
     }
     return [
         n1, n2, n3, n4
