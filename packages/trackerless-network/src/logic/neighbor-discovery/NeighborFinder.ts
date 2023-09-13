@@ -4,7 +4,7 @@ import { NodeID } from '../../identifiers'
 
 interface FindNeighborsSessionConfig {
     targetNeighbors: NodeList
-    nearbyContactPool: NodeList
+    nearbyNodeView: NodeList
     doFindNeighbors: (excludedNodes: NodeID[]) => Promise<NodeID[]>
     N: number
 }
@@ -33,7 +33,7 @@ export class NeighborFinder implements INeighborFinder {
             return
         }
         const newExcludes = await this.config.doFindNeighbors(excluded)
-        if (this.config.targetNeighbors.size() < this.config.N && newExcludes.length < this.config.nearbyContactPool.size()) {
+        if (this.config.targetNeighbors.size() < this.config.N && newExcludes.length < this.config.nearbyNodeView.size()) {
             setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL_TIMEOUT, this.abortController.signal)
         } else {
             this.running = false

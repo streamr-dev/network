@@ -32,14 +32,16 @@ export interface SetupOperatorContractOpts {
     }
 }
 
-export async function setupOperatorContract(
-    opts?: SetupOperatorContractOpts
-): Promise<{
+export interface SetupOperatorContractReturnType {
     operatorWallet: Wallet
     operatorContract: Operator
     operatorServiceConfig: Omit<OperatorServiceConfig, 'signer'>
     nodeWallets: Wallet[]
-}> {
+}
+
+export async function setupOperatorContract(
+    opts?: SetupOperatorContractOpts
+): Promise<SetupOperatorContractReturnType> {
     const operatorWallet = await generateWalletWithGasAndTokens({
         provider: opts?.provider,
         chainConfig: opts?.chainConfig,
@@ -99,7 +101,7 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
     const operatorReceipt = await (await operatorFactory.deployOperator(
         parseEther('1').mul(opts.operatorsCutPercent ?? 0).div(100),
         opts.poolTokenName ?? `Pool-${Date.now()}`,
-        opts.metadata ?? '{}',
+        opts.metadata ?? '',
         [
             chainConfig.contracts.OperatorDefaultDelegationPolicy,
             chainConfig.contracts.OperatorDefaultPoolYieldPolicy,

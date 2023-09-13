@@ -1,15 +1,14 @@
 import { 
     ITransport,
     ListeningRpcCommunicator,
-    PeerDescriptor,
-    peerIdFromPeerDescriptor
+    PeerDescriptor
 } from '@streamr/dht'
 import { LeaveStreamNotice, MessageID, MessageRef, ProxyDirection, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IStreamNode } from '../IStreamNode'
 import { EventEmitter } from 'eventemitter3'
 import { ConnectionLocker } from '@streamr/dht/src/exports'
 import { StreamNodeServer } from '../StreamNodeServer'
-import { Logger, wait, binaryToHex, EthereumAddress } from '@streamr/utils'
+import { Logger, wait, binaryToHex, EthereumAddress, addManagedEventListener } from '@streamr/utils'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
 import { NodeList } from '../NodeList'
 import { Propagation } from '../propagation/Propagation'
@@ -71,7 +70,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         super()
         this.config = config
         this.rpcCommunicator = new ListeningRpcCommunicator(`layer2-${config.streamPartId}`, config.P2PTransport)
-        this.targetNeighbors = new NodeList(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor), 1000)
+        this.targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor), 1000)
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.streamPartId,
@@ -233,8 +232,11 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
 
     async start(): Promise<void> {
         this.registerDefaultServerMethods()
-        this.config.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => 
-            this.onNodeDisconnected(peerDescriptor)
+        addManagedEventListener<any, any>(
+            this.config.P2PTransport as any,
+            'disconnected',
+            (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor),
+            this.abortController.signal
         )
     }
 
@@ -247,9 +249,6 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         this.rpcCommunicator.stop()
         this.connections.clear()
         this.abortController.abort()
-        this.config.P2PTransport.off('disconnected', (peerDescriptor: PeerDescriptor) => 
-            this.onNodeDisconnected(peerDescriptor)
-        )
     }
 
 }

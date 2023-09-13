@@ -35,7 +35,8 @@ export {
     NetworkNodeConfig,
     NetworkPeerDescriptor,
     ConnectivityMethod,
-    NetworkNodeType
+    NetworkNodeType,
+    StrictStreamrClientConfig
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'

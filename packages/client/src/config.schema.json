@@ -161,6 +161,13 @@
                         "webrtcDatachannelBufferThresholdHigh": {
                             "type": "number",
                             "default": 131072
+                        },
+                        "webrtcPortRange": {
+                            "$ref": "#/definitions/portRange",
+                            "default": {
+                                "min": 50000,
+                                "max": 64000
+                            }
                         }
                     },
                     "default": {}
