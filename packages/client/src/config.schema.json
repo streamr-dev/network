@@ -82,7 +82,6 @@
                             },
                             "default": [{
                                 "id": "productionEntryPoint1",
-                                "type": "nodejs",
                                 "websocket": {
                                     "ip": "127.0.0.1",
                                     "port": 40401
