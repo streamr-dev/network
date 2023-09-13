@@ -1,6 +1,6 @@
 import { OperatorFleetStateEvents } from './OperatorFleetState'
 import { MaintainTopologyHelperEvents } from './MaintainTopologyHelper'
-import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { StreamID, StreamPartID } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
 import pLimit from 'p-limit'
 import EventEmitter3 from 'eventemitter3'
