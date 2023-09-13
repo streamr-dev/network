@@ -16,7 +16,6 @@ export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '1
 
 interface TestConfig {
     privateKey: string
-    networkLayerWsServerPort?: number
     httpPort?: number
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: Config['apiAuthentication']
@@ -40,7 +39,6 @@ export const formConfig = ({
     apiAuthentication,
     enableCassandra = false,
     storageConfigRefreshInterval = 0,
-    networkLayerWsServerPort,
     entryPoints = DEFAULT_ENTRYPOINTS
 }: TestConfig): Config => {
     const plugins: Record<string, any> = { ...extraPlugins }
@@ -69,11 +67,7 @@ export const formConfig = ({
             },
             network: {
                 controlLayer: {
-                    entryPoints,
-                    websocketPortRange: networkLayerWsServerPort ? {
-                        min: networkLayerWsServerPort,
-                        max: networkLayerWsServerPort
-                    } : undefined
+                    entryPoints
                 },
                 node: {
                     id: toEthereumAddress(new Wallet(privateKey).address),
@@ -147,7 +141,6 @@ export const createTestStream = async (
 export async function startStorageNode(
     storageNodePrivateKey: string,
     httpPort: number,
-    networkLayerWsServerPort: number,
     entryPoints?: NetworkPeerDescriptor[],
     extraPlugins = {}
 ): Promise<Broker> {
@@ -169,7 +162,6 @@ export async function startStorageNode(
         privateKey: storageNodePrivateKey,
         httpPort,
         enableCassandra: true,
-        networkLayerWsServerPort,
         entryPoints,
         extraPlugins
     })
