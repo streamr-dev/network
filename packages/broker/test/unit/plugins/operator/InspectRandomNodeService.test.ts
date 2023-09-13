@@ -60,7 +60,7 @@ describe(findTarget, () => {
         expect(result).toBeUndefined()
     })
 
-    it('returns undefined if no sponsorships found with an operatorCount >= 2', async () => {
+    it('returns undefined if only finds sponsorship with my operator as only operator', async () => {
         setupEnv([{
             address: SPONSORSHIP_ADDRESS,
             operators: [MY_OPERATOR_ADDRESS],
@@ -105,9 +105,9 @@ describe(findTarget, () => {
     // TODO: few edge-cases where state changes during asynchronicity
 })
 
-const PEER_DESCRIPTOR_ONE = { id: 'node-1' }
-const PEER_DESCRIPTOR_TWO = { id: 'node-2' }
-const PEER_DESCRIPTOR_THREE = { id: 'node-3' }
+const PEER_DESCRIPTOR_ONE = { id: '0x1111' }
+const PEER_DESCRIPTOR_TWO = { id: '0x2222' }
+const PEER_DESCRIPTOR_THREE = { id: '0x3333' }
 
 const target = Object.freeze({
     sponsorshipAddress: SPONSORSHIP_ADDRESS,
