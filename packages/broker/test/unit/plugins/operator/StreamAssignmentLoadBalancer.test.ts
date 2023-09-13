@@ -74,12 +74,8 @@ describe(StreamAssignmentLoadBalancer, () => {
         expect(events).toEqual([])
     })
 
-    it('isAnyPartitionOfStreamAssignedToMe returns false if no assigned streams', () => {
-        expect(balancer.isAnyPartitionOfStreamAssignedToMe(S1)).toBe(false)
-    })
-
-    it('getPartitionsOfStreamAssignedToMe returns empty array if no assigned streams', () => {
-        expect(balancer.getPartitionsOfStreamAssignedToMe(S1)).toEqual([])
+    it('getMyStreamParts returns empty array if no assigned streams', () => {
+        expect(balancer.getMyStreamParts()).toEqual([])
     })
 
     it('all streams get assigned to myself if no other nodes present', async () => {
@@ -95,10 +91,11 @@ describe(StreamAssignmentLoadBalancer, () => {
             ['assigned', toStreamPartID(S3, 2)]
         ])
 
-        for (const streamId of [S1, S2, S3]) {
-            expect(balancer.isAnyPartitionOfStreamAssignedToMe(streamId)).toBeTrue()
-            expect(balancer.getPartitionsOfStreamAssignedToMe(streamId)).toEqual(streamPartMappings.get(streamId))
-        }
+        expect(balancer.getMyStreamParts()).toIncludeSameMembers([
+            ...streamPartMappings.get(S1)!,
+            ...streamPartMappings.get(S2)!,
+            ...streamPartMappings.get(S3)!
+        ])
     })
 
     it('unassigning a stream with only me present', async () => {
@@ -114,8 +111,10 @@ describe(StreamAssignmentLoadBalancer, () => {
             ['unassigned', toStreamPartID(S1, 1)]
         ])
 
-        expect(balancer.isAnyPartitionOfStreamAssignedToMe(S1)).toBeFalse()
-        expect(balancer.getPartitionsOfStreamAssignedToMe(S1)).toEqual([])
+        expect(balancer.getMyStreamParts()).toIncludeSameMembers([
+            ...streamPartMappings.get(S2)!,
+            ...streamPartMappings.get(S3)!
+        ])
     })
 
     it('adding nodes in the presence of streams', async () => {
@@ -132,8 +131,12 @@ describe(StreamAssignmentLoadBalancer, () => {
             ['unassigned', toStreamPartID(S3, 2)]
         ])
 
-        expect(balancer.isAnyPartitionOfStreamAssignedToMe(S3)).toBeTrue()
-        expect(balancer.getPartitionsOfStreamAssignedToMe(S3)).toEqual([toStreamPartID(S3, 0)])
+        expect(balancer.getMyStreamParts()).toIncludeSameMembers([
+            ...streamPartMappings.get(S1)!,
+            ...streamPartMappings.get(S2)!,
+            toStreamPartID(S3, 0),
+            ...streamPartMappings.get(S4)!,
+        ])
     })
 
     it('removing nodes in the presence of streams', async () => {
@@ -152,8 +155,7 @@ describe(StreamAssignmentLoadBalancer, () => {
             ['assigned', toStreamPartID(S3, 2)]
         ])
 
-        expect(balancer.isAnyPartitionOfStreamAssignedToMe(S3)).toBeTrue()
-        expect(balancer.getPartitionsOfStreamAssignedToMe(S3)).toEqual(streamPartMappings.get(S3))
+        expect(balancer.getMyStreamParts()).toIncludeSameMembers([...streamPartMappings.values()].flat())
     })
 
     it('stream assignments in the presence of other nodes', async () => {
@@ -169,9 +171,10 @@ describe(StreamAssignmentLoadBalancer, () => {
             ['assigned', toStreamPartID(S3, 0)]
         ])
 
-        expect(balancer.isAnyPartitionOfStreamAssignedToMe(S2)).toBeFalse()
-        expect(balancer.isAnyPartitionOfStreamAssignedToMe(S3)).toBeTrue()
-        expect(balancer.getPartitionsOfStreamAssignedToMe(S3)).toEqual([toStreamPartID(S3, 0)])
+        expect(balancer.getMyStreamParts()).toEqual([
+            toStreamPartID(S4, 0),
+            toStreamPartID(S3, 0)
+        ])
     })
 
     it('stream unassignments in the presence of other nodes', async () => {

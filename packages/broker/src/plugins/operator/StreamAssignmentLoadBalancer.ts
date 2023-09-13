@@ -44,23 +44,8 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.maintainTopologyHelper.on('removeStakedStream', this.streamRemoved)
     }
 
-    isAnyPartitionOfStreamAssignedToMe(streamId: StreamID): boolean {
-        for (const streamPart of this.myStreamParts.keys()) {
-            if (StreamPartIDUtils.getStreamID(streamPart) === streamId) {
-                return true
-            }
-        }
-        return false
-    }
-
-    getPartitionsOfStreamAssignedToMe(streamId: StreamID): StreamPartID[] {
-        const streamParts: StreamPartID[] = []
-        for (const streamPart of this.myStreamParts.keys()) {
-            if (StreamPartIDUtils.getStreamID(streamPart) === streamId) {
-                streamParts.push(streamPart)
-            }
-        }
-        return streamParts
+    getMyStreamParts(): StreamPartID[] {
+        return Array.from(this.myStreamParts)
     }
 
     private nodeAdded = this.concurrencyLimiter(async (nodeId: NodeID): Promise<void> => {

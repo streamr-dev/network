@@ -10,7 +10,7 @@ import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/Inspec
 import { mock, MockProxy } from 'jest-mock-extended'
 import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { StreamID, StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { EthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import { MessageListener, NetworkPeerDescriptor, StreamrClient, Subscription } from 'streamr-client'
 import { createHeartbeatMessage } from '../../../../src/plugins/operator/heartbeatUtils'
@@ -39,13 +39,8 @@ describe(findTarget, () => {
         })
     }
 
-    function setStreamPartsAssignedToMe(streamParts: StreamPartID[]) {
-        loadBalancer.getPartitionsOfStreamAssignedToMe.mockImplementation((streamId) => {
-            return streamParts.filter((streamPart) => StreamPartIDUtils.getStreamID(streamPart) === streamId)
-        })
-        loadBalancer.isAnyPartitionOfStreamAssignedToMe.mockImplementation((streamId) => {
-            return streamParts.some((streamPart) => StreamPartIDUtils.getStreamID(streamPart) === streamId)
-        })
+    function setStreamPartsAssignedToMe(streamParts: StreamPartID[]): void {
+        loadBalancer.getMyStreamParts.mockReturnValue(streamParts)
     }
 
     beforeEach(() => {
