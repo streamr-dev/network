@@ -106,7 +106,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             })
             const port = await this.webSocketServer.start(this.portRange!, this.host, this.tlsCertificate)
             this.selectedPort = port
-            this.connectivityChecker = new ConnectivityChecker(this.selectedPort)
+            this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.tlsCertificate !== undefined)
         }
     }
 
@@ -130,7 +130,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                         openInternet: true,
                         ip: this.host!,
                         natType: NatType.OPEN_INTERNET,
-                        websocket: { ip: this.host!, port: this.selectedPort! }
+                        websocket: { ip: this.host!, port: this.selectedPort!, tls: this.tlsCertificate !== undefined }
                     }
                     return preconfiguredConnectivityResponse
                 } else {

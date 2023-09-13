@@ -12,7 +12,8 @@ describe('inspect', () => {
         type: NodeType.NODEJS,
         websocket: {
             ip: 'localhost',
-            port: 15478
+            port: 15478,
+            tls: false
         }
     }
 
@@ -21,7 +22,8 @@ describe('inspect', () => {
         type: NodeType.NODEJS,
         websocket: {
             ip: 'localhost',
-            port: 15479
+            port: 15479,
+            tls: false
         }
     }
 
@@ -30,7 +32,8 @@ describe('inspect', () => {
         type: NodeType.NODEJS,
         websocket: {
             ip: 'localhost',
-            port: 15480
+            port: 15480,
+            tls: false
         }
     }
 

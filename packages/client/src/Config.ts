@@ -151,6 +151,7 @@ export interface NetworkPeerDescriptor {
 export interface ConnectivityMethod {
     ip: string
     port: number
+    tls: boolean
 }
 
 export interface ChainConnectionInfo {

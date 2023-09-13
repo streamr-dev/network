@@ -242,7 +242,8 @@ export const createTestClient = (privateKey: string, id: string, wsPort?: number
                     id,
                     websocket: wsPort ? {
                         ip: 'localhost',
-                        port: wsPort
+                        port: wsPort,
+                        tls: false
                     } : undefined
                 }
             },

@@ -14,7 +14,7 @@ describe('Full node network with WebSocket connections only', () => {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         nodeName: 'entrypoint',
-        websocket: { ip: 'localhost', port: 15555 }
+        websocket: { ip: 'localhost', port: 15555, tls: false }
     }
     const randomGraphId = StreamPartIDUtils.parse('websocket-network#0')
 

@@ -142,8 +142,9 @@ message PeerDescriptor {
 }
 
 message ConnectivityMethod {
-  uint32 port = 2;
-  string ip = 3;
+  uint32 port = 1;
+  string ip = 2;
+  bool tls = 3;
 }
 
 enum NodeType {
@@ -154,7 +155,7 @@ enum NodeType {
 
 message ConnectivityReportRequest {
   uint32 port = 1;
-  string requestId = 2;
+  string requestId = 3;
 }
 
 message ConnectivityReportResponse {
@@ -192,6 +193,7 @@ message RouteMessageAck {
 
 message ConnectivityRequest {
   uint32 port = 1;
+  bool tls = 2;
 }
 
 message ConnectivityResponse {

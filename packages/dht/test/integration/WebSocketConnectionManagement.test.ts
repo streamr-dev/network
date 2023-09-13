@@ -23,7 +23,8 @@ describe('WebSocket Connection Management', () => {
         type: NodeType.NODEJS,
         websocket: {
             ip: '127.0.0.1',
-            port: 12223
+            port: 12223,
+            tls: false
         }
     }
 

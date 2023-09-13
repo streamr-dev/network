@@ -88,7 +88,8 @@ describe('SimultaneousConnections', () => {
             type: NodeType.NODEJS,
             websocket: {
                 ip: '127.0.0.1',
-                port: 43432
+                port: 43432,
+                tls: false
             }
         }
 
@@ -98,7 +99,8 @@ describe('SimultaneousConnections', () => {
             type: NodeType.NODEJS,
             websocket: {
                 ip: '127.0.0.1',
-                port: 43433
+                port: 43433,
+                tls: false
             }
         }
 
@@ -171,7 +173,8 @@ describe('SimultaneousConnections', () => {
             type: NodeType.NODEJS,
             websocket: {
                 ip: '127.0.0.1',
-                port: 43432
+                port: 43432,
+                tls: false
             }
         }
 

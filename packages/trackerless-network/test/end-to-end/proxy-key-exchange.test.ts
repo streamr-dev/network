@@ -20,7 +20,7 @@ describe('proxy group key exchange', () => {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         nodeName: 'proxyNode',
-        websocket: { ip: 'localhost', port: 23134 }
+        websocket: { ip: 'localhost', port: 23134, tls: false }
     }
     const publisherDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),

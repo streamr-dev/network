@@ -8,7 +8,8 @@ export const HeartbeatMessageSchema = z.object({
         type: z.optional(z.nativeEnum(NetworkNodeType)),
         websocket: z.optional(z.object({
             ip: z.string(),
-            port: z.number()
+            port: z.number(),
+            tls: z.boolean()
         })),
         openInternet: z.optional(z.boolean()),
         region: z.optional(z.number())

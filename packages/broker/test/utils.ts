@@ -30,7 +30,8 @@ export const DEFAULT_ENTRYPOINTS = [{
     id: 'entrypoint',
     websocket: {
         ip: '127.0.0.1',
-        port: 40500
+        port: 40500,
+        tls: false
     }
 }]
 
@@ -65,7 +66,8 @@ export const formConfig = ({
         id: uuid(),
         websocket: {
             ip: '127.0.0.1',
-            port: networkLayerWsServerPort
+            port: networkLayerWsServerPort,
+            tls: false
         }
     } : {
         id: uuid(),

@@ -22,10 +22,12 @@ export class ConnectivityChecker {
     private static readonly CONNECTIVITY_CHECKER_SERVICE_ID = 'system/connectivitychecker'
     private static readonly CONNECTIVITY_CHECKER_TIMEOUT = 5000
     private destroyed = false
-    private webSocketPort?: number
+    private readonly webSocketPort: number
+    private readonly tls: boolean 
 
-    constructor(webSocketPort?: number) {
+    constructor(webSocketPort: number, tls: boolean) {
         this.webSocketPort = webSocketPort
+        this.tls = tls
     }
 
     public async sendConnectivityRequest(entryPoint: PeerDescriptor): Promise<ConnectivityResponse> {
@@ -35,7 +37,9 @@ export class ConnectivityChecker {
         let outgoingConnection: IConnection
         try {
             outgoingConnection = await this.connectAsync({
-                host: entryPoint.websocket?.ip, port: entryPoint.websocket?.port, timeoutMs: 1000,
+                host: entryPoint.websocket?.ip, 
+                port: entryPoint.websocket?.port,
+                timeoutMs: 1000,
                 mode: ConnectionMode.REQUEST
             })
         } catch (e) {
@@ -43,7 +47,7 @@ export class ConnectivityChecker {
             throw new Err.ConnectionFailed('Failed to connect to the entrypoints', e)
         }
         // send connectivity request
-        const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort! }
+        const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort, tls: this.tls }
         const msg: Message = {
             serviceId: ConnectivityChecker.CONNECTIVITY_CHECKER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_REQUEST, messageId: v4(),
@@ -130,7 +134,7 @@ export class ConnectivityChecker {
                 openInternet: true,
                 ip: connection.getRemoteAddress(),
                 natType: NatType.OPEN_INTERNET,
-                websocket: { ip: connection.getRemoteAddress(), port: connectivityRequest.port }
+                websocket: { ip: connection.getRemoteAddress(), port: connectivityRequest.port, tls: connectivityRequest.tls }
             }
         }
         const msg: Message = {
@@ -145,8 +149,8 @@ export class ConnectivityChecker {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private async connectAsync({ host, port, url, timeoutMs, mode }:
-        { host?: string, port?: number, url?: string, timeoutMs: number, mode: ConnectionMode } =
+    private async connectAsync({ host, port, tls, url, timeoutMs, mode }:
+        { host?: string, port?: number, tls?: boolean, url?: string, timeoutMs: number, mode: ConnectionMode } =
     { timeoutMs: 1000, mode: ConnectionMode.REQUEST }
     ): Promise<IConnection> {
         const socket = new ClientWebSocket()
@@ -154,7 +158,7 @@ export class ConnectivityChecker {
         if (url) {
             address = url
         } else if (host && port) {
-            address = 'ws://' + host + ':' + port
+            address = tls ? 'wss://' : 'ws://' + host + ':' + port
         }
 
         address += '?' + mode + '=true'

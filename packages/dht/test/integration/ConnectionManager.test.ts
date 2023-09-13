@@ -66,7 +66,7 @@ describe('ConnectionManager', () => {
             transportLayer: mockTransport,
             websocketPortRange: { min: 9992, max: 9992 },
             entryPoints: [
-                { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 12345 } }
+                { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 12345, tls: false } }
             ]
         })
 
@@ -94,7 +94,7 @@ describe('ConnectionManager', () => {
             transportLayer: mockConnectorTransport2,
             websocketPortRange: { min: 9994, max: 9994 },
             entryPoints: [
-                { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 9993 } }
+                { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 9993, tls: false } }
             ]
         })
 
