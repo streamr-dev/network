@@ -159,7 +159,7 @@ export class ConnectivityChecker {
         if (url) {
             address = url
         } else if (host && port) {
-            address = tls ? 'wss://' : 'ws://' + host + ':' + port
+            address = (tls ? 'wss://' : 'ws://') + host + ':' + port
         }
 
         address += '?' + mode + '=true'
