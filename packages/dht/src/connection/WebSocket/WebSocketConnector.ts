@@ -161,7 +161,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         } else {
             const socket = new ClientWebSocket()
 
-            const address = targetPeerDescriptor.websocket.tls ? 'wss://' : 'ws://' + targetPeerDescriptor.websocket!.ip + ':' +
+            const address = targetPeerDescriptor.websocket!.tls ? 'wss://' : 'ws://' + targetPeerDescriptor.websocket!.ip + ':' +
                 targetPeerDescriptor.websocket!.port
 
             const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
