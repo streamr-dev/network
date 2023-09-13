@@ -9,6 +9,7 @@ import { ConsistentHashRing } from './ConsistentHashRing'
 import without from 'lodash/without'
 import { weightedSample } from '../../helpers/weightedSample'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
+import { shuffle } from 'lodash'
 
 const logger = new Logger(module)
 
@@ -168,13 +169,13 @@ export class InspectRandomNodeService {
             return
         }
 
-        const targetPeerDescriptors = await this.findNodesForTarget(
+        const targetPeerDescriptors = shuffle(await this.findNodesForTarget(
             target,
             this.streamrClient,
             this.fetchRedundancyFactor,
             this.heartbeatLastResortTimeoutInMs,
             this.abortController.signal
-        )
+        ))
 
         logger.info('Inspecting nodes of operator', {
             targetOperator: target.operatorAddress,
