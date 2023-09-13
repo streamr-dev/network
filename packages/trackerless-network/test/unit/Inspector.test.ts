@@ -1,25 +1,25 @@
-import { ListeningRpcCommunicator, NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
+import { ListeningRpcCommunicator, NodeType, PeerDescriptor } from '@streamr/dht'
 import { Inspector } from '../../src/logic/inspect/Inspector'
-import { mockConnectionLocker } from '../utils/utils'
+import { createRandomNodeId, mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
-import { utf8ToBinary } from '@streamr/utils'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('Inspector', () => {
     
     let inspector: Inspector
-    const inspectorPeerId = PeerID.fromString('inspector')
+    const inspectorNodeId = createRandomNodeId()
     const inspectorDescriptor: PeerDescriptor = {
-        kademliaId: inspectorPeerId.value,
+        kademliaId: hexToBinary(inspectorNodeId),
         type: NodeType.NODEJS
     }
 
     const inspectedDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('inspected').value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS
     }
 
-    const nodeId = PeerID.fromString('other').toKey() as unknown as NodeID
+    const nodeId = createRandomNodeId()
     let mockConnect: jest.Mock
 
     const messageRef = {

@@ -1,6 +1,6 @@
 import { Client } from 'cassandra-driver'
 import { waitForStreamToEnd } from '@streamr/test-utils'
-import { toEthereumAddress, waitForEvent, waitForCondition } from '@streamr/utils'
+import { toEthereumAddress, waitForEvent, waitForCondition, hexToBinary } from '@streamr/utils'
 import { Readable, PassThrough } from 'stream'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
@@ -20,7 +20,7 @@ const createMockMessage = (i: number) => {
         content: {
             value: i
         },
-        signature: 'signature'
+        signature: hexToBinary('0x1234')
     })
 }
 const MOCK_MESSAGES = [1, 2, 3].map((contentValue: number) => createMockMessage(contentValue))

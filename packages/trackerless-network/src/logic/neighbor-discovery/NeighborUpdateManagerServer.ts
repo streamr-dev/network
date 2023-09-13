@@ -14,7 +14,7 @@ interface NeighborUpdateManagerConfig {
     ownNodeId: NodeID
     randomGraphId: string
     targetNeighbors: NodeList
-    nearbyContactPool: NodeList
+    nearbyNodeView: NodeList
     neighborFinder: INeighborFinder
     rpcCommunicator: ListeningRpcCommunicator
 }
@@ -29,20 +29,20 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
 
     // INetworkRpc server method
     async neighborUpdate(message: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> {
-        if (this.config.targetNeighbors!.hasNodeById(binaryToHex(message.senderId) as NodeID)) {
+        if (this.config.targetNeighbors.hasNodeById(binaryToHex(message.senderId) as NodeID)) {
             const newPeerDescriptors = message.neighborDescriptors
                 .filter((peerDescriptor) => {
                     const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
                     return nodeId !== this.config.ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
                 })
-            newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyContactPool.add(
+            newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
                 new RemoteRandomGraphNode(
                     peerDescriptor,
                     this.config.randomGraphId,
-                    toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator!.getRpcClientTransport()))
+                    toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
                 ))
             )
-            this.config.neighborFinder!.start()
+            this.config.neighborFinder.start()
             const response: NeighborUpdate = {
                 senderId: hexToBinary(this.config.ownNodeId),
                 randomGraphId: this.config.randomGraphId,

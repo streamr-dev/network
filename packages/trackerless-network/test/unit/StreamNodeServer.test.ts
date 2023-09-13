@@ -2,9 +2,10 @@ import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
 import { LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/Transport'
-import { utf8ToBinary, hexToBinary } from '@streamr/utils'
+import { hexToBinary } from '@streamr/utils'
 import { createRandomNodeId, createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('StreamNodeServer', () => {
 
@@ -22,7 +23,7 @@ describe('StreamNodeServer', () => {
     const message = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         StreamPartIDUtils.parse('random-graph#0'),
-        utf8ToBinary('publisher')
+        randomEthereumAddress()
     )
 
     let mockBroadcast: jest.Mock

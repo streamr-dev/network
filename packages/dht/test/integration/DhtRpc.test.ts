@@ -92,17 +92,14 @@ describe('DhtRpc', () => {
     it('Server side timeout', async () => {
         let timeout: NodeJS.Timeout
 
-        function respondGetClosestPeersWithTimeout(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
+        async function respondGetClosestPeersWithTimeout(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
             const neighbors = getMockPeers()
             const response: ClosestPeersResponse = {
                 peers: neighbors,
                 requestId: 'why am i still here'
             }
-            return new Promise((resolve, _reject) => {
-                timeout = setTimeout(() => {
-                    resolve(response)
-                }, 5000)
-            })
+            await wait(5000)
+            return response
         }
 
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', respondGetClosestPeersWithTimeout)

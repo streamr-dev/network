@@ -1,4 +1,5 @@
 import { v4, parse, stringify } from 'uuid'
+import { binaryToHex } from '@streamr/utils'
 
 export class UUID {
     private buf: Uint8Array
@@ -18,6 +19,10 @@ export class UUID {
 
     toString(): string {
         return stringify(this.buf)
+    }
+
+    toHex(): string {
+        return binaryToHex(this.buf)
     }
 
     equals(other: UUID): boolean {

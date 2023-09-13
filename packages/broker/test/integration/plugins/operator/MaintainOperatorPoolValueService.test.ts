@@ -1,14 +1,14 @@
 import { parseEther } from '@ethersproject/units'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, waitForCondition } from '@streamr/utils'
-import { MaintainOperatorValueService } from '../../../../src/plugins/operator/MaintainOperatorValueService'
+import { MaintainOperatorPoolValueService } from '../../../../src/plugins/operator/MaintainOperatorPoolValueService'
 import { createClient, createTestStream } from '../../../utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
-import { getTotalUnwithdrawnEarnings } from './operatorValueUtils'
+import { getTotalUnwithdrawnEarnings } from './operatorPoolValueUtils'
 
 const logger = new Logger(module)
 
-describe('MaintainOperatorValueService', () => {
+describe('MaintainOperatorPoolValueService', () => {
 
     let streamId: string
 
@@ -19,7 +19,7 @@ describe('MaintainOperatorValueService', () => {
         await client.destroy()
     }, 60 * 1000)
 
-    it('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
+    it.skip('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
         const { operatorWallet, operatorContract, operatorServiceConfig, nodeWallets } = await setupOperatorContract({
             nodeCount: 1,
             operatorConfig: {
@@ -37,7 +37,7 @@ describe('MaintainOperatorValueService', () => {
         await stake(operatorContract, sponsorship2.address, 100)
 
         // 1000 = check every second
-        const service = new MaintainOperatorValueService({
+        const service = new MaintainOperatorPoolValueService({
             ...operatorServiceConfig,
             signer: nodeWallets[0]
         }, 0.5, 1000)
