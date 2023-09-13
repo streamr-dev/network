@@ -53,8 +53,3 @@ message PeerDescriptor {
     uint32 port = 2;
     string ip = 3;
   }
-  
-  enum NodeType {
-    NODEJS = 0;
-    BROWSER = 1;
-  }
