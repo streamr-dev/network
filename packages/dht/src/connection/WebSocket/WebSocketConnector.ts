@@ -16,7 +16,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebSocketServer } from './WebSocketServer'
 import { ConnectivityChecker } from '../ConnectivityChecker'
-import { NatType, PortRange } from '../ConnectionManager'
+import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { ServerWebSocket } from './ServerWebSocket'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -38,6 +38,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private portRange?: PortRange
     private host?: string
     private entrypoints?: PeerDescriptor[]
+    private readonly tlsCertificate?: TlsCertificate
     private selectedPort?: number
     private readonly protocolVersion: string
     private ownPeerDescriptor?: PeerDescriptor
@@ -51,7 +52,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         incomingConnectionCallback: (connection: ManagedConnection) => boolean,
         portRange?: PortRange,
         host?: string,
-        entrypoints?: PeerDescriptor[]
+        entrypoints?: PeerDescriptor[],
+        tlsCertificate?: TlsCertificate
     ) {
         this.protocolVersion = protocolVersion
         this.webSocketServer = portRange ? new WebSocketServer() : undefined
@@ -59,6 +61,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         this.portRange = portRange
         this.host = host
         this.entrypoints = entrypoints
+        this.tlsCertificate = tlsCertificate
 
         this.canConnectFunction = fnCanConnect.bind(this)
 
@@ -101,7 +104,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     this.attachHandshaker(connection)
                 }
             })
-            const port = await this.webSocketServer.start(this.portRange!, this.host)
+            const port = await this.webSocketServer.start(this.portRange!, this.host, this.tlsCertificate)
             this.selectedPort = port
             this.connectivityChecker = new ConnectivityChecker(this.selectedPort)
         }

@@ -1,4 +1,5 @@
-import * as http from 'http'
+import { createServer as createHttpServer, Server as HttpServer } from 'http'
+import { createServer as createHttpsServer, Server as HttpsServer } from 'https'
 import EventEmitter from 'eventemitter3'
 import { server as WsServer } from 'websocket'
 import { ServerWebSocket } from './ServerWebSocket'
@@ -8,8 +9,9 @@ import {
 
 import { Logger, asAbortable } from '@streamr/utils'
 import { StartingWebSocketServerFailed } from '../../helpers/errors'
-import { PortRange } from '../ConnectionManager'
+import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
+import fs from 'fs'
 
 const logger = new Logger(module)
 
@@ -22,30 +24,45 @@ declare class NodeJsWsServer extends WsServer { }
 
 export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
 
-    private httpServer?: http.Server
+    private httpServer?: HttpServer | HttpsServer
     private wsServer?: WsServer
     private readonly abortController = new AbortController()
-    
-    public async start(portRange: PortRange, host?: string): Promise<number> {
+
+    public async start(portRange: PortRange, host?: string, tlsCertificate?: TlsCertificate): Promise<number> {
         const ports = range(portRange.min, portRange.max + 1)
         for (const port of ports) {
             try {
-                await asAbortable(this.startServer(port, host), this.abortController.signal)
+                await asAbortable(this.startServer(port, host, tlsCertificate), this.abortController.signal)
                 return port
             } catch (err) {
+                console.error(err)
                 logger.debug(`failed to start WebSocket server on port: ${port} reattempting on next port`)
             }
         }
         throw new StartingWebSocketServerFailed('Failed to start WebSocket server on any port in range')
     }
 
-    private startServer(port: number, host?: string): Promise<void> {
+    private startServer(port: number, host?: string, tlsCertificate?: TlsCertificate): Promise<void> {
+        if (tlsCertificate) {
+            console.log(tlsCertificate.certFileName, tlsCertificate.privateKeyFileName)
+            console.log(fs.readFileSync(tlsCertificate.certFileName), fs.readFileSync(tlsCertificate.privateKeyFileName))
+        }
         return new Promise((resolve, reject) => {
-            this.httpServer = http.createServer((request, response) => {
-                logger.trace('Received request for ' + request.url)
-                response.writeHead(404)
-                response.end()
-            })
+            this.httpServer = tlsCertificate ? 
+                createHttpsServer({
+                    key: fs.readFileSync(tlsCertificate.privateKeyFileName),
+                    cert: fs.readFileSync(tlsCertificate.certFileName)
+                }, (request, response) => {
+                    logger.trace('Received request for ' + request.url)
+                    response.writeHead(404)
+                    response.end()
+                })
+                : 
+                createHttpServer((request, response) => {
+                    logger.trace('Received request for ' + request.url)
+                    response.writeHead(404)
+                    response.end()
+                })
 
             function originIsAllowed(_uorigin: string) {
                 return true
@@ -96,7 +113,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
         })
     }
 
-    private createWsServer(httpServer: http.Server): WsServer {
+    private createWsServer(httpServer: HttpServer | HttpsServer): WsServer {
         // Use the real nodejs WebSocket server in Electron tests
 
         if (typeof NodeJsWsServer !== 'undefined') {

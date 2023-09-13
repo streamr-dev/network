@@ -20,7 +20,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
-import { ConnectionManager, ConnectionManagerConfig, PortRange } from '../connection/ConnectionManager'
+import { ConnectionManager, ConnectionManagerConfig, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
@@ -82,6 +82,7 @@ export interface DhtNodeOptions {
     webrtcNewConnectionTimeout?: number
     webrtcPortRange?: PortRange
     maxConnections?: number
+    tlsCertificate?: TlsCertificate
 }
 
 export class DhtNodeConfig {
@@ -112,6 +113,7 @@ export class DhtNodeConfig {
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
     webrtcPortRange?: PortRange
+    tlsCertificate?: TlsCertificate
 
     constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
@@ -208,7 +210,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 webrtcPortRange: this.config.webrtcPortRange,
                 nodeName: this.getNodeName(),
-                maxConnections: this.config.maxConnections
+                maxConnections: this.config.maxConnections,
+                tlsCertificate: this.config.tlsCertificate
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
