@@ -87,7 +87,7 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
     const id = PeerID.fromString(stringId)
     const descriptor: PeerDescriptor = {
         kademliaId: id.value,
-        type: 0,
+        type: NodeType.NODEJS,
         nodeName: stringId
     }
 
