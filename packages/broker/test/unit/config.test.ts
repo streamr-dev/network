@@ -40,8 +40,7 @@ describe('overrideConfigToEnvVarsIfGiven', () => {
                 network: {
                     controlLayer: {
                         peerDescriptor: {
-                            id: 'kademliaID',
-                            type: 0
+                            id: 'kademliaID'
                         }
                     }
                 }
