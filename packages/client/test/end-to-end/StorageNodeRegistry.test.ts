@@ -19,8 +19,8 @@ describe('StorageNodeRegistry', () => {
     beforeAll(async () => {
         creatorWallet = new Wallet(await fetchPrivateKeyWithGas())
         listenerWallet = new Wallet(await fetchPrivateKeyWithGas())
-        creatorClient = createTestClient(creatorWallet.privateKey, 'storage-node-registry-1-creator', 43235)
-        listenerClient = createTestClient(listenerWallet.privateKey, 'storage-node-registry-1-listener', 43234)
+        creatorClient = createTestClient(creatorWallet.privateKey, 43235)
+        listenerClient = createTestClient(listenerWallet.privateKey, 43234)
     }, TEST_TIMEOUT)
 
     afterAll(async () => {
