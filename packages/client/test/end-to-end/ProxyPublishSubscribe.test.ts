@@ -31,15 +31,17 @@ describe('PubSub with proxy connections', () => {
     const proxyNodeDescriptor1: NetworkPeerDescriptor = {
         id: proxyNodeId1,
         websocket: {
-            ip: 'localhost',
-            port: proxyNodePort1
+            host: 'localhost',
+            port: proxyNodePort1,
+            tls: false
         }
     }
     const proxyNodeDescriptor2: NetworkPeerDescriptor = {
         id: proxyNodeId2,
         websocket: {
-            ip: 'localhost',
-            port: proxyNodePort2
+            host: 'localhost',
+            port: proxyNodePort2,
+            tls: false
         }
     }
 

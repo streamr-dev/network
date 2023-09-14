@@ -6,8 +6,9 @@ const main = async () => {
         kademliaId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
         websocket: {
-            ip: '127.0.0.1',
-            port: 40500
+            host: '127.0.0.1',
+            port: 40500,
+            tls: false
         }
     }
     const dhtNode = new DhtNode({

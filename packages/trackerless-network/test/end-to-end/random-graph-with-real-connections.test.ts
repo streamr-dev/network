@@ -11,7 +11,7 @@ describe('random graph with real connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 12221 }
+        websocket: { host: 'localhost', port: 12221, tls: false }
     }
 
     const randomGraphId = StreamPartIDUtils.parse('random-graph#0')

@@ -29,8 +29,9 @@ interface TestConfig {
 export const DEFAULT_ENTRYPOINTS = [{
     id: 'entrypoint',
     websocket: {
-        ip: '127.0.0.1',
-        port: 40500
+        host: '127.0.0.1',
+        port: 40500,
+        tls: false
     }
 }]
 
@@ -64,8 +65,9 @@ export const formConfig = ({
     const peerDescriptor = networkLayerWsServerPort ? {
         id: uuid(),
         websocket: {
-            ip: '127.0.0.1',
-            port: networkLayerWsServerPort
+            host: '127.0.0.1',
+            port: networkLayerWsServerPort,
+            tls: false
         }
     } : {
         id: uuid(),

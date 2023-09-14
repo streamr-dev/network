@@ -52,6 +52,7 @@ export class ConnectionManagerConfig {
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
     webrtcPortRange?: PortRange
+    tlsCertificate?: TlsCertificate
 
     // the following fields are used in simulation only
     simulator?: Simulator
@@ -113,6 +114,11 @@ export interface PortRange {
     max: number
 }
 
+export interface TlsCertificate {
+    privateKeyFileName: string
+    certFileName: string
+}
+
 export type Events = TransportEvents & ConnectionManagerEvents
 
 export class ConnectionManager extends EventEmitter<Events> implements ITransport, ConnectionLocker {
@@ -167,7 +173,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 this.incomingConnectionCallback,
                 this.config.websocketPortRange,
                 this.config.websocketHost,
-                this.config.entryPoints
+                this.config.entryPoints,
+                this.config.tlsCertificate
             )
             logger.trace(`Creating WebRTCConnector`)
             this.webrtcConnector = new WebRtcConnector({
@@ -178,7 +185,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 connectionTimeout: this.config.webrtcNewConnectionTimeout,
-                portRange: this.config.webrtcPortRange
+                portRange: this.config.webrtcPortRange,
             }, this.incomingConnectionCallback)
         }
         this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'
@@ -341,7 +348,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private isOwnWebSocketServer(peerDescriptor: PeerDescriptor): boolean {
         if ((peerDescriptor.websocket !== undefined) && (this.ownPeerDescriptor!.websocket !== undefined)) {
             return ((peerDescriptor.websocket.port === this.ownPeerDescriptor!.websocket!.port) 
-                && (peerDescriptor.websocket.ip === this.ownPeerDescriptor!.websocket.ip))
+                && (peerDescriptor.websocket.host === this.ownPeerDescriptor!.websocket.host))
         } else {
             return false
         }

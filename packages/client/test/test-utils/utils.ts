@@ -241,8 +241,9 @@ export const createTestClient = (privateKey: string, id: string, wsPort?: number
                 peerDescriptor: {
                     id,
                     websocket: wsPort ? {
-                        ip: 'localhost',
-                        port: wsPort
+                        host: 'localhost',
+                        port: wsPort,
+                        tls: false
                     } : undefined
                 }
             },

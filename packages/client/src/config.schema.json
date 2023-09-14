@@ -84,8 +84,9 @@
                                 "id": "productionEntryPoint1",
                                 "type": "nodejs",
                                 "websocket": {
-                                    "ip": "127.0.0.1",
-                                    "port": 40401
+                                    "host": "127.0.0.1",
+                                    "port": 40401,
+                                    "tls": true
                                 }
                             }]
                         },
@@ -98,6 +99,25 @@
                         },
                         "peerDescriptor": {
                             "$ref": "#/definitions/peerDescriptor"
+                        },
+                        "tlsCertificate": {
+                            "description": "Files to use for TLS",
+                            "type": "object",
+                            "required": [
+                                "certFileName",
+                                "privateKeyFileName"
+                            ],
+                            "additionalProperties": false,
+                            "properties": {
+                                "certFileName": {
+                                    "type": "string",
+                                    "description": "Path of certificate file"
+                                },
+                                "privateKeyFileName": {
+                                    "type": "string",
+                                    "description": "Path of private key file"
+                                }
+                            }
                         },
                         "iceServers": {
                             "type": "array",
@@ -502,15 +522,19 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
+                "host",
                 "port",
-                "ip"
+                "tls"
             ],
             "properties": {
+                "host": {
+                    "type": "string"
+                },
                 "port": {
                     "type": "number"
                 },
-                "ip": {
-                    "type": "string"
+                "tls": {
+                    "type": "boolean"
                 }
             }
         },
