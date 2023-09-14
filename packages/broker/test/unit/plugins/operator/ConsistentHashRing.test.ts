@@ -3,6 +3,17 @@ import range from 'lodash/range'
 import random from 'lodash/random'
 import { randomString } from '@streamr/utils'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
+import { NodeID } from 'streamr-client'
+
+const NODE_1 = 'node1' as NodeID
+const NODE_2 = 'node2' as NodeID
+const NODE_3 = 'node3' as NodeID
+const NODE_4 = 'node4' as NodeID
+const NODE_5 = 'node5' as NodeID
+const NODE_6 = 'node6' as NodeID
+const NODE_7 = 'node7' as NodeID
+const NODE_8 = 'node8' as NodeID
+const NODE_9 = 'node9' as NodeID
 
 // caveat: statistically unlikely to get 10 consecutive assignments, but not impossible
 function checkForConsistentSequentialAssignments(assignments: string[]): void {
@@ -27,17 +38,17 @@ describe(ConsistentHashRing, () => {
         const h2 = new ConsistentHashRing(1)
         const h3 = new ConsistentHashRing(1)
 
-        h1.add('node-1')
-        h1.add('node-2')
-        h1.add('node-3')
+        h1.add(NODE_1)
+        h1.add(NODE_2)
+        h1.add(NODE_3)
 
-        h2.add('node-2')
-        h2.add('node-1')
-        h2.add('node-3')
+        h2.add(NODE_2)
+        h2.add(NODE_1)
+        h2.add(NODE_3)
 
-        h3.add('node-3')
-        h3.add('node-2')
-        h3.add('node-1')
+        h3.add(NODE_3)
+        h3.add(NODE_2)
+        h3.add(NODE_1)
 
         // eslint-disable-next-line no-underscore-dangle
         for (const _idx of range(50)) {
@@ -53,9 +64,9 @@ describe(ConsistentHashRing, () => {
 
     it('partitions of same stream get spread around sufficiently', () => {
         const h = new ConsistentHashRing(1)
-        h.add('node-1')
-        h.add('node-2')
-        h.add('node-3')
+        h.add(NODE_1)
+        h.add(NODE_2)
+        h.add(NODE_3)
 
         const assignments = []
         for (const idx of range(100)) {
@@ -67,9 +78,9 @@ describe(ConsistentHashRing, () => {
 
     it('streams with same partition number get spread around sufficiently', () => {
         const h = new ConsistentHashRing(1)
-        h.add('node-1')
-        h.add('node-2')
-        h.add('node-3')
+        h.add(NODE_1)
+        h.add(NODE_2)
+        h.add(NODE_3)
 
         const assignments = range(50).map((_idx) => {
             return h.get(toStreamPartID(toStreamID(randomString(16)), 0))[0]
@@ -81,26 +92,26 @@ describe(ConsistentHashRing, () => {
         const streamParts = range(50).map(() => toStreamPartID(toStreamID(randomString(6)), random(1, 10)))
 
         const h1 = new ConsistentHashRing(1)
-        h1.add('node-1')
-        h1.add('node-2')
+        h1.add(NODE_1)
+        h1.add(NODE_2)
         streamParts.forEach((sp) => h1.get(sp))
-        h1.remove('node-2')
-        h1.add('node-3')
+        h1.remove(NODE_2)
+        h1.add(NODE_3)
         streamParts.forEach((sp) => h1.get(sp))
-        h1.remove('node-1')
+        h1.remove(NODE_1)
         streamParts.forEach((sp) => h1.get(sp))
-        h1.add('node-1')
-        h1.add('node-4')
+        h1.add(NODE_1)
+        h1.add(NODE_4)
         streamParts.forEach((sp) => h1.get(sp))
-        h1.remove('node-4')
-        h1.add('node-4')
+        h1.remove(NODE_4)
+        h1.add(NODE_4)
         streamParts.forEach((sp) => h1.get(sp))
         streamParts.forEach((sp) => h1.get(sp))
 
         const h2 = new ConsistentHashRing(1)
-        h2.add('node-1')
-        h2.add('node-3')
-        h2.add('node-4')
+        h2.add(NODE_1)
+        h2.add(NODE_3)
+        h2.add(NODE_4)
 
         for (const sp of streamParts) {
             const h1result = h1.get(sp)
@@ -111,40 +122,40 @@ describe(ConsistentHashRing, () => {
 
     it('redundancy factor > 1', () => {
         const h = new ConsistentHashRing(3)
-        h.add('node-1')
-        h.add('node-2')
-        h.add('node-3')
+        h.add(NODE_1)
+        h.add(NODE_2)
+        h.add(NODE_3)
 
         const assignments = h.get(toStreamPartID(toStreamID('foo'), 0))
-        expect(assignments).toIncludeSameMembers(['node-1', 'node-2', 'node-3'])
+        expect(assignments).toIncludeSameMembers([NODE_1, NODE_2, NODE_3])
 
         const assignments2 = h.get(toStreamPartID(toStreamID('bar'), 0))
-        expect(assignments2).toIncludeSameMembers(['node-1', 'node-2', 'node-3'])
+        expect(assignments2).toIncludeSameMembers([NODE_1, NODE_2, NODE_3])
 
         const h2 = new ConsistentHashRing(3)
-        h2.add('node-1')
-        h2.add('node-2')
-        h2.add('node-3')
-        h2.add('node-4')
-        h2.add('node-5')
-        h2.add('node-6')
-        h2.add('node-7')
-        h2.add('node-8')
-        h2.add('node-9')
+        h2.add(NODE_1)
+        h2.add(NODE_2)
+        h2.add(NODE_3)
+        h2.add(NODE_4)
+        h2.add(NODE_5)
+        h2.add(NODE_6)
+        h2.add(NODE_7)
+        h2.add(NODE_8)
+        h2.add(NODE_9)
 
         const assignments3 = h2.get(toStreamPartID(toStreamID('foo'), 0))
-        expect(assignments3).toIncludeSameMembers(['node-5', 'node-6', 'node-7']) // expectation based on arbitrary hashing
+        expect(assignments3).toIncludeSameMembers([NODE_5, NODE_6, NODE_7]) // expectation based on arbitrary hashing
 
         const assignments4 = h2.get(toStreamPartID(toStreamID('barbar'), 0))
-        expect(assignments4).toIncludeSameMembers(['node-3', 'node-4', 'node-5']) // expectation based on arbitrary hashing
+        expect(assignments4).toIncludeSameMembers([NODE_3, NODE_4, NODE_5]) // expectation based on arbitrary hashing
     })
 
     it('handles properly situation where redundancy factor > number of nodes', () => {
         const h = new ConsistentHashRing(10)
-        h.add('node-1')
-        h.add('node-2')
+        h.add(NODE_1)
+        h.add(NODE_2)
 
         const result = h.get(toStreamPartID(toStreamID('streamId'), 0))
-        expect(result).toEqual(['node-1', 'node-2'])
+        expect(result).toEqual([NODE_1, NODE_2])
     })
 })

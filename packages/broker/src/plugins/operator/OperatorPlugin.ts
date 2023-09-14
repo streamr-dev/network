@@ -36,7 +36,7 @@ export interface OperatorServiceConfig {
 const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
-    private inspectRandomNodeService = new InspectRandomNodeService()
+    private inspectRandomNodeService?: InspectRandomNodeService
     private voteOnSuspectNodeService?: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
     private fleetState?: OperatorFleetState
@@ -71,7 +71,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
-        await this.inspectRandomNodeService.start()
+        //await this.inspectRandomNodeService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
         const maintainOperatorPoolValueHelper = new MaintainOperatorPoolValueHelper(this.serviceConfig)
@@ -83,7 +83,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             setAbortableInterval(() => {
                 (async () => {
                     await announceNodeToStream(
-                        toEthereumAddress(this.pluginConfig.operatorContractAddress), 
+                        toEthereumAddress(this.pluginConfig.operatorContractAddress),
                         streamrClient
                     )
                 })()
@@ -134,7 +134,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     async stop(): Promise<void> {
         this.abortController.abort()
         this.fleetState!.destroy()
-        await this.inspectRandomNodeService.stop()
+        //await this.inspectRandomNodeService.stop()
         await this.voteOnSuspectNodeService!.stop()
     }
 
