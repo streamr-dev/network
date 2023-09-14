@@ -1,7 +1,7 @@
 import { Contract } from '@ethersproject/contracts'
 import type { Operator } from '@streamr/network-contracts'
 import { operatorABI } from '@streamr/network-contracts'
-import { Logger } from '@streamr/utils'
+import { addManagedEventListener, Logger } from '@streamr/utils'
 import { OperatorServiceConfig } from './OperatorPlugin'
 import { ensureValidStreamPartitionIndex } from '@streamr/protocol'
 
@@ -45,52 +45,52 @@ export function parsePartitionFromMetadata(metadataAsString: string | undefined)
     return partition
 }
 
-export type ReviewRequestCallback = (sponsorship: string, operatorContractAddress: string, partition: number) => void
+export type ReviewRequestListener = (sponsorship: string, operatorContractAddress: string, partition: number) => void
 
 export class VoteOnSuspectNodeHelper {
     private readonly contract: Operator
 
     constructor(
         config: OperatorServiceConfig,
-        contract = new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator
+        contract = new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator,
     ) {
         this.contract = contract
     }
 
-    async start(reviewRequestCallback: ReviewRequestCallback): Promise<void> {
-        logger.debug('Starting')
-        this.contract.on('ReviewRequest', (sponsorship: string, targetOperator: string, metadataAsString?: string) => {
-            let partition: number
-            try {
-                partition = parsePartitionFromMetadata(metadataAsString)
-            } catch (err) {
-                if (err instanceof ParseError) {
-                    logger.warn(`Skip review request (${err.reasonText})`, {
-                        address: this.contract.address,
-                        sponsorship,
-                        targetOperator,
-                    })
-                } else {
-                    logger.warn('Encountered unexpected error', { err })
+    addReviewRequestListener(listener: ReviewRequestListener, abortSignal: AbortSignal): void {
+        addManagedEventListener<any, any>(
+            this.contract as any,
+            'ReviewRequest',
+            (sponsorship: string, targetOperator: string, metadataAsString?: string) => {
+                let partition: number
+                try {
+                    partition = parsePartitionFromMetadata(metadataAsString)
+                } catch (err) {
+                    if (err instanceof ParseError) {
+                        logger.warn(`Skip review request (${err.reasonText})`, {
+                            address: this.contract.address,
+                            sponsorship,
+                            targetOperator,
+                        })
+                    } else {
+                        logger.warn('Encountered unexpected error', { err })
+                    }
+                    return
                 }
-                return
-            }
-            logger.debug('Receive review request', {
-                address: this.contract.address,
-                sponsorship,
-                targetOperator,
-                partition
-            })
-            reviewRequestCallback(sponsorship, targetOperator, partition)
-        })
+                logger.debug('Receive review request', {
+                    address: this.contract.address,
+                    sponsorship,
+                    targetOperator,
+                    partition
+                })
+                listener(sponsorship, targetOperator, partition)
+            },
+            abortSignal
+        )
     }
 
     async voteOnFlag(sponsorship: string, targetOperator: string, kick: boolean): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
         await (await this.contract.voteOnFlag(sponsorship, targetOperator, voteData)).wait()
-    }
-
-    stop(): void {
-        this.contract.removeAllListeners()
     }
 }

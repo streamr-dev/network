@@ -9,7 +9,7 @@ import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { maintainOperatorPoolValue } from './maintainOperatorPoolValue'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
 import { DEFAULT_UPDATE_INTERVAL_IN_MS, OperatorFleetState } from './OperatorFleetState'
-import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
+import { inspectSuspectNode } from './inspectSuspectNode'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { createIsLeaderFn } from './createIsLeaderFn'
 import { announceNodeToContract } from './announceNodeToContract'
@@ -38,7 +38,6 @@ const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private inspectRandomNodeService?: InspectRandomNodeService
-    private voteOnSuspectNodeService?: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
     private fleetState?: OperatorFleetState
     private serviceConfig?: OperatorServiceConfig
@@ -56,11 +55,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         this.fleetState = new OperatorFleetState(
             streamrClient,
             toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
-        )
-        this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
-            new VoteOnSuspectNodeHelper(this.serviceConfig),
-            streamrClient,
-            this.fleetState
         )
         const redundancyFactor = await fetchRedundancyFactor(this.serviceConfig)
         if (redundancyFactor === undefined) {
@@ -130,15 +124,25 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 true,
                 this.abortController.signal
             )
+
+            const voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(this.serviceConfig!)
+            voteOnSuspectNodeHelper.addReviewRequestListener(async (sponsorship, targetOperator, partition) => {
+                if (isLeader()) {
+                    await inspectSuspectNode(
+                        voteOnSuspectNodeHelper,
+                        sponsorship,
+                        targetOperator,
+                        partition
+                    )
+                }
+            }, this.abortController.signal)
         })
-        await this.voteOnSuspectNodeService.start()
     }
 
     async stop(): Promise<void> {
         this.abortController.abort()
-        this.fleetState!.destroy()
+        await this.fleetState!.destroy()
         //await this.inspectRandomNodeService.stop()
-        await this.voteOnSuspectNodeService!.stop()
     }
 
     // eslint-disable-next-line class-methods-use-this
