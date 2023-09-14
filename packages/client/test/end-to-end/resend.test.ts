@@ -16,8 +16,8 @@ describe('resend', () => {
     let resendClient: StreamrClient
 
     beforeEach(async () => {
-        publisherClient = createTestClient(await fetchPrivateKeyWithGas(), 'resend-e2e-publisher-client', 43232)
-        resendClient = createTestClient(fastPrivateKey(), 'resend-e2e-resend-client', 43233)
+        publisherClient = createTestClient(await fetchPrivateKeyWithGas(), 43232)
+        resendClient = createTestClient(fastPrivateKey(), 43233)
     }, TIMEOUT)
 
     afterEach(async () => {

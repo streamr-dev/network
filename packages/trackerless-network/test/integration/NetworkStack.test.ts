@@ -26,8 +26,7 @@ describe('NetworkStack', () => {
                 peerDescriptor: epDescriptor,
                 entryPoints: [epDescriptor],
                 nodeName: 'entrypoint'
-            },
-            networkNode: {}
+            }
         })
         stack2 = new NetworkStack({
             layer0: {
@@ -35,8 +34,7 @@ describe('NetworkStack', () => {
                 peerIdString: 'network-stack',
                 entryPoints: [epDescriptor],
                 nodeName: 'node2'
-            },
-            networkNode: {}
+            }
         })
 
         await stack1.start()

@@ -9,7 +9,6 @@ import { StreamrClient,
     StreamPermission,
     StreamrClientConfig
 } from 'streamr-client'
-import { v4 as uuid } from 'uuid'
 import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
 
@@ -17,7 +16,6 @@ export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '1
 
 interface TestConfig {
     privateKey: string
-    networkLayerWsServerPort?: number
     httpPort?: number
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: Config['apiAuthentication']
@@ -27,7 +25,7 @@ interface TestConfig {
 }
 
 export const DEFAULT_ENTRYPOINTS = [{
-    id: 'entrypoint',
+    id: 'eeeeeeeeee',
     websocket: {
         host: '127.0.0.1',
         port: 40500,
@@ -42,7 +40,6 @@ export const formConfig = ({
     apiAuthentication,
     enableCassandra = false,
     storageConfigRefreshInterval = 0,
-    networkLayerWsServerPort,
     entryPoints = DEFAULT_ENTRYPOINTS
 }: TestConfig): Config => {
     const plugins: Record<string, any> = { ...extraPlugins }
@@ -62,16 +59,6 @@ export const formConfig = ({
             }
         }
     }
-    const peerDescriptor = networkLayerWsServerPort ? {
-        id: uuid(),
-        websocket: {
-            host: '127.0.0.1',
-            port: networkLayerWsServerPort,
-            tls: false
-        }
-    } : {
-        id: uuid(),
-    }
 
     return {
         client: {
@@ -81,13 +68,12 @@ export const formConfig = ({
             },
             network: {
                 controlLayer: {
-                    entryPoints,
-                    peerDescriptor,
+                    entryPoints
                 },
                 node: {
                     id: toEthereumAddress(new Wallet(privateKey).address),
                 }
-            }
+            },
         },
         httpServer: {
             port: httpPort ? httpPort : 7171
@@ -156,7 +142,6 @@ export const createTestStream = async (
 export async function startStorageNode(
     storageNodePrivateKey: string,
     httpPort: number,
-    networkLayerWsServerPort: number,
     entryPoints?: NetworkPeerDescriptor[],
     extraPlugins = {}
 ): Promise<Broker> {
@@ -178,7 +163,6 @@ export async function startStorageNode(
         privateKey: storageNodePrivateKey,
         httpPort,
         enableCassandra: true,
-        networkLayerWsServerPort,
         entryPoints,
         extraPlugins
     })

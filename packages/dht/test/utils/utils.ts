@@ -87,7 +87,7 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
     const id = PeerID.fromString(stringId)
     const descriptor: PeerDescriptor = {
         kademliaId: id.value,
-        type: 0,
+        type: NodeType.NODEJS,
         nodeName: stringId
     }
 
@@ -257,8 +257,8 @@ export const getMockPeers = (): PeerDescriptor[] => {
         type: NodeType.NODEJS,
     }
     const n4: PeerDescriptor = {
-        kademliaId: generateId('Neighbor1'),
-        type: NodeType.BROWSER,
+        kademliaId: generateId('Neighbor4'),
+        type: NodeType.NODEJS,
     }
     return [
         n1, n2, n3, n4

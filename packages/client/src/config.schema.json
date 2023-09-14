@@ -81,7 +81,7 @@
                                 "$ref": "#/definitions/peerDescriptor"
                             },
                             "default": [{
-                                "id": "productionEntryPoint1",
+                                "id": "aaaaaaaaaa",
                                 "type": "nodejs",
                                 "websocket": {
                                     "host": "127.0.0.1",

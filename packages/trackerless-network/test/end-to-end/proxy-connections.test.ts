@@ -83,8 +83,7 @@ describe('Proxy connections', () => {
             layer0: {
                 entryPoints: [proxyNodeDescriptor1],
                 peerDescriptor: proxiedNodeDescriptor,
-            },
-            networkNode: {}
+            }
         })
         await proxiedNode.start(false)
     }, 30000)

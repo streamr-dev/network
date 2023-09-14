@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-import { DhtNode, NodeType, PeerID } from '@streamr/dht'
+import { DhtNode, NodeType } from '@streamr/dht'
+import { hexToBinary } from '@streamr/utils'
 
 const main = async () => {
     const peerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
+        kademliaId: hexToBinary('eeeeeeeeee'),
         type: NodeType.NODEJS,
         websocket: {
             host: '127.0.0.1',
