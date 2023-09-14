@@ -117,6 +117,7 @@ export class ConnectivityChecker {
         let outgoingConnection: IConnection | undefined
         let connectivityResponseMessage: ConnectivityResponse | undefined
         try {
+            console.log(connection)
             outgoingConnection = await this.connectAsync({
                 host: connection.getRemoteAddress(),
                 port: connectivityRequest.port,
