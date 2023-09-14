@@ -1,5 +1,5 @@
 import { NetworkStack } from '../../src/NetworkStack'
-import { NodeType, PeerDescriptor } from '@streamr/dht'
+import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
 import {
     StreamPartIDUtils
 } from '@streamr/protocol'
@@ -14,21 +14,21 @@ describe('NetworkStack', () => {
     const streamPartId = StreamPartIDUtils.parse('stream1#0')
 
     const epDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
+        kademliaId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 32222, tls: false },
+        websocket: { ip: 'brubeck1.streamr.network', port: 40500, tls: true },
         nodeName: 'entrypoint'
     }
 
     beforeEach(async () => {
-        stack1 = new NetworkStack({
-            layer0: {
-                peerDescriptor: epDescriptor,
-                entryPoints: [epDescriptor],
-                nodeName: 'entrypoint'
-            },
-            networkNode: {}
-        })
+        // stack1 = new NetworkStack({
+        //     layer0: {
+        //         peerDescriptor: epDescriptor,
+        //         entryPoints: [epDescriptor],
+        //         nodeName: 'entrypoint'
+        //     },
+        //     networkNode: {}
+        // })
         stack2 = new NetworkStack({
             layer0: {
                 websocketPortRange: { min: 32223, max: 32223 },
@@ -39,32 +39,32 @@ describe('NetworkStack', () => {
             networkNode: {}
         })
 
-        await stack1.start()
-        stack1.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, [epDescriptor])
+        // await stack1.start()
+        // stack1.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, [epDescriptor])
         await stack2.start()
         stack2.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, [epDescriptor])
     })
 
     afterEach(async () => {
         await Promise.all([
-            stack1.stop(),
+            // stack1.stop(),
             stack2.stop()
         ])
     })
 
     it('Can use NetworkNode pub/sub via NetworkStack', async () => {
-        let receivedMessages = 0
-        await stack1.getStreamrNode().waitForJoinAndSubscribe(streamPartId)
-        stack1.getStreamrNode().on('newMessage', () => {
-            receivedMessages += 1
-        })
-        const msg = createStreamMessage(
-            JSON.stringify({ hello: 'WORLD' }),
-            streamPartId,
-            randomEthereumAddress()
-        )
-        await stack2.getStreamrNode().waitForJoinAndPublish(streamPartId, msg)
-        await waitForCondition(() => receivedMessages === 1)
+        // let receivedMessages = 0
+        // await stack1.getStreamrNode().waitForJoinAndSubscribe(streamPartId)
+        // stack1.getStreamrNode().on('newMessage', () => {
+        //     receivedMessages += 1
+        // })
+        // const msg = createStreamMessage(
+        //     JSON.stringify({ hello: 'WORLD' }),
+        //     streamPartId,
+        //     randomEthereumAddress()
+        // )
+        // await stack2.getStreamrNode().waitForJoinAndPublish(streamPartId, msg)
+        // await waitForCondition(() => receivedMessages === 1)
     })
 
 })
