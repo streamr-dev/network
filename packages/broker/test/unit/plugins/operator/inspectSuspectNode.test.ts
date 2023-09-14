@@ -9,7 +9,7 @@ const TARGET_OPERATOR = randomEthereumAddress()
 describe(inspectSuspectNode, () => {
     it('votes on flag', async () => {
         const voteOnSuspectNodeHelper = mock<VoteOnSuspectNodeHelper>()
-        await inspectSuspectNode(voteOnSuspectNodeHelper, SPONSORSHIP, TARGET_OPERATOR, 0)
+        await inspectSuspectNode(SPONSORSHIP, TARGET_OPERATOR, 0, voteOnSuspectNodeHelper)
         expect(voteOnSuspectNodeHelper.voteOnFlag).toHaveBeenCalledWith(SPONSORSHIP, TARGET_OPERATOR, true)
     })
 })

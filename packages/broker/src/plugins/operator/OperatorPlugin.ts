@@ -129,10 +129,10 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             voteOnSuspectNodeHelper.addReviewRequestListener(async (sponsorship, targetOperator, partition) => {
                 if (isLeader()) {
                     await inspectSuspectNode(
-                        voteOnSuspectNodeHelper,
                         sponsorship,
                         targetOperator,
-                        partition
+                        partition,
+                        voteOnSuspectNodeHelper
                     )
                 }
             }, this.abortController.signal)
