@@ -6,7 +6,7 @@ import { StreamrClient } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
-import { MaintainOperatorPoolValueService } from './MaintainOperatorPoolValueService'
+import { maintainOperatorPoolValue } from './maintainOperatorPoolValue'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
 import { DEFAULT_UPDATE_INTERVAL_IN_MS, OperatorFleetState } from './OperatorFleetState'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
@@ -39,7 +39,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private inspectRandomNodeService = new InspectRandomNodeService()
     private voteOnSuspectNodeService?: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
-    private maintainOperatorPoolValueService?: MaintainOperatorPoolValueService
     private fleetState?: OperatorFleetState
     private serviceConfig?: OperatorServiceConfig
     private readonly abortController: AbortController = new AbortController()
@@ -57,7 +56,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             streamrClient,
             toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
         )
-        this.maintainOperatorPoolValueService = new MaintainOperatorPoolValueService(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
             streamrClient,
             this.serviceConfig
@@ -74,7 +72,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             operatorFleetState: this.fleetState
         })
         await this.inspectRandomNodeService.start()
-        await this.maintainOperatorPoolValueService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
         const maintainOperatorPoolValueHelper = new MaintainOperatorPoolValueHelper(this.serviceConfig)
@@ -91,6 +88,17 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     )
                 })()
             }, DEFAULT_UPDATE_INTERVAL_IN_MS, this.abortController.signal)
+            await scheduleAtInterval(
+                () => maintainOperatorPoolValue(
+                    0.5,
+                    maintainOperatorPoolValueHelper
+                ).catch((err) => {
+                    logger.error('Encountered error while checking unwithdrawn earnings', { err })
+                }),
+                1000 * 60 * 60 * 24, // 1 day
+                true,
+                this.abortController.signal
+            )
             await scheduleAtInterval(
                 async () => checkOperatorPoolValueBreach(
                     maintainOperatorPoolValueHelper
@@ -124,7 +132,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         this.abortController.abort()
         this.fleetState!.destroy()
         await this.inspectRandomNodeService.stop()
-        await this.maintainOperatorPoolValueService!.stop()
         await this.voteOnSuspectNodeService!.stop()
     }
 
