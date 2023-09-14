@@ -9,7 +9,7 @@ import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { maintainOperatorPoolValue } from './maintainOperatorPoolValue'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
 import { DEFAULT_UPDATE_INTERVAL_IN_MS, OperatorFleetState } from './OperatorFleetState'
-import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
+import { inspectSuspectNode } from './inspectSuspectNode'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { createIsLeaderFn } from './createIsLeaderFn'
 import { announceNodeToContract } from './announceNodeToContract'
@@ -17,6 +17,7 @@ import { announceNodeToStream } from './announceNodeToStream'
 import { checkOperatorPoolValueBreach } from './checkOperatorPoolValueBreach'
 import { MaintainOperatorPoolValueHelper } from './MaintainOperatorPoolValueHelper'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
+import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
@@ -37,7 +38,6 @@ const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private inspectRandomNodeService?: InspectRandomNodeService
-    private voteOnSuspectNodeService?: VoteOnSuspectNodeService
     private maintainTopologyService?: MaintainTopologyService
     private fleetState?: OperatorFleetState
     private serviceConfig?: OperatorServiceConfig
@@ -56,10 +56,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             streamrClient,
             toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
         )
-        this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
-            streamrClient,
-            this.serviceConfig
-        )
         const redundancyFactor = await fetchRedundancyFactor(this.serviceConfig)
         if (redundancyFactor === undefined) {
             throw new Error('Failed to retrieve redundancy factor')
@@ -73,7 +69,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         })
         //await this.inspectRandomNodeService.start()
         await this.maintainTopologyService.start()
-        await this.voteOnSuspectNodeService.start()
+
         const maintainOperatorPoolValueHelper = new MaintainOperatorPoolValueHelper(this.serviceConfig)
         const announceNodeToContractHelper = new AnnounceNodeToContractHelper(this.serviceConfig!)
         await this.fleetState.start()
@@ -128,14 +124,25 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 true,
                 this.abortController.signal
             )
+
+            const voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(this.serviceConfig!)
+            voteOnSuspectNodeHelper.addReviewRequestListener(async (sponsorship, targetOperator, partition) => {
+                if (isLeader()) {
+                    await inspectSuspectNode(
+                        sponsorship,
+                        targetOperator,
+                        partition,
+                        voteOnSuspectNodeHelper
+                    )
+                }
+            }, this.abortController.signal)
         })
     }
 
     async stop(): Promise<void> {
         this.abortController.abort()
-        this.fleetState!.destroy()
+        await this.fleetState!.destroy()
         //await this.inspectRandomNodeService.stop()
-        await this.voteOnSuspectNodeService!.stop()
     }
 
     // eslint-disable-next-line class-methods-use-this
