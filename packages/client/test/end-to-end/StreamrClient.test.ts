@@ -18,11 +18,11 @@ describe('StreamrClient', () => {
     })
 
     it('getPeerDescriptor', async () => {
-        await client.subscribe('foobar')
         const descriptor = await client.getPeerDescriptor()
         expect(descriptor).toMatchObject({
-            id: expect.stringMatching(/^[0-9A-Fa-f]+$/),
+            id: expect.toBeString(),
             type: 'nodejs',
         })
+        expect(descriptor.id).toEqual(await client.getNodeId())
     }, 30 * 1000)
 })

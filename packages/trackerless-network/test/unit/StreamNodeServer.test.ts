@@ -1,4 +1,4 @@
-import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
+import { ListeningRpcCommunicator, NodeType, PeerDescriptor } from '@streamr/dht'
 import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
 import { LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/Transport'
@@ -12,12 +12,12 @@ describe('StreamNodeServer', () => {
     let streamNodeServer: StreamNodeServer
     const peerDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: 0
+        type: NodeType.NODEJS
     }
 
     const mockSender: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: 0
+        type: NodeType.NODEJS
     }
 
     const message = createStreamMessage(

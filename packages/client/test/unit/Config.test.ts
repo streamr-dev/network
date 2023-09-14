@@ -104,7 +104,7 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.controlLayer.entryPoints![0].id).toEqual('productionEntryPoint1')
+            expect(clientOverrides.network.controlLayer.entryPoints![0].id).toEqual('aaaaaaaaaa')
         })
 
         it('can override entryPoints', () => {
