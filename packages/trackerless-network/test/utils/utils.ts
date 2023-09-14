@@ -109,7 +109,6 @@ export const createNetworkNodeWithSimulator = (
             maxConnections: 25,
             storeHighestTtl: 120000,
             storeMaxTtl: 120000
-        },
-        networkNode: {}
+        }
     })
 }

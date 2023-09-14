@@ -21,8 +21,7 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
     const networkNode = createNetworkNode({
         layer0: {
             entryPoints,
-        },
-        networkNode: {}
+        }
     })
 
     try {
