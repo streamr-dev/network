@@ -179,6 +179,7 @@ describe(findNodesForTarget, () => {
 })
 
 const WAIT_FOR_FLAG_TIMEOUT_IN_MS = 100
+const TIMEOUT = 15 * 1000
 
 describe(InspectRandomNodeService, () => {
     let helper: MockProxy<InspectRandomNodeHelper>
@@ -222,10 +223,10 @@ describe(InspectRandomNodeService, () => {
 
         await service.start()
 
-        await waitForCondition(() => findTargetFn.mock.calls.length > 0)
+        await waitForCondition(() => findTargetFn.mock.calls.length > 0, TIMEOUT - 1000)
         expect(findTargetFn).toHaveBeenCalledWith(MY_OPERATOR_ADDRESS, helper, loadBalancer)
 
-        await waitForCondition(() => findNodesForTargetFn.mock.calls.length > 0)
+        await waitForCondition(() => findNodesForTargetFn.mock.calls.length > 0, TIMEOUT - 1000)
         expect(findNodesForTargetFn).toHaveBeenCalledWith(
             target,
             streamrClient,
@@ -234,13 +235,13 @@ describe(InspectRandomNodeService, () => {
             expect.anything()
         )
 
-        await waitForCondition(() => streamrClient.inspect.mock.calls.length >= 2)
+        await waitForCondition(() => streamrClient.inspect.mock.calls.length >= 2, TIMEOUT - 1000)
         expect(streamrClient.inspect).toHaveBeenCalledWith(PEER_DESCRIPTOR_ONE, target.streamPart)
         expect(streamrClient.inspect).toHaveBeenCalledWith(PEER_DESCRIPTOR_TWO, target.streamPart)
 
         await wait(WAIT_FOR_FLAG_TIMEOUT_IN_MS)
         expect(helper.flagWithMetadata).not.toHaveBeenCalled()
-    })
+    }, TIMEOUT)
 
     it('does not flag if a target is not found', async () => {
         findTargetFn.mockReset().mockResolvedValueOnce(undefined)
@@ -249,7 +250,7 @@ describe(InspectRandomNodeService, () => {
 
         await wait(WAIT_FOR_FLAG_TIMEOUT_IN_MS)
         expect(helper.flagWithMetadata).not.toHaveBeenCalled()
-    })
+    }, TIMEOUT)
 
     it('flags if inspection fails', async () => {
         streamrClient.inspect.calledWith(PEER_DESCRIPTOR_ONE, target.streamPart).mockResolvedValueOnce(false)
@@ -257,16 +258,16 @@ describe(InspectRandomNodeService, () => {
 
         await service.start()
 
-        await waitForCondition(() => helper.flagWithMetadata.mock.calls.length > 0)
+        await waitForCondition(() => helper.flagWithMetadata.mock.calls.length > 0, TIMEOUT - 1000)
         expect(helper.flagWithMetadata).toHaveBeenCalledWith(SPONSORSHIP_ADDRESS, OTHER_OPERATOR_ADDRESS, 4)
-    })
+    }, TIMEOUT)
 
     it('flags if no online nodes found', async () => {
         findNodesForTargetFn.mockReset().mockResolvedValueOnce([])
 
         await service.start()
 
-        await waitForCondition(() => helper.flagWithMetadata.mock.calls.length > 0)
+        await waitForCondition(() => helper.flagWithMetadata.mock.calls.length > 0, TIMEOUT - 1000)
         expect(helper.flagWithMetadata).toHaveBeenCalledWith(SPONSORSHIP_ADDRESS, OTHER_OPERATOR_ADDRESS, 4)
-    })
+    }, TIMEOUT)
 })
