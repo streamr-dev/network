@@ -57,8 +57,7 @@ describe('proxy group key exchange', () => {
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: publisherDescriptor,
-            },
-            networkNode: {}
+            }
         })
         await publisher.start(false)
 
@@ -66,8 +65,7 @@ describe('proxy group key exchange', () => {
             layer0: {
                 entryPoints: [subscriberDescriptor],
                 peerDescriptor: subscriberDescriptor,
-            },
-            networkNode: {}
+            }
         })
         await subscriber.start(false)
     })

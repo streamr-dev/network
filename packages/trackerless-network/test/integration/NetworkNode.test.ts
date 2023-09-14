@@ -41,16 +41,14 @@ describe('NetworkNode', () => {
                 entryPoints: [pd1],
                 peerDescriptor: pd1,
                 transportLayer: transport1
-            },
-            networkNode: {}
+            }
         })
         node2 = createNetworkNode({
             layer0: {
                 entryPoints: [pd1],
                 peerDescriptor: pd2,
                 transportLayer: transport2
-            },
-            networkNode: {}
+            }
         })
 
         await node1.start()
