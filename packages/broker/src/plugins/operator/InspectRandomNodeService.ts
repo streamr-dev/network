@@ -189,13 +189,13 @@ export class InspectRandomNodeService {
             return
         }
 
-        const targetPeerDescriptors = shuffle(await this.findNodesForTarget(
+        const targetPeerDescriptors = await this.findNodesForTarget(
             target,
             this.streamrClient,
             this.fetchRedundancyFactor,
             this.heartbeatLastResortTimeoutInMs,
             this.abortController.signal
-        ))
+        )
 
         logger.info('Inspecting nodes of operator', {
             targetOperator: target.operatorAddress,
@@ -204,7 +204,7 @@ export class InspectRandomNodeService {
             targetSponsorship: target.sponsorshipAddress
         })
 
-        for (const descriptor of targetPeerDescriptors) {
+        for (const descriptor of shuffle(targetPeerDescriptors)) {
             const result = await this.streamrClient.inspect(descriptor, target.streamPart)
             if (result) {
                 logger.info('Inspection done (no issue detected)', {
