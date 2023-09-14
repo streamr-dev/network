@@ -177,7 +177,7 @@ export class InspectRandomNodeService {
         }, this.intervalInMs, false, this.abortController.signal)
     }
 
-    async stop(): Promise<void> {
+    stop(): void {
         this.abortController.abort()
     }
 
