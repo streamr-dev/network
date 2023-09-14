@@ -22,11 +22,11 @@ describe('RemoteNeighborUpdateManager', () => {
 
     const clientNode: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
-        type: 1
+        type: NodeType.NODEJS
     }
     const serverNode: PeerDescriptor = {
         kademliaId: new Uint8Array([2, 2, 2]),
-        type: 1
+        type: NodeType.NODEJS
     }
 
     let simulator: Simulator

@@ -257,8 +257,8 @@ export const getMockPeers = (): PeerDescriptor[] => {
         type: NodeType.NODEJS,
     }
     const n4: PeerDescriptor = {
-        kademliaId: generateId('Neighbor1'),
-        type: NodeType.BROWSER,
+        kademliaId: generateId('Neighbor4'),
+        type: NodeType.NODEJS,
     }
     return [
         n1, n2, n3, n4
