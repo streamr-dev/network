@@ -1,7 +1,7 @@
 import { NodeType, PeerDescriptor } from '@streamr/dht'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamID, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { waitForEvent3, hexToBinary } from '@streamr/utils'
+import { waitForEvent3, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { ProxyDirection, StreamMessage as InternalStreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { StreamNodeType } from '../../src/logic/StreamrNode'
 import { randomEthereumAddress } from '@streamr/test-utils'
@@ -20,9 +20,9 @@ const createMessage = (streamId: StreamID): StreamMessage => {
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),
-        content: {
+        content: utf8ToBinary(JSON.stringify({
             hello: 'world'
-        },
+        })),
         messageType: StreamMessageType.MESSAGE,
         signature: hexToBinary('0x1234'),
     })

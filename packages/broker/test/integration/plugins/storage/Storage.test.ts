@@ -6,7 +6,7 @@ import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { toStreamID, StreamMessage, MessageID, EncryptionType } from '@streamr/protocol'
-import { EthereumAddress, hexToBinary, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -37,7 +37,7 @@ export function buildMsg({
 }): StreamMessage {
     return new StreamMessage({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
-        content: JSON.stringify(content),
+        content: utf8ToBinary(JSON.stringify(content)),
         signature: hexToBinary('0x1234')
     })
 }
@@ -61,7 +61,7 @@ function buildEncryptedMsg({
 }) {
     return new StreamMessage({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
-        content,
+        content: utf8ToBinary(content),
         encryptionType: EncryptionType.AES,
         signature: hexToBinary('0x1234'),
         groupKeyId: 'groupKeyId'

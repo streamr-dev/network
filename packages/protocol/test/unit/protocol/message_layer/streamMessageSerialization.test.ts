@@ -1,4 +1,4 @@
-import { toEthereumAddress, hexToBinary } from '@streamr/utils'
+import { toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import ValidationError from '../../../../src/errors/ValidationError'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
@@ -15,7 +15,7 @@ const signature = '111233'
 const message = new StreamMessage({
     messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
     prevMsgRef: new MessageRef(1564046132168, 5),
-    content: 'encrypted-content',
+    content: utf8ToBinary('encrypted-content'),
     messageType: StreamMessageType.MESSAGE,
     contentType: ContentType.JSON,
     groupKeyId: 'groupKeyId',

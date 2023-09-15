@@ -12,7 +12,7 @@ import {
 } from '@streamr/protocol'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { toEthereumAddress, waitForEvent3, hexToBinary } from '@streamr/utils'
+import { toEthereumAddress, waitForEvent3, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { createRandomNodeId } from '../utils/utils'
 
 describe('proxy group key exchange', () => {
@@ -80,14 +80,14 @@ describe('proxy group key exchange', () => {
         await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
         await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
 
-        const requestContent = new GroupKeyRequest({
+        const requestContent = utf8ToBinary(new GroupKeyRequest({
             recipient: publisherUserId,
             requestId: 'requestId',
             rsaPublicKey: 'mockKey',
             groupKeyIds: [
                 'mock'
             ],
-        }).toArray()
+        }).serialize())
         const request = new StreamMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
@@ -113,11 +113,11 @@ describe('proxy group key exchange', () => {
         await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
         await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
 
-        const responseContent = new GroupKeyResponse({
+        const responseContent = utf8ToBinary(new GroupKeyResponse({
             recipient: publisherUserId,
             requestId: 'requestId',
             encryptedGroupKeys: []
-        }).toArray()
+        }).serialize())
         const response = new StreamMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),

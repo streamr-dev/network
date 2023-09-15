@@ -20,8 +20,7 @@ export enum StreamMessageType {
 }
 
 export enum ContentType {
-    JSON = 0,
-    BINARY = 1
+    JSON = 0
 }
 
 export enum EncryptionType {
@@ -33,7 +32,7 @@ export enum EncryptionType {
 export interface StreamMessageOptions<T> {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
-    content: T | string | Uint8Array
+    content: Uint8Array
     messageType?: StreamMessageType
     contentType?: ContentType
     encryptionType?: EncryptionType
@@ -59,7 +58,7 @@ export default class StreamMessage<T = unknown> {
     messageId: MessageID
     prevMsgRef: MessageRef | null
     messageType: StreamMessageType
-    contentType: ContentType
+    contentType?: ContentType
     encryptionType: EncryptionType
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
@@ -71,10 +70,7 @@ export default class StreamMessage<T = unknown> {
      * Create a new StreamMessage identical to the passed-in streamMessage.
      */
     clone(): StreamMessage<T> {
-        const content = this.encryptionType === EncryptionType.NONE
-            ? this.getParsedContent()
-            : this.getSerializedContent()
-
+        const content = this.getSerializedContent()
         return new StreamMessage({
             messageId: this.messageId.clone(),
             prevMsgRef: this.prevMsgRef ? this.prevMsgRef.clone() : null,
@@ -93,7 +89,7 @@ export default class StreamMessage<T = unknown> {
         prevMsgRef = null,
         content,
         messageType = StreamMessageType.MESSAGE,
-        contentType,
+        contentType = ContentType.JSON,
         encryptionType = EncryptionType.NONE,
         groupKeyId = null,
         newGroupKey = null,
@@ -120,25 +116,12 @@ export default class StreamMessage<T = unknown> {
         validateIsType('signature', signature, 'Uint8Array', Uint8Array)
         this.signature = signature
 
-        if (typeof content === 'string') {
-            // this.parsedContent gets written lazily
-            contentType = ContentType.JSON
-            this.serializedContent = utf8ToBinary(content)
-        } else if (content instanceof Uint8Array) {
-            if (contentType == null) {
-                contentType = ContentType.BINARY
-            }
-            this.serializedContent = content
-        } else {
-            contentType = ContentType.JSON
-            this.parsedContent = content
-            this.serializedContent = utf8ToBinary(JSON.stringify(content))
-        }
-
-        validateIsNotEmptyByteArray('content', this.serializedContent)
-
         StreamMessage.validateContentType(contentType)
         this.contentType = contentType
+
+        this.serializedContent = content
+
+        validateIsNotEmptyByteArray('content', this.serializedContent)
 
         StreamMessage.validateSequence(this)
     }
@@ -215,8 +198,6 @@ export default class StreamMessage<T = unknown> {
                     this,
                 )
             }
-        } else if (this.contentType === ContentType.BINARY) {
-            this.parsedContent = this.serializedContent
         } else {
             throw new StreamMessageError(`Unsupported contentType for getParsedContent: ${this.contentType}`, this)
         }

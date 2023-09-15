@@ -9,7 +9,7 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, Logger } from '@streamr/utils'
+import { EthereumAddress, Logger, utf8ToBinary } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -111,7 +111,7 @@ export class SubscriberKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
-            serializedContent: JSON.stringify(requestContent),
+            serializedContent: utf8ToBinary(JSON.stringify(requestContent)),
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             encryptionType: EncryptionType.NONE,
             authentication: this.authentication

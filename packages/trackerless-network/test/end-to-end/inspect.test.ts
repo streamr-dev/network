@@ -1,7 +1,7 @@
 import { PeerDescriptor, NodeType } from '@streamr/dht'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { waitForCondition, hexToBinary } from '@streamr/utils'
+import { waitForCondition, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { createRandomNodeId } from '../utils/utils'
 
@@ -52,9 +52,9 @@ describe('inspect', () => {
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),
-        content: {
+        content: utf8ToBinary(JSON.stringify({
             hello: 'world'
-        },
+        })),
         messageType: StreamMessageType.MESSAGE,
         signature: hexToBinary('0x1234'),
     })

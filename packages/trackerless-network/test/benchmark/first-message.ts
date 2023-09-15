@@ -6,7 +6,7 @@ import { createNetworkNodeWithSimulator, createRandomNodeId } from '../utils/uti
 import { NetworkNode } from '../../src/NetworkNode'
 import { PeerDescriptor } from '../../../dht/src/exports'
 import { StreamMessage, toStreamID, MessageID, StreamPartIDUtils, StreamMessageType, toStreamPartID, StreamPartID } from '@streamr/protocol'
-import { hexToBinary, waitForEvent3 } from '@streamr/utils'
+import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
 
 const numNodes = 10000
@@ -87,9 +87,9 @@ const measureJoiningTime = async (count: number) => {
                 'msgChainId'
             ),
             prevMsgRef: null,
-            content: {
+            content: utf8ToBinary(JSON.stringify({
                 hello: 'world'
-            },
+            })),
             messageType: StreamMessageType.MESSAGE,
             signature: hexToBinary('0x1234'),
         })

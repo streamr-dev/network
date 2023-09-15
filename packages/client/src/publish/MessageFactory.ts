@@ -30,7 +30,7 @@ export interface MessageFactoryOptions {
 
 export const createSignedMessage = async <T>(
     opts: Omit<StreamMessageOptions<T>, 'signature' | 'content'>
-    & { serializedContent: Uint8Array | string, authentication: Authentication }
+    & { serializedContent: Uint8Array, authentication: Authentication }
 ): Promise<StreamMessage<T>> => {
     const signatureContent = typeof opts.serializedContent === 'string' ? utf8ToBinary(opts.serializedContent) : opts.serializedContent 
     const signature = await opts.authentication.createMessageSignature(createSignaturePayload({

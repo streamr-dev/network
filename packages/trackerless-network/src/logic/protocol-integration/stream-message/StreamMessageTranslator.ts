@@ -21,7 +21,7 @@ import {
     StreamMessageType,
     MessageID
 } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { toEthereumAddress, binaryToHex, binaryToUtf8, hexToBinary } from '@streamr/utils'
+import { toEthereumAddress, binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
 import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
 
@@ -37,20 +37,6 @@ const newToOldEncryptionType = (type: EncryptionType): OldEncryptionType => {
         return OldEncryptionType.AES
     }
     return OldEncryptionType.NONE
-}
-
-const oldToNewContentType = (type: OldContentType): ContentType => {
-    if (type === OldContentType.JSON) {
-        return ContentType.JSON
-    }
-    return ContentType.BINARY 
-} 
-
-const newToOldContentType = (type: ContentType): OldContentType => {
-    if (type === ContentType.JSON) {
-        return OldContentType.JSON
-    }
-    return OldContentType.BINARY
 }
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -110,7 +96,7 @@ export class StreamMessageTranslator {
             previousMessageRef,
             content,
             messageType,
-            contentType: oldToNewContentType(msg.contentType),
+            contentType: ContentType.JSON,
             encryptionType: oldToNewEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId ?? undefined,
             newGroupKey,
@@ -127,10 +113,10 @@ export class StreamMessageTranslator {
             content = msg.content
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             messageType = OldStreamMessageType.GROUP_KEY_REQUEST
-            content = GroupKeyRequestTranslator.toClientProtocol(GroupKeyRequest.fromBinary(msg.content)).serialize()
+            content = utf8ToBinary(GroupKeyRequestTranslator.toClientProtocol(GroupKeyRequest.fromBinary(msg.content)).serialize())
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_RESPONSE) {
             messageType = OldStreamMessageType.GROUP_KEY_RESPONSE
-            content = GroupKeyResponseTranslator.toClientProtocol(GroupKeyResponse.fromBinary(msg.content)).serialize()
+            content = utf8ToBinary(GroupKeyResponseTranslator.toClientProtocol(GroupKeyResponse.fromBinary(msg.content)).serialize())
         } else {
             throw new Error('invalid message type')
         }
@@ -158,7 +144,7 @@ export class StreamMessageTranslator {
             prevMsgRef,
             content,
             messageType,
-            contentType: newToOldContentType(msg.contentType),
+            contentType: OldContentType.JSON,
             encryptionType: newToOldEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId,
             newGroupKey,

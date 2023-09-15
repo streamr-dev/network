@@ -9,7 +9,7 @@ import {
     StreamPartIDUtils,
     toStreamID
 } from '@streamr/protocol'
-import { EthereumAddress, hexToBinary, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
 import { createRandomNodeId } from '../utils/utils'
 
@@ -35,9 +35,9 @@ describe('stream without default entrypoints', () => {
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),
-        content: {
+        content: utf8ToBinary(JSON.stringify({
             hello: 'world'
-        },
+        })),
         messageType: StreamMessageType.MESSAGE,
         signature: hexToBinary('0x1234'),
     })

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { toEthereumAddress } from '@streamr/utils'
+import { toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { MessageID } from '@streamr/protocol'
 import { Authentication } from '../../src/Authentication'
 import { StreamPermission } from '../../src/permission'
@@ -69,7 +69,7 @@ describe('waitForStorage', () => {
         await stream.addToStorageNode(storageNode.getAddress())
         const msg = convertStreamMessageToMessage(await createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: JSON.stringify({}),
+            serializedContent: utf8ToBinary(JSON.stringify({})),
             authentication
         }))
         await expect(() => client.waitForStorage(msg, {
@@ -85,7 +85,7 @@ describe('waitForStorage', () => {
     it('no storage assigned', async () => {
         const msg = convertStreamMessageToMessage(await createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: JSON.stringify({}),
+            serializedContent: utf8ToBinary(JSON.stringify({})),
             authentication
         }))
         await expect(() => client.waitForStorage(msg, {
