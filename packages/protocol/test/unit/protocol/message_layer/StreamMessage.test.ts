@@ -115,7 +115,7 @@ describe('StreamMessage', () => {
         it('should not throw when encrypted content', () => {
             assert.doesNotThrow(() => msg({
                 // @ts-expect-error TODO
-                content: 'encrypted content',
+                content: utf8ToBinary('encrypted content'),
                 encryptionType: EncryptionType.AES,
                 groupKeyId: 'mock-id'
             }))
