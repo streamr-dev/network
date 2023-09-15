@@ -146,21 +146,20 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(graphNodes.map((node) =>
             waitForCondition(() => node.getNumberOfOutgoingHandshakes() === 0)
         ))
-        await wait(10000)
-        let mismatchCounter = 0
-        graphNodes.forEach((node) => {
-            const nodeId = node.getOwnNodeId()
-            node.getTargetNeighborIds().forEach((neighborId) => {
-                if (neighborId !== entryPointRandomGraphNode.getOwnNodeId()) {
-                    const neighbor = graphNodes.find((n) => n.getOwnNodeId() === neighborId)
-                    if (!neighbor!.getTargetNeighborIds().includes(nodeId)) {
-                        logger.info('mismatching ids length: ' + nodeId + ' ' + neighbor!.getTargetNeighborIds().length)
-                        mismatchCounter += 1
+        await waitForCondition(() => {
+            let mismatchCounter = 0
+            graphNodes.forEach((node) => {
+                const nodeId = node.getOwnNodeId()
+                node.getTargetNeighborIds().forEach((neighborId) => {
+                    if (neighborId !== entryPointRandomGraphNode.getOwnNodeId()) {
+                        const neighbor = graphNodes.find((n) => n.getOwnNodeId() === neighborId)
+                        if (!neighbor!.getTargetNeighborIds().includes(nodeId)) {
+                            mismatchCounter += 1
+                        }
                     }
-                }
-        
+                })
             })
-        })
-        expect(mismatchCounter).toBeLessThanOrEqual(2)
+            return mismatchCounter === 0
+        }, 20000, 1000)
     }, 95000)
 })
