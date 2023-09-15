@@ -35,8 +35,11 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
                 await asAbortable(this.startServer(port, host, tlsCertificate), this.abortController.signal)
                 return port
             } catch (err) {
-                console.error(err)
-                logger.debug(`failed to start WebSocket server on port: ${port} reattempting on next port`)
+                if (err.originalError?.code === 'EADDRINUSE') {
+                    logger.debug(`failed to start WebSocket server on port: ${port} reattempting on next port`)
+                } else {
+                    throw new StartingWebSocketServerFailed(err)
+                }
             }
         }
         throw new StartingWebSocketServerFailed('Failed to start WebSocket server on any port in range')

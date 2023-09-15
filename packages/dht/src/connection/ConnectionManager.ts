@@ -186,7 +186,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 connectionTimeout: this.config.webrtcNewConnectionTimeout,
-                portRange: this.config.webrtcPortRange,
+                portRange: this.config.webrtcPortRange
             }, this.incomingConnectionCallback)
         }
         this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'
