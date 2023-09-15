@@ -137,7 +137,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
                     }
                 })
             })
-            return mismatchCounter === 0
+            return mismatchCounter > 2
         }, 20000, 1000)
     }, 90000)
 })

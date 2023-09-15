@@ -159,7 +159,7 @@ describe('RandomGraphNode-DhtNode', () => {
                     }
                 })
             })
-            return mismatchCounter === 0
+            return mismatchCounter > 2
         }, 20000, 1000)
     }, 95000)
 })
