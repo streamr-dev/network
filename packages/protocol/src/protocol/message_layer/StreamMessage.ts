@@ -8,7 +8,7 @@ import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
 import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from '../../utils/StreamPartID'
-import { EthereumAddress, utf8ToBinary, binaryToUtf8 } from '@streamr/utils'
+import { EthereumAddress, binaryToUtf8 } from '@streamr/utils'
 import { fromArray, toArray } from './streamMessageSerialization'
 
 export const VERSION = 32
@@ -29,7 +29,7 @@ export enum EncryptionType {
     AES = 2
 }
 
-export interface StreamMessageOptions<T> {
+export interface StreamMessageOptions {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
     content: Uint8Array
@@ -94,7 +94,7 @@ export default class StreamMessage<T = unknown> {
         groupKeyId = null,
         newGroupKey = null,
         signature,
-    }: StreamMessageOptions<T>) {
+    }: StreamMessageOptions) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
         this.messageId = messageId
 
