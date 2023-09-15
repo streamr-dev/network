@@ -8,6 +8,7 @@ import {
     LockResponse,
     Message,
     MessageType,
+    NodeType,
     PeerDescriptor,
     UnlockRequest
 } from '../proto/packages/dht/protos/DhtRpc'
@@ -358,7 +359,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.simulatorConnector) {
             return this.simulatorConnector.connect(peerDescriptor)
         } else if (peerDescriptor.websocket || this.ownPeerDescriptor!.websocket) {
-            return this.webSocketConnector!.connect(peerDescriptor)
+            if (!(peerDescriptor.type === NodeType.BROWSER && this.ownPeerDescriptor!.websocket?.tls)) {
+                return this.webSocketConnector!.connect(peerDescriptor)
+            }
         }
         return this.webrtcConnector!.connect(peerDescriptor)
     }
