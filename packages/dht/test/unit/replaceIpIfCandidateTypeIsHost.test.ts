@@ -1,4 +1,4 @@
-import { replaceIpIfCandidateTypeIsHost } from "../../src/connection/WebRTC/WebRtcConnector"
+import { replaceIpIfCandidateTypeIsHost } from '../../src/connection/WebRTC/WebRtcConnector'
 
 describe('replaceIpIfCandidateTypeIsHost', () => {
 
@@ -14,4 +14,5 @@ describe('replaceIpIfCandidateTypeIsHost', () => {
         const replaced = replaceIpIfCandidateTypeIsHost(srflxCandidate, '0.0.0.0')
         expect(replaced).toEqual(srflxCandidate)
     })
+
 })

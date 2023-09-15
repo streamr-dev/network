@@ -28,7 +28,7 @@ import { PortRange } from '../ConnectionManager'
 
 const logger = new Logger(module)
 
-export const replaceIpIfCandidateTypeIsHost = (candidate: string, ip: string) => {
+export const replaceIpIfCandidateTypeIsHost = (candidate: string, ip: string): string => {
     const parsed = candidate.split(' ')
     const type = parsed[7]
     if (type === 'host') {
