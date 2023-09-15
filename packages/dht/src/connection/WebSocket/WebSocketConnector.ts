@@ -4,6 +4,7 @@ import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
+    ConnectivityMethod,
     ConnectivityResponse,
     PeerDescriptor,
     WebSocketConnectionRequest,
@@ -26,6 +27,10 @@ import { ParsedUrlQuery } from 'querystring'
 import { sample } from 'lodash'
 
 const logger = new Logger(module)
+
+export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string => {
+    return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
+}
 
 export class WebSocketConnector implements IWebSocketConnectorService {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocketconnector'
@@ -161,8 +166,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         } else {
             const socket = new ClientWebSocket()
 
-            const address = (targetPeerDescriptor.websocket!.tls ? 'wss://' : 'ws://') + targetPeerDescriptor.websocket!.host + ':' +
-                targetPeerDescriptor.websocket!.port
+            const address = connectivityMethodToWebSocketUrl(targetPeerDescriptor.websocket!)
 
             const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
                 ConnectionType.WEBSOCKET_CLIENT, socket, undefined)

@@ -1,4 +1,5 @@
 import {
+    ConnectivityMethod,
     ConnectivityRequest, ConnectivityResponse,
     Message, MessageType, PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
@@ -9,6 +10,7 @@ import { ClientWebSocket } from './WebSocket/ClientWebSocket'
 import { v4 } from 'uuid'
 import { NatType } from './ConnectionManager'
 import { ServerWebSocket } from './WebSocket/ServerWebSocket'
+import { connectivityMethodToWebSocketUrl } from './WebSocket/WebSocketConnector'
 
 const logger = new Logger(module)
 
@@ -37,9 +39,11 @@ export class ConnectivityChecker {
         let outgoingConnection: IConnection
         try {
             outgoingConnection = await this.connectAsync({
-                host: entryPoint.websocket!.host, 
-                port: entryPoint.websocket!.port,
-                tls: entryPoint.websocket!.tls,
+                wsServerInfo: {
+                    host: entryPoint.websocket!.host, 
+                    port: entryPoint.websocket!.port,
+                    tls: entryPoint.websocket!.tls,
+                },
                 mode: ConnectionMode.REQUEST
             })
         } catch (e) {
@@ -116,9 +120,11 @@ export class ConnectivityChecker {
         let connectivityResponseMessage: ConnectivityResponse | undefined
         try {
             outgoingConnection = await this.connectAsync({
-                host: connection.getRemoteAddress(),
-                port: connectivityRequest.port,
-                tls: connectivityRequest.tls,
+                wsServerInfo: {
+                    host: connection.getRemoteAddress(),
+                    port: connectivityRequest.port,
+                    tls: connectivityRequest.tls
+                },
                 mode: ConnectionMode.PROBE
             })
         } catch (err) {
@@ -151,11 +157,11 @@ export class ConnectivityChecker {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private async connectAsync({ host, port, tls, mode, timeoutMs = 1000, }:
-        { host: string, port: number, tls: boolean, mode: ConnectionMode, timeoutMs?: number }
+    private async connectAsync({ wsServerInfo, mode, timeoutMs = 1000, }:
+        { wsServerInfo: ConnectivityMethod, mode: ConnectionMode, timeoutMs?: number }
     ): Promise<IConnection> {
         const socket = new ClientWebSocket()
-        const address = `${tls ? 'wss://' : 'ws://'}${host}:${port}?${mode}=true`
+        const address = `${connectivityMethodToWebSocketUrl(wsServerInfo)}?${mode}=true`
         let result: RunAndRaceEventsReturnType<ConnectionEvents>
         try {
             result = await runAndRaceEvents3<ConnectionEvents>([
