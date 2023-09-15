@@ -4,11 +4,17 @@ import type { Operator } from '@streamr/network-contracts'
 import { EthereumAddress, Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import { OperatorServiceConfig } from './OperatorPlugin'
 import fetch from 'node-fetch'
+import { StreamID, toStreamID } from '@streamr/protocol'
 
 const logger = new Logger(module)
 
-export class InspectRandomNodeHelper {
+export interface SponsorshipResult {
+    sponsorshipAddress: EthereumAddress
+    streamId: StreamID
+    operatorCount: number
+}
 
+export class InspectRandomNodeHelper {
     private readonly operatorContract: Operator
     private readonly theGraphClient: TheGraphClient
 
@@ -21,8 +27,17 @@ export class InspectRandomNodeHelper {
         })
     }
 
-    async getSponsorshipsOfOperator(operatorAddress: EthereumAddress, requiredBlockNumber: number): Promise<EthereumAddress[]> {
-        
+    async getSponsorshipsOfOperator(operatorAddress: EthereumAddress): Promise<SponsorshipResult[]> {
+        interface Stake {
+            id: string
+            sponsorship: {
+                id: string
+                operatorCount: number
+                stream: {
+                    id: string
+                }
+            }
+        }
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
@@ -32,6 +47,10 @@ export class InspectRandomNodeHelper {
                                 id
                                 sponsorship {
                                     id
+                                    operatorCount
+                                    stream {
+                                        id
+                                    }
                                 }
                             }
                         }
@@ -39,23 +58,28 @@ export class InspectRandomNodeHelper {
                     `
             }
         }
-        const parseItems = (response: { operator?: { stakes: { id: string, sponsorship: { id: string } }[] } }): 
-        { id: string, sponsorship: { id: string } }[] => {
-            if (!response.operator) {
-                return []
-            }
-            return response.operator.stakes
+        const parseItems = (response: { operator?: { stakes: Stake[] } }): Stake[] => {
+            return response.operator?.stakes ?? []
         }
-        this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
-        const queryResult = this.theGraphClient.queryEntities<{ id: string, sponsorship: { id: string } }>(createQuery, parseItems)
-        const sponsorshipIds = new Set<EthereumAddress>()
+        const queryResult = this.theGraphClient.queryEntities<Stake>(createQuery, parseItems)
+        const results: SponsorshipResult[] = []
         for await (const stake of queryResult) {
-            sponsorshipIds.add(toEthereumAddress(stake.sponsorship?.id))
+            results.push({
+                sponsorshipAddress: toEthereumAddress(stake.sponsorship.id),
+                streamId: toStreamID(stake.sponsorship.stream.id),
+                operatorCount: stake.sponsorship.operatorCount
+            })
         }
-        return Array.from(sponsorshipIds)
+        return results
     }
 
-    async getOperatorsInSponsorship(sponsorshipAddress: EthereumAddress, requiredBlockNumber: number): Promise<EthereumAddress[]> {
+    async getOperatorsInSponsorship(sponsorshipAddress: EthereumAddress): Promise<EthereumAddress[]> {
+        interface Stake {
+            id: string
+            operator: {
+                id: string
+            }
+        }
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
@@ -72,20 +96,15 @@ export class InspectRandomNodeHelper {
                     `
             }
         }
-        const parseItems = (response: { sponsorship?: { stakes: { id: string, operator: { id: string } }[] } } ):
-        { id: string, operator: { id: string } }[] => {
-            if (!response.sponsorship) {
-                return []
-            }
-            return response.sponsorship.stakes
+        const parseItems = (response: { sponsorship?: { stakes: Stake[] } } ): Stake[] => {
+            return response.sponsorship?.stakes ?? []
         }
-        this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
-        const queryResult = this.theGraphClient.queryEntities<{ id: string, operator: { id: string } }>(createQuery, parseItems)
-        const operatorIds = new Set<EthereumAddress>()
+        const queryResult = this.theGraphClient.queryEntities<Stake>(createQuery, parseItems)
+        const operatorIds: EthereumAddress[] = []
         for await (const stake of queryResult) {
-            operatorIds.add(toEthereumAddress(stake.operator?.id))
+            operatorIds.push(toEthereumAddress(stake.operator.id))
         }
-        return Array.from(operatorIds)
+        return operatorIds
     }
 
     async flagWithMetadata(sponsorship: EthereumAddress, operator: EthereumAddress, partition: number): Promise<void> {

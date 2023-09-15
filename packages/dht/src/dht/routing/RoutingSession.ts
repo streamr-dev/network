@@ -118,10 +118,9 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     }
 
     private sendRouteMessageRequest = async (contact: RemoteRouter): Promise<boolean> => {
-        logger.trace('sendRouteMessageRequest() sessionId: ' + this.sessionId)
-        logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${contact.getPeerId()}`)
-        this.contactList.setContacted(contact.getPeerId())
-        this.ongoingRequests.add(contact.getPeerId().toKey())
+        if (this.stopped) {
+            return false
+        }
         if (this.mode === RoutingMode.FORWARD) {
             return contact.forwardMessage({
                 ...this.messageToRoute,
@@ -176,25 +175,26 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.emitFailure()
             return
         }
-        while (this.ongoingRequests.size < this.parallelism && uncontacted.length > 0) {
-            if (this.stopped) {
-                return
-            }
+        while ((this.ongoingRequests.size) < this.parallelism && (uncontacted.length > 0) && !this.stopped) {
             const nextPeer = uncontacted.shift()
-            logger.trace('sendRouteMessageRequest')
-            // eslint-disable-next-line promise/catch-or-return
-            this.sendRouteMessageRequest(nextPeer!)
-                .then((succeeded) => {
+            // eslint-disable-next-line max-len
+            logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${nextPeer!.getPeerId()} (sessionId=${this.sessionId})`)
+            this.contactList.setContacted(nextPeer!.getPeerId())
+            this.ongoingRequests.add(nextPeer!.getPeerId().toKey())
+            setImmediate(async () => {
+                try {
+                    const succeeded = await this.sendRouteMessageRequest(nextPeer!)
                     if (succeeded) {
                         this.onRequestSucceeded(nextPeer!.getPeerId())
                     } else {
                         this.onRequestFailed(nextPeer!.getPeerId())
                     }
-                }).catch((e) => { 
-                    logger.error(e)
-                }).finally(() => {
+                } catch (e) {
+                    logger.debug('Unable to route message ', { error: e })
+                } finally {
                     logger.trace('sendRouteMessageRequest returned')
-                })
+                }
+            })
         }
     }
 

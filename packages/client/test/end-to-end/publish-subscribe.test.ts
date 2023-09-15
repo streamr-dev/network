@@ -8,7 +8,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { peerDescriptorTranslator } from '../../src/utils/utils'
 import { createTestStream, createTestClient } from '../test-utils/utils'
 import { waitForCondition } from '@streamr/utils'
-import { NetworkNode } from '@streamr/trackerless-network'
+import { createNetworkNode } from '@streamr/trackerless-network'
 
 const TIMEOUT = 30 * 1000
 
@@ -18,11 +18,10 @@ const ENCRYPTED_MESSSAGE_FORMAT = /^[0-9A-Fa-f]+$/
 
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
     const entryPoints = CONFIG_TEST.network!.controlLayer!.entryPoints!.map(peerDescriptorTranslator)
-    const networkNode = new NetworkNode({
+    const networkNode = createNetworkNode({
         layer0: {
             entryPoints,
-        },
-        networkNode: {}
+        }
     })
 
     try {
@@ -70,8 +69,8 @@ describe('publish-subscribe', () => {
     })
 
     beforeEach(async () => {
-        publisherClient = createTestClient(publisherPk, 'e2e-pub-sub-publisher', 15656)
-        subscriberClient = createTestClient(subscriberWallet.privateKey, 'e2e-pub-sub-subscriber', 15657)
+        publisherClient = createTestClient(publisherPk, 15656)
+        subscriberClient = createTestClient(subscriberWallet.privateKey, 15657)
     }, TIMEOUT)
 
     afterEach(async () => {

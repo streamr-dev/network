@@ -38,7 +38,7 @@ import { DataStore } from './store/DataStore'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/WebRTC/WebRtcConnector'
-import { ExternalApi } from './ExternalApi'
+import { registerExternalApiRpcMethod } from './registerExternalApiRpcMethod'
 import { RemoteExternalApi } from './RemoteExternalApi'
 import { UUID } from '../exports'
 import { isNodeJS } from '../helpers/browser/isNodeJS'
@@ -163,7 +163,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private localDataStore = new LocalDataStore()
     private recursiveFinder?: RecursiveFinder
     private peerDiscovery?: PeerDiscovery
-    private externalApi?: ExternalApi
 
     public connectionManager?: ConnectionManager
     private started = false
@@ -287,16 +286,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             recursiveFinder: this.recursiveFinder,
             ownPeerDescriptor: this.ownPeerDescriptor!,
             serviceId: this.config.serviceId,
-            storeHighestTtl: this.config.storeHighestTtl,
-            storeMaxTtl: this.config.storeMaxTtl,
-            storeNumberOfCopies: this.config.storeNumberOfCopies,
+            highestTtl: this.config.storeHighestTtl,
+            maxTtl: this.config.storeMaxTtl,
+            numberOfCopies: this.config.storeNumberOfCopies,
             localDataStore: this.localDataStore,
             dhtNodeEmitter: this,
             getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
                 return this.bucket!.closest(id, n)
             }
         })
-        this.externalApi = new ExternalApi(this)
+        registerExternalApiRpcMethod(this)
         if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
             && !isSamePeerDescriptor(this.config.entryPoints[0], this.ownPeerDescriptor!)) {
             this.connectToEntryPoint(this.config.entryPoints[0])
@@ -752,7 +751,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         this.transportLayer = undefined
         this.connectionManager = undefined
-        this.externalApi = undefined
         this.connections.clear()
         this.removeAllListeners()
     }

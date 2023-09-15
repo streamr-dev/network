@@ -1,19 +1,19 @@
-import { PeerID } from '@streamr/dht'
 import { HandshakerServer } from '../../src/logic/neighbor-discovery/HandshakerServer'
 import { NodeList } from '../../src/logic/NodeList'
 import { InterleaveNotice, StreamHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockRemoteHandshaker, createMockRemoteNode, createRandomNodeId, mockConnectionLocker } from '../utils/utils'
 import { NodeID } from '../../src/identifiers'
 import { hexToBinary } from '@streamr/utils'
+import { NodeType } from '@streamr/dht'
 
 describe('HandshakerServer', () => {
 
     let handshakerServer: HandshakerServer
 
-    const peerId = PeerID.fromString(createRandomNodeId())
+    const nodeId = createRandomNodeId()
     const ownPeerDescriptor = {
-        kademliaId: peerId.value,
-        type: 0
+        kademliaId: hexToBinary(nodeId),
+        type: NodeType.NODEJS
     }
 
     let targetNeighbors: NodeList
@@ -21,7 +21,7 @@ describe('HandshakerServer', () => {
     let handshakeWithInterleaving: jest.Mock
 
     beforeEach(() => {
-        targetNeighbors = new NodeList(peerId, 10)
+        targetNeighbors = new NodeList(nodeId, 10)
         ongoingHandshakes = new Set()
 
         handshakeWithInterleaving = jest.fn()
@@ -50,7 +50,7 @@ describe('HandshakerServer', () => {
             requestId: 'requestId',
             senderDescriptor: {
                 kademliaId: senderId,
-                type: 0
+                type: NodeType.NODEJS
             }
         })
         const res = await handshakerServer.handshake(req, {} as any)
@@ -71,7 +71,7 @@ describe('HandshakerServer', () => {
             requestId: 'requestId',
             senderDescriptor: {
                 kademliaId: senderId,
-                type: 0
+                type: NodeType.NODEJS
             }
         })
         const res = await handshakerServer.handshake(req, {} as any)
@@ -91,7 +91,7 @@ describe('HandshakerServer', () => {
             requestId: 'requestId',
             senderDescriptor: {
                 kademliaId: senderId,
-                type: 0
+                type: NodeType.NODEJS
             }
         })
         const res = await handshakerServer.handshake(req, {} as any)
@@ -104,7 +104,7 @@ describe('HandshakerServer', () => {
             senderId: hexToBinary('0x1111'),
             interleaveTargetDescriptor: {
                 kademliaId: hexToBinary('0x2222'),
-                type: 0
+                type: NodeType.NODEJS
             }
 
         }
@@ -118,7 +118,7 @@ describe('HandshakerServer', () => {
             senderId: hexToBinary('0x1111'),
             interleaveTargetDescriptor: {
                 kademliaId: hexToBinary('0x2222'),
-                type: 0
+                type: NodeType.NODEJS
             }
         }
         await handshakerServer.interleaveNotice(req, {} as any)

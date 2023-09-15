@@ -5,11 +5,12 @@ import { EventEmitter } from 'eventemitter3'
 import { NodeID } from '@streamr/trackerless-network'
 import min from 'lodash/min'
 import once from 'lodash/once'
-import { DEFAULT_INTERVAL_IN_MS } from './AnnounceNodeToStreamService'
 import { NetworkPeerDescriptor } from 'streamr-client'
 import { HeartbeatMessage, HeartbeatMessageSchema } from './heartbeatUtils'
 
 const logger = new Logger(module)
+
+export const DEFAULT_UPDATE_INTERVAL_IN_MS = 1000 * 10
 
 const DEFAULT_PRUNE_AGE_IN_MS = 5 * 60 * 1000
 
@@ -46,7 +47,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         timeProvider = Date.now,
         pruneAgeInMs = DEFAULT_PRUNE_AGE_IN_MS,
         pruneIntervalInMs = DEFAULT_PRUNE_INTERVAL_IN_MS,
-        heartbeatIntervalInMs = DEFAULT_INTERVAL_IN_MS,
+        heartbeatIntervalInMs = DEFAULT_UPDATE_INTERVAL_IN_MS,
         latencyExtraInMs = DEFAULT_LATENCY_EXTRA_MS
     ) {
         super()

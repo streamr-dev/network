@@ -1,8 +1,9 @@
-import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID, LatencyType } from '@streamr/dht'
+import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, LatencyType, NodeType } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
-import { wait, waitForCondition } from '@streamr/utils'
+import { hexToBinary, wait, waitForCondition } from '@streamr/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { createRandomNodeId } from '../utils/utils'
 
 describe('RandomGraphNode-DhtNode-Latencies', () => {
     const numOfNodes = 64
@@ -13,14 +14,14 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
 
     const streamId = 'Stream1'
     const entrypointDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
-        type: 0
+        kademliaId: hexToBinary(createRandomNodeId()),
+        type: NodeType.NODEJS
     }
 
-    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
+    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => {
         return {
-            kademliaId: PeerID.fromString(`${i}`).value,
-            type: 0
+            kademliaId: hexToBinary(createRandomNodeId()),
+            type: NodeType.NODEJS
         }
     })
     beforeEach(async () => {
@@ -74,10 +75,10 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         entryPointRandomGraphNode.start()
         await graphNodes[0].start()
         await Promise.all([
-            waitForCondition(() => graphNodes[0].getNearbyContactPoolIds().length === 1),
+            waitForCondition(() => graphNodes[0].getNearbyNodeView().getIds().length === 1),
             waitForCondition(() => graphNodes[0].getTargetNeighborIds().length === 1)
         ])
-        expect(graphNodes[0].getNearbyContactPoolIds().length).toEqual(1)
+        expect(graphNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
         expect(graphNodes[0].getTargetNeighborIds().length).toEqual(1)
     })
 
@@ -93,7 +94,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             }, 10000, 2000)
         }))
         range(4).map((i) => {
-            expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
         // Check bidirectionality
@@ -101,7 +102,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         allNodes.push(entryPointRandomGraphNode)
         range(5).map((i) => {
             const ownNodeId = allNodes[i].getOwnNodeId()
-            allNodes[i].getNearbyContactPoolIds().forEach((nodeId) => {
+            allNodes[i].getNearbyNodeView().getIds().forEach((nodeId) => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === ownNodeId
                 })
