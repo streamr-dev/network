@@ -13,7 +13,7 @@ interface NeighborUpdateManagerConfig {
     ownNodeId: NodeID
     ownPeerDescriptor: PeerDescriptor
     targetNeighbors: NodeList
-    nearbyContactPool: NodeList
+    nearbyNodeView: NodeList
     neighborFinder: INeighborFinder
     randomGraphId: string
     rpcCommunicator: ListeningRpcCommunicator
