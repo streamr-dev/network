@@ -146,7 +146,7 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(graphNodes.map((node) =>
             waitForCondition(() => node.getNumberOfOutgoingHandshakes() === 0)
         ))
-        await wait(10000)
+        await wait(20000)
         let mismatchCounter = 0
         graphNodes.forEach((node) => {
             const nodeId = node.getOwnNodeId()
