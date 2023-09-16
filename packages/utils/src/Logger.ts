@@ -27,6 +27,10 @@ function isPrettyPrintDisabled(): boolean {
     return typeof window === 'object' || (parseBoolean(process.env.DISABLE_PRETTY_LOG) ?? false)
 }
 
+function isJestRunning(): boolean {
+    return process.env.JEST_WORKER_ID !== undefined
+}
+
 const rootLogger = pino({
     name: 'rootLogger',
     enabled: !process.env.NOLOG,
@@ -44,6 +48,7 @@ const rootLogger = pino({
             translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
             ignore: 'pid,hostname',
             levelFirst: true,
+            sync: isJestRunning(),
         },
     },
     browser: {
