@@ -1,23 +1,15 @@
-import { EthereumAddress, Logger, scheduleAtInterval, wait } from '@streamr/utils'
+import { EthereumAddress, Logger, scheduleAtInterval } from '@streamr/utils'
 import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
-import { OperatorFleetState } from './OperatorFleetState'
 import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
 import sample from 'lodash/sample'
-import { StreamrClient, NetworkPeerDescriptor } from 'streamr-client'
-import { StreamID, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
-import { ConsistentHashRing } from './ConsistentHashRing'
+import { StreamrClient } from 'streamr-client'
+import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import without from 'lodash/without'
 import { weightedSample } from '../../helpers/weightedSample'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
-import { shuffle } from 'lodash'
+import { inspectTarget, Target } from './inspectionUtils'
 
 const logger = new Logger(module)
-
-interface Target {
-    sponsorshipAddress: EthereumAddress
-    operatorAddress: EthereumAddress
-    streamPart: StreamPartID
-}
 
 function createStreamIDMatcher(streamId: StreamID): (streamPart: StreamPartID) => boolean {
     return (streamPart) => {
@@ -83,54 +75,8 @@ export async function findTarget(
     }
 }
 
-export async function findNodesForTarget(
-    target: Target,
-    streamrClient: StreamrClient,
-    fetchRedundancyFactorFn: FetchRedundancyFactorFn,
-    maxWait: number,
-    abortSignal: AbortSignal
-): Promise<NetworkPeerDescriptor[]> {
-    logger.debug('Waiting for node heartbeats', {
-        targetOperator: target.operatorAddress,
-        maxWait
-    })
-    const targetOperatorFleetState = new OperatorFleetState(
-        streamrClient,
-        toStreamID('/operator/coordination', target.operatorAddress)
-    )
-    try {
-        await targetOperatorFleetState.start()
-        await Promise.race([
-            targetOperatorFleetState.waitUntilReady(),
-            wait(maxWait, abortSignal)
-        ])
-        logger.debug('Finished waiting for heartbeats', {
-            targetOperator: target.operatorAddress,
-            onlineNodes: targetOperatorFleetState.getNodeIds().length,
-        })
-
-        const replicationFactor = await fetchRedundancyFactorFn({
-            operatorContractAddress: target.operatorAddress,
-            signer: await streamrClient.getSigner()
-        })
-        if (replicationFactor === undefined) {
-            logger.debug('Encountered misconfigured replication factor')
-            return []
-        }
-
-        const consistentHashRing = new ConsistentHashRing(replicationFactor)
-        for (const nodeId of targetOperatorFleetState.getNodeIds()) {
-            consistentHashRing.add(nodeId)
-        }
-        const targetNodes = consistentHashRing.get(target.streamPart)
-        return targetNodes.map((nodeId) => targetOperatorFleetState.getPeerDescriptor(nodeId)!)
-    } finally {
-        await targetOperatorFleetState.destroy()
-    }
-}
-
 export type FindTargetFn = typeof findTarget
-export type FindNodesForTargetFn = typeof findNodesForTarget
+export type InspectTargetFn = typeof inspectTarget
 export type FetchRedundancyFactorFn = typeof fetchRedundancyFactor
 
 export class InspectRandomNodeService {
@@ -142,7 +88,7 @@ export class InspectRandomNodeService {
     private readonly heartbeatLastResortTimeoutInMs = 60 * 1000
     private readonly abortController = new AbortController()
     private readonly findTarget: FindTargetFn
-    private readonly findNodesForTarget: FindNodesForTargetFn
+    private readonly inspectTarget: InspectTargetFn
     private readonly fetchRedundancyFactor: FetchRedundancyFactorFn
 
     constructor(
@@ -153,7 +99,7 @@ export class InspectRandomNodeService {
         intervalInMs: number,
         heartbeatLastResortTimeoutInMs: number,
         findTargetFn = findTarget,
-        findNodesForTargetFn = findNodesForTarget,
+        inspectTargetFn = inspectTarget,
         fetchRedundancyFactorFn = fetchRedundancyFactor
     ) {
         this.operatorContractAddress = operatorContractAddress
@@ -163,7 +109,7 @@ export class InspectRandomNodeService {
         this.intervalInMs = intervalInMs
         this.heartbeatLastResortTimeoutInMs = heartbeatLastResortTimeoutInMs
         this.findTarget = findTargetFn
-        this.findNodesForTarget = findNodesForTargetFn
+        this.inspectTarget = inspectTargetFn
         this.fetchRedundancyFactor = fetchRedundancyFactorFn
     }
 
@@ -189,44 +135,21 @@ export class InspectRandomNodeService {
             return
         }
 
-        const targetPeerDescriptors = await this.findNodesForTarget(
+        const pass = await this.inspectTarget({
             target,
-            this.streamrClient,
-            this.fetchRedundancyFactor,
-            this.heartbeatLastResortTimeoutInMs,
-            this.abortController.signal
-        )
-
-        logger.info('Inspecting nodes of operator', {
-            targetOperator: target.operatorAddress,
-            targetStreamPart: target.streamPart,
-            targetNodes: targetPeerDescriptors.map(({ id }) => id),
-            targetSponsorship: target.sponsorshipAddress
+            streamrClient: this.streamrClient,
+            fetchRedundancyFactor: this.fetchRedundancyFactor,
+            heartbeatLastResortTimeoutInMs: this.heartbeatLastResortTimeoutInMs,
+            abortSignal: this.abortController.signal
         })
 
-        for (const descriptor of shuffle(targetPeerDescriptors)) {
-            const result = await this.streamrClient.inspect(descriptor, target.streamPart)
-            if (result) {
-                logger.info('Inspection done (no issue detected)', {
-                    targetOperator: target.operatorAddress,
-                    targetStreamPart: target.streamPart,
-                    targetNode: descriptor.id,
-                    targetSponsorship: target.sponsorshipAddress
-                })
-                return
-            }
+        if (!pass) {
+            logger.info('Raise flag', { target })
+            await this.helper.flagWithMetadata(
+                target.sponsorshipAddress,
+                target.operatorAddress,
+                StreamPartIDUtils.getStreamPartition(target.streamPart)
+            )
         }
-
-        logger.info('Raise flag (issue detected)', {
-            targetOperator: target.operatorAddress,
-            targetStreamPart: target.streamPart,
-            targetNodes: targetPeerDescriptors.map(({ id }) => id),
-            targetSponsorship: target.sponsorshipAddress
-        })
-        await this.helper.flagWithMetadata(
-            target.sponsorshipAddress,
-            target.operatorAddress,
-            StreamPartIDUtils.getStreamPartition(target.streamPart)
-        )
     }
 }
