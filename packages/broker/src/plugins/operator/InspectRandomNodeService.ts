@@ -223,7 +223,7 @@ export class InspectRandomNodeService {
             targetNodes: targetPeerDescriptors.map(({ id }) => id),
             targetSponsorship: target.sponsorshipAddress
         })
-        await this.helper.flagWithMetadata(
+        await this.helper.flag(
             target.sponsorshipAddress,
             target.operatorAddress,
             StreamPartIDUtils.getStreamPartition(target.streamPart)

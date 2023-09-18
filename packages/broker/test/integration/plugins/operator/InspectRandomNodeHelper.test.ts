@@ -87,7 +87,7 @@ describe(InspectRandomNodeHelper, () => {
             ...flagger.operatorServiceConfig,
             signer: flagger.nodeWallets[0]
         })
-        await inspectRandomNodeHelper.flagWithMetadata(toEthereumAddress(sponsorship.address), toEthereumAddress(target.operatorContract.address), 2)
+        await inspectRandomNodeHelper.flag(toEthereumAddress(sponsorship.address), toEthereumAddress(target.operatorContract.address), 2)
 
         await waitForCondition(async (): Promise<boolean> => {
             const result = await graphClient.queryEntity<{ operator: { flagsOpened: any[] } }>({ query: `
