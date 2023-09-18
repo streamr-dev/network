@@ -35,6 +35,7 @@ import { IInspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 import { markAndCheckDuplicate } from './utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { ILayer1 } from './ILayer1'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -43,7 +44,7 @@ export interface Events {
 
 export interface StrictRandomGraphNodeConfig {
     randomGraphId: string
-    layer1: DhtNode
+    layer1: ILayer1
     P2PTransport: ITransport
     connectionLocker: ConnectionLocker
     ownPeerDescriptor: PeerDescriptor

@@ -4,6 +4,7 @@ import { range } from 'lodash'
 import { hexToBinary, wait, waitForCondition } from '@streamr/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { createRandomNodeId } from '../utils/utils'
+import { ILayer1 } from '../../src/logic/ILayer1'
 
 describe('RandomGraphNode-DhtNode-Latencies', () => {
     const numOfNodes = 64
@@ -44,14 +45,14 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         }))
         graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
             randomGraphId: streamId,
-            layer1: dhtNodes[i],
+            layer1: dhtNodes[i] as ILayer1,
             P2PTransport: cms[i],
             connectionLocker: cms[i],
             ownPeerDescriptor: peerDescriptors[i]
         }))
         entryPointRandomGraphNode = createRandomGraphNode({
             randomGraphId: streamId,
-            layer1: dhtEntryPoint,
+            layer1: dhtEntryPoint as ILayer1,
             P2PTransport: entrypointCm,
             connectionLocker: entrypointCm,
             ownPeerDescriptor: entrypointDescriptor

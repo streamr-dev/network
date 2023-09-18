@@ -5,6 +5,7 @@ import { createStreamMessage } from '../utils/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { ILayer1 } from '../../src/logic/ILayer1'
 
 describe('random graph with real connections', () => {
 
@@ -42,7 +43,7 @@ describe('random graph with real connections', () => {
         randomGraphNode1 = createRandomGraphNode(
             {
                 randomGraphId,
-                layer1: epDhtNode,
+                layer1: epDhtNode as ILayer1,
                 P2PTransport: epDhtNode.getTransport(),
                 connectionLocker: epDhtNode.getTransport() as ConnectionManager,
                 ownPeerDescriptor: epPeerDescriptor
@@ -50,28 +51,28 @@ describe('random graph with real connections', () => {
         )
         randomGraphNode2 = createRandomGraphNode({
             randomGraphId,
-            layer1: dhtNode1,
+            layer1: dhtNode1 as ILayer1,
             P2PTransport: dhtNode1.getTransport(),
             connectionLocker: dhtNode1.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode1.getPeerDescriptor()
         })
         randomGraphNode3 = createRandomGraphNode({
             randomGraphId,
-            layer1: dhtNode2,
+            layer1: dhtNode2 as ILayer1,
             P2PTransport: dhtNode2.getTransport(),
             connectionLocker: dhtNode2.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode2.getPeerDescriptor()
         })
         randomGraphNode4 = createRandomGraphNode({
             randomGraphId,
-            layer1: dhtNode3,
+            layer1: dhtNode3 as ILayer1,
             P2PTransport: dhtNode3.getTransport(),
             connectionLocker: dhtNode3.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode3.getPeerDescriptor()
         })
         randomGraphNode5 = createRandomGraphNode({
             randomGraphId,
-            layer1: dhtNode4,
+            layer1: dhtNode4 as ILayer1,
             P2PTransport: dhtNode4.getTransport(),
             connectionLocker: dhtNode4.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode4.getPeerDescriptor()

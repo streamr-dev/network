@@ -26,6 +26,7 @@ import { ProxyDirection } from '../proto/packages/trackerless-network/protos/Net
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { ILayer1 } from './ILayer1'
 
 export enum StreamNodeType {
     RANDOM_GRAPH = 'random-graph',
@@ -68,7 +69,7 @@ class NeighborCounter {
 }
 
 export interface StreamObject {
-    layer1?: DhtNode
+    layer1?: ILayer1
     layer2: IStreamNode
     type: StreamNodeType
 }
@@ -225,7 +226,7 @@ export class StreamrNode extends EventEmitter<Events> {
         )
     }
 
-    private createStream(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): [DhtNode, RandomGraphNode] {
+    private createStream(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): [ILayer1, RandomGraphNode] {
         const layer1 = this.createLayer1Node(streamPartId, entryPoints)
         const layer2 = this.createRandomGraphNode(streamPartId, layer1)
         this.streams.set(streamPartId, {
@@ -239,7 +240,7 @@ export class StreamrNode extends EventEmitter<Events> {
         return [layer1, layer2]
     }
 
-    private createLayer1Node = (streamPartId: StreamPartID, entryPoints: PeerDescriptor[]) => {
+    private createLayer1Node = (streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): ILayer1 => {
         return new DhtNode({
             transportLayer: this.layer0!,
             serviceId: 'layer1::' + streamPartId,
@@ -249,10 +250,10 @@ export class StreamrNode extends EventEmitter<Events> {
             rpcRequestTimeout: 15000,
             dhtJoinTimeout: 60000,
             nodeName: this.config.nodeName + ':layer1'
-        })
+        }) as ILayer1
     }
 
-    private createRandomGraphNode = (streamPartId: StreamPartID, layer1: DhtNode) => {
+    private createRandomGraphNode = (streamPartId: StreamPartID, layer1: ILayer1) => {
         return createRandomGraphNode({
             randomGraphId: streamPartId,
             P2PTransport: this.P2PTransport!,

@@ -15,6 +15,7 @@ import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { NodeID } from '../../src/identifiers'
+import { ILayer1 } from '../../src/logic/ILayer1'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -39,7 +40,7 @@ export const createMockRandomGraphNodeAndDhtNode = (
     const randomGraphNode = createRandomGraphNode({
         randomGraphId,
         P2PTransport: mockCm,
-        layer1: dhtNode,
+        layer1: dhtNode as ILayer1,
         connectionLocker: mockCm,
         ownPeerDescriptor
     })
