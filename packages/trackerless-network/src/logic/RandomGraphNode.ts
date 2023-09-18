@@ -110,26 +110,26 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     async start(): Promise<void> {
         this.started = true
         this.registerDefaultServerMethods()
-        addManagedEventListener(
-            this.config.layer1,
+        addManagedEventListener<any, any>(
+            this.config.layer1 as any,
             'newContact',
             (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.newContact(peerDescriptor, closestPeers),
             this.abortController.signal
         )
-        addManagedEventListener(
-            this.config.layer1,
+        addManagedEventListener<any, any>(
+            this.config.layer1 as any,
             'contactRemoved',
             (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.removedContact(peerDescriptor, closestPeers),
             this.abortController.signal
         )
-        addManagedEventListener(
-            this.config.layer1,
+        addManagedEventListener<any, any>(
+            this.config.layer1 as any,
             'newRandomContact',
             (peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.newRandomContact(peerDescriptor, randomPeers),
             this.abortController.signal
         )   
-        addManagedEventListener(
-            this.config.layer1,
+        addManagedEventListener<any, any>(
+            this.config.layer1 as any,
             'randomContactRemoved',
             (peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.removedRandomContact(peerDescriptor, randomPeers),
             this.abortController.signal

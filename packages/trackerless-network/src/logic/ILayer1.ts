@@ -1,5 +1,4 @@
 import { PeerDescriptor, SortedContactList, DhtPeer } from '@streamr/dht'
-import EventEmitter from 'eventemitter3'
 
 export interface ILayer1Events {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -8,7 +7,13 @@ export interface ILayer1Events {
     randomContactRemoved: (peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => void
 }
 
-export interface ILayer1 extends EventEmitter<ILayer1Events> {
+export interface ILayer1 {
+    on<T extends keyof ILayer1Events>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
+
+    once<T extends keyof ILayer1Events>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
+
+    off<T extends keyof ILayer1Events>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
+    
     removeContact: (peerDescriptor: PeerDescriptor, removeFromOpenInternetPeers?: boolean) => void
     getNeighborList: () => SortedContactList<DhtPeer>
     getKBucketPeers: () => PeerDescriptor[]

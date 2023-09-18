@@ -250,7 +250,7 @@ export class StreamrNode extends EventEmitter<Events> {
             rpcRequestTimeout: 15000,
             dhtJoinTimeout: 60000,
             nodeName: this.config.nodeName + ':layer1'
-        }) as ILayer1
+        })
     }
 
     private createRandomGraphNode = (streamPartId: StreamPartID, layer1: ILayer1) => {
