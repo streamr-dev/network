@@ -240,7 +240,7 @@ describe(InspectRandomNodeService, () => {
         expect(streamrClient.inspect).toHaveBeenCalledWith(PEER_DESCRIPTOR_TWO, target.streamPart)
 
         await wait(WAIT_FOR_FLAG_TIMEOUT_IN_MS)
-        expect(helper.flagWithMetadata).not.toHaveBeenCalled()
+        expect(helper.flag).not.toHaveBeenCalled()
     })
 
     it('does not flag if a target is not found', async () => {
@@ -249,7 +249,7 @@ describe(InspectRandomNodeService, () => {
         await service.start()
 
         await wait(WAIT_FOR_FLAG_TIMEOUT_IN_MS)
-        expect(helper.flagWithMetadata).not.toHaveBeenCalled()
+        expect(helper.flag).not.toHaveBeenCalled()
     })
 
     it('flags if inspection fails', async () => {
@@ -258,8 +258,8 @@ describe(InspectRandomNodeService, () => {
 
         await service.start()
 
-        await waitForCondition(() => helper.flagWithMetadata.mock.calls.length > 0)
-        expect(helper.flagWithMetadata).toHaveBeenCalledWith(SPONSORSHIP_ADDRESS, OTHER_OPERATOR_ADDRESS, 4)
+        await waitForCondition(() => helper.flag.mock.calls.length > 0)
+        expect(helper.flag).toHaveBeenCalledWith(SPONSORSHIP_ADDRESS, OTHER_OPERATOR_ADDRESS, 4)
     })
 
     it('flags if no online nodes found', async () => {
@@ -267,7 +267,7 @@ describe(InspectRandomNodeService, () => {
 
         await service.start()
 
-        await waitForCondition(() => helper.flagWithMetadata.mock.calls.length > 0)
-        expect(helper.flagWithMetadata).toHaveBeenCalledWith(SPONSORSHIP_ADDRESS, OTHER_OPERATOR_ADDRESS, 4)
+        await waitForCondition(() => helper.flag.mock.calls.length > 0)
+        expect(helper.flag).toHaveBeenCalledWith(SPONSORSHIP_ADDRESS, OTHER_OPERATOR_ADDRESS, 4)
     })
 })
