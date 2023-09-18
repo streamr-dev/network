@@ -1,6 +1,5 @@
 import { EventEmitter } from 'eventemitter3'
 import {
-    DhtNode,
     PeerDescriptor,
     DhtPeer,
     ListeningRpcCommunicator,
