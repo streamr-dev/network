@@ -112,8 +112,7 @@ describe('StreamRegistry', () => {
             expect(hasBeenCalledFor(invalidStream)).toBeFalse()
         })
 
-        // TODO: re-enable test when ETH-568 has been implemented (ENS support in fast-chain)
-        describe.skip('ENS', () => {
+        describe('ENS', () => {
 
             it('domain owned by user', async () => {
                 const streamId = `testdomain1.eth/foobar/${Date.now()}`

@@ -93,7 +93,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: client
-      docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain ens-sync-script
+      docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain ens-sync-script-fastchain
       run-brokers: true
       command: npm run test-end-to-end
   broker:
