@@ -202,7 +202,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             )
         ))
         for (const descriptor of this.config.layer1.getKBucketPeers()) {
-            if (this.config.nearbyNodeView.size() < this.config.nodeViewSize) {
+            if (this.config.nearbyNodeView.size() >= this.config.nodeViewSize) {
                 break
             }
             this.config.nearbyNodeView.add(
