@@ -98,7 +98,7 @@ describe(InspectRandomNodeService, () => {
         inspectTargetFn.mockResolvedValueOnce(false)
 
         await service.start()
-        await waitForCondition(() => helper.flagWithMetadata.mock.calls.length > 0)
+        await waitForCondition(() => helper.flag.mock.calls.length > 0)
 
         expect(findTargetFn).toHaveBeenCalledWith(MY_OPERATOR_ADDRESS, helper, loadBalancer)
         expect(inspectTargetFn).toHaveBeenCalledWith({
