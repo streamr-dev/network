@@ -32,10 +32,9 @@ export const createSignedMessage = async <T>(
     opts: Omit<StreamMessageOptions, 'signature' | 'content'>
     & { serializedContent: Uint8Array, authentication: Authentication }
 ): Promise<StreamMessage<T>> => {
-    const signatureContent = typeof opts.serializedContent === 'string' ? utf8ToBinary(opts.serializedContent) : opts.serializedContent 
     const signature = await opts.authentication.createMessageSignature(createSignaturePayload({
         messageId: opts.messageId,
-        serializedContent: signatureContent,
+        serializedContent: opts.serializedContent,
         prevMsgRef: opts.prevMsgRef ?? undefined,
         newGroupKey: opts.newGroupKey ?? undefined
     }))
