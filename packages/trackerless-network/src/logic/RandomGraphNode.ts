@@ -1,6 +1,5 @@
 import { EventEmitter } from 'eventemitter3'
 import {
-    DhtNode,
     PeerDescriptor,
     DhtPeer,
     ListeningRpcCommunicator,
@@ -35,6 +34,7 @@ import { IInspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 import { markAndCheckDuplicate } from './utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { ILayer1 } from './ILayer1'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -43,7 +43,7 @@ export interface Events {
 
 export interface StrictRandomGraphNodeConfig {
     randomGraphId: string
-    layer1: DhtNode
+    layer1: ILayer1
     P2PTransport: ITransport
     connectionLocker: ConnectionLocker
     ownPeerDescriptor: PeerDescriptor
@@ -110,26 +110,26 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     async start(): Promise<void> {
         this.started = true
         this.registerDefaultServerMethods()
-        addManagedEventListener(
-            this.config.layer1,
+        addManagedEventListener<any, any>(
+            this.config.layer1 as any,
             'newContact',
             (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.newContact(peerDescriptor, closestPeers),
             this.abortController.signal
         )
-        addManagedEventListener(
-            this.config.layer1,
+        addManagedEventListener<any, any>(
+            this.config.layer1 as any,
             'contactRemoved',
             (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.removedContact(peerDescriptor, closestPeers),
             this.abortController.signal
         )
-        addManagedEventListener(
-            this.config.layer1,
+        addManagedEventListener<any, any>(
+            this.config.layer1 as any,
             'newRandomContact',
             (peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.newRandomContact(peerDescriptor, randomPeers),
             this.abortController.signal
         )   
-        addManagedEventListener(
-            this.config.layer1,
+        addManagedEventListener<any, any>(
+            this.config.layer1 as any,
             'randomContactRemoved',
             (peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.removedRandomContact(peerDescriptor, randomPeers),
             this.abortController.signal
