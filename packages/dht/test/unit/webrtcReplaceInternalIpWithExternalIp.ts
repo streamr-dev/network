@@ -1,4 +1,4 @@
-import { replaceIpIfCandidateTypeIsHost } from '../../src/connection/WebRTC/WebRtcConnector'
+import { replaceInternalIpWithExternalIp } from '../../src/connection/WebRTC/WebRtcConnector'
 
 describe('replaceIpIfCandidateTypeIsHost', () => {
 
@@ -6,12 +6,12 @@ describe('replaceIpIfCandidateTypeIsHost', () => {
     const srflxCandidate = 'candidate:1 1 UDP 2013266431 127.0.0.1 30000 typ srflx'
     
     it('replaces ip if candidate type is host', () => {
-        const replaced = replaceIpIfCandidateTypeIsHost(hostCandidate, '0.0.0.0')
+        const replaced = replaceInternalIpWithExternalIp(hostCandidate, '0.0.0.0')
         expect(replaced).toEqual('candidate:1 1 UDP 2013266431 0.0.0.0 30000 typ host')
     })
 
     it('does not replace candidate if type is not host', () => {
-        const replaced = replaceIpIfCandidateTypeIsHost(srflxCandidate, '0.0.0.0')
+        const replaced = replaceInternalIpWithExternalIp(srflxCandidate, '0.0.0.0')
         expect(replaced).toEqual(srflxCandidate)
     })
 

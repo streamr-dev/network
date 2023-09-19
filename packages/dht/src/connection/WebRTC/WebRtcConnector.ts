@@ -28,7 +28,7 @@ import { PortRange } from '../ConnectionManager'
 
 const logger = new Logger(module)
 
-export const replaceIpIfCandidateTypeIsHost = (candidate: string, ip: string): string => {
+export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): string => {
     const parsed = candidate.split(' ')
     const type = parsed[7]
     if (type === 'host') {
@@ -142,7 +142,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
 
         connection.on('localCandidate', (candidate: string, mid: string) => {
             if (this.config.externalIp) {
-                candidate = replaceIpIfCandidateTypeIsHost(candidate, this.config.externalIp)
+                candidate = replaceInternalIpWithExternalIp(candidate, this.config.externalIp)
                 logger.debug(`onLocalCandidate injected external ip ${candidate} ${mid}`)
             }
             remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
