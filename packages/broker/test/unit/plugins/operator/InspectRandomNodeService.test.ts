@@ -1,6 +1,5 @@
 import {
     FetchRedundancyFactorFn,
-    findTarget,
     FindTargetFn,
     InspectRandomNodeService, InspectTargetFn
 } from '../../../../src/plugins/operator/InspectRandomNodeService'
@@ -8,94 +7,14 @@ import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/Inspec
 import { mock, MockProxy } from 'jest-mock-extended'
 import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { StreamID, StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { EthereumAddress, wait, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { wait, waitForCondition } from '@streamr/utils'
 import { StreamrClient } from 'streamr-client'
 
 const MY_OPERATOR_ADDRESS = randomEthereumAddress()
 const OTHER_OPERATOR_ADDRESS = randomEthereumAddress()
 const SPONSORSHIP_ADDRESS = randomEthereumAddress()
 const STREAM_ID = toStreamID('streamId')
-
-describe(findTarget, () => {
-    let helper: MockProxy<InspectRandomNodeHelper>
-    let loadBalancer: MockProxy<StreamAssignmentLoadBalancer>
-
-    function setupEnv(sponsorships: Array<{ address: EthereumAddress, operators: EthereumAddress[], streamId: StreamID }>) {
-        helper.getSponsorshipsOfOperator.mockImplementation(async (operatorAddress) => {
-            return sponsorships
-                .filter(({ operators }) => operators.includes(operatorAddress))
-                .map(({ address, operators, streamId }) => ({
-                    sponsorshipAddress: address,
-                    operatorCount: operators.length,
-                    streamId,
-                }))
-        })
-        helper.getOperatorsInSponsorship.mockImplementation(async (sponsorshipAddress) => {
-            return sponsorships.find(({ address }) => address === sponsorshipAddress)!.operators
-        })
-    }
-
-    function setStreamPartsAssignedToMe(streamParts: StreamPartID[]): void {
-        loadBalancer.getMyStreamParts.mockReturnValue(streamParts)
-    }
-
-    beforeEach(() => {
-        helper = mock<InspectRandomNodeHelper>()
-        loadBalancer = mock<StreamAssignmentLoadBalancer>()
-    })
-
-    it('returns undefined if no sponsorships are found', async () => {
-        setupEnv([])
-        setStreamPartsAssignedToMe([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
-        expect(result).toBeUndefined()
-    })
-
-    it('returns undefined if only finds sponsorship with my operator as only operator', async () => {
-        setupEnv([{
-            address: SPONSORSHIP_ADDRESS,
-            operators: [MY_OPERATOR_ADDRESS],
-            streamId: STREAM_ID,
-        }])
-        setStreamPartsAssignedToMe([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
-        expect(result).toBeUndefined()
-    })
-
-    it('returns undefined if no sponsorships found with a partition assigned to me', async () => {
-        setupEnv([{
-            address: SPONSORSHIP_ADDRESS,
-            operators: [MY_OPERATOR_ADDRESS, OTHER_OPERATOR_ADDRESS],
-            streamId: STREAM_ID,
-        }])
-        setStreamPartsAssignedToMe([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
-        expect(result).toBeUndefined()
-    })
-
-    it('returns target sponsorship, operator and stream part', async () => {
-        setupEnv([{
-            address: SPONSORSHIP_ADDRESS,
-            operators: [MY_OPERATOR_ADDRESS, OTHER_OPERATOR_ADDRESS],
-            streamId: STREAM_ID,
-        }])
-        setStreamPartsAssignedToMe([
-            toStreamPartID(STREAM_ID, 0),
-            toStreamPartID(STREAM_ID, 1),
-            toStreamPartID(STREAM_ID, 2),
-        ])
-
-        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
-        expect(result).toMatchObject({
-            sponsorshipAddress: SPONSORSHIP_ADDRESS,
-            operatorAddress: OTHER_OPERATOR_ADDRESS,
-            streamPart: expect.stringMatching(/^streamId#\d$/)
-        })
-    })
-
-    // TODO: few edge-cases where state changes during asynchronicity
-})
 
 const WAIT_FOR_FLAG_TIMEOUT_IN_MS = 100
 
@@ -139,7 +58,7 @@ describe(InspectRandomNodeService, () => {
         service.stop()
     })
 
-    it('does not flag (or even inspect) if does not find target', async () => {
+    it('does not flag (or inspect) if does not find target', async () => {
         findTargetFn.mockResolvedValueOnce(undefined)
 
         await service.start()
