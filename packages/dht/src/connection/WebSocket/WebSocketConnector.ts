@@ -166,7 +166,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         } else {
             const socket = new ClientWebSocket()
 
-            const address = connectivityMethodToWebSocketUrl(targetPeerDescriptor.websocket!)
+            const url = connectivityMethodToWebSocketUrl(targetPeerDescriptor.websocket!)
 
             const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
                 ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
@@ -184,7 +184,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             socket.on('disconnected', delFunc)
             managedConnection.on('handshakeCompleted', delFunc)
 
-            socket.connect(address)
+            socket.connect(url)
 
             return managedConnection
         }

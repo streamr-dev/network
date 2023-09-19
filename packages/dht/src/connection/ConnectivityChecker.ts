@@ -161,11 +161,11 @@ export class ConnectivityChecker {
         { wsServerInfo: ConnectivityMethod, mode: ConnectionMode, timeoutMs?: number }
     ): Promise<IConnection> {
         const socket = new ClientWebSocket()
-        const address = `${connectivityMethodToWebSocketUrl(wsServerInfo)}?${mode}=true`
+        const url = `${connectivityMethodToWebSocketUrl(wsServerInfo)}?${mode}=true`
         let result: RunAndRaceEventsReturnType<ConnectionEvents>
         try {
             result = await runAndRaceEvents3<ConnectionEvents>([
-                () => { socket.connect(address) }],
+                () => { socket.connect(url) }],
             socket, ['connected', 'error'],
             timeoutMs)
         } catch (e) {
