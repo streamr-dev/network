@@ -145,6 +145,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             }
         } catch (err) {
             if (reattempt < 5) {
+                logger.error('Failed to connect to the entrypoint', { error: err })
                 await wait(2000)
                 return this.checkConnectivity(reattempt + 1)
             } else {
