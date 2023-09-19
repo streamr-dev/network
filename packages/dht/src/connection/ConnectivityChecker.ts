@@ -47,7 +47,7 @@ export class ConnectivityChecker {
                 mode: ConnectionMode.REQUEST
             })
         } catch (e) {
-            logger.error('Failed to connect to the entrypoints: ' + e)
+            logger.error('Failed to connect to the entrypoint', { entryPoint, error: e })
             throw new Err.ConnectionFailed('Failed to connect to the entrypoints', e)
         }
         // send connectivity request
