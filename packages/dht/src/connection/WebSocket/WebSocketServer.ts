@@ -1,4 +1,4 @@
-import { createServer as createHttpServer, Server as HttpServer } from 'http'
+import { createServer as createHttpServer, Server as HttpServer, IncomingMessage, ServerResponse } from 'http'
 import { createServer as createHttpsServer, Server as HttpsServer } from 'https'
 import EventEmitter from 'eventemitter3'
 import { server as WsServer } from 'websocket'
@@ -46,7 +46,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     }
 
     private startServer(port: number, host?: string, tlsCertificate?: TlsCertificate): Promise<void> {
-        const serverCallBack = (request, response) => {
+        const serverCallBack = (request: IncomingMessage, response: ServerResponse<IncomingMessage>) => {
             logger.trace('Received request for ' + request.url)
             response.writeHead(404)
             response.end()
