@@ -220,7 +220,6 @@ export class StreamrNode extends EventEmitter<Events> {
         await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT), false, knownEntryPoints.length > 0)
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
-            layer1.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT,
             discoveryResult.entryPointsFromDht,
             entryPoints.length
         )

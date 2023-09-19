@@ -6,6 +6,9 @@ import { Any } from '../../src/proto/google/protobuf/any'
 import { hexToBinary, wait } from '@streamr/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { createRandomNodeId } from '../utils/utils'
+import { MockLayer1 } from '../utils/mock/MockLayer1'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { range } from 'lodash'
 
 describe('StreamEntryPointDiscovery', () => {
 
@@ -71,10 +74,21 @@ describe('StreamEntryPointDiscovery', () => {
 
     const fakeDeleteEntryPointData = async (_key: Uint8Array): Promise<void> => {}
 
+    const addNodesToStream = (layer1: MockLayer1, count: number) => {
+        range(count).forEach(() => {
+            layer1.addNewRandomPeerToKBucket()
+            layer1.addNewRandomPeerToKBucket()
+            layer1.addNewRandomPeerToKBucket()
+            layer1.addNewRandomPeerToKBucket()
+        })
+    } 
+
+    let layer1: MockLayer1
     beforeEach(() => {
         storeCalled = 0
         streams = new Map()
-        streams.set(streamPartId, {} as any)
+        layer1 = new MockLayer1(getNodeIdFromPeerDescriptor(peerDescriptor))
+        streams.set(streamPartId, { layer1 } as any)
         streamEntryPointDiscoveryWithData = new StreamEntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
             streams,
@@ -119,22 +133,24 @@ describe('StreamEntryPointDiscovery', () => {
     })
 
     it('store on empty stream', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, true, 0)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, 0)
         expect(storeCalled).toEqual(1)
     })
 
     it('store on non-empty stream without known entry points', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, false, false, 0)
+        addNodesToStream(layer1, 4)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, false, 0)
         expect(storeCalled).toEqual(0)
     })
 
     it('store on stream without saturated entrypoint count', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, false, true, 0)
+        addNodesToStream(layer1, 4)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, 0)
         expect(storeCalled).toEqual(1)
     })
 
     it('will keep recaching until stream stopped', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, true, 0)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, 0)
         expect(storeCalled).toEqual(1)
         await wait(4500)
         streamEntryPointDiscoveryWithData.removeSelfAsEntryPoint(streamPartId)
@@ -142,7 +158,7 @@ describe('StreamEntryPointDiscovery', () => {
     })
 
     it('will stop recaching is stream is left', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, true, 0)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, 0)
         expect(storeCalled).toEqual(1)
         streams.delete(streamPartId)
         await wait(4500)
