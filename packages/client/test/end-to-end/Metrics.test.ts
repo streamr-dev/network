@@ -35,7 +35,7 @@ describe('NodeMetrics', () => {
             partitions: NUM_OF_PARTITIONS
         })
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        subscriberClient = createTestClient(await fetchPrivateKeyWithGas(), 'subscriber', 15653)
+        subscriberClient = createTestClient(await fetchPrivateKeyWithGas(), 15653)
     }, 30 * 1000)
 
     afterAll(async () => {

@@ -4,6 +4,7 @@ import { getMockPeers, MockDhtRpc } from '../utils/utils'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
+    NodeType,
     PeerDescriptor,
     PingRequest,
     PingResponse
@@ -21,11 +22,11 @@ describe('DhtPeer', () => {
     const serviceId = 'test'
     const clientPeerDescriptor: PeerDescriptor = {
         kademliaId: generateId('dhtPeer'),
-        type: 0
+        type: NodeType.NODEJS
     }
     const serverPeerDescriptor: PeerDescriptor = {
         kademliaId: generateId('server'),
-        type: 0
+        type: NodeType.NODEJS
     }
 
     beforeEach(() => {

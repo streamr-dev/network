@@ -1,4 +1,4 @@
-import { DhtNode, PeerDescriptor, Simulator } from '@streamr/dht'
+import { DhtNode, NodeType, PeerDescriptor, Simulator } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockRandomGraphNodeAndDhtNode, createRandomNodeId, createStreamMessage } from '../utils/utils'
 import { range } from 'lodash'
@@ -9,7 +9,7 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 describe('Propagation', () => {
     const entryPointDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: 1
+        type: NodeType.NODEJS
     }
     let dhtNodes: DhtNode[]
     let randomGraphNodes: RandomGraphNode[]
@@ -33,7 +33,7 @@ describe('Propagation', () => {
         await Promise.all(range(NUM_OF_NODES).map(async (_i) => {
             const descriptor: PeerDescriptor = {
                 kademliaId: hexToBinary(createRandomNodeId()),
-                type: 1
+                type: NodeType.NODEJS
             }
             const [dht, graph] = createMockRandomGraphNodeAndDhtNode(
                 descriptor,
@@ -43,6 +43,7 @@ describe('Propagation', () => {
             )
             await dht.start()
             await graph.start()
+            // eslint-disable-next-line promise/always-return
             await dht.joinDht([entryPointDescriptor]).then(() => {
                 graph.on('message', () => { totalReceived += 1 })
                 dhtNodes.push(dht)

@@ -18,8 +18,7 @@ describe('NetworkStack can be stopped during start', () => {
             layer0: {
                 peerDescriptor: epDescriptor,
                 entryPoints: [epDescriptor]
-            },
-            networkNode: {}
+            }
         })
         node = new NetworkStack({
             layer0: {
@@ -28,8 +27,7 @@ describe('NetworkStack can be stopped during start', () => {
                     type: NodeType.NODEJS
                 },
                 entryPoints: [epDescriptor]
-            },
-            networkNode: {}
+            }
         })
         await entryPoint.start()
     })

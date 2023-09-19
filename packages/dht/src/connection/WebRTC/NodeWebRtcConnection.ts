@@ -60,7 +60,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
     private readonly iceServers: IceServer[]
-    private readonly bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use
+    private readonly _bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use (NET-938)
     private readonly bufferThresholdLow: number
     private readonly connectingTimeout: number
     private readonly remotePeerDescriptor: PeerDescriptor
@@ -71,7 +71,8 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         super()
         this.connectionId = new ConnectionID()
         this.iceServers = params.iceServers || []
-        this.bufferThresholdHigh = params.bufferThresholdHigh || 2 ** 17
+        // eslint-disable-next-line no-underscore-dangle
+        this._bufferThresholdHigh = params.bufferThresholdHigh || 2 ** 17
         this.bufferThresholdLow = params.bufferThresholdLow || 2 ** 15
         this.connectingTimeout = params.connectingTimeout || 20000
         this.remotePeerDescriptor = params.remotePeerDescriptor

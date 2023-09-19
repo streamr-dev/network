@@ -1,4 +1,4 @@
-import { DhtNode, Simulator, PeerDescriptor, ConnectionManager, getRandomRegion } from '@streamr/dht'
+import { DhtNode, Simulator, PeerDescriptor, ConnectionManager, getRandomRegion, NodeType } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { wait, waitForCondition, hexToBinary } from '@streamr/utils'
@@ -19,7 +19,7 @@ describe('RandomGraphNode-DhtNode', () => {
     const entrypointDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
         nodeName: 'entrypoint',
-        type: 0,
+        type: NodeType.NODEJS,
         region: getRandomRegion()
     }
 
@@ -27,7 +27,7 @@ describe('RandomGraphNode-DhtNode', () => {
         return {
             kademliaId: hexToBinary(createRandomNodeId()),
             nodeName: `node${i}`,
-            type: 0,
+            type: NodeType.NODEJS,
             region: getRandomRegion()
         }
     })

@@ -77,8 +77,7 @@ describe('proxy and full node', () => {
             layer0: {
                 entryPoints: [proxyNodeDescriptor],
                 peerDescriptor: proxiedNodeDescriptor,
-            },
-            networkNode: {}
+            }
         })
         await proxiedNode.start(false)
     })

@@ -1,5 +1,5 @@
 import { StreamEntryPointDiscovery } from '../../src/logic/StreamEntryPointDiscovery'
-import { PeerDescriptor, isSamePeerDescriptor, RecursiveFindResult } from '@streamr/dht'
+import { PeerDescriptor, isSamePeerDescriptor, RecursiveFindResult, NodeType } from '@streamr/dht'
 import { StreamObject } from '../../src/logic/StreamrNode'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { Any } from '../../src/proto/google/protobuf/any'
@@ -16,13 +16,13 @@ describe('StreamEntryPointDiscovery', () => {
 
     const peerDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: 0,
+        type: NodeType.NODEJS,
         nodeName: 'fake'
     }
 
     const deletedPeerDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: 0,
+        type: NodeType.NODEJS,
         nodeName: 'deleted'
     }
 
