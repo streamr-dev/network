@@ -36,7 +36,7 @@
     "geoip-lite": "^1.4.2",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@streamr/test-utils": "8.5.5",
@@ -46,7 +46,7 @@
     "@types/geoip-lite": "^1.4.1",
     "@types/lodash": "^4.14.198",
     "@types/morgan": "^1.9.5",
-    "@types/uuid": "^9.0.3"
+    "@types/uuid": "^9.0.4"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.5",
