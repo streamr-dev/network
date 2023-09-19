@@ -107,9 +107,9 @@ export class InspectRandomNodeHelper {
         return operatorIds
     }
 
-    async flagWithMetadata(sponsorship: EthereumAddress, operator: EthereumAddress, partition: number): Promise<void> {
+    async flag(sponsorship: EthereumAddress, operator: EthereumAddress, partition: number): Promise<void> {
         const metadata = JSON.stringify({ partition })
-        await (await this.operatorContract.flagWithMetadata(sponsorship, operator, metadata)).wait()
+        await (await this.operatorContract.flag(sponsorship, operator, metadata)).wait()
     }
     
 }

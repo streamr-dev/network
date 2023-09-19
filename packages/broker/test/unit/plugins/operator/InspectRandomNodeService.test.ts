@@ -1,7 +1,8 @@
 import {
     FetchRedundancyFactorFn,
     FindTargetFn,
-    InspectRandomNodeService, InspectTargetFn
+    InspectRandomNodeService,
+    InspectTargetFn
 } from '../../../../src/plugins/operator/InspectRandomNodeService'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { mock, MockProxy } from 'jest-mock-extended'
@@ -65,7 +66,7 @@ describe(InspectRandomNodeService, () => {
         await wait(WAIT_FOR_FLAG_TIMEOUT_IN_MS)
 
         expect(inspectTargetFn).not.toHaveBeenCalled()
-        expect(helper.flagWithMetadata).not.toHaveBeenCalled()
+        expect(helper.flag).not.toHaveBeenCalled()
     })
 
     it('does not flag if inspection passes', async () => {
@@ -75,7 +76,7 @@ describe(InspectRandomNodeService, () => {
         await service.start()
         await wait(WAIT_FOR_FLAG_TIMEOUT_IN_MS)
 
-        expect(helper.flagWithMetadata).not.toHaveBeenCalled()
+        expect(helper.flag).not.toHaveBeenCalled()
     })
 
     it('flags if inspection does not pass', async () => {
@@ -83,9 +84,9 @@ describe(InspectRandomNodeService, () => {
         inspectTargetFn.mockResolvedValueOnce(false)
 
         await service.start()
-        await waitForCondition(() => helper.flagWithMetadata.mock.calls.length > 0)
+        await waitForCondition(() => helper.flag.mock.calls.length > 0)
 
-        expect(helper.flagWithMetadata).toHaveBeenCalledWith(
+        expect(helper.flag).toHaveBeenCalledWith(
             SPONSORSHIP_ADDRESS,
             OTHER_OPERATOR_ADDRESS,
             StreamPartIDUtils.getStreamPartition(target.streamPart)

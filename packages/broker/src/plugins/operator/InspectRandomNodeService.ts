@@ -78,7 +78,7 @@ export class InspectRandomNodeService {
 
         if (!pass) {
             logger.info('Raise flag', { target })
-            await this.helper.flagWithMetadata(
+            await this.helper.flag(
                 target.sponsorshipAddress,
                 target.operatorAddress,
                 StreamPartIDUtils.getStreamPartition(target.streamPart)
