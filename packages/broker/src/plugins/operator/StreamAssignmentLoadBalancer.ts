@@ -19,7 +19,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
     private readonly myStreamParts = new Set<StreamPartID>()
     private readonly concurrencyLimit = pLimit(1)
     private readonly consistentHashRing: ConsistentHashRing
-    private readonly myNodeId: string
+    private readonly myNodeId: NodeID
     private readonly getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>
     private readonly operatorFleetState: EventEmitter3<OperatorFleetStateEvents>
     private readonly maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>
@@ -42,6 +42,10 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.operatorFleetState.on('removed', this.nodeRemoved)
         this.maintainTopologyHelper.on('addStakedStreams', this.streamsAdded)
         this.maintainTopologyHelper.on('removeStakedStream', this.streamRemoved)
+    }
+
+    getMyStreamParts(): StreamPartID[] {
+        return Array.from(this.myStreamParts)
     }
 
     private nodeAdded = this.concurrencyLimiter(async (nodeId: NodeID): Promise<void> => {

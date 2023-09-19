@@ -19,26 +19,14 @@ export class EncryptionUtil {
         }
     }
 
-    /**
-     * Returns a Buffer or a hex String
-     */
-    static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: true): string
-    // These overrides tell ts outputInHex returns string
-    static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike): string
-    static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: false): Buffer
-    static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: boolean = false): string | Buffer {
+    static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike): Buffer {
         this.validateRSAPublicKey(publicKey)
         const ciphertextBuffer = crypto.publicEncrypt(publicKey, plaintextBuffer)
-        if (outputInHex) {
-            return hexlify(ciphertextBuffer).slice(2)
-        }
         return ciphertextBuffer
     }
 
-    // Returns a Buffer
-    static decryptWithRSAPrivateKey(ciphertext: string | Uint8Array, privateKey: crypto.KeyLike, isHexString = false): Buffer {
-        const ciphertextBuffer = isHexString ? arrayify(`0x${ciphertext}`) : ciphertext as Uint8Array
-        return crypto.privateDecrypt(privateKey, ciphertextBuffer)
+    static decryptWithRSAPrivateKey(ciphertext: Uint8Array, privateKey: crypto.KeyLike): Buffer {
+        return crypto.privateDecrypt(privateKey, ciphertext)
     }
 
     /*

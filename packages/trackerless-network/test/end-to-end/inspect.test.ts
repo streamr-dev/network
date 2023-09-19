@@ -64,24 +64,21 @@ describe('inspect', () => {
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: publisherDescriptor
-            },
-            networkNode: {}
+            }
         })
 
         inspectedNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: inspectedDescriptor
-            },
-            networkNode: {}
+            }
         })
 
         inspectorNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: inspectorDescriptor
-            },
-            networkNode: {}
+            }
         })
 
         await publisherNode.start()

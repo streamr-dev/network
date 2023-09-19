@@ -33,8 +33,7 @@ describe('Full node network with WebRTC connections', () => {
             layer0: {
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: epPeerDescriptor
-            },
-            networkNode: {}
+            }
         })
         await entryPoint.start()
         entryPoint.getStreamrNode()!.setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
@@ -49,8 +48,7 @@ describe('Full node network with WebRTC connections', () => {
                 layer0: {
                     peerDescriptor,
                     entryPoints: [epPeerDescriptor]
-                }, 
-                networkNode: {}
+                }
             })
             nodes.push(node)
             await node.start()

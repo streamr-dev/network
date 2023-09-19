@@ -10,6 +10,7 @@ import { fastWallet } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { createMockMessage } from '../test-utils/utils'
+import { hexToBinary } from '@streamr/utils'
 
 const STREAM_ID = toStreamID('streamId')
 
@@ -67,7 +68,7 @@ describe('EncryptionUtil', () => {
         })
         msg.newGroupKey = {
             groupKeyId: 'mockId',
-            encryptedGroupKeyHex: '0x1234',
+            data: hexToBinary('0x1234'),
             serialized: ''
         } as EncryptedGroupKey
         expect(() => EncryptionUtil.decryptStreamMessage(msg, key)).toThrow('Could not decrypt new group key')

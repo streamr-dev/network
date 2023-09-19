@@ -2,7 +2,7 @@ import { getMockPeers, MockDhtRpc } from '../utils/utils'
 import { ProtoRpcClient, RpcCommunicator, RpcError, toProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { generateId } from '../utils/utils'
-import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { ClosestPeersRequest, ClosestPeersResponse, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { wait } from '@streamr/utils'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
@@ -16,12 +16,12 @@ describe('DhtRpc', () => {
 
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: generateId('peer1'),
-        type: 0
+        type: NodeType.NODEJS
     }
 
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: generateId('peer2'),
-        type: 0
+        type: NodeType.NODEJS
     }
 
     const outgoingListener2 = (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
@@ -92,17 +92,14 @@ describe('DhtRpc', () => {
     it('Server side timeout', async () => {
         let timeout: NodeJS.Timeout
 
-        function respondGetClosestPeersWithTimeout(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
+        async function respondGetClosestPeersWithTimeout(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
             const neighbors = getMockPeers()
             const response: ClosestPeersResponse = {
                 peers: neighbors,
                 requestId: 'why am i still here'
             }
-            return new Promise((resolve, _reject) => {
-                timeout = setTimeout(() => {
-                    resolve(response)
-                }, 5000)
-            })
+            await wait(5000)
+            return response
         }
 
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', respondGetClosestPeersWithTimeout)

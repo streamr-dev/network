@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto'
-import { ConnectionLocker, DhtNode, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { ConnectionLocker, DhtNode, NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import {
     ContentType,
@@ -79,7 +79,7 @@ export const createRandomNodeId = (): NodeID => {
 export const createMockRemoteNode = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
     const mockPeerDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: 0
+        type: NodeType.NODEJS
     }
     return new RemoteRandomGraphNode(peerDescriptor || mockPeerDescriptor, 'mock', {} as any)
 }
@@ -87,7 +87,7 @@ export const createMockRemoteNode = (peerDescriptor?: PeerDescriptor): RemoteRan
 export const createMockRemoteHandshaker = (): RemoteHandshaker => {
     const mockPeerDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: 0
+        type: NodeType.NODEJS
     }
     return new RemoteHandshaker(mockPeerDescriptor, 'mock', {
         handshake: async () => {},
@@ -109,7 +109,6 @@ export const createNetworkNodeWithSimulator = (
             maxConnections: 25,
             storeHighestTtl: 120000,
             storeMaxTtl: 120000
-        },
-        networkNode: {}
+        }
     })
 }

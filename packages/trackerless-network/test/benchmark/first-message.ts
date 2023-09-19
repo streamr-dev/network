@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import { LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
+import { LatencyType, NodeType, Simulator, getRandomRegion } from '@streamr/dht'
 import fs from 'fs'
 import { createNetworkNodeWithSimulator, createRandomNodeId } from '../utils/utils'
 import { NetworkNode } from '../../src/NetworkNode'
@@ -27,7 +27,7 @@ const prepareLayer0 = async () => {
     const peerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
         region: getRandomRegion(),
-        type: 0,
+        type: NodeType.NODEJS,
         nodeName: 'entrypoint'
     }
     layer0Ep = peerDescriptor
@@ -43,7 +43,7 @@ const prepareStream = async (streamId: string) => {
     const peerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
         region: getRandomRegion(),
-        type: 0,
+        type: NodeType.NODEJS,
         nodeName: streamId
     }
     const streamPartId = toStreamPartID(toStreamID(streamId), 0)
@@ -66,7 +66,7 @@ const measureJoiningTime = async (count: number) => {
     const nodeId = createRandomNodeId()
     const peerDescriptor = {
         kademliaId: hexToBinary(nodeId),
-        type: 0,
+        type: NodeType.NODEJS,
         region: getRandomRegion(),
         nodeName: `${count}`
     }
@@ -134,7 +134,7 @@ const run = async () => {
     Simulator.useFakeTimers(false)
 } 
 
-// eslint-disable-next-line promise/catch-or-return
+// eslint-disable-next-line promise/catch-or-return, promise/always-return
 run().then(() => {
     console.log('done')
 }).catch((err) => {

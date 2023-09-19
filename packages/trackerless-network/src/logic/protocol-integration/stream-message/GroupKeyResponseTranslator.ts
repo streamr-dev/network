@@ -9,7 +9,7 @@ export class GroupKeyResponseTranslator {
 
         const groupKeys = msg.encryptedGroupKeys.map((groupKey) => {
             return {
-                data: hexToBinary(groupKey.encryptedGroupKeyHex),
+                data: groupKey.data,
                 id: groupKey.groupKeyId
             }
         })
@@ -24,7 +24,7 @@ export class GroupKeyResponseTranslator {
     static toClientProtocol(msg: GroupKeyResponse): OldGroupKeyResponse {
         const encryptedGroupKeys = msg.groupKeys.map((groupKey: GroupKey) => new OldEncryptedGroupKey(
             groupKey.id,
-            binaryToHex(groupKey.data),
+            groupKey.data,
         ))
         return new OldGroupKeyResponse({
             requestId: msg.requestId,

@@ -5,6 +5,7 @@ import {
     ListeningRpcCommunicator,
     Simulator,
     SimulatorTransport,
+    NodeType,
 } from '@streamr/dht'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -44,7 +45,7 @@ describe('NodeList', () => {
         ids.forEach((id) => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: id,
-                type: 0
+                type: NodeType.NODEJS
             }
             nodeList.add(createRemoteGraphNode(peerDescriptor))
         })
@@ -61,7 +62,7 @@ describe('NodeList', () => {
     it('add', () => {
         const newDescriptor = {
             kademliaId: new Uint8Array([1, 2, 3]),
-            type: 0
+            type: NodeType.NODEJS
         }
         const newNode = createRemoteGraphNode(newDescriptor)
         nodeList.add(newNode)
@@ -69,7 +70,7 @@ describe('NodeList', () => {
 
         const newDescriptor2 = {
             kademliaId: new Uint8Array([1, 2, 4]),
-            type: 0
+            type: NodeType.NODEJS
         }
         const newNode2 = createRemoteGraphNode(newDescriptor2)
         nodeList.add(newNode2)
