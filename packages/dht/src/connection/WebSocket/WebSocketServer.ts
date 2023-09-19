@@ -8,7 +8,7 @@ import {
 } from '../IConnectionSource'
 
 import { Logger, asAbortable } from '@streamr/utils'
-import { StartingWebSocketServerFailed } from '../../helpers/errors'
+import { WebSocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
 import fs from 'fs'
@@ -38,11 +38,11 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
                 if (err.originalError?.code === 'EADDRINUSE') {
                     logger.debug(`failed to start WebSocket server on port: ${port} reattempting on next port`)
                 } else {
-                    throw new StartingWebSocketServerFailed(err)
+                    throw new WebSocketServerStartError(err)
                 }
             }
         }
-        throw new StartingWebSocketServerFailed('Failed to start WebSocket server on any port in range')
+        throw new WebSocketServerStartError('Failed to start WebSocket server on any port in range')
     }
 
     private startServer(port: number, host?: string, tlsCertificate?: TlsCertificate): Promise<void> {
@@ -81,7 +81,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
                 this.emit('connected', new ServerWebSocket(connection, request.resourceURL))
             })
             this.httpServer.once('error', (err: Error) => {
-                reject(new StartingWebSocketServerFailed('Starting Websocket server failed', err))
+                reject(new WebSocketServerStartError('Starting Websocket server failed', err))
             })
 
             this.httpServer.once('listening', () => {
@@ -92,7 +92,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
             try {
                 this.httpServer.listen(port, host)
             } catch (e) {
-                reject(new StartingWebSocketServerFailed('Websocket server threw an exception', e))
+                reject(new WebSocketServerStartError('Websocket server threw an exception', e))
             }
         })
     }
