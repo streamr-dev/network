@@ -132,7 +132,9 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         sponsorship,
                         targetOperator,
                         partition,
-                        voteOnSuspectNodeHelper
+                        voteOnSuspectNodeHelper,
+                        streamrClient,
+                        this.abortController.signal
                     )
                 }
             }, this.abortController.signal)
