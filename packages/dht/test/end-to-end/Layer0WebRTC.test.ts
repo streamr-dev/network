@@ -11,7 +11,7 @@ describe('Layer0 with WebRTC connections', () => {
         kademliaId: PeerID.fromString('entrypoint').value,
         nodeName: 'entrypoint',
         type: NodeType.NODEJS,
-        websocket: { ip: '127.0.0.1', port: 10029 }
+        websocket: { host: '127.0.0.1', port: 10029, tls: false }
     }
     let epDhtNode: DhtNode
     let node1: DhtNode

@@ -9,8 +9,9 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         kademliaId: PeerID.fromString(entryPointId).value,
         type: NodeType.NODEJS,
         websocket: {
-            ip: '127.0.0.1',
-            port: 23232
+            host: '127.0.0.1',
+            port: 23232,
+            tls: false
         }
     }
 

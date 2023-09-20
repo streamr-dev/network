@@ -22,8 +22,9 @@ describe('WebSocket Connection Management', () => {
         kademliaId: PeerID.fromString('peerWithServer').value,
         type: NodeType.NODEJS,
         websocket: {
-            ip: '127.0.0.1',
-            port: 12223
+            host: '127.0.0.1',
+            port: 12223,
+            tls: false
         }
     }
 

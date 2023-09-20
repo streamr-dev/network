@@ -15,7 +15,7 @@ describe('Full node network with WebRTC connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 14444 },
+        websocket: { host: 'localhost', port: 14444, tls: false },
         region: getRandomRegion()
     }
 

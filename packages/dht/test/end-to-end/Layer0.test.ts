@@ -6,7 +6,7 @@ describe('Layer0', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
-        websocket: { ip: '127.0.0.1', port: 10011 }
+        websocket: { host: '127.0.0.1', port: 10011, tls: false }
     }
     
     let epDhtNode: DhtNode

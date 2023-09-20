@@ -20,7 +20,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
-import { ConnectionManager, ConnectionManagerConfig, PortRange } from '../connection/ConnectionManager'
+import { ConnectionManager, ConnectionManagerConfig, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
@@ -82,6 +82,7 @@ export interface DhtNodeOptions {
     webrtcNewConnectionTimeout?: number
     webrtcPortRange?: PortRange
     maxConnections?: number
+    tlsCertificate?: TlsCertificate
     externalIp?: string
 }
 
@@ -114,6 +115,7 @@ export class DhtNodeConfig {
     webrtcNewConnectionTimeout?: number
     externalIp?: string
     webrtcPortRange?: PortRange
+    tlsCertificate?: TlsCertificate
 
     constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
@@ -134,13 +136,13 @@ export type Events = TransportEvents & DhtNodeEvents
 export const createPeerDescriptor = (msg?: ConnectivityResponse, peerIdString?: string, nodeName?: string): PeerDescriptor => {
     let peerId: Uint8Array
     if (msg) {
-        peerId = peerIdString ? PeerID.fromString(peerIdString).value : PeerID.fromIp(msg.ip).value
+        peerId = peerIdString ? PeerID.fromString(peerIdString).value : PeerID.fromIp(msg.host).value
     } else {
         peerId = PeerID.fromString(peerIdString!).value
     }
     const ret: PeerDescriptor = { kademliaId: peerId, nodeName: nodeName, type: NodeType.NODEJS }
     if (msg && msg.websocket) {
-        ret.websocket = { ip: msg.websocket.ip, port: msg.websocket.port }
+        ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
         ret.openInternet = true
     }
     return ret
@@ -211,11 +213,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcPortRange: this.config.webrtcPortRange,
                 nodeName: this.getNodeName(),
                 maxConnections: this.config.maxConnections,
+                tlsCertificate: this.config.tlsCertificate,
                 externalIp: this.config.externalIp
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
-                connectionManagerConfig.websocketHost = this.config.peerDescriptor.websocket.ip
+                connectionManagerConfig.websocketHost = this.config.peerDescriptor.websocket.host
                 connectionManagerConfig.websocketPortRange = { 
                     min: this.config.peerDescriptor.websocket.port,
                     max: this.config.peerDescriptor.websocket.port

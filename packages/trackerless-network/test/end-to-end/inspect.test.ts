@@ -11,8 +11,9 @@ describe('inspect', () => {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         websocket: {
-            ip: 'localhost',
-            port: 15478
+            host: 'localhost',
+            port: 15478,
+            tls: false
         }
     }
 
@@ -20,8 +21,9 @@ describe('inspect', () => {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         websocket: {
-            ip: 'localhost',
-            port: 15479
+            host: 'localhost',
+            port: 15479,
+            tls: false
         }
     }
 
@@ -29,8 +31,9 @@ describe('inspect', () => {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         websocket: {
-            ip: 'localhost',
-            port: 15480
+            host: 'localhost',
+            port: 15480,
+            tls: false
         }
     }
 

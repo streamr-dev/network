@@ -112,8 +112,9 @@ describe('Config', () => {
                 id: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
                 type: NetworkNodeType.NODEJS,
                 websocket: {
-                    ip: 'brubeck3.streamr.network',
-                    port: 30401
+                    host: 'brubeck3.streamr.network',
+                    port: 30401,
+                    tls: false
                 }
             }]
             const clientOverrides = createStrictConfig({
