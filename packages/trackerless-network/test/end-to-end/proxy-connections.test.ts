@@ -105,7 +105,7 @@ describe('Proxy connections', () => {
 
     it('happy path subscribing', async () => {
         await proxiedNode.setProxies(streamPartId, [proxyNodeDescriptor1], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID, 1)
-        proxiedNode.subscribe(streamPartId)
+        proxiedNode.join(streamPartId)
         await Promise.all([
             waitForEvent3(proxiedNode.stack.getStreamrNode()! as any, 'newMessage'),
             proxyNode1.publish(message)
@@ -208,14 +208,14 @@ describe('Proxy connections', () => {
         expect(proxyNode1.hasProxyConnection(streamPartId, proxiedNodeId, ProxyDirection.SUBSCRIBE)).toBe(true)
     }, 30000)
 
-    it('cannot subscribe on proxy publish streams', async () => {
+    it('cannot join on proxy publish streams', async () => {
         await proxiedNode.setProxies(
             streamPartId,
             [proxyNodeDescriptor1],
             ProxyDirection.PUBLISH,
             PROXIED_NODE_USER_ID
         )
-        await expect(proxiedNode.subscribe(streamPartId)).rejects.toThrow('Cannot subscribe')
+        await expect(proxiedNode.join(streamPartId)).rejects.toThrow('Cannot join')
     })
 
     it('connect publish on proxy subscribe streams', async () => {

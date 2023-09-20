@@ -58,9 +58,9 @@ export class NetworkNode {
         this.stack.getStreamrNode().publishToStream(streamPartId, msg)
     }
 
-    async subscribe(streamPartId: StreamPartID): Promise<void> {
+    async join(streamPartId: StreamPartID): Promise<void> {
         if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
-            throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
+            throw new Error(`Cannot join to ${streamPartId} as proxy publish connections have been set`)
         }
         await this.stack.joinLayer0IfRequired(streamPartId)
         this.stack.getStreamrNode().safeJoinStream(streamPartId)

@@ -32,7 +32,7 @@ describe('NetworkNode', () => {
             joinLayer0IfRequired: async () => {}
         }
         const node = new NetworkNode(stack as any)
-        await node.subscribe(STREAM_PART)
+        await node.join(STREAM_PART)
         const onMessage = jest.fn()
 
         node.addMessageListener(onMessage)

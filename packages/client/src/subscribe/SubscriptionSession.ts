@@ -101,7 +101,7 @@ export class SubscriptionSession {
     private async subscribe(): Promise<NetworkNodeStub> {
         const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
-        await node.subscribe(this.streamPartId)
+        await node.join(this.streamPartId)
         return node
     }
 

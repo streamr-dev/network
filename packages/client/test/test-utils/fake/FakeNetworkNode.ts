@@ -34,7 +34,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         pull(this.messageListeners, listener)
     }
 
-    async subscribe(streamPartId: StreamPartID): Promise<void> {
+    async join(streamPartId: StreamPartID): Promise<void> {
         this.subscriptions.add(streamPartId)
     }
 

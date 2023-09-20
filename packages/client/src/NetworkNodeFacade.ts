@@ -19,7 +19,7 @@ export interface NetworkNodeStub {
     getNodeId: () => NodeID
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
-    subscribe: (streamPartId: StreamPartID) => Promise<void>
+    join: (streamPartId: StreamPartID) => Promise<void>
     subscribeAndWaitForJoin: (streamPart: StreamPartID, timeout?: number) => Promise<number>
     waitForJoinAndPublish: (msg: StreamMessage, timeout?: number) => Promise<number>
     leave: (streamPartId: StreamPartID) => void

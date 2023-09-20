@@ -135,7 +135,7 @@ export class FakeStorageNode extends FakeNetworkNode {
                         this.storeMessage(msg)
                     }
                 })
-                this.subscribe(streamPartId)
+                this.join(streamPartId)
                 const assignmentMessage = await createMockMessage({
                     streamPartId: toStreamPartID(formStorageNodeAssignmentStreamId(this.getAddress()), DEFAULT_PARTITION),
                     publisher: this.wallet,
