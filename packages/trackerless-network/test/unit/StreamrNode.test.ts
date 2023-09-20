@@ -59,7 +59,7 @@ describe('StreamrNode', () => {
     })
 
     it('subscribe joins stream', async () => {
-        node.subscribeToStream(streamPartId)
+        node.safeJoinStream(streamPartId)
         await waitForCondition(() => node.hasStream(streamPartId))
     })
 

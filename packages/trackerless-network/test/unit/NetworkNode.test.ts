@@ -24,7 +24,7 @@ describe('NetworkNode', () => {
                 return false
             }
             // eslint-disable-next-line class-methods-use-this
-            subscribeToStream() {
+            safeJoinStream() {
             }
         }()
         const stack: Partial<NetworkStack> = {

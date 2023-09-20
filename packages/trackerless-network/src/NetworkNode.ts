@@ -63,7 +63,7 @@ export class NetworkNode {
             throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
         }
         await this.stack.joinLayer0IfRequired(streamPartId)
-        this.stack.getStreamrNode().subscribeToStream(streamPartId)
+        this.stack.getStreamrNode().safeJoinStream(streamPartId)
     }
 
     async setProxies(

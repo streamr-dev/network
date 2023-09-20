@@ -163,7 +163,8 @@ export class StreamrNode extends EventEmitter<Events> {
         this.connectionLocker = undefined
     }
 
-    subscribeToStream(streamPartId: StreamPartID): void {
+    // TODO inline this method?
+    safeJoinStream(streamPartId: StreamPartID): void {
         if (!this.streams.has(streamPartId)) {
             this.joinStream(streamPartId)
                 .catch((err) => {
@@ -292,7 +293,7 @@ export class StreamrNode extends EventEmitter<Events> {
             const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, expectedNeighbors)
             await neighborCounter.waitForTargetReached(timeout)
         }
-        this.subscribeToStream(streamPartId)
+        this.safeJoinStream(streamPartId)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborIds().length ?? 0
     }
 
