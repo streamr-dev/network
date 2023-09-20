@@ -28,6 +28,10 @@ service TemporaryConnectionRpc {
   rpc openConnection (TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
 }
 
+service InfoService {
+  rpc getInfo (InfoRequest) return (InfoResponse)
+}
+
 message MessageID {
   string streamId = 1;
   int32 streamPartition = 2;
@@ -159,4 +163,10 @@ message StreamrNodeInfo {
 message StreamPartitionInfo {
   string id = 1;
   repeated string neighbors = 2;
+}
+
+message InfoRequest {
+  bool getControlLayerInfo = 1;
+  bool getStreamInfo = 2;
+  repeated streamIds = 3;
 }
