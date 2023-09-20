@@ -88,7 +88,7 @@ export class StreamMessageTranslator {
         if (msg.getNewGroupKey()) {
             newGroupKey = {
                 id: msg.getNewGroupKey()!.groupKeyId,
-                data: hexToBinary(msg.getNewGroupKey()!.encryptedGroupKeyHex)
+                data: msg.getNewGroupKey()!.data
             }
         }
         const translated: StreamMessage = {
@@ -135,8 +135,8 @@ export class StreamMessageTranslator {
         let newGroupKey: OldEncryptedGroupKey | undefined = undefined
         if (msg.newGroupKey) {
             newGroupKey = new OldEncryptedGroupKey(
-                msg.newGroupKey.id,
-                binaryToHex(msg.newGroupKey.data),
+                msg.newGroupKey!.id,
+                msg.newGroupKey!.data,
             )
         }
         const translated = new OldStreamMessage<T>({

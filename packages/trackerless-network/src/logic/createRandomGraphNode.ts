@@ -29,7 +29,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const acceptProxyConnections = config.acceptProxyConnections ?? false
     const neighborUpdateInterval = config.neighborUpdateInterval ?? 10000
     const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, numOfTargetNeighbors + 1)
-    const randomNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, maxNumberOfContacts)
+    const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxNumberOfContacts)
     const targetNeighbors = config.targetNeighbors ?? new NodeList(ownNodeId, maxNumberOfContacts)
 
     const temporaryConnectionServer = new TemporaryConnectionRpcServer({

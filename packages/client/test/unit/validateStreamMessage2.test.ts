@@ -9,7 +9,7 @@ import {
     ValidationError,
     toStreamID
 } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, hexToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { Authentication } from '../../src/Authentication'
 import { Stream } from '../../src/Stream'
@@ -82,7 +82,7 @@ describe('Validator2', () => {
         msgWithNewGroupKey = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
             serializedContent: JSON.stringify({}),
-            newGroupKey: new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex'),
+            newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
             authentication: publisherAuthentication
         })
         assert.notStrictEqual(msg.signature, msgWithNewGroupKey.signature)
@@ -106,8 +106,8 @@ describe('Validator2', () => {
             requestId: 'requestId',
             recipient: subscriber,
             encryptedGroupKeys: [
-                new EncryptedGroupKey('groupKeyId1', 'encryptedKey1'),
-                new EncryptedGroupKey('groupKeyId2', 'encryptedKey2')
+                new EncryptedGroupKey('groupKeyId1', hexToBinary('0x1111')),
+                new EncryptedGroupKey('groupKeyId2', hexToBinary('0x2222'))
             ],
         }), new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), null, publisherAuthentication)
     })

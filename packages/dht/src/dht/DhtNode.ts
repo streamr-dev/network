@@ -83,6 +83,7 @@ export interface DhtNodeOptions {
     webrtcPortRange?: PortRange
     maxConnections?: number
     tlsCertificate?: TlsCertificate
+    externalIp?: string
 }
 
 export class DhtNodeConfig {
@@ -112,6 +113,7 @@ export class DhtNodeConfig {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    externalIp?: string
     webrtcPortRange?: PortRange
     tlsCertificate?: TlsCertificate
 
@@ -211,7 +213,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcPortRange: this.config.webrtcPortRange,
                 nodeName: this.getNodeName(),
                 maxConnections: this.config.maxConnections,
-                tlsCertificate: this.config.tlsCertificate
+                tlsCertificate: this.config.tlsCertificate,
+                externalIp: this.config.externalIp
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {

@@ -94,6 +94,16 @@ export interface ControlLayerConfig {
      * TLS configuration for the WebSocket server
      */
     tlsCertificate?: TlsCertificate
+    
+    /*
+     * Used to assign a custom external IPv4 address for the node.
+     * Useful in cases where the node has a public IP address but
+     * the hosts network interface does not know of it.
+     *
+     * Works only if the Full Cone NAT that the node is behind preserves local
+     * port mappings on the public side.
+    */
+    externalIp?: string
 }
 
 export interface NetworkNodeConfig {
