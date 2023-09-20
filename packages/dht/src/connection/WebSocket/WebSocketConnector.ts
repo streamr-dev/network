@@ -32,6 +32,8 @@ export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string
     return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
 }
 
+const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
+
 export class WebSocketConnector implements IWebSocketConnectorService {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocketconnector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
@@ -144,7 +146,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                 }
             }
         } catch (err) {
-            if (reattempt < 5) {
+            if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
                 logger.error('Failed to connect to the entrypoint', { error: err })
                 await wait(2000)
                 return this.checkConnectivity(reattempt + 1)

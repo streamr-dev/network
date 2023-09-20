@@ -46,7 +46,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     }
 
     private startServer(port: number, host?: string, tlsCertificate?: TlsCertificate): Promise<void> {
-        const serverCallBack = (request: IncomingMessage, response: ServerResponse<IncomingMessage>) => {
+        const requestListener = (request: IncomingMessage, response: ServerResponse<IncomingMessage>) => {
             logger.trace('Received request for ' + request.url)
             response.writeHead(404)
             response.end()
@@ -56,9 +56,9 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
                 createHttpsServer({
                     key: fs.readFileSync(tlsCertificate.privateKeyFileName),
                     cert: fs.readFileSync(tlsCertificate.certFileName)
-                }, serverCallBack)
+                }, requestListener)
                 : 
-                createHttpServer(serverCallBack)
+                createHttpServer(requestListener)
 
             function originIsAllowed(_uorigin: string) {
                 return true
