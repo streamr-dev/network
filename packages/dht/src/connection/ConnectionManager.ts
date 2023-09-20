@@ -1,5 +1,6 @@
 import { EventEmitter } from 'eventemitter3'
 import {
+    ConnectionManagerInfo,
     ConnectivityResponse,
     DisconnectMode,
     DisconnectNotice,
@@ -315,7 +316,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return this.locks.getNumberOfWeakLockedConnections()
     }
 
-    public getInfo(): any {
+    public getInfo(): ConnectionManagerInfo {
         return {
             connections: this.getAllConnectionPeerDescriptors()
         }

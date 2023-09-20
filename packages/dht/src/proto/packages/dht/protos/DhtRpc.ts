@@ -680,6 +680,28 @@ export interface FindDataResponse {
     error?: string;
 }
 /**
+ * @generated from protobuf message dht.DhtNodeInfo
+ */
+export interface DhtNodeInfo {
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor kBucket = 1;
+     */
+    kBucket: PeerDescriptor[];
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor neighborList = 2;
+     */
+    neighborList: PeerDescriptor[];
+}
+/**
+ * @generated from protobuf message dht.ConnectionManagerInfo
+ */
+export interface ConnectionManagerInfo {
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor connections = 1;
+     */
+    connections: PeerDescriptor[];
+}
+/**
  * @generated from protobuf enum dht.FindMode
  */
 export enum FindMode {
@@ -1286,6 +1308,31 @@ class FindDataResponse$Type extends MessageType$<FindDataResponse> {
  * @generated MessageType for protobuf message dht.FindDataResponse
  */
 export const FindDataResponse = new FindDataResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DhtNodeInfo$Type extends MessageType$<DhtNodeInfo> {
+    constructor() {
+        super("dht.DhtNodeInfo", [
+            { no: 1, name: "kBucket", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 2, name: "neighborList", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.DhtNodeInfo
+ */
+export const DhtNodeInfo = new DhtNodeInfo$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ConnectionManagerInfo$Type extends MessageType$<ConnectionManagerInfo> {
+    constructor() {
+        super("dht.ConnectionManagerInfo", [
+            { no: 1, name: "connections", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.ConnectionManagerInfo
+ */
+export const ConnectionManagerInfo = new ConnectionManagerInfo$Type();
 /**
  * @generated ServiceType for protobuf service dht.DhtRpcService
  */

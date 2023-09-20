@@ -318,3 +318,12 @@ message FindDataResponse {
   repeated DataEntry dataEntries = 1;
   optional string error = 2;
 }
+
+message DhtNodeInfo {
+  repeated PeerDescriptor kBucket = 1;
+  repeated PeerDescriptor neighborList = 2;
+}
+
+message ConnectionManagerInfo {
+  repeated PeerDescriptor connections = 1;
+}

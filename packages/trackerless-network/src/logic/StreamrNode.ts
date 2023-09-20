@@ -5,7 +5,7 @@ import {
     DhtNode,
     ITransport
 } from '@streamr/dht'
-import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamMessage, StreamrNodeInfo } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'eventemitter3'
 import {
     Logger,
@@ -354,13 +354,15 @@ export class StreamrNode extends EventEmitter<Events> {
         return false
     }
 
-    getInfo(streamPartsIds: StreamPartID[]): any {
+    getStreamrNodeInfo(streamPartsIds: StreamPartID[]): StreamrNodeInfo {
         const filtered = Array.from(this.streams.entries())
             .filter(([streamPartId]) => streamPartsIds.length > 0 || streamPartsIds.includes(StreamPartIDUtils.parse(streamPartId)))
-        return filtered.map(([streamPartId, stream]) => ({
-            streamPartId,
-            neighbors: stream.layer2.getTargetNeighborIds()
-        }))
+        return {
+            streamPartitions: filtered.map(([streamPartId, stream]) => ({
+                id: streamPartId,
+                neighbors: stream.layer2.getTargetNeighborIds()
+            }))
+        }
     }
 
     setStreamPartEntryPoints(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): void {

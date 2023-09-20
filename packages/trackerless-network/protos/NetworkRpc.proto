@@ -151,3 +151,12 @@ enum ProxyDirection {
   PUBLISH = 0;
   SUBSCRIBE = 1;
 }
+
+message StreamrNodeInfo {
+  repeated StreamPartitionInfo streamPartitions = 1;
+}
+
+message StreamPartitionInfo {
+  string id = 1;
+  repeated string neighbors = 2;
+}

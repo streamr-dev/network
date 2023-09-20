@@ -313,6 +313,28 @@ export interface TemporaryConnectionResponse {
     accepted: boolean;
 }
 /**
+ * @generated from protobuf message StreamrNodeInfo
+ */
+export interface StreamrNodeInfo {
+    /**
+     * @generated from protobuf field: repeated StreamPartitionInfo streamPartitions = 1;
+     */
+    streamPartitions: StreamPartitionInfo[];
+}
+/**
+ * @generated from protobuf message StreamPartitionInfo
+ */
+export interface StreamPartitionInfo {
+    /**
+     * @generated from protobuf field: string id = 1;
+     */
+    id: string;
+    /**
+     * @generated from protobuf field: repeated string neighbors = 2;
+     */
+    neighbors: string[];
+}
+/**
  * @generated from protobuf enum StreamMessageType
  */
 export enum StreamMessageType {
@@ -591,6 +613,31 @@ class TemporaryConnectionResponse$Type extends MessageType<TemporaryConnectionRe
  * @generated MessageType for protobuf message TemporaryConnectionResponse
  */
 export const TemporaryConnectionResponse = new TemporaryConnectionResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class StreamrNodeInfo$Type extends MessageType<StreamrNodeInfo> {
+    constructor() {
+        super("StreamrNodeInfo", [
+            { no: 1, name: "streamPartitions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => StreamPartitionInfo }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message StreamrNodeInfo
+ */
+export const StreamrNodeInfo = new StreamrNodeInfo$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
+    constructor() {
+        super("StreamPartitionInfo", [
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "neighbors", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message StreamPartitionInfo
+ */
+export const StreamPartitionInfo = new StreamPartitionInfo$Type();
 /**
  * @generated ServiceType for protobuf service NetworkRpc
  */
