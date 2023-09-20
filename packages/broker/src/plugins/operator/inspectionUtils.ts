@@ -87,12 +87,12 @@ export async function findNodesForTarget(
     target: Target,
     streamrClient: StreamrClient,
     fetchRedundancyFactorFn: FetchRedundancyFactorFn,
-    maxWait: number,
+    timeout: number,
     abortSignal: AbortSignal
 ): Promise<NetworkPeerDescriptor[]> {
     logger.debug('Waiting for node heartbeats', {
         targetOperator: target.operatorAddress,
-        maxWait
+        timeout
     })
     const targetOperatorFleetState = new OperatorFleetState(
         streamrClient,
@@ -102,7 +102,7 @@ export async function findNodesForTarget(
         await targetOperatorFleetState.start()
         await Promise.race([
             targetOperatorFleetState.waitUntilReady(),
-            wait(maxWait, abortSignal)
+            wait(timeout, abortSignal)
         ])
         logger.debug('Finished waiting for heartbeats', {
             targetOperator: target.operatorAddress,
