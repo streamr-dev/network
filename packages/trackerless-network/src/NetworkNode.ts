@@ -117,7 +117,7 @@ export class NetworkNode {
         if (this.stopped) {
             return
         }
-        this.stack.getStreamrNode().unsubscribeFromStream(streamPartId)
+        this.stack.getStreamrNode().leaveStream(streamPartId)
     }
 
     getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeID> {

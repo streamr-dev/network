@@ -68,9 +68,9 @@ describe('StreamrNode', () => {
         await waitForCondition(() => node.hasStream(streamPartId))
     })
 
-    it('can unsubscribe', async () => {
+    it('can leave', async () => {
         await node.joinStream(streamPartId)
-        await node.unsubscribeFromStream(streamPartId)
+        await node.leaveStream(streamPartId)
     })
 
 })

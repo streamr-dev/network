@@ -186,10 +186,6 @@ export class StreamrNode extends EventEmitter<Events> {
         this.metrics.publishBytesPerSecond.record(msg.content.length)
     }
 
-    unsubscribeFromStream(streamPartId: StreamPartID): void {
-        this.leaveStream(streamPartId)
-    }
-
     leaveStream(streamPartId: StreamPartID): void {
         const stream = this.streams.get(streamPartId)
         if (stream) {
