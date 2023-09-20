@@ -315,6 +315,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return this.locks.getNumberOfWeakLockedConnections()
     }
 
+    public getInfo(): any {
+        return {
+            connections: this.getAllConnectionPeerDescriptors()
+        }
+    }
+
     public async send(message: Message, doNotConnect = false, doNotMindStopped = false): Promise<void> {
         if (this.state === ConnectionManagerState.STOPPED && !doNotMindStopped) {
             return

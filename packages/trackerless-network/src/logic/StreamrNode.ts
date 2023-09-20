@@ -354,6 +354,15 @@ export class StreamrNode extends EventEmitter<Events> {
         return false
     }
 
+    getInfo(streamPartsIds: StreamPartID[]): any {
+        const filtered = Array.from(this.streams.entries())
+            .filter(([streamPartId]) => streamPartsIds.length > 0 || streamPartsIds.includes(StreamPartIDUtils.parse(streamPartId)))
+        return filtered.map(([streamPartId, stream]) => ({
+            streamPartId,
+            neighbors: stream.layer2.getTargetNeighborIds()
+        }))
+    }
+
     setStreamPartEntryPoints(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): void {
         this.knownStreamEntryPoints.set(streamPartId, entryPoints)
     }

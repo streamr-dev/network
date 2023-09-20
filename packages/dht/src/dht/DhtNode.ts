@@ -726,6 +726,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.config.entryPoints || []
     }
 
+    public getInfo(): any {
+        return {
+            kBucket: this.getKBucketPeers(),
+            neighborList: this.getNeighborList().getAllContacts().map((contact) => contact.getPeerDescriptor())
+        }
+    }
+
     public async stop(): Promise<void> {
         if (this.stopped) {
             return
