@@ -306,6 +306,7 @@ describe('ConnectionManager', () => {
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
         await connectionManager3.stop()
         await connectionManager4.stop()
+        simulator2.stop()
     })
 
     it('Cannot send to own WebSocketServer if kademliaIds do not match', async () => {
@@ -337,5 +338,43 @@ describe('ConnectionManager', () => {
             .toThrow('Cannot send to self')
         
         await connectionManager1.stop()
+    })
+
+    it('getInfo returns correct info', async () => {
+        const simulator2 = new Simulator()
+        const connectionManager3 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor3, simulator: simulator2 })
+        const connectionManager4 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor4, simulator: simulator2 })
+
+        const msg: Message = {
+            serviceId,
+            messageType: MessageType.RPC,
+            messageId: '1',
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            } 
+        }
+
+        const connectedPromise1 = new Promise<void>((resolve, _reject) => {
+            connectionManager4.on('connected', (_peerDescriptor: PeerDescriptor) => {
+                resolve()
+            })
+        })
+
+        const connectedPromise2 = new Promise<void>((resolve, _reject) => {
+            connectionManager3.on('connected', (_peerDescriptor: PeerDescriptor) => {
+                resolve()
+            })
+        })
+        msg.targetDescriptor = mockPeerDescriptor4
+        connectionManager3.send(msg)
+        await Promise.all([connectedPromise1, connectedPromise2])
+        const info1 = connectionManager3.getInfo()
+        const info2 = connectionManager4.getInfo()
+        expect(info1.connections[0]).toEqual(connectionManager4.getPeerDescriptor())
+        expect(info2.connections[0]).toEqual(connectionManager3.getPeerDescriptor())
+        await connectionManager3.stop()
+        await connectionManager4.stop()
+        simulator2.stop()
     })
 })
