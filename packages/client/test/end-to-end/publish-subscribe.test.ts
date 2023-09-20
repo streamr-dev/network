@@ -10,7 +10,7 @@ import { createTestStream, createTestClient } from '../test-utils/utils'
 import { waitForCondition } from '@streamr/utils'
 import { createNetworkNode } from '@streamr/trackerless-network'
 
-const TIMEOUT = 10 * 1000
+const TIMEOUT = 15 * 1000
 
 const PAYLOAD = { hello: 'world' }
 
@@ -88,7 +88,7 @@ describe('publish-subscribe', () => {
                 permissions: [StreamPermission.SUBSCRIBE],
                 user: subscriberWallet.address
             })
-        }, TIMEOUT * 3)
+        }, TIMEOUT * 2)
 
         it('messages are published encrypted', async () => {
             await publisherClient.publish(stream.id, PAYLOAD)
