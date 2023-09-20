@@ -354,9 +354,10 @@ export class StreamrNode extends EventEmitter<Events> {
         return false
     }
 
-    getStreamrNodeInfo(streamPartsIds: StreamPartID[]): StreamrNodeInfo {
-        const filtered = Array.from(this.streams.entries())
-            .filter(([streamPartId]) => streamPartsIds.length > 0 || streamPartsIds.includes(StreamPartIDUtils.parse(streamPartId)))
+    getInfo(streamPartsIds?: StreamPartID[]): StreamrNodeInfo {
+        const filtered = streamPartsIds ? Array.from(this.streams.entries())
+            .filter(([streamPartId]) => streamPartsIds!.includes(StreamPartIDUtils.parse(streamPartId)))
+            : Array.from(this.streams.entries())
         return {
             streamPartitions: filtered.map(([streamPartId, stream]) => ({
                 id: streamPartId,

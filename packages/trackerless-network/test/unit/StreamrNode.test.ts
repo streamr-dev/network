@@ -73,4 +73,21 @@ describe('StreamrNode', () => {
         await node.unsubscribeFromStream(streamPartId)
     })
 
+    it('getInfo returns queried streamPartition', async () => {
+        await node.joinStream(streamPartId)
+        const info = node.getInfo([streamPartId])
+        expect(info.streamPartitions[0].id).toEqual(streamPartId)
+    })
+
+    it('getInfo does not return queried streamPart if it does not exist', async () => {
+        const info = node.getInfo([streamPartId])
+        expect(info.streamPartitions.length).toEqual(0)
+    })
+
+    it('getInfo without specified streamPartitions to query returns all streams', async () => {
+        await node.joinStream(streamPartId)
+        const info = node.getInfo()
+        expect(info.streamPartitions.length).toEqual(1)
+    })
+
 })
