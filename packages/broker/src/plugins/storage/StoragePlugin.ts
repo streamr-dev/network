@@ -65,7 +65,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         const node = await this.streamrClient!.getNode()
         node.removeMessageListener(this.messageListener!)
         this.storageConfig!.getStreamParts().forEach((streamPart) => {
-            node.unsubscribe(streamPart)
+            node.leave(streamPart)
         })
         await this.cassandra!.close()
         this.storageConfig!.destroy()
@@ -121,7 +121,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                     }
                 },
                 onStreamPartRemoved: (streamPart) => {
-                    node.unsubscribe(streamPart)
+                    node.leave(streamPart)
                 }
             }
         )

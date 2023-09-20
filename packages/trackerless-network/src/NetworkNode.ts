@@ -113,7 +113,7 @@ export class NetworkNode {
         return this.stack.getStreamrNode().waitForJoinAndPublish(streamPartId, msg, timeout)
     }
 
-    unsubscribe(streamPartId: StreamPartID): void {
+    leave(streamPartId: StreamPartID): void {
         if (this.stopped) {
             return
         }

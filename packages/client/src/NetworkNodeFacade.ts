@@ -22,7 +22,7 @@ export interface NetworkNodeStub {
     subscribe: (streamPartId: StreamPartID) => Promise<void>
     subscribeAndWaitForJoin: (streamPart: StreamPartID, timeout?: number) => Promise<number>
     waitForJoinAndPublish: (msg: StreamMessage, timeout?: number) => Promise<number>
-    unsubscribe: (streamPartId: StreamPartID) => void
+    leave: (streamPartId: StreamPartID) => void
     publish: (streamMessage: StreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
     getNeighbors: () => string[]

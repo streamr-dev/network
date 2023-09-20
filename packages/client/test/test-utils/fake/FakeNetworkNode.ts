@@ -38,7 +38,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         this.subscriptions.add(streamPartId)
     }
 
-    unsubscribe(streamPartId: StreamPartID): void {
+    leave(streamPartId: StreamPartID): void {
         this.subscriptions.delete(streamPartId)
     }
 
