@@ -9,7 +9,7 @@ describe('WebSocket IConnection Requests', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('3').value,
         type: NodeType.NODEJS,
-        websocket: { ip: '127.0.0.1', port: 10021 }
+        websocket: { host: '127.0.0.1', port: 10021, tls: false }
     }
     let epDhtNode: DhtNode
     let node1: DhtNode

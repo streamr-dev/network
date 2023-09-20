@@ -4,6 +4,7 @@ import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
+    ConnectivityMethod,
     ConnectivityResponse,
     PeerDescriptor,
     WebSocketConnectionRequest,
@@ -16,7 +17,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebSocketServer } from './WebSocketServer'
 import { ConnectivityChecker } from '../ConnectivityChecker'
-import { NatType, PortRange } from '../ConnectionManager'
+import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { ServerWebSocket } from './ServerWebSocket'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -26,6 +27,12 @@ import { ParsedUrlQuery } from 'querystring'
 import { sample } from 'lodash'
 
 const logger = new Logger(module)
+
+export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string => {
+    return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
+}
+
+const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
 export class WebSocketConnector implements IWebSocketConnectorService {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocketconnector'
@@ -38,6 +45,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private portRange?: PortRange
     private host?: string
     private entrypoints?: PeerDescriptor[]
+    private readonly tlsCertificate?: TlsCertificate
     private selectedPort?: number
     private readonly protocolVersion: string
     private ownPeerDescriptor?: PeerDescriptor
@@ -51,7 +59,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         incomingConnectionCallback: (connection: ManagedConnection) => boolean,
         portRange?: PortRange,
         host?: string,
-        entrypoints?: PeerDescriptor[]
+        entrypoints?: PeerDescriptor[],
+        tlsCertificate?: TlsCertificate
     ) {
         this.protocolVersion = protocolVersion
         this.webSocketServer = portRange ? new WebSocketServer() : undefined
@@ -59,6 +68,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         this.portRange = portRange
         this.host = host
         this.entrypoints = entrypoints
+        this.tlsCertificate = tlsCertificate
 
         this.canConnectFunction = fnCanConnect.bind(this)
 
@@ -101,16 +111,16 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     this.attachHandshaker(connection)
                 }
             })
-            const port = await this.webSocketServer.start(this.portRange!, this.host)
+            const port = await this.webSocketServer.start(this.portRange!, this.host, this.tlsCertificate)
             this.selectedPort = port
-            this.connectivityChecker = new ConnectivityChecker(this.selectedPort!)
+            this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.tlsCertificate !== undefined)
         }
     }
 
     public async checkConnectivity(reattempt = 0): Promise<ConnectivityResponse> {
         const noServerConnectivityResponse: ConnectivityResponse = {
             openInternet: false,
-            ip: '127.0.0.1',
+            host: '127.0.0.1',
             natType: NatType.UNKNOWN
         }
         if (this.destroyed) {
@@ -125,9 +135,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     // return connectivity info given in config
                     const preconfiguredConnectivityResponse: ConnectivityResponse = {
                         openInternet: true,
-                        ip: this.host!,
+                        host: this.host!,
                         natType: NatType.OPEN_INTERNET,
-                        websocket: { ip: this.host!, port: this.selectedPort! }
+                        websocket: { host: this.host!, port: this.selectedPort!, tls: this.tlsCertificate !== undefined }
                     }
                     return preconfiguredConnectivityResponse
                 } else {
@@ -136,7 +146,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                 }
             }
         } catch (err) {
-            if (reattempt < 5) {
+            if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
+                logger.error('Failed to connect to the entrypoint', { error: err })
                 await wait(2000)
                 return this.checkConnectivity(reattempt + 1)
             } else {
@@ -158,12 +169,11 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         } else {
             const socket = new ClientWebSocket()
 
-            const address = 'ws://' + targetPeerDescriptor.websocket!.ip + ':' +
-                targetPeerDescriptor.websocket!.port
+            const url = connectivityMethodToWebSocketUrl(targetPeerDescriptor.websocket!)
 
             const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
                 ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
-            managedConnection.setPeerDescriptor(targetPeerDescriptor!)
+            managedConnection.setPeerDescriptor(targetPeerDescriptor)
 
             this.connectingConnections.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
 
@@ -177,7 +187,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             socket.on('disconnected', delFunc)
             managedConnection.on('handshakeCompleted', delFunc)
 
-            socket.connect(address)
+            socket.connect(url)
 
             return managedConnection
         }
@@ -189,7 +199,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                 targetPeerDescriptor,
                 toProtoRpcClient(new WebSocketConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
             )
-            remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.ip, ownPeerDescriptor.websocket!.port)
+            remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.host, ownPeerDescriptor.websocket!.port)
         })
         const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion, ConnectionType.WEBSOCKET_SERVER)
         managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor)))

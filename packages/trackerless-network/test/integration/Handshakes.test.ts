@@ -4,8 +4,7 @@ import {
     PeerDescriptor,
     ListeningRpcCommunicator,
     Simulator,
-    SimulatorTransport,
-    peerIdFromPeerDescriptor
+    SimulatorTransport
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
@@ -16,6 +15,7 @@ import { mockConnectionLocker } from '../utils/utils'
 import { StreamHandshakeRequest, StreamHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('Handshakes', () => {
 
@@ -34,7 +34,7 @@ describe('Handshakes', () => {
     let rpcCommunicator1: ListeningRpcCommunicator
     let rpcCommunicator2: ListeningRpcCommunicator
     let rpcCommunicator3: ListeningRpcCommunicator
-    let contactPool: NodeList
+    let nodeView: NodeList
     let targetNeighbors: NodeList
     let handshaker: Handshaker
     const randomGraphId = 'handshaker'
@@ -80,14 +80,14 @@ describe('Handshakes', () => {
         rpcCommunicator2 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport2)
         rpcCommunicator3 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport3)
 
-        const handshakerPeerId = peerIdFromPeerDescriptor(peerDescriptor2)
-        contactPool = new NodeList(handshakerPeerId, 10)
-        targetNeighbors = new NodeList(handshakerPeerId, 4)
+        const handshakerNodeId = getNodeIdFromPeerDescriptor(peerDescriptor2)
+        nodeView = new NodeList(handshakerNodeId, 10)
+        targetNeighbors = new NodeList(handshakerNodeId, 4)
         handshaker = new Handshaker({
             ownPeerDescriptor: peerDescriptor2,
             randomGraphId,
-            nearbyContactPool: contactPool,
-            randomContactPool: contactPool,
+            nearbyNodeView: nodeView,
+            randomNodeView: nodeView,
             targetNeighbors,
             connectionLocker: mockConnectionLocker,
             rpcCommunicator: rpcCommunicator2,

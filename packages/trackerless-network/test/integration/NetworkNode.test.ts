@@ -1,4 +1,4 @@
-import { NetworkNode } from '../../src/NetworkNode'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import {
     MessageID,
@@ -8,7 +8,7 @@ import {
     StreamPartIDUtils,
     toStreamID
 } from '@streamr/protocol'
-import { EthereumAddress, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, waitForCondition, hexToBinary } from '@streamr/utils'
 
 describe('NetworkNode', () => {
 
@@ -36,21 +36,19 @@ describe('NetworkNode', () => {
         transport1 = new SimulatorTransport(pd1, simulator)
         transport2 = new SimulatorTransport(pd2, simulator)
 
-        node1 = new NetworkNode({
+        node1 = createNetworkNode({
             layer0: {
                 entryPoints: [pd1],
                 peerDescriptor: pd1,
                 transportLayer: transport1
-            },
-            networkNode: {}
+            }
         })
-        node2 = new NetworkNode({
+        node2 = createNetworkNode({
             layer0: {
                 entryPoints: [pd1],
                 peerDescriptor: pd2,
                 transportLayer: transport2
-            },
-            networkNode: {}
+            }
         })
 
         await node1.start()
@@ -82,7 +80,7 @@ describe('NetworkNode', () => {
                 hello: 'world'
             },
             messageType: StreamMessageType.MESSAGE,
-            signature: '0x1111',
+            signature: hexToBinary('0x1234'),
         })
 
         let msgCount = 0

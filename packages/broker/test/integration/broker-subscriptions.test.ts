@@ -10,8 +10,6 @@ jest.setTimeout(50000)
 
 const mqttPort1 = 13551
 const mqttPort2 = 13552
-const networkLayerPort1 = 44400
-const networkLayerPort2 = 44401
 
 const createMqttClient = (mqttPort: number) => {
     return mqtt.connectAsync(`mqtt://localhost:${mqttPort}`)
@@ -51,8 +49,7 @@ describe('broker subscriptions', () => {
                 mqtt: {
                     port: mqttPort1
                 }
-            },
-            networkLayerWsServerPort: networkLayerPort1
+            }
         })
         broker2 = await startBroker({
             privateKey: broker2User.privateKey,
@@ -60,8 +57,7 @@ describe('broker subscriptions', () => {
                 mqtt: {
                     port: mqttPort2
                 }
-            },
-            networkLayerWsServerPort: networkLayerPort2
+            }
         })
 
         client1 = createClient(await fetchPrivateKeyWithGas())

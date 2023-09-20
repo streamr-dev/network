@@ -43,8 +43,8 @@ class ReadynessListener {
 }
 
 export interface NetworkOptions {
-    layer0: DhtNodeOptions
-    networkNode: StreamrNodeConfig
+    layer0?: DhtNodeOptions
+    networkNode?: StreamrNodeConfig
     metricsContext?: MetricsContext
 }
 
@@ -72,33 +72,35 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         })
         this.streamrNode = new StreamrNode({
             ...options.networkNode,
-            nodeName: options.networkNode.nodeName ?? options.layer0.nodeName,
+            nodeName: options.networkNode?.nodeName ?? options.layer0?.nodeName,
             metricsContext: this.metricsContext
         })
-        this.firstConnectionTimeout = options.networkNode.firstConnectionTimeout ?? 5000
+        this.firstConnectionTimeout = options.networkNode?.firstConnectionTimeout ?? 5000
     }
 
     async start(doJoin = true): Promise<void> {
         await this.layer0DhtNode!.start()
         this.connectionManager = this.layer0DhtNode!.getTransport() as ConnectionManager
-        if (this.options.layer0.entryPoints!.some((entryPoint) => 
+        if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0!.entryPoints!.some((entryPoint) => 
             isSamePeerDescriptor(entryPoint, this.layer0DhtNode!.getPeerDescriptor())
-        )) {
+        ))) {
             this.dhtJoinRequired = false
-            await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints!)
-            await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
+            await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
+            await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager, this.connectionManager)
         } else {
             if (doJoin) {
                 this.dhtJoinRequired = false
                 await this.joinDht()
             }
-            await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
+            await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager, this.connectionManager)
         }
     }
 
     private async joinDht(): Promise<void> {
         setImmediate(() => {
-            this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints!)
+            if (this.options.layer0?.entryPoints !== undefined) {
+                this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
+            }
         })
         await this.waitForFirstConnection()
     }

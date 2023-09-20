@@ -3,15 +3,12 @@ import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { IConnectionLockerClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice, DisconnectMode } from '../proto/packages/dht/protos/DhtRpc'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
-import { PeerID } from '../helpers/PeerID'
 
 import * as Err from '../helpers/errors'
-import { peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
 export class RemoteConnectionLocker {
-    private peerId: PeerID
     private ownPeerDescriptor: PeerDescriptor
     private targetPeerDescriptor: PeerDescriptor
     private protocolVersion: string
@@ -23,7 +20,6 @@ export class RemoteConnectionLocker {
         protocolVersion: string,
         client: ProtoRpcClient<IConnectionLockerClient>
     ) {
-        this.peerId = peerIdFromPeerDescriptor(targetPeerDescriptor)
         this.ownPeerDescriptor = ownPeerDescriptor
         this.targetPeerDescriptor = targetPeerDescriptor
         this.protocolVersion = protocolVersion
@@ -58,8 +54,8 @@ export class RemoteConnectionLocker {
             serviceId
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor as PeerDescriptor,
-            targetDescriptor: this.targetPeerDescriptor as PeerDescriptor,
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.targetPeerDescriptor,
             notification: true
         }
 

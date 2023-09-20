@@ -88,7 +88,7 @@ export class StreamMessageTranslator {
         if (msg.getNewGroupKey()) {
             newGroupKey = {
                 id: msg.getNewGroupKey()!.groupKeyId,
-                data: hexToBinary(msg.getNewGroupKey()!.encryptedGroupKeyHex)
+                data: msg.getNewGroupKey()!.data
             }
         }
         const translated: StreamMessage = {
@@ -100,8 +100,7 @@ export class StreamMessageTranslator {
             encryptionType: oldToNewEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId ?? undefined,
             newGroupKey,
-            signature: hexToBinary(msg.signature)
-
+            signature: msg.signature
         }
         return translated
     }
@@ -131,13 +130,13 @@ export class StreamMessageTranslator {
         )
         let prevMsgRef: OldMessageRef | undefined = undefined
         if (msg.previousMessageRef) {
-            prevMsgRef = new OldMessageRef(Number(msg.previousMessageRef!.timestamp), msg.previousMessageRef!.sequenceNumber)
+            prevMsgRef = new OldMessageRef(Number(msg.previousMessageRef.timestamp), msg.previousMessageRef.sequenceNumber)
         }
         let newGroupKey: OldEncryptedGroupKey | undefined = undefined
         if (msg.newGroupKey) {
             newGroupKey = new OldEncryptedGroupKey(
                 msg.newGroupKey!.id,
-                binaryToHex(msg.newGroupKey!.data),
+                msg.newGroupKey!.data,
             )
         }
         const translated = new OldStreamMessage<T>({
@@ -149,7 +148,7 @@ export class StreamMessageTranslator {
             encryptionType: newToOldEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId,
             newGroupKey,
-            signature: binaryToHex(msg.signature, true),
+            signature: msg.signature
         })
         return translated
     }

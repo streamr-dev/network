@@ -37,7 +37,7 @@ describe('LocalDataStore', () => {
         localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1, 
             ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
         const fetchedData = localDataStore.getEntry(dataKey)
-        fetchedData!.forEach((entry) => {
+        fetchedData.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(isSamePeerDescriptor(fetchedDescriptor, storer1)).toBeTrue()
         })
@@ -50,7 +50,7 @@ describe('LocalDataStore', () => {
         localDataStore.storeEntry({ storer: storer2, kademliaId: dataKey.value, 
             data: data1, ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
         const fetchedData = localDataStore.getEntry(dataKey)
-        fetchedData!.forEach((entry) => {
+        fetchedData.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(isSamePeerDescriptor(fetchedDescriptor, storer1)).toBeTrue()
         })
@@ -64,7 +64,7 @@ describe('LocalDataStore', () => {
             ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
         localDataStore.deleteEntry(dataKey, storer1)
         const fetchedData = localDataStore.getEntry(dataKey)
-        fetchedData!.forEach((entry) => {
+        fetchedData.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(isSamePeerDescriptor(fetchedDescriptor, storer2)).toBeTrue()
         })

@@ -71,7 +71,7 @@ describe('MessageFactory', () => {
             encryptionType: EncryptionType.AES,
             groupKeyId: GROUP_KEY.id,
             newGroupKey: null,
-            signature: expect.stringMatching(/^0x[0-9a-f]+$/),
+            signature: expect.any(Uint8Array),
             contentType: ContentType.JSON,
             serializedContent: expect.stringMatching(/^[0-9a-f]+$/)
         })
@@ -116,7 +116,7 @@ describe('MessageFactory', () => {
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)
         expect(msg.newGroupKey).toMatchObject({
             groupKeyId: nextGroupKey.id,
-            encryptedGroupKeyHex: expect.any(String)
+            data: expect.any(Uint8Array)
         })
         expect(GROUP_KEY.decryptNextGroupKey(msg.newGroupKey!)).toEqual(nextGroupKey)
     })

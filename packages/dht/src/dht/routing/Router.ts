@@ -2,7 +2,7 @@ import { Message, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '.
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
-import { Logger, raceEvents3 } from '@streamr/utils'
+import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DuplicateDetector } from './DuplicateDetector'
@@ -92,7 +92,7 @@ export class Router implements IRouter {
                 message: msg,
                 requestId: v4(),
                 destinationPeer: forwardingPeer,
-                sourcePeer: this.ownPeerDescriptor!,
+                sourcePeer: this.ownPeerDescriptor,
                 reachableThrough,
                 routingPath: []
             }
@@ -102,7 +102,7 @@ export class Router implements IRouter {
                 message: msg,
                 requestId: v4(),
                 destinationPeer: targetPeerDescriptor,
-                sourcePeer: this.ownPeerDescriptor!,
+                sourcePeer: this.ownPeerDescriptor,
                 reachableThrough,
                 routingPath: []
             }
@@ -116,24 +116,32 @@ export class Router implements IRouter {
         }
         logger.trace(`Peer ${this.ownPeerId.value} routing message ${routedMessage.requestId} 
             from ${routedMessage.sourcePeer?.kademliaId} to ${routedMessage.destinationPeer?.kademliaId}`)
-        routedMessage.routingPath.push(this.ownPeerDescriptor!)
+        routedMessage.routingPath.push(this.ownPeerDescriptor)
         const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         this.addRoutingSession(session)
         try {
             // eslint-disable-next-line promise/catch-or-return
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
-            raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped', 'noCandidatesFound'], 10000)
-                .then(() => {
+            let eventReceived: Promise<unknown>
+            executeSafePromise(async () => {
+                eventReceived = raceEvents3<RoutingSessionEvents>(
+                    session,
+                    ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped', 'noCandidatesFound'],
+                    null
+                )
+            })
+            setImmediate(async () => {
+                try {
+                    await withTimeout(eventReceived, 10000)
                     logger.trace('raceEvents ended from routingSession: ' + session.sessionId)
-                    this.removeRoutingSession(session.sessionId)
-                })
-                .catch(() => {
+                } catch (e) {
                     logger.trace('raceEvents timed out for routingSession ' + session.sessionId) 
-                    this.removeRoutingSession(session.sessionId) 
-                })
+                }
+                this.removeRoutingSession(session.sessionId) 
+            })
             session.start()
         } catch (e) {
-            if (peerIdFromPeerDescriptor(routedMessage.sourcePeer!).equals(this.ownPeerId!)) {
+            if (peerIdFromPeerDescriptor(routedMessage.sourcePeer!).equals(this.ownPeerId)) {
                 logger.warn(
                     `Failed to send (routeMessage: ${this.serviceId}) to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}: ${e}`
                 )
@@ -151,10 +159,10 @@ export class Router implements IRouter {
         logger.trace(' routing session created with connections: ' + this.connections.size )
         return new RoutingSession(
             this.rpcCommunicator,
-            this.ownPeerDescriptor!,
+            this.ownPeerDescriptor,
             routedMessage,
             this.connections,
-            this.ownPeerId!.equals(peerIdFromPeerDescriptor(routedMessage.sourcePeer!)) ? 2 : 1,
+            this.ownPeerId.equals(peerIdFromPeerDescriptor(routedMessage.sourcePeer!)) ? 2 : 1,
             mode,
             undefined,
             excludedPeers
@@ -202,7 +210,7 @@ export class Router implements IRouter {
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
         this.addContact(routedMessage.sourcePeer!, true)
         this.addToDuplicateDetector(routedMessage.requestId, keyFromPeerDescriptor(routedMessage.sourcePeer!))
-        if (this.ownPeerId!.equals(peerIdFromPeerDescriptor(routedMessage.destinationPeer!))) {
+        if (this.ownPeerId.equals(peerIdFromPeerDescriptor(routedMessage.destinationPeer!))) {
             logger.trace(`${this.ownPeerDescriptor.nodeName} routing message targeted to self ${routedMessage.requestId}`)
             this.setForwardingEntries(routedMessage)
             this.connectionManager?.handleMessage(routedMessage.message!)
@@ -214,7 +222,7 @@ export class Router implements IRouter {
 
     private setForwardingEntries(routedMessage: RouteMessageWrapper): void {
         const reachableThroughWithoutSelf = routedMessage.reachableThrough.filter((peer) => {
-            return !peerIdFromPeerDescriptor(peer).equals(this.ownPeerId!)
+            return !peerIdFromPeerDescriptor(peer).equals(this.ownPeerId)
         })
         
         if (reachableThroughWithoutSelf.length > 0) {
@@ -256,8 +264,8 @@ export class Router implements IRouter {
     private forwardToDestination(routedMessage: RouteMessageWrapper): RouteMessageAck {
         logger.trace(`Peer ${this.ownPeerId.value} forwarding found message targeted to self ${routedMessage.requestId}`)
         const forwardedMessage = routedMessage.message!
-        if (this.ownPeerId!.equals(peerIdFromPeerDescriptor(forwardedMessage.targetDescriptor!))) {
-            this.connectionManager?.handleMessage(forwardedMessage!)
+        if (this.ownPeerId.equals(peerIdFromPeerDescriptor(forwardedMessage.targetDescriptor!))) {
+            this.connectionManager?.handleMessage(forwardedMessage)
             return createRouteMessageAck(routedMessage)
         }
         return this.doRouteMessage({ ...routedMessage, destinationPeer: forwardedMessage.targetDescriptor })

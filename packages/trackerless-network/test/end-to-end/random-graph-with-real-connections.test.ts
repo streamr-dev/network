@@ -1,16 +1,17 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, NodeType, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { ConnectionManager, DhtNode, PeerDescriptor, NodeType } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('random graph with real connections', () => {
 
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 12221 }
+        websocket: { host: 'localhost', port: 12221, tls: false }
     }
 
     const randomGraphId = StreamPartIDUtils.parse('random-graph#0')
@@ -144,7 +145,7 @@ describe('random graph with real connections', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             randomGraphId,
-            peerIdFromPeerDescriptor(epPeerDescriptor).value
+            randomEthereumAddress()
         )
         randomGraphNode1.broadcast(msg)
         await waitForCondition(() => numOfMessagesReceived >= 4)

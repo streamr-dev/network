@@ -1,6 +1,6 @@
 {
   "name": "@streamr/utils",
-  "version": "0.0.1-tatum.0",
+  "version": "0.0.1-tatum.2",
   "description": "A collection of shared common utilities",
   "repository": {
     "type": "git",
@@ -22,12 +22,12 @@
   "dependencies": {
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
-    "pino": "^8.15.0",
+    "pino": "^8.15.1",
     "pino-pretty": "^10.2.0"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@types/lodash": "^4.14.197",
+    "@types/lodash": "^4.14.198",
     "@types/node-fetch": "^2.6.4",
     "express": "^4.17.1",
     "node-fetch": "^2.7.0"

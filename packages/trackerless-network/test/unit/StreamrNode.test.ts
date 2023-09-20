@@ -1,23 +1,24 @@
 import { StreamrNode } from '../../src/logic/StreamrNode'
 import { MockLayer0 } from '../utils/mock/MockLayer0'
-import { isSamePeerDescriptor, PeerDescriptor, PeerID } from '@streamr/dht'
-import { createStreamMessage, mockConnectionLocker } from '../utils/utils'
+import { isSamePeerDescriptor, NodeType, PeerDescriptor } from '@streamr/dht'
+import { createRandomNodeId, createStreamMessage, mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
-import { waitForCondition } from '@streamr/utils'
+import { hexToBinary, waitForCondition } from '@streamr/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('StreamrNode', () => {
 
     let node: StreamrNode
     const peerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('streamr-node').value,
-        type: 0
+        kademliaId: hexToBinary(createRandomNodeId()),
+        type: NodeType.NODEJS
     }
     const streamPartId = StreamPartIDUtils.parse('stream#0')
     const message = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }), 
         streamPartId, 
-        peerDescriptor.kademliaId
+        randomEthereumAddress()
     )
 
     beforeEach(async () => {

@@ -8,7 +8,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { peerDescriptorTranslator } from '../../src/utils/utils'
 import { createTestStream, createTestClient } from '../test-utils/utils'
 import { randomString, waitForCondition } from '@streamr/utils'
-import { NetworkNode } from '@streamr/trackerless-network'
+import { createNetworkNode } from '@streamr/trackerless-network'
 import random from 'lodash/random'
 
 const TIMEOUT = 5 * 60 * 1000
@@ -19,11 +19,10 @@ const ENCRYPTED_MESSSAGE_FORMAT = /^[0-9A-Fa-f]+$/
 
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
     const entryPoints = CONFIG_TEST.network!.controlLayer!.entryPoints!.map(peerDescriptorTranslator)
-    const networkNode = new NetworkNode({
+    const networkNode = createNetworkNode({
         layer0: {
             entryPoints,
-        },
-        networkNode: {}
+        }
     })
 
     try {

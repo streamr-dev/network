@@ -4,7 +4,8 @@ import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { createStreamMessage } from '../utils/utils'
-import { hexToBinary, waitForCondition } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('Joining streams on offline nodes', () => {
     const streamPartId = StreamPartIDUtils.parse('stream#0')
@@ -52,8 +53,7 @@ describe('Joining streams on offline nodes', () => {
                 transportLayer: entryPointTransport,
                 peerDescriptor: entryPointPeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
-            },
-            networkNode: {}
+            }
         })
 
         node1 = new NetworkStack({
@@ -61,8 +61,7 @@ describe('Joining streams on offline nodes', () => {
                 transportLayer: new SimulatorTransport(node1PeerDescriptor, simulator),
                 peerDescriptor: node1PeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
-            },
-            networkNode: {}
+            }
         })
 
         node2 = new NetworkStack({
@@ -70,8 +69,7 @@ describe('Joining streams on offline nodes', () => {
                 transportLayer: new SimulatorTransport(node2PeerDescriptor, simulator),
                 peerDescriptor: node2PeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
-            },
-            networkNode: {}
+            }
         })
 
         await entryPoint.start()
@@ -87,17 +85,17 @@ describe('Joining streams on offline nodes', () => {
     })
 
     it('should recover if discovered nodes are offline', async () => {
-        let numOfMessages = 0
+        let messageReceived = false
 
-        // store invalid peer descriptors to DHT
+        // store offline peer descriptors to DHT
         await entryPoint.getLayer0DhtNode().storeDataToDht(streamPartIdToDataKey(streamPartId), Any.pack(offlineDescriptor1, PeerDescriptor))
         await entryPoint.getLayer0DhtNode().storeDataToDht(streamPartIdToDataKey(streamPartId), Any.pack(offlineDescriptor2, PeerDescriptor))
         
         await node1.getStreamrNode().subscribeToStream(streamPartId)
-        await node1.getStreamrNode().on('newMessage', () => {numOfMessages += 1})
-        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), streamPartId, hexToBinary('0x1111'))
+        await node1.getStreamrNode().on('newMessage', () => { messageReceived = true })
+        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), streamPartId, randomEthereumAddress())
         await node2.getStreamrNode().publishToStream(streamPartId, msg)
-        await waitForCondition(() => numOfMessages === 1, 30000)
+        await waitForCondition(() => messageReceived, 25000)
     }, 30000)
 
 })

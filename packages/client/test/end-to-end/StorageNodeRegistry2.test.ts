@@ -19,9 +19,9 @@ describe('StorageNodeRegistry2', () => {
     let storageNodeAddress: EthereumAddress
 
     beforeAll(async () => {
-        client = createTestClient(await fetchPrivateKeyWithGas(), 'storage-node-registry-2-client', 43236)
+        client = createTestClient(await fetchPrivateKeyWithGas(), 43236)
         const storageNodeWallet = new Wallet(await fetchPrivateKeyWithGas())
-        storageNodeClient = createTestClient(storageNodeWallet.privateKey, 'storage-node-registry-2-storage-node', 43237)
+        storageNodeClient = createTestClient(storageNodeWallet.privateKey, 43237)
         storageNodeAddress = toEthereumAddress(storageNodeWallet.address)
         createdStream = await createTestStream(client, module)
     })

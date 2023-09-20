@@ -19,13 +19,14 @@ import {
 import { uniq } from 'lodash'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { sampleSize } from 'lodash'
-import { StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
+import { NETWORK_SPLIT_AVOIDANCE_LIMIT, StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
 import { ILayer0 } from './ILayer0'
 import { createRandomGraphNode } from './createRandomGraphNode'
 import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { ILayer1 } from './ILayer1'
 
 export enum StreamNodeType {
     RANDOM_GRAPH = 'random-graph',
@@ -68,7 +69,7 @@ class NeighborCounter {
 }
 
 export interface StreamObject {
-    layer1?: DhtNode
+    layer1?: ILayer1
     layer2: IStreamNode
     type: StreamNodeType
 }
@@ -94,8 +95,6 @@ export interface StreamrNodeConfig {
     firstConnectionTimeout?: number
     acceptProxyConnections?: boolean
 }
-
-const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 
 export class StreamrNode extends EventEmitter<Events> {
     private P2PTransport?: ITransport
@@ -136,10 +135,9 @@ export class StreamrNode extends EventEmitter<Events> {
             ownPeerDescriptor: this.getPeerDescriptor(),
             streams: this.streams,
             getEntryPointData: (key) => this.layer0!.getDataFromDht(key),
-            getEntryPointDataViaNode: (peerDescriptor, key) => this.layer0!.findDataViaPeer(peerDescriptor, key),
+            getEntryPointDataViaNode: (key, node) => this.layer0!.findDataViaPeer(key, node),
             storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data),
-            deleteEntryPointData: (key) => this.layer0!.deleteDataFromDht(key),
-            networkSplitAvoidanceLimit: NETWORK_SPLIT_AVOIDANCE_LIMIT
+            deleteEntryPointData: (key) => this.layer0!.deleteDataFromDht(key)
         })
         cleanUp = () => this.destroy()
     }
@@ -208,28 +206,26 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         logger.debug(`Joining stream ${streamPartId}`)
         const knownEntryPoints = this.knownStreamEntryPoints.get(streamPartId) ?? []
-        const enableRejoins = knownEntryPoints.length > 0
         let entryPoints = knownEntryPoints.concat(knownEntryPoints)
         const [layer1, layer2] = this.createStream(streamPartId, knownEntryPoints)
         await layer1.start()
         await layer2.start()
-        const forwardingPeer = this.layer0!.isJoinOngoing() ? this.layer0!.getKnownEntryPoints()[0] : undefined
+        const forwardingNode = this.layer0!.isJoinOngoing() ? this.layer0!.getKnownEntryPoints()[0] : undefined
         const discoveryResult = await this.streamEntryPointDiscovery!.discoverEntryPointsFromDht(
             streamPartId,
             knownEntryPoints.length,
-            forwardingPeer
+            forwardingNode
         )
         entryPoints = knownEntryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT), false, enableRejoins)
+        await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT), true, knownEntryPoints.length > 0)
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
-            layer1.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT,
             discoveryResult.entryPointsFromDht,
             entryPoints.length
         )
     }
 
-    private createStream(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): [DhtNode, RandomGraphNode] {
+    private createStream(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): [ILayer1, RandomGraphNode] {
         const layer1 = this.createLayer1Node(streamPartId, entryPoints)
         const layer2 = this.createRandomGraphNode(streamPartId, layer1)
         this.streams.set(streamPartId, {
@@ -243,7 +239,7 @@ export class StreamrNode extends EventEmitter<Events> {
         return [layer1, layer2]
     }
 
-    private createLayer1Node = (streamPartId: StreamPartID, entryPoints: PeerDescriptor[]) => {
+    private createLayer1Node = (streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): ILayer1 => {
         return new DhtNode({
             transportLayer: this.layer0!,
             serviceId: 'layer1::' + streamPartId,
@@ -256,7 +252,7 @@ export class StreamrNode extends EventEmitter<Events> {
         })
     }
 
-    private createRandomGraphNode = (streamPartId: StreamPartID, layer1: DhtNode) => {
+    private createRandomGraphNode = (streamPartId: StreamPartID, layer1: ILayer1) => {
         return createRandomGraphNode({
             randomGraphId: streamPartId,
             P2PTransport: this.P2PTransport!,
@@ -311,6 +307,9 @@ export class StreamrNode extends EventEmitter<Events> {
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
+        if (this.config.acceptProxyConnections) {
+            throw new Error('cannot set proxies when acceptProxyConnections=true')
+        }
         if (this.streams.get(streamPartId)?.type === StreamNodeType.PROXY && contactPeerDescriptors.length > 0) {
             const proxyClient = this.streams.get(streamPartId)!.layer2 as ProxyStreamConnectionClient
             await proxyClient.setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)

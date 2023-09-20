@@ -1,10 +1,14 @@
 import { StreamEntryPointDiscovery } from '../../src/logic/StreamEntryPointDiscovery'
-import { PeerDescriptor, RecursiveFindResult, PeerID } from '@streamr/dht'
+import { PeerDescriptor, isSamePeerDescriptor, RecursiveFindResult, NodeType } from '@streamr/dht'
 import { StreamObject } from '../../src/logic/StreamrNode'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { Any } from '../../src/proto/google/protobuf/any'
-import { wait } from '@streamr/utils'
+import { hexToBinary, wait } from '@streamr/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { createRandomNodeId } from '../utils/utils'
+import { MockLayer1 } from '../utils/mock/MockLayer1'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { range } from 'lodash'
 
 describe('StreamEntryPointDiscovery', () => {
 
@@ -14,14 +18,14 @@ describe('StreamEntryPointDiscovery', () => {
     let streams = new Map<string, StreamObject>()
 
     const peerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('fake').value,
-        type: 0,
+        kademliaId: hexToBinary(createRandomNodeId()),
+        type: NodeType.NODEJS,
         nodeName: 'fake'
     }
 
     const deletedPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('deleted').value,
-        type: 0,
+        kademliaId: hexToBinary(createRandomNodeId()),
+        type: NodeType.NODEJS,
         nodeName: 'deleted'
     }
 
@@ -52,7 +56,7 @@ describe('StreamEntryPointDiscovery', () => {
         }
     }
 
-    const fakegetEntryPointDataViaNode = async (_key: Uint8Array, _peer: PeerDescriptor): Promise<DataEntry[]> => {
+    const fakegetEntryPointDataViaNode = async (_key: Uint8Array, _node: PeerDescriptor): Promise<DataEntry[]> => {
         return [fakeData]
     }
 
@@ -70,10 +74,21 @@ describe('StreamEntryPointDiscovery', () => {
 
     const fakeDeleteEntryPointData = async (_key: Uint8Array): Promise<void> => {}
 
+    const addNodesToStream = (layer1: MockLayer1, count: number) => {
+        range(count).forEach(() => {
+            layer1.addNewRandomPeerToKBucket()
+            layer1.addNewRandomPeerToKBucket()
+            layer1.addNewRandomPeerToKBucket()
+            layer1.addNewRandomPeerToKBucket()
+        })
+    } 
+
+    let layer1: MockLayer1
     beforeEach(() => {
         storeCalled = 0
         streams = new Map()
-        streams.set(streamPartId, {} as any)
+        layer1 = new MockLayer1(getNodeIdFromPeerDescriptor(peerDescriptor))
+        streams.set(streamPartId, { layer1 } as any)
         streamEntryPointDiscoveryWithData = new StreamEntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
             streams,
@@ -102,42 +117,42 @@ describe('StreamEntryPointDiscovery', () => {
 
     it('discoverEntryPointsFromDht has known entrypoints', async () => {
         const res = await streamEntryPointDiscoveryWithData.discoverEntryPointsFromDht(streamPartId, 1)
-        expect(res.joiningEmptyStream).toEqual(false)
         expect(res.entryPointsFromDht).toEqual(false)
         expect(res.discoveredEntryPoints).toEqual([])
     })
 
     it('discoverEntryPointsFromDht does not have known entrypoints', async () => {
         const res = await streamEntryPointDiscoveryWithData.discoverEntryPointsFromDht(streamPartId, 0)
-        expect(res.joiningEmptyStream).toEqual(false)
-        expect(res.entryPointsFromDht).toEqual(true)
-        expect(res.discoveredEntryPoints).toEqual([peerDescriptor])
+        expect(res.discoveredEntryPoints.length).toBe(1)
+        expect(isSamePeerDescriptor(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)
     })
 
     it('discoverEntryPointsfromDht on an empty stream', async () => {
         const res = await streamEntryPointDiscoveryWithoutData.discoverEntryPointsFromDht(streamPartId, 0)
-        expect(res.joiningEmptyStream).toEqual(true)
         expect(res.entryPointsFromDht).toEqual(true)
-        expect(res.discoveredEntryPoints).toEqual([peerDescriptor]) // ownPeerDescriptor
+        expect(res.discoveredEntryPoints.length).toBe(1)
+        expect(isSamePeerDescriptor(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)  // ownPeerDescriptor
     })
 
     it('store on empty stream', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, true, 0)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, 0)
         expect(storeCalled).toEqual(1)
     })
 
     it('store on non-empty stream without known entry points', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, false, false, 0)
+        addNodesToStream(layer1, 4)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, false, 0)
         expect(storeCalled).toEqual(0)
     })
 
     it('store on stream without saturated entrypoint count', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, false, true, 0)
+        addNodesToStream(layer1, 4)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, 0)
         expect(storeCalled).toEqual(1)
     })
 
     it('will keep recaching until stream stopped', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, true, 0)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, 0)
         expect(storeCalled).toEqual(1)
         await wait(4500)
         streamEntryPointDiscoveryWithData.removeSelfAsEntryPoint(streamPartId)
@@ -145,7 +160,7 @@ describe('StreamEntryPointDiscovery', () => {
     })
 
     it('will stop recaching is stream is left', async () => {
-        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, true, 0)
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, 0)
         expect(storeCalled).toEqual(1)
         streams.delete(streamPartId)
         await wait(4500)
