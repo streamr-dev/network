@@ -1,5 +1,5 @@
-import { DhtNode, Simulator } from "../../src/exports"
-import { createMockConnectionDhtNode } from "../utils/utils"
+import { DhtNode, Simulator } from '../../src/exports'
+import { createMockConnectionDhtNode } from '../utils/utils'
 
 describe('DhtNode getInfo', () => {
     let entryPoint: DhtNode
