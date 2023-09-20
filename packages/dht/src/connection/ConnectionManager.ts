@@ -51,6 +51,7 @@ export class ConnectionManagerConfig {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    externalIp?: string
     webrtcPortRange?: PortRange
 
     // the following fields are used in simulation only
@@ -178,6 +179,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 connectionTimeout: this.config.webrtcNewConnectionTimeout,
+                externalIp: this.config.externalIp,
                 portRange: this.config.webrtcPortRange
             }, this.incomingConnectionCallback)
         }

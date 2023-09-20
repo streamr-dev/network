@@ -82,6 +82,7 @@ export interface DhtNodeOptions {
     webrtcNewConnectionTimeout?: number
     webrtcPortRange?: PortRange
     maxConnections?: number
+    externalIp?: string
 }
 
 export class DhtNodeConfig {
@@ -111,6 +112,7 @@ export class DhtNodeConfig {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    externalIp?: string
     webrtcPortRange?: PortRange
 
     constructor(conf: Partial<DhtNodeOptions>) {
@@ -208,7 +210,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 webrtcPortRange: this.config.webrtcPortRange,
                 nodeName: this.getNodeName(),
-                maxConnections: this.config.maxConnections
+                maxConnections: this.config.maxConnections,
+                externalIp: this.config.externalIp
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
