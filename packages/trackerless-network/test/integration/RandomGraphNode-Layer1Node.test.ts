@@ -159,6 +159,7 @@ describe('RandomGraphNode-DhtNode', () => {
                     }
                 })
             })
+            // NET-1074 Investigate why sometimes unidirectional connections remain.
             return mismatchCounter <= 2
         }, 20000, 1000)
     }, 95000)
