@@ -1,4 +1,4 @@
-import { toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { toEthereumAddress, hexToBinary, utf8ToBinary, binaryToHex } from '@streamr/utils'
 import assert from 'assert'
 import ValidationError from '../../../../src/errors/ValidationError'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
@@ -31,7 +31,7 @@ const serializedMessage = JSON.stringify([
     ContentType.JSON,
     EncryptionType.AES,
     'groupKeyId',
-    '656e637279707465642d636f6e74656e74',
+    binaryToHex(utf8ToBinary('encrypted-content')),
     '["groupKeyId","1234"]',
     SIGNATURE_TYPE_ETH,
     signature

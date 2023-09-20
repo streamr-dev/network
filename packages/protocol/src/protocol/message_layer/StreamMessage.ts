@@ -58,7 +58,7 @@ export default class StreamMessage<T = unknown> {
     messageId: MessageID
     prevMsgRef: MessageRef | null
     messageType: StreamMessageType
-    contentType?: ContentType
+    contentType: ContentType
     encryptionType: EncryptionType
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
@@ -104,6 +104,9 @@ export default class StreamMessage<T = unknown> {
         StreamMessage.validateMessageType(messageType)
         this.messageType = messageType
 
+        StreamMessage.validateContentType(contentType)
+        this.contentType = contentType
+        
         StreamMessage.validateEncryptionType(encryptionType)
         this.encryptionType = encryptionType
 
@@ -115,9 +118,6 @@ export default class StreamMessage<T = unknown> {
 
         validateIsType('signature', signature, 'Uint8Array', Uint8Array)
         this.signature = signature
-
-        StreamMessage.validateContentType(contentType)
-        this.contentType = contentType
 
         this.serializedContent = content
 

@@ -106,7 +106,7 @@ export class StreamMessageTranslator {
     }
 
     static toClientProtocol<T>(msg: StreamMessage): OldStreamMessage<T> {
-        let content: Uint8Array | string
+        let content: Uint8Array
         let messageType: OldStreamMessageType
         if (msg.messageType === StreamMessageType.MESSAGE) {
             messageType = OldStreamMessageType.MESSAGE
