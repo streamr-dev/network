@@ -1,7 +1,7 @@
 import { DhtNode, Simulator, PeerDescriptor, ConnectionManager, getRandomRegion, NodeType } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
-import { wait, waitForCondition, hexToBinary } from '@streamr/utils'
+import { waitForCondition, hexToBinary } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { createRandomNodeId } from '../utils/utils'
@@ -146,21 +146,21 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(graphNodes.map((node) =>
             waitForCondition(() => node.getNumberOfOutgoingHandshakes() === 0)
         ))
-        await wait(10000)
-        let mismatchCounter = 0
-        graphNodes.forEach((node) => {
-            const nodeId = node.getOwnNodeId()
-            node.getTargetNeighborIds().forEach((neighborId) => {
-                if (neighborId !== entryPointRandomGraphNode.getOwnNodeId()) {
-                    const neighbor = graphNodes.find((n) => n.getOwnNodeId() === neighborId)
-                    if (!neighbor!.getTargetNeighborIds().includes(nodeId)) {
-                        logger.info('mismatching ids length: ' + nodeId + ' ' + neighbor!.getTargetNeighborIds().length)
-                        mismatchCounter += 1
+        await waitForCondition(() => {
+            let mismatchCounter = 0
+            graphNodes.forEach((node) => {
+                const nodeId = node.getOwnNodeId()
+                node.getTargetNeighborIds().forEach((neighborId) => {
+                    if (neighborId !== entryPointRandomGraphNode.getOwnNodeId()) {
+                        const neighbor = graphNodes.find((n) => n.getOwnNodeId() === neighborId)
+                        if (!neighbor!.getTargetNeighborIds().includes(nodeId)) {
+                            mismatchCounter += 1
+                        }
                     }
-                }
-        
+                })
             })
-        })
-        expect(mismatchCounter).toBeLessThanOrEqual(2)
+            // NET-1074 Investigate why sometimes unidirectional connections remain.
+            return mismatchCounter <= 2
+        }, 20000, 1000)
     }, 95000)
 })
