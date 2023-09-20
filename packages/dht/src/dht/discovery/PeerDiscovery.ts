@@ -99,7 +99,7 @@ export class PeerDiscovery {
                         setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.abortController.signal)
                     }
                 } else {
-                    await this.ensureClosestPeersIntervalIsRunning()
+                    await this.ensureRecoveryIntervalIsRunning()
                 }
             }
             this.ongoingDiscoverySessions.delete(session.sessionId)
@@ -130,7 +130,7 @@ export class PeerDiscovery {
         }
     }
 
-    private async ensureClosestPeersIntervalIsRunning(): Promise<void> {
+    private async ensureRecoveryIntervalIsRunning(): Promise<void> {
         if (!this.recoveryIntervalStarted) {
             this.recoveryIntervalStarted = true
             await scheduleAtInterval(() => this.fetchClosestPeersFromBucket(), 60000, true, this.abortController.signal)

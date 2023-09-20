@@ -53,8 +53,7 @@ describe('Joining streams on offline nodes', () => {
                 transportLayer: entryPointTransport,
                 peerDescriptor: entryPointPeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
-            },
-            networkNode: {}
+            }
         })
 
         node1 = new NetworkStack({
@@ -62,8 +61,7 @@ describe('Joining streams on offline nodes', () => {
                 transportLayer: new SimulatorTransport(node1PeerDescriptor, simulator),
                 peerDescriptor: node1PeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
-            },
-            networkNode: {}
+            }
         })
 
         node2 = new NetworkStack({
@@ -71,8 +69,7 @@ describe('Joining streams on offline nodes', () => {
                 transportLayer: new SimulatorTransport(node2PeerDescriptor, simulator),
                 peerDescriptor: node2PeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
-            },
-            networkNode: {}
+            }
         })
 
         await entryPoint.start()
@@ -90,7 +87,7 @@ describe('Joining streams on offline nodes', () => {
     it('should recover if discovered nodes are offline', async () => {
         let messageReceived = false
 
-        // store invalid peer descriptors to DHT
+        // store offline peer descriptors to DHT
         await entryPoint.getLayer0DhtNode().storeDataToDht(streamPartIdToDataKey(streamPartId), Any.pack(offlineDescriptor1, PeerDescriptor))
         await entryPoint.getLayer0DhtNode().storeDataToDht(streamPartIdToDataKey(streamPartId), Any.pack(offlineDescriptor2, PeerDescriptor))
         
