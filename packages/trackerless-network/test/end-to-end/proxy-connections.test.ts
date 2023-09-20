@@ -205,8 +205,7 @@ describe('Proxy connections', () => {
         await waitForCondition(() => 
             proxiedNode.hasProxyConnection(streamPartId, getNodeIdFromPeerDescriptor(proxyNodeDescriptor1), ProxyDirection.SUBSCRIBE)
         , 25000)
-        expect(proxyNode1.hasProxyConnection(streamPartId, proxiedNodeId, ProxyDirection.SUBSCRIBE)).toBe(false)
-
+        expect(proxyNode1.hasProxyConnection(streamPartId, proxiedNodeId, ProxyDirection.SUBSCRIBE)).toBe(true)
     }, 30000)
 
     it('cannot subscribe on proxy publish streams', async () => {

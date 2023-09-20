@@ -19,7 +19,7 @@ import {
 import { uniq } from 'lodash'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { sampleSize } from 'lodash'
-import { StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
+import { NETWORK_SPLIT_AVOIDANCE_LIMIT, StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
 import { ILayer0 } from './ILayer0'
 import { createRandomGraphNode } from './createRandomGraphNode'
 import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
@@ -217,10 +217,9 @@ export class StreamrNode extends EventEmitter<Events> {
             forwardingNode
         )
         entryPoints = knownEntryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await layer1.joinDht(sampleSize(entryPoints, 4))
+        await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT), true, knownEntryPoints.length > 0)
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
-            discoveryResult.joiningEmptyStream,
             discoveryResult.entryPointsFromDht,
             entryPoints.length
         )
@@ -247,8 +246,8 @@ export class StreamrNode extends EventEmitter<Events> {
             peerDescriptor: this.layer0!.getPeerDescriptor(),
             entryPoints,
             numberOfNodesPerKBucket: 4,
-            rpcRequestTimeout: 15000,
-            dhtJoinTimeout: 60000,
+            rpcRequestTimeout: 5000,
+            dhtJoinTimeout: 20000,
             nodeName: this.config.nodeName + ':layer1'
         })
     }
