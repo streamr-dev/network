@@ -53,7 +53,6 @@ describe(findTarget, () => {
 
     it('returns undefined if no sponsorships are found', async () => {
         setupEnv([])
-        setStreamPartsAssignedToMe([])
         const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
         expect(result).toBeUndefined()
     })
@@ -64,7 +63,6 @@ describe(findTarget, () => {
             operators: [MY_OPERATOR_ADDRESS],
             streamId: STREAM_ID,
         }])
-        setStreamPartsAssignedToMe([])
         const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
         expect(result).toBeUndefined()
     })
