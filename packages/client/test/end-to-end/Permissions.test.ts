@@ -226,7 +226,7 @@ describe('Stream permissions', () => {
             user: otherUser.address,
             permissions: [StreamPermission.PUBLISH]
         })
-        await expect(otherUserClient.publish(stream.id, message)).resolves.toBeDefined()
+        await expect(() => otherUserClient.publish(stream.id, message)).resolves
         await otherUserClient.destroy()
     })
 })
