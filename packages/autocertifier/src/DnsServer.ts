@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/parameter-properties, no-empty */
+/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/parameter-properties, no-empty, 
+    class-methods-use-this */
 
 import { DnsHandler, DnsResponse, Packet, createServer } from 'dns2'
 import { Database, Subdomain } from './Database'
@@ -107,7 +108,7 @@ export class DnsServer {
 
     private handleAAAAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
-        logger.info('handleAAAAQuery() ' + mixedCaseName) 
+        logger.info('handleAAAAQuery() ' + mixedCaseName)
         await send(response)
     }
 
@@ -118,10 +119,10 @@ export class DnsServer {
     }
 
     private handleCAAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
-    response: DnsResponse): Promise<void> => {
-    logger.info('handleCAAQuery() ' + mixedCaseName)
-    await send(response)
-}
+        response: DnsResponse): Promise<void> => {
+        logger.info('handleCAAQuery() ' + mixedCaseName)
+        await send(response)
+    }
 
     private handleNormalQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
@@ -189,7 +190,7 @@ export class DnsServer {
         const mixedCaseDomainName = parts[parts.length - 2] + '.' + parts[parts.length - 1]
 
         // @ts-ignore private field
-        logger.info(mixedCaseDomainName+ ' question type 0x' + Number(question.type).toString(16))
+        logger.info(mixedCaseDomainName + ' question type 0x' + Number(question.type).toString(16))
         // @ts-ignore private field
         if (question.type == Packet.TYPE.SOA) {
             return this.handleSOAQuery(mixedCaseDomainName, send, response)

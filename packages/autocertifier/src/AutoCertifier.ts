@@ -129,6 +129,26 @@ export class AutoCertifier implements RestInterface {
             throw new Error('AUTOICERTIFIER_HMAC_KEY environment variable is not set')
         }
 
+        const restServerCaCertPath = process.env['AUTOICERTIFIER_REST_SERVER_CA_CERT_PATH']
+        if (!restServerCaCertPath) {
+            throw new Error('AUTOICERTIFIER_REST_SERVER_CA__CERT_PATH environment variable is not set')
+        }
+
+        const restServerCaKeyPath = process.env['AUTOICERTIFIER_REST_SERVER_CA_KEY_PATH']
+        if (!restServerCaKeyPath) {
+            throw new Error('AUTOICERTIFIER_REST_SERVER_CA_KEY_PATH environment variable is not set')
+        }
+
+        const restServerCertPath = process.env['AUTOICERTIFIER_REST_SERVER_CERT_PATH']
+        if (!restServerCertPath) {
+            throw new Error('AUTOICERTIFIER_REST_SERVER_CERT_PATH environment variable is not set')
+        }
+
+        const restServerKeyPath = process.env['AUTOICERTIFIER_REST_SERVER_KEY_PATH']
+        if (!restServerKeyPath) {
+            throw new Error('AUTOICERTIFIER_REST_SERVER_KEY_PATH environment variable is not set')
+        }
+
         this.database = new Database(databaseFilePath)
         await this.database.start()
         logger.info('database is running on file ' + databaseFilePath)
@@ -143,7 +163,8 @@ export class AutoCertifier implements RestInterface {
         await this.certificateCreator.start()
         logger.info('certificate creator is running')
 
-        this.restServer = new RestServer(ownIpAddress, restServerPort, this)
+        this.restServer = new RestServer(ownIpAddress, restServerPort, restServerCaCertPath, restServerCaKeyPath, 
+            restServerCertPath, restServerKeyPath, this)
         await this.restServer.start()
         logger.info('rest server is running on port ' + restServerPort)
     }

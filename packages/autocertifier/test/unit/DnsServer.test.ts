@@ -22,7 +22,7 @@ describe('DnsServer', () => {
 
             // @ts-ignore private field
 
-            await dnsServer.handleSOAQuery(send, response)
+            await dnsServer.handleSOAQuery('example.com', send, response)
 
             expect(response.answers).toHaveLength(1)
             expect(response.answers[0].type).toBe(6)

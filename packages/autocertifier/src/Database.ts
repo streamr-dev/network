@@ -4,7 +4,7 @@ import sqlite3 from 'sqlite3'
 import { open, Statement, Database as SqliteDatabase } from 'sqlite'
 import { Logger } from '@streamr/utils'
 import { DatabaseError, InvalidSubdomainOrToken } from './errors'
-import os from 'os'
+import { filePathToNodeFormat } from './utlis/filePathToNodeFormat'
 
 const logger = new Logger(module)
 
@@ -21,11 +21,7 @@ export class Database {
     private databaseFilePath: string
 
     constructor(filePath: string) {
-        if (filePath.startsWith('~/')) {
-            this.databaseFilePath = filePath.replace('~', os.homedir())
-        } else {
-            this.databaseFilePath = filePath
-        }
+        this.databaseFilePath = filePathToNodeFormat(filePath)
     }
 
     public async createSubdomain(subdomain: string, ip: string, port: string, token: string): Promise<void> {
@@ -90,7 +86,7 @@ export class Database {
     }
 
     public async updateSubdomainAcmeChallenge(subdomain: string, acmeChallenge: string): Promise<void> {
-        logger.info('Updating subdomain acme challenge' + acmeChallenge +  '  for ' + subdomain)
+        logger.info('Updating subdomain acme challenge' + acmeChallenge + '  for ' + subdomain)
         try {
             await this.updateSubdomainAcmeChallengeStatement!.run(acmeChallenge, subdomain)
         } catch (e) {

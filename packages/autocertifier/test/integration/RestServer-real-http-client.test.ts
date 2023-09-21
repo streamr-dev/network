@@ -2,26 +2,33 @@ import request from 'request'
 import { RestServer } from '../../src/RestServer'
 import { CertifiedSubdomain } from '../../src/data/CertifiedSubdomain'
 import { ApiError } from '../../src/data/ApiError'
+import os from 'os'
+import fs from 'fs'
 
 describe('RestServer', () => {
     let server: RestServer
+    const dir = os.tmpdir()
+    let ca: string
 
     const certifiedSubdomain: CertifiedSubdomain = { subdomain: 'test', token: 'token', certificate: { cert: 'certificate', key: 'key' } }
     beforeAll(async () => {
-        server = new RestServer('3000', {
-            async createNewSubdomainAndCertificate(_ip: string, _port: string, _streamrWebsocketPort: string): Promise<CertifiedSubdomain> {
-                return certifiedSubdomain
-            },
-            async createNewCertificateForSubdomain(_subdomain: string, _ipAddress: string,
-                _port: string, _streamrWebSocketPort: string, _token: string): Promise<CertifiedSubdomain> {
 
-                return certifiedSubdomain
-            },
-            async updateSubdomainIpAndPort(_subdomain: string, _ip: string, _port: string, _streamrWebsocketPort: string, _token: string) {
-                // do nothing
-            }
-        })
+        server = new RestServer('127.0.0.1', '3000', dir + '/restServerCaCert.pem', dir + '/restServerCaKey.pem',
+            dir + '/restServerCert.pem', dir + '/restServerKey.pem', {
+                async createNewSubdomainAndCertificate(_ip: string, _port: string, _streamrWebsocketPort: string): Promise<CertifiedSubdomain> {
+                    return certifiedSubdomain
+                },
+                async createNewCertificateForSubdomain(_subdomain: string, _ipAddress: string,
+                    _port: string, _streamrWebSocketPort: string, _token: string): Promise<CertifiedSubdomain> {
+
+                    return certifiedSubdomain
+                },
+                async updateSubdomainIpAndPort(_subdomain: string, _ip: string, _port: string, _streamrWebsocketPort: string, _token: string) {
+                    // do nothing
+                }
+            })
         await server.start()
+        ca = fs.readFileSync(dir + '/restServerCaCert.pem', 'utf8')
     })
 
     afterAll(async () => {
@@ -31,11 +38,12 @@ describe('RestServer', () => {
     describe('PATCH /certifiedsubdomains', () => {
         it('should return a certified subdomain', (done) => {
             const options = {
-                url: 'http://localhost:3000/certifiedsubdomains',
+                url: 'https://localhost:3000/certifiedsubdomains',
                 method: 'PATCH',
                 json: {
                     streamrWebSocketPort: '1234'
-                }
+                },
+                ca: ca
             }
 
             request(options, (error, response, body) => {
@@ -48,9 +56,10 @@ describe('RestServer', () => {
 
         it('should return an error if streamrWebSocketPort is missing', (done) => {
             const options = {
-                url: 'http://localhost:3000/certifiedsubdomains',
+                url: 'https://localhost:3000/certifiedsubdomains',
                 method: 'PATCH',
-                json: true
+                json: true,
+                ca: ca
             }
 
             request(options, (error, response, body) => {
@@ -66,12 +75,13 @@ describe('RestServer', () => {
     describe('PUT /certifiedsubdomains/:subdomain/ip', () => {
         it('should update the subdomain IP and port', (done) => {
             const options = {
-                url: 'http://localhost:3000/certifiedsubdomains/test/ip',
+                url: 'https://localhost:3000/certifiedsubdomains/test/ip',
                 method: 'PUT',
                 json: {
                     streamrWebSocketPort: '1234',
                     token: 'token'
-                }
+                },
+                ca: ca
             }
 
             request(options, (error, response, body) => {
@@ -84,11 +94,12 @@ describe('RestServer', () => {
 
         it('should return an error if streamrWebSocketPort is missing', (done) => {
             const options = {
-                url: 'http://localhost:3000/certifiedsubdomains/test/ip',
+                url: 'https://localhost:3000/certifiedsubdomains/test/ip',
                 method: 'PUT',
                 json: {
                     token: 'token'
-                }
+                },
+                ca: ca
             }
 
             request(options, (error, response, body) => {
@@ -102,11 +113,12 @@ describe('RestServer', () => {
 
         it('should return an error if token is missing', (done) => {
             const options = {
-                url: 'http://localhost:3000/certifiedsubdomains/test/ip',
+                url: 'https://localhost:3000/certifiedsubdomains/test/ip',
                 method: 'PUT',
                 json: {
                     streamrWebSocketPort: '1234'
-                }
+                },
+                ca: ca
             }
 
             request(options, (error, response, body) => {
