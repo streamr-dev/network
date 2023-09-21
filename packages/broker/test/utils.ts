@@ -27,7 +27,7 @@ interface TestConfig {
 export const DEFAULT_ENTRYPOINTS = [{
     id: 'eeeeeeeeee',
     websocket: {
-        host: '127.0.0.1',
+        host: STREAMR_DOCKER_DEV_HOST,
         port: 40500,
         tls: false
     }
