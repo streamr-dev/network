@@ -1,6 +1,6 @@
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
-import { inspectTarget } from './inspectionUtils'
+import { findNodesForTarget, inspectTarget } from './inspectionUtils'
 import { toStreamPartID } from '@streamr/protocol'
 import { StreamrClient } from 'streamr-client'
 import { fetchRedundancyFactor as _fetchRedundancyFactor } from './fetchRedundancyFactor'
@@ -19,16 +19,23 @@ export async function inspectSuspectNode(
 ): Promise<void> {
     logger.info('Received inspection request', { targetOperator, sponsorship, partition })
     const streamId = await voteOnSuspectNodeHelper.getStreamId(sponsorship)
-    const pass = await inspectTarget({
-        target: {
-            sponsorshipAddress: sponsorship,
-            operatorAddress: targetOperator,
-            streamPart: toStreamPartID(streamId, partition),
-        },
+    const target = {
+        sponsorshipAddress: sponsorship, 
+        operatorAddress: targetOperator,
+        streamPart: toStreamPartID(streamId, partition),
+    }
+    const onlineNodeDescriptors = await findNodesForTarget(
+        target,
         streamrClient,
-        abortSignal,
         getRedundancyFactor,
         heartbeatTimeoutInMs,
+        abortSignal
+    )
+    const pass = await inspectTarget({
+        target,
+        targetPeerDescriptors: onlineNodeDescriptors,
+        streamrClient,
+        abortSignal
     })
     const kick = !pass
     logger.info('Vote on inspection request', { sponsorship, targetOperator, partition, kick })

@@ -1,4 +1,5 @@
 import {
+    FindNodesForTargetFn,
     FindTargetFn,
     inspectRandomNode,
     InspectTargetFn
@@ -24,11 +25,15 @@ const target = Object.freeze({
     streamPart: toStreamPartID(STREAM_ID, 4),
 })
 
+const PEER_DESCRIPTOR_ONE = { id: '0x1111' }
+const PEER_DESCRIPTOR_TWO = { id: '0x2222' }
+
 describe(inspectRandomNode, () => {
     let helper: MockProxy<InspectRandomNodeHelper>
     let loadBalancer: MockProxy<StreamAssignmentLoadBalancer>
     let streamrClient: MockProxy<StreamrClient>
     let findTargetFn: jest.MockedFn<FindTargetFn>
+    let findNodesForTargetFn: jest.MockedFn<FindNodesForTargetFn>
     let inspectTargetFn: jest.MockedFn<InspectTargetFn>
     let getRedundancyFactorFn: jest.MockedFn<(operatorContractAddress: EthereumAddress) => Promise<number | undefined>>
     let abortController: AbortController
@@ -38,6 +43,7 @@ describe(inspectRandomNode, () => {
         loadBalancer = mock<StreamAssignmentLoadBalancer>()
         streamrClient = mock<StreamrClient>()
         findTargetFn = jest.fn()
+        findNodesForTargetFn = jest.fn()
         inspectTargetFn = jest.fn()
         getRedundancyFactorFn = jest.fn()
         getRedundancyFactorFn.mockResolvedValueOnce(1)
@@ -58,6 +64,7 @@ describe(inspectRandomNode, () => {
             getRedundancyFactorFn,
             abortController.signal,
             findTargetFn,
+            findNodesForTargetFn,
             inspectTargetFn
         )
     }
@@ -74,6 +81,7 @@ describe(inspectRandomNode, () => {
 
     it('does not flag if inspection passes', async () => {
         findTargetFn.mockResolvedValueOnce(target)
+        findNodesForTargetFn.mockResolvedValueOnce([PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO])
         inspectTargetFn.mockResolvedValueOnce(true)
 
         await doInspection()
@@ -84,6 +92,7 @@ describe(inspectRandomNode, () => {
 
     it('flags if inspection does not pass', async () => {
         findTargetFn.mockResolvedValueOnce(target)
+        findNodesForTargetFn.mockResolvedValueOnce([PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO])
         inspectTargetFn.mockResolvedValueOnce(false)
 
         await doInspection()
@@ -98,6 +107,7 @@ describe(inspectRandomNode, () => {
 
     it('findTarget and inspectTarget are called with correct arguments', async () => {
         findTargetFn.mockResolvedValueOnce(target)
+        findNodesForTargetFn.mockResolvedValueOnce([PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO])
         inspectTargetFn.mockResolvedValueOnce(false)
 
         await doInspection()
@@ -106,9 +116,8 @@ describe(inspectRandomNode, () => {
         expect(findTargetFn).toHaveBeenCalledWith(MY_OPERATOR_ADDRESS, helper, loadBalancer)
         expect(inspectTargetFn).toHaveBeenCalledWith({
             target,
+            targetPeerDescriptors: [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO],
             streamrClient,
-            getRedundancyFactorFn,
-            heartbeatTimeoutInMs: 1000,
             abortSignal: expect.anything()
         })
     })

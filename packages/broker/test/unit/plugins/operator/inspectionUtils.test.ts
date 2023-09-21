@@ -185,11 +185,9 @@ describe(inspectTarget, () => {
     it('returns false if zero nodes online', async () => {
         const result = await inspectTarget({
             target,
+            targetPeerDescriptors: [],
             streamrClient,
-            getRedundancyFactor: undefined as any,
-            heartbeatTimeoutInMs: 100,
-            abortSignal: abortController.signal,
-            findNodesForTargetFn: async () => []
+            abortSignal: abortController.signal
         })
         expect(result).toEqual(false)
     })
@@ -198,11 +196,9 @@ describe(inspectTarget, () => {
         streamrClient.inspect.mockResolvedValue(false)
         const result = await inspectTarget({
             target,
+            targetPeerDescriptors: [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE],
             streamrClient,
-            getRedundancyFactor: undefined as any,
-            heartbeatTimeoutInMs: 100,
             abortSignal: abortController.signal,
-            findNodesForTargetFn: async () => [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE]
         })
         expect(result).toEqual(false)
         expect(streamrClient.inspect).toHaveBeenCalledTimes(3)
@@ -216,11 +212,9 @@ describe(inspectTarget, () => {
         streamrClient.inspect.mockResolvedValueOnce(true)
         const result = await inspectTarget({
             target,
+            targetPeerDescriptors: [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE],
             streamrClient,
-            getRedundancyFactor: undefined as any,
-            heartbeatTimeoutInMs: 100,
-            abortSignal: abortController.signal,
-            findNodesForTargetFn: async () => [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE]
+            abortSignal: abortController.signal
         })
         expect(result).toEqual(true)
         expect(streamrClient.inspect).toHaveBeenCalledTimes(2)

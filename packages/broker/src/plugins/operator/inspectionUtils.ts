@@ -127,26 +127,15 @@ export async function findNodesForTarget(
 
 export async function inspectTarget({
     target,
+    targetPeerDescriptors,
     streamrClient,
-    getRedundancyFactor,
-    heartbeatTimeoutInMs,
-    abortSignal,
-    findNodesForTargetFn = findNodesForTarget
+    abortSignal
 }: {
     target: Target
+    targetPeerDescriptors: NetworkPeerDescriptor[]
     streamrClient: StreamrClient
-    getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>
-    heartbeatTimeoutInMs: number
     abortSignal: AbortSignal
-    findNodesForTargetFn?: typeof findNodesForTarget
 }): Promise<boolean> {
-    const targetPeerDescriptors = await findNodesForTargetFn(
-        target,
-        streamrClient,
-        getRedundancyFactor,
-        heartbeatTimeoutInMs,
-        abortSignal
-    )
 
     logger.info('Inspecting nodes of operator', {
         targetOperator: target.operatorAddress,
