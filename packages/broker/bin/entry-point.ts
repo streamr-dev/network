@@ -27,6 +27,7 @@ const main = async () => {
             },
         }
     })[0]
+    // eslint-disable-next-line no-console
     console.log('DEBUG: ' + JSON.stringify(peerDescriptor))
     const dhtNode = new DhtNode({
         peerDescriptor,

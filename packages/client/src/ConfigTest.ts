@@ -1,5 +1,5 @@
 import { toEthereumAddress } from '@streamr/utils'
-import { StreamrClientConfig, NetworkNodeType } from './Config'
+import { StreamrClientConfig } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
@@ -9,8 +9,7 @@ function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
 }
 
-const tmp = [ // TODO CHAIN_CONFIG.dev2.entryPoints
-{
+const tmp = [{ // TODO CHAIN_CONFIG.dev2.entryPoints
     id: 'eeeeeeeeee',
     websocket: {
         host: '10.200.10.1',
