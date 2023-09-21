@@ -57,8 +57,8 @@ describe('WebSocketConnectorRpc', () => {
     })
 
     afterEach(async () => {
-        await rpcCommunicator1.stop()
-        await rpcCommunicator2.stop()
+        rpcCommunicator1.stop()
+        rpcCommunicator2.stop()
     })
 
     it('Happy path', async () => {
@@ -71,7 +71,7 @@ describe('WebSocketConnectorRpc', () => {
         { targetDescriptor: peerDescriptor2 },
         )
         const res1 = await response1
-        await (expect(res1.accepted)).toEqual(true)
+        expect(res1.accepted).toEqual(true)
 
         const response2 = client2.requestConnection({
             requester: peerDescriptor2,
@@ -82,6 +82,6 @@ describe('WebSocketConnectorRpc', () => {
         { targetDescriptor: peerDescriptor1 },
         )
         const res2 = await response2
-        await (expect(res2.accepted)).toEqual(true)
+        expect(res2.accepted).toEqual(true)
     })
 })

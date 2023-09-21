@@ -163,7 +163,7 @@ describe('multiple publisher plugins', () => {
 
         await waitForCondition(() => receivedMessages.size() >= messages.length)
         expect(receivedMessages.values()).toIncludeSameMembers(messages)
-        await subscriber.close()
+        subscriber.close()
 
     })
 
