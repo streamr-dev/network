@@ -1,5 +1,4 @@
 import {
-    FetchRedundancyFactorFn,
     FindTargetFn,
     InspectRandomNodeService,
     InspectTargetFn
@@ -9,7 +8,7 @@ import { mock, MockProxy } from 'jest-mock-extended'
 import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { wait, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import { StreamrClient } from 'streamr-client'
 
 const MY_OPERATOR_ADDRESS = randomEthereumAddress()
@@ -32,7 +31,7 @@ describe(InspectRandomNodeService, () => {
     let service: InspectRandomNodeService
     let findTargetFn: jest.MockedFn<FindTargetFn>
     let inspectTargetFn: jest.MockedFn<InspectTargetFn>
-    let fetchRedundancyFactorFn: jest.MockedFn<FetchRedundancyFactorFn>
+    let getRedundancyFactorFn: jest.MockedFn<(operatorContractAddress: EthereumAddress) => Promise<number | undefined>>
 
     beforeEach(() => {
         helper = mock<InspectRandomNodeHelper>()
@@ -40,8 +39,8 @@ describe(InspectRandomNodeService, () => {
         streamrClient = mock<StreamrClient>()
         findTargetFn = jest.fn()
         inspectTargetFn = jest.fn()
-        fetchRedundancyFactorFn = jest.fn()
-        fetchRedundancyFactorFn.mockResolvedValueOnce(1)
+        getRedundancyFactorFn = jest.fn()
+        getRedundancyFactorFn.mockResolvedValueOnce(1)
         service = new InspectRandomNodeService(
             MY_OPERATOR_ADDRESS,
             helper,
@@ -49,9 +48,9 @@ describe(InspectRandomNodeService, () => {
             streamrClient,
             200,
             1000,
+            getRedundancyFactorFn,
             findTargetFn,
-            inspectTargetFn,
-            fetchRedundancyFactorFn
+            inspectTargetFn
         )
     })
 
@@ -104,7 +103,7 @@ describe(InspectRandomNodeService, () => {
         expect(inspectTargetFn).toHaveBeenCalledWith({
             target,
             streamrClient,
-            fetchRedundancyFactor: fetchRedundancyFactorFn,
+            getRedundancyFactorFn,
             heartbeatLastResortTimeoutInMs: 1000,
             abortSignal: expect.anything()
         })

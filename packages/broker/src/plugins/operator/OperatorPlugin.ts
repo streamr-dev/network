@@ -134,7 +134,11 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         partition,
                         voteOnSuspectNodeHelper,
                         streamrClient,
-                        this.abortController.signal
+                        this.abortController.signal,
+                        (operatorContractAddress) => fetchRedundancyFactor({
+                            operatorContractAddress,
+                            signer
+                        })
                     )
                 }
             }, this.abortController.signal)

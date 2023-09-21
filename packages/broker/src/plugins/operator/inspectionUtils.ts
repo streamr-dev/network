@@ -4,7 +4,6 @@ import { OperatorFleetState } from './OperatorFleetState'
 import { StreamID, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { ConsistentHashRing } from './ConsistentHashRing'
-import { FetchRedundancyFactorFn } from './InspectRandomNodeService'
 import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
 import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
 import { weightedSample } from '../../helpers/weightedSample'
@@ -86,7 +85,7 @@ export async function findTarget(
 export async function findNodesForTarget(
     target: Target,
     streamrClient: StreamrClient,
-    fetchRedundancyFactorFn: FetchRedundancyFactorFn,
+    getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
     timeout: number,
     abortSignal: AbortSignal
 ): Promise<NetworkPeerDescriptor[]> {
@@ -109,10 +108,7 @@ export async function findNodesForTarget(
             onlineNodes: targetOperatorFleetState.getNodeIds().length,
         })
 
-        const replicationFactor = await fetchRedundancyFactorFn({
-            operatorContractAddress: target.operatorAddress,
-            signer: await streamrClient.getSigner()
-        })
+        const replicationFactor = await getRedundancyFactor(target.operatorAddress)
         if (replicationFactor === undefined) {
             logger.debug('Encountered misconfigured replication factor')
             return []
@@ -132,14 +128,14 @@ export async function findNodesForTarget(
 export async function inspectTarget({
     target,
     streamrClient,
-    fetchRedundancyFactor,
+    getRedundancyFactor,
     heartbeatLastResortTimeoutInMs,
     abortSignal,
     findNodesForTargetFn = findNodesForTarget
 }: {
     target: Target
     streamrClient: StreamrClient
-    fetchRedundancyFactor: FetchRedundancyFactorFn
+    getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>
     heartbeatLastResortTimeoutInMs: number
     abortSignal: AbortSignal
     findNodesForTargetFn?: typeof findNodesForTarget
@@ -147,7 +143,7 @@ export async function inspectTarget({
     const targetPeerDescriptors = await findNodesForTargetFn(
         target,
         streamrClient,
-        fetchRedundancyFactor,
+        getRedundancyFactor,
         heartbeatLastResortTimeoutInMs,
         abortSignal
     )

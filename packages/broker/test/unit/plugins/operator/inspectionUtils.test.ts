@@ -1,4 +1,3 @@
-import { FetchRedundancyFactorFn } from '../../../../src/plugins/operator/InspectRandomNodeService'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { MessageListener, NetworkPeerDescriptor, StreamrClient, Subscription } from 'streamr-client'
 import { createHeartbeatMessage } from '../../../../src/plugins/operator/heartbeatUtils'
@@ -106,7 +105,7 @@ describe(findTarget, () => {
 
 describe(findNodesForTarget, () => {
     let streamrClient: MockProxy<StreamrClient>
-    let fetchRedundancyFactorFn: jest.MockedFn<FetchRedundancyFactorFn>
+    let getRedundancyFactorFn: jest.MockedFn<(operatorContractAddress: EthereumAddress) => Promise<number | undefined>>
     let abortController: AbortController
     let capturedMessageHandler: MessageListener
     let resultPromise: Promise<NetworkPeerDescriptor[]>
@@ -117,9 +116,9 @@ describe(findNodesForTarget, () => {
             capturedMessageHandler = callback!
             return mock<Subscription>()
         })
-        fetchRedundancyFactorFn = jest.fn()
+        getRedundancyFactorFn = jest.fn()
         abortController = new AbortController()
-        resultPromise = findNodesForTarget(target, streamrClient, fetchRedundancyFactorFn, 100, abortController.signal)
+        resultPromise = findNodesForTarget(target, streamrClient, getRedundancyFactorFn, 100, abortController.signal)
     })
 
     afterEach(() => {
@@ -136,7 +135,7 @@ describe(findNodesForTarget, () => {
     })
 
     it('returns empty array if redundancy factor is undefined', async () => {
-        fetchRedundancyFactorFn.mockResolvedValueOnce(undefined)
+        getRedundancyFactorFn.mockResolvedValueOnce(undefined)
         comeOnline(PEER_DESCRIPTOR_ONE)
         comeOnline(PEER_DESCRIPTOR_TWO)
         const result = await resultPromise
@@ -144,14 +143,14 @@ describe(findNodesForTarget, () => {
     })
 
     it('returns the single node if single node found', async () => {
-        fetchRedundancyFactorFn.mockResolvedValueOnce(1)
+        getRedundancyFactorFn.mockResolvedValueOnce(1)
         comeOnline(PEER_DESCRIPTOR_ONE)
         const result = await resultPromise
         expect(result).toEqual([PEER_DESCRIPTOR_ONE])
     })
 
     it('returns one of the nodes if multiple nodes found (replicationFactor=1)', async () => {
-        fetchRedundancyFactorFn.mockResolvedValueOnce(1)
+        getRedundancyFactorFn.mockResolvedValueOnce(1)
         comeOnline(PEER_DESCRIPTOR_ONE)
         comeOnline(PEER_DESCRIPTOR_TWO)
         comeOnline(PEER_DESCRIPTOR_THREE)
@@ -161,7 +160,7 @@ describe(findNodesForTarget, () => {
     })
 
     it('returns two of the nodes if multiple nodes found (replicationFactor=2)', async () => {
-        fetchRedundancyFactorFn.mockResolvedValueOnce(2)
+        getRedundancyFactorFn.mockResolvedValueOnce(2)
         comeOnline(PEER_DESCRIPTOR_ONE)
         comeOnline(PEER_DESCRIPTOR_TWO)
         comeOnline(PEER_DESCRIPTOR_THREE)
@@ -189,7 +188,7 @@ describe(inspectTarget, () => {
         const result = await inspectTarget({
             target,
             streamrClient,
-            fetchRedundancyFactor: undefined as any,
+            getRedundancyFactor: undefined as any,
             heartbeatLastResortTimeoutInMs: 100,
             abortSignal: abortController.signal,
             findNodesForTargetFn: async () => []
@@ -202,7 +201,7 @@ describe(inspectTarget, () => {
         const result = await inspectTarget({
             target,
             streamrClient,
-            fetchRedundancyFactor: undefined as any,
+            getRedundancyFactor: undefined as any,
             heartbeatLastResortTimeoutInMs: 100,
             abortSignal: abortController.signal,
             findNodesForTargetFn: async () => [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE]
@@ -220,7 +219,7 @@ describe(inspectTarget, () => {
         const result = await inspectTarget({
             target,
             streamrClient,
-            fetchRedundancyFactor: undefined as any,
+            getRedundancyFactor: undefined as any,
             heartbeatLastResortTimeoutInMs: 100,
             abortSignal: abortController.signal,
             findNodesForTargetFn: async () => [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE]

@@ -14,7 +14,7 @@ export async function inspectSuspectNode(
     voteOnSuspectNodeHelper: VoteOnSuspectNodeHelper,
     streamrClient: StreamrClient,
     abortSignal: AbortSignal,
-    fetchRedundancyFactor = _fetchRedundancyFactor,
+    getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
     heartbeatLastResortTimeoutInMs = 60 * 1000,
 ): Promise<void> {
     logger.info('Received inspection request', { targetOperator, sponsorship, partition })
@@ -27,7 +27,7 @@ export async function inspectSuspectNode(
         },
         streamrClient,
         abortSignal,
-        fetchRedundancyFactor,
+        getRedundancyFactor,
         heartbeatLastResortTimeoutInMs,
     })
     const kick = !pass
