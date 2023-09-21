@@ -5,6 +5,7 @@ RUN --mount=type=cache,target=/root/.npm \
 	npm run bootstrap-pkg --package=streamr-client && \
 	npm run bootstrap-pkg --package=streamr-broker && \
 	npm run prune-pkg -- streamr-broker
+RUN chmod +x /usr/src/network/packages/broker/dist/bin/*.js
 
 FROM node:18-bullseye-slim
 ARG NODE_ENV
@@ -25,6 +26,7 @@ EXPOSE 7170/tcp
 EXPOSE 7171/tcp
 
 WORKDIR /home/streamr/network/packages/broker
+# is this needed? (if it is, why it has worked ok previously?)
 
 # start broker from default config (needs mounted volume, e.g. docker run -v $(cd ~/.streamr/config;pwd):/home/streamr/.streamr/config IMAGE
 CMD ["/usr/local/bin/npm", "exec", "streamr-broker"]

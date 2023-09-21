@@ -9,13 +9,23 @@ function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
 }
 
+const tmp = [ // TODO CHAIN_CONFIG.dev2.entryPoints
+{
+    "id": "eeeeeeeeee",
+    "websocket": {
+        "host": "10.200.10.1",
+        "port": 40500,
+        "tls": false
+    }
+}]
+
 /**
  * Streamr client constructor options that work in the test environment
  */
 export const CONFIG_TEST: StreamrClientConfig = {
     network: {
         controlLayer: {
-            entryPoints: DOCKER_DEV_CHAIN_CONFIG.entryPoints,
+            entryPoints: tmp,
             websocketPortRange: {
                 min: 32400,
                 max: 32800

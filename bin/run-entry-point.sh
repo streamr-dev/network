@@ -7,4 +7,4 @@ cd ../packages/broker/dist/bin
 
 chmod +x entry-point.js
 
-./entry-point.js
+./entry-point.js $1

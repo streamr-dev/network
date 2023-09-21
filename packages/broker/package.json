@@ -10,7 +10,8 @@
   "bin": {
     "streamr-broker": "dist/bin/broker.js",
     "streamr-broker-init": "dist/bin/config-wizard.js",
-    "delete-expired-data": "dist/bin/delete-expired-data.js"
+    "delete-expired-data": "dist/bin/delete-expired-data.js",
+    "entry-point": "dist/bin/entry-point.js"
   },
   "main": "./dist/src/exports.js",
   "types": "./dist/src/exports.d.ts",
