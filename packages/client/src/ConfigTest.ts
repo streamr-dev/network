@@ -11,11 +11,11 @@ function toNumber(value: any): number | undefined {
 
 const tmp = [ // TODO CHAIN_CONFIG.dev2.entryPoints
 {
-    "id": "eeeeeeeeee",
-    "websocket": {
-        "host": "10.200.10.1",
-        "port": 40500,
-        "tls": false
+    id: 'eeeeeeeeee',
+    websocket: {
+        host: '10.200.10.1',
+        port: 40500,
+        tls: false
     }
 }]
 

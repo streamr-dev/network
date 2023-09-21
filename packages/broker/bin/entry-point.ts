@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { config as CHAIN_CONFIG } from '@streamr/config'
+//import { config as CHAIN_CONFIG } from '@streamr/config'
 import { DhtNode, NodeType } from '@streamr/dht'
 import { hexToBinary } from '@streamr/utils'
 import omit from 'lodash/omit'
@@ -8,11 +8,11 @@ const main = async () => {
     const hostOverride = process.argv[2]
     const tmp = [ // TODO CHAIN_CONFIG.dev2.entryPoints
         {
-            "id": "eeeeeeeeee",
-            "websocket": {
-                "host": "10.200.10.1",
-                "port": 40500,
-                "tls": false
+            id: 'eeeeeeeeee',
+            websocket: {
+                host: '10.200.10.1',
+                port: 40500,
+                tls: false
             }
         }
     ]
