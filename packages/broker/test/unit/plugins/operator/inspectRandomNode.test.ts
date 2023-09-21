@@ -1,8 +1,8 @@
 import {
     FindTargetFn,
-    InspectRandomNodeService,
+    inspectRandomNode,
     InspectTargetFn
-} from '../../../../src/plugins/operator/InspectRandomNodeService'
+} from '../../../../src/plugins/operator/inspectRandomNode'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
@@ -24,14 +24,14 @@ const target = Object.freeze({
     streamPart: toStreamPartID(STREAM_ID, 4),
 })
 
-describe(InspectRandomNodeService, () => {
+describe(inspectRandomNode, () => {
     let helper: MockProxy<InspectRandomNodeHelper>
     let loadBalancer: MockProxy<StreamAssignmentLoadBalancer>
     let streamrClient: MockProxy<StreamrClient>
-    let service: InspectRandomNodeService
     let findTargetFn: jest.MockedFn<FindTargetFn>
     let inspectTargetFn: jest.MockedFn<InspectTargetFn>
     let getRedundancyFactorFn: jest.MockedFn<(operatorContractAddress: EthereumAddress) => Promise<number | undefined>>
+    let abortController: AbortController
 
     beforeEach(() => {
         helper = mock<InspectRandomNodeHelper>()
@@ -41,27 +41,31 @@ describe(InspectRandomNodeService, () => {
         inspectTargetFn = jest.fn()
         getRedundancyFactorFn = jest.fn()
         getRedundancyFactorFn.mockResolvedValueOnce(1)
-        service = new InspectRandomNodeService(
+        abortController = new AbortController()
+    })
+
+    afterEach(() => {
+        abortController.abort()
+    })
+
+    async function doInspection(): Promise<void> {
+        return inspectRandomNode(
             MY_OPERATOR_ADDRESS,
             helper,
             loadBalancer,
             streamrClient,
             200,
-            1000,
             getRedundancyFactorFn,
+            abortController.signal,
             findTargetFn,
             inspectTargetFn
         )
-    })
-
-    afterEach(() => {
-        service.stop()
-    })
+    }
 
     it('does not flag (or inspect) if does not find target', async () => {
         findTargetFn.mockResolvedValueOnce(undefined)
 
-        await service.start()
+        await doInspection()
         await wait(WAIT_FOR_FLAG_TIMEOUT_IN_MS)
 
         expect(inspectTargetFn).not.toHaveBeenCalled()
@@ -72,7 +76,7 @@ describe(InspectRandomNodeService, () => {
         findTargetFn.mockResolvedValueOnce(target)
         inspectTargetFn.mockResolvedValueOnce(true)
 
-        await service.start()
+        await doInspection()
         await wait(WAIT_FOR_FLAG_TIMEOUT_IN_MS)
 
         expect(helper.flag).not.toHaveBeenCalled()
@@ -82,7 +86,7 @@ describe(InspectRandomNodeService, () => {
         findTargetFn.mockResolvedValueOnce(target)
         inspectTargetFn.mockResolvedValueOnce(false)
 
-        await service.start()
+        await doInspection()
         await waitForCondition(() => helper.flag.mock.calls.length > 0)
 
         expect(helper.flag).toHaveBeenCalledWith(
@@ -96,7 +100,7 @@ describe(InspectRandomNodeService, () => {
         findTargetFn.mockResolvedValueOnce(target)
         inspectTargetFn.mockResolvedValueOnce(false)
 
-        await service.start()
+        await doInspection()
         await waitForCondition(() => helper.flag.mock.calls.length > 0)
 
         expect(findTargetFn).toHaveBeenCalledWith(MY_OPERATOR_ADDRESS, helper, loadBalancer)
