@@ -104,7 +104,7 @@ describe(InspectRandomNodeService, () => {
             target,
             streamrClient,
             getRedundancyFactorFn,
-            heartbeatLastResortTimeoutInMs: 1000,
+            heartbeatTimeoutInMs: 1000,
             abortSignal: expect.anything()
         })
     })

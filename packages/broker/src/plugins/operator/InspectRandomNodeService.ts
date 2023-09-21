@@ -16,7 +16,7 @@ export class InspectRandomNodeService {
     private readonly loadBalancer: StreamAssignmentLoadBalancer
     private readonly streamrClient: StreamrClient
     private readonly intervalInMs = 15 * 60 * 1000
-    private readonly heartbeatLastResortTimeoutInMs = 60 * 1000
+    private readonly heartbeatTimeoutInMs = 60 * 1000
     private readonly abortController = new AbortController()
     private readonly findTarget: FindTargetFn
     private readonly inspectTarget: InspectTargetFn
@@ -28,7 +28,7 @@ export class InspectRandomNodeService {
         streamAssignmentLoadBalancer: StreamAssignmentLoadBalancer,
         streamrClient: StreamrClient,
         intervalInMs: number,
-        heartbeatLastResortTimeoutInMs: number,
+        heartbeatTimeoutInMs: number,
         getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
         findTargetFn = findTarget,
         inspectTargetFn = inspectTarget,
@@ -38,7 +38,7 @@ export class InspectRandomNodeService {
         this.loadBalancer = streamAssignmentLoadBalancer
         this.streamrClient = streamrClient
         this.intervalInMs = intervalInMs
-        this.heartbeatLastResortTimeoutInMs = heartbeatLastResortTimeoutInMs
+        this.heartbeatTimeoutInMs = heartbeatTimeoutInMs
         this.findTarget = findTargetFn
         this.inspectTarget = inspectTargetFn
         this.getRedundancyFactor = getRedundancyFactor
@@ -70,7 +70,7 @@ export class InspectRandomNodeService {
             target,
             streamrClient: this.streamrClient,
             getRedundancyFactor: this.getRedundancyFactor,
-            heartbeatLastResortTimeoutInMs: this.heartbeatLastResortTimeoutInMs,
+            heartbeatTimeoutInMs: this.heartbeatTimeoutInMs,
             abortSignal: this.abortController.signal
         })
 

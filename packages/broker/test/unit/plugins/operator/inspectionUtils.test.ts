@@ -187,7 +187,7 @@ describe(inspectTarget, () => {
             target,
             streamrClient,
             getRedundancyFactor: undefined as any,
-            heartbeatLastResortTimeoutInMs: 100,
+            heartbeatTimeoutInMs: 100,
             abortSignal: abortController.signal,
             findNodesForTargetFn: async () => []
         })
@@ -200,7 +200,7 @@ describe(inspectTarget, () => {
             target,
             streamrClient,
             getRedundancyFactor: undefined as any,
-            heartbeatLastResortTimeoutInMs: 100,
+            heartbeatTimeoutInMs: 100,
             abortSignal: abortController.signal,
             findNodesForTargetFn: async () => [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE]
         })
@@ -218,7 +218,7 @@ describe(inspectTarget, () => {
             target,
             streamrClient,
             getRedundancyFactor: undefined as any,
-            heartbeatLastResortTimeoutInMs: 100,
+            heartbeatTimeoutInMs: 100,
             abortSignal: abortController.signal,
             findNodesForTargetFn: async () => [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE]
         })

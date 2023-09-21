@@ -129,14 +129,14 @@ export async function inspectTarget({
     target,
     streamrClient,
     getRedundancyFactor,
-    heartbeatLastResortTimeoutInMs,
+    heartbeatTimeoutInMs,
     abortSignal,
     findNodesForTargetFn = findNodesForTarget
 }: {
     target: Target
     streamrClient: StreamrClient
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>
-    heartbeatLastResortTimeoutInMs: number
+    heartbeatTimeoutInMs: number
     abortSignal: AbortSignal
     findNodesForTargetFn?: typeof findNodesForTarget
 }): Promise<boolean> {
@@ -144,7 +144,7 @@ export async function inspectTarget({
         target,
         streamrClient,
         getRedundancyFactor,
-        heartbeatLastResortTimeoutInMs,
+        heartbeatTimeoutInMs,
         abortSignal
     )
 
