@@ -31,8 +31,8 @@ const REQUEST_TYPE_FROM = 'requestFrom'
 const REQUEST_TYPE_RANGE = 'requestRange'
 
 const streamToContentValues = async (resultStream: Readable) => {
-    const messages: StreamMessage<{ value: any }>[] = (await waitForStreamToEnd(resultStream)) as StreamMessage<{ value: any }>[]
-    return messages.map((message) => message.getParsedContent().value)
+    const messages: StreamMessage[] = (await waitForStreamToEnd(resultStream)) as StreamMessage[]
+    return messages.map((message) => (message.getParsedContent() as any).value)
 }
 
 class ProxyClient {

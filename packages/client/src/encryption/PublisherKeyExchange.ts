@@ -3,7 +3,6 @@ import {
     EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
-    GroupKeyResponseSerialized,
     MessageID,
     StreamMessage,
     StreamMessageType,
@@ -99,7 +98,7 @@ export class PublisherKeyExchange {
         rsaPublicKey: string,
         recipient: EthereumAddress,
         requestId: string
-    ): Promise<StreamMessage<GroupKeyResponseSerialized>> {
+    ): Promise<StreamMessage> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {
             const encryptedGroupKey = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey)
             return new EncryptedGroupKey(key.id, encryptedGroupKey)
@@ -109,7 +108,7 @@ export class PublisherKeyExchange {
             requestId,
             encryptedGroupKeys
         })
-        const response = createSignedMessage<GroupKeyResponseSerialized>({
+        const response = createSignedMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
                 StreamPartIDUtils.getStreamPartition(streamPartId),

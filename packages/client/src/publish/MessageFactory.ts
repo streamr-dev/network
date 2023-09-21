@@ -28,17 +28,17 @@ export interface MessageFactoryOptions {
     groupKeyQueue: GroupKeyQueue
 }
 
-export const createSignedMessage = async <T>(
+export const createSignedMessage = async (
     opts: Omit<StreamMessageOptions, 'signature' | 'content'>
     & { serializedContent: Uint8Array, authentication: Authentication }
-): Promise<StreamMessage<T>> => {
+): Promise<StreamMessage> => {
     const signature = await opts.authentication.createMessageSignature(createSignaturePayload({
         messageId: opts.messageId,
         serializedContent: opts.serializedContent,
         prevMsgRef: opts.prevMsgRef ?? undefined,
         newGroupKey: opts.newGroupKey ?? undefined
     }))
-    return new StreamMessage<T>({
+    return new StreamMessage({
         ...opts,
         signature,
         content: opts.serializedContent
@@ -66,11 +66,11 @@ export class MessageFactory {
     }
 
     /* eslint-disable padding-line-between-statements */
-    async createMessage<T>(
-        content: T,
+    async createMessage(
+        content: unknown,
         metadata: PublishMetadata & { timestamp: number },
         explicitPartition?: number
-    ): Promise<StreamMessage<T>> {
+    ): Promise<StreamMessage> {
         const publisherId = await this.authentication.getAddress()
         const isPublisher = await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
         if (!isPublisher) {
@@ -113,7 +113,7 @@ export class MessageFactory {
             }
         }
 
-        return createSignedMessage<T>({
+        return createSignedMessage({
             messageId,
             serializedContent,
             prevMsgRef,

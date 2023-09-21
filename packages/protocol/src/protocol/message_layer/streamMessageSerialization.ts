@@ -24,7 +24,7 @@ export function toArray(streamMessage: StreamMessage): any[] {
     ]
 }
 
-export function fromArray(arr: any[]): StreamMessage<any> {
+export function fromArray(arr: any[]): StreamMessage {
     const [
         _version,
         messageIdArr,

@@ -105,7 +105,7 @@ export class StreamMessageTranslator {
         return translated
     }
 
-    static toClientProtocol<T>(msg: StreamMessage): OldStreamMessage<T> {
+    static toClientProtocol(msg: StreamMessage): OldStreamMessage {
         let content: Uint8Array
         let messageType: OldStreamMessageType
         if (msg.messageType === StreamMessageType.MESSAGE) {
@@ -139,7 +139,7 @@ export class StreamMessageTranslator {
                 msg.newGroupKey!.data,
             )
         }
-        const translated = new OldStreamMessage<T>({
+        const translated = new OldStreamMessage({
             messageId,
             prevMsgRef,
             content,

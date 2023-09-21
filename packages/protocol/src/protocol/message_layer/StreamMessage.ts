@@ -44,13 +44,13 @@ export interface StreamMessageOptions {
 /**
  * Encrypted StreamMessage.
  */
-export type StreamMessageAESEncrypted<T = unknown> = StreamMessage<T> & {
+export type StreamMessageAESEncrypted = StreamMessage & {
     encryptionType: EncryptionType.AES
     groupKeyId: string
     parsedContent: never
 }
 
-export default class StreamMessage<T = unknown> {
+export default class StreamMessage {
     private static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessageType))
     private static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
     private static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
@@ -63,13 +63,13 @@ export default class StreamMessage<T = unknown> {
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
     signature: Uint8Array
-    parsedContent?: T | Uint8Array
+    parsedContent?: unknown | Uint8Array
     serializedContent: Uint8Array
 
     /**
      * Create a new StreamMessage identical to the passed-in streamMessage.
      */
-    clone(): StreamMessage<T> {
+    clone(): StreamMessage {
         const content = this.getSerializedContent()
         return new StreamMessage({
             messageId: this.messageId.clone(),
@@ -106,7 +106,7 @@ export default class StreamMessage<T = unknown> {
 
         StreamMessage.validateContentType(contentType)
         this.contentType = contentType
-        
+
         StreamMessage.validateEncryptionType(encryptionType)
         this.encryptionType = encryptionType
 
@@ -173,18 +173,16 @@ export default class StreamMessage<T = unknown> {
     /**
      * Lazily parses the content to JSON
      */
-    getParsedContent(): T {
+    getParsedContent(): unknown {
         if (this.parsedContent == null) {
             // Don't try to parse encrypted messages
             if (this.messageType === StreamMessageType.MESSAGE && this.encryptionType !== EncryptionType.NONE) {
-                // @ts-expect-error need type narrowing for encrypted vs unencrypted
                 return this.serializedContent
             }
             this.createParsedContent()   
         }
 
-        // should be expected type by here
-        return this.parsedContent as T
+        return this.parsedContent
     }
 
     createParsedContent(): void {
@@ -205,8 +203,8 @@ export default class StreamMessage<T = unknown> {
 
     getContent(): Uint8Array
     getContent(parsedContent: false): Uint8Array
-    getContent(parsedContent: true): T
-    getContent(parsedContent = true): Uint8Array | T {
+    getContent(parsedContent: true): unknown
+    getContent(parsedContent = true): Uint8Array | unknown {
         if (parsedContent) {
             return this.getParsedContent()
         }
@@ -269,7 +267,7 @@ export default class StreamMessage<T = unknown> {
         }
     }
 
-    static isAESEncrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageAESEncrypted<T> {
+    static isAESEncrypted(msg: StreamMessage): msg is StreamMessageAESEncrypted {
         return msg.encryptionType === EncryptionType.AES
     }
 }

@@ -1,7 +1,6 @@
 import {
     EncryptionType,
     GroupKeyRequest,
-    GroupKeyRequestSerialized,
     GroupKeyResponse,
     MessageID,
     StreamMessage,
@@ -95,14 +94,14 @@ export class SubscriberKeyExchange {
         publisherId: EthereumAddress,
         rsaPublicKey: string,
         requestId: string
-    ): Promise<StreamMessage<GroupKeyRequestSerialized>> {
+    ): Promise<StreamMessage> {
         const requestContent = new GroupKeyRequest({
             recipient: publisherId,
             requestId,
             rsaPublicKey,
             groupKeyIds: [groupKeyId],
         }).toArray()
-        return createSignedMessage<GroupKeyRequestSerialized>({
+        return createSignedMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
                 StreamPartIDUtils.getStreamPartition(streamPartId),
