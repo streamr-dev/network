@@ -71,7 +71,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.maintainTopologyService.start()
 
         const maintainOperatorPoolValueHelper = new MaintainOperatorPoolValueHelper(this.serviceConfig)
-        const announceNodeToContractHelper = new AnnounceNodeToContractHelper(this.serviceConfig!)
+        const announceNodeToContractHelper = new AnnounceNodeToContractHelper(this.serviceConfig)
         await this.fleetState.start()
         // start tasks in background so that operations which take significant amount of time (e.g. fleetState.waitUntilReady())
         // don't block the startup of Broker
