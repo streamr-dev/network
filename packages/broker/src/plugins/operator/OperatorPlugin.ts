@@ -5,7 +5,7 @@ import { Signer } from 'ethers'
 import { StreamrClient } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
-import { maintainOperatorPoolValue } from './maintainOperatorPoolValue'
+import { maintainOperatorValue } from './maintainOperatorValue'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
 import { DEFAULT_UPDATE_INTERVAL_IN_MS, OperatorFleetState } from './OperatorFleetState'
 import { inspectSuspectNode } from './inspectSuspectNode'
@@ -13,8 +13,8 @@ import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { createIsLeaderFn } from './createIsLeaderFn'
 import { announceNodeToContract } from './announceNodeToContract'
 import { announceNodeToStream } from './announceNodeToStream'
-import { checkOperatorPoolValueBreach } from './checkOperatorPoolValueBreach'
-import { MaintainOperatorPoolValueHelper } from './MaintainOperatorPoolValueHelper'
+import { checkOperatorValueBreach } from './checkOperatorValueBreach'
+import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
 
@@ -67,7 +67,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         })
         await this.maintainTopologyService.start()
 
-        const maintainOperatorPoolValueHelper = new MaintainOperatorPoolValueHelper(this.serviceConfig)
+        const maintainOperatorValueHelper = new MaintainOperatorValueHelper(this.serviceConfig)
         const announceNodeToContractHelper = new AnnounceNodeToContractHelper(this.serviceConfig!)
         await this.fleetState.start()
         // start tasks in background so that operations which take significant amount of time (e.g. fleetState.waitUntilReady())
@@ -82,8 +82,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 })()
             }, DEFAULT_UPDATE_INTERVAL_IN_MS, this.abortController.signal)
             await scheduleAtInterval(
-                async () => checkOperatorPoolValueBreach(
-                    maintainOperatorPoolValueHelper
+                async () => checkOperatorValueBreach(
+                    maintainOperatorValueHelper
                 ).catch((err) => {
                     logger.warn('Encountered error', { err })
                 }),
@@ -111,7 +111,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 async () => {
                     if (isLeader()) {
                         try {
-                            await maintainOperatorPoolValue(0.5, maintainOperatorPoolValueHelper)
+                            await maintainOperatorValue(0.5, maintainOperatorValueHelper)
                         } catch (err) {
                             logger.error('Encountered error while checking earnings', { err })
                         }

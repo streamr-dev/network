@@ -14,7 +14,7 @@ interface EarningsData {
     rewardThresholdDataWei: bigint
 }
 
-export class MaintainOperatorPoolValueHelper {
+export class MaintainOperatorValueHelper {
     private readonly operator: Operator
     private readonly theGraphClient: TheGraphClient
     private readonly config: OperatorServiceConfig

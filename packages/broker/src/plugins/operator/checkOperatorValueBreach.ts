@@ -1,10 +1,10 @@
 import { Logger } from '@streamr/utils'
-import { MaintainOperatorPoolValueHelper } from './MaintainOperatorPoolValueHelper'
+import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
 
 const logger = new Logger(module)
 
-export const checkOperatorPoolValueBreach = async (
-    helper: MaintainOperatorPoolValueHelper
+export const checkOperatorValueBreach = async (
+    helper: MaintainOperatorValueHelper
 ): Promise<void> => {
     const targetOperatorAddress = await helper.getRandomOperator()
     if (targetOperatorAddress === undefined) {
