@@ -271,11 +271,7 @@ export class StreamrNode extends EventEmitter<Events> {
         if (this.getStream(streamPartId)?.type === StreamNodeType.PROXY) {
             return 0
         }
-        await this.joinStream(streamPartId)
-        if (this.getStream(streamPartId)!.layer1!.getBucketSize() > 0) {
-            const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, 1)
-            await neighborCounter.waitForTargetReached(timeout)
-        }
+        await this.joinAndWaitForNeighbors(streamPartId, 1, timeout)
         this.publishToStream(streamPartId, msg)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborIds().length ?? 0
     }
@@ -288,13 +284,21 @@ export class StreamrNode extends EventEmitter<Events> {
         if (this.getStream(streamPartId)?.type === StreamNodeType.PROXY) {
             return 0
         }
-        await this.joinStream(streamPartId)
-        if (this.getStream(streamPartId)!.layer1!.getBucketSize() > 0) {
-            const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, expectedNeighbors)
-            await neighborCounter.waitForTargetReached(timeout)
-        }
+        await this.joinAndWaitForNeighbors(streamPartId, expectedNeighbors, timeout)
         this.safeJoinStream(streamPartId)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborIds().length ?? 0
+    }
+
+    private async joinAndWaitForNeighbors(
+        streamPartId: StreamPartID,
+        requiredNeighborCount: number,
+        timeout?: number,
+    ): Promise<void> {
+        await this.joinStream(streamPartId)
+        if (this.getStream(streamPartId)!.layer1!.getBucketSize() > 0) {
+            const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, requiredNeighborCount)
+            await neighborCounter.waitForTargetReached(timeout)
+        }
     }
 
     async setProxies(
