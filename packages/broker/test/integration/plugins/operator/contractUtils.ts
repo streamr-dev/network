@@ -7,7 +7,7 @@ import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from 
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
-import { BigNumber, Wallet } from 'ethers'
+import { Wallet } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { range } from 'lodash'
 
@@ -122,7 +122,7 @@ export interface DeploySponsorshipContractOpts {
     deployer: Wallet
     metadata?: string
     minOperatorCount?: number
-    earningsPerSecond?: BigNumber
+    earningsPerSecond?: number
     chainConfig?: {
         contracts: {
             SponsorshipFactory: string
@@ -149,7 +149,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
             chainConfig.contracts.SponsorshipDefaultLeavePolicy,
             chainConfig.contracts.SponsorshipVoteKickPolicy,
         ], [
-            (opts.earningsPerSecond ?? parseEther('0.01')).toString(),
+            parseEther((opts.earningsPerSecond ?? 0.01).toString()),
             '0',
             '0',
         ]
@@ -201,6 +201,10 @@ export const delegate = async (delegator: Wallet, operatorContractAddress: strin
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L233
     await transferTokens(delegator, operatorContractAddress, amount, delegator.address, token)
+}
+
+export const undelegate = async (delegator: Wallet, operatorContract: Operator, amount: number): Promise<void> => {
+    await operatorContract.connect(delegator).undelegate(parseEther(amount.toString()))
 }
 
 export const stake = async (operatorContract: Operator, sponsorshipContractAddress: string, amount: number): Promise<void> => {

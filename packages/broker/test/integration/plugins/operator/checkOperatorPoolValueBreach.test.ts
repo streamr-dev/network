@@ -1,5 +1,4 @@
 import { Contract } from '@ethersproject/contracts'
-import { parseEther } from '@ethersproject/units'
 import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { MaintainOperatorPoolValueHelper } from '../../../../src/plugins/operator/MaintainOperatorPoolValueHelper'
@@ -48,10 +47,10 @@ describe('checkOperatorPoolValueBreach', () => {
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         const sponsorer = await generateWalletWithGasAndTokens()
         await delegate(operatorWallet, operatorContract.address, 200)
-        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
+        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: 1, streamId, deployer: operatorWallet })
         await sponsor(sponsorer, sponsorship1.address, 250)
         await stake(operatorContract, sponsorship1.address, 100)
-        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: parseEther('2'), streamId, deployer: operatorWallet })
+        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: 2, streamId, deployer: operatorWallet })
         await sponsor(sponsorer, sponsorship2.address, 250)
         await stake(operatorContract, sponsorship2.address, 100)
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()

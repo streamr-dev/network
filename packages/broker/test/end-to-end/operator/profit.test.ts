@@ -2,7 +2,7 @@ import { Wallet } from '@ethersproject/wallet'
 import type { Operator, Sponsorship } from '@streamr/network-contracts'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
-import { formatEther, parseEther } from 'ethers/lib/utils'
+import { formatEther } from 'ethers/lib/utils'
 import {
     delegate,
     deploySponsorshipContract,
@@ -96,7 +96,7 @@ describe('profit', () => {
             }
         }))
         sponsorshipContract = await deploySponsorshipContract({
-            earningsPerSecond: parseEther(EARNINGS_PER_SECOND.toString()),
+            earningsPerSecond: EARNINGS_PER_SECOND,
             streamId,
             deployer: operatorWallet
         })

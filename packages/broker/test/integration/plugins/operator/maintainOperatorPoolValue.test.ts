@@ -1,4 +1,3 @@
-import { parseEther } from '@ethersproject/units'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, waitForCondition } from '@streamr/utils'
 import { createClient, createTestStream } from '../../../utils'
@@ -37,7 +36,7 @@ describe('maintainOperatorPoolValue', () => {
             }
         })
         const sponsorer = await generateWalletWithGasAndTokens()
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
+        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 1, streamId, deployer: operatorWallet })
         await sponsor(sponsorer, sponsorship.address, 250)
         await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
         await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
