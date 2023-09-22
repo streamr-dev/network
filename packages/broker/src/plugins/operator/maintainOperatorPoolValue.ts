@@ -9,7 +9,7 @@ export const maintainOperatorPoolValue = async (
     helper: MaintainOperatorPoolValueHelper
 ): Promise<void> => {
     logger.info('Check whether it is time to withdraw my earnings')
-    const { sumDataWei, rewardThresholdDataWei, sponsorshipAddresses } = await helper.getMyUnwithdrawnEarnings()
+    const { sumDataWei, rewardThresholdDataWei, sponsorshipAddresses } = await helper.getMyEarnings()
     const triggerWithdrawLimitDataWei = multiply(rewardThresholdDataWei, 1 - withdrawLimitSafetyFraction)
     logger.trace(` -> is ${sumDataWei} > ${triggerWithdrawLimitDataWei} ?`)
     if (sumDataWei > triggerWithdrawLimitDataWei) {

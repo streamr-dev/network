@@ -42,12 +42,12 @@ describe('maintainOperatorPoolValue', () => {
         await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
         await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
         const helper = new MaintainOperatorPoolValueHelper({ ...operatorServiceConfig, signer: nodeWallets[0] })
-        const { rewardThresholdDataWei } = await helper.getMyUnwithdrawnEarnings()
+        const { rewardThresholdDataWei } = await helper.getMyEarnings()
         const triggerWithdrawLimitDataWei = multiply(rewardThresholdDataWei, 1 - SAFETY_FRACTION)
         await waitForCondition(async () => {
-            const { sumDataWei } = await helper.getMyUnwithdrawnEarnings()
-            const unwithdrawnEarnings = sumDataWei
-            return unwithdrawnEarnings > triggerWithdrawLimitDataWei
+            const { sumDataWei } = await helper.getMyEarnings()
+            const earnings = sumDataWei
+            return earnings > triggerWithdrawLimitDataWei
         }, 10000, 1000)
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
 

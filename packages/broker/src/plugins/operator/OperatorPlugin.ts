@@ -113,7 +113,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         try {
                             await maintainOperatorPoolValue(0.5, maintainOperatorPoolValueHelper)
                         } catch (err) {
-                            logger.error('Encountered error while checking unwithdrawn earnings', { err })
+                            logger.error('Encountered error while checking earnings', { err })
                         }
                     }
                 },
