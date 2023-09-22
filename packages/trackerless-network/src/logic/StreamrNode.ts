@@ -17,7 +17,7 @@ import {
     EthereumAddress
 } from '@streamr/utils'
 import { uniq } from 'lodash'
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import { sampleSize } from 'lodash'
 import { NETWORK_SPLIT_AVOIDANCE_LIMIT, StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
 import { ILayer0 } from './ILayer0'
@@ -172,7 +172,8 @@ export class StreamrNode extends EventEmitter<Events> {
         }
     }
 
-    publishToStream(streamPartId: StreamPartID, msg: StreamMessage): void {
+    publishToStream(msg: StreamMessage): void {
+        const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
         if (this.streams.has(streamPartId)) {
             this.streams.get(streamPartId)!.layer2.broadcast(msg)
         } else {
@@ -279,7 +280,7 @@ export class StreamrNode extends EventEmitter<Events> {
             const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, 1)
             await neighborCounter.waitForTargetReached(timeout)
         }
-        this.publishToStream(streamPartId, msg)
+        this.publishToStream(msg)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborIds().length ?? 0
     }
 
