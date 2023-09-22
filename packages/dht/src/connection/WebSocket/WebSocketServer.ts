@@ -28,11 +28,11 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     private wsServer?: WsServer
     private readonly abortController = new AbortController()
 
-    public async start(portRange: PortRange, host?: string, tlsCertificate?: TlsCertificate): Promise<number> {
+    public async start(portRange: PortRange, tlsCertificate?: TlsCertificate): Promise<number> {
         const ports = range(portRange.min, portRange.max + 1)
         for (const port of ports) {
             try {
-                await asAbortable(this.startServer(port, host, tlsCertificate), this.abortController.signal)
+                await asAbortable(this.startServer(port, tlsCertificate), this.abortController.signal)
                 return port
             } catch (err) {
                 if (err.originalError?.code === 'EADDRINUSE') {
@@ -45,7 +45,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
         throw new WebSocketServerStartError('Failed to start WebSocket server on any port in range')
     }
 
-    private startServer(port: number, host?: string, tlsCertificate?: TlsCertificate): Promise<void> {
+    private startServer(port: number, tlsCertificate?: TlsCertificate): Promise<void> {
         const requestListener = (request: IncomingMessage, response: ServerResponse<IncomingMessage>) => {
             logger.trace('Received request for ' + request.url)
             response.writeHead(404)
@@ -90,7 +90,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
             })
 
             try {
-                this.httpServer.listen(port, host)
+                this.httpServer.listen(port, '0.0.0.0')
             } catch (e) {
                 reject(new WebSocketServerStartError('Websocket server threw an exception', e))
             }
