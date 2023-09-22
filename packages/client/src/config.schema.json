@@ -97,6 +97,10 @@
                                 "max": 32250
                             }
                         },
+                        "websocketHost": {
+                            "type": "string",
+                            "format": "hostname"
+                        },
                         "peerDescriptor": {
                             "$ref": "#/definitions/peerDescriptor"
                         },

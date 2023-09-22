@@ -182,6 +182,7 @@ message RouteMessageAck {
 message ConnectivityRequest {
   uint32 port = 1;
   bool tls = 2;
+  optional string host = 3;
 }
 
 message ConnectivityResponse {
@@ -317,4 +318,13 @@ message FindDataRequest {
 message FindDataResponse {
   repeated DataEntry dataEntries = 1;
   optional string error = 2;
+}
+
+message DhtNodeInfo {
+  repeated PeerDescriptor kBucket = 1;
+  repeated PeerDescriptor neighborList = 2;
+}
+
+message ConnectionManagerInfo {
+  repeated PeerDescriptor connections = 1;
 }

@@ -16,7 +16,7 @@ describe('NetworkStack', () => {
     const epDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
-        websocket: { host: 'localhost', port: 32222, tls: false },
+        websocket: { host: '127.0.0.1', port: 32222, tls: false },
         nodeName: 'entrypoint'
     }
 

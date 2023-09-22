@@ -91,6 +91,13 @@ export interface ControlLayerConfig {
     websocketPortRange?: PortRange
 
     /**
+     * The host name or IP address of the WebSocket server used to connect to it over the internet.
+     * If not specified, the host name will be auto-detected. 
+     * Can be useful in situations where the host is running begind a reverse-proxy or load balancer.
+     */
+    websocketHost?: string
+
+    /**
      * TLS configuration for the WebSocket server
      */
     tlsCertificate?: TlsCertificate

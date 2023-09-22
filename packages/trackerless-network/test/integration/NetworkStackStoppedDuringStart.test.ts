@@ -8,7 +8,7 @@ describe('NetworkStack can be stopped during start', () => {
     const epDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
-        websocket: { host: 'localhost', port: 32224, tls: false },
+        websocket: { host: '127.0.0.1', port: 32224, tls: false },
     }
     let entryPoint: NetworkStack
     let node: NetworkStack
