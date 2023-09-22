@@ -24,23 +24,13 @@ interface TestConfig {
     entryPoints?: NetworkPeerDescriptor[]
 }
 
-export const DEFAULT_ENTRYPOINTS = [{
-    id: 'eeeeeeeeee',
-    websocket: {
-        host: STREAMR_DOCKER_DEV_HOST,
-        port: 40500,
-        tls: false
-    }
-}]
-
 export const formConfig = ({
     privateKey,
     httpPort,
     extraPlugins = {},
     apiAuthentication,
     enableCassandra = false,
-    storageConfigRefreshInterval = 0,
-    entryPoints = DEFAULT_ENTRYPOINTS
+    storageConfigRefreshInterval = 0
 }: TestConfig): Config => {
     const plugins: Record<string, any> = { ...extraPlugins }
     if (httpPort) {
@@ -67,9 +57,6 @@ export const formConfig = ({
                 privateKey
             },
             network: {
-                controlLayer: {
-                    entryPoints
-                },
                 node: {
                     id: toEthereumAddress(new Wallet(privateKey).address),
                 }
@@ -104,10 +91,6 @@ export const createClient = (
                 privateKey
             },
             network: {
-                controlLayer: {
-                    ...CONFIG_TEST.network!.controlLayer!,
-                    entryPoints: DEFAULT_ENTRYPOINTS
-                },
                 node:
                     merge(
                         CONFIG_TEST.network!.node,
