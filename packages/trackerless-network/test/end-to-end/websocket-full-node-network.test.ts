@@ -14,7 +14,7 @@ describe('Full node network with WebSocket connections only', () => {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         nodeName: 'entrypoint',
-        websocket: { host: 'localhost', port: 15555, tls: false }
+        websocket: { host: '127.0.0.1', port: 15555, tls: false }
     }
     const randomGraphId = StreamPartIDUtils.parse('websocket-network#0')
 
@@ -41,8 +41,6 @@ describe('Full node network with WebSocket connections only', () => {
                 layer0: {
                     entryPoints: [epPeerDescriptor],
                     websocketPortRange: { min: 15556 + i, max: 15556 + i },
-                    websocketHost: 'localhost',
-                    peerIdString: `${i}`,
                     nodeName: `${i}`,
                     numberOfNodesPerKBucket: 4
                 }

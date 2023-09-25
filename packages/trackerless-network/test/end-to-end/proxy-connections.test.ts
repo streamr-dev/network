@@ -15,13 +15,13 @@ describe('Proxy connections', () => {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         nodeName: 'proxyNode',
-        websocket: { host: 'localhost', port: 23132, tls: false }
+        websocket: { host: '127.0.0.1', port: 23132, tls: false }
     }
     const proxyNodeDescriptor2: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         nodeName: 'proxyNode',
-        websocket: { host: 'localhost', port: 23133, tls: false }
+        websocket: { host: '127.0.0.1', port: 23133, tls: false }
     }
     const proxiedNodeDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
@@ -63,7 +63,7 @@ describe('Proxy connections', () => {
             }
         })
         await proxyNode1.start()
-        await proxyNode1.setStreamPartEntryPoints(streamPartId, [proxyNodeDescriptor1])
+        proxyNode1.setStreamPartEntryPoints(streamPartId, [proxyNodeDescriptor1])
         await proxyNode1.stack.getStreamrNode()!.joinStream(streamPartId)
        
         proxyNode2 = createNetworkNode({

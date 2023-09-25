@@ -48,8 +48,8 @@ describe('RandomGraphNode', () => {
         await randomGraphNode.start()
     })
 
-    afterEach(async () => {
-        await randomGraphNode.stop()
+    afterEach(() => {
+        randomGraphNode.stop()
     })
 
     it('getTargetNeighborIds', () => {

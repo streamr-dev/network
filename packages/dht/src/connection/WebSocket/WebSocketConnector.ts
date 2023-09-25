@@ -111,13 +111,14 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     this.attachHandshaker(connection)
                 }
             })
-            const port = await this.webSocketServer.start(this.portRange!, this.host, this.tlsCertificate)
+            const port = await this.webSocketServer.start(this.portRange!, this.tlsCertificate)
             this.selectedPort = port
-            this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.tlsCertificate !== undefined)
+            this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.tlsCertificate !== undefined, this.host)
         }
     }
 
     public async checkConnectivity(reattempt = 0): Promise<ConnectivityResponse> {
+        // TODO: this could throw if the server is not running
         const noServerConnectivityResponse: ConnectivityResponse = {
             openInternet: false,
             host: '127.0.0.1',

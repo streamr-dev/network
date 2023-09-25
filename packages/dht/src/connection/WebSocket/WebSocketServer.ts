@@ -28,11 +28,11 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     private wsServer?: WsServer
     private readonly abortController = new AbortController()
 
-    public async start(portRange: PortRange, host?: string, tlsCertificate?: TlsCertificate): Promise<number> {
+    public async start(portRange: PortRange, tlsCertificate?: TlsCertificate): Promise<number> {
         const ports = range(portRange.min, portRange.max + 1)
         for (const port of ports) {
             try {
-                await asAbortable(this.startServer(port, host, tlsCertificate), this.abortController.signal)
+                await asAbortable(this.startServer(port, tlsCertificate), this.abortController.signal)
                 return port
             } catch (err) {
                 if (err.originalError?.code === 'EADDRINUSE') {
@@ -42,10 +42,10 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
                 }
             }
         }
-        throw new WebSocketServerStartError('Failed to start WebSocket server on any port in range')
+        throw new WebSocketServerStartError(`Failed to start WebSocket server on any port in range: ${portRange.min}-${portRange.min}`)
     }
 
-    private startServer(port: number, host?: string, tlsCertificate?: TlsCertificate): Promise<void> {
+    private startServer(port: number, tlsCertificate?: TlsCertificate): Promise<void> {
         const requestListener = (request: IncomingMessage, response: ServerResponse<IncomingMessage>) => {
             logger.trace('Received request for ' + request.url)
             response.writeHead(404)
@@ -90,7 +90,8 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
             })
 
             try {
-                this.httpServer.listen(port, host)
+                // Listen only to IPv4 network interfaces, default value listens to IPv6 as well
+                this.httpServer.listen(port, '0.0.0.0')
             } catch (e) {
                 reject(new WebSocketServerStartError('Websocket server threw an exception', e))
             }

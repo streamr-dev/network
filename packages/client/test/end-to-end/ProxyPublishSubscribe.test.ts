@@ -36,8 +36,8 @@ describe('PubSub with proxy connections', () => {
 
         onewayClient = createTestClient(pubPrivateKey)
 
-        proxyClient1 = await createTestClient(proxyPrivateKey1, proxyNodePort1, true)
-        proxyClient2 = await createTestClient(proxyPrivateKey2, proxyNodePort2, true)
+        proxyClient1 = createTestClient(proxyPrivateKey1, proxyNodePort1, true)
+        proxyClient2 = createTestClient(proxyPrivateKey2, proxyNodePort2, true)
         proxyNodeDescriptor1 = await proxyClient1.getPeerDescriptor()
         proxyNodeDescriptor2 = await proxyClient2.getPeerDescriptor()
 
