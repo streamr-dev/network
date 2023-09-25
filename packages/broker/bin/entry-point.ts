@@ -30,7 +30,12 @@ const main = async () => {
     // eslint-disable-next-line no-console
     console.log('DEBUG: ' + JSON.stringify(peerDescriptor))
     const dhtNode = new DhtNode({
-        peerDescriptor,
+        peerId: tmp[0].id,
+        websocketHost: tmp[0].websocket.host,
+        websocketPortRange: {
+            min: tmp[0].websocket.port,
+            max: tmp[0].websocket.port
+        },
         entryPoints: [peerDescriptor]
     })
     await dhtNode.start()
