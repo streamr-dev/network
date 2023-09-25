@@ -5,7 +5,7 @@ import type { ConnectionInfo } from '@ethersproject/web'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
 import { LogLevel } from '@streamr/utils'
-import { IceServer, PortRange } from '@streamr/dht'
+import { IceServer, PortRange, TlsCertificate } from '@streamr/dht'
 import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
 import { GapFillStrategy } from './subscribe/ordering/GapFiller'
@@ -91,6 +91,18 @@ export interface ControlLayerConfig {
     websocketPortRange?: PortRange
 
     /**
+     * The host name or IP address of the WebSocket server used to connect to it over the internet.
+     * If not specified, the host name will be auto-detected. 
+     * Can be useful in situations where the host is running behind a reverse-proxy or load balancer.
+     */
+    websocketHost?: string
+
+    /**
+     * TLS configuration for the WebSocket server
+     */
+    tlsCertificate?: TlsCertificate
+    
+    /*
      * Used to assign a custom external IPv4 address for the node.
      * Useful in cases where the node has a public IP address but
      * the hosts network interface does not know of it.
@@ -154,8 +166,9 @@ export interface NetworkPeerDescriptor {
 }
 
 export interface ConnectivityMethod {
-    ip: string
+    host: string
     port: number
+    tls: boolean
 }
 
 export interface ChainConnectionInfo {

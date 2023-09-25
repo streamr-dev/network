@@ -11,7 +11,7 @@ describe('random graph with real connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 12221 }
+        websocket: { host: '127.0.0.1', port: 12221, tls: false }
     }
 
     const randomGraphId = StreamPartIDUtils.parse('random-graph#0')
@@ -30,10 +30,10 @@ describe('random graph with real connections', () => {
     beforeEach(async () => {
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
         await epDhtNode.start()
-        dhtNode1 = new DhtNode({ peerIdString: '1', websocketPortRange, entryPoints: [epPeerDescriptor] })
-        dhtNode2 = new DhtNode({ peerIdString: '2', websocketPortRange, entryPoints: [epPeerDescriptor] })
-        dhtNode3 = new DhtNode({ peerIdString: '3', websocketPortRange, entryPoints: [epPeerDescriptor] })
-        dhtNode4 = new DhtNode({ peerIdString: '4', websocketPortRange, entryPoints: [epPeerDescriptor] })
+        dhtNode1 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
+        dhtNode2 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
+        dhtNode3 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
+        dhtNode4 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
         await dhtNode1.start()
         await dhtNode2.start()
         await dhtNode3.start()

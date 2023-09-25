@@ -7,7 +7,8 @@ describe('heartbeatUtils', () => {
             id: 'nodeId',
             websocket: {
                 port: 31313,
-                ip: '127.0.0.1'
+                host: '127.0.0.1',
+                tls: false
             },
             openInternet: false,
         })

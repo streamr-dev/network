@@ -19,8 +19,9 @@ export const CONFIG_TEST: StreamrClientConfig = {
                 id: 'b1',
                 type: NetworkNodeType.NODEJS,
                 websocket: {
-                    ip: '127.0.0.1',
-                    port: 40401
+                    host: '127.0.0.1',
+                    port: 40401,
+                    tls: false
                 }
             }],
             websocketPortRange: {

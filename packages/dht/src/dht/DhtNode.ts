@@ -20,11 +20,12 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
-import { ConnectionManager, ConnectionManagerConfig, PortRange } from '../connection/ConnectionManager'
+import { ConnectionManager, ConnectionManagerConfig, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
-    MetricsContext
+    MetricsContext,
+    hexToBinary
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RandomContactList } from './contact/RandomContactList'
@@ -71,7 +72,7 @@ export interface DhtNodeOptions {
     entryPoints?: PeerDescriptor[]
     websocketHost?: string
     websocketPortRange?: PortRange
-    peerIdString?: string
+    peerId?: string
 
     nodeName?: string
     rpcRequestTimeout?: number
@@ -82,6 +83,7 @@ export interface DhtNodeOptions {
     webrtcNewConnectionTimeout?: number
     webrtcPortRange?: PortRange
     maxConnections?: number
+    tlsCertificate?: TlsCertificate
     externalIp?: string
 }
 
@@ -98,7 +100,7 @@ export class DhtNodeConfig {
     storeMaxTtl = 60000
     storeNumberOfCopies = 5
     metricsContext = new MetricsContext()
-    peerIdString = new UUID().toHex()
+    peerId = new UUID().toHex()
 
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
@@ -114,6 +116,7 @@ export class DhtNodeConfig {
     webrtcNewConnectionTimeout?: number
     externalIp?: string
     webrtcPortRange?: PortRange
+    tlsCertificate?: TlsCertificate
 
     constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
@@ -131,16 +134,16 @@ const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
 
-export const createPeerDescriptor = (msg?: ConnectivityResponse, peerIdString?: string, nodeName?: string): PeerDescriptor => {
-    let peerId: Uint8Array
+export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string, nodeName?: string): PeerDescriptor => {
+    let kademliaId: Uint8Array
     if (msg) {
-        peerId = peerIdString ? PeerID.fromString(peerIdString).value : PeerID.fromIp(msg.ip).value
+        kademliaId = peerId ? hexToBinary(peerId) : PeerID.fromIp(msg.host).value
     } else {
-        peerId = PeerID.fromString(peerIdString!).value
+        kademliaId = hexToBinary(peerId!)
     }
-    const ret: PeerDescriptor = { kademliaId: peerId, nodeName: nodeName, type: NodeType.NODEJS }
+    const ret: PeerDescriptor = { kademliaId, nodeName: nodeName, type: NodeType.NODEJS }
     if (msg && msg.websocket) {
-        ret.websocket = { ip: msg.websocket.ip, port: msg.websocket.port }
+        ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
         ret.openInternet = true
     }
     return ret
@@ -211,11 +214,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcPortRange: this.config.webrtcPortRange,
                 nodeName: this.getNodeName(),
                 maxConnections: this.config.maxConnections,
+                tlsCertificate: this.config.tlsCertificate,
                 externalIp: this.config.externalIp
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
-                connectionManagerConfig.websocketHost = this.config.peerDescriptor.websocket.ip
+                connectionManagerConfig.websocketHost = this.config.peerDescriptor.websocket.host
                 connectionManagerConfig.websocketPortRange = { 
                     min: this.config.peerDescriptor.websocket.port,
                     max: this.config.peerDescriptor.websocket.port
@@ -445,7 +449,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.ownPeerDescriptor = this.config.peerDescriptor
         } else {
             this.ownPeerDescriptor = createPeerDescriptor(connectivityResponse,
-                this.config.peerIdString,
+                this.config.peerId,
                 this.config.nodeName)
         }
         return this.ownPeerDescriptor

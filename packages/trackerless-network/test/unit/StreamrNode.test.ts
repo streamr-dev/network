@@ -59,13 +59,12 @@ describe('StreamrNode', () => {
     })
 
     it('publish joins stream', async () => {
-        await node.publishToStream(streamPartId, message)
+        node.publishToStream(streamPartId, message)
         await waitForCondition(() => node.hasStream(streamPartId))
     })
 
     it('can leave', async () => {
         await node.joinStream(streamPartId)
-        await node.leaveStream(streamPartId)
+        node.leaveStream(streamPartId)
     })
-
 })
