@@ -1,63 +1,77 @@
-import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { Wallet } from '@ethersproject/wallet'
+import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { ProxyDirection } from '@streamr/trackerless-network'
-import { wait, collect } from '@streamr/utils'
+import { collect, wait, withTimeout } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
 import { createTestClient, createTestStream } from '../test-utils/utils'
 
-jest.setTimeout(50000)
+const TIMEOUT = 15 * 1000
 const SUBSCRIBE_WAIT_TIME = 2000
+const WEBSOCKET_PORT = 14231
 
 describe('publish/subscribe via proxy', () => {
 
     let stream: Stream
-    let onewayClient: StreamrClient
-    let proxyClient: StreamrClient
+    let client: StreamrClient
+    let proxyUser: Wallet = fastWallet()
 
     beforeEach(async () => {
-        onewayClient = createTestClient(await fetchPrivateKeyWithGas())
-        proxyClient = createTestClient(fastPrivateKey(), 14231, true)
-    }, 10000)
-
-    beforeEach(async () => {
-        stream = await createTestStream(onewayClient, module)
+        client = createTestClient(await fetchPrivateKeyWithGas())
+        stream = await createTestStream(client, module)
+        proxyUser = fastWallet()
         await stream.grantPermissions({
-            permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE], 
-            user: await proxyClient.getAddress()
+            permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
+            user: proxyUser.address
         })
-    }, 60000)
+    }, TIMEOUT)
 
     afterEach(async () => {
-        await Promise.all([
-            proxyClient.destroy(),
-            onewayClient.destroy()
-        ])
+        await client.destroy()
     })
 
-    it('happy path: publish via proxy', async () => {
-        const subscription = await proxyClient.subscribe(stream)
+    it('publish', async () => {
+        const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
+        const subscription = await proxy.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setProxies(stream, [await proxyClient.getPeerDescriptor()], ProxyDirection.PUBLISH)
+        await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.PUBLISH)
 
-        await onewayClient.publish(stream, {
+        await client.publish(stream, {
             foo: 'bar'
         })
         const receivedMessages = await collect(subscription, 1)
         expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
-    }, 15000)
+        await proxy.destroy()
+    }, TIMEOUT)
 
-    it('happy path: subscribe via proxy', async () => {
-        await proxyClient.subscribe(stream)
+    it('subscribe', async () => {
+        const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, true)
+        await proxy.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
+        await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.SUBSCRIBE)
+        const subscription = await client.subscribe(stream)
 
-        await onewayClient.setProxies(stream, [await proxyClient.getPeerDescriptor()], ProxyDirection.SUBSCRIBE)
-        const subscription = await onewayClient.subscribe(stream)
-
-        await proxyClient.publish(stream, {
+        await proxy.publish(stream, {
             foo: 'bar'
         })
         const receivedMessages = await collect(subscription, 1)
         expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
-    }, 15000)
+        await proxy.destroy()
+    }, TIMEOUT)
+
+    it('proxy doesn\'t accept connections', async () => {
+        const proxy = createTestClient(proxyUser.privateKey, WEBSOCKET_PORT, false)
+        const subscription = await proxy.subscribe(stream)
+        await wait(SUBSCRIBE_WAIT_TIME)
+        await client.setProxies(stream, [await proxy.getPeerDescriptor()], ProxyDirection.PUBLISH)
+
+        await client.publish(stream, {
+            foo: 'bar'
+        })
+        await expect(async () => {
+            return withTimeout(collect(subscription, 1), 2000)
+        }).rejects.toThrow('timed out')
+        await proxy.destroy()
+    }, TIMEOUT)
 })
