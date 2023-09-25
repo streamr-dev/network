@@ -52,7 +52,7 @@ export interface NetworkStackEvents {
     stopped: () => void
 }
 
-export class NetworkStack extends EventEmitter<NetworkStackEvents> {
+export class NetworkStack extends EventEmitter<NetworkStackEvents>  {
 
     private connectionManager?: ConnectionManager
     private layer0DhtNode?: DhtNode
@@ -129,6 +129,10 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     getLayer0DhtNode(): DhtNode {
         return this.layer0DhtNode!
+    }
+
+    getConnectionManager(): ConnectionManager {
+        return this.connectionManager!
     }
 
     getMetricsContext(): MetricsContext {

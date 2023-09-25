@@ -21,7 +21,7 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
         }
         const request: NeighborUpdate = {
             senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
-            randomGraphId: this.graphId,
+            randomGraphId: this.serviceId,
             neighborDescriptors: neighbors,
             removeMe: false
         }

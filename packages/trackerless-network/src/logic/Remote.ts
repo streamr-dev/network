@@ -4,12 +4,12 @@ import { ProtoRpcClient } from '@streamr/proto-rpc'
 export abstract class Remote<T> {
     protected remotePeerDescriptor: PeerDescriptor
     protected client: ProtoRpcClient<T>
-    protected graphId: string
+    protected serviceId: string
 
-    constructor(peerDescriptor: PeerDescriptor, graphId: string, client: ProtoRpcClient<T>) {
+    constructor(peerDescriptor: PeerDescriptor, serviceId: string, client: ProtoRpcClient<T>) {
         this.remotePeerDescriptor = peerDescriptor
         this.client = client
-        this.graphId = graphId
+        this.serviceId = serviceId
     }
 
     getPeerDescriptor(): PeerDescriptor {

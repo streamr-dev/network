@@ -12,7 +12,7 @@ const logger = new Logger(module)
 export class RemoteProxyServer extends Remote<IProxyConnectionRpcClient> {
 
     async requestConnection(ownPeerDescriptor: PeerDescriptor, direction: ProxyDirection, userId: EthereumAddress): Promise<boolean> {
-        const streamPartId = StreamPartIDUtils.parse(this.graphId)
+        const streamPartId = StreamPartIDUtils.parse(this.serviceId)
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor,

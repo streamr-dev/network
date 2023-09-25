@@ -31,7 +31,7 @@ export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
         }
         const notification: LeaveStreamNotice = {
             senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
-            randomGraphId: this.graphId
+            randomGraphId: this.serviceId
         }
         this.client.leaveStreamNotice(notification, options).catch(() => {
             logger.debug('Failed to send leaveStreamNotice')
