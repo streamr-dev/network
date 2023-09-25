@@ -57,6 +57,7 @@ export const formConfig = ({
                 privateKey
             },
             network: {
+                ...CONFIG_TEST.network,
                 node: {
                     id: toEthereumAddress(new Wallet(privateKey).address),
                 }
@@ -91,6 +92,7 @@ export const createClient = (
                 privateKey
             },
             network: {
+                controlLayer: CONFIG_TEST.network!.controlLayer,
                 node:
                     merge(
                         CONFIG_TEST.network!.node,
