@@ -9,7 +9,7 @@ import { createTestClient, createTestStream } from '../test-utils/utils'
 jest.setTimeout(50000)
 const SUBSCRIBE_WAIT_TIME = 2000
 
-describe('PubSub with proxy connections', () => {
+describe('publish/subscribe via proxy', () => {
 
     let stream: Stream
     let onewayClient: StreamrClient
