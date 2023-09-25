@@ -42,7 +42,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
                 }
             }
         }
-        throw new WebSocketServerStartError('Failed to start WebSocket server on any port in range')
+        throw new WebSocketServerStartError(`Failed to start WebSocket server on any port in range: ${portRange.min}-${portRange.min}`)
     }
 
     private startServer(port: number, tlsCertificate?: TlsCertificate): Promise<void> {
