@@ -8,6 +8,8 @@ import { v4 } from 'uuid'
 import { CertifiedSubdomain } from './data/CertifiedSubdomain'
 import { Logger } from '@streamr/utils'
 import { CertificateCreator } from './CertificateCreator'
+import { Session } from './data/Session'
+import { StreamrChallenger } from './StreamrChallenger'
 
 const logger = new Logger(module)
 
@@ -18,34 +20,47 @@ export class AutoCertifier implements RestInterface {
     private restServer?: RestServer
     private database?: Database
     private certificateCreator?: CertificateCreator
+    private streamrChallenger = new StreamrChallenger()
 
     // RestInterface implementation
 
-    public async createNewSubdomainAndCertificate(ipAddress: string, port: string,
-        _streamrWebSocketPort: string): Promise<CertifiedSubdomain> {
-        logger.info('creating new subdomain and certificate for ' + ipAddress + ':' + port)
+    public async createSession(): Promise<Session> {
+        logger.info('creating new session')
 
+        const sessionId = v4()
+
+        return { sessionId: sessionId }
+    }
+
+    public async createNewSubdomainAndCertificate(ipAddress: string, port: string,
+        streamrWebSocketPort: string, sessionId: string, streamrWebSocketCaCert?: string): Promise<CertifiedSubdomain> {
+        logger.trace('Creating new subdomain and certificate for ' + ipAddress + ':' + port)
+
+        // this will throw if the client cannot answer the challenge of getting sessionId 
+        await this.streamrChallenger.testStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId, streamrWebSocketCaCert)
+        
         const subdomain = v4()
         const token = v4()
         await this.dnsServer!.createSubdomain(subdomain, ipAddress, port, token)
         const cert = await this.certificateCreator!.createCertificate(subdomain + '.' + this.domainName)
 
         const ret: CertifiedSubdomain = {
-            subdomain: subdomain,
+            subdomain: this.domainName + '.' + subdomain,
             token: token,
             certificate: cert
         }
 
         return ret
+        
     }
 
     public async createNewCertificateForSubdomain(subdomain: string, ipAddress: string,
-        port: string, streamrWebSocketPort: string, token: string): Promise<CertifiedSubdomain> {
+        port: string, streamrWebSocketPort: string, sessionId: string, token: string): Promise<CertifiedSubdomain> {
 
         logger.info('creating new certificate for ' + subdomain + ' and ' + ipAddress + ':' + port)
 
         // This will throw if the token is incorrect
-        await this.updateSubdomainIpAndPort(subdomain, ipAddress, port, streamrWebSocketPort, token)
+        await this.updateSubdomainIpAndPort(subdomain, ipAddress, port, streamrWebSocketPort, sessionId, token)
 
         const cert = await this.certificateCreator!.createCertificate(subdomain + '.' + this.domainName)
 
@@ -59,9 +74,12 @@ export class AutoCertifier implements RestInterface {
     }
 
     public async updateSubdomainIpAndPort(subdomain: string, ipAddress: string, port: string,
-        _streamrWebSocketPort: string, token: string): Promise<void> {
+        streamrWebSocketPort: string, sessionId: string, token: string): Promise<void> {
 
         logger.info('updating subdomain ip and port for ' + subdomain + ' to ' + ipAddress + ':' + port)
+
+        // this will throw if the client cannot answer the challenge of getting sessionId 
+        this.streamrChallenger.testStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
 
         await this.dnsServer!.updateSubdomainIpAndPort(subdomain, ipAddress, port, token)
     }
@@ -72,6 +90,7 @@ export class AutoCertifier implements RestInterface {
         logger.info('creating challenge for ' + fqdn + ' with value ' + value)
         this.dnsServer!.updateSubdomainAcmeChallenge(fqdn, value)
     }
+
     public async deleteChallenge(_name: string): Promise<void> {
     }
 
@@ -118,7 +137,7 @@ export class AutoCertifier implements RestInterface {
         if (!acmeDirectoryUrl) {
             throw new Error('AUTOCERTIFIER_ACME_DIRECTORY_URL environment variable is not set')
         }
-        
+
         const hmacKid = process.env['AUTOICERTIFIER_HMAC_KID']
         if (!hmacKid) {
             throw new Error('AUTOICERTIFIER_HMAC_KID environment variable is not set')
@@ -163,7 +182,7 @@ export class AutoCertifier implements RestInterface {
         await this.certificateCreator.start()
         logger.info('certificate creator is running')
 
-        this.restServer = new RestServer(ownIpAddress, restServerPort, restServerCaCertPath, restServerCaKeyPath, 
+        this.restServer = new RestServer(ownIpAddress, restServerPort, restServerCaCertPath, restServerCaKeyPath,
             restServerCertPath, restServerKeyPath, this)
         await this.restServer.start()
         logger.info('rest server is running on port ' + restServerPort)

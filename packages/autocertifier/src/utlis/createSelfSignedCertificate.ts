@@ -7,7 +7,7 @@ interface Certificates {
     serverKey: string
 }
 
-export function createSelfSignedCertificate(validMonths: number): Certificates {
+export function createSelfSignedCertificate(validMonths: number, validMilliseconds?: number): Certificates {
     // Generate a new RSA key pair for the certificate authority
     const caKeys = forge.pki.rsa.generateKeyPair(2048)
 
@@ -18,8 +18,12 @@ export function createSelfSignedCertificate(validMonths: number): Certificates {
     caCert.validity.notBefore = new Date()
     caCert.validity.notAfter = new Date()
 
-    caCert.validity.notAfter.setMonth(caCert.validity.notBefore.getMonth() + validMonths)
-
+    if (validMonths > 0) {
+        caCert.validity.notAfter.setMonth(caCert.validity.notBefore.getMonth() + validMonths)
+    } else {
+        caCert.validity.notAfter.setMilliseconds(caCert.validity.notBefore.getMilliseconds() + validMilliseconds!)
+    }
+    
     const attrs = [
         { name: 'commonName', value: 'My CA' },
         { name: 'countryName', value: 'US' },

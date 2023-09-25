@@ -1,0 +1,1 @@
+{"version":3,"file":"filePathToNodeFormat.js","sourceRoot":"","sources":["../../../src/utlis/filePathToNodeFormat.ts"],"names":[],"mappings":";;;;;;AAAA,4CAAmB;AAEnB,SAAgB,oBAAoB,CAAC,QAAgB;IACjD,IAAI,QAAQ,CAAC,UAAU,CAAC,IAAI,CAAC,EAAE;QAC3B,OAAO,QAAQ,CAAC,OAAO,CAAC,GAAG,EAAE,YAAE,CAAC,OAAO,EAAE,CAAC,CAAA;KAC7C;SAAM;QACH,OAAO,QAAQ,CAAA;KAClB;AACL,CAAC;AAND,oDAMC"}

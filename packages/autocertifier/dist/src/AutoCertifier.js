@@ -8,26 +8,37 @@ const RestServer_1 = require("./RestServer");
 const uuid_1 = require("uuid");
 const utils_1 = require("@streamr/utils");
 const CertificateCreator_1 = require("./CertificateCreator");
+const StreamrChallenger_1 = require("./StreamrChallenger");
 const logger = new utils_1.Logger(module);
 class AutoCertifier {
+    constructor() {
+        this.streamrChallenger = new StreamrChallenger_1.StreamrChallenger();
+    }
     // RestInterface implementation
-    async createNewSubdomainAndCertificate(ipAddress, port, _streamrWebSocketPort) {
-        logger.info('creating new subdomain and certificate for ' + ipAddress + ':' + port);
+    async createSession() {
+        logger.info('creating new session');
+        const sessionId = (0, uuid_1.v4)();
+        return { sessionId: sessionId };
+    }
+    async createNewSubdomainAndCertificate(ipAddress, port, streamrWebSocketPort, sessionId, streamrWebSocketCaCert) {
+        console.log('Creating new subdomain and certificate for ' + ipAddress + ':' + port);
+        // this will throw if the client cannot answer the challenge of getting sessionId 
+        await this.streamrChallenger.testStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId, streamrWebSocketCaCert);
         const subdomain = (0, uuid_1.v4)();
         const token = (0, uuid_1.v4)();
         await this.dnsServer.createSubdomain(subdomain, ipAddress, port, token);
         const cert = await this.certificateCreator.createCertificate(subdomain + '.' + this.domainName);
         const ret = {
-            subdomain: subdomain,
+            subdomain: this.domainName + '.' + subdomain,
             token: token,
             certificate: cert
         };
         return ret;
     }
-    async createNewCertificateForSubdomain(subdomain, ipAddress, port, streamrWebSocketPort, token) {
+    async createNewCertificateForSubdomain(subdomain, ipAddress, port, streamrWebSocketPort, sessionId, token) {
         logger.info('creating new certificate for ' + subdomain + ' and ' + ipAddress + ':' + port);
         // This will throw if the token is incorrect
-        await this.updateSubdomainIpAndPort(subdomain, ipAddress, port, streamrWebSocketPort, token);
+        await this.updateSubdomainIpAndPort(subdomain, ipAddress, port, streamrWebSocketPort, sessionId, token);
         const cert = await this.certificateCreator.createCertificate(subdomain + '.' + this.domainName);
         const ret = {
             subdomain: subdomain,
@@ -36,8 +47,10 @@ class AutoCertifier {
         };
         return ret;
     }
-    async updateSubdomainIpAndPort(subdomain, ipAddress, port, _streamrWebSocketPort, token) {
+    async updateSubdomainIpAndPort(subdomain, ipAddress, port, streamrWebSocketPort, sessionId, token) {
         logger.info('updating subdomain ip and port for ' + subdomain + ' to ' + ipAddress + ':' + port);
+        // this will throw if the client cannot answer the challenge of getting sessionId 
+        this.streamrChallenger.testStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId);
         await this.dnsServer.updateSubdomainIpAndPort(subdomain, ipAddress, port, token);
     }
     // ChallengeInterface implementation
@@ -90,6 +103,22 @@ class AutoCertifier {
         if (!hmacKey) {
             throw new Error('AUTOICERTIFIER_HMAC_KEY environment variable is not set');
         }
+        const restServerCaCertPath = process.env['AUTOICERTIFIER_REST_SERVER_CA_CERT_PATH'];
+        if (!restServerCaCertPath) {
+            throw new Error('AUTOICERTIFIER_REST_SERVER_CA__CERT_PATH environment variable is not set');
+        }
+        const restServerCaKeyPath = process.env['AUTOICERTIFIER_REST_SERVER_CA_KEY_PATH'];
+        if (!restServerCaKeyPath) {
+            throw new Error('AUTOICERTIFIER_REST_SERVER_CA_KEY_PATH environment variable is not set');
+        }
+        const restServerCertPath = process.env['AUTOICERTIFIER_REST_SERVER_CERT_PATH'];
+        if (!restServerCertPath) {
+            throw new Error('AUTOICERTIFIER_REST_SERVER_CERT_PATH environment variable is not set');
+        }
+        const restServerKeyPath = process.env['AUTOICERTIFIER_REST_SERVER_KEY_PATH'];
+        if (!restServerKeyPath) {
+            throw new Error('AUTOICERTIFIER_REST_SERVER_KEY_PATH environment variable is not set');
+        }
         this.database = new Database_1.Database(databaseFilePath);
         await this.database.start();
         logger.info('database is running on file ' + databaseFilePath);
@@ -99,7 +128,7 @@ class AutoCertifier {
         this.certificateCreator = new CertificateCreator_1.CertificateCreator(acmeDirectoryUrl, hmacKid, hmacKey, accountPrivateKeyPath, this);
         await this.certificateCreator.start();
         logger.info('certificate creator is running');
-        this.restServer = new RestServer_1.RestServer(ownIpAddress, restServerPort, this);
+        this.restServer = new RestServer_1.RestServer(ownIpAddress, restServerPort, restServerCaCertPath, restServerCaKeyPath, restServerCertPath, restServerKeyPath, this);
         await this.restServer.start();
         logger.info('rest server is running on port ' + restServerPort);
     }

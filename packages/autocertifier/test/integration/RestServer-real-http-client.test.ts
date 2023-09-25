@@ -4,18 +4,26 @@ import { CertifiedSubdomain } from '../../src/data/CertifiedSubdomain'
 import { ApiError } from '../../src/data/ApiError'
 import os from 'os'
 import fs from 'fs'
+import { Session } from '../../src/data/Session'
+import { v4 } from 'uuid'
 
 describe('RestServer', () => {
     let server: RestServer
     const dir = os.tmpdir()
     let ca: string
 
-    const certifiedSubdomain: CertifiedSubdomain = { subdomain: 'test', token: 'token', certificate: { cert: 'certificate', key: 'key' } }
+    const certifiedSubdomain: CertifiedSubdomain = { subdomain: 'fwefwafeaw', token: 'token', certificate: { cert: 'certificate', key: 'key' } }
+    const sessionId = v4()
+
     beforeAll(async () => {
 
         server = new RestServer('127.0.0.1', '3000', dir + '/restServerCaCert.pem', dir + '/restServerCaKey.pem',
             dir + '/restServerCert.pem', dir + '/restServerKey.pem', {
-                async createNewSubdomainAndCertificate(_ip: string, _port: string, _streamrWebsocketPort: string): Promise<CertifiedSubdomain> {
+                async createSession(): Promise<Session> {
+                    return { sessionId: sessionId }
+                },
+                async createNewSubdomainAndCertificate(_ip: string, _port: string, _streamrWebsocketPort: string,
+                    _streamrWebSocketCaCert: string | undefined, _sessionId: string): Promise<CertifiedSubdomain> {
                     return certifiedSubdomain
                 },
                 async createNewCertificateForSubdomain(_subdomain: string, _ipAddress: string,
@@ -33,6 +41,24 @@ describe('RestServer', () => {
 
     afterAll(async () => {
         await server.stop()
+    })
+
+    describe('POST /sessions', () => {
+        it('should return session with sessionId', (done) => {
+            const options = {
+                url: 'https://localhost:3000/sessions',
+                method: 'POST',
+                json: true,
+                ca: ca
+            }
+
+            request(options, (error, response, body) => {
+                expect(error).toBeFalsy()
+                expect(response.statusCode).toEqual(200)
+                expect(body).toEqual({ sessionId: sessionId })
+                done()
+            })
+        })
     })
 
     describe('PATCH /certifiedsubdomains', () => {

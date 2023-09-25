@@ -9,16 +9,11 @@ const sqlite3_1 = __importDefault(require("sqlite3"));
 const sqlite_1 = require("sqlite");
 const utils_1 = require("@streamr/utils");
 const errors_1 = require("./errors");
-const os_1 = __importDefault(require("os"));
+const filePathToNodeFormat_1 = require("./utlis/filePathToNodeFormat");
 const logger = new utils_1.Logger(module);
 class Database {
     constructor(filePath) {
-        if (filePath.startsWith('~/')) {
-            this.databaseFilePath = filePath.replace('~', os_1.default.homedir());
-        }
-        else {
-            this.databaseFilePath = filePath;
-        }
+        this.databaseFilePath = (0, filePathToNodeFormat_1.filePathToNodeFormat)(filePath);
     }
     async createSubdomain(subdomain, ip, port, token) {
         try {

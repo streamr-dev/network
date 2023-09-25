@@ -10,6 +10,8 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { createSelfSignedCertificate } from './utlis/createSelfSignedCertificate'
 import { filePathToNodeFormat } from './utlis/filePathToNodeFormat'
+import { CreateCertifiedSubdomainRequest } from './data/CreateCertifiedSubdomainRequest'
+import { UpdateIpAndPortRequest } from './data/UpdateIpAndPortRequest'
 
 const logger = new Logger(module)
 
@@ -54,8 +56,11 @@ export class RestServer {
                 res.send('User-agent: *\nDisallow: /')
             })
 
+            // create new session
+            app.post('/sessions', this.createSession)
+
             // create new subdomain and certificate
-            app.patch('/certifiedsubdomains', this.createSubdomainAndCertificate)
+            app.patch('/certifiedsubdomains', async (req, res) => {await this.createSubdomainAndCertificate(req, res)})
 
             // get new certificate for existing subdomain
 
@@ -79,14 +84,27 @@ export class RestServer {
         })
     }
 
-    private createSubdomainAndCertificate = async (req: express.Request, res: express.Response): Promise<void> => {
+    private createSession = async (_req: express.Request, res: express.Response): Promise<void> => {
+        try {
+            const session = await this.engine.createSession()
 
-        if (!req.body || !req.body.streamrWebSocketPort) {
+            this.sendResponse(res, session)
+        } catch (err) {
+            this.sendError(res, err)
+            return
+        }
+    }
+
+    private createSubdomainAndCertificate = async (req: express.Request, res: express.Response): Promise<void> => {
+        logger.info('createSubdomainAndCertificate')
+        const body = req.body as CreateCertifiedSubdomainRequest
+        if (!body || !body.streamrWebSocketPort) {
             const err = new SteamrWebSocketPortMissing('Streamr websocket port not given')
             this.sendError(res, err)
             return
         }
-        const streamrWebSocketPort = req.body.streamrWebSocketPort + ''
+        const streamrWebSocketPort = body.streamrWebSocketPort + ''
+        const streamrWebSocketCaCert: string | undefined = body.streamrWebSocketCaCert
 
         const ipAndPort = this.extractIpAndPort(req)
         if (!ipAndPort) {
@@ -95,9 +113,12 @@ export class RestServer {
             return
         }
 
+        const sessionId = body.sessionId
+
         try {
             const certifiedSubdomain = await this.engine.createNewSubdomainAndCertificate(
-                ipAndPort.ip, ipAndPort.port, streamrWebSocketPort)
+                ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId, streamrWebSocketCaCert
+            )
 
             this.sendResponse(res, certifiedSubdomain)
         } catch (err) {
@@ -108,20 +129,22 @@ export class RestServer {
 
     private createNewCertificateForExistingSubdomain = async (req: express.Request, res: express.Response): Promise<void> => {
         const subdomain = req.params.subdomain
+        const body = req.body as UpdateIpAndPortRequest
 
-        if (!req.body || !req.body.streamrWebSocketPort) {
+        if (!body || !body.streamrWebSocketPort) {
             const err = new SteamrWebSocketPortMissing('Streamr websocket port not given')
             this.sendError(res, err)
             return
         }
-        const streamrWebSocketPort = req.body.streamrWebSocketPort + ''
+        const streamrWebSocketPort = body.streamrWebSocketPort + ''
 
-        if (!req.body || !req.body.token) {
+        if (!body || !body.token) {
             const err = new TokenMissing('Token not given')
             this.sendError(res, err)
             return
         }
-        const token = req.body.token
+        const token = body.token
+        const sessionId = body.sessionId
 
         const ipAndPort = this.extractIpAndPort(req)
         if (!ipAndPort) {
@@ -131,12 +154,47 @@ export class RestServer {
         }
         try {
             const certifiedSubdomain = await this.engine.createNewCertificateForSubdomain(subdomain,
-                ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, token)
+                ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId, token)
 
             this.sendResponse(res, certifiedSubdomain)
         } catch (err) {
             this.sendError(res, err)
             return
+        }
+    }
+
+    private updateSubdomainIpAndPort = async (req: express.Request, res: express.Response): Promise<void> => {
+        const subdomain = req.params.subdomain
+        const body = req.body as UpdateIpAndPortRequest
+
+        if (!body || !body.streamrWebSocketPort) {
+            const err = new SteamrWebSocketPortMissing('Streamr websocket port not given')
+            this.sendError(res, err)
+            return
+        }
+        const streamrWebSocketPort = req.body.streamrWebSocketPort + ''
+
+        if (!body || !body.token) {
+            const err = new TokenMissing('Token not given')
+            this.sendError(res, err)
+            return
+        }
+        const token = body.token
+        const sessionId = body.sessionId
+        
+        const ipAndPort = this.extractIpAndPort(req)
+        if (!ipAndPort) {
+            const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
+            this.sendError(res, err)
+            return
+        }
+        try {
+            await this.engine.updateSubdomainIpAndPort(subdomain, ipAndPort.ip,
+                ipAndPort.port, streamrWebSocketPort, sessionId, token)
+
+            this.sendResponse(res)
+        } catch (err) {
+            this.sendError(res, err)
         }
     }
 
@@ -166,39 +224,6 @@ export class RestServer {
             fs.writeFileSync(this.caKeyPath, certs.caKey, { flag: 'w' })
             fs.writeFileSync(this.certPath, certs.serverCert, { flag: 'w' })
             fs.writeFileSync(this.keyPath, certs.serverKey, { flag: 'w' })
-        }
-    }
-
-    private updateSubdomainIpAndPort = async (req: express.Request, res: express.Response): Promise<void> => {
-        const subdomain = req.params.subdomain
-
-        if (!req.body || !req.body.streamrWebSocketPort) {
-            const err = new SteamrWebSocketPortMissing('Streamr websocket port not given')
-            this.sendError(res, err)
-            return
-        }
-        const streamrWebSocketPort = req.body.streamrWebSocketPort + ''
-
-        if (!req.body || !req.body.token) {
-            const err = new TokenMissing('Token not given')
-            this.sendError(res, err)
-            return
-        }
-        const token = req.body.token
-
-        const ipAndPort = this.extractIpAndPort(req)
-        if (!ipAndPort) {
-            const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
-            this.sendError(res, err)
-            return
-        }
-        try {
-            await this.engine.updateSubdomainIpAndPort(subdomain, ipAndPort.ip,
-                ipAndPort.port, streamrWebSocketPort, token)
-
-            this.sendResponse(res)
-        } catch (err) {
-            this.sendError(res, err)
         }
     }
 

@@ -1,5 +1,6 @@
 "use strict";
-/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/parameter-properties, no-empty */
+/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/parameter-properties, no-empty,
+    class-methods-use-this */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DnsServer = void 0;
 const dns2_1 = require("dns2");
