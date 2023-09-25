@@ -82,7 +82,7 @@ describe('stream without default entrypoints', () => {
     })
 
     it('can join stream without configured entrypoints one by one', async () => {
-        await nodes[0].subscribeAndWaitForJoin(STREAM_ID)
+        await nodes[0].joinAndWaitForNeighbors(STREAM_ID, 1)
         nodes[0].addMessageListener((_msg) => {
             numOfReceivedMessages += 1
         })
@@ -107,7 +107,7 @@ describe('stream without default entrypoints', () => {
     /*it('multiple nodes can join without configured entrypoints simultaneously', async () => {
         const numOfSubscribers = 8
         await Promise.all(range(numOfSubscribers).map(async (i) => {
-            await nodes[i].subscribeAndWaitForJoin(STREAM_ID, undefined, 4)
+            await nodes[i].joinAndWaitForNeighbors(STREAM_ID, undefined, 4)
             nodes[i].addMessageListener((_msg) => {
                 numOfReceivedMessages += 1
             })
@@ -120,7 +120,7 @@ describe('stream without default entrypoints', () => {
 
     it('nodes store themselves as entrypoints on streamPart if number of entrypoints is low', async () => {
         for (let i = 0; i < 10; i++) {
-            await nodes[i].subscribeAndWaitForJoin(STREAM_ID)
+            await nodes[i].joinAndWaitForNeighbors(STREAM_ID, 1)
         }
         await waitForCondition(async () => {
             const entryPointData = await nodes[15].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(STREAM_ID))

@@ -42,16 +42,9 @@ export class FakeNetworkNode implements NetworkNodeStub {
         this.subscriptions.delete(streamPartId)
     }
 
-    async subscribeAndWaitForJoin(streamPartId: StreamPartID, _timeout?: number): Promise<number> {
-        this.subscriptions.add(streamPartId)
-        return this.getNeighborsForStreamPart(streamPartId).length
-    }
-
-    async waitForJoinAndPublish(msg: StreamMessage, _timeout?: number): Promise<number> {
-        const streamPartId = msg.getStreamPartID()
-        this.subscriptions.add(streamPartId)
-        await this.publish(msg)
-        return this.getNeighborsForStreamPart(streamPartId).length
+    // eslint-disable-next-line class-methods-use-this
+    async joinAndWaitForNeighbors(_streamPartId: StreamPartID, _requiredNeighborCount: number, _timeout?: number): Promise<void> {
+        throw new Error('not implemented')
     }
 
     async publish(msg: StreamMessage): Promise<void> {

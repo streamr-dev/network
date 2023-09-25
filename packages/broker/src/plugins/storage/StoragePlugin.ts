@@ -102,7 +102,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             {
                 onStreamPartAdded: async (streamPart) => {
                     try {
-                        await node.subscribeAndWaitForJoin(streamPart) // best-effort, can time out
+                        await node.joinAndWaitForNeighbors(streamPart, 1) // best-effort, can time out
                     } catch (_e) {
                         // no-op
                     }

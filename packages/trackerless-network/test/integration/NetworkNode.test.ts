@@ -84,13 +84,16 @@ describe('NetworkNode', () => {
         })
 
         let msgCount = 0
-        await node1.subscribeAndWaitForJoin(STREAM_ID)
+        // TODO is there a need to join and/or wait here?
+        await node1.joinAndWaitForNeighbors(STREAM_ID, 1)
         node1.addMessageListener((msg) => {
             expect(msg.messageId.timestamp).toEqual(666)
             expect(msg.getSequenceNumber()).toEqual(0)
             msgCount += 1
         })
-        await node2.waitForJoinAndPublish(streamMessage)
+        // TODO is there a need to join and/or wait here?
+        await node2.joinAndWaitForNeighbors(STREAM_ID, 1)
+        await node2.publish(streamMessage)
         await waitForCondition(() => msgCount === 1)
     })
 

@@ -61,9 +61,9 @@ describe('inspect', () => {
             inspectedNodes.push(node)
         }))
         await Promise.all([
-            publisherNode.getStreamrNode().waitForJoinAndSubscribe(streamPartId, 5000, 4),
-            inspectorNode.getStreamrNode().waitForJoinAndSubscribe(streamPartId, 5000, 4),
-            ...inspectedNodes.map((node) => node.getStreamrNode().waitForJoinAndSubscribe(streamPartId, 5000, 4))
+            publisherNode.getStreamrNode().joinAndWaitForNeighbors(streamPartId, 4, 5000),
+            inspectorNode.getStreamrNode().joinAndWaitForNeighbors(streamPartId, 4, 5000),
+            ...inspectedNodes.map((node) => node.getStreamrNode().joinAndWaitForNeighbors(streamPartId, 4, 5000))
         ])
         sequenceNumber = 0
     }, 30000)
