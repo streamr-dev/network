@@ -81,7 +81,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     async start(doJoin = true): Promise<void> {
         await this.layer0DhtNode!.start()
         this.connectionManager = this.layer0DhtNode!.getTransport() as ConnectionManager
-        if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0!.entryPoints!.some((entryPoint) => 
+        if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
             isSamePeerDescriptor(entryPoint, this.layer0DhtNode!.getPeerDescriptor())
         ))) {
             this.dhtJoinRequired = false
