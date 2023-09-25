@@ -17,7 +17,7 @@ describe('PubSub with proxy connections', () => {
 
     beforeEach(async () => {
         onewayClient = createTestClient(await fetchPrivateKeyWithGas())
-        proxyClient1 = await createTestClient(fastPrivateKey(), 14231, true)
+        proxyClient1 = createTestClient(fastPrivateKey(), 14231, true)
     }, 10000)
 
     beforeEach(async () => {
