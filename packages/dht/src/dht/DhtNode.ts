@@ -24,7 +24,8 @@ import { ConnectionManager, ConnectionManagerConfig, PortRange, TlsCertificate }
 import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
-    MetricsContext
+    MetricsContext,
+    hexToBinary
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RandomContactList } from './contact/RandomContactList'
@@ -71,7 +72,7 @@ export interface DhtNodeOptions {
     entryPoints?: PeerDescriptor[]
     websocketHost?: string
     websocketPortRange?: PortRange
-    peerIdString?: string
+    peerIdString?: string  // TODO rename to peerId
 
     nodeName?: string
     rpcRequestTimeout?: number
@@ -136,9 +137,9 @@ export type Events = TransportEvents & DhtNodeEvents
 export const createPeerDescriptor = (msg?: ConnectivityResponse, peerIdString?: string, nodeName?: string): PeerDescriptor => {
     let peerId: Uint8Array
     if (msg) {
-        peerId = peerIdString ? PeerID.fromString(peerIdString).value : PeerID.fromIp(msg.host).value
+        peerId = peerIdString ? hexToBinary(peerIdString) : PeerID.fromIp(msg.host).value
     } else {
-        peerId = PeerID.fromString(peerIdString!).value
+        peerId = hexToBinary(peerIdString!)
     }
     const ret: PeerDescriptor = { kademliaId: peerId, nodeName: nodeName, type: NodeType.NODEJS }
     if (msg && msg.websocket) {
