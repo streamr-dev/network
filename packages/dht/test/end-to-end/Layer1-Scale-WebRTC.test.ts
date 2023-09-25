@@ -34,7 +34,7 @@ describe('Layer1 Scale', () => {
         layer1Nodes = []
 
         for (let i = 1; i < NUM_OF_NODES; i++) {
-            const node = new DhtNode({ peerIdString: `node-${i}`, nodeName: `${i}`, entryPoints: [epPeerDescriptor] })
+            const node = new DhtNode({ nodeName: `${i}`, entryPoints: [epPeerDescriptor] })
             await node.start()
             layer0Nodes.push(node)
             const layer1 = new DhtNode({
