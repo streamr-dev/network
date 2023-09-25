@@ -113,7 +113,7 @@ describe('Route Message With Mock Connections', () => {
                 sourceDescriptor: sourceNode.getPeerDescriptor(),
                 targetDescriptor: destinationNode.getPeerDescriptor()
             }
-            await sourceNode.router!.doRouteMessage({
+            sourceNode.router!.doRouteMessage({
                 message,
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 requestId: v4(),
@@ -169,7 +169,7 @@ describe('Route Message With Mock Connections', () => {
                             sourceDescriptor: node.getPeerDescriptor(),
                             targetDescriptor: destinationNode.getPeerDescriptor()
                         }
-                        await node.router!.doRouteMessage({
+                        node.router!.doRouteMessage({
                             message,
                             destinationPeer: receiver.getPeerDescriptor(),
                             sourcePeer: node.getPeerDescriptor(),

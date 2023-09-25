@@ -46,8 +46,8 @@ describe('DhtRpc', () => {
     })
 
     afterEach(async () => {
-        await rpcCommunicator1.stop()
-        await rpcCommunicator2.stop()
+        rpcCommunicator1.stop()
+        rpcCommunicator2.stop()
     })
 
     it('Happy path', async () => {

@@ -1,10 +1,9 @@
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { areEqualBinaries, waitForEvent3 } from '@streamr/utils'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { ConnectionType } from '../../src/connection/IConnection'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
-import { ConnectionType } from '../../src/connection/IConnection'
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import EventEmitter from 'events'
-import { waitForEvent } from '@streamr/utils'
+import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 
 describe('Layer0 with WebRTC connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
@@ -26,10 +25,10 @@ describe('Layer0 with WebRTC connections', () => {
 
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ peerIdString: 'Peer0', nodeName: 'Peer0', entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ peerIdString: 'Peer1', nodeName: 'Peer1', entryPoints: [epPeerDescriptor] })
-        node3 = new DhtNode({ peerIdString: 'Peer2', nodeName: 'Peer2', entryPoints: [epPeerDescriptor] })
-        node4 = new DhtNode({ peerIdString: 'Peer3', nodeName: 'Peer3', entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ nodeName: 'Peer0', entryPoints: [epPeerDescriptor] })
+        node2 = new DhtNode({ nodeName: 'Peer1', entryPoints: [epPeerDescriptor] })
+        node3 = new DhtNode({ nodeName: 'Peer2', entryPoints: [epPeerDescriptor] })
+        node4 = new DhtNode({ nodeName: 'Peer3', entryPoints: [epPeerDescriptor] })
 
         await Promise.all([
             node1.start(),
@@ -51,22 +50,17 @@ describe('Layer0 with WebRTC connections', () => {
         await epDhtNode.stop()
     })
 
-    class Peer0Listener extends EventEmitter {
-        private nodeToListen: DhtNode
-        constructor(nodeToListen: DhtNode) {
-            super()
-            this.nodeToListen = nodeToListen
-            this.nodeToListen.on('connected', (peer: PeerDescriptor) => {
-                if (PeerID.fromValue(peer.kademliaId).equals(PeerID.fromString('Peer0'))) {
-                    this.emit('peer0connected')
-                }
-            })
-        }
-    }
-
     it('Happy path two peers', async () => {
 
-        await Promise.all([waitForEvent(new Peer0Listener(node2), 'peer0connected', 20000),
+        await Promise.all([
+            waitForEvent3<any>(
+                node2 as any,
+                'connected',
+                20000,
+                (peerDescriptor: PeerDescriptor) => {
+                    return areEqualBinaries(peerDescriptor.kademliaId, node1.getPeerDescriptor().kademliaId)
+                }
+            ),
             node2.joinDht([epPeerDescriptor]),
             node1.joinDht([epPeerDescriptor])
         ])
