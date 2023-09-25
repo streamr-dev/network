@@ -9,7 +9,8 @@ describe('Publisher', () => {
         const authentication = createRandomAuthentication()
         const streamIdBuilder = new StreamIDBuilder(authentication)
         const streamRegistry = {
-            isStreamPublisher: async () => false
+            isStreamPublisher: async () => false,
+            clearStreamCache: () => {}
         }
         const publisher = new Publisher(
             undefined as any,
