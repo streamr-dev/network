@@ -2,14 +2,7 @@ import { WebSocketServer } from '../../src/connection/WebSocket/WebSocketServer'
 
 describe('WebSocketServer', () => {
 
-    it('starts and stops with host "127.0.0.1"', async () => {
-        const server = new WebSocketServer()
-        const port = await server.start({ min: 19792, max: 19792 }, '127.0.0.1')
-        expect(port).toEqual(19792)
-        await server.stop()
-    })
-
-    it('starts and stops if no host given', async () => {
+    it('starts and stops', async () => {
         const server = new WebSocketServer()
         const port = await server.start({ min: 19792, max: 19792 })
         expect(port).toEqual(19792)
