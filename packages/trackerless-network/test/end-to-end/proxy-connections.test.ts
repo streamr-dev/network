@@ -51,13 +51,13 @@ describe('Proxy connections', () => {
             kademliaId: hexToBinary(createRandomNodeId()),
             type: NodeType.NODEJS,
             nodeName: 'proxyNode',
-            websocket: { host: 'localhost', port: 23132, tls: false }
+            websocket: { host: '127.0.0.1', port: 23132, tls: false }
         }
         const proxyNodeDescriptor2: PeerDescriptor = {
             kademliaId: hexToBinary(createRandomNodeId()),
             type: NodeType.NODEJS,
             nodeName: 'proxyNode',
-            websocket: { host: 'localhost', port: 23133, tls: false }
+            websocket: { host: '127.0.0.1', port: 23133, tls: false }
         }
         const proxiedNodeDescriptor: PeerDescriptor = {
             kademliaId: hexToBinary(createRandomNodeId()),
