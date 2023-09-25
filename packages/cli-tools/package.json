@@ -27,7 +27,7 @@
   "license": "AGPL-3.0",
   "dependencies": {
     "@ethersproject/wallet": "^5.5.0",
-    "@snapshot-labs/snapshot.js": "^0.5.8",
+    "@snapshot-labs/snapshot.js": "^0.6.2",
     "@streamr/utils": "0.0.1-tatum.2",
     "commander": "^11.0.0",
     "easy-table": "^1.1.1",
@@ -37,8 +37,8 @@
   },
   "devDependencies": {
     "@streamr/test-utils": "0.0.1-tatum.2",
-    "@types/event-stream": "^4.0.0",
-    "@types/lodash": "^4.14.198",
+    "@types/event-stream": "^4.0.2",
+    "@types/lodash": "^4.14.199",
     "@types/merge2": "^1.4.0",
     "merge2": "^1.4.1"
   }
