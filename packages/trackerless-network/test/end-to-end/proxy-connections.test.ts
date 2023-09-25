@@ -10,7 +10,6 @@ import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { ProxyStreamConnectionClient } from '../../src/logic/proxy/ProxyStreamConnectionClient'
 
 const PROXIED_NODE_USER_ID = randomEthereumAddress()
-
 const STREAM_PART_ID = toStreamPartID(toStreamID('proxy-test'), 0)
 const MESSAGE = new StreamMessage({
     messageId: new MessageID(
@@ -76,7 +75,6 @@ describe('Proxy connections', () => {
         await proxyNode1.start()
         proxyNode1.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor1])
         await proxyNode1.stack.getStreamrNode()!.joinStream(STREAM_PART_ID)
-       
         proxyNode2 = createNetworkNode({
             layer0: {
                 entryPoints: [proxyNodeDescriptor1],
@@ -89,7 +87,6 @@ describe('Proxy connections', () => {
         await proxyNode2.start()
         proxyNode2.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor1])
         await proxyNode2.stack.getStreamrNode()!.joinStream(STREAM_PART_ID)
-
         proxiedNode = createNetworkNode({
             layer0: {
                 entryPoints: [proxyNode1.getPeerDescriptor()],
