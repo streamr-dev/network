@@ -93,7 +93,7 @@ export interface ControlLayerConfig {
     /**
      * The host name or IP address of the WebSocket server used to connect to it over the internet.
      * If not specified, the host name will be auto-detected. 
-     * Can be useful in situations where the host is running begind a reverse-proxy or load balancer.
+     * Can be useful in situations where the host is running behind a reverse-proxy or load balancer.
      */
     websocketHost?: string
 
