@@ -90,6 +90,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
             })
 
             try {
+                // Listen only to IPv4 network interfaces, default value listens to IPv6 as well
                 this.httpServer.listen(port, '0.0.0.0')
             } catch (e) {
                 reject(new WebSocketServerStartError('Websocket server threw an exception', e))
