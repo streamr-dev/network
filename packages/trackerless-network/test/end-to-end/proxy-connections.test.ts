@@ -194,7 +194,7 @@ describe('Proxy connections', () => {
         await waitForCondition(() => hasProxyConnection(proxiedNode, proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE))
         expect(hasProxyConnection(proxyNode1, proxiedNode.getNodeId(), ProxyDirection.SUBSCRIBE)).toBe(false)
         await proxyNode1.stack.getStreamrNode()!.joinStream(STREAM_PART_ID)
-        await waitForCondition(() => hasProxyConnection(proxiedNode,  proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE), 25000)
+        await waitForCondition(() => hasProxyConnection(proxiedNode, proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE), 25000)
         expect(hasProxyConnection(proxyNode1, proxiedNode.getNodeId(), ProxyDirection.SUBSCRIBE)).toBe(true)
     }, 30000)
 
