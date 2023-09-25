@@ -26,10 +26,10 @@ describe('Layer0 with WebRTC connections', () => {
 
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ peerId: 'Peer0', nodeName: 'Peer0', entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ peerId: 'Peer1', nodeName: 'Peer1', entryPoints: [epPeerDescriptor] })
-        node3 = new DhtNode({ peerId: 'Peer2', nodeName: 'Peer2', entryPoints: [epPeerDescriptor] })
-        node4 = new DhtNode({ peerId: 'Peer3', nodeName: 'Peer3', entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ nodeName: 'Peer0', entryPoints: [epPeerDescriptor] })
+        node2 = new DhtNode({ nodeName: 'Peer1', entryPoints: [epPeerDescriptor] })
+        node3 = new DhtNode({ nodeName: 'Peer2', entryPoints: [epPeerDescriptor] })
+        node4 = new DhtNode({ nodeName: 'Peer3', entryPoints: [epPeerDescriptor] })
 
         await Promise.all([
             node1.start(),

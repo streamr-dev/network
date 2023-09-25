@@ -1,12 +1,10 @@
+import { binaryToHex } from '@streamr/utils'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { PeerID } from '../../src/exports'
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
-    const entryPointId = '00000'
-
     const entrypointDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(entryPointId).value,
+        kademliaId: new Uint8Array([0]),
         type: NodeType.NODEJS,
         websocket: {
             host: '127.0.0.1',
@@ -34,28 +32,28 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
         layer0EntryPoint = new DhtNode({ peerDescriptor: entrypointDescriptor })
 
-        const layer0Node1Id = 'layer0Node1'
+        const layer0Node1Id = '11'
         layer0Node1 = new DhtNode({
             peerId: layer0Node1Id
         })
 
-        const layer0Node2Id = 'layer0Node2'
+        const layer0Node2Id = '22'
         layer0Node2 = new DhtNode({
             peerId: layer0Node2Id
         })
 
-        const layer0Node3Id = 'layer0Node3'
+        const layer0Node3Id = '33'
         layer0Node3 = new DhtNode({
             peerId: layer0Node3Id
         })
 
-        const layer0Node4Id = 'layer0Node4'
+        const layer0Node4Id = '44'
         layer0Node4 = new DhtNode({
             peerId: layer0Node4Id
         })
 
         layer1EntryPoint = new DhtNode({
-            peerId: entryPointId,
+            peerId: binaryToHex(entrypointDescriptor.kademliaId),
             transportLayer: layer0EntryPoint,
             serviceId: 'layer1'
         })

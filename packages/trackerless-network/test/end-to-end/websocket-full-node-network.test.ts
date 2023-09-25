@@ -41,7 +41,6 @@ describe('Full node network with WebSocket connections only', () => {
                 layer0: {
                     entryPoints: [epPeerDescriptor],
                     websocketPortRange: { min: 15556 + i, max: 15556 + i },
-                    peerId: `${i}`,
                     nodeName: `${i}`,
                     numberOfNodesPerKBucket: 4
                 }
