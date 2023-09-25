@@ -36,50 +36,50 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
         const layer0Node1Id = 'layer0Node1'
         layer0Node1 = new DhtNode({
-            peerIdString: layer0Node1Id
+            peerId: layer0Node1Id
         })
 
         const layer0Node2Id = 'layer0Node2'
         layer0Node2 = new DhtNode({
-            peerIdString: layer0Node2Id
+            peerId: layer0Node2Id
         })
 
         const layer0Node3Id = 'layer0Node3'
         layer0Node3 = new DhtNode({
-            peerIdString: layer0Node3Id
+            peerId: layer0Node3Id
         })
 
         const layer0Node4Id = 'layer0Node4'
         layer0Node4 = new DhtNode({
-            peerIdString: layer0Node4Id
+            peerId: layer0Node4Id
         })
 
         layer1EntryPoint = new DhtNode({
-            peerIdString: entryPointId,
+            peerId: entryPointId,
             transportLayer: layer0EntryPoint,
             serviceId: 'layer1'
         })
 
         layer1Node1 = new DhtNode({
-            peerIdString: layer0Node1Id,
+            peerId: layer0Node1Id,
             transportLayer: layer0Node1,
             serviceId: 'layer1'
         })
 
         layer1Node2 = new DhtNode({
-            peerIdString: layer0Node2Id,
+            peerId: layer0Node2Id,
             transportLayer: layer0Node2,
             serviceId: 'layer1'
         })
 
         layer1Node3 = new DhtNode({
-            peerIdString: layer0Node3Id,
+            peerId: layer0Node3Id,
             transportLayer: layer0Node3,
             serviceId: 'layer1'
         })
 
         layer1Node4 = new DhtNode({
-            peerIdString: layer0Node4Id,
+            peerId: layer0Node4Id,
             transportLayer: layer0Node4,
             serviceId: 'layer1'
         })
