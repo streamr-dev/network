@@ -130,10 +130,6 @@ export class NetworkNode {
         return this.stack.getStreamrNode().hasStream(streamPartId)
     }
 
-    hasProxyConnection(streamPartId: StreamPartID, contactNodeId: NodeID, direction: ProxyDirection): boolean {
-        return this.stack.getStreamrNode()!.hasProxyConnection(streamPartId, contactNodeId, direction)
-    }
-
     // eslint-disable-next-line class-methods-use-this
     getRtt(_nodeId: NodeID): number | undefined {
         throw new Error('Not implemented')
