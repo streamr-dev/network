@@ -26,10 +26,12 @@ export class ConnectivityChecker {
     private destroyed = false
     private readonly webSocketPort: number
     private readonly tls: boolean 
+    private readonly host?: string
 
-    constructor(webSocketPort: number, tls: boolean) {
+    constructor(webSocketPort: number, tls: boolean, host?: string) {
         this.webSocketPort = webSocketPort
         this.tls = tls
+        this.host = host
     }
 
     public async sendConnectivityRequest(entryPoint: PeerDescriptor): Promise<ConnectivityResponse> {
@@ -50,7 +52,7 @@ export class ConnectivityChecker {
             throw new Err.ConnectionFailed('Failed to connect to the entrypoints', e)
         }
         // send connectivity request
-        const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort, tls: this.tls }
+        const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort, host: this.host, tls: this.tls }
         const msg: Message = {
             serviceId: ConnectivityChecker.CONNECTIVITY_CHECKER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_REQUEST, messageId: v4(),
@@ -117,10 +119,11 @@ export class ConnectivityChecker {
         }
         let outgoingConnection: IConnection | undefined
         let connectivityResponseMessage: ConnectivityResponse | undefined
+        const host = connectivityRequest.host ?? connection.getRemoteAddress()
         try {
             outgoingConnection = await this.connectAsync({
                 wsServerInfo: {
-                    host: connection.getRemoteAddress(),
+                    host,
                     port: connectivityRequest.port,
                     tls: connectivityRequest.tls
                 },
@@ -130,7 +133,7 @@ export class ConnectivityChecker {
             logger.debug('error', { err })
             connectivityResponseMessage = {
                 openInternet: false,
-                host: connection.getRemoteAddress(),
+                host,
                 natType: NatType.UNKNOWN
             }
         }
@@ -139,9 +142,9 @@ export class ConnectivityChecker {
             logger.trace('Connectivity test produced positive result, communicating reply to the requester')
             connectivityResponseMessage = {
                 openInternet: true,
-                host: connection.getRemoteAddress(),
+                host,
                 natType: NatType.OPEN_INTERNET,
-                websocket: { host: connection.getRemoteAddress(), port: connectivityRequest.port, tls: connectivityRequest.tls }
+                websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls }
             }
         }
         const msg: Message = {

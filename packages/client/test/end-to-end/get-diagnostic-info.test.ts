@@ -12,7 +12,7 @@ describe('getDiagnosticInfo', () => {
 
     beforeAll(async () => {
         const streamPath = `/get-diagnostic-info.test.ts/${Date.now()}`
-        client = await createTestClient(await fetchPrivateKeyWithGas())
+        client = createTestClient(await fetchPrivateKeyWithGas())
         stream = await client.createStream(streamPath)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         otherClient = await createClient()
