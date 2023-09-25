@@ -67,7 +67,7 @@ describe('Proxy connections', () => {
             }
         })
         await proxyNode1.start()
-        await proxyNode1.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor1])
+        proxyNode1.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor1])
         await proxyNode1.stack.getStreamrNode()!.joinStream(STREAM_PART_ID)
        
         proxyNode2 = createNetworkNode({
