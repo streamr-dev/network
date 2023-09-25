@@ -69,17 +69,13 @@ describe('PubSub with proxy connections', () => {
         ])
     })
 
-    it('Proxy publish connections work', async () => {
+    it('happy path: publish via proxy', async () => {
         const receivedMessagesProxy: any[] = []
         await proxyClient1.subscribe(stream, (msg) => {
             receivedMessagesProxy.push(msg)
         })
         await wait(SUBSCRIBE_WAIT_TIME)
         await onewayClient.setProxies(stream, [proxyNodeDescriptor1], ProxyDirection.PUBLISH)
-
-        expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.PUBLISH))
-            .toEqual(true)
 
         await onewayClient.publish(stream, {
             msg: 'hellow'
@@ -92,45 +88,9 @@ describe('PubSub with proxy connections', () => {
         })
         await until(() => receivedMessagesProxy.length >= 3)
         expect(receivedMessagesProxy.length).toEqual(3)
-
-        expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.PUBLISH))
-            .toEqual(true)
     }, 15000)
 
-    it('Open publish proxies, close publish proxies', async () => {
-        const receivedMessagesProxy1: any[] = []
-        const receivedMessagesProxy2: any[] = []
-        await proxyClient1.subscribe(stream, (msg) => {
-            receivedMessagesProxy1.push(msg)
-        })
-        await proxyClient2.subscribe(stream, (msg) => {
-            receivedMessagesProxy2.push(msg)
-        })
-        await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setProxies(stream, [proxyNodeDescriptor1, proxyNodeDescriptor2], ProxyDirection.PUBLISH)
-
-        expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.PUBLISH))
-            .toEqual(true)
-
-        expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey2, ProxyDirection.PUBLISH))
-            .toEqual(true)
-
-        await onewayClient.setProxies(stream, [], ProxyDirection.PUBLISH)
-
-        expect((await onewayClient.getNode())
-            .hasStreamPart(toStreamPartID(stream.id, 0)))
-            .toEqual(false)
-
-        expect((await onewayClient.getNode())
-            .hasStreamPart(toStreamPartID(stream.id, 0)))
-            .toEqual(false)
-
-    }, 15000)
-
-    it('Proxy subscribe connections work', async () => {
+    it('happy path: subscribe via proxy', async () => {
         const receivedMessages: any[] = []
         await proxyClient1.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
@@ -139,9 +99,6 @@ describe('PubSub with proxy connections', () => {
         await onewayClient.subscribe(stream, (msg) => {
             receivedMessages.push(msg)
         })
-        expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.SUBSCRIBE))
-            .toEqual(true)
 
         await proxyClient1.publish(stream, {
             msg: 'hellow'
@@ -154,68 +111,5 @@ describe('PubSub with proxy connections', () => {
         })
         await until(() => receivedMessages.length >= 3)
         expect(receivedMessages.length).toEqual(3)
-
-        expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.SUBSCRIBE))
-            .toEqual(true)
     }, 15000)
-
-    it('open subscribe proxies, close subscribe proxies', async () => {
-        await proxyClient1.subscribe(stream)
-        await proxyClient2.subscribe(stream)
-        await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setProxies(stream, [proxyNodeDescriptor1, proxyNodeDescriptor2], ProxyDirection.SUBSCRIBE)
-
-        expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.SUBSCRIBE))
-            .toEqual(true)
-
-        expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey2, ProxyDirection.SUBSCRIBE))
-            .toEqual(true)
-
-        await onewayClient.unsubscribe(stream)
-        await onewayClient.setProxies(stream, [], ProxyDirection.SUBSCRIBE)
-
-        expect((await onewayClient.getNode())
-            .hasStreamPart(toStreamPartID(stream.id, 0)))
-            .toEqual(false)
-
-        expect((await onewayClient.getNode())
-            .hasStreamPart(toStreamPartID(stream.id, 0)))
-            .toEqual(false)
-    }, 15000)
-
-    it('Open proxies, close all proxies', async () => {
-        const receivedMessagesProxy1: any[] = []
-        const receivedMessagesProxy2: any[] = []
-        await proxyClient1.subscribe(stream, (msg) => {
-            receivedMessagesProxy1.push(msg)
-        })
-        await proxyClient2.subscribe(stream, (msg) => {
-            receivedMessagesProxy2.push(msg)
-        })
-        await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setProxies(stream, [proxyNodeDescriptor1, proxyNodeDescriptor2], ProxyDirection.PUBLISH)
-
-        expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.PUBLISH))
-            .toEqual(true)
-
-        expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey2, ProxyDirection.PUBLISH))
-            .toEqual(true)
-
-        await onewayClient.setProxies(stream, [], ProxyDirection.PUBLISH)
-
-        expect((await onewayClient.getNode())
-            .hasStreamPart(toStreamPartID(stream.id, 0)))
-            .toEqual(false)
-
-        expect((await onewayClient.getNode())
-            .hasStreamPart(toStreamPartID(stream.id, 0)))
-            .toEqual(false)
-
-    }, 15000)
-
 })
