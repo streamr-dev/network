@@ -28,9 +28,7 @@ class ReadynessListener {
     }
 
     public async waitUntilReady(timeout: number): Promise<void> {
-        if (this.dhtNode.getNumberOfConnections() > 0) {
-            return
-        } else {
+        if (this.dhtNode.getNumberOfConnections() === 0) {
             await waitForEvent3<ReadynessEvents>(this.emitter, 'done', timeout)
         }
     }
