@@ -26,7 +26,7 @@ describe('maintainOperatorValue', () => {
     /*
      * We stake 100 tokens and start a sponsorship which generates 1 token of earnings per second. Then we wait
      * until we've earned enough tokens so that the operator value has drifted at least for 2.5 tokens.
-     * The default drift limit is 5 token (5% of 100 staked tokens, see StreamrConfig.sol#poolValueDriftLimitFraction
+     * The default drift limit is 5 token (5% of 100 staked tokens, see StreamrConfig.sol#maxAllowedEarningsFraction
      * in network-contracts), and the configured safe limit in this test is 50%, i.e. 2.5 tokens.
      */
     it('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {

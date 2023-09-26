@@ -57,8 +57,7 @@ describe('checkOperatorValueBreach', () => {
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
-        const driftLimitFraction = await streamrConfig.poolValueDriftLimitFraction()
-        const allowedDifference = valueBeforeWithdraw.mul(driftLimitFraction).div(ONE_ETHER).toBigInt()
+        const allowedDifference = valueBeforeWithdraw.mul(await streamrConfig.maxAllowedEarningsFraction()).div(ONE_ETHER).toBigInt()
         const helper = new MaintainOperatorValueHelper({
             ...watcherConfig,
             signer: watcherWallets[0]
