@@ -85,9 +85,6 @@ export class NetworkNode {
     }
 
     removeMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
-        if (this.stopped) {
-            return
-        }
         pull(this.messageListeners, cb)
     }
 
@@ -132,11 +129,6 @@ export class NetworkNode {
 
     hasProxyConnection(streamPartId: StreamPartID, contactNodeId: NodeID, direction: ProxyDirection): boolean {
         return this.stack.getStreamrNode()!.hasProxyConnection(streamPartId, contactNodeId, direction)
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getRtt(_nodeId: NodeID): number | undefined {
-        throw new Error('Not implemented')
     }
 
     async stop(): Promise<void> {
