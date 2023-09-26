@@ -7,7 +7,7 @@ import {
 } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { EncryptionUtil, INITIALIZATION_VECTOR_LENGTH } from '../../src/encryption/EncryptionUtil'
 import { createMockMessage } from '../test-utils/utils'
 import { hexToBinary, binaryToUtf8 } from '@streamr/utils'
 
@@ -26,7 +26,7 @@ describe('EncryptionUtil', () => {
         const plaintext = 'some random text'
         const plaintextBuffer = Buffer.from(plaintext, 'utf8')
         const ciphertext = EncryptionUtil.encryptWithAES(plaintextBuffer, key.data)
-        expect(ciphertext.length).toStrictEqual(plaintextBuffer.length + 16)
+        expect(ciphertext.length).toStrictEqual(plaintextBuffer.length + INITIALIZATION_VECTOR_LENGTH)
     })
 
     it('multiple same encrypt() calls use different ivs and produce different ciphertexts', () => {
@@ -34,8 +34,8 @@ describe('EncryptionUtil', () => {
         const plaintext = 'some random text'
         const cipher1 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
         const cipher2 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
-        expect(cipher1.slice(0, 16)).not.toStrictEqual(cipher2.slice(0, 16))
-        expect(cipher1.slice(16)).not.toStrictEqual(cipher2.slice(16))
+        expect(cipher1.slice(0, INITIALIZATION_VECTOR_LENGTH)).not.toStrictEqual(cipher2.slice(0, INITIALIZATION_VECTOR_LENGTH))
+        expect(cipher1.slice(INITIALIZATION_VECTOR_LENGTH)).not.toStrictEqual(cipher2.slice(INITIALIZATION_VECTOR_LENGTH))
     })
 
     it('StreamMessage decryption: happy path', async () => {

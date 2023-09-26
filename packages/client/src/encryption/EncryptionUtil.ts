@@ -8,6 +8,8 @@ export class DecryptError extends StreamMessageError {
     }
 }
 
+export const INITIALIZATION_VECTOR_LENGTH = 16
+
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class EncryptionUtil {
     private static validateRSAPublicKey(publicKey: crypto.KeyLike): void | never {
@@ -32,7 +34,7 @@ export class EncryptionUtil {
      * Returns a hex string without the '0x' prefix.
      */
     static encryptWithAES(data: Uint8Array, cipherKey: CipherKey): Uint8Array {
-        const iv = crypto.randomBytes(16) // always need a fresh IV when using CTR mode
+        const iv = crypto.randomBytes(INITIALIZATION_VECTOR_LENGTH) // always need a fresh IV when using CTR mode
         const cipher = crypto.createCipheriv('aes-256-ctr', cipherKey, iv)
         return Buffer.concat([iv, cipher.update(data), cipher.final()])
     }
@@ -41,9 +43,9 @@ export class EncryptionUtil {
      * 'ciphertext' must be a hex string (without '0x' prefix), 'groupKey' must be a GroupKey. Returns a Buffer.
      */
     static decryptWithAES(cipher: Uint8Array, cipherKey: CipherKey): Buffer {
-        const iv = cipher.slice(0, 16)
+        const iv = cipher.slice(0, INITIALIZATION_VECTOR_LENGTH)
         const decipher = crypto.createDecipheriv('aes-256-ctr', cipherKey, iv)
-        return Buffer.concat([decipher.update(cipher.slice(16)), decipher.final()])
+        return Buffer.concat([decipher.update(cipher.slice(INITIALIZATION_VECTOR_LENGTH)), decipher.final()])
     }
 
     static decryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey): void | never {
