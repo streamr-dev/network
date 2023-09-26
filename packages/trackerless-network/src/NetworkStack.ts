@@ -85,14 +85,13 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         ))) {
             this.dhtJoinRequired = false
             await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
-            await this.streamrNode?.start(this.layer0DhtNode!, connectionManager, connectionManager)
         } else {
             if (doJoin) {
                 this.dhtJoinRequired = false
                 await this.joinDht()
             }
-            await this.streamrNode?.start(this.layer0DhtNode!, connectionManager, connectionManager)
         }
+        await this.streamrNode?.start(this.layer0DhtNode!, connectionManager, connectionManager)
     }
 
     private async joinDht(): Promise<void> {
