@@ -95,8 +95,10 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             }
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager, this.connectionManager)
         }
-        this.infoServer = new InfoRpcServer(this)
-        this.infoServer.registerDefaultServerMethods()
+        if (this.connectionManager) {
+            this.infoServer = new InfoRpcServer(this)
+            this.infoServer.registerDefaultServerMethods()
+        }
     }
 
     private async joinDht(): Promise<void> {
