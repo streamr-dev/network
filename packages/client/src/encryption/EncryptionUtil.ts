@@ -57,7 +57,6 @@ export class EncryptionUtil {
             streamMessage.encryptionType = EncryptionType.NONE
             const serializedContent = this.decryptWithAES(streamMessage.getSerializedContent(), groupKey.data)
             streamMessage.serializedContent = serializedContent
-            streamMessage.createParsedContent()
         } catch (err) {
             streamMessage.encryptionType = EncryptionType.AES
             throw new DecryptError(streamMessage, err.stack)

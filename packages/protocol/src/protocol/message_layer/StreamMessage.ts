@@ -47,7 +47,6 @@ export interface StreamMessageOptions {
 export type StreamMessageAESEncrypted = StreamMessage & {
     encryptionType: EncryptionType.AES
     groupKeyId: string
-    parsedContent: never
 }
 
 export default class StreamMessage {
@@ -63,7 +62,7 @@ export default class StreamMessage {
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
     signature: Uint8Array
-    parsedContent?: unknown | Uint8Array
+    private parsedContent?: unknown | Uint8Array
     serializedContent: Uint8Array
 
     /**
@@ -179,26 +178,21 @@ export default class StreamMessage {
             if (this.messageType === StreamMessageType.MESSAGE && this.encryptionType !== EncryptionType.NONE) {
                 return this.serializedContent
             }
-            this.createParsedContent()   
-        }
-
-        return this.parsedContent
-    }
-
-    createParsedContent(): void {
-        if (this.contentType === ContentType.JSON) {
-            try {
-                this.parsedContent = JSON.parse(binaryToUtf8(this.serializedContent))
-            } catch (err: any) {
-                throw new InvalidJsonError(
-                    this.getStreamId(),
-                    err,
-                    this,
-                )
+            if (this.contentType === ContentType.JSON) {
+                try {
+                    this.parsedContent = JSON.parse(binaryToUtf8(this.serializedContent))
+                } catch (err: any) {
+                    throw new InvalidJsonError(
+                        this.getStreamId(),
+                        err,
+                        this,
+                    )
+                }
+            } else {
+                throw new StreamMessageError(`Unsupported contentType for getParsedContent: ${this.contentType}`, this)
             }
-        } else {
-            throw new StreamMessageError(`Unsupported contentType for getParsedContent: ${this.contentType}`, this)
         }
+        return this.parsedContent
     }
 
     getContent(): Uint8Array
