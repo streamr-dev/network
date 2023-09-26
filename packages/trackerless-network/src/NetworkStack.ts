@@ -84,6 +84,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             isSamePeerDescriptor(entryPoint, this.layer0DhtNode!.getPeerDescriptor())
         ))) {
             this.dhtJoinRequired = false
+            // TODO should this go via this.join?
             await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
         } else {
             if (doJoin) {
