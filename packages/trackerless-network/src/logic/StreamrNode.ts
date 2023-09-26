@@ -17,7 +17,7 @@ import {
     EthereumAddress
 } from '@streamr/utils'
 import { uniq } from 'lodash'
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import { sampleSize } from 'lodash'
 import { NETWORK_SPLIT_AVOIDANCE_LIMIT, StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
 import { ILayer0 } from './ILayer0'
@@ -173,7 +173,8 @@ export class StreamrNode extends EventEmitter<Events> {
         }
     }
 
-    publishToStream(streamPartId: StreamPartID, msg: StreamMessage): void {
+    publishToStream(msg: StreamMessage): void {
+        const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
         if (!this.streams.has(streamPartId)) {
             this.joinStream(streamPartId)
                 .catch((err) => {
@@ -332,9 +333,9 @@ export class StreamrNode extends EventEmitter<Events> {
         this.knownStreamEntryPoints.set(streamPartId, entryPoints)
     }
 
-    isProxiedStreamPart(streamId: string, direction: ProxyDirection): boolean {
+    isProxiedStreamPart(streamId: string, direction?: ProxyDirection): boolean {
         return this.streams.get(streamId)?.type === StreamNodeType.PROXY 
-            && (this.streams.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction
+            && ((direction === undefined) || (this.streams.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction)
     }
 
     hasProxyConnection(streamId: string, nodeId: NodeID, direction: ProxyDirection): boolean {
@@ -372,11 +373,6 @@ export class StreamrNode extends EventEmitter<Events> {
     setExtraMetadata(metadata: Record<string, unknown>): void {
         this.extraMetadata = metadata
     }
-
-    isJoinRequired(streamPartId: StreamPartID): boolean {
-        return !this.streams.has(streamPartId) && Array.from(this.streams.values()).every((stream) => stream.type === StreamNodeType.PROXY)
-    }
-
 }
 
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {

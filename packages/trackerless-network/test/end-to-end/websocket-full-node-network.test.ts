@@ -82,7 +82,7 @@ describe('Full node network with WebSocket connections only', () => {
             randomGraphId,
             randomEthereumAddress()
         )
-        entryPoint.getStreamrNode()!.publishToStream(randomGraphId, msg)
+        entryPoint.getStreamrNode()!.publishToStream(msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
     }, 220000)
 

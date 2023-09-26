@@ -1,10 +1,10 @@
 import { Contract } from '@ethersproject/contracts'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { OperatorFactory, operatorFactoryABI } from '@streamr/network-contracts'
-import { MaintainOperatorPoolValueHelper } from '../../../../src/plugins/operator/MaintainOperatorPoolValueHelper'
+import { MaintainOperatorValueHelper } from '../../../../src/plugins/operator/MaintainOperatorValueHelper'
 import { SetupOperatorContractOpts, getAdminWallet, setupOperatorContract } from './contractUtils'
 
-describe('MaintainOperatorPoolValueHelper', () => {
+describe('MaintainOperatorValueHelper', () => {
 
     let deployConfig: SetupOperatorContractOpts
 
@@ -21,7 +21,7 @@ describe('MaintainOperatorPoolValueHelper', () => {
         // deploy another operator to make sure there are at least 2 operators
         await setupOperatorContract(deployConfig)
 
-        const helper = new MaintainOperatorPoolValueHelper({
+        const helper = new MaintainOperatorValueHelper({
             ...operatorServiceConfig,
             signer: nodeWallets[0]
         })

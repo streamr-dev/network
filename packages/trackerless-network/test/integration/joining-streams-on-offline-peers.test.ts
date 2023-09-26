@@ -94,7 +94,7 @@ describe('Joining streams on offline nodes', () => {
         node1.getStreamrNode().safeJoinStream(streamPartId)
         node1.getStreamrNode().on('newMessage', () => { messageReceived = true })
         const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), streamPartId, randomEthereumAddress())
-        node2.getStreamrNode().publishToStream(streamPartId, msg)
+        node2.getStreamrNode().publishToStream(msg)
         await waitForCondition(() => messageReceived, 25000)
     }, 30000)
 

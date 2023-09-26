@@ -63,7 +63,7 @@ describe('NetworkStack', () => {
         )
         // TODO is there a need to join and/or wait here?
         await stack2.getStreamrNode().joinAndWaitForNeighbors(streamPartId, 1)
-        stack2.getStreamrNode().publishToStream(streamPartId, msg)
+        stack2.getStreamrNode().publishToStream(msg)
         await waitForCondition(() => receivedMessages === 1)
     })
 
