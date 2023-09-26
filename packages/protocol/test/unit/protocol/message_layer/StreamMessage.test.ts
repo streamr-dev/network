@@ -7,7 +7,7 @@ import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 import StreamMessage, { ContentType, EncryptionType, StreamMessageType } from '../../../../src/protocol/message_layer/StreamMessage'
 import { toStreamID } from '../../../../src/utils/StreamID'
 import { StreamPartIDUtils } from '../../../../src/utils/StreamPartID'
-import { merge, hexToBinary, binaryToUtf8 } from '@streamr/utils'
+import { merge, hexToBinary } from '@streamr/utils'
 
 const content = {
     hello: 'world',
@@ -51,7 +51,7 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
             assert.strictEqual(streamMessage.groupKeyId, null)
             assert.deepStrictEqual(streamMessage.getContent(), content)
-            assert.strictEqual(binaryToUtf8(streamMessage.getSerializedContent()), JSON.stringify(content))
+            expect(streamMessage.getSerializedContent()).toEqual(utf8ToBinary(JSON.stringify(content)))
             assert.deepStrictEqual(streamMessage.getNewGroupKey(), newGroupKey)
             assert.strictEqual(streamMessage.signature, signature)
             assert.strictEqual(streamMessage.getStreamPartID(), StreamPartIDUtils.parse('streamId#0'))
@@ -75,7 +75,7 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
             assert.strictEqual(streamMessage.groupKeyId, null)
             assert.deepStrictEqual(streamMessage.getContent(), content)
-            assert.strictEqual(binaryToUtf8(streamMessage.getSerializedContent()), JSON.stringify(content))
+            expect(streamMessage.getSerializedContent()).toEqual(utf8ToBinary(JSON.stringify(content)))
             assert.strictEqual(streamMessage.getNewGroupKey(), null)
             assert.strictEqual(streamMessage.signature, signature)
         })
