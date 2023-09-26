@@ -84,11 +84,6 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getRtt(_nodeId: string): number | undefined {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     getMetricsContext(): MetricsContext {
         throw new Error('not implemented')
     }

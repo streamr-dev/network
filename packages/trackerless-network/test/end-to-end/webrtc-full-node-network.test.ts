@@ -86,7 +86,7 @@ describe('Full node network with WebRTC connections', () => {
             randomGraphId,
             randomEthereumAddress()
         )
-        entryPoint.getStreamrNode()!.publishToStream(randomGraphId, msg)
+        entryPoint.getStreamrNode()!.publishToStream(msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
     }, 120000)
 
