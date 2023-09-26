@@ -51,6 +51,7 @@ describe('EncryptionUtil', () => {
             nextEncryptionKey: nextKey
         })
         EncryptionUtil.decryptStreamMessage(streamMessage, key)
+        // Coparing this way as jest does not like comparing buffers to Uint8Arrays
         expect(binaryToUtf8(streamMessage.getSerializedContent())).toStrictEqual('{"foo":"bar"}')
         expect(streamMessage.encryptionType).toStrictEqual(EncryptionType.NONE)
         expect(streamMessage.groupKeyId).toBe(key.id)
