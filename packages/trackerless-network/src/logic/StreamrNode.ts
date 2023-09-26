@@ -106,7 +106,6 @@ export class StreamrNode extends EventEmitter<Events> {
     public config: StreamrNodeConfig
     private readonly streams: Map<string, StreamObject>
     private readonly knownStreamEntryPoints: Map<string, PeerDescriptor[]> = new Map()
-    protected extraMetadata: Record<string, unknown> = {}
     private started = false
     private destroyed = false
 
@@ -394,10 +393,6 @@ export class StreamrNode extends EventEmitter<Events> {
 
     getStreamParts(): StreamPartID[] {
         return Array.from(this.streams.keys()).map((id) => StreamPartIDUtils.parse(id))
-    }
-
-    setExtraMetadata(metadata: Record<string, unknown>): void {
-        this.extraMetadata = metadata
     }
 }
 

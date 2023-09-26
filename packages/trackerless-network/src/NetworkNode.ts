@@ -38,10 +38,6 @@ export class NetworkNode {
         await this.stack.start(doJoin)
     }
 
-    setExtraMetadata(metadata: Record<string, unknown>): void {
-        this.stack.getStreamrNode().setExtraMetadata(metadata)
-    }
-
     async inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
         return this.stack.getStreamrNode().inspect(node, streamPartId)
     }
