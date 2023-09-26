@@ -1,5 +1,4 @@
 import { randomFillSync } from 'crypto'
-
 import { Client } from 'cassandra-driver'
 import toArray from 'stream-to-array'
 import { Storage } from '../../../../src/plugins/storage/Storage'
@@ -48,8 +47,7 @@ function buildEncryptedMsg({
     timestamp,
     sequenceNumber,
     publisherId = publisherZero,
-    msgChainId = '1',
-    content = 'ab3516983712fa4eb216a898ddd'
+    msgChainId = '1'
 }: {
     streamId: string
     streamPartition: number
@@ -57,11 +55,10 @@ function buildEncryptedMsg({
     sequenceNumber: number
     publisherId?: EthereumAddress
     msgChainId?: string
-    content?: string
 }) {
     return new StreamMessage({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
-        content: utf8ToBinary(content),
+        content: new Uint8Array([1, 2, 3]),
         encryptionType: EncryptionType.AES,
         signature: hexToBinary('0x1234'),
         groupKeyId: 'groupKeyId'
