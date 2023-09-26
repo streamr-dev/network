@@ -28,8 +28,8 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
     "@ethersproject/hdnode": "^5.4.0",
-    "@streamr/config": "^4.0.6",
-    "@streamr/network-contracts": "^6.1.0",
+    "@streamr/config": "^4.0.7",
+    "@streamr/network-contracts": "^7.0.0",
     "@streamr/protocol": "0.0.1-tatum.2",
     "@streamr/utils": "0.0.1-tatum.2",
     "aedes": "^0.50.0",

@@ -22,7 +22,7 @@ export interface SetupOperatorContractOpts {
             DATA: string
             OperatorFactory: string
             OperatorDefaultDelegationPolicy: string
-            OperatorDefaultPoolYieldPolicy: string
+            OperatorDefaultExchangeRatePolicy: string
             OperatorDefaultUndelegationPolicy: string
         }
     }
@@ -80,7 +80,7 @@ interface DeployOperatorContractOpts {
         contracts: {
             OperatorFactory: string
             OperatorDefaultDelegationPolicy: string
-            OperatorDefaultPoolYieldPolicy: string
+            OperatorDefaultExchangeRatePolicy: string
             OperatorDefaultUndelegationPolicy: string
         }
     }
@@ -104,7 +104,7 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
         opts.metadata ?? '',
         [
             chainConfig.contracts.OperatorDefaultDelegationPolicy,
-            chainConfig.contracts.OperatorDefaultPoolYieldPolicy,
+            chainConfig.contracts.OperatorDefaultExchangeRatePolicy,
             chainConfig.contracts.OperatorDefaultUndelegationPolicy,
         ], [
             0,
