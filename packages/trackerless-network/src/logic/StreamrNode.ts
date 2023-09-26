@@ -17,9 +17,9 @@ import {
     EthereumAddress
 } from '@streamr/utils'
 import { uniq } from 'lodash'
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import { sampleSize } from 'lodash'
-import { StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
+import { NETWORK_SPLIT_AVOIDANCE_LIMIT, StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
 import { ILayer0 } from './ILayer0'
 import { createRandomGraphNode } from './createRandomGraphNode'
 import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
@@ -106,7 +106,6 @@ export class StreamrNode extends EventEmitter<Events> {
     public config: StreamrNodeConfig
     private readonly streams: Map<string, StreamObject>
     private readonly knownStreamEntryPoints: Map<string, PeerDescriptor[]> = new Map()
-    protected extraMetadata: Record<string, unknown> = {}
     private started = false
     private destroyed = false
 
@@ -172,7 +171,8 @@ export class StreamrNode extends EventEmitter<Events> {
         }
     }
 
-    publishToStream(streamPartId: StreamPartID, msg: StreamMessage): void {
+    publishToStream(msg: StreamMessage): void {
+        const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
         if (this.streams.has(streamPartId)) {
             this.streams.get(streamPartId)!.layer2.broadcast(msg)
         } else {
@@ -217,10 +217,9 @@ export class StreamrNode extends EventEmitter<Events> {
             forwardingNode
         )
         entryPoints = knownEntryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await layer1.joinDht(sampleSize(entryPoints, 4))
+        await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT), true, knownEntryPoints.length > 0)
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
-            discoveryResult.joiningEmptyStream,
             discoveryResult.entryPointsFromDht,
             entryPoints.length
         )
@@ -247,8 +246,8 @@ export class StreamrNode extends EventEmitter<Events> {
             peerDescriptor: this.layer0!.getPeerDescriptor(),
             entryPoints,
             numberOfNodesPerKBucket: 4,
-            rpcRequestTimeout: 15000,
-            dhtJoinTimeout: 60000,
+            rpcRequestTimeout: 5000,
+            dhtJoinTimeout: 20000,
             nodeName: this.config.nodeName + ':layer1'
         })
     }
@@ -280,7 +279,7 @@ export class StreamrNode extends EventEmitter<Events> {
             const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, 1)
             await neighborCounter.waitForTargetReached(timeout)
         }
-        this.publishToStream(streamPartId, msg)
+        this.publishToStream(msg)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborIds().length ?? 0
     }
 
@@ -359,9 +358,9 @@ export class StreamrNode extends EventEmitter<Events> {
         this.knownStreamEntryPoints.set(streamPartId, entryPoints)
     }
 
-    isProxiedStreamPart(streamId: string, direction: ProxyDirection): boolean {
+    isProxiedStreamPart(streamId: string, direction?: ProxyDirection): boolean {
         return this.streams.get(streamId)?.type === StreamNodeType.PROXY 
-            && (this.streams.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction
+            && ((direction === undefined) || (this.streams.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction)
     }
 
     hasProxyConnection(streamId: string, nodeId: NodeID, direction: ProxyDirection): boolean {
@@ -395,15 +394,6 @@ export class StreamrNode extends EventEmitter<Events> {
     getStreamParts(): StreamPartID[] {
         return Array.from(this.streams.keys()).map((id) => StreamPartIDUtils.parse(id))
     }
-
-    setExtraMetadata(metadata: Record<string, unknown>): void {
-        this.extraMetadata = metadata
-    }
-
-    isJoinRequired(streamPartId: StreamPartID): boolean {
-        return !this.streams.has(streamPartId) && Array.from(this.streams.values()).every((stream) => stream.type === StreamNodeType.PROXY)
-    }
-
 }
 
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {

@@ -18,7 +18,7 @@ export interface ILayer1 {
     getNeighborList: () => SortedContactList<DhtPeer>
     getKBucketPeers: () => PeerDescriptor[]
     getBucketSize: () => number
-    joinDht: (entryPoints: PeerDescriptor[], doRandomJoin?: boolean) => Promise<void>
+    joinDht: (entryPoints: PeerDescriptor[], doRandomJoin?: boolean, retry?: boolean) => Promise<void>
     start: () => Promise<void>
     stop: () => Promise<void>
 }

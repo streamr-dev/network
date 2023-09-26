@@ -59,7 +59,7 @@ describe('OperatorPlugin', () => {
         const receivedMessages = await collect(subscription, 1)
         clearInterval(publishTimer)
 
-        expect(receivedMessages![0].content).toEqual({ foo: 'bar' })
+        expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
         await subscriber.destroy()
         await publisher.destroy()
     }, 30 * 1000)

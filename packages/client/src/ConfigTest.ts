@@ -1,5 +1,5 @@
 import { toEthereumAddress } from '@streamr/utils'
-import { StreamrClientConfig, NetworkNodeType } from './Config'
+import { StreamrClientConfig } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
@@ -15,14 +15,7 @@ function toNumber(value: any): number | undefined {
 export const CONFIG_TEST: StreamrClientConfig = {
     network: {
         controlLayer: {
-            entryPoints: [{
-                id: 'b1',
-                type: NetworkNodeType.NODEJS,
-                websocket: {
-                    ip: '127.0.0.1',
-                    port: 40401
-                }
-            }],
+            entryPoints: CHAIN_CONFIG.dev2.entryPoints,
             websocketPortRange: {
                 min: 32400,
                 max: 32800

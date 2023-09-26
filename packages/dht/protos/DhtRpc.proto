@@ -142,26 +142,15 @@ message PeerDescriptor {
 }
 
 message ConnectivityMethod {
-  uint32 port = 2;
-  string ip = 3;
+  uint32 port = 1;
+  string host = 2;
+  bool tls = 3;
 }
 
 enum NodeType {
   NODEJS = 0;
   BROWSER = 1;
   VIRTUAL = 3;
-}
-
-message ConnectivityReportRequest {
-  uint32 port = 1;
-  string requestId = 2;
-}
-
-message ConnectivityReportResponse {
-  string open_internet = 1;
-  string ip = 2;
-  string natType = 3;
-  string requestId = 4;
 }
 
 enum RpcResponseError {
@@ -192,11 +181,13 @@ message RouteMessageAck {
 
 message ConnectivityRequest {
   uint32 port = 1;
+  bool tls = 2;
+  optional string host = 3;
 }
 
 message ConnectivityResponse {
   bool open_internet = 1;
-  string ip = 2;
+  string host = 2;
   string natType = 3;
   ConnectivityMethod websocket = 4;
 }

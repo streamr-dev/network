@@ -93,7 +93,7 @@ describe('RemoteRandomGraphNode', () => {
     })
 
     it('leaveNotice', async () => {
-        await remoteRandomGraphNode.leaveStreamNotice(clientNode)
+        remoteRandomGraphNode.leaveStreamNotice(clientNode)
         await waitForCondition(() => recvCounter === 1)
     })
 

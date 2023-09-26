@@ -135,8 +135,8 @@ export class StreamMessageTranslator {
         let newGroupKey: OldEncryptedGroupKey | undefined = undefined
         if (msg.newGroupKey) {
             newGroupKey = new OldEncryptedGroupKey(
-                msg.newGroupKey!.id,
-                msg.newGroupKey!.data,
+                msg.newGroupKey.id,
+                msg.newGroupKey.data,
             )
         }
         const translated = new OldStreamMessage({

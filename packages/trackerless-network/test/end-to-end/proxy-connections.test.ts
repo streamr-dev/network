@@ -15,13 +15,13 @@ describe('Proxy connections', () => {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         nodeName: 'proxyNode',
-        websocket: { ip: 'localhost', port: 23132 }
+        websocket: { host: '127.0.0.1', port: 23132, tls: false }
     }
     const proxyNodeDescriptor2: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         nodeName: 'proxyNode',
-        websocket: { ip: 'localhost', port: 23133 }
+        websocket: { host: '127.0.0.1', port: 23133, tls: false }
     }
     const proxiedNodeDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),
@@ -63,7 +63,7 @@ describe('Proxy connections', () => {
             }
         })
         await proxyNode1.start()
-        await proxyNode1.setStreamPartEntryPoints(streamPartId, [proxyNodeDescriptor1])
+        proxyNode1.setStreamPartEntryPoints(streamPartId, [proxyNodeDescriptor1])
         await proxyNode1.stack.getStreamrNode()!.joinStream(streamPartId)
        
         proxyNode2 = createNetworkNode({
@@ -205,8 +205,7 @@ describe('Proxy connections', () => {
         await waitForCondition(() => 
             proxiedNode.hasProxyConnection(streamPartId, getNodeIdFromPeerDescriptor(proxyNodeDescriptor1), ProxyDirection.SUBSCRIBE)
         , 25000)
-        expect(proxyNode1.hasProxyConnection(streamPartId, proxiedNodeId, ProxyDirection.SUBSCRIBE)).toBe(false)
-
+        expect(proxyNode1.hasProxyConnection(streamPartId, proxiedNodeId, ProxyDirection.SUBSCRIBE)).toBe(true)
     }, 30000)
 
     it('cannot subscribe on proxy publish streams', async () => {

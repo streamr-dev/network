@@ -8,6 +8,7 @@ import {
     LockResponse,
     Message,
     MessageType,
+    NodeType,
     PeerDescriptor,
     UnlockRequest
 } from '../proto/packages/dht/protos/DhtRpc'
@@ -51,7 +52,9 @@ export class ConnectionManagerConfig {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    externalIp?: string
     webrtcPortRange?: PortRange
+    tlsCertificate?: TlsCertificate
 
     // the following fields are used in simulation only
     simulator?: Simulator
@@ -113,6 +116,11 @@ export interface PortRange {
     max: number
 }
 
+export interface TlsCertificate {
+    privateKeyFileName: string
+    certFileName: string
+}
+
 export type Events = TransportEvents & ConnectionManagerEvents
 
 export class ConnectionManager extends EventEmitter<Events> implements ITransport, ConnectionLocker {
@@ -167,7 +175,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 this.incomingConnectionCallback,
                 this.config.websocketPortRange,
                 this.config.websocketHost,
-                this.config.entryPoints
+                this.config.entryPoints,
+                this.config.tlsCertificate
             )
             logger.trace(`Creating WebRTCConnector`)
             this.webrtcConnector = new WebRtcConnector({
@@ -178,6 +187,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 connectionTimeout: this.config.webrtcNewConnectionTimeout,
+                externalIp: this.config.externalIp,
                 portRange: this.config.webrtcPortRange
             }, this.incomingConnectionCallback)
         }
@@ -340,8 +350,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     private isOwnWebSocketServer(peerDescriptor: PeerDescriptor): boolean {
         if ((peerDescriptor.websocket !== undefined) && (this.ownPeerDescriptor!.websocket !== undefined)) {
-            return ((peerDescriptor.websocket.port === this.ownPeerDescriptor!.websocket!.port) 
-                && (peerDescriptor.websocket.ip === this.ownPeerDescriptor!.websocket.ip))
+            return ((peerDescriptor.websocket.port === this.ownPeerDescriptor!.websocket.port) 
+                && (peerDescriptor.websocket.host === this.ownPeerDescriptor!.websocket.host))
         } else {
             return false
         }
@@ -351,7 +361,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.simulatorConnector) {
             return this.simulatorConnector.connect(peerDescriptor)
         } else if (peerDescriptor.websocket || this.ownPeerDescriptor!.websocket) {
-            return this.webSocketConnector!.connect(peerDescriptor)
+            if (!(peerDescriptor.type === NodeType.BROWSER && this.ownPeerDescriptor!.websocket?.tls)) {
+                return this.webSocketConnector!.connect(peerDescriptor)
+            }
         }
         return this.webrtcConnector!.connect(peerDescriptor)
     }

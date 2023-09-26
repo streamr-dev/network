@@ -48,8 +48,8 @@ describe('RandomGraphNode', () => {
         await randomGraphNode.start()
     })
 
-    afterEach(async () => {
-        await randomGraphNode.stop()
+    afterEach(() => {
+        randomGraphNode.stop()
     })
 
     it('getTargetNeighborIds', () => {
@@ -99,6 +99,24 @@ describe('RandomGraphNode', () => {
         await waitForCondition(() => randomNodeView.size() === 2)
         expect(randomNodeView.getNeighborById(nodeId1)).toBeTruthy()
         expect(randomNodeView.getNeighborById(nodeId2)).toBeTruthy()
+    })
+
+    it('Adds Nodes from layer1 KBucket to nearbyNodeView if its size is below nodeViewSize', async () => {
+        const nodeId1 = createRandomNodeId()
+        const peerDescriptor1 = {
+            kademliaId: hexToBinary(nodeId1),
+            type: NodeType.NODEJS 
+        }
+        const nodeId2 = createRandomNodeId()
+        const peerDescriptor2 = {
+            kademliaId: hexToBinary(nodeId2),
+            type: NodeType.NODEJS 
+        }
+        layer1.addNewRandomPeerToKBucket()
+        layer1.emit('newContact', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
+        await waitForCondition(() => nearbyNodeView.size() === 3)
+        expect(nearbyNodeView.getNeighborById(nodeId1)).toBeTruthy()
+        expect(nearbyNodeView.getNeighborById(nodeId2)).toBeTruthy()
     })
 
 })
