@@ -89,11 +89,6 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    setExtraMetadata(_metadata: Record<string, unknown>): void {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     getMetricsContext(): MetricsContext {
         throw new Error('not implemented')
     }
