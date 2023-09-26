@@ -88,9 +88,10 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     private async joinDht(): Promise<void> {
-        setImmediate(() => {
+        setImmediate(async () => {
             if (this.options.layer0?.entryPoints !== undefined) {
-                this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
+                // TODO should catch possible rejection?
+                await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
             }
         })
         await this.waitForFirstConnection()
