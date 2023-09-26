@@ -17,19 +17,13 @@ class ReadynessListener {
     constructor(networkStack: NetworkStack, dhtNode: DhtNode) {
         this.networkStack = networkStack
         this.dhtNode = dhtNode
-        this.networkStack.on('stopped', this.onStopped)
-        this.dhtNode.on('connected', this.onConnected)
+        this.networkStack.on('stopped', this.onDone)
+        this.dhtNode.on('connected', this.onDone)
     }
 
-    private onConnected = () => {
-        this.networkStack.off('stopped', this.onStopped)
-        this.dhtNode.off('connected', this.onConnected)
-        this.emitter.emit('done')
-    }
-
-    private onStopped = () => {
-        this.networkStack.off('stopped', this.onStopped)
-        this.dhtNode.off('connected', this.onConnected)
+    private onDone = () => {
+        this.networkStack.off('stopped', this.onDone)
+        this.dhtNode.off('connected', this.onDone)
         this.emitter.emit('done')
     }
 
