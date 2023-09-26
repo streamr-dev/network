@@ -4,13 +4,13 @@ import { MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamPartID } from '@streamr/protocol'
 
-interface ReadynessEvents {
+interface ReadinessEvents {
     done: () => void
 }
 
-class ReadynessListener {
+class ReadinessListener {
 
-    private readonly emitter = new EventEmitter<ReadynessEvents>()
+    private readonly emitter = new EventEmitter<ReadinessEvents>()
     private readonly networkStack: NetworkStack
     private readonly dhtNode: DhtNode
 
@@ -29,7 +29,7 @@ class ReadynessListener {
 
     public async waitUntilReady(timeout: number): Promise<void> {
         if (this.dhtNode.getNumberOfConnections() === 0) {
-            await waitForEvent3<ReadynessEvents>(this.emitter, 'done', timeout)
+            await waitForEvent3<ReadinessEvents>(this.emitter, 'done', timeout)
         }
     }
 }
@@ -97,9 +97,9 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     private async waitForFirstConnection(): Promise<void> {
-        const readynessListener = new ReadynessListener(this, this.layer0DhtNode!)
+        const readinessListener = new ReadinessListener(this, this.layer0DhtNode!)
         const timeout = this.options.networkNode?.firstConnectionTimeout ?? DEFAULT_FIRST_CONNECTION_TIMEOUT
-        await readynessListener.waitUntilReady(timeout)
+        await readinessListener.waitUntilReady(timeout)
     }
 
     async joinLayer0IfRequired(streamPartId: StreamPartID): Promise<void> {
