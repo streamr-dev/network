@@ -100,15 +100,15 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     async joinLayer0IfRequired(streamPartId: StreamPartID): Promise<void> {
-        if (this.isJoinRequired(streamPartId)) {
+        if (this.streamrNode!.isProxiedStreamPart(streamPartId)) {
+            return
+        }
+        // TODO we could wrap joinDht with pOnce and call it here (no else-if needed in that case)
+        if (!this.layer0DhtNode!.hasJoined()) {
             await this.joinDht()
         } else if (this.layer0DhtNode!.getNumberOfConnections() < 1) {
             await this.waitForFirstConnection()
         }
-    }
-
-    private isJoinRequired(streamPartId: StreamPartID): boolean {
-        return !this.layer0DhtNode!.hasJoined() && this.streamrNode!.isJoinRequired(streamPartId)
     }
 
     getStreamrNode(): StreamrNode {
