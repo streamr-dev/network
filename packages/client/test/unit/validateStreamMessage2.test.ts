@@ -15,7 +15,7 @@ import { Authentication } from '../../src/Authentication'
 import { Stream } from '../../src/Stream'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
-import { createRandomAuthentication } from '../test-utils/utils'
+import { createRandomAuthentication, MOCK_CONTENT } from '../test-utils/utils'
 
 const groupKeyMessageToStreamMessage = async (
     groupKeyMessage: GroupKeyMessage,
@@ -75,13 +75,13 @@ describe('Validator2', () => {
 
         msg = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
-            serializedContent: utf8ToBinary(JSON.stringify({})),
+            serializedContent: MOCK_CONTENT,
             authentication: publisherAuthentication
         })
 
         msgWithNewGroupKey = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
-            serializedContent: utf8ToBinary(JSON.stringify({})),
+            serializedContent: MOCK_CONTENT,
             newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
             authentication: publisherAuthentication
         })
@@ -89,7 +89,7 @@ describe('Validator2', () => {
 
         msgWithPrevMsgRef = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, publisher, 'msgChainId'),
-            serializedContent: utf8ToBinary(JSON.stringify({})),
+            serializedContent: MOCK_CONTENT,
             prevMsgRef: new MessageRef(1000, 0),
             authentication: publisherAuthentication
         })
