@@ -52,13 +52,14 @@ export interface NetworkStackEvents {
     stopped: () => void
 }
 
+const DEFAULT_FIRST_CONNECTION_TIMEOUT = 5000
+
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     private layer0DhtNode?: DhtNode
     private streamrNode?: StreamrNode
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
-    private readonly firstConnectionTimeout: number
     private dhtJoinRequired = true
 
     constructor(options: NetworkOptions) {
@@ -74,7 +75,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             nodeName: options.networkNode?.nodeName ?? options.layer0?.nodeName,
             metricsContext: this.metricsContext
         })
-        this.firstConnectionTimeout = options.networkNode?.firstConnectionTimeout ?? 5000
     }
 
     async start(doJoin = true): Promise<void> {
@@ -84,7 +84,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             isSamePeerDescriptor(entryPoint, this.layer0DhtNode!.getPeerDescriptor())
         ))) {
             this.dhtJoinRequired = false
-            // TODO should this go via this.join?
+            // TODO would it make sense to call this.joinDht here?
             await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
         } else {
             if (doJoin) {
@@ -106,7 +106,8 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     private async waitForFirstConnection(): Promise<void> {
         const readynessListener = new ReadynessListener(this, this.layer0DhtNode!)
-        await readynessListener.waitUntilReady(this.firstConnectionTimeout)
+        const timeout = this.options.networkNode?.firstConnectionTimeout ?? DEFAULT_FIRST_CONNECTION_TIMEOUT
+        await readynessListener.waitUntilReady(timeout)
     }
 
     async joinLayer0IfRequired(streamPartId: StreamPartID): Promise<void> {
