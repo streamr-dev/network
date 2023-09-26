@@ -87,7 +87,7 @@ describe('inspect', () => {
                 123123,
                 sequenceNumber
             )
-            await publisherNode.getStreamrNode().publishToStream(msg)
+            publisherNode.getStreamrNode().publishToStream(msg)
             sequenceNumber += 1
         }, 200)
 

@@ -292,7 +292,7 @@ export async function fetchPrivateKeyWithGas(): Promise<string> {
     }
 
     if (!response.ok) {
-        throw new Error(`fetchPrivateKeyWithGas failed ${response.status} ${response.statusText}: ${response.text()}`)
+        throw new Error(`fetchPrivateKeyWithGas failed ${response.status} ${response.statusText}: ${await response.text()}`)
     }
 
     return response.text()
