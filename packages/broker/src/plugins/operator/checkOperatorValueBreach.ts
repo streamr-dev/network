@@ -12,11 +12,11 @@ export const checkOperatorValueBreach = async (
         return
     }
     logger.info('Check earnings', { targetOperatorAddress })
-    const { sumDataWei, rewardThresholdDataWei, sponsorshipAddresses } = await helper.getEarningsOf(targetOperatorAddress)
-    logger.trace(` -> is ${sumDataWei} > ${rewardThresholdDataWei}?`)
-    if (sumDataWei > rewardThresholdDataWei) {
+    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await helper.getEarningsOf(targetOperatorAddress)
+    logger.trace(` -> is ${sumDataWei} > ${maxAllowedEarningsDataWei}?`)
+    if (sumDataWei > maxAllowedEarningsDataWei) {
         logger.info('Withdraw earnings from sponsorships (target operator value in breach)',
-            { targetOperatorAddress, sponsorshipAddresses, sumDataWei, rewardThresholdDataWei })
+            { targetOperatorAddress, sponsorshipAddresses, sumDataWei, maxAllowedEarningsDataWei })
         await helper.triggerWithdraw(targetOperatorAddress, sponsorshipAddresses)
     }
 }

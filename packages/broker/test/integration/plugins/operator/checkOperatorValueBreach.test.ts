@@ -42,7 +42,7 @@ describe('checkOperatorValueBreach', () => {
         }
     }, 60 * 1000)
 
-    it('withdraws the other Operators earnings when they are above the penalty limit', async () => {
+    it('withdraws the other Operators earnings when they are above the limit', async () => {
         // eslint-disable-next-line max-len
         const { operatorServiceConfig: watcherConfig, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)

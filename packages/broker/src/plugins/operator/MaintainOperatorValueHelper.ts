@@ -11,7 +11,7 @@ const logger = new Logger(module)
 interface EarningsData {
     sponsorshipAddresses: EthereumAddress[]
     sumDataWei: bigint
-    rewardThresholdDataWei: bigint
+    maxAllowedEarningsDataWei: bigint
 }
 
 export class MaintainOperatorValueHelper {
@@ -51,7 +51,7 @@ export class MaintainOperatorValueHelper {
         const {
             addresses: allSponsorshipAddresses,
             earnings,
-            rewardThreshold,
+            maxAllowedEarnings,
         } = await operator.getSponsorshipsAndEarnings()
 
         const sponsorships = allSponsorshipAddresses
@@ -63,7 +63,7 @@ export class MaintainOperatorValueHelper {
         return {
             sponsorshipAddresses: sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address)),
             sumDataWei: sponsorships.reduce((sum, sponsorship) => sum += sponsorship.earnings, 0n),
-            rewardThresholdDataWei: rewardThreshold.toBigInt()
+            maxAllowedEarningsDataWei: maxAllowedEarnings.toBigInt()
         }
     }
 
