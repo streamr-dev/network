@@ -54,7 +54,7 @@ describe('checkOperatorValueBreach', () => {
         const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: parseEther('2'), streamId, deployer: operatorWallet })
         await sponsor(sponsorer, sponsorship2.address, 250)
         await stake(operatorContract, sponsorship2.address, 100)
-        const valueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
+        const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
         const driftLimitFraction = await streamrConfig.poolValueDriftLimitFraction()
@@ -76,7 +76,7 @@ describe('checkOperatorValueBreach', () => {
 
         const earnings = await getEarnings(operatorContract)
         expect(earnings).toBeLessThan(allowedDifference)
-        const valueAfterWithdraw = await operatorContract.getApproximatePoolValue()
+        const valueAfterWithdraw = await operatorContract.valueWithoutEarnings()
         expect(valueAfterWithdraw.toBigInt()).toBeGreaterThan(valueBeforeWithdraw.toBigInt())
 
     }, 60 * 1000)

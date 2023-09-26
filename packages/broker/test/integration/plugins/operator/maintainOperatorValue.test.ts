@@ -49,13 +49,13 @@ describe('maintainOperatorValue', () => {
             const earnings = sumDataWei
             return earnings > triggerWithdrawLimitDataWei
         }, 10000, 1000)
-        const valueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
+        const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
 
         await maintainOperatorValue(
             SAFETY_FRACTION,
             helper
         )
-        const valueAfterWithdraw = await operatorContract.getApproximatePoolValue()
+        const valueAfterWithdraw = await operatorContract.valueWithoutEarnings()
         expect(valueAfterWithdraw.toBigInt()).toBeGreaterThan(valueBeforeWithdraw.toBigInt())
     }, 60 * 1000)
 })
