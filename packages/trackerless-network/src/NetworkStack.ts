@@ -52,7 +52,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     private streamrNode?: StreamrNode
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
-    private dhtJoinRequired = true
 
     constructor(options: NetworkOptions) {
         super()
@@ -75,12 +74,9 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
             isSamePeerDescriptor(entryPoint, this.layer0DhtNode!.getPeerDescriptor())
         ))) {
-            this.dhtJoinRequired = false
-            // TODO would it make sense to call this.joinDht here?
             await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
         } else {
             if (doJoin) {
-                this.dhtJoinRequired = false
                 await this.joinDht()
             }
         }
@@ -105,7 +101,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     async joinLayer0IfRequired(streamPartId: StreamPartID): Promise<void> {
         if (this.isJoinRequired(streamPartId)) {
-            this.dhtJoinRequired = false
             await this.joinDht()
         } else if (this.layer0DhtNode!.getNumberOfConnections() < 1) {
             await this.waitForFirstConnection()
@@ -113,7 +108,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     private isJoinRequired(streamPartId: StreamPartID): boolean {
-        return this.dhtJoinRequired && !this.layer0DhtNode!.hasJoined() && this.streamrNode!.isJoinRequired(streamPartId)
+        return !this.layer0DhtNode!.hasJoined() && this.streamrNode!.isJoinRequired(streamPartId)
     }
 
     getStreamrNode(): StreamrNode {
