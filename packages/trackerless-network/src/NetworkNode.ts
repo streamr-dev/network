@@ -85,9 +85,6 @@ export class NetworkNode {
     }
 
     removeMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
-        if (this.stopped) {
-            return
-        }
         pull(this.messageListeners, cb)
     }
 
