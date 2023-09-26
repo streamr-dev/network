@@ -55,7 +55,7 @@ export class NetworkNode {
 
         await this.stack.joinLayer0IfRequired(streamPartId)
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
-        this.stack.getStreamrNode().publishToStream(streamPartId, msg)
+        this.stack.getStreamrNode().publishToStream(msg)
     }
 
     async subscribe(streamPartId: StreamPartID): Promise<void> {
