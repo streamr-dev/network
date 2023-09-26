@@ -1,9 +1,9 @@
-import { ServerCallContext } from "@protobuf-ts/runtime-rpc"
-import { InfoRequest, InfoResponse } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
-import { IInfoRpc } from "../../proto/packages/trackerless-network/protos/NetworkRpc.server"
-import { NetworkStack } from "../../NetworkStack"
-import { StreamPartIDUtils } from "@streamr/protocol"
-import { ListeningRpcCommunicator } from "@streamr/dht"
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { InfoRequest, InfoResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { IInfoRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { NetworkStack } from '../../NetworkStack'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { ListeningRpcCommunicator } from '@streamr/dht'
 
 export const INFO_RPC_SERVICE_ID = 'InfoRpc'
 export class InfoRpcServer implements IInfoRpc {

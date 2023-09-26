@@ -3,6 +3,7 @@ import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
 import { MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamPartID } from '@streamr/protocol'
+import { InfoRpcServer } from './logic/info-rpc/InfoRpcServer'
 
 interface ReadynessEvents {
     done: () => void
@@ -52,8 +53,7 @@ export interface NetworkStackEvents {
     stopped: () => void
 }
 
-export class NetworkStack extends EventEmitter<NetworkStackEvents>  {
-
+export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     private connectionManager?: ConnectionManager
     private layer0DhtNode?: DhtNode
     private streamrNode?: StreamrNode
@@ -61,6 +61,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents>  {
     private readonly options: NetworkOptions
     private readonly firstConnectionTimeout: number
     private dhtJoinRequired = true
+    private infoServer?: InfoRpcServer
 
     constructor(options: NetworkOptions) {
         super()
@@ -94,6 +95,8 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents>  {
             }
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager, this.connectionManager)
         }
+        this.infoServer = new InfoRpcServer(this)
+        this.infoServer.registerDefaultServerMethods()
     }
 
     private async joinDht(): Promise<void> {
