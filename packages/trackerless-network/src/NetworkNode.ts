@@ -48,6 +48,7 @@ export class NetworkNode {
 
     async publish(streamMessage: StreamMessage): Promise<void> {
         const streamPartId = streamMessage.getStreamPartID()
+        // TODO move this check to somewhere else?
         if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) 
             && streamMessage.messageType === StreamMessageType.MESSAGE) {
             throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
@@ -59,6 +60,7 @@ export class NetworkNode {
     }
 
     async join(streamPartId: StreamPartID): Promise<void> {
+        // TODO move this check to somewhere else?
         if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
             throw new Error(`Cannot join to ${streamPartId} as proxy publish connections have been set`)
         }
