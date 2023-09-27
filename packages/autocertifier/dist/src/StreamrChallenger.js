@@ -7,6 +7,7 @@ const proto_rpc_1 = require("@streamr/proto-rpc");
 const AutoCertifier_client_1 = require("./proto/packages/autocertifier/protos/AutoCertifier.client");
 const utils_1 = require("@streamr/utils");
 const IConnection_1 = require("@streamr/dht/dist/src/connection/IConnection");
+const errors_1 = require("./errors");
 const logger = new utils_1.Logger(module);
 class StreamrChallenger {
     constructor() {
@@ -23,22 +24,24 @@ class StreamrChallenger {
                 kademliaId: dht_1.PeerID.fromString('AutoCertifierClient').value,
                 type: dht_1.NodeType.NODEJS,
                 websocket: {
-                    ip: streamrWebSocketIp,
-                    port: parseInt(streamrWebSocketPort)
+                    host: streamrWebSocketIp,
+                    port: parseInt(streamrWebSocketPort),
+                    tls: false
                 }
             };
             const socket = new dht_1.ClientWebSocket();
-            const address = 'ws://' + targetPeerDescriptor.websocket.ip + ':' +
+            const address = 'ws://' + targetPeerDescriptor.websocket.host + ':' +
                 targetPeerDescriptor.websocket.port;
             const managedConnection = new dht_1.ManagedConnection(this.ownPeerDescriptor, this.protocolVersion, IConnection_1.ConnectionType.WEBSOCKET_CLIENT, socket, undefined);
             managedConnection.setPeerDescriptor(targetPeerDescriptor);
             const onDisconnected = () => {
-                reject(new Error('disconnected'));
+                reject(new errors_1.FailedToConnectToStreamrWebSocket('Autocertifier failed to connect to '
+                    + address + '. Please chack that the IP address is not behind a NAT.'));
             };
             socket.on('disconnected', onDisconnected);
             managedConnection.on('handshakeCompleted', () => {
                 socket.off('disconnected', onDisconnected);
-                const communicator = new RoutingRpcCommunicator_1.RoutingRpcCommunicator(this.SERVICE_ID, (msg, doNotConnect) => {
+                const communicator = new RoutingRpcCommunicator_1.RoutingRpcCommunicator(this.SERVICE_ID, (msg, _doNotConnect) => {
                     logger.info('sending message to peer');
                     return managedConnection.send(dht_1.Message.toBinary(msg), true);
                 });
@@ -48,6 +51,7 @@ class StreamrChallenger {
                 const rpcClient = (0, proto_rpc_1.toProtoRpcClient)(new AutoCertifier_client_1.AutoCertifierServiceClient(communicator.getRpcClientTransport()));
                 rpcClient.getSessionId({ sessionId: sessionId }).then(() => {
                     resolve();
+                    return;
                 }).catch((e) => {
                     reject(e);
                 });

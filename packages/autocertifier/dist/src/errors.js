@@ -1,7 +1,7 @@
 "use strict";
 /* eslint-disable max-len */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ServerError = exports.InvalidSubdomainOrToken = exports.DatabaseError = exports.SteamrWebSocketPortMissing = exports.TokenMissing = exports.FailedToExtractIpAddress = exports.UnspecifiedError = exports.Err = exports.ErrorCode = void 0;
+exports.ServerError = exports.FailedToConnectToStreamrWebSocket = exports.InvalidSubdomainOrToken = exports.DatabaseError = exports.SteamrWebSocketPortMissing = exports.TokenMissing = exports.FailedToExtractIpAddress = exports.UnspecifiedError = exports.Err = exports.ErrorCode = void 0;
 const HttpStatus_1 = require("./data/HttpStatus");
 var ErrorCode;
 (function (ErrorCode) {
@@ -12,6 +12,7 @@ var ErrorCode;
     ErrorCode["DATABASE_ERROR"] = "DATABASE_ERROR";
     ErrorCode["INVALID_SUBDOMAIN_OR_TOKEN"] = "INVALID_SUBDOMAIN_OR_TOKEN";
     ErrorCode["SERVER_ERROR"] = "SERVER_ERROR";
+    ErrorCode["FAILED_TO_CONNECT_TO_STREAMR_WEBSOCKET"] = "FAILED_TO_CONNECT_TO_STREAMR_WEBSOCKET";
 })(ErrorCode || (exports.ErrorCode = ErrorCode = {}));
 class Err extends Error {
     constructor(code, httpStatus, message, originalError) {
@@ -55,6 +56,10 @@ class InvalidSubdomainOrToken extends Err {
     constructor(message, originalError) { super(ErrorCode.INVALID_SUBDOMAIN_OR_TOKEN, HttpStatus_1.HttpStatus.UNAUTHORIZED, message, originalError); }
 }
 exports.InvalidSubdomainOrToken = InvalidSubdomainOrToken;
+class FailedToConnectToStreamrWebSocket extends Err {
+    constructor(message, originalError) { super(ErrorCode.FAILED_TO_CONNECT_TO_STREAMR_WEBSOCKET, HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR, message, originalError); }
+}
+exports.FailedToConnectToStreamrWebSocket = FailedToConnectToStreamrWebSocket;
 class ServerError extends Err {
     constructor(originalError) {
         super(ErrorCode.SERVER_ERROR, originalError.httpStatus, originalError.message, originalError);

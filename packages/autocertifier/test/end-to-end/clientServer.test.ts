@@ -81,7 +81,7 @@ describe('clientServer', () => {
         })
 
         await clientConnectionManager.start((report) => {
-            expect(report.ip).toEqual('127.0.0.1')
+            expect(report.host).toEqual('127.0.0.1')
             expect(report.openInternet).toEqual(true)
             return createPeerDescriptor(report)
         })
@@ -102,10 +102,13 @@ describe('clientServer', () => {
         client.on('updatedSubdomain', (subdomain) => {
             logger.info(JSON.stringify(subdomain))
             expect(subdomain).toEqual(certifiedSubdomain)
-            client.stop().then(() => { done() }).catch((e) => { done.fail(e) })
+            client.stop().then(() => { 
+                done()
+                return
+            }).catch((e) => { done.fail(e) })
         })
 
-        client.start().then(() => {}).catch((e) => { done.fail(e) })
+        client.start().then(() => { return }).catch((e) => { done.fail(e) })
     })
 
     it.only('Starting the client throws an exception if AutoCertifier cannot connect to it using WebSocket', async () => {

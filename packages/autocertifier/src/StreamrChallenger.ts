@@ -26,14 +26,15 @@ export class StreamrChallenger {
                 kademliaId: PeerID.fromString('AutoCertifierClient').value,
                 type: NodeType.NODEJS,
                 websocket: {
-                    ip: streamrWebSocketIp,
-                    port: parseInt(streamrWebSocketPort)
+                    host: streamrWebSocketIp,
+                    port: parseInt(streamrWebSocketPort),
+                    tls: false
                 }
             }
 
             const socket = new ClientWebSocket()
 
-            const address = 'ws://' + targetPeerDescriptor.websocket!.ip + ':' +
+            const address = 'ws://' + targetPeerDescriptor.websocket!.host + ':' +
                 targetPeerDescriptor.websocket!.port
 
             const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
@@ -63,6 +64,7 @@ export class StreamrChallenger {
 
                 rpcClient.getSessionId({ sessionId: sessionId }).then(() => {
                     resolve()
+                    return
                 }).catch((e) => {
                     reject(e)
                 })

@@ -40,7 +40,7 @@ const filePathToNodeFormat_1 = require("./utlis/filePathToNodeFormat");
 const logger = new utils_1.Logger(module);
 class RestServer {
     constructor(ownIpAddress, port, caCertPath, caKeyPath, certPath, keyPath, engine) {
-        this.createSession = async (req, res) => {
+        this.createSession = async (_req, res) => {
             try {
                 const session = await this.engine.createSession();
                 this.sendResponse(res, session);
@@ -59,7 +59,7 @@ class RestServer {
                 return;
             }
             const streamrWebSocketPort = body.streamrWebSocketPort + '';
-            let streamrWebSocketCaCert = body.streamrWebSocketCaCert;
+            const streamrWebSocketCaCert = body.streamrWebSocketCaCert;
             const ipAndPort = this.extractIpAndPort(req);
             if (!ipAndPort) {
                 const err = new errors_1.FailedToExtractIpAddress('Failed to extract IP address from request');

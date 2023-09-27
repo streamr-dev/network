@@ -21,7 +21,7 @@ class AutoCertifier {
         return { sessionId: sessionId };
     }
     async createNewSubdomainAndCertificate(ipAddress, port, streamrWebSocketPort, sessionId, streamrWebSocketCaCert) {
-        console.log('Creating new subdomain and certificate for ' + ipAddress + ':' + port);
+        logger.trace('Creating new subdomain and certificate for ' + ipAddress + ':' + port);
         // this will throw if the client cannot answer the challenge of getting sessionId 
         await this.streamrChallenger.testStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId, streamrWebSocketCaCert);
         const subdomain = (0, uuid_1.v4)();

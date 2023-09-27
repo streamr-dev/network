@@ -7,7 +7,8 @@ export declare enum ErrorCode {
     STREAMR_WEBSOCKET_PORT_MISSING = "STREAMR_WEBSOCKET_PORT_MISSING",
     DATABASE_ERROR = "DATABASE_ERROR",
     INVALID_SUBDOMAIN_OR_TOKEN = "INVALID_SUBDOMAIN_OR_TOKEN",
-    SERVER_ERROR = "SERVER_ERROR"
+    SERVER_ERROR = "SERVER_ERROR",
+    FAILED_TO_CONNECT_TO_STREAMR_WEBSOCKET = "FAILED_TO_CONNECT_TO_STREAMR_WEBSOCKET"
 }
 export declare class Err extends Error {
     code: ErrorCode;
@@ -32,6 +33,9 @@ export declare class DatabaseError extends Err {
     constructor(message?: string, originalError?: Error | string);
 }
 export declare class InvalidSubdomainOrToken extends Err {
+    constructor(message?: string, originalError?: Error | string);
+}
+export declare class FailedToConnectToStreamrWebSocket extends Err {
     constructor(message?: string, originalError?: Error | string);
 }
 export declare class ServerError extends Err {

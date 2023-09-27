@@ -50,9 +50,13 @@ class RestClient {
             request_1.default.post(url, { json: body, ca: this.caCert }, (error, response, body) => {
                 if (error) {
                     reject(error);
-                    return;
                 }
-                resolve(body);
+                else if (response.statusCode >= 200 && response.statusCode < 300) {
+                    resolve(body);
+                }
+                else {
+                    reject(new errors_1.ServerError(body));
+                }
             });
         });
     }
@@ -61,9 +65,13 @@ class RestClient {
             request_1.default.post(url, { json: body, ca: this.caCert }, (error, response, body) => {
                 if (error) {
                     reject(error);
-                    return;
                 }
-                resolve(body);
+                else if (response.statusCode >= 200 && response.statusCode < 300) {
+                    resolve(body);
+                }
+                else {
+                    reject(new errors_1.ServerError(body));
+                }
             });
         });
     }
@@ -72,9 +80,8 @@ class RestClient {
             request_1.default.patch(url, { json: body, ca: this.caCert }, (error, response, body) => {
                 if (error) {
                     reject(error);
-                    return;
                 }
-                if (response.statusCode >= 200 && response.statusCode < 300) {
+                else if (response.statusCode >= 200 && response.statusCode < 300) {
                     resolve(body);
                 }
                 else {

@@ -49,9 +49,6 @@ class AutoCertifierClient extends eventemitter3_1.EventEmitter {
             try {
                 certifiedSubdomain = await this.restClient.createNewSubdomainAndCertificate(this.streamrWebSocketPort, sessionId);
             }
-            catch (e) {
-                throw new Error('Failed to create certificate)');
-            }
             finally {
                 this.ongoingSessions.delete(sessionId);
             }
@@ -93,14 +90,14 @@ class AutoCertifierClient extends eventemitter3_1.EventEmitter {
     }
     async start() {
         if (!fs_1.default.existsSync(this.subdomainPath)) {
-            this.createCertificate();
+            await this.createCertificate();
         }
         else {
             const subdomain = JSON.parse(fs_1.default.readFileSync(this.subdomainPath, 'utf8'));
             const certObj = forge.pki.certificateFromPem(subdomain.certificate.cert);
             const expiryTime = certObj.validity.notAfter.getTime();
             if (Date.now() > expiryTime) {
-                this.updateCertificate();
+                await this.updateCertificate();
             }
             else {
                 await this.updateSubdomainIpAndPort();
