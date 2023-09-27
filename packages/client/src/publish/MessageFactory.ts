@@ -23,7 +23,7 @@ import { StreamrClientError } from '../StreamrClientError'
 export interface MessageFactoryOptions {
     streamId: StreamID
     authentication: Authentication
-    streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher'>
+    streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
     groupKeyQueue: GroupKeyQueue
 }
 
@@ -51,7 +51,7 @@ export class MessageFactory {
     private defaultPartition: number | undefined
     private readonly defaultMessageChainIds: Mapping<[partition: number], string>
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
-    private readonly streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher'>
+    private readonly streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
     private readonly groupKeyQueue: GroupKeyQueue
 
     constructor(opts: MessageFactoryOptions) {
@@ -73,6 +73,7 @@ export class MessageFactory {
         const publisherId = await this.authentication.getAddress()
         const isPublisher = await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
         if (!isPublisher) {
+            this.streamRegistry.clearStreamCache(this.streamId)
             throw new StreamrClientError(`You don't have permission to publish to this stream. Using address: ${publisherId}`, 'MISSING_PERMISSION')
         }
 

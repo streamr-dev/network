@@ -1,8 +1,8 @@
 import { Contract } from '@ethersproject/contracts'
 import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { MaintainOperatorPoolValueHelper } from '../../../../src/plugins/operator/MaintainOperatorPoolValueHelper'
-import { checkOperatorPoolValueBreach } from '../../../../src/plugins/operator/checkOperatorPoolValueBreach'
+import { MaintainOperatorValueHelper } from '../../../../src/plugins/operator/MaintainOperatorValueHelper'
+import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
 import { createClient, createTestStream } from '../../../utils'
 import {
     SetupOperatorContractOpts,
@@ -25,7 +25,7 @@ const getEarnings = async (operatorContract: Operator): Promise<bigint> => {
     return earnings[0].toBigInt()
 }
 
-describe('checkOperatorPoolValueBreach', () => {
+describe('checkOperatorValueBreach', () => {
 
     let streamId: string
     let deployConfig: SetupOperatorContractOpts
@@ -41,7 +41,7 @@ describe('checkOperatorPoolValueBreach', () => {
         }
     }, 60 * 1000)
 
-    it('withdraws the other Operators earnings when they are above the penalty limit', async () => {
+    it('withdraws the other Operators earnings when they are above the limit', async () => {
         // eslint-disable-next-line max-len
         const { operatorServiceConfig: watcherConfig, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
@@ -53,12 +53,11 @@ describe('checkOperatorPoolValueBreach', () => {
         const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: 2, streamId, deployer: operatorWallet })
         await sponsor(sponsorer, sponsorship2.address, 250)
         await stake(operatorContract, sponsorship2.address, 100)
-        const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
+        const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
-        const poolValueDriftLimitFraction = await streamrConfig.poolValueDriftLimitFraction()
-        const allowedDifference = poolValueBeforeWithdraw.mul(poolValueDriftLimitFraction).div(ONE_ETHER).toBigInt()
-        const helper = new MaintainOperatorPoolValueHelper({
+        const allowedDifference = valueBeforeWithdraw.mul(await streamrConfig.maxAllowedEarningsFraction()).div(ONE_ETHER).toBigInt()
+        const helper = new MaintainOperatorValueHelper({
             ...watcherConfig,
             signer: watcherWallets[0]
         })
@@ -69,14 +68,14 @@ describe('checkOperatorPoolValueBreach', () => {
 
         logger.debug('Waiting until above', { allowedDifference })
         await waitForCondition(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
-        await checkOperatorPoolValueBreach(
+        await checkOperatorValueBreach(
             helper
         )
 
         const earnings = await getEarnings(operatorContract)
         expect(earnings).toBeLessThan(allowedDifference)
-        const poolValueAfterWithdraw = await operatorContract.getApproximatePoolValue()
-        expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
+        const valueAfterWithdraw = await operatorContract.valueWithoutEarnings()
+        expect(valueAfterWithdraw.toBigInt()).toBeGreaterThan(valueBeforeWithdraw.toBigInt())
 
     }, 60 * 1000)
 })

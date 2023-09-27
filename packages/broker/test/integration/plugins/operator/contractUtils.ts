@@ -22,7 +22,7 @@ export interface SetupOperatorContractOpts {
             DATA: string
             OperatorFactory: string
             OperatorDefaultDelegationPolicy: string
-            OperatorDefaultPoolYieldPolicy: string
+            OperatorDefaultExchangeRatePolicy: string
             OperatorDefaultUndelegationPolicy: string
         }
     }
@@ -75,12 +75,12 @@ interface DeployOperatorContractOpts {
     deployer: Wallet
     operatorsCutPercent?: number
     metadata?: string
-    poolTokenName?: string
+    operatorTokenName?: string
     chainConfig?: {
         contracts: {
             OperatorFactory: string
             OperatorDefaultDelegationPolicy: string
-            OperatorDefaultPoolYieldPolicy: string
+            OperatorDefaultExchangeRatePolicy: string
             OperatorDefaultUndelegationPolicy: string
         }
     }
@@ -100,11 +100,11 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
     }
     const operatorReceipt = await (await operatorFactory.deployOperator(
         parseEther('1').mul(opts.operatorsCutPercent ?? 0).div(100),
-        opts.poolTokenName ?? `Pool-${Date.now()}`,
+        opts.operatorTokenName ?? `OperatorToken-${Date.now()}`,
         opts.metadata ?? '',
         [
             chainConfig.contracts.OperatorDefaultDelegationPolicy,
-            chainConfig.contracts.OperatorDefaultPoolYieldPolicy,
+            chainConfig.contracts.OperatorDefaultExchangeRatePolicy,
             chainConfig.contracts.OperatorDefaultUndelegationPolicy,
         ], [
             0,
