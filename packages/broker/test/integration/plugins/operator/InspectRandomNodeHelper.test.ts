@@ -4,7 +4,7 @@ import fetch from 'node-fetch'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { createClient, createTestStream } from '../../../utils'
 import {
-    THE_GRAPH_URL,
+    TEST_CHAIN_CONFIG,
     delegate,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
@@ -13,9 +13,9 @@ import {
     stake
 } from './contractUtils'
 
-jest.setTimeout(600 * 1000)
+const TIMEOUT = 90 * 1000
 
-describe('InspectRandomNodeHelper', () => {
+describe(InspectRandomNodeHelper, () => {
 
     let streamId1: string
     let streamId2: string
@@ -28,17 +28,17 @@ describe('InspectRandomNodeHelper', () => {
         await client.destroy()
 
         graphClient = new TheGraphClient({
-            serverUrl: THE_GRAPH_URL,
+            serverUrl: TEST_CHAIN_CONFIG.theGraphUrl,
             fetch,
             logger: new Logger(module)
         })
-    })
+    }, TIMEOUT)
 
     it('getSponsorshipsOfOperator, getOperatorsInSponsorship', async () => {
         const { operatorWallet, operatorContract, operatorServiceConfig } = await setupOperatorContract()
         const inspectRandomNodeHelper = new InspectRandomNodeHelper({
             ...operatorServiceConfig,
-            nodeWallet: undefined as any
+            signer: undefined as any
         })
 
         const sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
@@ -49,16 +49,27 @@ describe('InspectRandomNodeHelper', () => {
         await stake(operatorContract, sponsorship2.address, 100)
 
         await waitForCondition(async (): Promise<boolean> => {
-            const res = await inspectRandomNodeHelper.getSponsorshipsOfOperator(toEthereumAddress(operatorContract.address), 0)
+            const res = await inspectRandomNodeHelper.getSponsorshipsOfOperator(toEthereumAddress(operatorContract.address))
             return res.length === 2
-        }, 10000, 1000)
+        }, 10000, 500)
 
-        const sponsorships = await inspectRandomNodeHelper.getSponsorshipsOfOperator(toEthereumAddress(operatorContract.address), 0)
-        expect(sponsorships).toEqual(expect.arrayContaining([toEthereumAddress(sponsorship1.address), toEthereumAddress(sponsorship2.address)]))
+        const sponsorships = await inspectRandomNodeHelper.getSponsorshipsOfOperator(toEthereumAddress(operatorContract.address))
+        expect(sponsorships).toIncludeSameMembers([
+            {
+                sponsorshipAddress: toEthereumAddress(sponsorship1.address),
+                operatorCount: 1,
+                streamId: streamId1
+            },
+            {
+                sponsorshipAddress: toEthereumAddress(sponsorship2.address),
+                operatorCount: 1,
+                streamId: streamId2
+            }
+        ])
 
-        const operators = await inspectRandomNodeHelper.getOperatorsInSponsorship(toEthereumAddress(sponsorship1.address), 0)
+        const operators = await inspectRandomNodeHelper.getOperatorsInSponsorship(toEthereumAddress(sponsorship1.address))
         expect(operators).toEqual([toEthereumAddress(operatorContract.address)])
-    })
+    }, TIMEOUT)
 
     it('works to flag through the inspectRandomNodeHelper', async () => {
         const flagger = await setupOperatorContract({ nodeCount: 1 })
@@ -74,11 +85,11 @@ describe('InspectRandomNodeHelper', () => {
 
         const inspectRandomNodeHelper = new InspectRandomNodeHelper({
             ...flagger.operatorServiceConfig,
-            nodeWallet: flagger.nodeWallets[0]
+            signer: flagger.nodeWallets[0]
         })
-        await inspectRandomNodeHelper.flag(toEthereumAddress(sponsorship.address), toEthereumAddress(target.operatorContract.address))
+        await inspectRandomNodeHelper.flag(toEthereumAddress(sponsorship.address), toEthereumAddress(target.operatorContract.address), 2)
 
-        waitForCondition(async (): Promise<boolean> => {
+        await waitForCondition(async (): Promise<boolean> => {
             const result = await graphClient.queryEntity<{ operator: { flagsOpened: any[] } }>({ query: `
                 {
                     operator(id: "${flagger.operatorContract.address.toLowerCase()}") {
@@ -93,7 +104,7 @@ describe('InspectRandomNodeHelper', () => {
             return result.operator.flagsOpened.length === 1
         }, 10000, 1000)
 
-        waitForCondition(async (): Promise<boolean> => {
+        await waitForCondition(async (): Promise<boolean> => {
             const result = await graphClient.queryEntity<{ operator: { flagsTargeted: any[] } }>({ query: `
                 {
                     operator(id: "${target.operatorContract.address.toLowerCase()}") {
@@ -107,5 +118,5 @@ describe('InspectRandomNodeHelper', () => {
             })
             return result.operator.flagsTargeted.length === 1
         }, 10000, 1000)
-    })
+    }, TIMEOUT)
 })

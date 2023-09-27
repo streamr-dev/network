@@ -1,9 +1,10 @@
-import { LatencyType, NodeType, PeerDescriptor, PeerID, Simulator, SimulatorTransport } from '@streamr/dht'
+import { LatencyType, NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
 import { range } from 'lodash'
-import { createStreamMessage } from '../utils/utils'
-import { utf8ToBinary } from '../../src/logic/utils'
+import { createRandomNodeId, createStreamMessage } from '../utils/utils'
+import { hexToBinary } from '@streamr/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('inspect', () => {
 
@@ -13,12 +14,12 @@ describe('inspect', () => {
     let sequenceNumber: number
 
     const publisherDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('publisher').value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
     }
 
     const inspectorPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('inspector').value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
     }
 
@@ -37,8 +38,7 @@ describe('inspect', () => {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor,
                 transportLayer
-            },
-            networkNode: {}
+            }
         })
         await node.start()
         return node
@@ -52,9 +52,9 @@ describe('inspect', () => {
         inspectorNode = await initiateNode(inspectorPeerDescriptor, simulator)
 
         inspectedNodes = []
-        await Promise.all(range(inspectedNodeCount).map(async (i) => {
+        await Promise.all(range(inspectedNodeCount).map(async () => {
             const peerDescriptor: PeerDescriptor = {
-                kademliaId: PeerID.fromString(`inspected${i}`).value,
+                kademliaId: hexToBinary(createRandomNodeId()),
                 type: NodeType.NODEJS
             }
             const node = await initiateNode(peerDescriptor, simulator)
@@ -82,12 +82,12 @@ describe('inspect', () => {
         publishInterval = setInterval(async () => {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
-                StreamPartIDUtils.parse('stream#0'),
-                utf8ToBinary('publisher'),
+                streamPartId,
+                randomEthereumAddress(),
                 123123,
                 sequenceNumber
             )
-            await publisherNode.getStreamrNode().publishToStream(streamPartId, msg)
+            publisherNode.getStreamrNode().publishToStream(msg)
             sequenceNumber += 1
         }, 200)
 

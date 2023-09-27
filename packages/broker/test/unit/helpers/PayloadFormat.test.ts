@@ -1,4 +1,3 @@
-import { toEthereumAddress } from '@streamr/utils'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { MetadataPayloadFormat, PlainPayloadFormat } from '../../../src/helpers/PayloadFormat'
 
@@ -8,7 +7,7 @@ const MOCK_CONTENT = {
 const MOCK_METADATA = {
     timestamp: 123,
     sequenceNumber: 456,
-    publisherId: toEthereumAddress(randomEthereumAddress()),
+    publisherId: randomEthereumAddress(),
     msgChainId: 'm'
 }
 

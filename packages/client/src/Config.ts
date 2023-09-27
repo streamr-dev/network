@@ -5,7 +5,7 @@ import type { ConnectionInfo } from '@ethersproject/web'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
 import { LogLevel } from '@streamr/utils'
-import { IceServer, PortRange } from '@streamr/dht'
+import { IceServer, PortRange, TlsCertificate } from '@streamr/dht'
 import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
 import { GapFillStrategy } from './subscribe/ordering/GapFiller'
@@ -69,6 +69,13 @@ export interface ControlLayerConfig {
     webrtcDatachannelBufferThresholdHigh?: number
 
     /**
+     * Defines a custom UDP port range to be used for WebRTC connections.
+     * This port range should not be restricted by enclosing firewalls
+     * or virtual private cloud configurations. NodeJS only.
+     */
+    webrtcPortRange?: PortRange
+
+    /**
      * Contains connectivity information to the client's Network Node, used in the network layer.
      * Can be used in cases where the client's public IP address is known before
      * starting the network node. If not specified, the PeerDescriptor will be auto-generated.
@@ -82,6 +89,28 @@ export interface ControlLayerConfig {
      * over the public internet to improve the network node's connectivity.
      */
     websocketPortRange?: PortRange
+
+    /**
+     * The host name or IP address of the WebSocket server used to connect to it over the internet.
+     * If not specified, the host name will be auto-detected. 
+     * Can be useful in situations where the host is running behind a reverse-proxy or load balancer.
+     */
+    websocketHost?: string
+
+    /**
+     * TLS configuration for the WebSocket server
+     */
+    tlsCertificate?: TlsCertificate
+    
+    /*
+     * Used to assign a custom external IPv4 address for the node.
+     * Useful in cases where the node has a public IP address but
+     * the hosts network interface does not know of it.
+     *
+     * Works only if the Full Cone NAT that the node is behind preserves local
+     * port mappings on the public side.
+    */
+    externalIp?: string
 }
 
 export interface NetworkNodeConfig {
@@ -137,8 +166,9 @@ export interface NetworkPeerDescriptor {
 }
 
 export interface ConnectivityMethod {
-    ip: string
+    host: string
     port: number
+    tls: boolean
 }
 
 export interface ChainConnectionInfo {

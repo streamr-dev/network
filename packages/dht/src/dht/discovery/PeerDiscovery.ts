@@ -1,7 +1,6 @@
 import { DiscoverySession } from './DiscoverySession'
 import { DhtPeer } from '../DhtPeer'
 import crypto from 'crypto'
-import * as Err from '../../helpers/errors'
 import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
@@ -41,13 +40,14 @@ export class PeerDiscovery {
 
     private rejoinTimeoutRef?: NodeJS.Timeout
     private readonly abortController: AbortController
+    private recoveryIntervalStarted = false
 
     constructor(config: PeerDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
     }
 
-    async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin = true): Promise<void> {
+    async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin = true, retry = true): Promise<void> {
         if (this.stopped) {
             return
         }
@@ -61,15 +61,15 @@ export class PeerDiscovery {
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         this.config.addContact(entryPointDescriptor)
-        const closest = this.config.bucket.closest(this.config.ownPeerId!.value, this.config.getClosestContactsLimit)
+        const closest = this.config.bucket.closest(this.config.ownPeerId.value, this.config.getClosestContactsLimit)
         this.config.neighborList.addContacts(closest)
         const sessionOptions = {
             bucket: this.config.bucket,
-            neighborList: this.config.neighborList!,
-            targetId: this.config.ownPeerId!.value,
-            ownPeerDescriptor: this.config.ownPeerDescriptor!,
+            neighborList: this.config.neighborList,
+            targetId: this.config.ownPeerId.value,
+            ownPeerDescriptor: this.config.ownPeerDescriptor,
             serviceId: this.config.serviceId,
-            rpcCommunicator: this.config.rpcCommunicator!,
+            rpcCommunicator: this.config.rpcCommunicator,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
             newContactListener: (newPeer: DhtPeer) => this.config.addContact(newPeer.getPeerDescriptor()),
@@ -90,16 +90,18 @@ export class PeerDiscovery {
             if (randomSession) {
                 await randomSession.findClosestNodes(this.config.joinTimeout)
             }
+        } catch (_e) {
+            logger.debug(`DHT join on ${this.config.serviceId} timed out`)
+        } finally {
             if (!this.stopped) {
                 if (this.config.bucket.count() === 0) {
-                    this.rejoinDht(entryPointDescriptor).catch(() => {})
+                    if (retry) {
+                        setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.abortController.signal)
+                    }
                 } else {
-                    await scheduleAtInterval(() => this.getClosestPeersFromBucket(), 60000, true, this.abortController.signal)
+                    await this.ensureRecoveryIntervalIsRunning()
                 }
             }
-        } catch (_e) {
-            throw new Err.DhtJoinTimeout('join timed out')
-        } finally {
             this.ongoingDiscoverySessions.delete(session.sessionId)
             if (randomSession) {
                 this.ongoingDiscoverySessions.delete(randomSession.sessionId)
@@ -128,12 +130,19 @@ export class PeerDiscovery {
         }
     }
 
-    private async getClosestPeersFromBucket(): Promise<void> {
+    private async ensureRecoveryIntervalIsRunning(): Promise<void> {
+        if (!this.recoveryIntervalStarted) {
+            this.recoveryIntervalStarted = true
+            await scheduleAtInterval(() => this.fetchClosestPeersFromBucket(), 60000, true, this.abortController.signal)
+        }
+    }
+
+    private async fetchClosestPeersFromBucket(): Promise<void> {
         if (this.stopped) {
             return
         }
         await Promise.allSettled(this.config.bucket.closest(this.config.ownPeerId.value, this.config.parallelism).map(async (peer: DhtPeer) => {
-            const contacts = await peer.getClosestPeers(this.config.ownPeerDescriptor.kademliaId!)
+            const contacts = await peer.getClosestPeers(this.config.ownPeerDescriptor.kademliaId)
             contacts.forEach((contact) => {
                 this.config.addContact(contact)
             })

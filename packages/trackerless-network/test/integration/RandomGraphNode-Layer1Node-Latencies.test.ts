@@ -1,8 +1,9 @@
-import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID, LatencyType } from '@streamr/dht'
+import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, LatencyType, NodeType } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
-import { wait, waitForCondition } from '@streamr/utils'
+import { hexToBinary, waitForCondition } from '@streamr/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { createRandomNodeId } from '../utils/utils'
 
 describe('RandomGraphNode-DhtNode-Latencies', () => {
     const numOfNodes = 64
@@ -13,14 +14,14 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
 
     const streamId = 'Stream1'
     const entrypointDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
-        type: 0
+        kademliaId: hexToBinary(createRandomNodeId()),
+        type: NodeType.NODEJS
     }
 
-    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
+    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => {
         return {
-            kademliaId: PeerID.fromString(`${i}`).value,
-            type: 0
+            kademliaId: hexToBinary(createRandomNodeId()),
+            type: NodeType.NODEJS
         }
     })
     beforeEach(async () => {
@@ -69,19 +70,19 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         Simulator.useFakeTimers(false)
     })
 
-    it('happy path single peer', async () => {
+    it('happy path single node', async () => {
         await dhtNodes[0].joinDht([entrypointDescriptor])
         entryPointRandomGraphNode.start()
         await graphNodes[0].start()
         await Promise.all([
-            waitForCondition(() => graphNodes[0].getNearbyContactPoolIds().length === 1),
-            waitForCondition(() => graphNodes[0].getTargetNeighborStringIds().length === 1)
+            waitForCondition(() => graphNodes[0].getNearbyNodeView().getIds().length === 1),
+            waitForCondition(() => graphNodes[0].getTargetNeighborIds().length === 1)
         ])
-        expect(graphNodes[0].getNearbyContactPoolIds().length).toEqual(1)
-        expect(graphNodes[0].getTargetNeighborStringIds().length).toEqual(1)
+        expect(graphNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
+        expect(graphNodes[0].getTargetNeighborIds().length).toEqual(1)
     })
 
-    it('happy path 5 peers', async () => {
+    it('happy path 5 nodes', async () => {
         entryPointRandomGraphNode.start()
         range(4).map((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
@@ -89,53 +90,55 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         }))
         await Promise.all(range(4).map((i) => {
             return waitForCondition(() => {
-                return graphNodes[i].getTargetNeighborStringIds().length >= 4
+                return graphNodes[i].getTargetNeighborIds().length >= 4
             }, 10000, 2000)
         }))
         range(4).map((i) => {
-            expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
-            expect(graphNodes[i].getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
         // Check bidirectionality
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
         range(5).map((i) => {
-            const nodeId = allNodes[i].getOwnStringId()
-            allNodes[i].getNearbyContactPoolIds().forEach((stringId) => {
-                const neighbor = allNodes.find((peer) => {
-                    return peer.getOwnStringId() === stringId
+            const ownNodeId = allNodes[i].getOwnNodeId()
+            allNodes[i].getNearbyNodeView().getIds().forEach((nodeId) => {
+                const neighbor = allNodes.find((node) => {
+                    return node.getOwnNodeId() === ownNodeId
                 })
-                expect(neighbor!.getTargetNeighborStringIds()).toContain(nodeId)
+                expect(neighbor!.getTargetNeighborIds()).toContain(nodeId)
             })
         })
     }, 60000)
 
-    it('happy path 64 peers', async () => {
+    it('happy path 64 nodes', async () => {
         await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
         await Promise.all(range(numOfNodes).map((i) => {
             dhtNodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(graphNodes.map((node) =>
-            waitForCondition(() => node.getTargetNeighborStringIds().length >= 4, 10000)
+            waitForCondition(() => node.getTargetNeighborIds().length >= 4, 10000)
         ))
 
         await Promise.all(graphNodes.map((node) =>
             waitForCondition(() => node.getNumberOfOutgoingHandshakes() === 0)
         ))
 
-        await wait(20000)
-        let mismatchCounter = 0
-        graphNodes.forEach((node) => {
-            const nodeId = node.getOwnStringId()
-            node.getTargetNeighborStringIds().forEach((neighborId) => {
-                if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
-                    const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
-                    if (!neighbor!.getTargetNeighborStringIds().includes(nodeId)) {
-                        mismatchCounter += 1
+        await waitForCondition(() => {
+            let mismatchCounter = 0
+            graphNodes.forEach((node) => {
+                const nodeId = node.getOwnNodeId()
+                node.getTargetNeighborIds().forEach((neighborId) => {
+                    if (neighborId !== entryPointRandomGraphNode.getOwnNodeId()) {
+                        const neighbor = graphNodes.find((n) => n.getOwnNodeId() === neighborId)
+                        if (!neighbor!.getTargetNeighborIds().includes(nodeId)) {
+                            mismatchCounter += 1
+                        }
                     }
-                }
+                })
             })
-        })
-        expect(mismatchCounter).toBeLessThanOrEqual(2)
+            // NET-1074 Investigate why sometimes unidirectional connections remain.
+            return mismatchCounter <= 2
+        }, 20000, 1000)
     }, 90000)
 })

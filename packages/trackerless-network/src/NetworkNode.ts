@@ -1,30 +1,41 @@
 import { StreamMessage, StreamPartID, StreamMessageType } from '@streamr/protocol'
-import { PeerDescriptor, PeerIDKey } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
-import { MetricsContext } from '@streamr/utils'
+import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
-import { UserID } from './identifiers'
-/*
-Convenience wrapper for building client-facing functionality. Used by client.
-*/
+import { NodeID } from './identifiers'
+import { pull } from 'lodash'
+
+export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
+    return new NetworkNode(new NetworkStack(opts))
+}
+
+/**
+ * Convenience wrapper for building client-facing functionality. Used by client.
+ */
 
 export class NetworkNode {
 
     readonly stack: NetworkStack
-    private readonly options: NetworkOptions
+    private readonly messageListeners: ((msg: StreamMessage<any>) => void)[] = []
     private stopped = false
-    constructor(opts: NetworkOptions) {
-        this.options = opts
-        this.stack = new NetworkStack(opts)
+
+    /** @internal */
+    constructor(stack: NetworkStack) {
+        this.stack = stack
+        this.stack.getStreamrNode().on('newMessage', (msg) => {
+            if (this.messageListeners.length > 0) {
+                const translated = StreamMessageTranslator.toClientProtocol<any>(msg)
+                for (const listener of this.messageListeners) {
+                    listener(translated)
+                }
+            }
+        })
     }
 
     async start(doJoin?: boolean): Promise<void> {
         await this.stack.start(doJoin)
-    }
-
-    setExtraMetadata(metadata: Record<string, unknown>): void {
-        this.stack.getStreamrNode().setExtraMetadata(metadata)
     }
 
     async inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
@@ -40,7 +51,7 @@ export class NetworkNode {
 
         await this.stack.joinLayer0IfRequired(streamPartId)
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
-        this.stack.getStreamrNode().publishToStream(streamPartId, msg)
+        this.stack.getStreamrNode().publishToStream(msg)
     }
 
     async subscribe(streamPartId: StreamPartID): Promise<void> {
@@ -55,20 +66,14 @@ export class NetworkNode {
         streamPartId: StreamPartID,
         contactPeerDescriptors: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: UserID,
+        userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
-        if (this.options.networkNode.acceptProxyConnections) {
-            throw new Error('cannot set proxies when acceptProxyConnections=true')
-        }
         await this.stack.getStreamrNode().setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
     }
 
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
-        this.stack.getStreamrNode().on('newMessage', (msg) => {
-            const translated = StreamMessageTranslator.toClientProtocol<T>(msg)
-            return cb(translated)
-        })
+        this.messageListeners.push(cb)
     }
 
     setStreamPartEntryPoints(streamPartId: StreamPartID, contactPeerDescriptors: PeerDescriptor[]): void {
@@ -76,13 +81,7 @@ export class NetworkNode {
     }
 
     removeMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
-        if (this.stopped) {
-            return
-        }
-        this.stack.getStreamrNode().off('newMessage', (msg) => {
-            const translated = StreamMessageTranslator.toClientProtocol<T>(msg)
-            return cb(translated)
-        })
+        pull(this.messageListeners, cb)
     }
 
     async subscribeAndWaitForJoin(
@@ -114,9 +113,9 @@ export class NetworkNode {
         this.stack.getStreamrNode().unsubscribeFromStream(streamPartId)
     }
 
-    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<string> {
+    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
         return this.hasStreamPart(streamPartId)
-            ? this.stack.getStreamrNode().getStream(streamPartId)!.layer2.getTargetNeighborStringIds()
+            ? this.stack.getStreamrNode().getStream(streamPartId)!.layer2.getTargetNeighborIds()
             : []
     }
 
@@ -124,13 +123,8 @@ export class NetworkNode {
         return this.stack.getStreamrNode().hasStream(streamPartId)
     }
 
-    hasProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): boolean {
-        return this.stack.getStreamrNode()!.hasProxyConnection(streamPartId, contactNodeId as PeerIDKey, direction)
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getRtt(_nodeId: string): number | undefined {
-        throw new Error('Not implemented')
+    hasProxyConnection(streamPartId: StreamPartID, contactNodeId: NodeID, direction: ProxyDirection): boolean {
+        return this.stack.getStreamrNode()!.hasProxyConnection(streamPartId, contactNodeId, direction)
     }
 
     async stop(): Promise<void> {
@@ -146,19 +140,15 @@ export class NetworkNode {
         return this.stack.getMetricsContext()
     }
 
-    getNodeId(): string {
+    getNodeId(): NodeID {
         return this.stack.getStreamrNode().getNodeId()
-    }
-
-    getNodeStringId(): string {
-        return this.stack.getStreamrNode().getNodeStringId()
     }
 
     getStreamParts(): StreamPartID[] {
         return this.stack.getStreamrNode().getStreamParts()
     }
 
-    getNeighbors(): string[] {
+    getNeighbors(): NodeID[] {
         return this.stack.getStreamrNode().getNeighbors()
     }
 

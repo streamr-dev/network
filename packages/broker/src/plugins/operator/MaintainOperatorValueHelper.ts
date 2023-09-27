@@ -1,5 +1,5 @@
-import { BigNumber, Contract } from 'ethers'
-import { Operator, StreamrConfig, operatorABI, streamrConfigABI } from '@streamr/network-contracts'
+import { Contract } from 'ethers'
+import { Operator, operatorABI } from '@streamr/network-contracts'
 import { OperatorServiceConfig } from './OperatorPlugin'
 import { EthereumAddress } from 'streamr-client'
 import { Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
@@ -8,12 +8,10 @@ import sample from 'lodash/sample'
 
 const logger = new Logger(module)
 
-const ONE_ETHER = BigInt(1e18)
-
-interface UnwithdrawnEarningsData {
-    sumDataWei: bigint
-    fraction: bigint
+interface EarningsData {
     sponsorshipAddresses: EthereumAddress[]
+    sumDataWei: bigint
+    maxAllowedEarningsDataWei: bigint
 }
 
 export class MaintainOperatorValueHelper {
@@ -23,7 +21,7 @@ export class MaintainOperatorValueHelper {
 
     constructor(config: OperatorServiceConfig) {
         this.config = config
-        this.operator = new Contract(config.operatorContractAddress, operatorABI, this.config.nodeWallet) as unknown as Operator
+        this.operator = new Contract(config.operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
         this.theGraphClient = new TheGraphClient({
             serverUrl: config.theGraphUrl,
             fetch,
@@ -41,47 +39,36 @@ export class MaintainOperatorValueHelper {
     }
 
     /**
-     * The "hard limit" for paying out rewards to `withdrawEarningsFromSponsorships` caller.
-     * Operator is expected to call `withdrawEarningsFromSponsorships` before
-     *   `unwithdrawn earnings / (total staked + free funds)` exceeds this limit.
-     * @returns a "wei" fraction: 1e18 or "1 ether" means limit is at unwithdrawn earnings == total staked + free funds
-     */
-    async getPenaltyLimitFraction(): Promise<bigint> {
-        const streamrConfigAddress = await this.operator.streamrConfig()
-        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, this.config.nodeWallet) as unknown as StreamrConfig
-        return (await streamrConfig.poolValueDriftLimitFraction()).toBigInt()
-    }
-
-    /**
-     * Find the sum of unwithdrawn earnings in Sponsorships (that the Operator must withdraw before the sum reaches a limit),
+     * Find the sum of earnings in Sponsorships (that the Operator must withdraw before the sum reaches a limit),
      * SUBJECT TO the constraints, set in the OperatorServiceConfig:
      *  - only take at most maxSponsorshipsInWithdraw addresses (those with most earnings), or all if undefined
      *  - only take sponsorships that have more than minSponsorshipEarningsInWithdraw, or all if undefined
      * @param operatorContractAddress
      */
-    async getUnwithdrawnEarningsOf(operatorContractAddress: EthereumAddress): Promise<UnwithdrawnEarningsData> {
-        const operator = new Contract(operatorContractAddress, operatorABI, this.config.nodeWallet) as unknown as Operator
-        const minSponsorshipEarningsInWithdrawWei = BigNumber.from(this.config.minSponsorshipEarningsInWithdraw ?? 0)
-        const { sponsorshipAddresses: allSponsorshipAddresses, earnings } = await operator.getEarningsFromSponsorships()
+    async getEarningsOf(operatorContractAddress: EthereumAddress): Promise<EarningsData> {
+        const operator = new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
+        const minSponsorshipEarningsInWithdrawWei = BigInt(this.config.minSponsorshipEarningsInWithdraw ?? 0)
+        const {
+            addresses: allSponsorshipAddresses,
+            earnings,
+            maxAllowedEarnings,
+        } = await operator.getSponsorshipsAndEarnings()
 
         const sponsorships = allSponsorshipAddresses
-            .map((address, i) => ({ address, earnings: earnings[i] }))
-            .filter((sponsorship) => sponsorship.earnings.gte(minSponsorshipEarningsInWithdrawWei))
-            .sort((a, b) => Number(b.earnings.sub(a.earnings).toBigInt())) // TODO: after Node 20, use .toSorted() instead
+            .map((address, i) => ({ address, earnings: earnings[i].toBigInt() }))
+            .filter((sponsorship) => sponsorship.earnings >= minSponsorshipEarningsInWithdrawWei)
+            .sort((a, b) => Number(b.earnings - a.earnings)) // TODO: after Node 20, use .toSorted() instead
             .slice(0, this.config.maxSponsorshipsInWithdraw) // take all if maxSponsorshipsInWithdraw is undefined
-        const sponsorshipAddresses = sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address))
 
-        const approxPoolValue = (await operator.totalValueInSponsorshipsWei()).toBigInt()
-        const sumDataWei = sponsorships.reduce((sum, sponsorship) => sum.add(sponsorship.earnings), BigNumber.from(0)).toBigInt()
-        const fraction = approxPoolValue > 0
-            ? sumDataWei * ONE_ETHER / approxPoolValue
-            : BigInt(0)
-
-        return { sumDataWei, fraction, sponsorshipAddresses }
+        return {
+            sponsorshipAddresses: sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address)),
+            sumDataWei: sponsorships.reduce((sum, sponsorship) => sum += sponsorship.earnings, 0n),
+            maxAllowedEarningsDataWei: maxAllowedEarnings.toBigInt()
+        }
     }
 
-    async getMyUnwithdrawnEarnings(): Promise<UnwithdrawnEarningsData> {
-        return this.getUnwithdrawnEarningsOf(this.config.operatorContractAddress)
+    async getMyEarnings(): Promise<EarningsData> {
+        return this.getEarningsOf(this.config.operatorContractAddress)
     }
 
     async withdrawMyEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {

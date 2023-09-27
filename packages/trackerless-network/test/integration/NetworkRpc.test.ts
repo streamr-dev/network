@@ -12,8 +12,8 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { createStreamMessage } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Simulator } from '@streamr/dht'
-import { utf8ToBinary } from '../../src/logic/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('Network RPC', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -49,7 +49,7 @@ describe('Network RPC', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             StreamPartIDUtils.parse('testStream#0'),
-            utf8ToBinary('peer1')
+            randomEthereumAddress()
         )
         await client.sendData(msg)
         await waitForCondition(() => recvCounter === 1)

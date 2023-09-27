@@ -5,11 +5,12 @@ import { EventEmitter } from 'eventemitter3'
 import { NodeID } from '@streamr/trackerless-network'
 import min from 'lodash/min'
 import once from 'lodash/once'
-import { DEFAULT_INTERVAL_IN_MS } from './AnnounceNodeToStreamService'
 import { NetworkPeerDescriptor } from 'streamr-client'
 import { HeartbeatMessage, HeartbeatMessageSchema } from './heartbeatUtils'
 
 const logger = new Logger(module)
+
+export const DEFAULT_UPDATE_INTERVAL_IN_MS = 1000 * 10
 
 const DEFAULT_PRUNE_AGE_IN_MS = 5 * 60 * 1000
 
@@ -18,8 +19,8 @@ const DEFAULT_PRUNE_INTERVAL_IN_MS = 30 * 1000
 const DEFAULT_LATENCY_EXTRA_MS = 2000
 
 export interface OperatorFleetStateEvents {
-    added: (nodeId: string) => void
-    removed: (nodeId: string) => void
+    added: (nodeId: NodeID) => void
+    removed: (nodeId: NodeID) => void
 }
 
 interface Heartbeat {
@@ -46,7 +47,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         timeProvider = Date.now,
         pruneAgeInMs = DEFAULT_PRUNE_AGE_IN_MS,
         pruneIntervalInMs = DEFAULT_PRUNE_INTERVAL_IN_MS,
-        heartbeatIntervalInMs = DEFAULT_INTERVAL_IN_MS,
+        heartbeatIntervalInMs = DEFAULT_UPDATE_INTERVAL_IN_MS,
         latencyExtraInMs = DEFAULT_LATENCY_EXTRA_MS
     ) {
         super()
@@ -75,7 +76,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
                 return
             }
             if (message.msgType === 'heartbeat') {
-                const nodeId = message.peerDescriptor.id
+                const nodeId = message.peerDescriptor.id as NodeID
                 const exists = this.latestHeartbeats.has(nodeId)
                 this.latestHeartbeats.set(nodeId, {
                     timestamp: this.timeProvider(),
@@ -101,11 +102,11 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         await this.subscription?.unsubscribe()
     }
 
-    getLeaderNodeId(): string | undefined {
+    getLeaderNodeId(): NodeID | undefined {
         return min(this.getNodeIds()) // we just need the leader to be consistent
     }
 
-    getNodeIds(): string[] {
+    getNodeIds(): NodeID[] {
         return [...this.latestHeartbeats.keys()]
     }
 

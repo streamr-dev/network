@@ -1,5 +1,5 @@
 import { toEthereumAddress } from '@streamr/utils'
-import { StreamrClientConfig, NetworkNodeType } from './Config'
+import { StreamrClientConfig } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
@@ -15,14 +15,7 @@ function toNumber(value: any): number | undefined {
 export const CONFIG_TEST: StreamrClientConfig = {
     network: {
         controlLayer: {
-            entryPoints: [{
-                id: 'entryPointBroker',
-                type: NetworkNodeType.NODEJS,
-                websocket: {
-                    ip: '127.0.0.1',
-                    port: 40401
-                }
-            }],
+            entryPoints: CHAIN_CONFIG.dev2.entryPoints,
             websocketPortRange: {
                 min: 32400,
                 max: 32800
@@ -51,7 +44,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
                 timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
             }]
         },
-        theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8800/subgraphs/name/streamr-dev/network-subgraphs`,
+        theGraphUrl: DOCKER_DEV_CHAIN_CONFIG.theGraphUrl,
     },
     encryption: {
         rsaKeyLength: MIN_KEY_LENGTH

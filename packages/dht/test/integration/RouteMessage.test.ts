@@ -1,5 +1,5 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
-import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Logger, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils/utils'
@@ -35,7 +35,7 @@ describe('Route Message With Mock Connections', () => {
         entryPointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
             nodeName: 'entrypoint',
-            type: 0
+            type: NodeType.NODEJS
         }
 
         sourceNode = await createMockConnectionDhtNode(sourceId, simulator)
@@ -113,7 +113,7 @@ describe('Route Message With Mock Connections', () => {
                 sourceDescriptor: sourceNode.getPeerDescriptor(),
                 targetDescriptor: destinationNode.getPeerDescriptor()
             }
-            await sourceNode.router!.doRouteMessage({
+            sourceNode.router!.doRouteMessage({
                 message,
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 requestId: v4(),
@@ -143,7 +143,7 @@ describe('Route Message With Mock Connections', () => {
                 numsOfReceivedMessages[node.getNodeId().toKey()] = numsOfReceivedMessages[node.getNodeId().toKey()] + 1
                 try {
                     const target = receiveMatrix[parseInt(node.getNodeId().toString()) - 1]
-                    target[parseInt(PeerID.fromValue(msg.sourceDescriptor!.kademliaId!).toString()) - 1]++
+                    target[parseInt(PeerID.fromValue(msg.sourceDescriptor!.kademliaId).toString()) - 1]++
                 } catch (e) {
                     console.error(e)
                 }
@@ -169,7 +169,7 @@ describe('Route Message With Mock Connections', () => {
                             sourceDescriptor: node.getPeerDescriptor(),
                             targetDescriptor: destinationNode.getPeerDescriptor()
                         }
-                        await node.router!.doRouteMessage({
+                        node.router!.doRouteMessage({
                             message,
                             destinationPeer: receiver.getPeerDescriptor(),
                             sourcePeer: node.getPeerDescriptor(),

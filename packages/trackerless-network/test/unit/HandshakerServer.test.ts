@@ -1,25 +1,27 @@
-import { PeerID } from '@streamr/dht'
 import { HandshakerServer } from '../../src/logic/neighbor-discovery/HandshakerServer'
-import { PeerList } from '../../src/logic/PeerList'
+import { NodeList } from '../../src/logic/NodeList'
 import { InterleaveNotice, StreamHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createMockRemoteHandshaker, createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
+import { createMockRemoteHandshaker, createMockRemoteNode, createRandomNodeId, mockConnectionLocker } from '../utils/utils'
+import { NodeID } from '../../src/identifiers'
+import { hexToBinary } from '@streamr/utils'
+import { NodeType } from '@streamr/dht'
 
 describe('HandshakerServer', () => {
 
     let handshakerServer: HandshakerServer
 
-    const peerId = PeerID.fromString('Handshaker')
+    const nodeId = createRandomNodeId()
     const ownPeerDescriptor = {
-        kademliaId: peerId.value,
-        type: 0
+        kademliaId: hexToBinary(nodeId),
+        type: NodeType.NODEJS
     }
 
-    let targetNeighbors: PeerList
-    let ongoingHandshakes: Set<string>
+    let targetNeighbors: NodeList
+    let ongoingHandshakes: Set<NodeID>
     let handshakeWithInterleaving: jest.Mock
 
     beforeEach(() => {
-        targetNeighbors = new PeerList(peerId, 10)
+        targetNeighbors = new NodeList(nodeId, 10)
         ongoingHandshakes = new Set()
 
         handshakeWithInterleaving = jest.fn()
@@ -30,7 +32,7 @@ describe('HandshakerServer', () => {
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
             createRemoteHandshaker: (_p) => createMockRemoteHandshaker(),
-            createRemoteNode: (_p) => createMockRemotePeer(),
+            createRemoteNode: (_p) => createMockRemoteNode(),
             handshakeWithInterleaving: async (_p, _t) => {
                 handshakeWithInterleaving()
                 return true
@@ -41,13 +43,14 @@ describe('HandshakerServer', () => {
     })
 
     it('handshake', async () => {
+        const senderId = hexToBinary('0x1111')
         const req = StreamHandshakeRequest.create({
             randomGraphId: 'random-graph',
-            senderId: 'senderId',
+            senderId,
             requestId: 'requestId',
             senderDescriptor: {
-                kademliaId: PeerID.fromString('senderId').value,
-                type: 0
+                kademliaId: senderId,
+                type: NodeType.NODEJS
             }
         })
         const res = await handshakerServer.handshake(req, {} as any)
@@ -57,17 +60,18 @@ describe('HandshakerServer', () => {
     })
 
     it('handshake interleave', async () => {
-        targetNeighbors.add(createMockRemotePeer())
-        targetNeighbors.add(createMockRemotePeer())
-        targetNeighbors.add(createMockRemotePeer())
-        targetNeighbors.add(createMockRemotePeer())
+        const senderId = hexToBinary('0x1111')
+        targetNeighbors.add(createMockRemoteNode())
+        targetNeighbors.add(createMockRemoteNode())
+        targetNeighbors.add(createMockRemoteNode())
+        targetNeighbors.add(createMockRemoteNode())
         const req = StreamHandshakeRequest.create({
             randomGraphId: 'random-graph',
-            senderId: 'senderId',
+            senderId,
             requestId: 'requestId',
             senderDescriptor: {
-                kademliaId: PeerID.fromString('senderId').value,
-                type: 0
+                kademliaId: senderId,
+                type: NodeType.NODEJS
             }
         })
         const res = await handshakerServer.handshake(req, {} as any)
@@ -76,17 +80,18 @@ describe('HandshakerServer', () => {
     })
 
     it('unaccepted handshake', async () => {
-        ongoingHandshakes.add('mock1')
-        ongoingHandshakes.add('mock2')
-        ongoingHandshakes.add('mock3')
-        ongoingHandshakes.add('mock4')
+        const senderId = hexToBinary('0x1111')
+        ongoingHandshakes.add('0x2222' as NodeID)
+        ongoingHandshakes.add('0x3333' as NodeID)
+        ongoingHandshakes.add('0x4444' as NodeID)
+        ongoingHandshakes.add('0x5555' as NodeID)
         const req = StreamHandshakeRequest.create({
             randomGraphId: 'random-graph',
-            senderId: 'senderId',
+            senderId,
             requestId: 'requestId',
             senderDescriptor: {
-                kademliaId: PeerID.fromString('senderId').value,
-                type: 0
+                kademliaId: senderId,
+                type: NodeType.NODEJS
             }
         })
         const res = await handshakerServer.handshake(req, {} as any)
@@ -96,10 +101,10 @@ describe('HandshakerServer', () => {
     it('handshakeWithInterleaving success', async () => {
         const req: InterleaveNotice = {
             randomGraphId: 'random-graph',
-            senderId: 'senderId',
+            senderId: hexToBinary('0x1111'),
             interleaveTargetDescriptor: {
-                kademliaId: PeerID.fromString('interleaveTargetDescriptor').value,
-                type: 0
+                kademliaId: hexToBinary('0x2222'),
+                type: NodeType.NODEJS
             }
 
         }
@@ -110,10 +115,10 @@ describe('HandshakerServer', () => {
     it('handshakeWithInterleaving success', async () => {
         const req: InterleaveNotice = {
             randomGraphId: 'wrong-random-graph',
-            senderId: 'senderId',
+            senderId: hexToBinary('0x1111'),
             interleaveTargetDescriptor: {
-                kademliaId: PeerID.fromString('interleaveTargetDescriptor').value,
-                type: 0
+                kademliaId: hexToBinary('0x2222'),
+                type: NodeType.NODEJS
             }
         }
         await handshakerServer.interleaveNotice(req, {} as any)

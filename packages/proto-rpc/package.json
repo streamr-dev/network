@@ -1,6 +1,6 @@
 {
   "name": "@streamr/proto-rpc",
-  "version": "0.0.1-tatum.0",
+  "version": "0.0.1-tatum.2",
   "description": "Proto-RPC",
   "repository": {
     "type": "git",
@@ -19,25 +19,25 @@
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
-    "test": "jest",
+    "test": "npm run test-unit && npm run test-integration",
     "test-browser": "karma start karma.config.js",
     "test-unit": "jest test/unit",
-    "test-integration": "jest test/integration"
+    "test-integration": "jest --bail test/integration"
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/utils": "0.0.1-tatum.0",
+    "@streamr/utils": "0.0.1-tatum.2",
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@streamr/test-utils": "0.0.1-tatum.0",
-    "@types/express": "^4.17.13",
-    "@types/lodash": "^4.14.197",
-    "@types/uuid": "^9.0.2",
+    "@streamr/test-utils": "0.0.1-tatum.2",
+    "@types/express": "^4.17.18",
+    "@types/lodash": "^4.14.199",
+    "@types/uuid": "^9.0.4",
     "express": "^4.17.1",
     "patch-package": "^8.0.0",
     "ts-node": "^10.9.1"

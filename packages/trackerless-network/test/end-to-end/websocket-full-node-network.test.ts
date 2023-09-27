@@ -1,18 +1,20 @@
-import { PeerDescriptor, NodeType, PeerID, peerIdFromPeerDescriptor, keyFromPeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, NodeType } from '@streamr/dht'
 import { range } from 'lodash'
-import { waitForCondition } from '@streamr/utils'
-import { createStreamMessage } from '../utils/utils'
+import { hexToBinary, waitForCondition } from '@streamr/utils'
+import { createRandomNodeId, createStreamMessage } from '../utils/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('Full node network with WebSocket connections only', () => {
 
     const NUM_OF_NODES = 48
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`entrypoint`).value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         nodeName: 'entrypoint',
-        websocket: { ip: 'localhost', port: 15555 }
+        websocket: { host: '127.0.0.1', port: 15555, tls: false }
     }
     const randomGraphId = StreamPartIDUtils.parse('websocket-network#0')
 
@@ -28,8 +30,7 @@ describe('Full node network with WebSocket connections only', () => {
             layer0: {
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: epPeerDescriptor,
-            },
-            networkNode: {}
+            }
         })
         await entryPoint.start()
         entryPoint.getStreamrNode()!.setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
@@ -40,18 +41,15 @@ describe('Full node network with WebSocket connections only', () => {
                 layer0: {
                     entryPoints: [epPeerDescriptor],
                     websocketPortRange: { min: 15556 + i, max: 15556 + i },
-                    websocketHost: 'localhost',
-                    peerIdString: `${i}`,
                     nodeName: `${i}`,
                     numberOfNodesPerKBucket: 4
-                }, 
-                networkNode: {}
+                }
             })
             nodes.push(node)
             await node.start()
-            node.getStreamrNode!().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
+            node.getStreamrNode().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
             await node.getStreamrNode().joinStream(randomGraphId)
-            node.getStreamrNode!().subscribeToStream(randomGraphId)
+            node.getStreamrNode().subscribeToStream(randomGraphId)
         }))
 
     }, 120000)
@@ -66,7 +64,7 @@ describe('Full node network with WebSocket connections only', () => {
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
             waitForCondition(() => {
-                return node.getStreamrNode()!.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
+                return node.getStreamrNode()!.getStream(randomGraphId)!.layer2.getTargetNeighborIds().length >= 3
             }
             , 120000)
         ))
@@ -74,7 +72,7 @@ describe('Full node network with WebSocket connections only', () => {
         const successIds: string[] = []
         nodes.map((node) => {
             node.getStreamrNode()!.on('newMessage', () => {
-                successIds.push(keyFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
+                successIds.push(getNodeIdFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
                 numOfMessagesReceived += 1
             })
         })
@@ -82,9 +80,9 @@ describe('Full node network with WebSocket connections only', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             randomGraphId,
-            peerIdFromPeerDescriptor(epPeerDescriptor).value
+            randomEthereumAddress()
         )
-        entryPoint.getStreamrNode()!.publishToStream(randomGraphId, msg)
+        entryPoint.getStreamrNode()!.publishToStream(msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
     }, 220000)
 

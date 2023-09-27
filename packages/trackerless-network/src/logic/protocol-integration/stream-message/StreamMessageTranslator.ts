@@ -21,10 +21,9 @@ import {
     StreamMessageType,
     MessageID
 } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { toEthereumAddress } from '@streamr/utils'
+import { toEthereumAddress, binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
 import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
-import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary } from '../../utils'
 
 const oldToNewEncryptionType = (type: OldEncryptionType): EncryptionType => {
     if (type === OldEncryptionType.AES) {
@@ -89,7 +88,7 @@ export class StreamMessageTranslator {
         if (msg.getNewGroupKey()) {
             newGroupKey = {
                 id: msg.getNewGroupKey()!.groupKeyId,
-                data: hexToBinary(msg.getNewGroupKey()!.encryptedGroupKeyHex)
+                data: msg.getNewGroupKey()!.data
             }
         }
         const translated: StreamMessage = {
@@ -101,8 +100,7 @@ export class StreamMessageTranslator {
             encryptionType: oldToNewEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId ?? undefined,
             newGroupKey,
-            signature: hexToBinary(msg.signature)
-
+            signature: msg.signature
         }
         return translated
     }
@@ -132,13 +130,13 @@ export class StreamMessageTranslator {
         )
         let prevMsgRef: OldMessageRef | undefined = undefined
         if (msg.previousMessageRef) {
-            prevMsgRef = new OldMessageRef(Number(msg.previousMessageRef!.timestamp), msg.previousMessageRef!.sequenceNumber)
+            prevMsgRef = new OldMessageRef(Number(msg.previousMessageRef.timestamp), msg.previousMessageRef.sequenceNumber)
         }
         let newGroupKey: OldEncryptedGroupKey | undefined = undefined
         if (msg.newGroupKey) {
             newGroupKey = new OldEncryptedGroupKey(
-                msg.newGroupKey!.id,
-                binaryToHex(msg.newGroupKey!.data),
+                msg.newGroupKey.id,
+                msg.newGroupKey.data,
             )
         }
         const translated = new OldStreamMessage<T>({
@@ -150,7 +148,7 @@ export class StreamMessageTranslator {
             encryptionType: newToOldEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId,
             newGroupKey,
-            signature: binaryToHex(msg.signature, true),
+            signature: msg.signature
         })
         return translated
     }

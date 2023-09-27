@@ -17,7 +17,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v4
       - name: build
         uses: ./.github/workflows/reusable/cached-build
       - run: npm run versions
@@ -70,7 +70,7 @@ jobs:
       command: |
         npm run test-unit
         npm run test-integration
-        npm run test-e2e
+        npm run test-end-to-end
   trackerless-network-browser:
     needs: build
     uses: ./.github/workflows/test-setup.yml
@@ -94,6 +94,7 @@ jobs:
     with:
       package: client
       docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain ens-sync-script
+      run-entry-point: true
       run-brokers: true
       command: npm run test-end-to-end
   broker:
@@ -116,6 +117,7 @@ jobs:
     with:
       package: client
       docker-services: init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
+      run-entry-point: true
       run-brokers: true
       command: npm run test-browser
   cli-tools:
@@ -124,6 +126,7 @@ jobs:
     with:
       package: cli-tools
       docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
+      run-entry-point: true
       run-brokers: true
       command: npm run test
   broker-docker-image:
@@ -131,6 +134,6 @@ jobs:
     with:
       docker_file: Dockerfile.broker
       image_name: streamr/broker-node
-      test_services_to_start: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain broker-node-storage-1
+      test_services_to_start: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain broker-node-storage-1 entry-point
       build_platforms: linux/amd64
       test_script: bash ./.github/healthcheck.sh http://localhost:8891/info streamr-dev-broker-node-storage-1

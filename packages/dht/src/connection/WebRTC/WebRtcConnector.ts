@@ -24,8 +24,18 @@ import {
     peerIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
+import { PortRange } from '../ConnectionManager'
 
 const logger = new Logger(module)
+
+export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): string => {
+    const parsed = candidate.split(' ')
+    const type = parsed[7]
+    if (type === 'host') {
+        parsed[4] = ip
+    }
+    return parsed.join(' ')
+}
 
 export interface WebRtcConnectorConfig {
     rpcTransport: ITransport
@@ -35,6 +45,8 @@ export interface WebRtcConnectorConfig {
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
     connectionTimeout?: number
+    externalIp?: string
+    portRange?: PortRange
 }
 
 export interface IceServer {
@@ -96,7 +108,8 @@ export class WebRtcConnector implements IWebRtcConnectorService {
             iceServers: this.iceServers,
             bufferThresholdLow: this.config.bufferThresholdLow,
             bufferThresholdHigh: this.config.bufferThresholdHigh,
-            connectingTimeout: this.config.connectionTimeout
+            connectingTimeout: this.config.connectionTimeout,
+            portRange: this.config.portRange
         })
 
         const offering = this.isOffering(targetPeerDescriptor)
@@ -128,6 +141,10 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         )
 
         connection.on('localCandidate', (candidate: string, mid: string) => {
+            if (this.config.externalIp) {
+                candidate = replaceInternalIpWithExternalIp(candidate, this.config.externalIp)
+                logger.debug(`onLocalCandidate injected external ip ${candidate} ${mid}`)
+            }
             remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
         })
 
@@ -207,7 +224,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         connection!.setConnectionId(connectionId)
         connection!.setRemoteDescription(description, 'offer')
         
-        managedConnection!.on('handshakeRequest', () => {
+        managedConnection.on('handshakeRequest', () => {
             if (this.ongoingConnectAttempts.has(peerKey)) {
                 this.ongoingConnectAttempts.delete(peerKey)
             }

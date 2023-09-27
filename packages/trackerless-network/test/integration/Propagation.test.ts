@@ -1,14 +1,15 @@
-import { DhtNode, PeerDescriptor, Simulator, PeerID, UUID, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtNode, NodeType, PeerDescriptor, Simulator } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils/utils'
+import { createMockRandomGraphNodeAndDhtNode, createRandomNodeId, createStreamMessage } from '../utils/utils'
 import { range } from 'lodash'
-import { waitForCondition } from '@streamr/utils'
+import { waitForCondition, hexToBinary } from '@streamr/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('Propagation', () => {
     const entryPointDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`entrypoint`).value,
-        type: 1
+        kademliaId: hexToBinary(createRandomNodeId()),
+        type: NodeType.NODEJS
     }
     let dhtNodes: DhtNode[]
     let randomGraphNodes: RandomGraphNode[]
@@ -31,8 +32,8 @@ describe('Propagation', () => {
 
         await Promise.all(range(NUM_OF_NODES).map(async (_i) => {
             const descriptor: PeerDescriptor = {
-                kademliaId: PeerID.fromString(new UUID().toString()).value,
-                type: 1
+                kademliaId: hexToBinary(createRandomNodeId()),
+                type: NodeType.NODEJS
             }
             const [dht, graph] = createMockRandomGraphNodeAndDhtNode(
                 descriptor,
@@ -42,6 +43,7 @@ describe('Propagation', () => {
             )
             await dht.start()
             await graph.start()
+            // eslint-disable-next-line promise/always-return
             await dht.joinDht([entryPointDescriptor]).then(() => {
                 graph.on('message', () => { totalReceived += 1 })
                 dhtNodes.push(dht)
@@ -57,18 +59,18 @@ describe('Propagation', () => {
 
     it('All nodes receive messages', async () => {
         await waitForCondition(
-            () => randomGraphNodes.every((peer) => peer.getTargetNeighborStringIds().length >= 3), 30000
+            () => randomGraphNodes.every((node) => node.getTargetNeighborIds().length >= 3), 30000
         )
         await waitForCondition(() => {
             const avg = randomGraphNodes.reduce((acc, curr) => {
-                return acc + curr.getTargetNeighborStringIds().length
+                return acc + curr.getTargetNeighborIds().length
             }, 0) / randomGraphNodes.length
             return avg >= 4
         }, 20000)
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             STREAM_PART_ID,
-            peerIdFromPeerDescriptor(dhtNodes[0].getPeerDescriptor()).value
+            randomEthereumAddress()
         )
         randomGraphNodes[0].broadcast(msg)
         await waitForCondition(() => totalReceived >= NUM_OF_NODES, 10000)

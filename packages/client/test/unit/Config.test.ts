@@ -94,8 +94,8 @@ describe('Config', () => {
         it('can override network.entryPoints arrays', () => {
             const clientDefaults = createStrictConfig()
             const clientOverrides = createStrictConfig(CONFIG_TEST)
-            expect(clientOverrides.network.controlLayer!.entryPoints).not.toEqual(clientDefaults.network.controlLayer!.entryPoints)
-            expect(clientOverrides.network.controlLayer!.entryPoints).toEqual(CONFIG_TEST.network!.controlLayer!.entryPoints)
+            expect(clientOverrides.network.controlLayer.entryPoints).not.toEqual(clientDefaults.network.controlLayer.entryPoints)
+            expect(clientOverrides.network.controlLayer.entryPoints).toEqual(CONFIG_TEST.network!.controlLayer!.entryPoints)
         })
 
         it('network can be empty', () => {
@@ -104,7 +104,7 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.controlLayer!.entryPoints![0].id).toEqual('productionEntryPoint1')
+            expect(clientOverrides.network.controlLayer.entryPoints![0].id).toEqual('aaaaaaaaaa')
         })
 
         it('can override entryPoints', () => {
@@ -112,8 +112,9 @@ describe('Config', () => {
                 id: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
                 type: NetworkNodeType.NODEJS,
                 websocket: {
-                    ip: 'brubeck3.streamr.network',
-                    port: 30401
+                    host: 'brubeck3.streamr.network',
+                    port: 30401,
+                    tls: false
                 }
             }]
             const clientOverrides = createStrictConfig({
@@ -123,9 +124,9 @@ describe('Config', () => {
                     }
                 }
             })
-            expect(clientOverrides.network.controlLayer!.entryPoints!).toEqual(entryPoints)
-            expect(clientOverrides.network.controlLayer!.entryPoints!).not.toBe(entryPoints)
-            expect((clientOverrides.network.controlLayer! as NetworkPeerDescriptor[])[0]).not.toBe(entryPoints[0])
+            expect(clientOverrides.network.controlLayer.entryPoints!).toEqual(entryPoints)
+            expect(clientOverrides.network.controlLayer.entryPoints!).not.toBe(entryPoints)
+            expect((clientOverrides.network.controlLayer as NetworkPeerDescriptor[])[0]).not.toBe(entryPoints[0])
         })
     })
 

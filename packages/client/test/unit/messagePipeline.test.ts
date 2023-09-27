@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { collect, toEthereumAddress } from '@streamr/utils'
+import { collect, toEthereumAddress, hexToBinary } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { StrictStreamrClientConfig } from '../../src/Config'
@@ -118,7 +118,7 @@ describe('messagePipeline', () => {
 
     it('error: invalid signature', async () => {
         const msg = await createMessage()
-        msg.signature = 'invalid-signature'
+        msg.signature = hexToBinary('0x111111')
         await pipeline.push(msg)
         pipeline.endWrite()
         const onError = jest.fn()

@@ -2,6 +2,7 @@ import {
     FindMode,
     Message,
     MessageType,
+    NodeType,
     PeerDescriptor,
     RouteMessageWrapper
 } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -27,12 +28,12 @@ describe('RecursiveFinder', () => {
     const peerId1 = PeerID.fromString('peerid')
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: peerId1.value,
-        type: 0,
+        type: NodeType.NODEJS,
         nodeName: 'peerid'
     }
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('destination').value,
-        type: 0,
+        type: NodeType.NODEJS,
         nodeName: 'destination'
     }
     const recursiveFindRequest = createRecursiveFindRequest(FindMode.NODE)

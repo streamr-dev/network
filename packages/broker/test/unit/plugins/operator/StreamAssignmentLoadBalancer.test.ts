@@ -6,9 +6,11 @@ import { eventsWithArgsToArray } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import range from 'lodash/range'
+import { NodeID } from '@streamr/trackerless-network'
 
-const MY_NODE_ID = 'node0'
-
+const MY_NODE_ID = '0x0000' as NodeID
+const N1 = '0x1111' as NodeID
+const N2 = '0x2222' as NodeID
 const S1 = toStreamID('S1')
 const S2 = toStreamID('S2')
 const S3 = toStreamID('S3')
@@ -53,9 +55,9 @@ describe(StreamAssignmentLoadBalancer, () => {
     })
 
     it('no events emitted if no assigned streams', async () => {
-        operatorFleetState.emit('added', 'node1')
-        operatorFleetState.emit('added', 'node2')
-        operatorFleetState.emit('removed', 'node2')
+        operatorFleetState.emit('added', N1)
+        operatorFleetState.emit('added', N2)
+        operatorFleetState.emit('removed', N2)
         await wait(0)
         expect(events).toEqual([])
     })
@@ -72,6 +74,10 @@ describe(StreamAssignmentLoadBalancer, () => {
         expect(events).toEqual([])
     })
 
+    it('getMyStreamParts returns empty array if no assigned streams', () => {
+        expect(balancer.getMyStreamParts()).toEqual([])
+    })
+
     it('all streams get assigned to myself if no other nodes present', async () => {
         maintainTopologyHelper.emit('addStakedStreams', [S1, S2])
         maintainTopologyHelper.emit('addStakedStreams', [S3])
@@ -83,6 +89,12 @@ describe(StreamAssignmentLoadBalancer, () => {
             ['assigned', toStreamPartID(S3, 0)],
             ['assigned', toStreamPartID(S3, 1)],
             ['assigned', toStreamPartID(S3, 2)]
+        ])
+
+        expect(balancer.getMyStreamParts()).toIncludeSameMembers([
+            ...streamPartMappings.get(S1)!,
+            ...streamPartMappings.get(S2)!,
+            ...streamPartMappings.get(S3)!
         ])
     })
 
@@ -98,6 +110,11 @@ describe(StreamAssignmentLoadBalancer, () => {
             ['unassigned', toStreamPartID(S1, 0)],
             ['unassigned', toStreamPartID(S1, 1)]
         ])
+
+        expect(balancer.getMyStreamParts()).toIncludeSameMembers([
+            ...streamPartMappings.get(S2)!,
+            ...streamPartMappings.get(S3)!
+        ])
     })
 
     it('adding nodes in the presence of streams', async () => {
@@ -107,16 +124,23 @@ describe(StreamAssignmentLoadBalancer, () => {
         await wait(0)
         clearEvents()
 
-        operatorFleetState.emit('added', 'node1')
+        operatorFleetState.emit('added', N1)
         await wait(0)
         expect(events).toEqual([ // expectation based on arbitrary hashing
             ['unassigned', toStreamPartID(S3, 1)],
             ['unassigned', toStreamPartID(S3, 2)]
         ])
+
+        expect(balancer.getMyStreamParts()).toIncludeSameMembers([
+            ...streamPartMappings.get(S1)!,
+            ...streamPartMappings.get(S2)!,
+            toStreamPartID(S3, 0),
+            ...streamPartMappings.get(S4)!,
+        ])
     })
 
     it('removing nodes in the presence of streams', async () => {
-        operatorFleetState.emit('added', 'node1')
+        operatorFleetState.emit('added', N1)
         await wait(0)
         maintainTopologyHelper.emit('addStakedStreams', [S1, S2])
         maintainTopologyHelper.emit('addStakedStreams', [S3])
@@ -124,17 +148,19 @@ describe(StreamAssignmentLoadBalancer, () => {
         await wait(0)
         clearEvents()
 
-        operatorFleetState.emit('removed', 'node1')
+        operatorFleetState.emit('removed', N1)
         await wait(0)
         expect(events).toEqual([ // expectation based on arbitrary hashing
             ['assigned', toStreamPartID(S3, 1)],
             ['assigned', toStreamPartID(S3, 2)]
         ])
+
+        expect(balancer.getMyStreamParts()).toIncludeSameMembers([...streamPartMappings.values()].flat())
     })
 
     it('stream assignments in the presence of other nodes', async () => {
-        operatorFleetState.emit('added', 'node1')
-        operatorFleetState.emit('added', 'node2')
+        operatorFleetState.emit('added', N1)
+        operatorFleetState.emit('added', N2)
         await wait(0)
         maintainTopologyHelper.emit('addStakedStreams', [S4, S2])
         maintainTopologyHelper.emit('addStakedStreams', [S3])
@@ -144,11 +170,16 @@ describe(StreamAssignmentLoadBalancer, () => {
             ['assigned', toStreamPartID(S4, 0)],
             ['assigned', toStreamPartID(S3, 0)]
         ])
+
+        expect(balancer.getMyStreamParts()).toEqual([
+            toStreamPartID(S4, 0),
+            toStreamPartID(S3, 0)
+        ])
     })
 
     it('stream unassignments in the presence of other nodes', async () => {
-        operatorFleetState.emit('added', 'node1')
-        operatorFleetState.emit('added', 'node2')
+        operatorFleetState.emit('added', N1)
+        operatorFleetState.emit('added', N2)
         await wait(0)
         maintainTopologyHelper.emit('addStakedStreams', [S4, S2])
         maintainTopologyHelper.emit('addStakedStreams', [S3])

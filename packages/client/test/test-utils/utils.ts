@@ -181,6 +181,7 @@ export const createStreamRegistry = (opts?: {
         isStreamSubscriber: async () => {
             return opts?.isStreamSubscriber ?? true
         },
+        clearStreamCache: () => {}
     } as any
 }
 
@@ -229,7 +230,7 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
     })
 }
 
-export const createTestClient = (privateKey: string, id: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
+export const createTestClient = (privateKey: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
     return new StreamrClient({
         ...CONFIG_TEST,
         auth: {
@@ -238,13 +239,7 @@ export const createTestClient = (privateKey: string, id: string, wsPort?: number
         network: {
             controlLayer: {
                 ...CONFIG_TEST.network!.controlLayer,
-                peerDescriptor: {
-                    id,
-                    websocket: wsPort ? {
-                        ip: 'localhost',
-                        port: wsPort
-                    } : undefined
-                }
+                websocketPortRange: wsPort !== undefined ? { min: wsPort, max: wsPort } : undefined
             },
             node: {
                 acceptProxyConnections

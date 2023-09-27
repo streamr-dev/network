@@ -35,7 +35,8 @@ export {
     NetworkNodeConfig,
     NetworkPeerDescriptor,
     ConnectivityMethod,
-    NetworkNodeType
+    NetworkNodeType,
+    StrictStreamrClientConfig
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
@@ -46,7 +47,7 @@ export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
 
 export type { StreamID, StreamPartID } from '@streamr/protocol'
-export { ProxyDirection } from '@streamr/trackerless-network'
+export { NodeID, ProxyDirection } from '@streamr/trackerless-network'
 export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.

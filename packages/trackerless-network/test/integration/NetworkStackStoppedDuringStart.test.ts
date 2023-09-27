@@ -1,34 +1,33 @@
-import { PeerID } from '@streamr/dht'
+import { hexToBinary } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { createRandomNodeId } from '../utils/utils'
 
 describe('NetworkStack can be stopped during start', () => {
     
     const epDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
+        kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 32224 },
+        websocket: { host: '127.0.0.1', port: 32224, tls: false },
     }
     let entryPoint: NetworkStack
-    let peer: NetworkStack
+    let node: NetworkStack
 
     beforeEach(async () => {
         entryPoint = new NetworkStack({
             layer0: {
                 peerDescriptor: epDescriptor,
                 entryPoints: [epDescriptor]
-            },
-            networkNode: {}
+            }
         })
-        peer = new NetworkStack({
+        node = new NetworkStack({
             layer0: {
                 peerDescriptor: {
-                    kademliaId: PeerID.fromString('peer').value,
+                    kademliaId: hexToBinary(createRandomNodeId()),
                     type: NodeType.NODEJS
                 },
                 entryPoints: [epDescriptor]
-            },
-            networkNode: {}
+            }
         })
         await entryPoint.start()
     })
@@ -38,8 +37,8 @@ describe('NetworkStack can be stopped during start', () => {
     })
 
     it('Can be stopped during start', async () => {
-        setImmediate(() => peer.stop())
-        await peer.start()
+        setImmediate(() => node.stop())
+        await node.start()
     })
 
 })

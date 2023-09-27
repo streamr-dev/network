@@ -8,9 +8,9 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { peerDescriptorTranslator } from '../../src/utils/utils'
 import { createTestStream, createTestClient } from '../test-utils/utils'
 import { waitForCondition } from '@streamr/utils'
-import { NetworkNode } from '@streamr/trackerless-network'
+import { createNetworkNode } from '@streamr/trackerless-network'
 
-const TIMEOUT = 30 * 1000
+const TIMEOUT = 15 * 1000
 
 const PAYLOAD = { hello: 'world' }
 
@@ -18,11 +18,10 @@ const ENCRYPTED_MESSSAGE_FORMAT = /^[0-9A-Fa-f]+$/
 
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
     const entryPoints = CONFIG_TEST.network!.controlLayer!.entryPoints!.map(peerDescriptorTranslator)
-    const networkNode = new NetworkNode({
+    const networkNode = createNetworkNode({
         layer0: {
             entryPoints,
-        },
-        networkNode: {}
+        }
     })
 
     try {
@@ -32,7 +31,7 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
         networkNode.addMessageListener((msg) => {
             messages.push(msg.getContent())
         })
-        await waitForCondition(() => messages.length > 0, TIMEOUT - 100)
+        await waitForCondition(() => messages.length > 0, TIMEOUT)
         return messages
     } finally {
         await networkNode.stop()
@@ -70,8 +69,8 @@ describe('publish-subscribe', () => {
     })
 
     beforeEach(async () => {
-        publisherClient = createTestClient(publisherPk, 'e2e-pub-sub-publisher', 15656)
-        subscriberClient = createTestClient(subscriberWallet.privateKey, 'e2e-pub-sub-subscriber', 15657)
+        publisherClient = createTestClient(publisherPk, 15656)
+        subscriberClient = createTestClient(subscriberWallet.privateKey, 15657)
     }, TIMEOUT)
 
     afterEach(async () => {
@@ -89,7 +88,7 @@ describe('publish-subscribe', () => {
                 permissions: [StreamPermission.SUBSCRIBE],
                 user: subscriberWallet.address
             })
-        }, TIMEOUT)
+        }, TIMEOUT * 2)
 
         it('messages are published encrypted', async () => {
             await publisherClient.publish(stream.id, PAYLOAD)
@@ -104,7 +103,7 @@ describe('publish-subscribe', () => {
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
-            await waitForCondition(() => messages.length > 0)
+            await waitForCondition(() => messages.length > 0, TIMEOUT)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })
@@ -125,14 +124,13 @@ describe('publish-subscribe', () => {
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
 
-        // TODO: flaky test fix in NET-1013
-        it.skip('subscriber is able to receive messages', async () => {
+        it('subscriber is able to receive messages', async () => {
             const messages: unknown[] = []
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
             await publisherClient.publish(stream.id, PAYLOAD)
-            await waitForCondition(() => messages.length > 0, TIMEOUT - 1000)
+            await waitForCondition(() => messages.length > 0, TIMEOUT)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })

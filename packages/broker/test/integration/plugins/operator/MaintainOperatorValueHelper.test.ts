@@ -23,7 +23,7 @@ describe('MaintainOperatorValueHelper', () => {
 
         const helper = new MaintainOperatorValueHelper({
             ...operatorServiceConfig,
-            nodeWallet: nodeWallets[0]
+            signer: nodeWallets[0]
         })
         const randomOperatorAddress = await helper.getRandomOperator()
         expect(randomOperatorAddress).toBeDefined()

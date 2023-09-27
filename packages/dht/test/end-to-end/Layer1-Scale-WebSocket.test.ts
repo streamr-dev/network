@@ -6,7 +6,7 @@ describe('Layer1 Scale', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
-        websocket: { ip: '127.0.0.1', port: 43225 },
+        websocket: { host: '127.0.0.1', port: 43225, tls: false },
         nodeName: 'entrypoint'
     }
 
@@ -36,7 +36,7 @@ describe('Layer1 Scale', () => {
         layer1Nodes = []
 
         for (let i = 0; i < NUM_OF_NODES; i++) {
-            const node = new DhtNode({ peerIdString: `node-${i}`, nodeName: `${i}`, websocketPortRange, entryPoints: [epPeerDescriptor] })
+            const node = new DhtNode({ nodeName: `${i}`, websocketPortRange, entryPoints: [epPeerDescriptor] })
             await node.start()
             layer0Nodes.push(node)
             const layer1 = new DhtNode({

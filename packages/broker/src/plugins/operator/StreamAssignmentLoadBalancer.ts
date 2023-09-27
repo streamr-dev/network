@@ -5,6 +5,7 @@ import { Logger } from '@streamr/utils'
 import pLimit from 'p-limit'
 import EventEmitter3 from 'eventemitter3'
 import { ConsistentHashRing } from './ConsistentHashRing'
+import { NodeID } from '@streamr/trackerless-network'
 
 const logger = new Logger(module)
 
@@ -18,13 +19,13 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
     private readonly myStreamParts = new Set<StreamPartID>()
     private readonly concurrencyLimit = pLimit(1)
     private readonly consistentHashRing: ConsistentHashRing
-    private readonly myNodeId: string
+    private readonly myNodeId: NodeID
     private readonly getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>
     private readonly operatorFleetState: EventEmitter3<OperatorFleetStateEvents>
     private readonly maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>
 
     constructor(
-        myNodeId: string,
+        myNodeId: NodeID,
         redundancyFactor: number,
         getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>,
         operatorFleetState: EventEmitter3<OperatorFleetStateEvents>,
@@ -43,7 +44,11 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.maintainTopologyHelper.on('removeStakedStream', this.streamRemoved)
     }
 
-    private nodeAdded = this.concurrencyLimiter(async (nodeId: string): Promise<void> => {
+    getMyStreamParts(): StreamPartID[] {
+        return Array.from(this.myStreamParts)
+    }
+
+    private nodeAdded = this.concurrencyLimiter(async (nodeId: NodeID): Promise<void> => {
         if (nodeId === this.myNodeId) {
             return
         }
@@ -51,7 +56,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.recalculateAssignments()
     })
 
-    private nodeRemoved = this.concurrencyLimiter(async (nodeId: string): Promise<void> => {
+    private nodeRemoved = this.concurrencyLimiter(async (nodeId: NodeID): Promise<void> => {
         if (nodeId === this.myNodeId) {
             return
         }

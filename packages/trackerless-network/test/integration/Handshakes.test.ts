@@ -4,18 +4,18 @@ import {
     PeerDescriptor,
     ListeningRpcCommunicator,
     Simulator,
-    SimulatorTransport,
-    peerIdFromPeerDescriptor
+    SimulatorTransport
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     HandshakeRpcClient
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { PeerList } from '../../src/logic/PeerList'
+import { NodeList } from '../../src/logic/NodeList'
 import { mockConnectionLocker } from '../utils/utils'
 import { StreamHandshakeRequest, StreamHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('Handshakes', () => {
 
@@ -34,8 +34,8 @@ describe('Handshakes', () => {
     let rpcCommunicator1: ListeningRpcCommunicator
     let rpcCommunicator2: ListeningRpcCommunicator
     let rpcCommunicator3: ListeningRpcCommunicator
-    let contactPool: PeerList
-    let targetNeighbors: PeerList
+    let nodeView: NodeList
+    let targetNeighbors: NodeList
     let handshaker: Handshaker
     const randomGraphId = 'handshaker'
 
@@ -80,14 +80,14 @@ describe('Handshakes', () => {
         rpcCommunicator2 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport2)
         rpcCommunicator3 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport3)
 
-        const handshakerPeerId = peerIdFromPeerDescriptor(peerDescriptor2)
-        contactPool = new PeerList(handshakerPeerId, 10)
-        targetNeighbors = new PeerList(handshakerPeerId, 4)
+        const handshakerNodeId = getNodeIdFromPeerDescriptor(peerDescriptor2)
+        nodeView = new NodeList(handshakerNodeId, 10)
+        targetNeighbors = new NodeList(handshakerNodeId, 4)
         handshaker = new Handshaker({
             ownPeerDescriptor: peerDescriptor2,
             randomGraphId,
-            nearbyContactPool: contactPool,
-            randomContactPool: contactPool,
+            nearbyNodeView: nodeView,
+            randomNodeView: nodeView,
             targetNeighbors,
             connectionLocker: mockConnectionLocker,
             rpcCommunicator: rpcCommunicator2,
@@ -107,7 +107,7 @@ describe('Handshakes', () => {
         Simulator.useFakeTimers(false)
     })
 
-    it('Two peers can handshake', async () => {
+    it('Two nodes can handshake', async () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
@@ -118,7 +118,7 @@ describe('Handshakes', () => {
             )
         )
         expect(res).toEqual(true)
-        expect(targetNeighbors.hasPeer(peerDescriptor1)).toEqual(true)
+        expect(targetNeighbors.hasNode(peerDescriptor1)).toEqual(true)
     })
 
     it('Handshake accepted', async () => {
@@ -132,7 +132,7 @@ describe('Handshakes', () => {
             )
         )
         expect(res).toEqual(true)
-        expect(targetNeighbors.hasPeer(peerDescriptor1)).toEqual(true)
+        expect(targetNeighbors.hasNode(peerDescriptor1)).toEqual(true)
     })
 
     it('Handshake rejected', async () => {
@@ -146,7 +146,7 @@ describe('Handshakes', () => {
             )
         )
         expect(res).toEqual(false)
-        expect(targetNeighbors.hasPeer(peerDescriptor1)).toEqual(false)
+        expect(targetNeighbors.hasNode(peerDescriptor1)).toEqual(false)
     })
 
     it('Handshake with Interleaving', async () => {
@@ -161,7 +161,7 @@ describe('Handshakes', () => {
             )
         )
         expect(res).toEqual(true)
-        expect(targetNeighbors.hasPeer(peerDescriptor1)).toEqual(true)
-        expect(targetNeighbors.hasPeer(peerDescriptor3)).toEqual(true)
+        expect(targetNeighbors.hasNode(peerDescriptor1)).toEqual(true)
+        expect(targetNeighbors.hasNode(peerDescriptor3)).toEqual(true)
     })
 })

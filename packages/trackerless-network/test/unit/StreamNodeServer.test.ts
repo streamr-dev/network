@@ -1,28 +1,29 @@
-import { ListeningRpcCommunicator, PeerDescriptor, PeerID } from '@streamr/dht'
+import { ListeningRpcCommunicator, NodeType, PeerDescriptor } from '@streamr/dht'
 import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
 import { LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/Transport'
-import { createStreamMessage } from '../utils/utils'
-import { utf8ToBinary } from '../../src/logic/utils'
+import { hexToBinary } from '@streamr/utils'
+import { createRandomNodeId, createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('StreamNodeServer', () => {
 
     let streamNodeServer: StreamNodeServer
     const peerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('random-graph-node').value,
-        type: 0
+        kademliaId: hexToBinary(createRandomNodeId()),
+        type: NodeType.NODEJS
     }
 
     const mockSender: PeerDescriptor = {
-        kademliaId: PeerID.fromString('mock-sender').value,
-        type: 0
+        kademliaId: hexToBinary(createRandomNodeId()),
+        type: NodeType.NODEJS
     }
 
     const message = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         StreamPartIDUtils.parse('random-graph#0'),
-        utf8ToBinary('publisher')
+        randomEthereumAddress()
     )
 
     let mockBroadcast: jest.Mock
@@ -56,7 +57,7 @@ describe('StreamNodeServer', () => {
 
     it('Server leaveStreamNotice()', async () => {
         const leaveNotice: LeaveStreamNotice = {
-            senderId: 'sender',
+            senderId: hexToBinary(createRandomNodeId()),
             randomGraphId: 'random-graph'
         }
         await streamNodeServer.leaveStreamNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)
