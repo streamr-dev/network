@@ -62,7 +62,7 @@ export default class StreamMessage {
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
     signature: Uint8Array
-    private parsedContent?: unknown | Uint8Array
+    private parsedContent?: unknown
     serializedContent: Uint8Array
 
     /**

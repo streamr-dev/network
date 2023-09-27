@@ -93,7 +93,6 @@ describe('publish and subscribe', () => {
         publishViaCliCommand()
         const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
         subscriberAbortController.abort()
-        console.log(receivedMessage)
         expect(JSON.parse(receivedMessage)).toMatchObject({
             content: expect.stringMatching(/^[0-9a-fA-F]+$/),
             metadata: {
