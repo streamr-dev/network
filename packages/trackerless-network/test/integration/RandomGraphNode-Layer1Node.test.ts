@@ -37,14 +37,12 @@ describe('RandomGraphNode-DhtNode', () => {
         const simulator = new Simulator()
         const entrypointCm = new ConnectionManager({
             ownPeerDescriptor: entrypointDescriptor,
-            nodeName: entrypointDescriptor.nodeName,
             simulator
         })
 
         const cms: ConnectionManager[] = range(numOfNodes).map((i) =>
             new ConnectionManager({
                 ownPeerDescriptor: peerDescriptors[i],
-                nodeName: peerDescriptors[i].nodeName,
                 simulator
             })
         )
