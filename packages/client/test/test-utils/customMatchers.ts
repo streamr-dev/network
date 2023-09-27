@@ -24,11 +24,8 @@ declare global {
     }
 }
 
-const formError = (description: string, expected: string, actual: string): ExpectationResult => {
-    return {
-        pass: false,
-        message: () => `${description}\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
-    }
+const formErrorMessage = (description: string, expected: string, actual: string): string => {
+    return `${description}\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
 }
 
 const toThrowStreamrError = (
@@ -50,18 +47,27 @@ const toThrowStreamrError = (
         actualError = actual
     }
 
+    const messages: string[] = []
     if (!(actualError instanceof StreamrClientError)) {
-        return formError('Class name', 'StreamrClientError', actualError.constructor.name)
+        messages.push(formErrorMessage('Class name', 'StreamrClientError', actualError.constructor.name))
+    } else {
+        if (actualError.code !== expectedError.code) {
+            messages.push(formErrorMessage('StreamrClientError.code', expectedError.code, actualError.code))
+        }
+        if ((expectedError.message !== undefined) && (actualError.message !== expectedError.message)) {
+            messages.push(formErrorMessage('StreamrClientError.message', expectedError.message, actualError.message))
+        }
     }
-    if (actualError.code !== expectedError.code) {
-        return formError('StreamrClientError.code', expectedError.code, actualError.code)
-    }
-    if ((expectedError.message !== undefined) && (actualError.message !== expectedError.message)) {
-        return formError('StreamrClientError.message', expectedError.message, actualError.message)
-    }
-    return {
-        pass: true,
-        message: () => `Expected not to throw ${printReceived('StreamrClientError')}`
+    if (messages.length > 0) {
+        return {
+            pass: false,
+            message: () => messages.join('\n\n')
+        }
+    } else {
+        return {
+            pass: true,
+            message: () => `Expected not to throw ${printReceived('StreamrClientError')}`
+        }
     }
 }
 

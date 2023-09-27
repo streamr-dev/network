@@ -8,13 +8,13 @@ import sample from 'lodash/sample'
 
 const logger = new Logger(module)
 
-interface UnwithdrawnEarningsData {
+interface EarningsData {
     sponsorshipAddresses: EthereumAddress[]
     sumDataWei: bigint
-    rewardThresholdDataWei: bigint
+    maxAllowedEarningsDataWei: bigint
 }
 
-export class MaintainOperatorPoolValueHelper {
+export class MaintainOperatorValueHelper {
     private readonly operator: Operator
     private readonly theGraphClient: TheGraphClient
     private readonly config: OperatorServiceConfig
@@ -39,19 +39,19 @@ export class MaintainOperatorPoolValueHelper {
     }
 
     /**
-     * Find the sum of unwithdrawn earnings in Sponsorships (that the Operator must withdraw before the sum reaches a limit),
+     * Find the sum of earnings in Sponsorships (that the Operator must withdraw before the sum reaches a limit),
      * SUBJECT TO the constraints, set in the OperatorServiceConfig:
      *  - only take at most maxSponsorshipsInWithdraw addresses (those with most earnings), or all if undefined
      *  - only take sponsorships that have more than minSponsorshipEarningsInWithdraw, or all if undefined
      * @param operatorContractAddress
      */
-    async getUnwithdrawnEarningsOf(operatorContractAddress: EthereumAddress): Promise<UnwithdrawnEarningsData> {
+    async getEarningsOf(operatorContractAddress: EthereumAddress): Promise<EarningsData> {
         const operator = new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
         const minSponsorshipEarningsInWithdrawWei = BigInt(this.config.minSponsorshipEarningsInWithdraw ?? 0)
         const {
             addresses: allSponsorshipAddresses,
             earnings,
-            rewardThreshold,
+            maxAllowedEarnings,
         } = await operator.getSponsorshipsAndEarnings()
 
         const sponsorships = allSponsorshipAddresses
@@ -63,12 +63,12 @@ export class MaintainOperatorPoolValueHelper {
         return {
             sponsorshipAddresses: sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address)),
             sumDataWei: sponsorships.reduce((sum, sponsorship) => sum += sponsorship.earnings, 0n),
-            rewardThresholdDataWei: rewardThreshold.toBigInt()
+            maxAllowedEarningsDataWei: maxAllowedEarnings.toBigInt()
         }
     }
 
-    async getMyUnwithdrawnEarnings(): Promise<UnwithdrawnEarningsData> {
-        return this.getUnwithdrawnEarningsOf(this.config.operatorContractAddress)
+    async getMyEarnings(): Promise<EarningsData> {
+        return this.getEarningsOf(this.config.operatorContractAddress)
     }
 
     async withdrawMyEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {

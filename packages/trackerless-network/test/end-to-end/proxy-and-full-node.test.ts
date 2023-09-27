@@ -34,7 +34,7 @@ describe('proxy and full node', () => {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         nodeName: 'proxyNode',
-        websocket: { host: 'localhost', port: 23135, tls: false }
+        websocket: { host: '127.0.0.1', port: 23135, tls: false }
     }
     const proxiedNodeDescriptor: PeerDescriptor = {
         kademliaId: hexToBinary(createRandomNodeId()),

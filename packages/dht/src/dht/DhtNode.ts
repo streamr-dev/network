@@ -25,7 +25,8 @@ import { ConnectionManager, ConnectionManagerConfig, PortRange, TlsCertificate }
 import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
-    MetricsContext
+    MetricsContext,
+    hexToBinary
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RandomContactList } from './contact/RandomContactList'
@@ -72,7 +73,7 @@ export interface DhtNodeOptions {
     entryPoints?: PeerDescriptor[]
     websocketHost?: string
     websocketPortRange?: PortRange
-    peerIdString?: string
+    peerId?: string
 
     nodeName?: string
     rpcRequestTimeout?: number
@@ -100,7 +101,7 @@ export class DhtNodeConfig {
     storeMaxTtl = 60000
     storeNumberOfCopies = 5
     metricsContext = new MetricsContext()
-    peerIdString = new UUID().toHex()
+    peerId = new UUID().toHex()
 
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
@@ -134,14 +135,14 @@ const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
 
-export const createPeerDescriptor = (msg?: ConnectivityResponse, peerIdString?: string, nodeName?: string): PeerDescriptor => {
-    let peerId: Uint8Array
+export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string, nodeName?: string): PeerDescriptor => {
+    let kademliaId: Uint8Array
     if (msg) {
-        peerId = peerIdString ? PeerID.fromString(peerIdString).value : PeerID.fromIp(msg.host).value
+        kademliaId = peerId ? hexToBinary(peerId) : PeerID.fromIp(msg.host).value
     } else {
-        peerId = PeerID.fromString(peerIdString!).value
+        kademliaId = hexToBinary(peerId!)
     }
-    const ret: PeerDescriptor = { kademliaId: peerId, nodeName: nodeName, type: NodeType.NODEJS }
+    const ret: PeerDescriptor = { kademliaId, nodeName: nodeName, type: NodeType.NODEJS }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
         ret.openInternet = true
@@ -449,7 +450,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.ownPeerDescriptor = this.config.peerDescriptor
         } else {
             this.ownPeerDescriptor = createPeerDescriptor(connectivityResponse,
-                this.config.peerIdString,
+                this.config.peerId,
                 this.config.nodeName)
         }
         return this.ownPeerDescriptor
