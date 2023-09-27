@@ -5,40 +5,32 @@ import { EventEmitter } from 'eventemitter3'
 import { StreamPartID } from '@streamr/protocol'
 import { InfoRpcServer } from './logic/info-rpc/InfoRpcServer'
 
-interface ReadynessEvents {
+interface ReadinessEvents {
     done: () => void
 }
 
-class ReadynessListener {
+class ReadinessListener {
 
-    private readonly emitter = new EventEmitter<ReadynessEvents>()
+    private readonly emitter = new EventEmitter<ReadinessEvents>()
     private readonly networkStack: NetworkStack
     private readonly dhtNode: DhtNode
 
     constructor(networkStack: NetworkStack, dhtNode: DhtNode) {
         this.networkStack = networkStack
         this.dhtNode = dhtNode
-        this.networkStack.on('stopped', this.onStopped)
-        this.dhtNode.on('connected', this.onConnected)
+        this.networkStack.on('stopped', this.onDone)
+        this.dhtNode.on('connected', this.onDone)
     }
 
-    private onConnected = () => {
-        this.networkStack.off('stopped', this.onStopped)
-        this.dhtNode.off('connected', this.onConnected)
-        this.emitter.emit('done')
-    }
-
-    private onStopped = () => {
-        this.networkStack.off('stopped', this.onStopped)
-        this.dhtNode.off('connected', this.onConnected)
+    private onDone = () => {
+        this.networkStack.off('stopped', this.onDone)
+        this.dhtNode.off('connected', this.onDone)
         this.emitter.emit('done')
     }
 
     public async waitUntilReady(timeout: number): Promise<void> {
-        if (this.dhtNode.getNumberOfConnections() > 0) {
-            return
-        } else {
-            await waitForEvent3<ReadynessEvents>(this.emitter, 'done', timeout)
+        if (this.dhtNode.getNumberOfConnections() === 0) {
+            await waitForEvent3<ReadinessEvents>(this.emitter, 'done', timeout)
         }
     }
 }
@@ -53,14 +45,13 @@ export interface NetworkStackEvents {
     stopped: () => void
 }
 
+const DEFAULT_FIRST_CONNECTION_TIMEOUT = 5000
+
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
-    private connectionManager?: ConnectionManager
     private layer0DhtNode?: DhtNode
     private streamrNode?: StreamrNode
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
-    private readonly firstConnectionTimeout: number
-    private dhtJoinRequired = true
     private infoServer?: InfoRpcServer
 
     constructor(options: NetworkOptions) {
@@ -76,56 +67,53 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             nodeName: options.networkNode?.nodeName ?? options.layer0?.nodeName,
             metricsContext: this.metricsContext
         })
-        this.firstConnectionTimeout = options.networkNode?.firstConnectionTimeout ?? 5000
     }
 
     async start(doJoin = true): Promise<void> {
         await this.layer0DhtNode!.start()
-        this.connectionManager = this.layer0DhtNode!.getTransport() as ConnectionManager
-        if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0!.entryPoints!.some((entryPoint) => 
+        const connectionManager = this.layer0DhtNode!.getTransport() as ConnectionManager
+        if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
             isSamePeerDescriptor(entryPoint, this.layer0DhtNode!.getPeerDescriptor())
         ))) {
-            this.dhtJoinRequired = false
             await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
-            await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager, this.connectionManager)
         } else {
             if (doJoin) {
-                this.dhtJoinRequired = false
                 await this.joinDht()
             }
-            await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager, this.connectionManager)
         }
-        if (this.connectionManager) {
+        await this.streamrNode?.start(this.layer0DhtNode!, connectionManager, connectionManager)
+        if (this.streamrNode) {
             this.infoServer = new InfoRpcServer(this)
             this.infoServer.registerDefaultServerMethods()
         }
     }
 
     private async joinDht(): Promise<void> {
-        setImmediate(() => {
+        setImmediate(async () => {
             if (this.options.layer0?.entryPoints !== undefined) {
-                this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
+                // TODO should catch possible rejection?
+                await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
             }
         })
         await this.waitForFirstConnection()
     }
 
     private async waitForFirstConnection(): Promise<void> {
-        const readynessListener = new ReadynessListener(this, this.layer0DhtNode!)
-        await readynessListener.waitUntilReady(this.firstConnectionTimeout)
+        const readinessListener = new ReadinessListener(this, this.layer0DhtNode!)
+        const timeout = this.options.networkNode?.firstConnectionTimeout ?? DEFAULT_FIRST_CONNECTION_TIMEOUT
+        await readinessListener.waitUntilReady(timeout)
     }
 
     async joinLayer0IfRequired(streamPartId: StreamPartID): Promise<void> {
-        if (this.isJoinRequired(streamPartId)) {
-            this.dhtJoinRequired = false
+        if (this.streamrNode!.isProxiedStreamPart(streamPartId)) {
+            return
+        }
+        // TODO we could wrap joinDht with pOnce and call it here (no else-if needed in that case)
+        if (!this.layer0DhtNode!.hasJoined()) {
             await this.joinDht()
         } else if (this.layer0DhtNode!.getNumberOfConnections() < 1) {
             await this.waitForFirstConnection()
         }
-    }
-
-    private isJoinRequired(streamPartId: StreamPartID): boolean {
-        return this.dhtJoinRequired && !this.layer0DhtNode!.hasJoined() && this.streamrNode!.isJoinRequired(streamPartId)
     }
 
     getStreamrNode(): StreamrNode {
@@ -137,7 +125,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     getConnectionManager(): ConnectionManager {
-        return this.connectionManager!
+        return this.layer0DhtNode!.getTransport() as ConnectionManager
     }
 
     getMetricsContext(): MetricsContext {
@@ -148,7 +136,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         await this.streamrNode!.destroy()
         this.streamrNode = undefined
         this.layer0DhtNode = undefined
-        this.connectionManager = undefined
         this.emit('stopped')
     }
 

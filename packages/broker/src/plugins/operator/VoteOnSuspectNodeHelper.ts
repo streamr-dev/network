@@ -1,9 +1,10 @@
 import { Contract } from '@ethersproject/contracts'
 import type { Operator } from '@streamr/network-contracts'
-import { operatorABI } from '@streamr/network-contracts'
-import { addManagedEventListener, Logger } from '@streamr/utils'
+import { operatorABI, Sponsorship, sponsorshipABI } from '@streamr/network-contracts'
+import { addManagedEventListener, EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { OperatorServiceConfig } from './OperatorPlugin'
-import { ensureValidStreamPartitionIndex } from '@streamr/protocol'
+import { ensureValidStreamPartitionIndex, StreamID, toStreamID } from '@streamr/protocol'
+import { Signer } from 'ethers'
 
 export const VOTE_KICK = '0x0000000000000000000000000000000000000000000000000000000000000001'
 export const VOTE_NO_KICK = '0x0000000000000000000000000000000000000000000000000000000000000000'
@@ -45,15 +46,21 @@ export function parsePartitionFromMetadata(metadataAsString: string | undefined)
     return partition
 }
 
-export type ReviewRequestListener = (sponsorship: string, operatorContractAddress: string, partition: number) => void
+export type ReviewRequestListener = (
+    sponsorship: EthereumAddress,
+    operatorContractAddress: EthereumAddress,
+    partition: number
+) => void
 
 export class VoteOnSuspectNodeHelper {
+    private readonly signer: Signer
     private readonly contract: Operator
 
     constructor(
         config: OperatorServiceConfig,
         contract = new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator,
     ) {
+        this.signer = config.signer
         this.contract = contract
     }
 
@@ -83,10 +90,15 @@ export class VoteOnSuspectNodeHelper {
                     targetOperator,
                     partition
                 })
-                listener(sponsorship, targetOperator, partition)
+                listener(toEthereumAddress(sponsorship), toEthereumAddress(targetOperator), partition)
             },
             abortSignal
         )
+    }
+
+    async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
+        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, this.signer) as unknown as Sponsorship
+        return toStreamID(await sponsorship.streamId())
     }
 
     async voteOnFlag(sponsorship: string, targetOperator: string, kick: boolean): Promise<void> {

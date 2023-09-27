@@ -357,7 +357,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     private isOwnWebSocketServer(peerDescriptor: PeerDescriptor): boolean {
         if ((peerDescriptor.websocket !== undefined) && (this.ownPeerDescriptor!.websocket !== undefined)) {
-            return ((peerDescriptor.websocket.port === this.ownPeerDescriptor!.websocket!.port) 
+            return ((peerDescriptor.websocket.port === this.ownPeerDescriptor!.websocket.port) 
                 && (peerDescriptor.websocket.host === this.ownPeerDescriptor!.websocket.host))
         } else {
             return false

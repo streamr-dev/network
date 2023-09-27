@@ -5,8 +5,7 @@ import { Signer } from 'ethers'
 import { StreamrClient } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
-import { InspectRandomNodeService } from './InspectRandomNodeService'
-import { maintainOperatorPoolValue } from './maintainOperatorPoolValue'
+import { maintainOperatorValue } from './maintainOperatorValue'
 import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
 import { DEFAULT_UPDATE_INTERVAL_IN_MS, OperatorFleetState } from './OperatorFleetState'
 import { inspectSuspectNode } from './inspectSuspectNode'
@@ -14,8 +13,8 @@ import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { createIsLeaderFn } from './createIsLeaderFn'
 import { announceNodeToContract } from './announceNodeToContract'
 import { announceNodeToStream } from './announceNodeToStream'
-import { checkOperatorPoolValueBreach } from './checkOperatorPoolValueBreach'
-import { MaintainOperatorPoolValueHelper } from './MaintainOperatorPoolValueHelper'
+import { checkOperatorValueBreach } from './checkOperatorValueBreach'
+import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
 
@@ -37,7 +36,6 @@ export interface OperatorServiceConfig {
 const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
-    private inspectRandomNodeService?: InspectRandomNodeService
     private maintainTopologyService?: MaintainTopologyService
     private fleetState?: OperatorFleetState
     private serviceConfig?: OperatorServiceConfig
@@ -67,11 +65,10 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
-        //await this.inspectRandomNodeService.start()
         await this.maintainTopologyService.start()
 
-        const maintainOperatorPoolValueHelper = new MaintainOperatorPoolValueHelper(this.serviceConfig)
-        const announceNodeToContractHelper = new AnnounceNodeToContractHelper(this.serviceConfig!)
+        const maintainOperatorValueHelper = new MaintainOperatorValueHelper(this.serviceConfig)
+        const announceNodeToContractHelper = new AnnounceNodeToContractHelper(this.serviceConfig)
         await this.fleetState.start()
         // start tasks in background so that operations which take significant amount of time (e.g. fleetState.waitUntilReady())
         // don't block the startup of Broker
@@ -85,8 +82,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 })()
             }, DEFAULT_UPDATE_INTERVAL_IN_MS, this.abortController.signal)
             await scheduleAtInterval(
-                async () => checkOperatorPoolValueBreach(
-                    maintainOperatorPoolValueHelper
+                async () => checkOperatorValueBreach(
+                    maintainOperatorValueHelper
                 ).catch((err) => {
                     logger.warn('Encountered error', { err })
                 }),
@@ -114,9 +111,9 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 async () => {
                     if (isLeader()) {
                         try {
-                            await maintainOperatorPoolValue(0.5, maintainOperatorPoolValueHelper)
+                            await maintainOperatorValue(0.5, maintainOperatorValueHelper)
                         } catch (err) {
-                            logger.error('Encountered error while checking unwithdrawn earnings', { err })
+                            logger.error('Encountered error while checking earnings', { err })
                         }
                     }
                 },
@@ -125,6 +122,25 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 this.abortController.signal
             )
 
+            await scheduleAtInterval(async () => {
+                try {
+                    /*await inspectRandomNode(
+                        this.serviceConfig!.operatorContractAddress,
+                        new InspectRandomNodeHelper(this.serviceConfig!),
+                        undefind as any, TODO: make loadbalacner accessible
+                        streamrClient,
+                        this.heartbeatTimeoutInMs,
+                        (operatorContractAddress) => fetchRedundancyFactor({
+                            operatorContractAddress,
+                            signer
+                        }),
+                        this.abortController.signal
+                    )*/
+                } catch (err) {
+                    logger.error('Encountered error while inspecting random node', { err })
+                }
+            }, 15 * 60 * 1000, false, this.abortController.signal)
+
             const voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(this.serviceConfig!)
             voteOnSuspectNodeHelper.addReviewRequestListener(async (sponsorship, targetOperator, partition) => {
                 if (isLeader()) {
@@ -132,7 +148,13 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         sponsorship,
                         targetOperator,
                         partition,
-                        voteOnSuspectNodeHelper
+                        voteOnSuspectNodeHelper,
+                        streamrClient,
+                        this.abortController.signal,
+                        (operatorContractAddress) => fetchRedundancyFactor({
+                            operatorContractAddress,
+                            signer
+                        })
                     )
                 }
             }, this.abortController.signal)

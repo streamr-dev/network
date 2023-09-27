@@ -82,12 +82,12 @@ describe('inspect', () => {
         publishInterval = setInterval(async () => {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
-                StreamPartIDUtils.parse('stream#0'),
+                streamPartId,
                 randomEthereumAddress(),
                 123123,
                 sequenceNumber
             )
-            await publisherNode.getStreamrNode().publishToStream(streamPartId, msg)
+            publisherNode.getStreamrNode().publishToStream(msg)
             sequenceNumber += 1
         }, 200)
 

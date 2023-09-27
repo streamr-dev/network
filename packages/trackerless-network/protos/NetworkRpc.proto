@@ -68,6 +68,7 @@ message StreamMessage {
   EncryptionType encryptionType = 3;
   bytes content = 4;
   bytes signature = 5;
+  // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
   MessageID messageId = 6;
   optional MessageRef previousMessageRef = 7;
   optional string groupKeyId = 8;
@@ -98,6 +99,7 @@ message StreamHandshakeRequest {
   string requestId = 3;
   optional bytes concurrentHandshakeTargetId = 4;
   repeated bytes neighborIds = 5;
+  // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
   dht.PeerDescriptor senderDescriptor = 6;
   optional bytes interleaveSourceId = 7;
 }
@@ -111,6 +113,7 @@ message StreamHandshakeResponse {
 message InterleaveNotice {
   bytes senderId = 1;
   string randomGraphId = 2;
+  // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
   dht.PeerDescriptor interleaveTargetDescriptor = 3;
 }
 
@@ -132,6 +135,7 @@ message ProxyConnectionRequest {
   uint32 streamPartition = 3; 
   ProxyDirection direction = 4;
   bytes userId = 5;
+  // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
   dht.PeerDescriptor senderDescriptor = 6;
 }
 
