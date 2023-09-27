@@ -19,12 +19,12 @@
         "packages/test-utils",
         "packages/protocol",
         "packages/proto-rpc",
+        "packages/autocertifier",
         "packages/dht",
         "packages/trackerless-network",
         "packages/client",
         "packages/broker",
-        "packages/cli-tools",
-        "packages/autocertifier"
+        "packages/cli-tools"
     ],
     "dependencies": {
         "@manypkg/cli": "^0.21.0",

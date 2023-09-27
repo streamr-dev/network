@@ -7,8 +7,11 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/autocertifier"
   },
-  "main": "dist/src/main.js",
-  "types": "dist/src/main.d.ts",
+  "bin": {
+    "autocertifier": "dist/bin/run-auto-certifier.js"
+  },
+  "main": "dist/src/exports.js",
+  "types": "dist/src/exports.d.ts",
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {

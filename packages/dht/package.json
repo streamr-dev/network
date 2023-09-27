@@ -31,6 +31,7 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
+    "@streamr/autocertifier": "1.0.0",
     "@streamr/proto-rpc": "0.0.1-tatum.2",
     "@streamr/utils": "0.0.1-tatum.2",
     "eventemitter3": "^5.0.0",

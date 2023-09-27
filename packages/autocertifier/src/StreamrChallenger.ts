@@ -1,5 +1,4 @@
-import { Message, NodeType, PeerDescriptor, PeerID, ClientWebSocket, ManagedConnection } from '@streamr/dht'
-import { RoutingRpcCommunicator } from '@streamr/dht/dist/src/transport/RoutingRpcCommunicator'
+import { Message, NodeType, PeerDescriptor, PeerID, ClientWebSocket, ManagedConnection, RoutingRpcCommunicator } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { AutoCertifierServiceClient } from './proto/packages/autocertifier/protos/AutoCertifier.client'
 import { Logger } from '@streamr/utils'
