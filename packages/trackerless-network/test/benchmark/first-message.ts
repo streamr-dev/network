@@ -2,7 +2,7 @@
 
 import { LatencyType, NodeType, Simulator, getRandomRegion } from '@streamr/dht'
 import fs from 'fs'
-import { createNetworkNodeWithSimulator, createRandomNodeId } from '../utils/utils'
+import { createMockPeerDescriptor, createNetworkNodeWithSimulator, createRandomNodeId } from '../utils/utils'
 import { NetworkNode } from '../../src/NetworkNode'
 import { PeerDescriptor } from '../../../dht/src/exports'
 import { StreamMessage, toStreamID, MessageID, StreamPartIDUtils, StreamMessageType, toStreamPartID, StreamPartID } from '@streamr/protocol'
@@ -24,12 +24,10 @@ const prepareLayer0 = async () => {
     console.log('Preparing network')
     nodes = []
     simulator = new Simulator(LatencyType.REAL)
-    const peerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
+    const peerDescriptor = createMockPeerDescriptor({
         region: getRandomRegion(),
-        type: NodeType.NODEJS,
         nodeName: 'entrypoint'
-    }
+    })
     layer0Ep = peerDescriptor
     const entryPoint = createNetworkNodeWithSimulator(peerDescriptor, simulator, [peerDescriptor])
     await entryPoint.start()    
@@ -40,12 +38,10 @@ const prepareLayer0 = async () => {
 
 const prepareStream = async (streamId: string) => {
     console.log('Preparing stream ')
-    const peerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
+    const peerDescriptor = createMockPeerDescriptor({
         region: getRandomRegion(),
-        type: NodeType.NODEJS,
         nodeName: streamId
-    }
+    })
     const streamPartId = toStreamPartID(toStreamID(streamId), 0)
     const streamPublisher = createNetworkNodeWithSimulator(peerDescriptor, simulator, [layer0Ep])
     await streamPublisher.start()

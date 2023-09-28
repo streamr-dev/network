@@ -77,8 +77,9 @@ export const createRandomNodeId = (): NodeID => {
 }
 
 // TODO use this in tests
-export const createMockPeerDescriptor = (): PeerDescriptor => {
+export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'kademliaId' | 'type'>): PeerDescriptor => {
     return {
+        ...opts,
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS
     }

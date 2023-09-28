@@ -1,23 +1,20 @@
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { NodeType, PeerDescriptor } from '@streamr/dht'
-import { MockTransport } from '../utils/mock/Transport'
-import { createMockRemoteNode, createRandomNodeId, mockConnectionLocker } from '../utils/utils'
-import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
-import { NodeList } from '../../src/logic/NodeList'
-import { MockHandshaker } from '../utils/mock/MockHandshaker'
-import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManager'
-import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
-import { MockLayer1 } from '../utils/mock/MockLayer1'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { NodeType } from '@streamr/dht'
 import { hexToBinary, waitForCondition } from '@streamr/utils'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { NodeList } from '../../src/logic/NodeList'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { MockHandshaker } from '../utils/mock/MockHandshaker'
+import { MockLayer1 } from '../utils/mock/MockLayer1'
+import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
+import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManager'
+import { MockTransport } from '../utils/mock/Transport'
+import { createMockPeerDescriptor, createMockRemoteNode, createRandomNodeId, mockConnectionLocker } from '../utils/utils'
 
 describe('RandomGraphNode', () => {
 
     let randomGraphNode: RandomGraphNode
-    const peerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
+    const peerDescriptor = createMockPeerDescriptor()
 
     let targetNeighbors: NodeList
     let nearbyNodeView: NodeList

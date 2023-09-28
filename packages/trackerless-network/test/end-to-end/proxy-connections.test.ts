@@ -1,13 +1,12 @@
-import { NodeType, PeerDescriptor } from '@streamr/dht'
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { NodeID } from '../../src/identifiers'
-import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createRandomNodeId } from '../utils/utils'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { ProxyStreamConnectionClient } from '../../src/logic/proxy/ProxyStreamConnectionClient'
+import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 const PROXIED_NODE_USER_ID = randomEthereumAddress()
 const STREAM_PART_ID = toStreamPartID(toStreamID('proxy-test'), 0)
@@ -47,22 +46,15 @@ describe('Proxy connections', () => {
     }
 
     beforeEach(async () => {
-        const proxyNodeDescriptor1: PeerDescriptor = {
-            kademliaId: hexToBinary(createRandomNodeId()),
-            type: NodeType.NODEJS,
+        const proxyNodeDescriptor1 = createMockPeerDescriptor({
             nodeName: 'proxyNode',
             websocket: { host: '127.0.0.1', port: 23132, tls: false }
-        }
-        const proxyNodeDescriptor2: PeerDescriptor = {
-            kademliaId: hexToBinary(createRandomNodeId()),
-            type: NodeType.NODEJS,
+        })
+        const proxyNodeDescriptor2 = createMockPeerDescriptor({
             nodeName: 'proxyNode',
             websocket: { host: '127.0.0.1', port: 23133, tls: false }
-        }
-        const proxiedNodeDescriptor: PeerDescriptor = {
-            kademliaId: hexToBinary(createRandomNodeId()),
-            type: NodeType.NODEJS,
-        }
+        })
+        const proxiedNodeDescriptor = createMockPeerDescriptor()
         proxyNode1 = createNetworkNode({
             layer0: {
                 entryPoints: [proxyNodeDescriptor1],
