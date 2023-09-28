@@ -19,8 +19,6 @@ export class RemoteProxyServer extends Remote<IProxyConnectionRpcClient> {
             timeout: 5000
         }
         const request: ProxyConnectionRequest = {
-            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
-            senderDescriptor: ownPeerDescriptor,
             streamId: toStreamID(streamPartId),
             streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
             direction,

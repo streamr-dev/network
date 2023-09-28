@@ -8,7 +8,8 @@ import { NetworkRpcClient } from '../../proto/packages/trackerless-network/proto
 import { EventEmitter } from 'eventemitter3'
 import { EthereumAddress, Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
-import { NodeID } from '../../identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtCallContext } from '@streamr/dht/src/exports'
 
 const logger = new Logger(module)
 
@@ -75,12 +76,13 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
     }
 
     // IProxyConnectionRpc server method
-    async requestConnection(request: ProxyConnectionRequest, _context: ServerCallContext): Promise<ProxyConnectionResponse> {
-        this.connections.set(binaryToHex(request.senderId) as NodeID, {
+    async requestConnection(request: ProxyConnectionRequest, context: ServerCallContext): Promise<ProxyConnectionResponse> {
+        const senderPeerDescriptor = (context as DhtCallContext).sourceDescriptor!
+        this.connections.set(getNodeIdFromPeerDescriptor(senderPeerDescriptor), {
             direction: request.direction,
             userId: toEthereumAddress(binaryToHex(request.userId, true)),
             remote: new RemoteRandomGraphNode(
-                request.senderDescriptor!,
+                senderPeerDescriptor,
                 this.config.streamPartId,
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))    
             )
