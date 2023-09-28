@@ -1,11 +1,9 @@
 import { DhtRpcOptions } from '@streamr/dht'
+import { EthereumAddress, Logger, hexToBinary } from '@streamr/utils'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { ProxyConnectionRequest, ProxyDirection } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { Remote } from '../Remote'
-import { StreamPartIDUtils, toStreamID } from '@streamr/protocol'
-import { ProxyDirection, ProxyConnectionRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { EthereumAddress, Logger, hexToBinary } from '@streamr/utils'
-import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 
