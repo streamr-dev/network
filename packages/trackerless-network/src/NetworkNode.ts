@@ -42,26 +42,13 @@ export class NetworkNode {
         return this.stack.getStreamrNode().inspect(node, streamPartId)
     }
 
-    async publish(streamMessage: StreamMessage): Promise<void> {
-        const streamPartId = streamMessage.getStreamPartID()
-        // TODO move this check to somewhere else?
-        if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) 
-            && streamMessage.messageType === StreamMessageType.MESSAGE) {
-            throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
-        }
-
-        await this.stack.joinLayer0IfRequired(streamPartId)
+    async broadcast(streamMessage: StreamMessage): Promise<void> {
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
-        this.stack.getStreamrNode().publishToStream(msg)
+        await this.stack.broadcast(msg)
     }
 
     async join(streamPartId: StreamPartID): Promise<void> {
-        // TODO move this check to somewhere else?
-        if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
-            throw new Error(`Cannot join to ${streamPartId} as proxy publish connections have been set`)
-        }
-        await this.stack.joinLayer0IfRequired(streamPartId)
-        this.stack.getStreamrNode().safeJoinStream(streamPartId)
+        await this.stack.joinStreamPart(streamPartId)
     }
 
     async joinAndWaitForNeighbors(

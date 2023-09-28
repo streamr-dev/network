@@ -2,7 +2,8 @@ import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor } from
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
 import { MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { StreamPartID } from '@streamr/protocol'
+import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
+import { StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
 
 interface ReadinessEvents {
     done: () => void
@@ -66,6 +67,17 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             nodeName: options.networkNode?.nodeName ?? options.layer0?.nodeName,
             metricsContext: this.metricsContext
         })
+    }
+
+    async joinStreamPart(streamPartId: StreamPartID): Promise<void> {
+        await this.joinLayer0IfRequired(streamPartId)
+        this.getStreamrNode().safeJoinStream(streamPartId)
+    }
+
+    async broadcast(msg: StreamMessage): Promise<void> {
+        const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
+        await this.joinLayer0IfRequired(streamPartId)
+        this.getStreamrNode().broadcast(msg)
     }
 
     async start(doJoin = true): Promise<void> {

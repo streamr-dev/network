@@ -89,7 +89,7 @@ describe('stream without default entrypoints', () => {
         })
         await Promise.all([
             waitForCondition(() => numOfReceivedMessages === 1, 10000),
-            nodes[1].publish(streamMessage)
+            nodes[1].broadcast(streamMessage)
         ])
     })
 
@@ -100,7 +100,7 @@ describe('stream without default entrypoints', () => {
         await Promise.all([
             waitForCondition(() => numOfReceivedMessages === 1, 15000),
             nodes[0].join(STREAM_PART_ID),
-            nodes[1].publish(streamMessage),
+            nodes[1].broadcast(streamMessage),
         ])
     })
 
@@ -115,7 +115,7 @@ describe('stream without default entrypoints', () => {
         }))
         await Promise.all([
             waitForCondition(() => numOfReceivedMessages === numOfSubscribers, 15000),
-            nodes[9].publish(streamMessage)
+            nodes[9].broadcast(streamMessage)
         ])
     }, 45000)*/
 

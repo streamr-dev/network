@@ -87,7 +87,7 @@ describe('inspect', () => {
                 123123,
                 sequenceNumber
             )
-            publisherNode.getStreamrNode().publishToStream(msg)
+            publisherNode.getStreamrNode().broadcast(msg)
             sequenceNumber += 1
         }, 200)
 

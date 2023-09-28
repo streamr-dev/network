@@ -22,7 +22,7 @@ export interface NetworkNodeStub {
     join: (streamPartId: StreamPartID) => Promise<void>
     joinAndWaitForNeighbors(streamPartId: StreamPartID, requiredNeighborCount: number, timeout?: number): Promise<void>
     leave: (streamPartId: StreamPartID) => void
-    publish: (streamMessage: StreamMessage) => Promise<void>
+    broadcast: (streamMessage: StreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
     getNeighbors: () => string[]
     getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>
@@ -188,10 +188,10 @@ export class NetworkNodeFacade {
             // use .then instead of async/await so
             // this.cachedNode.publish call can be sync
             return this.startNodeTask().then((node) =>
-                node.publish(streamMessage)
+                node.broadcast(streamMessage)
             )
         }
-        return this.cachedNode!.publish(streamMessage)
+        return this.cachedNode!.broadcast(streamMessage)
     }
 
     async inspect(node: NetworkPeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {

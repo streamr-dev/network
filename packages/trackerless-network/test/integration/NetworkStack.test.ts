@@ -51,8 +51,7 @@ describe('NetworkStack', () => {
 
     it('Can use NetworkNode pub/sub via NetworkStack', async () => {
         let receivedMessages = 0
-        // TODO is there a need to join and/or wait here?
-        await stack1.getStreamrNode().joinAndWaitForNeighbors(streamPartId, 1)
+        await stack1.getStreamrNode().joinStream(streamPartId)
         stack1.getStreamrNode().on('newMessage', () => {
             receivedMessages += 1
         })
@@ -61,9 +60,7 @@ describe('NetworkStack', () => {
             streamPartId,
             randomEthereumAddress()
         )
-        // TODO is there a need to join and/or wait here?
-        await stack2.getStreamrNode().joinAndWaitForNeighbors(streamPartId, 1)
-        stack2.getStreamrNode().publishToStream(msg)
+        stack2.getStreamrNode().broadcast(msg)
         await waitForCondition(() => receivedMessages === 1)
     })
 

@@ -1,32 +1,30 @@
-import { RandomGraphNode } from './RandomGraphNode'
 import {
-    PeerDescriptor,
     ConnectionLocker,
     DhtNode,
-    ITransport
+    ITransport,
+    PeerDescriptor
 } from '@streamr/dht'
-import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { EventEmitter } from 'eventemitter3'
-import {
-    Logger,
-    MetricsContext,
-    RateMetric,
-    Metric,
-    MetricsDefinition,
-    waitForEvent3,
-    EthereumAddress
-} from '@streamr/utils'
-import { uniq } from 'lodash'
 import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
-import { sampleSize } from 'lodash'
-import { NETWORK_SPLIT_AVOIDANCE_LIMIT, StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
-import { ILayer0 } from './ILayer0'
-import { createRandomGraphNode } from './createRandomGraphNode'
-import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { IStreamNode } from './IStreamNode'
-import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
+import {
+    EthereumAddress,
+    Logger,
+    Metric,
+    MetricsContext,
+    MetricsDefinition,
+    RateMetric,
+    waitForEvent3
+} from '@streamr/utils'
+import { EventEmitter } from 'eventemitter3'
+import { sampleSize, uniq } from 'lodash'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { ProxyDirection, StreamMessage, StreamMessageType } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { ILayer0 } from './ILayer0'
 import { ILayer1 } from './ILayer1'
+import { IStreamNode } from './IStreamNode'
+import { RandomGraphNode } from './RandomGraphNode'
+import { NETWORK_SPLIT_AVOIDANCE_LIMIT, StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
+import { createRandomGraphNode } from './createRandomGraphNode'
+import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
 
 export enum StreamNodeType {
     RANDOM_GRAPH = 'random-graph',
@@ -172,8 +170,11 @@ export class StreamrNode extends EventEmitter<Events> {
         }
     }
 
-    publishToStream(msg: StreamMessage): void {
+    broadcast(msg: StreamMessage): void {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
+        if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.messageType === StreamMessageType.MESSAGE)) {
+            throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
+        }
         if (!this.streams.has(streamPartId)) {
             this.joinStream(streamPartId)
                 .catch((err) => {
@@ -181,6 +182,7 @@ export class StreamrNode extends EventEmitter<Events> {
                 })
         }
         this.streams.get(streamPartId)!.layer2.broadcast(msg)
+        // TODO rename metrics: publish -> broadcast
         this.metrics.publishMessagesPerSecond.record(1)
         this.metrics.publishBytesPerSecond.record(msg.content.length)
     }
@@ -196,6 +198,9 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     async joinStream(streamPartId: StreamPartID): Promise<void> {
+        if (this.isProxiedStreamPart(streamPartId)) {
+            throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
+        }
         if (this.streams.has(streamPartId)) {
             return
         }

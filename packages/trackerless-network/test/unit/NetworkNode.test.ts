@@ -29,7 +29,7 @@ describe('NetworkNode', () => {
         }()
         const stack: Partial<NetworkStack> = {
             getStreamrNode: () => streamrNode as any,
-            joinLayer0IfRequired: async () => {}
+            joinStreamPart: async () => {}
         }
         const node = new NetworkNode(stack as any)
         await node.join(STREAM_PART)

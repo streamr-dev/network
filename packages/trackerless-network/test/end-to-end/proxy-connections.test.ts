@@ -106,16 +106,15 @@ describe('Proxy connections', () => {
         await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
         await Promise.all([
             waitForEvent3(proxyNode1.stack.getStreamrNode()! as any, 'newMessage'),
-            proxiedNode.publish(MESSAGE)
+            proxiedNode.broadcast(MESSAGE)
         ])
     })
 
     it('happy path subscribing', async () => {
         await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID, 1)
-        proxiedNode.join(STREAM_PART_ID)
         await Promise.all([
             waitForEvent3(proxiedNode.stack.getStreamrNode()! as any, 'newMessage'),
-            proxyNode1.publish(MESSAGE)
+            proxyNode1.broadcast(MESSAGE)
         ])
     })
 
@@ -219,6 +218,6 @@ describe('Proxy connections', () => {
             ProxyDirection.SUBSCRIBE,
             PROXIED_NODE_USER_ID
         )
-        await expect(proxiedNode.publish(MESSAGE)).rejects.toThrow('Cannot publish')
+        await expect(proxiedNode.broadcast(MESSAGE)).rejects.toThrow('Cannot publish')
     })
 })

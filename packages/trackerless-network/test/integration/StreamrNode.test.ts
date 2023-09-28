@@ -95,7 +95,7 @@ describe('StreamrNode', () => {
         await waitForCondition(() => node2.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1)
         await Promise.all([
             waitForEvent3<Events>(node1, 'newMessage'),
-            node2.publishToStream(msg)
+            node2.broadcast(msg)
         ])
     })
 
@@ -123,8 +123,8 @@ describe('StreamrNode', () => {
         await Promise.all([
             waitForEvent3<Events>(node1, 'newMessage'),
             waitForEvent3<Events>(node2, 'newMessage'),
-            node1.publishToStream(msg2),
-            node2.publishToStream(msg)
+            node1.broadcast(msg2),
+            node2.broadcast(msg)
         ])
     })
 

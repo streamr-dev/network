@@ -58,8 +58,8 @@ describe('StreamrNode', () => {
         await waitForCondition(() => node.hasStream(streamPartId))
     })
 
-    it('publish joins stream', async () => {
-        node.publishToStream(message)
+    it('broadcast joins stream', async () => {
+        node.broadcast(message)
         await waitForCondition(() => node.hasStream(streamPartId))
     })
 

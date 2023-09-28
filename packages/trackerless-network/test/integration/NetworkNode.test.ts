@@ -93,7 +93,7 @@ describe('NetworkNode', () => {
         })
         // TODO is there a need to join and/or wait here?
         await node2.joinAndWaitForNeighbors(STREAM_PART_ID, 1)
-        await node2.publish(streamMessage)
+        await node2.broadcast(streamMessage)
         await waitForCondition(() => msgCount === 1)
     })
 

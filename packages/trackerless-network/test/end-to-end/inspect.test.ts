@@ -111,7 +111,7 @@ describe('inspect', () => {
 
     it('should inspect succesfully', async () => {
         setTimeout(async () => {
-            await publisherNode.publish(message)
+            await publisherNode.broadcast(message)
         }, 250)
         const success = await inspectorNode.inspect(inspectedDescriptor, streamPartId)
         expect(success).toBe(true)

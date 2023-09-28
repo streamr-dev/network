@@ -93,14 +93,14 @@ describe('proxy and full node', () => {
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage'),
-            proxiedNode.publish(regularMessage1)
+            proxiedNode.broadcast(regularMessage1)
         ])
 
         expect(proxiedNode.stack.getLayer0DhtNode().hasJoined()).toBe(true)
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage'),
-            proxiedNode.publish(proxiedMessage)
+            proxiedNode.broadcast(proxiedMessage)
         ])
 
         expect(proxiedNode.stack.getStreamrNode().getStream(proxyStreamId)!.type).toBe(StreamNodeType.PROXY)
@@ -120,17 +120,17 @@ describe('proxy and full node', () => {
                 (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream3'),
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
                 (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream4'),
-            proxiedNode.publish(regularMessage1),
-            proxiedNode.publish(regularMessage2),
-            proxiedNode.publish(regularMessage3),
-            proxiedNode.publish(regularMessage4)
+            proxiedNode.broadcast(regularMessage1),
+            proxiedNode.broadcast(regularMessage2),
+            proxiedNode.broadcast(regularMessage3),
+            proxiedNode.broadcast(regularMessage4)
         ])
 
         expect(proxiedNode.stack.getLayer0DhtNode().hasJoined()).toBe(true)
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage'),
-            proxiedNode.publish(proxiedMessage)
+            proxiedNode.broadcast(proxiedMessage)
         ])
 
         expect(proxiedNode.stack.getStreamrNode().getStream(proxyStreamId)!.type).toBe(StreamNodeType.PROXY)

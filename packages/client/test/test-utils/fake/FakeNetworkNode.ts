@@ -47,7 +47,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    async publish(msg: StreamMessage): Promise<void> {
+    async broadcast(msg: StreamMessage): Promise<void> {
         // by adding a subscription we emulate the functionality of real network node, which subscribes to 
         // the stream topology when it publishes a message to a stream
         this.subscriptions.add(msg.getStreamPartID())
