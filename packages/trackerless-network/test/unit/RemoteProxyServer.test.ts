@@ -4,7 +4,6 @@ import { hexToBinary } from '@streamr/utils'
 import { RemoteProxyServer } from '../../src/logic/proxy/RemoteProxyServer'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('RemoteProxyServer', () => {
 
