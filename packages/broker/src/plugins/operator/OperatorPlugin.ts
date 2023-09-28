@@ -1,4 +1,3 @@
-import { toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Signer } from 'ethers'
@@ -17,6 +16,7 @@ import { checkOperatorValueBreach } from './checkOperatorValueBreach'
 import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
+import { formCoordinationStreamId } from './formCoordinationStreamId'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
@@ -49,7 +49,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         }
         const fleetState = new OperatorFleetState(
             streamrClient,
-            toStreamID('/operator/coordination', serviceConfig.operatorContractAddress)
+            formCoordinationStreamId(serviceConfig.operatorContractAddress)
         )
         const redundancyFactor = await fetchRedundancyFactor(serviceConfig)
         if (redundancyFactor === undefined) {

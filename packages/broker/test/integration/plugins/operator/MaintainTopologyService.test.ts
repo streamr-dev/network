@@ -1,4 +1,4 @@
-import { StreamPartID, toStreamID } from '@streamr/protocol'
+import { StreamPartID } from '@streamr/protocol'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { Stream, StreamrClient } from 'streamr-client'
@@ -15,6 +15,7 @@ import {
     generateWalletWithGasAndTokens,
     stake
 } from './contractUtils'
+import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -76,7 +77,7 @@ describe('MaintainTopologyService', () => {
             theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl
         }
 
-        operatorFleetState = new OperatorFleetState(client, toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress))
+        operatorFleetState = new OperatorFleetState(client, formCoordinationStreamId(serviceHelperConfig.operatorContractAddress))
         await setUpAndStartMaintainTopologyService({
             streamrClient: client,
             redundancyFactor: 3,
