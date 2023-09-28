@@ -1,6 +1,6 @@
 import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor } from '@streamr/dht'
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
-import { MetricsContext, waitForEvent3 } from '@streamr/utils'
+import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
@@ -47,6 +47,8 @@ export interface NetworkStackEvents {
 
 const DEFAULT_FIRST_CONNECTION_TIMEOUT = 5000
 
+const logger = new Logger(module)
+
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     private layer0DhtNode?: DhtNode
@@ -71,7 +73,13 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     async joinStreamPart(streamPartId: StreamPartID): Promise<void> {
         await this.joinLayer0IfRequired(streamPartId)
-        this.getStreamrNode().safeJoinStream(streamPartId)
+        setImmediate(async () => {
+            try {
+                await this.getStreamrNode().joinStream(streamPartId)
+            } catch (err) {
+                logger.warn(`Failed to join to stream ${streamPartId} with error: ${err}`)
+            }
+        })
     }
 
     async broadcast(msg: StreamMessage): Promise<void> {

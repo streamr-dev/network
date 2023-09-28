@@ -160,16 +160,6 @@ export class StreamrNode extends EventEmitter<Events> {
         this.connectionLocker = undefined
     }
 
-    // TODO inline this method?
-    safeJoinStream(streamPartId: StreamPartID): void {
-        if (!this.streams.has(streamPartId)) {
-            this.joinStream(streamPartId)
-                .catch((err) => {
-                    logger.warn(`Failed to subscribe to stream ${streamPartId} with error: ${err}`)
-                })
-        }
-    }
-
     broadcast(msg: StreamMessage): void {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
         if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.messageType === StreamMessageType.MESSAGE)) {
@@ -272,7 +262,6 @@ export class StreamrNode extends EventEmitter<Events> {
         timeout?: number,
     ): Promise<void> {
         await this.joinStream(streamPartId)
-        // TODO should we call this.safeJoinStream(streamPartId) as we did in waitForJoinAndSubscribe?
         if (this.getStream(streamPartId)!.layer1!.getBucketSize() > 0) {
             const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, requiredNeighborCount)
             await neighborCounter.waitForTargetReached(timeout)

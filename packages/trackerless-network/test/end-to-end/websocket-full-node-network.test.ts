@@ -49,7 +49,6 @@ describe('Full node network with WebSocket connections only', () => {
             await node.start()
             node.getStreamrNode().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
             await node.getStreamrNode().joinStream(randomGraphId)
-            node.getStreamrNode().safeJoinStream(randomGraphId)
         }))
 
     }, 120000)

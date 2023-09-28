@@ -53,11 +53,6 @@ describe('StreamrNode', () => {
         expect(node.hasStream(streamPartId)).toEqual(true)
     })
 
-    it('subscribe joins stream', async () => {
-        node.safeJoinStream(streamPartId)
-        await waitForCondition(() => node.hasStream(streamPartId))
-    })
-
     it('broadcast joins stream', async () => {
         node.broadcast(message)
         await waitForCondition(() => node.hasStream(streamPartId))
