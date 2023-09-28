@@ -1,6 +1,6 @@
 import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor } from '@streamr/dht'
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
-import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
+import { Logger, MetricsContext, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
@@ -71,7 +71,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         })
     }
 
-    async joinStreamPart(streamPartId: StreamPartID): Promise<void> {
+    async joinStreamPart(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
         if (this.getStreamrNode().isProxiedStreamPart(streamPartId)) {
             throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
         }
@@ -83,6 +83,9 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
                 logger.warn(`Failed to join to stream ${streamPartId} with error: ${err}`)
             }
         })
+        if (neighborRequirement !== undefined) {
+            await waitForCondition(() => this.getStreamrNode().getNeighbors(streamPartId).length >= neighborRequirement.minCount, neighborRequirement.timeout)
+        }
     }
 
     async broadcast(msg: StreamMessage): Promise<void> {

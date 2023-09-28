@@ -31,41 +31,6 @@ export enum StreamNodeType {
     PROXY = 'proxy'
 }
 
-export interface NeighborCounterEvents {
-    targetReached: () => void
-}
-
-class NeighborCounter {
-
-    private counter = 0
-    private readonly emitter = new EventEmitter<NeighborCounterEvents>()
-    private readonly randomGraphNode: RandomGraphNode
-    private readonly targetNumberOfNeighbors: number
-
-    constructor(randomGraphNode: RandomGraphNode, targetNumberOfNeighbors: number) {
-        this.randomGraphNode = randomGraphNode
-        this.targetNumberOfNeighbors = targetNumberOfNeighbors
-        this.counter = randomGraphNode.getTargetNeighborIds().length
-        this.randomGraphNode.on('targetNeighborConnected', this.onTargetNeighborConnected)
-    }
-
-    private onTargetNeighborConnected = () => {
-        this.counter++
-        if (this.counter == this.targetNumberOfNeighbors) {
-            this.randomGraphNode.off('targetNeighborConnected', this.onTargetNeighborConnected)
-            this.emitter.emit('targetReached')
-        }
-    }
-
-    public async waitForTargetReached(timeout = 5000): Promise<void> {
-        if (this.counter >= this.targetNumberOfNeighbors) {
-            return
-        } else {
-            await waitForEvent3<NeighborCounterEvents>(this.emitter, 'targetReached', timeout)
-        }
-    }
-}
-
 export interface StreamObject {
     layer1?: ILayer1
     layer2: IStreamNode
@@ -250,18 +215,6 @@ export class StreamrNode extends EventEmitter<Events> {
         })
     }
 
-    async joinAndWaitForNeighbors(
-        streamPartId: StreamPartID,
-        requiredNeighborCount: number,
-        timeout?: number,
-    ): Promise<void> {
-        await this.joinStream(streamPartId)
-        if (this.getStream(streamPartId)!.layer1!.getBucketSize() > 0) {
-            const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, requiredNeighborCount)
-            await neighborCounter.waitForTargetReached(timeout)
-        }
-    }
-
     async setProxies(
         streamPartId: StreamPartID,
         contactPeerDescriptors: PeerDescriptor[],
@@ -341,12 +294,8 @@ export class StreamrNode extends EventEmitter<Events> {
         return this.layer0!.getNodeId().toKey() as unknown as NodeID
     }
 
-    getNeighbors(): NodeID[] {
-        const neighbors: NodeID[] = []
-        this.streams.forEach((stream) =>
-            stream.layer2.getTargetNeighborIds().forEach((neighbor) => neighbors.push(neighbor))
-        )
-        return uniq(neighbors)
+    getNeighbors(streamPartId: StreamPartID): NodeID[] {
+        return this.streams.get(streamPartId)?.layer2.getTargetNeighborIds() ?? []
     }
 
     getStreamParts(): StreamPartID[] {

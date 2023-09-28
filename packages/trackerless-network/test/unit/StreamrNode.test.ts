@@ -48,11 +48,6 @@ describe('StreamrNode', () => {
         expect(node.hasStream(streamPartId)).toEqual(false)
     })
 
-    it('join and wait for neighbors', async () => {
-        await node.joinAndWaitForNeighbors(streamPartId, 1)
-        expect(node.hasStream(streamPartId)).toEqual(true)
-    })
-
     it('broadcast joins stream', async () => {
         node.broadcast(message)
         await waitForCondition(() => node.hasStream(streamPartId))

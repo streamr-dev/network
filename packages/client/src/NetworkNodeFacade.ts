@@ -19,12 +19,10 @@ export interface NetworkNodeStub {
     getNodeId: () => NodeID
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
-    join: (streamPartId: StreamPartID) => Promise<void>
-    joinAndWaitForNeighbors(streamPartId: StreamPartID, requiredNeighborCount: number, timeout?: number): Promise<void>
+    join: (streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }) => Promise<void>
     leave: (streamPartId: StreamPartID) => void
     broadcast: (streamMessage: StreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
-    getNeighbors: () => string[]
     getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>
     getPeerDescriptor: () => PeerDescriptor
     getMetricsContext: () => MetricsContext

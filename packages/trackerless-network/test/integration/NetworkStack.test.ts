@@ -64,4 +64,12 @@ describe('NetworkStack', () => {
         await waitForCondition(() => receivedMessages === 1)
     })
 
+    it('join and wait for neighbors', async () => {
+        await Promise.all([
+            stack1.joinStreamPart(streamPartId, { minCount: 1, timeout: 5000 }),
+            stack2.joinStreamPart(streamPartId, { minCount: 1, timeout: 5000 }),
+        ])
+        expect(stack1.getStreamrNode().getNeighbors(streamPartId).length).toBe(1)
+        expect(stack2.getStreamrNode().getNeighbors(streamPartId).length).toBe(1)
+    })
 })

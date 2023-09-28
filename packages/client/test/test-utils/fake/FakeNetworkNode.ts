@@ -34,17 +34,15 @@ export class FakeNetworkNode implements NetworkNodeStub {
         pull(this.messageListeners, listener)
     }
 
-    async join(streamPartId: StreamPartID): Promise<void> {
+    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout?: number }): Promise<void> {
+        if (neighborRequirement !== undefined) {
+            throw new Error('not implemented')
+        }
         this.subscriptions.add(streamPartId)
     }
 
     leave(streamPartId: StreamPartID): void {
         this.subscriptions.delete(streamPartId)
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async joinAndWaitForNeighbors(_streamPartId: StreamPartID, _requiredNeighborCount: number, _timeout?: number): Promise<void> {
-        throw new Error('not implemented')
     }
 
     async broadcast(msg: StreamMessage): Promise<void> {

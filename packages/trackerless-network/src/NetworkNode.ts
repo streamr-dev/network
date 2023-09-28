@@ -47,16 +47,8 @@ export class NetworkNode {
         await this.stack.broadcast(msg)
     }
 
-    async join(streamPartId: StreamPartID): Promise<void> {
-        await this.stack.joinStreamPart(streamPartId)
-    }
-
-    async joinAndWaitForNeighbors(
-        streamPartId: StreamPartID,
-        requiredNeighborCount: number,
-        timeout?: number,
-    ): Promise<void> {
-        return this.stack.getStreamrNode().joinAndWaitForNeighbors(streamPartId, requiredNeighborCount, timeout)
+    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
+        await this.stack.joinStreamPart(streamPartId, neighborRequirement)
     }
 
     async setProxies(
@@ -117,10 +109,6 @@ export class NetworkNode {
 
     getStreamParts(): StreamPartID[] {
         return this.stack.getStreamrNode().getStreamParts()
-    }
-
-    getNeighbors(): NodeID[] {
-        return this.stack.getStreamrNode().getNeighbors()
     }
 
     // eslint-disable-next-line class-methods-use-this
