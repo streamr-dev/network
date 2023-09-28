@@ -26,14 +26,11 @@ export interface NetworkNodeStub {
     getStreamParts: () => StreamPartID[]
     getNeighbors: () => string[]
     getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>
-    setExtraMetadata: (metadata: Record<string, unknown>) => void
     getPeerDescriptor: () => PeerDescriptor
     getMetricsContext: () => MetricsContext
     getDiagnosticInfo: () => Record<string, unknown>
     hasStreamPart: (streamPartId: StreamPartID) => boolean
     inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean>
-    /** @internal */
-    hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: NodeID, direction: ProxyDirection) => boolean
     /** @internal */
     start: (doJoin?: boolean) => Promise<void>
     /** @internal */

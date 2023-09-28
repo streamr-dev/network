@@ -30,9 +30,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             timeout: 10000
         }
         try {
-            logger.trace('calling dhtClient.routeMessage')
             const ack = await this.client.routeMessage(message, options)
-            logger.trace('dhtClient.routeMessage returned')
             // Success signal if sent to destination and error includes duplicate
             if (
                 isSamePeerDescriptor(params.destinationPeer!, this.peerDescriptor)
@@ -45,7 +43,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
         } catch (err) {
             const fromNode = params.previousPeer ?
                 peerIdFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
-            logger.debug(`Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`)
+            logger.trace(`Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`)
             return false
         }
         return true
@@ -75,7 +73,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             const fromNode = params.previousPeer ?
                 keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
 
-            logger.debug(
+            logger.trace(
                 `Failed to send forwardMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`
             )
             return false

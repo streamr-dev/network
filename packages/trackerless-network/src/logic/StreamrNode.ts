@@ -106,7 +106,6 @@ export class StreamrNode extends EventEmitter<Events> {
     public config: StreamrNodeConfig
     private readonly streams: Map<string, StreamObject>
     private readonly knownStreamEntryPoints: Map<string, PeerDescriptor[]> = new Map()
-    protected extraMetadata: Record<string, unknown> = {}
     private started = false
     private destroyed = false
 
@@ -338,10 +337,6 @@ export class StreamrNode extends EventEmitter<Events> {
             && ((direction === undefined) || (this.streams.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction)
     }
 
-    hasProxyConnection(streamId: string, nodeId: NodeID, direction: ProxyDirection): boolean {
-        return this.streams.has(streamId) && this.streams.get(streamId)!.layer2.hasProxyConnection(nodeId, direction)
-    }
-
     getStream(streamPartId: StreamPartID): StreamObject | undefined {
         return this.streams.get(streamPartId)
     }
@@ -368,10 +363,6 @@ export class StreamrNode extends EventEmitter<Events> {
 
     getStreamParts(): StreamPartID[] {
         return Array.from(this.streams.keys()).map((id) => StreamPartIDUtils.parse(id))
-    }
-
-    setExtraMetadata(metadata: Record<string, unknown>): void {
-        this.extraMetadata = metadata
     }
 }
 

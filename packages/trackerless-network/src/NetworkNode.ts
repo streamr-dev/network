@@ -38,10 +38,6 @@ export class NetworkNode {
         await this.stack.start(doJoin)
     }
 
-    setExtraMetadata(metadata: Record<string, unknown>): void {
-        this.stack.getStreamrNode().setExtraMetadata(metadata)
-    }
-
     async inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
         return this.stack.getStreamrNode().inspect(node, streamPartId)
     }
@@ -113,10 +109,6 @@ export class NetworkNode {
 
     hasStreamPart(streamPartId: StreamPartID): boolean {
         return this.stack.getStreamrNode().hasStream(streamPartId)
-    }
-
-    hasProxyConnection(streamPartId: StreamPartID, contactNodeId: NodeID, direction: ProxyDirection): boolean {
-        return this.stack.getStreamrNode()!.hasProxyConnection(streamPartId, contactNodeId, direction)
     }
 
     async stop(): Promise<void> {

@@ -77,11 +77,6 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    setExtraMetadata(_metadata: Record<string, unknown>): void {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     getMetricsContext(): MetricsContext {
         throw new Error('not implemented')
     }
@@ -93,11 +88,6 @@ export class FakeNetworkNode implements NetworkNodeStub {
 
     hasStreamPart(streamPartId: StreamPartID): boolean {
         return this.subscriptions.has(streamPartId)
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    hasProxyConnection(_streamPartId: StreamPartID, _contactNodeId: string, _direction: ProxyDirection): boolean {
-        throw new Error('not implemented')
     }
 
     async start(): Promise<void> {

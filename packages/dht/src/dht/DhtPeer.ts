@@ -69,7 +69,7 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
                 return true
             }
         } catch (err) {
-            logger.debug(`ping failed on ${this.serviceId} to ${this.peerId.toKey()}: ${err}`)
+            logger.trace(`ping failed on ${this.serviceId} to ${this.peerId.toKey()}: ${err}`)
         }
         return false
     }
