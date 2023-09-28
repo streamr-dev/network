@@ -13,6 +13,8 @@ import { EthereumAddress, hexToBinary, waitForCondition } from '@streamr/utils'
 import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
 import { createRandomNodeId } from '../utils/utils'
 
+const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
+
 describe('stream without default entrypoints', () => {
 
     let entrypoint: NetworkNode
@@ -24,7 +26,6 @@ describe('stream without default entrypoints', () => {
         type: NodeType.NODEJS
     }
 
-    const STREAM_ID = StreamPartIDUtils.parse('test#0')
     const streamMessage = new StreamMessage({
         messageId: new MessageID(
             toStreamID('test'),
@@ -82,7 +83,7 @@ describe('stream without default entrypoints', () => {
     })
 
     it('can join stream without configured entrypoints one by one', async () => {
-        await nodes[0].joinAndWaitForNeighbors(STREAM_ID, 1)
+        await nodes[0].joinAndWaitForNeighbors(STREAM_PART_ID, 1)
         nodes[0].addMessageListener((_msg) => {
             numOfReceivedMessages += 1
         })
@@ -98,7 +99,7 @@ describe('stream without default entrypoints', () => {
         })
         await Promise.all([
             waitForCondition(() => numOfReceivedMessages === 1, 15000),
-            nodes[0].join(STREAM_ID),
+            nodes[0].join(STREAM_PART_ID),
             nodes[1].publish(streamMessage),
         ])
     })
@@ -120,10 +121,10 @@ describe('stream without default entrypoints', () => {
 
     it('nodes store themselves as entrypoints on streamPart if number of entrypoints is low', async () => {
         for (let i = 0; i < 10; i++) {
-            await nodes[i].joinAndWaitForNeighbors(STREAM_ID, 1)
+            await nodes[i].joinAndWaitForNeighbors(STREAM_PART_ID, 1)
         }
         await waitForCondition(async () => {
-            const entryPointData = await nodes[15].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(STREAM_ID))
+            const entryPointData = await nodes[15].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(STREAM_PART_ID))
             return entryPointData.dataEntries!.length >= 7
         }, 15000)
         
