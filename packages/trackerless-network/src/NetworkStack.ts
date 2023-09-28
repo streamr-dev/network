@@ -3,7 +3,7 @@ import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
 import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
-import { StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
 
 interface ReadinessEvents {
     done: () => void
@@ -72,6 +72,9 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     async joinStreamPart(streamPartId: StreamPartID): Promise<void> {
+        if (this.getStreamrNode().isProxiedStreamPart(streamPartId)) {
+            throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
+        }
         await this.joinLayer0IfRequired(streamPartId)
         setImmediate(async () => {
             try {
@@ -84,6 +87,9 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     async broadcast(msg: StreamMessage): Promise<void> {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
+        if (this.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.messageType === StreamMessageType.MESSAGE)) {
+            throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
+        }
         await this.joinLayer0IfRequired(streamPartId)
         this.getStreamrNode().broadcast(msg)
     }

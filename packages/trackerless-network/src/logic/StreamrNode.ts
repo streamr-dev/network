@@ -162,9 +162,6 @@ export class StreamrNode extends EventEmitter<Events> {
 
     broadcast(msg: StreamMessage): void {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
-        if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.messageType === StreamMessageType.MESSAGE)) {
-            throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
-        }
         if (!this.streams.has(streamPartId)) {
             this.joinStream(streamPartId)
                 .catch((err) => {
@@ -188,9 +185,6 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     async joinStream(streamPartId: StreamPartID): Promise<void> {
-        if (this.isProxiedStreamPart(streamPartId)) {
-            throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
-        }
         if (this.streams.has(streamPartId)) {
             return
         }
