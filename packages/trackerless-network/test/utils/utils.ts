@@ -76,20 +76,20 @@ export const createRandomNodeId = (): NodeID => {
     return randomBytes(10).toString('hex') as NodeID
 }
 
-export const createMockRemoteNode = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
-    const mockPeerDescriptor: PeerDescriptor = {
+// TODO use this in tests
+export const createMockPeerDescriptor = (): PeerDescriptor => {
+    return {
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS
     }
-    return new RemoteRandomGraphNode(peerDescriptor || mockPeerDescriptor, 'mock', {} as any)
+}
+
+export const createMockRemoteNode = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
+    return new RemoteRandomGraphNode(peerDescriptor || createMockPeerDescriptor(), 'mock', {} as any)
 }
 
 export const createMockRemoteHandshaker = (): RemoteHandshaker => {
-    const mockPeerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
-    return new RemoteHandshaker(mockPeerDescriptor, 'mock', {
+    return new RemoteHandshaker(createMockPeerDescriptor(), 'mock', {
         handshake: async () => {},
         interleaveNotice: async () => {}
     } as any)
