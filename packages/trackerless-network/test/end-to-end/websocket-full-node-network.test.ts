@@ -41,7 +41,6 @@ describe('Full node network with WebSocket connections only', () => {
                 layer0: {
                     entryPoints: [epPeerDescriptor],
                     websocketPortRange: { min: 15556 + i, max: 15556 + i },
-                    peerIdString: `${i}`,
                     nodeName: `${i}`,
                     numberOfNodesPerKBucket: 4
                 }
@@ -83,7 +82,7 @@ describe('Full node network with WebSocket connections only', () => {
             randomGraphId,
             randomEthereumAddress()
         )
-        entryPoint.getStreamrNode()!.publishToStream(randomGraphId, msg)
+        entryPoint.getStreamrNode()!.publishToStream(msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
     }, 220000)
 
