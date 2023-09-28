@@ -8,7 +8,8 @@ import { NetworkRpcClient } from '../../proto/packages/trackerless-network/proto
 import { EventEmitter } from 'eventemitter3'
 import { EthereumAddress, Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
-import { NodeID } from '../../identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtCallContext } from '@streamr/dht/src/exports'
 
 const logger = new Logger(module)
 
@@ -75,25 +76,23 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
     }
 
     // IProxyConnectionRpc server method
-    async requestConnection(request: ProxyConnectionRequest, _context: ServerCallContext): Promise<ProxyConnectionResponse> {
-        this.connections.set(binaryToHex(request.senderId) as NodeID, {
+    async requestConnection(request: ProxyConnectionRequest, context: ServerCallContext): Promise<ProxyConnectionResponse> {
+        const senderPeerDescriptor = (context as DhtCallContext).sourceDescriptor!
+        const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+        this.connections.set(senderId, {
             direction: request.direction,
             userId: toEthereumAddress(binaryToHex(request.userId, true)),
             remote: new RemoteRandomGraphNode(
-                request.senderDescriptor!,
+                senderPeerDescriptor,
                 this.config.streamPartId,
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))    
             )
         })
         const response: ProxyConnectionResponse = {
-            accepted: true,
-            streamId: request.streamId,
-            streamPartition: request.streamPartition,
-            direction: request.direction,
-            senderId: request.senderId
+            accepted: true
         }
-        logger.trace(`Accepted connection request from ${request.senderId} to ${request.streamId}/${request.streamPartition}`)
-        this.emit('newConnection', binaryToHex(request.senderId) as NodeID)
+        logger.trace(`Accepted connection request from ${senderId} to ${this.config.streamPartId}`)
+        this.emit('newConnection', senderId)
         return response
     }
 }

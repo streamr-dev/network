@@ -126,20 +126,11 @@ message NeighborUpdate {
 }
 
 message ProxyConnectionRequest {
-  bytes senderId = 1; // TODO: remove redundant info NET-1028
-  string streamId = 2;
-  uint32 streamPartition = 3; 
   ProxyDirection direction = 4;
   bytes userId = 5;
-  // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  dht.PeerDescriptor senderDescriptor = 6;
 }
 
 message ProxyConnectionResponse {
-  bytes senderId = 1; // TODO: remove redundant info NET-1028
-  string streamId = 2;
-  uint32 streamPartition = 3;
-  ProxyDirection direction = 4;  
   bool accepted = 5;
 }
 
