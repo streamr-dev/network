@@ -131,10 +131,6 @@ message ProxyConnectionRequest {
 }
 
 message ProxyConnectionResponse {
-  bytes senderId = 1; // TODO: remove redundant info NET-1028
-  string streamId = 2;
-  uint32 streamPartition = 3;
-  ProxyDirection direction = 4;  
   bool accepted = 5;
 }
 

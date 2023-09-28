@@ -88,11 +88,7 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
             )
         })
         const response: ProxyConnectionResponse = {
-            accepted: true,
-            streamId: request.streamId,
-            streamPartition: request.streamPartition,
-            direction: request.direction,
-            senderId: request.senderId
+            accepted: true
         }
         logger.trace(`Accepted connection request from ${request.senderId} to ${request.streamId}/${request.streamPartition}`)
         this.emit('newConnection', binaryToHex(request.senderId) as NodeID)
