@@ -15,17 +15,13 @@ describe('RemoteProxyServer', () => {
         const serverPeerDescriptor = createMockPeerDescriptor()
         const server = new RemoteProxyServer(
             serverPeerDescriptor,
-            StreamPartIDUtils.parse('stream-id#5'), 
+            StreamPartIDUtils.parse('stream#0'),
             client
         )
         const clientPeerDescriptor = createMockPeerDescriptor()
         const userId = randomEthereumAddress()
         server.requestConnection(clientPeerDescriptor, ProxyDirection.PUBLISH, userId)
         expect(client.requestConnection).toBeCalledWith({
-            senderId: hexToBinary(getNodeIdFromPeerDescriptor(clientPeerDescriptor)),
-            senderDescriptor: clientPeerDescriptor,
-            streamId: 'stream-id',
-            streamPartition: 5,
             direction: ProxyDirection.PUBLISH,
             userId: hexToBinary(userId)
         }, {
