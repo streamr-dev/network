@@ -78,7 +78,8 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
     // IProxyConnectionRpc server method
     async requestConnection(request: ProxyConnectionRequest, context: ServerCallContext): Promise<ProxyConnectionResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).sourceDescriptor!
-        this.connections.set(getNodeIdFromPeerDescriptor(senderPeerDescriptor), {
+        const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+        this.connections.set(senderId, {
             direction: request.direction,
             userId: toEthereumAddress(binaryToHex(request.userId, true)),
             remote: new RemoteRandomGraphNode(
@@ -90,8 +91,8 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         const response: ProxyConnectionResponse = {
             accepted: true
         }
-        logger.trace(`Accepted connection request from ${request.senderId} to ${request.streamId}/${request.streamPartition}`)
-        this.emit('newConnection', binaryToHex(request.senderId) as NodeID)
+        logger.trace(`Accepted connection request from ${senderId} to ${this.config.streamPartId}`)
+        this.emit('newConnection', senderId)
         return response
     }
 }
