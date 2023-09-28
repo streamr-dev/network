@@ -1,4 +1,4 @@
-import { StreamMessage, StreamPartID, StreamMessageType } from '@streamr/protocol'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'

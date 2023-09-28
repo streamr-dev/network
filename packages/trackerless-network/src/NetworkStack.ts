@@ -84,7 +84,9 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             }
         })
         if (neighborRequirement !== undefined) {
-            await waitForCondition(() => this.getStreamrNode().getNeighbors(streamPartId).length >= neighborRequirement.minCount, neighborRequirement.timeout)
+            await waitForCondition(() => {
+                return this.getStreamrNode().getNeighbors(streamPartId).length >= neighborRequirement.minCount
+            }, neighborRequirement.timeout)
         }
     }
 

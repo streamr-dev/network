@@ -11,13 +11,12 @@ import {
     Metric,
     MetricsContext,
     MetricsDefinition,
-    RateMetric,
-    waitForEvent3
+    RateMetric
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { sampleSize, uniq } from 'lodash'
+import { sampleSize } from 'lodash'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
-import { ProxyDirection, StreamMessage, StreamMessageType } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection, StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ILayer0 } from './ILayer0'
 import { ILayer1 } from './ILayer1'
 import { IStreamNode } from './IStreamNode'
