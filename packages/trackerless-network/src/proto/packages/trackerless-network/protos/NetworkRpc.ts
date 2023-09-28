@@ -251,14 +251,6 @@ export interface NeighborUpdate {
  */
 export interface ProxyConnectionRequest {
     /**
-     * @generated from protobuf field: string streamId = 2;
-     */
-    streamId: string;
-    /**
-     * @generated from protobuf field: uint32 streamPartition = 3;
-     */
-    streamPartition: number;
-    /**
      * @generated from protobuf field: ProxyDirection direction = 4;
      */
     direction: ProxyDirection;
@@ -536,8 +528,6 @@ export const NeighborUpdate = new NeighborUpdate$Type();
 class ProxyConnectionRequest$Type extends MessageType<ProxyConnectionRequest> {
     constructor() {
         super("ProxyConnectionRequest", [
-            { no: 2, name: "streamId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "streamPartition", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 4, name: "direction", kind: "enum", T: () => ["ProxyDirection", ProxyDirection] },
             { no: 5, name: "userId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
