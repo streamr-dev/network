@@ -74,8 +74,7 @@ describe('profit', () => {
     let operatorWallet: Wallet
     let delegatorWallet: Wallet
     let sponsorWallet: Wallet
-    // eslint-disable-next-line no-underscore-dangle
-    let _operatorNodeWallet: Wallet
+    let operatorNodeWallet: Wallet
     let operatorContract: Operator
     let sponsorshipContract: Sponsorship
 
@@ -102,7 +101,7 @@ describe('profit', () => {
         ;({
             operatorWallet,
             operatorContract,
-            nodeWallets: [_operatorNodeWallet]
+            nodeWallets: [operatorNodeWallet]
         } = await setupOperatorContract({
             nodeCount: 1,
             operatorConfig: {
@@ -125,18 +124,18 @@ describe('profit', () => {
         await delegate(delegatorWallet, operatorContract.address, EXTERNAL_DELEGATED_AMOUNT)
         await stake(operatorContract, sponsorshipContract.address, OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT)
 
-        /* TODO configure the interval of maintainTopologyValue service so that it callx the
-           withdrawMyEarningsFromSponsorships function e.g. 2-3 times during the test run (maybe increase the test time also)
+        /* TODO configure the interval of maintainTopologyValue service so that it calls the
+           withdrawMyEarningsFromSponsorships function e.g. 2-3 times during the test run (maybe increase the test time also)*/
         const broker = await startBroker({
-            privateKey: _operatorNodeWallet.privateKey,
+            privateKey: operatorNodeWallet.privateKey,
             extraPlugins: {
                 operator: {
                     operatorContractAddress: operatorContract.address
                 }
             }
-        })*/
+        })
         await waitForCondition(async () => !(await sponsorshipContract.isFunded()), 60 * 1000)
-        //await broker.stop()
+        await broker.stop()
 
         await unstake(operatorContract, sponsorshipContract.address)
         await undelegate(delegatorWallet, operatorContract, DELEGTOR_OWNERSHIP_WORTH)
