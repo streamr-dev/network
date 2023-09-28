@@ -77,7 +77,7 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
 
     // IProxyConnectionRpc server method
     async requestConnection(request: ProxyConnectionRequest, context: ServerCallContext): Promise<ProxyConnectionResponse> {
-        const senderPeerDescriptor = (context as DhtCallContext).sourceDescriptor!
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         this.connections.set(senderId, {
             direction: request.direction,
