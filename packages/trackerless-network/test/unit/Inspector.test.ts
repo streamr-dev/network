@@ -1,18 +1,14 @@
-import { ListeningRpcCommunicator, NodeType, PeerDescriptor } from '@streamr/dht'
-import { Inspector } from '../../src/logic/inspect/Inspector'
-import { createMockPeerDescriptor, createRandomNodeId, mockConnectionLocker } from '../utils/utils'
-import { MockTransport } from '../utils/mock/Transport'
-import { hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
+import { utf8ToBinary } from '@streamr/utils'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { Inspector } from '../../src/logic/inspect/Inspector'
+import { MockTransport } from '../utils/mock/Transport'
+import { createMockPeerDescriptor, createRandomNodeId, mockConnectionLocker } from '../utils/utils'
 
 describe('Inspector', () => {
     
     let inspector: Inspector
-    const inspectorNodeId = createRandomNodeId()
-    const inspectorDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(inspectorNodeId),
-        type: NodeType.NODEJS
-    }
+    const inspectorDescriptor = createMockPeerDescriptor()
 
     const inspectedDescriptor = createMockPeerDescriptor()
 
