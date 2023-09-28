@@ -1,6 +1,4 @@
-import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { range } from 'lodash'
-import { NodeType, PeerDescriptor, Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
+import { LatencyType, NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import {
     MessageID,
     MessageRef,
@@ -10,8 +8,10 @@ import {
     toStreamID
 } from '@streamr/protocol'
 import { EthereumAddress, hexToBinary, waitForCondition } from '@streamr/utils'
+import { range } from 'lodash'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
-import { createRandomNodeId } from '../utils/utils'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('stream without default entrypoints', () => {
 
@@ -57,11 +57,9 @@ describe('stream without default entrypoints', () => {
         })
         await entrypoint.start()
         await Promise.all(range(20).map(async (i) => {
-            const peerDescriptor: PeerDescriptor = {
-                kademliaId: hexToBinary(createRandomNodeId()),
-                type: NodeType.NODEJS,
+            const peerDescriptor = createMockPeerDescriptor({
                 nodeName: `${i}`
-            }
+            })
             const transport = new SimulatorTransport(peerDescriptor, simulator)
             const node = createNetworkNode({
                 layer0: {

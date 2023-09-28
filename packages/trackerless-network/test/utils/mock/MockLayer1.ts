@@ -1,9 +1,8 @@
+import { DhtPeer, PeerDescriptor, PeerID, PeerIDKey, SortedContactList } from '@streamr/dht'
 import { EventEmitter } from 'eventemitter3'
-import { ILayer1 } from '../../../src/logic/ILayer1'
-import { DhtPeer, PeerDescriptor, PeerID, PeerIDKey, SortedContactList, NodeType } from '@streamr/dht'
 import { NodeID } from '../../../src/identifiers'
-import { hexToBinary } from '@streamr/utils'
-import { createRandomNodeId } from '../utils'
+import { ILayer1 } from '../../../src/logic/ILayer1'
+import { createMockPeerDescriptor } from '../utils'
 
 export class MockLayer1 extends EventEmitter implements ILayer1 {
     
@@ -33,10 +32,7 @@ export class MockLayer1 extends EventEmitter implements ILayer1 {
     }
 
     addNewRandomPeerToKBucket(): void {
-        this.kbucketPeers.push({
-            kademliaId: hexToBinary(createRandomNodeId()),
-            type: NodeType.NODEJS
-        })
+        this.kbucketPeers.push(createMockPeerDescriptor())
     }
 
     // eslint-disable-next-line class-methods-use-this
