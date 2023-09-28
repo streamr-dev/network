@@ -123,10 +123,6 @@ export class NetworkNode {
         return this.stack.getStreamrNode().hasStream(streamPartId)
     }
 
-    hasProxyConnection(streamPartId: StreamPartID, contactNodeId: NodeID, direction: ProxyDirection): boolean {
-        return this.stack.getStreamrNode()!.hasProxyConnection(streamPartId, contactNodeId, direction)
-    }
-
     async stop(): Promise<void> {
         this.stopped = true
         await this.stack.stop()
