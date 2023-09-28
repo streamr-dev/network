@@ -16,7 +16,7 @@ import {
     undelegate,
     unstake
 } from '../../integration/plugins/operator/contractUtils'
-import { createClient, createTestStream } from '../../utils'
+import { createClient, createTestStream, startBroker } from '../../utils'
 
 /*
  * Given:
@@ -32,27 +32,25 @@ import { createClient, createTestStream } from '../../utils'
  * - the delegator delegates 526 DATA
  * - operator stakes all delegated tokens (i.e. 1026 DATA)
  * - operator runs the operator node until the sponsorship no longer funded (~6 seconds)
- *
- * Then:
- * - the operator and the delegator has earned some profit:
- *   - all 600 DATA from the sponsorship, excl.protocol fee 30 DATA = 570 DATA
+ * - the operator unstakes from the sponsorship
+ *   - this triggers withdraw of earnings 
+ *   - and the stake is returned to operator contract
+ * - the operator and the delegator have earnings:
+ *   - all 600 DATA from the sponsorship, excl. protocol fee 30 DATA = 570 DATA
  *   - operator's cut is 57 DATA
  *   - operator token's worth is delegations + profit, excl. operator's cut = 500+526+570-57=1539 DATA
  *     - i.e. the exchange rate is token's worth divide by the delegated DATA = 1539/1026=1.5
- *   - that worth is allocated to the operator and delegator propotionally to their delegations:
- *     - operator owns 500*1.5=750 DATA
- *     - delegator owns 526*1.5=789 DATA
  *   - operator auto-delegates the operator's cut of 57 DATA by using the current exchange rate of 1.5
- *     - operator's stake increases by 57/1.5=38 operator tokens
- *     - operator owns (500+38)*1.5=807 DATA (i.e. 570+57)
+ *     - operator's self-delegation increases by 57/1.5=38 operator tokens
+ *     - operator owns (500+38)*1.5=807 DATA
+ *     - delegator owns 526*1.5=789 DATA
  *
  * Then:
- * - the operator unstakes all delegated tokens
  * - the operator and the external delegator undelegate all tokens
  * - both the operator and the external delegator receive their staked DATA plus profits to their wallets
  *   - operator receive 807 DATA, i.e. profit is 807-500=307 DATA
  *   - external receive 789 DATA, i.e. profit is 789-526=263 DATA
- * - protocol fee of 3 DATA is transferred to the admin wallet
+ * - protocol fee of 30 DATA is transferred to the admin wallet
  */
 
 const SPONSOR_AMOUNT = 600
