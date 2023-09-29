@@ -126,12 +126,12 @@ message NeighborUpdate {
 }
 
 message ProxyConnectionRequest {
-  ProxyDirection direction = 4;
-  bytes userId = 5;
+  ProxyDirection direction = 1;
+  bytes userId = 2;
 }
 
 message ProxyConnectionResponse {
-  bool accepted = 5;
+  bool accepted = 1;
 }
 
 message TemporaryConnectionRequest {
