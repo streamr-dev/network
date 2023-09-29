@@ -19,6 +19,8 @@ import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
 import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
+import { inspectRandomNode } from './inspectRandomNode'
+import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
@@ -58,6 +60,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         }
         logger.info('Fetched redundancy factor', { redundancyFactor })
 
+        const inspectRandomNodeHelper = new InspectRandomNodeHelper(serviceConfig)
+        const voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(serviceConfig)
         const maintainOperatorValueHelper = new MaintainOperatorValueHelper(serviceConfig)
         const maintainTopologyHelper = new MaintainTopologyHelper(serviceConfig)
         const announceNodeToContractHelper = new AnnounceNodeToContractHelper(serviceConfig)
@@ -75,6 +79,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         )
 
         // Important: must be created before maintainTopologyHelper#start is invoked!
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const maintainTopologyService = new MaintainTopologyService(streamrClient, loadBalancer)
         await fleetState.start()
         await maintainTopologyHelper.start()
@@ -137,24 +142,23 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
 
             await scheduleAtInterval(async () => {
                 try {
-                    /*await inspectRandomNode(
-                        this.serviceConfig!.operatorContractAddress,
-                        new InspectRandomNodeHelper(this.serviceConfig!),
-                        undefind as any, TODO: make loadbalacner accessible
+                    await inspectRandomNode(
+                        operatorContractAddress,
+                        inspectRandomNodeHelper,
+                        loadBalancer,
                         streamrClient,
-                        this.heartbeatTimeoutInMs,
+                        2 * 60 * 1000, // 2 minutes
                         (operatorContractAddress) => fetchRedundancyFactor({
                             operatorContractAddress,
                             signer
                         }),
                         this.abortController.signal
-                    )*/
+                    )
                 } catch (err) {
                     logger.error('Encountered error while inspecting random node', { err })
                 }
             }, 15 * 60 * 1000, false, this.abortController.signal)
 
-            const voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(serviceConfig)
             voteOnSuspectNodeHelper.addReviewRequestListener(async (sponsorship, targetOperator, partition) => {
                 if (isLeader()) {
                     await inspectSuspectNode(
