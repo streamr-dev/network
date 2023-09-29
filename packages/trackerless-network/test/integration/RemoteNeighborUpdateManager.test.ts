@@ -48,7 +48,6 @@ describe('RemoteNeighborUpdateManager', () => {
                     kademliaId: new Uint8Array([4, 2, 4]),
                     type: NodeType.NODEJS
                 }
-
                 const update: NeighborUpdate = {
                     randomGraphId: 'testStream',
                     neighborDescriptors: [
