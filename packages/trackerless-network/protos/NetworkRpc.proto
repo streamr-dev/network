@@ -91,7 +91,7 @@ message GroupKey {
 
 message StreamHandshakeRequest {
   string randomGraphId = 1;
-  bytes senderId = 2;
+  bytes senderId = 2; // TODO is it possible to remove this field? (NET-1028)
   string requestId = 3;
   optional bytes concurrentHandshakeTargetId = 4;
   repeated bytes neighborIds = 5;
@@ -107,7 +107,7 @@ message StreamHandshakeResponse {
 }
 
 message InterleaveNotice {
-  bytes senderId = 1;
+  bytes senderId = 1; // TODO is it possible to remove this field? (NET-1028)
   string randomGraphId = 2;
   // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
   dht.PeerDescriptor interleaveTargetDescriptor = 3;
@@ -115,7 +115,7 @@ message InterleaveNotice {
 
 message LeaveStreamNotice {
   string randomGraphId = 1;
-  bytes senderId = 2;
+  bytes senderId = 2; // TODO is it possible to remove this field? (NET-1028)
 }
 
 message NeighborUpdate {
@@ -135,7 +135,7 @@ message ProxyConnectionResponse {
 }
 
 message TemporaryConnectionRequest {
-  bytes senderId = 1;
+  bytes senderId = 1; // TODO is it possible to remove this field? (NET-1028)
 }
 
 message TemporaryConnectionResponse {
