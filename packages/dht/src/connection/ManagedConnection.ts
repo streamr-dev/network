@@ -1,7 +1,7 @@
 import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from './IConnection'
 import * as Err from '../helpers/errors'
 import { Handshaker } from './Handshaker'
-import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { HandshakeError, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { Logger, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { PeerIDKey } from '../helpers/PeerID'
@@ -10,7 +10,7 @@ import { DisconnectionType } from '../transport/ITransport'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
-    handshakeRequest: (peerDescriptor: PeerDescriptor) => void
+    handshakeRequest: (peerDescriptor: PeerDescriptor, presumedPeerDescriptor?: PeerDescriptor) => void
     handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
     handshakeFailed: () => void
     bufferSentByOtherConnection: () => void
@@ -49,6 +49,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     private protocolVersion: string
     protected outgoingConnection?: IConnection
     protected incomingConnection?: IConnection
+    private readonly presumedPeerDescriptor?: PeerDescriptor
 
     constructor(
         ownPeerDescriptor: PeerDescriptor,
@@ -56,6 +57,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         connectionType: ConnectionType,
         outgoingConnection?: IConnection,
         incomingConnection?: IConnection,
+        presumedPeerDescriptor?: PeerDescriptor,
     ) {
         super()
         this.objectId = ManagedConnection.objectCounter
@@ -69,7 +71,8 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.incomingConnection = incomingConnection
         this.connectionType = connectionType
         this.connectionId = new ConnectionID()
-
+        this.presumedPeerDescriptor = presumedPeerDescriptor
+    
         this.onDisconnected = this.onDisconnected.bind(this)
 
         logger.trace('creating ManagedConnection of type: ' + connectionType + ' objectId: ' + this.objectId)
@@ -81,8 +84,12 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, outgoingConnection)
 
             this.handshaker.once('handshakeFailed', (errorMessage) => {
-                logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' handshakeFailed: ' + errorMessage)
-                this.emit('handshakeFailed')
+                if (errorMessage === HandshakeError.INVALID_PRESUMED_PEER_DESCRIPTOR) {
+                    this.destroy()
+                } else {
+                    logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' handshakeFailed: ' + errorMessage)
+                    this.emit('handshakeFailed')
+                }
             })
 
             this.handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
@@ -95,7 +102,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             })
 
             outgoingConnection.once('connected', () => {
-                this.handshaker!.sendHandshakeRequest()
+                this.handshaker!.sendHandshakeRequest(presumedPeerDescriptor)
                 this.emit('connected')
             })
             outgoingConnection.once('disconnected', this.onDisconnected)
@@ -103,9 +110,9 @@ export class ManagedConnection extends EventEmitter<Events> {
         } else {
             if (incomingConnection) {
                 this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, incomingConnection)
-                this.handshaker.on('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
-                    this.setPeerDescriptor(peerDescriptor)
-                    this.emit('handshakeRequest', peerDescriptor)
+                this.handshaker.on('handshakeRequest', (sourcePeerDescriptor: PeerDescriptor, presumedPeerDescriptor?: PeerDescriptor) => {
+                    this.setPeerDescriptor(sourcePeerDescriptor)
+                    this.emit('handshakeRequest', sourcePeerDescriptor, presumedPeerDescriptor)
                 })
 
                 incomingConnection.on('disconnected', this.onDisconnected)
@@ -331,7 +338,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.onHandshakeCompleted(this.peerDescriptor!)
     }
 
-    public rejectHandshake(errorMessage: string): void {
+    public rejectHandshake(errorMessage: HandshakeError): void {
         this.handshaker!.sendHandshakeResponse(errorMessage)
     }
 

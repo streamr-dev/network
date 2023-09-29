@@ -1,6 +1,7 @@
 import { ConnectionType } from '../IConnection'
 
 import {
+    HandshakeError,
     PeerDescriptor,
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
@@ -86,7 +87,7 @@ export class SimulatorConnector {
                 logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + sourceConnection.ownPeerDescriptor.nodeName + ' calling acceptHandshake')
                 managedConnection.acceptHandshake()
             } else {
-                managedConnection.rejectHandshake('Duplicate connection')
+                managedConnection.rejectHandshake(HandshakeError.DUPLICATE_CONNECTION)
                 managedConnection.destroy()
             }
         })

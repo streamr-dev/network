@@ -116,9 +116,21 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         let managedConnection: ManagedWebRtcConnection
 
         if (offering) {
-            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, connection)
+            managedConnection = new ManagedWebRtcConnection(
+                this.ownPeerDescriptor!,
+                this.config.protocolVersion,
+                connection,
+                undefined,
+                targetPeerDescriptor
+            )
         } else {
-            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, undefined, connection)
+            managedConnection = new ManagedWebRtcConnection(
+                this.ownPeerDescriptor!,
+                this.config.protocolVersion,
+                undefined,
+                connection,
+                targetPeerDescriptor
+            )
         }
 
         managedConnection.setPeerDescriptor(targetPeerDescriptor)

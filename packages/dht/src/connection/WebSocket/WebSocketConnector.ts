@@ -6,6 +6,7 @@ import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
     ConnectivityMethod,
     ConnectivityResponse,
+    HandshakeError,
     PeerDescriptor,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
@@ -22,7 +23,7 @@ import { PeerIDKey } from '../../helpers/PeerID'
 import { ServerWebSocket } from './ServerWebSocket'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from '../Handshaker'
-import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
 import { sample } from 'lodash'
 
@@ -86,8 +87,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
     private attachHandshaker(connection: IConnection) {
         const handshaker = new Handshaker(this.ownPeerDescriptor!, this.protocolVersion, connection)
-        handshaker.once('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
-            this.onServerSocketHandshakeRequest(peerDescriptor, connection)
+        handshaker.once('handshakeRequest', (peerDescriptor: PeerDescriptor, presumedPeerDescriptor?: PeerDescriptor) => {
+            this.onServerSocketHandshakeRequest(peerDescriptor, connection, presumedPeerDescriptor)
         })
     }
 
@@ -173,7 +174,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             const url = connectivityMethodToWebSocketUrl(targetPeerDescriptor.websocket!)
 
             const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
-                ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
+                ConnectionType.WEBSOCKET_CLIENT, socket, undefined, targetPeerDescriptor)
             managedConnection.setPeerDescriptor(targetPeerDescriptor)
 
             this.connectingConnections.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
@@ -202,32 +203,47 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             )
             remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.host, ownPeerDescriptor.websocket!.port)
         })
-        const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion, ConnectionType.WEBSOCKET_SERVER)
+        const managedConnection = new ManagedConnection(
+            this.ownPeerDescriptor!,
+            this.protocolVersion,
+            ConnectionType.WEBSOCKET_SERVER,
+            undefined,
+            undefined,
+            targetPeerDescriptor
+        )
         managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor)))
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
         this.ongoingConnectRequests.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
         return managedConnection
     }
 
-    private onServerSocketHandshakeRequest = (peerDescriptor: PeerDescriptor, serverWebSocket: IConnection) => {
-
+    private onServerSocketHandshakeRequest = (
+        peerDescriptor: PeerDescriptor, 
+        serverWebSocket: IConnection,
+        presumedPeerDescriptor?: PeerDescriptor
+    ) => {
         const peerId = peerIdFromPeerDescriptor(peerDescriptor)
-
         if (this.ongoingConnectRequests.has(peerId.toKey())) {
             const ongoingConnectReguest = this.ongoingConnectRequests.get(peerId.toKey())!
             ongoingConnectReguest.attachImplementation(serverWebSocket, peerDescriptor)
-            ongoingConnectReguest.acceptHandshake()
-            this.ongoingConnectRequests.delete(peerId.toKey())
+            if (presumedPeerDescriptor && !isSamePeerDescriptor(this.ownPeerDescriptor!, presumedPeerDescriptor)) {
+                ongoingConnectReguest.rejectHandshake(HandshakeError.INVALID_PRESUMED_PEER_DESCRIPTOR)
+            } else {
+                ongoingConnectReguest.acceptHandshake()
+                this.ongoingConnectRequests.delete(peerId.toKey())
+            }
         } else {
             const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
-                ConnectionType.WEBSOCKET_SERVER, undefined, serverWebSocket)
+                ConnectionType.WEBSOCKET_SERVER, undefined, serverWebSocket, peerDescriptor)
 
             managedConnection.setPeerDescriptor(peerDescriptor)
 
-            if (this.incomingConnectionCallback(managedConnection)) {
+            if (presumedPeerDescriptor && !isSamePeerDescriptor(this.ownPeerDescriptor!, presumedPeerDescriptor)) {
+                managedConnection.rejectHandshake(HandshakeError.INVALID_PRESUMED_PEER_DESCRIPTOR)
+            } else if (this.incomingConnectionCallback(managedConnection)) {
                 managedConnection.acceptHandshake()
             } else {
-                managedConnection.rejectHandshake('Duplicate connection')
+                managedConnection.rejectHandshake(HandshakeError.DUPLICATE_CONNECTION)
                 managedConnection.destroy()
             }
         }

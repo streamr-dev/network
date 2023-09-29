@@ -4,7 +4,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { createPeerDescriptor } from '../../src/dht/DhtNode'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { Logger } from '@streamr/utils'
+import { Logger, waitForEvent3 } from '@streamr/utils'
 
 const logger = new Logger(module)
 
@@ -339,4 +339,64 @@ describe('ConnectionManager', () => {
         
         await connectionManager1.stop()
     })
+
+    it('Cannot send to a WebSocketServer if kademlia do not match', async () => {
+        const peerDescriptor1 = {
+            kademliaId: PeerID.fromString('tester1').value,
+            type: NodeType.NODEJS,
+            websocket: {
+                host: '127.0.0.1',
+                port: 10002,
+                tls: false
+            }
+        }
+        const connectionManager1 = new ConnectionManager({ 
+            transportLayer: mockConnectorTransport1,
+            websocketHost: '127.0.0.1',
+            websocketPortRange: { min: 10002, max: 10002 },
+            ownPeerDescriptor: peerDescriptor1
+        })
+
+        await connectionManager1.start(() => peerDescriptor1)
+
+        const peerDescriptor2 = {
+            kademliaId: PeerID.fromString('tester2').value,
+            type: NodeType.NODEJS,
+            websocket: {
+                host: '127.0.0.1',
+                port: 10003,
+                tls: false
+            }
+        }
+        const connectionManager2 = new ConnectionManager({
+            transportLayer: mockConnectorTransport2,
+            websocketPortRange: { min: 10003, max: 10003 },
+            ownPeerDescriptor: peerDescriptor2,
+        })
+
+        await connectionManager2.start(() => peerDescriptor2)
+
+        const msg: Message = {
+            serviceId,
+            messageType: MessageType.RPC,
+            messageId: '1',
+            targetDescriptor: {
+                kademliaId: new Uint8Array([1, 2, 3, 4]),
+                type: NodeType.NODEJS,
+                websocket: peerDescriptor2.websocket
+            },
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            } 
+        }
+        await connectionManager1.send(msg)      
+        
+        await expect(waitForEvent3<any>(connectionManager2, 'message'))
+            .rejects
+            .toThrow()
+        await connectionManager1.stop()
+        await connectionManager2.stop()
+    }, 10000)
+
 })
