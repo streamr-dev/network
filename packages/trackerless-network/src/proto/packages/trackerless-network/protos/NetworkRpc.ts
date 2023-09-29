@@ -268,10 +268,6 @@ export interface ProxyConnectionResponse {
  * @generated from protobuf message TemporaryConnectionRequest
  */
 export interface TemporaryConnectionRequest {
-    /**
-     * @generated from protobuf field: bytes senderId = 1;
-     */
-    senderId: Uint8Array; // TODO is it possible to remove this field? (NET-1028)
 }
 /**
  * @generated from protobuf message TemporaryConnectionResponse
@@ -531,9 +527,7 @@ export const ProxyConnectionResponse = new ProxyConnectionResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class TemporaryConnectionRequest$Type extends MessageType<TemporaryConnectionRequest> {
     constructor() {
-        super("TemporaryConnectionRequest", [
-            { no: 1, name: "senderId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
-        ]);
+        super("TemporaryConnectionRequest", []);
     }
 }
 /**

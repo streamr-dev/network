@@ -134,7 +134,6 @@ message ProxyConnectionResponse {
 }
 
 message TemporaryConnectionRequest {
-  bytes senderId = 1; // TODO is it possible to remove this field? (NET-1028)
 }
 
 message TemporaryConnectionResponse {
