@@ -104,10 +104,9 @@ message StreamHandshakeResponse {
 }
 
 message InterleaveNotice {
-  bytes senderId = 1; // TODO is it possible to remove this field? (NET-1028)
-  string randomGraphId = 2;
+  string randomGraphId = 1;
   // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  dht.PeerDescriptor interleaveTargetDescriptor = 3;
+  dht.PeerDescriptor interleaveTargetDescriptor = 2;
 }
 
 message LeaveStreamNotice {

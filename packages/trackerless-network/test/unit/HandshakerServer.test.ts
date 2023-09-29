@@ -85,27 +85,29 @@ describe('HandshakerServer', () => {
     it('handshakeWithInterleaving success', async () => {
         const req: InterleaveNotice = {
             randomGraphId: 'random-graph',
-            senderId: hexToBinary('0x1111'),
             interleaveTargetDescriptor: {
                 kademliaId: hexToBinary('0x2222'),
                 type: NodeType.NODEJS
             }
 
         }
-        await handshakerServer.interleaveNotice(req, {} as any)
+        await handshakerServer.interleaveNotice(req, {
+            incomingSourceDescriptor: createMockPeerDescriptor()
+        } as any)
         expect(handshakeWithInterleaving).toHaveBeenCalledTimes(1)
     })
 
     it('handshakeWithInterleaving success', async () => {
         const req: InterleaveNotice = {
             randomGraphId: 'wrong-random-graph',
-            senderId: hexToBinary('0x1111'),
             interleaveTargetDescriptor: {
                 kademliaId: hexToBinary('0x2222'),
                 type: NodeType.NODEJS
             }
         }
-        await handshakerServer.interleaveNotice(req, {} as any)
+        await handshakerServer.interleaveNotice(req, {
+            incomingSourceDescriptor: createMockPeerDescriptor()
+        } as any)
         expect(handshakeWithInterleaving).toHaveBeenCalledTimes(0)
     })
 

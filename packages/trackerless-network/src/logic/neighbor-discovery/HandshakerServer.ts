@@ -91,15 +91,15 @@ export class HandshakerServer implements IHandshakeRpc {
         }
     }
 
-    async interleaveNotice(message: InterleaveNotice, _context: ServerCallContext): Promise<Empty> {
+    async interleaveNotice(message: InterleaveNotice, context: ServerCallContext): Promise<Empty> {
         if (message.randomGraphId === this.config.randomGraphId) {
-            const nodeId = binaryToHex(message.senderId) as NodeID
-            if (this.config.targetNeighbors.hasNodeById(nodeId)) {
-                const senderDescriptor = this.config.targetNeighbors.getNeighborById(nodeId)!.getPeerDescriptor()
-                this.config.connectionLocker.unlockConnection(senderDescriptor, this.config.randomGraphId)
-                this.config.targetNeighbors.remove(senderDescriptor)
+            const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+            const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+            if (this.config.targetNeighbors.hasNodeById(senderId)) {
+                this.config.connectionLocker.unlockConnection(senderPeerDescriptor, this.config.randomGraphId)
+                this.config.targetNeighbors.remove(senderPeerDescriptor)
             }
-            this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, nodeId).catch((_e) => {})
+            this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, senderId).catch((_e) => {})
         }
         return Empty
     }

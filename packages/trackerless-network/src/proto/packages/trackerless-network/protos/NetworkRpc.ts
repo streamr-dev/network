@@ -188,17 +188,13 @@ export interface StreamHandshakeResponse {
  */
 export interface InterleaveNotice {
     /**
-     * @generated from protobuf field: bytes senderId = 1;
-     */
-    senderId: Uint8Array; // TODO is it possible to remove this field? (NET-1028)
-    /**
-     * @generated from protobuf field: string randomGraphId = 2;
+     * @generated from protobuf field: string randomGraphId = 1;
      */
     randomGraphId: string;
     /**
      * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
      *
-     * @generated from protobuf field: dht.PeerDescriptor interleaveTargetDescriptor = 3;
+     * @generated from protobuf field: dht.PeerDescriptor interleaveTargetDescriptor = 2;
      */
     interleaveTargetDescriptor?: PeerDescriptor;
 }
@@ -450,9 +446,8 @@ export const StreamHandshakeResponse = new StreamHandshakeResponse$Type();
 class InterleaveNotice$Type extends MessageType<InterleaveNotice> {
     constructor() {
         super("InterleaveNotice", [
-            { no: 1, name: "senderId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "interleaveTargetDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "interleaveTargetDescriptor", kind: "message", T: () => PeerDescriptor }
         ]);
     }
 }

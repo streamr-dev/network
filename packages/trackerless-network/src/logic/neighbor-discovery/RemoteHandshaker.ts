@@ -53,8 +53,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
         }
         const notification: InterleaveNotice = {
             randomGraphId: this.graphId,
-            interleaveTargetDescriptor: originatorDescriptor,
-            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor))
+            interleaveTargetDescriptor: originatorDescriptor
         }
         this.client.interleaveNotice(notification, options).catch(() => {
             logger.debug('Failed to send interleaveNotice')
