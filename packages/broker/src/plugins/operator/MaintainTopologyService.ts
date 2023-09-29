@@ -3,63 +3,18 @@ import { StreamrClient, Subscription } from 'streamr-client'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import pLimit from 'p-limit'
 import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
-import { MaintainTopologyHelper } from './MaintainTopologyHelper'
-import { OperatorServiceConfig } from './OperatorPlugin'
-import { OperatorFleetState } from './OperatorFleetState'
 
 const logger = new Logger(module)
 
-/**
- * Helper function for setting up and starting a MaintainTopologyService along
- * with all its dependencies.
- */
-export async function setUpAndStartMaintainTopologyService({
-    streamrClient,
-    redundancyFactor,
-    serviceHelperConfig,
-    operatorFleetState
-}: {
-    streamrClient: StreamrClient
-    redundancyFactor: number
-    serviceHelperConfig: OperatorServiceConfig
-    operatorFleetState: OperatorFleetState
-}): Promise<MaintainTopologyService> {
-    // TODO: check that operatorFleetState is NOT started
-    const maintainTopologyHelper = new MaintainTopologyHelper(serviceHelperConfig)
-    const nodeId = await streamrClient.getNodeId()
-    const service = new MaintainTopologyService(
-        streamrClient,
-        new StreamAssignmentLoadBalancer(
-            nodeId,
-            redundancyFactor,
-            async (streamId) => {
-                const stream = await streamrClient.getStream(streamId)
-                return stream.getStreamParts()
-            },
-            operatorFleetState,
-            maintainTopologyHelper
-        )
-    )
-    await service.start()
-    await maintainTopologyHelper.start()
-    return service
-}
-
 export class MaintainTopologyService {
     private readonly streamrClient: StreamrClient
-    private readonly streamAssignmentLoadBalancer: StreamAssignmentLoadBalancer
     private readonly subscriptions = new Map<StreamPartID, Subscription>()
     private readonly concurrencyLimit = pLimit(1)
 
-    constructor(streamrClient: StreamrClient, streamAssignmentLoadBalancer: StreamAssignmentLoadBalancer) {
+    constructor(streamrClient: StreamrClient, loadBalancer: StreamAssignmentLoadBalancer) {
         this.streamrClient = streamrClient
-        this.streamAssignmentLoadBalancer = streamAssignmentLoadBalancer
-    }
-
-    async start(): Promise<void> {
-        this.streamAssignmentLoadBalancer.on('assigned', this.onAddStakedStreamPart)
-        this.streamAssignmentLoadBalancer.on('unassigned', this.onRemoveStakedStreamPart)
-        logger.info('Started')
+        loadBalancer.on('assigned', this.onAddStakedStreamPart)
+        loadBalancer.on('unassigned', this.onRemoveStakedStreamPart)
     }
 
     private onAddStakedStreamPart = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {

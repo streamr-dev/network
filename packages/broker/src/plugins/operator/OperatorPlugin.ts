@@ -5,7 +5,7 @@ import { StreamrClient } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { maintainOperatorValue } from './maintainOperatorValue'
-import { setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
+import { MaintainTopologyService } from './MaintainTopologyService'
 import { DEFAULT_UPDATE_INTERVAL_IN_MS, OperatorFleetState } from './OperatorFleetState'
 import { inspectSuspectNode } from './inspectSuspectNode'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
@@ -17,6 +17,8 @@ import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
+import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
+import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
@@ -40,33 +42,42 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
 
     async start(streamrClient: StreamrClient): Promise<void> {
         const signer = await streamrClient.getSigner()
+        const nodeId = await streamrClient.getNodeId()
+        const operatorContractAddress = toEthereumAddress(this.pluginConfig.operatorContractAddress)
         const serviceConfig = {
             signer,
-            operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
+            operatorContractAddress,
             theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl,
             maxSponsorshipsInWithdraw: DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW,
             minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
         }
-        const fleetState = new OperatorFleetState(
-            streamrClient,
-            formCoordinationStreamId(serviceConfig.operatorContractAddress)
-        )
+
         const redundancyFactor = await fetchRedundancyFactor(serviceConfig)
         if (redundancyFactor === undefined) {
             throw new Error('Failed to retrieve redundancy factor')
         }
         logger.info('Fetched redundancy factor', { redundancyFactor })
-        const maintainTopologyService = await setUpAndStartMaintainTopologyService({
-            streamrClient,
-            redundancyFactor,
-            serviceHelperConfig: serviceConfig,
-            operatorFleetState: fleetState
-        })
-        await maintainTopologyService.start()
 
         const maintainOperatorValueHelper = new MaintainOperatorValueHelper(serviceConfig)
+        const maintainTopologyHelper = new MaintainTopologyHelper(serviceConfig)
         const announceNodeToContractHelper = new AnnounceNodeToContractHelper(serviceConfig)
+
+        const fleetState = new OperatorFleetState(streamrClient, formCoordinationStreamId(operatorContractAddress))
+        const loadBalancer = new StreamAssignmentLoadBalancer(
+            nodeId,
+            redundancyFactor,
+            async (streamId) => {
+                const stream = await streamrClient.getStream(streamId)
+                return stream.getStreamParts()
+            },
+            fleetState,
+            maintainTopologyHelper
+        )
+
+        // Important: must be created before maintainTopologyHelper#start is invoked!
+        const maintainTopologyService = new MaintainTopologyService(streamrClient, loadBalancer)
         await fleetState.start()
+        await maintainTopologyHelper.start()
 
         this.abortController.signal.addEventListener('abort', async () => {
             await fleetState.destroy()

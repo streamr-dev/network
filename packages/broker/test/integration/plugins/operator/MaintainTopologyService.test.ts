@@ -2,9 +2,6 @@ import { StreamPartID } from '@streamr/protocol'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { Stream, StreamrClient } from 'streamr-client'
-import {
-    setUpAndStartMaintainTopologyService
-} from '../../../../src/plugins/operator/MaintainTopologyService'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { createClient, createTestStream } from '../../../utils'
 import {
@@ -16,6 +13,9 @@ import {
     stake
 } from './contractUtils'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
+import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
+import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
+import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -78,12 +78,20 @@ describe('MaintainTopologyService', () => {
         }
 
         operatorFleetState = new OperatorFleetState(client, formCoordinationStreamId(serviceHelperConfig.operatorContractAddress))
-        await setUpAndStartMaintainTopologyService({
-            streamrClient: client,
-            redundancyFactor: 3,
-            serviceHelperConfig,
-            operatorFleetState
-        })
+        const maintainTopologyHelper = new MaintainTopologyHelper(serviceHelperConfig)
+        const loadBalancer = new StreamAssignmentLoadBalancer(
+            await client.getNodeId(),
+            3,
+            async (streamId) => {
+                const stream = await client.getStream(streamId)
+                return stream.getStreamParts()
+            },
+            operatorFleetState,
+            maintainTopologyHelper
+        )
+        new MaintainTopologyService(client, loadBalancer)
+        await operatorFleetState.start()
+        await maintainTopologyHelper.start()
 
         await waitForCondition(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), stream1.getStreamParts())
