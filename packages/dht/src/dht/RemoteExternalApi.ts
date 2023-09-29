@@ -1,5 +1,6 @@
 import { DhtRpcOptions } from '../exports'
-import { DataEntry, FindDataRequest } from '../proto/packages/dht/protos/DhtRpc'
+import { Any } from '../proto/google/protobuf/any'
+import { DataEntry, ExternalStoreDataRequest, FindDataRequest, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { IExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { Remote } from './contact/Remote'
 
@@ -18,6 +19,24 @@ export class RemoteExternalApi extends Remote<IExternalApiServiceClient> {
         try {
             const data = await this.client.findData(request, options)
             return data.dataEntries
+        } catch (err) {
+            return []
+        }
+    }
+
+    async storeData(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
+        const request: ExternalStoreDataRequest = {
+            key,
+            data
+        }
+        const options: DhtRpcOptions = {
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.peerDescriptor,
+            timeout: 10000
+        }
+        try {
+            const response = await this.client.externalStoreData(request, options)
+            return response.storers
         } catch (err) {
             return []
         }
