@@ -150,29 +150,19 @@ export interface StreamHandshakeRequest {
      */
     randomGraphId: string;
     /**
-     * @generated from protobuf field: bytes senderId = 2;
-     */
-    senderId: Uint8Array; // TODO is it possible to remove this field? (NET-1028)
-    /**
-     * @generated from protobuf field: string requestId = 3;
+     * @generated from protobuf field: string requestId = 2;
      */
     requestId: string;
     /**
-     * @generated from protobuf field: optional bytes concurrentHandshakeTargetId = 4;
+     * @generated from protobuf field: optional bytes concurrentHandshakeTargetId = 3;
      */
     concurrentHandshakeTargetId?: Uint8Array;
     /**
-     * @generated from protobuf field: repeated bytes neighborIds = 5;
+     * @generated from protobuf field: repeated bytes neighborIds = 4;
      */
     neighborIds: Uint8Array[];
     /**
-     * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-     *
-     * @generated from protobuf field: dht.PeerDescriptor senderDescriptor = 6;
-     */
-    senderDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: optional bytes interleaveSourceId = 7;
+     * @generated from protobuf field: optional bytes interleaveSourceId = 5;
      */
     interleaveSourceId?: Uint8Array;
 }
@@ -431,12 +421,10 @@ class StreamHandshakeRequest$Type extends MessageType<StreamHandshakeRequest> {
     constructor() {
         super("StreamHandshakeRequest", [
             { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "senderId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 3, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "concurrentHandshakeTargetId", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ },
-            { no: 5, name: "neighborIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 12 /*ScalarType.BYTES*/ },
-            { no: 6, name: "senderDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 7, name: "interleaveSourceId", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ }
+            { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "concurrentHandshakeTargetId", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ },
+            { no: 4, name: "neighborIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 12 /*ScalarType.BYTES*/ },
+            { no: 5, name: "interleaveSourceId", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }

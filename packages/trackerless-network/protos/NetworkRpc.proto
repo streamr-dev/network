@@ -91,13 +91,10 @@ message GroupKey {
 
 message StreamHandshakeRequest {
   string randomGraphId = 1;
-  bytes senderId = 2; // TODO is it possible to remove this field? (NET-1028)
-  string requestId = 3;
-  optional bytes concurrentHandshakeTargetId = 4;
-  repeated bytes neighborIds = 5;
-  // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  dht.PeerDescriptor senderDescriptor = 6;
-  optional bytes interleaveSourceId = 7;
+  string requestId = 2;
+  optional bytes concurrentHandshakeTargetId = 3;
+  repeated bytes neighborIds = 4;
+  optional bytes interleaveSourceId = 5;
 }
 
 message StreamHandshakeResponse {

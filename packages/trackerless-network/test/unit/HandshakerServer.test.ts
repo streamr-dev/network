@@ -39,58 +39,46 @@ describe('HandshakerServer', () => {
     })
 
     it('handshake', async () => {
-        const senderId = hexToBinary('0x1111')
         const req = StreamHandshakeRequest.create({
             randomGraphId: 'random-graph',
-            senderId,
-            requestId: 'requestId',
-            senderDescriptor: {
-                kademliaId: senderId,
-                type: NodeType.NODEJS
-            }
+            requestId: 'requestId'
         })
-        const res = await handshakerServer.handshake(req, {} as any)
+        const res = await handshakerServer.handshake(req, {
+            incomingSourceDescriptor: createMockPeerDescriptor()
+        } as any)
         expect(res.accepted).toEqual(true)
         expect(res.interleaveTargetDescriptor).toBeUndefined()
         expect(res.requestId).toEqual('requestId')
     })
 
     it('handshake interleave', async () => {
-        const senderId = hexToBinary('0x1111')
         targetNeighbors.add(createMockRemoteNode())
         targetNeighbors.add(createMockRemoteNode())
         targetNeighbors.add(createMockRemoteNode())
         targetNeighbors.add(createMockRemoteNode())
         const req = StreamHandshakeRequest.create({
             randomGraphId: 'random-graph',
-            senderId,
-            requestId: 'requestId',
-            senderDescriptor: {
-                kademliaId: senderId,
-                type: NodeType.NODEJS
-            }
+            requestId: 'requestId'
         })
-        const res = await handshakerServer.handshake(req, {} as any)
+        const res = await handshakerServer.handshake(req, {
+            incomingSourceDescriptor: createMockPeerDescriptor()
+        } as any)
         expect(res.accepted).toEqual(true)
         expect(res.interleaveTargetDescriptor).toBeDefined()
     })
 
     it('unaccepted handshake', async () => {
-        const senderId = hexToBinary('0x1111')
         ongoingHandshakes.add('0x2222' as NodeID)
         ongoingHandshakes.add('0x3333' as NodeID)
         ongoingHandshakes.add('0x4444' as NodeID)
         ongoingHandshakes.add('0x5555' as NodeID)
         const req = StreamHandshakeRequest.create({
             randomGraphId: 'random-graph',
-            senderId,
-            requestId: 'requestId',
-            senderDescriptor: {
-                kademliaId: senderId,
-                type: NodeType.NODEJS
-            }
+            requestId: 'requestId'
         })
-        const res = await handshakerServer.handshake(req, {} as any)
+        const res = await handshakerServer.handshake(req, {
+            incomingSourceDescriptor: createMockPeerDescriptor()
+        } as any)
         expect(res.accepted).toEqual(false)
     })
 
