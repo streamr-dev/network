@@ -119,10 +119,9 @@ message LeaveStreamNotice {
 }
 
 message NeighborUpdate {
-  bytes senderId = 1; // TODO: remove redundant info NET-1028
-  string randomGraphId = 2;
-  bool removeMe = 3;
-  repeated dht.PeerDescriptor neighborDescriptors = 4;
+  string randomGraphId = 1;
+  bool removeMe = 2;
+  repeated dht.PeerDescriptor neighborDescriptors = 3;
 }
 
 message ProxyConnectionRequest {
