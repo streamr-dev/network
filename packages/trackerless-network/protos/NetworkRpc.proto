@@ -111,7 +111,6 @@ message InterleaveNotice {
 
 message LeaveStreamNotice {
   string randomGraphId = 1;
-  bytes senderId = 2; // TODO is it possible to remove this field? (NET-1028)
 }
 
 message NeighborUpdate {

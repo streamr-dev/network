@@ -87,8 +87,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             rpcCommunicator: this.config.rpcCommunicator,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
-            onLeaveNotice: (notice: LeaveStreamNotice) => {
-                const senderId = binaryToHex(notice.senderId) as NodeID
+            onLeaveNotice: (senderId: NodeID) => {
                 const contact = this.config.nearbyNodeView.getNeighborById(senderId)
                 || this.config.randomNodeView.getNeighborById(senderId)
                 || this.config.targetNeighbors.getNeighborById(senderId)

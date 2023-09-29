@@ -206,10 +206,6 @@ export interface LeaveStreamNotice {
      * @generated from protobuf field: string randomGraphId = 1;
      */
     randomGraphId: string;
-    /**
-     * @generated from protobuf field: bytes senderId = 2;
-     */
-    senderId: Uint8Array; // TODO is it possible to remove this field? (NET-1028)
 }
 /**
  * @generated from protobuf message NeighborUpdate
@@ -459,8 +455,7 @@ export const InterleaveNotice = new InterleaveNotice$Type();
 class LeaveStreamNotice$Type extends MessageType<LeaveStreamNotice> {
     constructor() {
         super("LeaveStreamNotice", [
-            { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "senderId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+            { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

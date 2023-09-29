@@ -1,11 +1,10 @@
 import { ListeningRpcCommunicator } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary } from '@streamr/utils'
 import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
 import { LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/Transport'
-import { createMockPeerDescriptor, createRandomNodeId, createStreamMessage } from '../utils/utils'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('StreamNodeServer', () => {
 
@@ -51,7 +50,6 @@ describe('StreamNodeServer', () => {
 
     it('Server leaveStreamNotice()', async () => {
         const leaveNotice: LeaveStreamNotice = {
-            senderId: hexToBinary(createRandomNodeId()),
             randomGraphId: 'random-graph'
         }
         await streamNodeServer.leaveStreamNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)
