@@ -41,6 +41,7 @@ export interface NetworkNodeStub {
         userId: EthereumAddress,
         connectionCount?: number
     ) => Promise<void>
+    isProxiedStreamPart(streamPartId: StreamPartID): boolean
     setStreamPartEntryPoints: (streamPartId: StreamPartID, peerDescriptors: PeerDescriptor[]) => void
 }
 

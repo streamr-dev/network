@@ -61,6 +61,10 @@ export class NetworkNode {
         await this.stack.getStreamrNode().setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
     }
 
+    isProxiedStreamPart(streamPartId: StreamPartID): boolean {
+        return this.stack.getStreamrNode().isProxiedStreamPart(streamPartId)
+    }
+
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
         this.messageListeners.push(cb)
     }

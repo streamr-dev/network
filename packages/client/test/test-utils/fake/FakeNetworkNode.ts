@@ -113,6 +113,11 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
+    isProxiedStreamPart(): boolean {
+        throw new Error('not implemented')
+    }
+
+    // eslint-disable-next-line class-methods-use-this
     getDiagnosticInfo(): Record<string, unknown> {
         return {}
     }
