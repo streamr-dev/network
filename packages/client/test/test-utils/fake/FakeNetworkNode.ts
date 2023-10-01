@@ -14,6 +14,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
 
     private readonly id: NodeID
     readonly subscriptions: Set<StreamPartID> = new Set()
+    readonly proxiedStreamParts: Set<StreamPartID> = new Set()
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
 
@@ -101,20 +102,23 @@ export class FakeNetworkNode implements NetworkNodeStub {
         return true
     }
 
-    // eslint-disable-next-line class-methods-use-this
     async setProxies(
-        _streamPartId: StreamPartID,
-        _peerDescriptors: PeerDescriptor[],
+        streamPartId: StreamPartID,
+        peerDescriptors: PeerDescriptor[],
         _direction: ProxyDirection,
         _userId: EthereumAddress,
-        _targetCount?: number
+        connectionCount?: number
     ): Promise<void> {
-        throw new Error('not implemented')
+        const enable = (peerDescriptors.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))
+        if (enable) {
+            this.proxiedStreamParts.add(streamPartId)
+        } else {
+            this.proxiedStreamParts.delete(streamPartId)
+        }
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    isProxiedStreamPart(): boolean {
-        throw new Error('not implemented')
+    isProxiedStreamPart(streamPartId: StreamPartID): boolean {
+        return this.proxiedStreamParts.has(streamPartId)
     }
 
     // eslint-disable-next-line class-methods-use-this
