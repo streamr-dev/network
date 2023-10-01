@@ -72,6 +72,8 @@ export interface StreamMessage {
      */
     signature: Uint8Array;
     /**
+     * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
+     *
      * @generated from protobuf field: MessageID messageId = 6;
      */
     messageId?: MessageID;
@@ -164,6 +166,8 @@ export interface StreamHandshakeRequest {
      */
     neighborIds: Uint8Array[];
     /**
+     * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
+     *
      * @generated from protobuf field: dht.PeerDescriptor senderDescriptor = 6;
      */
     senderDescriptor?: PeerDescriptor;
@@ -202,6 +206,8 @@ export interface InterleaveNotice {
      */
     randomGraphId: string;
     /**
+     * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
+     *
      * @generated from protobuf field: dht.PeerDescriptor interleaveTargetDescriptor = 3;
      */
     interleaveTargetDescriptor?: PeerDescriptor;
@@ -245,18 +251,6 @@ export interface NeighborUpdate {
  */
 export interface ProxyConnectionRequest {
     /**
-     * @generated from protobuf field: bytes senderId = 1;
-     */
-    senderId: Uint8Array; // TODO: remove redundant info NET-1028
-    /**
-     * @generated from protobuf field: string streamId = 2;
-     */
-    streamId: string;
-    /**
-     * @generated from protobuf field: uint32 streamPartition = 3;
-     */
-    streamPartition: number;
-    /**
      * @generated from protobuf field: ProxyDirection direction = 4;
      */
     direction: ProxyDirection;
@@ -264,31 +258,11 @@ export interface ProxyConnectionRequest {
      * @generated from protobuf field: bytes userId = 5;
      */
     userId: Uint8Array;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor senderDescriptor = 6;
-     */
-    senderDescriptor?: PeerDescriptor;
 }
 /**
  * @generated from protobuf message ProxyConnectionResponse
  */
 export interface ProxyConnectionResponse {
-    /**
-     * @generated from protobuf field: bytes senderId = 1;
-     */
-    senderId: Uint8Array; // TODO: remove redundant info NET-1028
-    /**
-     * @generated from protobuf field: string streamId = 2;
-     */
-    streamId: string;
-    /**
-     * @generated from protobuf field: uint32 streamPartition = 3;
-     */
-    streamPartition: number;
-    /**
-     * @generated from protobuf field: ProxyDirection direction = 4;
-     */
-    direction: ProxyDirection;
     /**
      * @generated from protobuf field: bool accepted = 5;
      */
@@ -538,12 +512,8 @@ export const NeighborUpdate = new NeighborUpdate$Type();
 class ProxyConnectionRequest$Type extends MessageType<ProxyConnectionRequest> {
     constructor() {
         super("ProxyConnectionRequest", [
-            { no: 1, name: "senderId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "streamId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "streamPartition", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 4, name: "direction", kind: "enum", T: () => ["ProxyDirection", ProxyDirection] },
-            { no: 5, name: "userId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 6, name: "senderDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 5, name: "userId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }
@@ -555,10 +525,6 @@ export const ProxyConnectionRequest = new ProxyConnectionRequest$Type();
 class ProxyConnectionResponse$Type extends MessageType<ProxyConnectionResponse> {
     constructor() {
         super("ProxyConnectionResponse", [
-            { no: 1, name: "senderId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "streamId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "streamPartition", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 4, name: "direction", kind: "enum", T: () => ["ProxyDirection", ProxyDirection] },
             { no: 5, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }

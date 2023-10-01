@@ -3,6 +3,7 @@ import { WebRtcConnectionEvents, IWebRtcConnection, RtcDescription } from './IWe
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
 import { Logger } from '@streamr/utils'
 import { DisconnectionType } from '../../transport/ITransport'
+import { IceServer } from './WebRtcConnector'
 
 const logger = new Logger(module)
 
@@ -14,9 +15,13 @@ export const WEB_RTC_CLEANUP = new class {
 
 type Events = WebRtcConnectionEvents & ConnectionEvents
 
+interface Params {
+    iceServers?: IceServer[]
+}
+
 export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRtcConnection, IConnection {
 
-    public connectionId: ConnectionID = new ConnectionID()
+    public readonly connectionId: ConnectionID
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
 
     // We need to keep track of connection state ourselves because
@@ -24,12 +29,18 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
 
     private lastState: RTCPeerConnectionState = 'connecting'
 
-    private iceServers = []
+    private readonly iceServers: IceServer[]
     private peerConnection?: RTCPeerConnection
     private dataChannel?: RTCDataChannel
     private makingOffer = false
     private isOffering = false
     private closed = false
+
+    constructor(params: Params) {
+        super()
+        this.connectionId = new ConnectionID()
+        this.iceServers = params.iceServers || []
+    }
 
     public start(isOffering: boolean): void {
         this.isOffering = isOffering

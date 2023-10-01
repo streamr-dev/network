@@ -1,10 +1,9 @@
-import { LatencyType, NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { NetworkStack } from '../../src/NetworkStack'
-import { range } from 'lodash'
-import { createRandomNodeId, createStreamMessage } from '../utils/utils'
-import { hexToBinary } from '@streamr/utils'
+import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { range } from 'lodash'
+import { NetworkStack } from '../../src/NetworkStack'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('inspect', () => {
 
@@ -13,15 +12,8 @@ describe('inspect', () => {
     const streamPartId = StreamPartIDUtils.parse('stream#0')
     let sequenceNumber: number
 
-    const publisherDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
-    }
-
-    const inspectorPeerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
-    }
+    const publisherDescriptor = createMockPeerDescriptor()
+    const inspectorPeerDescriptor = createMockPeerDescriptor()
 
     const inspectedNodeCount = 12
 
@@ -53,10 +45,7 @@ describe('inspect', () => {
 
         inspectedNodes = []
         await Promise.all(range(inspectedNodeCount).map(async () => {
-            const peerDescriptor: PeerDescriptor = {
-                kademliaId: hexToBinary(createRandomNodeId()),
-                type: NodeType.NODEJS
-            }
+            const peerDescriptor = createMockPeerDescriptor()
             const node = await initiateNode(peerDescriptor, simulator)
             inspectedNodes.push(node)
         }))
