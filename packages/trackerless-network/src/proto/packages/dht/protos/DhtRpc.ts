@@ -321,6 +321,10 @@ export interface ConnectivityRequest {
      * @generated from protobuf field: bool tls = 2;
      */
     tls: boolean;
+    /**
+     * @generated from protobuf field: optional string host = 3;
+     */
+    host?: string;
 }
 /**
  * @generated from protobuf message dht.ConnectivityResponse
@@ -1029,7 +1033,8 @@ class ConnectivityRequest$Type extends MessageType$<ConnectivityRequest> {
     constructor() {
         super("dht.ConnectivityRequest", [
             { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 2, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 2, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "host", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

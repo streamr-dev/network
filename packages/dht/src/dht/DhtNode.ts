@@ -25,7 +25,8 @@ import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages
 import {
     Logger,
     MetricsContext,
-    hexToBinary
+    hexToBinary,
+    binaryToHex
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RandomContactList } from './contact/RandomContactList'
@@ -141,7 +142,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
     } else {
         kademliaId = hexToBinary(peerId!)
     }
-    const ret: PeerDescriptor = { kademliaId, nodeName: nodeName, type: NodeType.NODEJS }
+    const ret: PeerDescriptor = { kademliaId, nodeName: nodeName ? nodeName : binaryToHex(kademliaId), type: NodeType.NODEJS }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
         ret.openInternet = true
@@ -212,7 +213,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 webrtcPortRange: this.config.webrtcPortRange,
-                nodeName: this.getNodeName(),
                 maxConnections: this.config.maxConnections,
                 tlsCertificate: this.config.tlsCertificate,
                 externalIp: this.config.externalIp
@@ -705,14 +705,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public getNumberOfWeakLockedConnections(): number {
         return this.connectionManager!.getNumberOfWeakLockedConnections()
-    }
-
-    public getNodeName(): string {
-        if (this.config.nodeName) {
-            return this.config.nodeName
-        } else {
-            return 'unnamed node'
-        }
     }
 
     public isJoinOngoing(): boolean {

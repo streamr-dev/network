@@ -1,9 +1,9 @@
-import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, LatencyType, NodeType } from '@streamr/dht'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { DhtNode, LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
-import { hexToBinary, waitForCondition } from '@streamr/utils'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
-import { createRandomNodeId } from '../utils/utils'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('RandomGraphNode-DhtNode-Latencies', () => {
     const numOfNodes = 64
@@ -13,17 +13,9 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
     let graphNodes: RandomGraphNode[]
 
     const streamId = 'Stream1'
-    const entrypointDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
+    const entrypointDescriptor = createMockPeerDescriptor()
 
-    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => {
-        return {
-            kademliaId: hexToBinary(createRandomNodeId()),
-            type: NodeType.NODEJS
-        }
-    })
+    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => createMockPeerDescriptor())
     beforeEach(async () => {
         Simulator.useFakeTimers()
         const simulator = new Simulator(LatencyType.FIXED, 50)

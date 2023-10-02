@@ -1,10 +1,9 @@
-import { DhtNode, Simulator, PeerDescriptor, ConnectionManager, getRandomRegion, NodeType } from '@streamr/dht'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, getRandomRegion } from '@streamr/dht'
+import { Logger, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
-import { waitForCondition, hexToBinary } from '@streamr/utils'
-import { Logger } from '@streamr/utils'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
-import { createRandomNodeId } from '../utils/utils'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 const logger = new Logger(module)
 
@@ -16,20 +15,16 @@ describe('RandomGraphNode-DhtNode', () => {
     let graphNodes: RandomGraphNode[]
 
     const streamId = 'Stream1'
-    const entrypointDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
+    const entrypointDescriptor = createMockPeerDescriptor({
         nodeName: 'entrypoint',
-        type: NodeType.NODEJS,
         region: getRandomRegion()
-    }
+    })
 
     const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
-        return {
-            kademliaId: hexToBinary(createRandomNodeId()),
+        return createMockPeerDescriptor({
             nodeName: `node${i}`,
-            type: NodeType.NODEJS,
             region: getRandomRegion()
-        }
+        })
     })
     beforeEach(async () => {
 
@@ -37,14 +32,12 @@ describe('RandomGraphNode-DhtNode', () => {
         const simulator = new Simulator()
         const entrypointCm = new ConnectionManager({
             ownPeerDescriptor: entrypointDescriptor,
-            nodeName: entrypointDescriptor.nodeName,
             simulator
         })
 
         const cms: ConnectionManager[] = range(numOfNodes).map((i) =>
             new ConnectionManager({
                 ownPeerDescriptor: peerDescriptors[i],
-                nodeName: peerDescriptors[i].nodeName,
                 simulator
             })
         )

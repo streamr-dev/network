@@ -1,11 +1,10 @@
-import { NetworkStack } from '../../src/NetworkStack'
-import { NodeType, PeerDescriptor } from '@streamr/dht'
 import {
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { hexToBinary, waitForCondition } from '@streamr/utils'
-import { createRandomNodeId, createStreamMessage } from '../utils/utils'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { waitForCondition } from '@streamr/utils'
+import { NetworkStack } from '../../src/NetworkStack'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('NetworkStack', () => {
 
@@ -13,12 +12,10 @@ describe('NetworkStack', () => {
     let stack2: NetworkStack
     const streamPartId = StreamPartIDUtils.parse('stream1#0')
 
-    const epDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
+    const epDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 32222, tls: false },
         nodeName: 'entrypoint'
-    }
+    })
 
     beforeEach(async () => {
         stack1 = new NetworkStack({

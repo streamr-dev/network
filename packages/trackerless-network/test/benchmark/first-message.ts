@@ -1,13 +1,14 @@
 /* eslint-disable no-console */
 
-import { LatencyType, NodeType, Simulator, getRandomRegion } from '@streamr/dht'
-import fs from 'fs'
-import { createNetworkNodeWithSimulator, createRandomNodeId } from '../utils/utils'
-import { NetworkNode } from '../../src/NetworkNode'
-import { PeerDescriptor } from '../../../dht/src/exports'
-import { StreamMessage, toStreamID, MessageID, StreamPartIDUtils, StreamMessageType, toStreamPartID, StreamPartID } from '@streamr/protocol'
+import { LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
+import { MessageID, StreamMessage, StreamMessageType, StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
+import fs from 'fs'
+import { PeerDescriptor } from '../../../dht/src/exports'
+import { NetworkNode } from '../../src/NetworkNode'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
+import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
 
 const numNodes = 10000
 
@@ -24,12 +25,10 @@ const prepareLayer0 = async () => {
     console.log('Preparing network')
     nodes = []
     simulator = new Simulator(LatencyType.REAL)
-    const peerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
+    const peerDescriptor = createMockPeerDescriptor({
         region: getRandomRegion(),
-        type: NodeType.NODEJS,
         nodeName: 'entrypoint'
-    }
+    })
     layer0Ep = peerDescriptor
     const entryPoint = createNetworkNodeWithSimulator(peerDescriptor, simulator, [peerDescriptor])
     await entryPoint.start()    
@@ -40,12 +39,10 @@ const prepareLayer0 = async () => {
 
 const prepareStream = async (streamId: string) => {
     console.log('Preparing stream ')
-    const peerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
+    const peerDescriptor = createMockPeerDescriptor({
         region: getRandomRegion(),
-        type: NodeType.NODEJS,
         nodeName: streamId
-    }
+    })
     const streamPartId = toStreamPartID(toStreamID(streamId), 0)
     const streamPublisher = createNetworkNodeWithSimulator(peerDescriptor, simulator, [layer0Ep])
     await streamPublisher.start()
@@ -63,14 +60,11 @@ const shutdownNetwork = async () => {
 }
 
 const measureJoiningTime = async (count: number) => {
-    const nodeId = createRandomNodeId()
-    const peerDescriptor = {
-        kademliaId: hexToBinary(nodeId),
-        type: NodeType.NODEJS,
+    const peerDescriptor = createMockPeerDescriptor({
         region: getRandomRegion(),
         nodeName: `${count}`
-    }
-    console.log('starting node with id ', nodeId)
+    })
+    console.log('starting node with id ', getNodeIdFromPeerDescriptor(peerDescriptor))
 
     // start publishing ons stream
     const stream = Array.from(streams.keys())[Math.floor(Math.random() * streams.size)]

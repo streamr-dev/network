@@ -1,41 +1,34 @@
-import { PeerDescriptor, NodeType } from '@streamr/dht'
-import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { waitForCondition, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { createRandomNodeId } from '../utils/utils'
+import { hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('inspect', () => {
 
-    const publisherDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
+    const publisherDescriptor = createMockPeerDescriptor({
         websocket: {
             host: '127.0.0.1',
             port: 15478,
             tls: false
         }
-    }
+    })
 
-    const inspectedDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
+    const inspectedDescriptor = createMockPeerDescriptor({
         websocket: {
             host: '127.0.0.1',
             port: 15479,
             tls: false
         }
-    }
+    })
 
-    const inspectorDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
+    const inspectorDescriptor = createMockPeerDescriptor({
         websocket: {
             host: '127.0.0.1',
             port: 15480,
             tls: false
         }
-    }
+    })
 
     const streamPartId = toStreamPartID(toStreamID('stream'), 0)
 

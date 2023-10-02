@@ -1,16 +1,13 @@
-import { DhtNode, NodeType, PeerDescriptor, Simulator } from '@streamr/dht'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { createMockRandomGraphNodeAndDhtNode, createRandomNodeId, createStreamMessage } from '../utils/utils'
-import { range } from 'lodash'
-import { waitForCondition, hexToBinary } from '@streamr/utils'
+import { DhtNode, Simulator } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { waitForCondition } from '@streamr/utils'
+import { range } from 'lodash'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { createMockPeerDescriptor, createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils/utils'
 
 describe('Propagation', () => {
-    const entryPointDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
+    const entryPointDescriptor = createMockPeerDescriptor()
     let dhtNodes: DhtNode[]
     let randomGraphNodes: RandomGraphNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
@@ -31,10 +28,7 @@ describe('Propagation', () => {
         randomGraphNodes.push(node1)
 
         await Promise.all(range(NUM_OF_NODES).map(async (_i) => {
-            const descriptor: PeerDescriptor = {
-                kademliaId: hexToBinary(createRandomNodeId()),
-                type: NodeType.NODEJS
-            }
+            const descriptor = createMockPeerDescriptor()
             const [dht, graph] = createMockRandomGraphNodeAndDhtNode(
                 descriptor,
                 entryPointDescriptor,
