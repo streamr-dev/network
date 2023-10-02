@@ -1,4 +1,4 @@
-import { PeerDescriptor } from '@streamr/dht'
+import { DhtRpcOptions, PeerDescriptor } from '@streamr/dht'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 
 export abstract class Remote<T> {
@@ -16,4 +16,11 @@ export abstract class Remote<T> {
         return this.remotePeerDescriptor
     }
 
+    formDhtRpcOptions(ownPeerDescriptor: PeerDescriptor, opts?: Omit<Partial<DhtRpcOptions>, 'sourceDescriptor' | 'targetDescriptor'>): DhtRpcOptions {
+        return {
+            sourceDescriptor: ownPeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor,
+            ...opts
+        }
+    }
 }

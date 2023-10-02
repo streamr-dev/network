@@ -15,10 +15,7 @@ interface UpdateNeighborsResponse {
 export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient> {
 
     async updateNeighbors(ownPeerDescriptor: PeerDescriptor, neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor,
-        }
+        const options: DhtRpcOptions = this.formDhtRpcOptions(ownPeerDescriptor)
         const request: NeighborUpdate = {
             randomGraphId: this.graphId,
             neighborDescriptors: neighbors,

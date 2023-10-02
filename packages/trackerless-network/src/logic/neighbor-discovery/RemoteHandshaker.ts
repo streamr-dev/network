@@ -1,9 +1,9 @@
-import { Remote } from '../Remote'
-import { DhtRpcOptions, PeerDescriptor, UUID } from '@streamr/dht'
-import { InterleaveNotice, StreamHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { PeerDescriptor, UUID } from '@streamr/dht'
 import { Logger, hexToBinary } from '@streamr/utils'
-import { IHandshakeRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { InterleaveNotice, StreamHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { IHandshakeRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { Remote } from '../Remote'
 
 const logger = new Logger(module)
 
@@ -27,10 +27,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
             concurrentHandshakeTargetId: (concurrentHandshakeTargetId !== undefined) ? hexToBinary(concurrentHandshakeTargetId) : undefined,
             interleaveSourceId: (interleaveSourceId !== undefined) ? hexToBinary(interleaveSourceId) : undefined
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor 
-        }
+        const options = this.formDhtRpcOptions(ownPeerDescriptor)
         try {
             const response = await this.client.handshake(request, options)
             return {
@@ -46,11 +43,9 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
     }
 
     interleaveNotice(ownPeerDescriptor: PeerDescriptor, originatorDescriptor: PeerDescriptor): void {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor,
+        const options = this.formDhtRpcOptions(ownPeerDescriptor, {
             notification: true
-        }
+        })
         const notification: InterleaveNotice = {
             randomGraphId: this.graphId,
             interleaveTargetDescriptor: originatorDescriptor

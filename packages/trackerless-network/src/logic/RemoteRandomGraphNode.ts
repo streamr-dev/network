@@ -1,4 +1,4 @@
-import { DhtRpcOptions, PeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import { Logger } from '@streamr/utils'
 import {
     LeaveStreamNotice,
@@ -12,22 +12,18 @@ const logger = new Logger(module)
 export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
 
     async sendData(ownPeerDescriptor: PeerDescriptor, msg: StreamMessage): Promise<void> {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor,
+        const options = this.formDhtRpcOptions(ownPeerDescriptor, {
             notification: true
-        }
+        })
         this.client.sendData(msg, options).catch(() => {
             logger.trace('Failed to sendData')
         })
     }
 
     leaveStreamNotice(ownPeerDescriptor: PeerDescriptor): void {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor,
+        const options = this.formDhtRpcOptions(ownPeerDescriptor, {
             notification: true
-        }
+        })
         const notification: LeaveStreamNotice = {
             randomGraphId: this.graphId
         }
