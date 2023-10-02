@@ -18,7 +18,7 @@ export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
 export class NetworkNode {
 
     readonly stack: NetworkStack
-    private readonly messageListeners: ((msg: StreamMessage<any>) => void)[] = []
+    private readonly messageListeners: ((msg: StreamMessage) => void)[] = []
     private stopped = false
 
     /** @internal */
@@ -26,7 +26,7 @@ export class NetworkNode {
         this.stack = stack
         this.stack.getStreamrNode().on('newMessage', (msg) => {
             if (this.messageListeners.length > 0) {
-                const translated = StreamMessageTranslator.toClientProtocol<any>(msg)
+                const translated = StreamMessageTranslator.toClientProtocol(msg)
                 for (const listener of this.messageListeners) {
                     listener(translated)
                 }
@@ -72,7 +72,7 @@ export class NetworkNode {
         await this.stack.getStreamrNode().setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
     }
 
-    addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
+    addMessageListener(cb: (msg: StreamMessage) => void): void {
         this.messageListeners.push(cb)
     }
 
@@ -80,7 +80,7 @@ export class NetworkNode {
         this.stack.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, contactPeerDescriptors)
     }
 
-    removeMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
+    removeMessageListener(cb: (msg: StreamMessage) => void): void {
         pull(this.messageListeners, cb)
     }
 
