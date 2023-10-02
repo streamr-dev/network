@@ -224,8 +224,8 @@ export class StreamrNode extends EventEmitter<Events> {
         if (this.config.acceptProxyConnections) {
             throw new Error('cannot set proxies when acceptProxyConnections=true')
         }
-        const shouldEnable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))
-        if (shouldEnable) {
+        const enable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))
+        if (enable) {
             let proxyClient: ProxyStreamConnectionClient
             const alreadyProxied = this.isProxiedStreamPart(streamPartId)
             if (alreadyProxied) {
