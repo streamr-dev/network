@@ -6,23 +6,17 @@ import { StreamrNode } from '../../src/logic/StreamrNode'
 import { MockLayer0 } from '../utils/mock/MockLayer0'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockPeerDescriptor, createStreamMessage, mockConnectionLocker } from '../utils/utils'
+import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 
 describe('StreamrNode', () => {
 
     let node: StreamrNode
     const peerDescriptor = createMockPeerDescriptor()
-    const streamPartId = StreamPartIDUtils.parse('stream#0')
-    const message = createStreamMessage(
-        JSON.stringify({ hello: 'WORLD' }), 
-        streamPartId, 
-        randomEthereumAddress()
-    )
 
     beforeEach(async () => {
         node = new StreamrNode({})
         const mockLayer0 = new MockLayer0(peerDescriptor)
         await node.start(mockLayer0, new MockTransport(), mockConnectionLocker)
-        node.setStreamPartEntryPoints(streamPartId, [peerDescriptor])
     })
 
     afterEach(async () => {
@@ -33,25 +27,60 @@ describe('StreamrNode', () => {
         expect(isSamePeerDescriptor(peerDescriptor, node.getPeerDescriptor()))
     })
 
-    it('can join streams', async () => {
-        await node.joinStream(streamPartId)
-        expect(node.hasStream(streamPartId)).toEqual(true)
+    describe('join and leave', () => {
+
+        const streamPartId = StreamPartIDUtils.parse('stream#0')
+        const message = createStreamMessage(
+            JSON.stringify({ hello: 'WORLD' }), 
+            streamPartId, 
+            randomEthereumAddress()
+        )
+
+        beforeEach(async () => {
+            node.setStreamPartEntryPoints(streamPartId, [node.getPeerDescriptor()])
+        })
+    
+        it('can join streams', async () => {
+            await node.joinStream(streamPartId)
+            expect(node.hasStream(streamPartId)).toEqual(true)
+        })
+    
+        it('can leave streams', async () => {
+            await node.joinStream(streamPartId)
+            expect(node.hasStream(streamPartId)).toEqual(true)
+            node.leaveStream(streamPartId)
+            expect(node.hasStream(streamPartId)).toEqual(false)
+        })
+    
+        it('broadcast joins stream', async () => {
+            node.broadcast(message)
+            await waitForCondition(() => node.hasStream(streamPartId))
+        })
+    
+        it('can leave', async () => {
+            await node.joinStream(streamPartId)
+            node.leaveStream(streamPartId)
+        })
     })
 
-    it('can leave streams', async () => {
-        await node.joinStream(streamPartId)
-        expect(node.hasStream(streamPartId)).toEqual(true)
-        node.leaveStream(streamPartId)
-        expect(node.hasStream(streamPartId)).toEqual(false)
-    })
+    describe('proxied stream', () => {
+        it('happy path', () => {
+            const streamPartId = StreamPartIDUtils.parse('stream#0')
+            const proxy = createMockPeerDescriptor()
+            const userId = randomEthereumAddress()
+            node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(true)
+            node.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
+        })
 
-    it('broadcast joins stream', async () => {
-        node.broadcast(message)
-        await waitForCondition(() => node.hasStream(streamPartId))
-    })
-
-    it('can leave', async () => {
-        await node.joinStream(streamPartId)
-        node.leaveStream(streamPartId)
+        it('remove by setting connection count to 0', () => {
+            const streamPartId = StreamPartIDUtils.parse('stream#0')
+            const proxy = createMockPeerDescriptor()
+            const userId = randomEthereumAddress()
+            node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
+            node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
+        })
     })
 })
