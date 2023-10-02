@@ -1,10 +1,10 @@
 import request from 'request'
 import { RestServer } from '../../src/RestServer'
-import { CertifiedSubdomain } from '../../src/data/CertifiedSubdomain'
-import { ApiError } from '../../src/data/ApiError'
+import { CertifiedSubdomain } from '@streamr/autocertifier-client'
+import { ApiError } from '@streamr/autocertifier-client'
 import os from 'os'
 import fs from 'fs'
-import { Session } from '../../src/data/Session'
+import { Session } from '@streamr/autocertifier-client'
 import { v4 } from 'uuid'
 
 describe('RestServer', () => {

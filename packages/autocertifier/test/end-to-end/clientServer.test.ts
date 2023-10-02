@@ -1,15 +1,16 @@
-import { ConnectionManager, NodeType, PeerDescriptor, PeerID, Simulator } from '@streamr/dht'
+import { ConnectionManager, ListeningRpcCommunicator, NodeType, PeerDescriptor, PeerID, Simulator } from '@streamr/dht'
 import { createPeerDescriptor } from '@streamr/dht/dist/src/dht/DhtNode'
-import { AutoCertifierClient } from '../../src/client/AutoCertifierClient'
+import { AutoCertifierClient } from '@streamr/autocertifier-client'
 import os from 'os'
 import fs from 'fs'
 import { RestServer } from '../../src/RestServer'
-import { CertifiedSubdomain } from '../../src/data/CertifiedSubdomain'
-import { Session } from '../../src/data/Session'
+import { CertifiedSubdomain } from '@streamr/autocertifier-client'
+import { Session } from '@streamr/autocertifier-client'
 import { v4 } from 'uuid'
 import { Logger } from '@streamr/utils'
 import { createSelfSignedCertificate } from '../../src/utlis/createSelfSignedCertificate'
 import { StreamrChallenger } from '../../src/StreamrChallenger'
+import { SessionIdRequest, SessionIdResponse } from '../../src/proto/packages/autocertifier/protos/AutoCertifier'
 
 const logger = new Logger(module)
 
@@ -42,6 +43,7 @@ describe('clientServer', () => {
     const mockTransport = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor1, simulator: simulator })
 
     let clientConnectionManager: ConnectionManager
+    let clientRpcCommunicator: ListeningRpcCommunicator | undefined
 
     const subdomainPath = os.tmpdir() + 'subdomain.json'
 
@@ -92,12 +94,26 @@ describe('clientServer', () => {
         await server.stop()
     })
 
-    it('The client can start', (done) => {
+    afterEach(async () => {
+        if (clientRpcCommunicator) {
+            await clientRpcCommunicator.stop()
+        }
+    })
+    
+    it.only('The client can start', (done) => {
         const streamrWebSocketPort = clientConnectionManager.getPeerDescriptor().websocket!.port
         const autoCertifierUrl = 'https://localhost:' + restServerPort
 
         const client = new AutoCertifierClient(subdomainPath, streamrWebSocketPort,
-            autoCertifierUrl, restServerCa, clientConnectionManager)
+            autoCertifierUrl, restServerCa, (serviceId, rpcMethodName, method) => {
+                clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
+                clientRpcCommunicator.registerRpcMethod(
+                    SessionIdRequest,
+                    SessionIdResponse,
+                    rpcMethodName,
+                    method
+                )
+            })
 
         client.on('updatedSubdomain', (subdomain) => {
             logger.info(JSON.stringify(subdomain))
@@ -111,12 +127,20 @@ describe('clientServer', () => {
         client.start().then(() => { return }).catch((e) => { done.fail(e) })
     })
 
-    it.only('Starting the client throws an exception if AutoCertifier cannot connect to it using WebSocket', async () => {
+    it('Starting the client throws an exception if AutoCertifier cannot connect to it using WebSocket', async () => {
         const streamrWebSocketPort = 100
         const autoCertifierUrl = 'https://localhost:' + restServerPort
 
         const client = new AutoCertifierClient(subdomainPath, streamrWebSocketPort,
-            autoCertifierUrl, restServerCa, clientConnectionManager)
+            autoCertifierUrl, restServerCa, (serviceId, rpcMethodName, method) => {
+                clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
+                clientRpcCommunicator.registerRpcMethod(
+                    SessionIdRequest,
+                    SessionIdResponse,
+                    rpcMethodName,
+                    method
+                )
+            })
 
         await expect(client.start()).rejects.toThrow('Autocertifier failed to connect')
     })

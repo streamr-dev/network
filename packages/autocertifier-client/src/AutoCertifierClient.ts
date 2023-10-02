@@ -1,11 +1,11 @@
 import { EventEmitter } from 'eventemitter3'
-import { ITransport, ListeningRpcCommunicator } from '@streamr/dht'
-import { IAutoCertifierService } from '../proto/packages/autocertifier/protos/AutoCertifier.server'
-import { SessionIdRequest, SessionIdResponse } from '../proto/packages/autocertifier/protos/AutoCertifier'
+//import { ITransport, ListeningRpcCommunicator } from '@streamr/dht'
+import { IAutoCertifierService } from './proto/packages/autocertifier/protos/AutoCertifier.server'
+import { SessionIdRequest, SessionIdResponse } from './proto/packages/autocertifier/protos/AutoCertifier'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { filePathToNodeFormat } from '../utlis/filePathToNodeFormat'
+import { filePathToNodeFormat } from '@streamr/utils'
 import { RestClient } from './RestClient'
-import { CertifiedSubdomain } from '../data/CertifiedSubdomain'
+import { CertifiedSubdomain } from './data/CertifiedSubdomain'
 import fs from 'fs'
 import * as forge from 'node-forge'
 import { Logger } from '@streamr/utils'
@@ -20,7 +20,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
 
     private readonly SERVICE_ID = 'AutoCertifier'
     private readonly ONE_DAY = 1000 * 60 * 60 * 24
-    private readonly rpcCommunicator: ListeningRpcCommunicator
+    //private readonly rpcCommunicator: ListeningRpcCommunicator
     private updateTimeout?: NodeJS.Timeout
     private readonly restClient: RestClient
     private readonly subdomainPath: string
@@ -28,13 +28,16 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     private readonly ongoingSessions: Set<string> = new Set()
 
     constructor(subdomainPath: string, streamrWebSocketPort: number, restApiUrl: string, restApiCaCert: string,
-        rpcTransport: ITransport) {
+        registerRpcMethod: (serviceId: string, rpcMethodName: string, 
+            method: (request: SessionIdRequest, context: ServerCallContext) => Promise<SessionIdResponse>) => void) {
         super()
 
         this.restClient = new RestClient(restApiUrl, restApiCaCert)
         this.subdomainPath = filePathToNodeFormat(subdomainPath)
         this.streamrWebSocketPort = streamrWebSocketPort
 
+        registerRpcMethod(this.SERVICE_ID, 'getSessionId', this.getSessionId.bind(this))
+        /*
         this.rpcCommunicator = new ListeningRpcCommunicator(this.SERVICE_ID, rpcTransport)
         this.rpcCommunicator.registerRpcMethod(
             SessionIdRequest,
@@ -42,6 +45,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             'getSessionId',
             (req: SessionIdRequest, context) => this.getSessionId(req, context)
         )
+        */
     }
 
     public async start(): Promise<void> {
@@ -63,7 +67,6 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     public async stop(): Promise<void> {
-        this.rpcCommunicator.stop()
         if (this.updateTimeout) {
             clearTimeout(this.updateTimeout)
             this.updateTimeout = undefined

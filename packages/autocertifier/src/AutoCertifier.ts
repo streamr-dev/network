@@ -5,10 +5,9 @@ import { DnsServer } from './DnsServer'
 import { RestInterface } from './RestInterface'
 import { RestServer } from './RestServer'
 import { v4 } from 'uuid'
-import { CertifiedSubdomain } from './data/CertifiedSubdomain'
+import { CertifiedSubdomain, Session } from '@streamr/autocertifier-client'
 import { Logger } from '@streamr/utils'
 import { CertificateCreator } from './CertificateCreator'
-import { Session } from './data/Session'
 import { StreamrChallenger } from './StreamrChallenger'
 
 const logger = new Logger(module)

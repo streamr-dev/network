@@ -1,0 +1,17 @@
+syntax = "proto3";
+option optimize_for = CODE_SIZE;
+
+package autocertifier;
+
+message SessionIdRequest {
+    string sessionId = 1;
+}
+
+message SessionIdResponse {
+    optional string error = 1;
+    optional string sessionId = 2;
+}
+
+service AutoCertifierService {
+    rpc getSessionId (SessionIdRequest) returns (SessionIdResponse);
+}

@@ -4,7 +4,7 @@ import * as acme from 'acme-client'
 import fs from 'fs'
 import path from 'path'
 import { ChallengeInterface } from './ChallengeInterface'
-import { Certificate } from './data/Certificate'
+import { Certificate } from '@streamr/autocertifier-client'
 import os from 'os'
 
 const logger = new Logger(module)

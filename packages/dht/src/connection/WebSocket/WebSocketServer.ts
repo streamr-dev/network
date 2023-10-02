@@ -8,7 +8,7 @@ import {
 } from '../IConnectionSource'
 
 import { Logger, asAbortable } from '@streamr/utils'
-import { AutoCertifierClient } from '@streamr/autocertifier' 
+import { AutoCertifierClient } from '@streamr/autocertifier-client' 
 import { WebSocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
@@ -28,7 +28,22 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     private httpServer?: HttpServer | HttpsServer
     private wsServer?: WsServer
     private readonly abortController = new AbortController()
-    private readonly autocertifier: AutoCertifierClient
+    private autocertifier?: AutoCertifierClient
+
+    /*
+    create the autocertifier client like this:
+
+    const client = new AutoCertifierClient(subdomainPath, streamrWebSocketPort,
+            autoCertifierUrl, restServerCa, (serviceId, rpcMethodName, method) => {
+                clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
+                clientRpcCommunicator.registerRpcMethod(
+                    SessionIdRequest,
+                    SessionIdResponse,
+                    rpcMethodName,
+                    method
+                )
+            })
+    */
 
     public async start(portRange: PortRange, tlsCertificate?: TlsCertificate): Promise<number> {
         const ports = range(portRange.min, portRange.max + 1)

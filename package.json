@@ -19,6 +19,7 @@
         "packages/test-utils",
         "packages/protocol",
         "packages/proto-rpc",
+        "packages/autocertifier-client",
         "packages/autocertifier",
         "packages/dht",
         "packages/trackerless-network",

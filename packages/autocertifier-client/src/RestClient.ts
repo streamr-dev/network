@@ -1,9 +1,9 @@
-import { Session } from '../data/Session'
-import { CertifiedSubdomain } from '../data/CertifiedSubdomain'
+import { Session } from './data/Session'
+import { CertifiedSubdomain } from './data/CertifiedSubdomain'
 import request from 'request'
-import { UpdateIpAndPortRequest } from '../data/UpdateIpAndPortRequest'
-import { CreateCertifiedSubdomainRequest } from '../data/CreateCertifiedSubdomainRequest'
-import { ServerError } from '../errors'
+import { UpdateIpAndPortRequest } from './data/UpdateIpAndPortRequest'
+import { CreateCertifiedSubdomainRequest } from './data/CreateCertifiedSubdomainRequest'
+import { ServerError } from './errors'
 
 export class RestClient {
 
@@ -45,7 +45,7 @@ export class RestClient {
     }
 
     public async updateSubdomainIpAndPort(subdomain: string, streamrWebSocketPort: number, sessioId: string, token: string): Promise<void> {
-        const url = this.baseUrl + '/subdomains/' + subdomain + 'ip'
+        const url = this.baseUrl + '/certifiedsubdomains/' + subdomain + '/ip'
         const body: UpdateIpAndPortRequest = {
             token: token,
             sessionId: sessioId,
@@ -70,7 +70,7 @@ export class RestClient {
 
     private async put<T>(url: string, body: any): Promise<T> {
         return new Promise((resolve, reject) => {
-            request.post(url, { json: body, ca: this.caCert }, (error, response, body) => {
+            request.put(url, { json: body, ca: this.caCert }, (error, response, body) => {
                 if (error) {
                     reject(error)
                 } else if (response.statusCode >= 200 && response.statusCode < 300) {

@@ -3,8 +3,8 @@
 import sqlite3 from 'sqlite3'
 import { open, Statement, Database as SqliteDatabase } from 'sqlite'
 import { Logger } from '@streamr/utils'
-import { DatabaseError, InvalidSubdomainOrToken } from './errors'
-import { filePathToNodeFormat } from './utlis/filePathToNodeFormat'
+import { DatabaseError, InvalidSubdomainOrToken } from '@streamr/autocertifier-client'
+import { filePathToNodeFormat } from '@streamr/utils'
 
 const logger = new Logger(module)
 

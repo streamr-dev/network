@@ -3,15 +3,15 @@
 import express from 'express'
 import { RestInterface } from './RestInterface'
 import { Logger } from '@streamr/utils'
-import { Err, FailedToExtractIpAddress, SteamrWebSocketPortMissing, TokenMissing, UnspecifiedError } from './errors'
+import { Err, FailedToExtractIpAddress, SteamrWebSocketPortMissing, TokenMissing, UnspecifiedError } from '@streamr/autocertifier-client'
 import bodyParser from 'body-parser'
 import * as https from 'https'
 import * as fs from 'fs'
 import * as path from 'path'
 import { createSelfSignedCertificate } from './utlis/createSelfSignedCertificate'
-import { filePathToNodeFormat } from './utlis/filePathToNodeFormat'
-import { CreateCertifiedSubdomainRequest } from './data/CreateCertifiedSubdomainRequest'
-import { UpdateIpAndPortRequest } from './data/UpdateIpAndPortRequest'
+import { filePathToNodeFormat } from '@streamr/utils'
+import { CreateCertifiedSubdomainRequest } from '@streamr/autocertifier-client'
+import { UpdateIpAndPortRequest } from '@streamr/autocertifier-client'
 
 const logger = new Logger(module)
 

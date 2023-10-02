@@ -3,7 +3,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { AutoCertifierServiceClient } from './proto/packages/autocertifier/protos/AutoCertifier.client'
 import { Logger } from '@streamr/utils'
 import { ConnectionType } from '@streamr/dht/dist/src/connection/IConnection'
-import { FailedToConnectToStreamrWebSocket } from './errors'
+import { FailedToConnectToStreamrWebSocket } from '@streamr/autocertifier-client'
 
 const logger = new Logger(module)
 

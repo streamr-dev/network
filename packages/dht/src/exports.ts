@@ -1,5 +1,6 @@
 export { DhtNode, DhtNodeEvents, DhtNodeOptions } from './dht/DhtNode'
 export { ListeningRpcCommunicator } from './transport/ListeningRpcCommunicator'
+export { RoutingRpcCommunicator } from './transport/RoutingRpcCommunicator'
 export { Simulator, LatencyType } from './connection/Simulator/Simulator'
 export { SimulatorTransport } from './connection/Simulator/SimulatorTransport'
 export { getRandomRegion, getRegionDelayMatrix } from './connection/Simulator/pings'

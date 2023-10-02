@@ -1,5 +1,5 @@
-import { CertifiedSubdomain } from './data/CertifiedSubdomain'
-import { Session } from './data/Session'
+import { CertifiedSubdomain } from '@streamr/autocertifier-client'
+import { Session } from '@streamr/autocertifier-client'
 
 export interface RestInterface {
     createSession(): Promise<Session>
