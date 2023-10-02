@@ -16,7 +16,10 @@ export abstract class Remote<T> {
         return this.remotePeerDescriptor
     }
 
-    formDhtRpcOptions(ownPeerDescriptor: PeerDescriptor, opts?: Omit<Partial<DhtRpcOptions>, 'sourceDescriptor' | 'targetDescriptor'>): DhtRpcOptions {
+    formDhtRpcOptions(
+        ownPeerDescriptor: PeerDescriptor,
+        opts?: Omit<Partial<DhtRpcOptions>, 'sourceDescriptor' | 'targetDescriptor'>
+    ): DhtRpcOptions {
         return {
             sourceDescriptor: ownPeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor,
