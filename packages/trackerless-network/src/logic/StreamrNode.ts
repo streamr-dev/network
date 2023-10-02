@@ -45,8 +45,8 @@ const logger = new Logger(module)
 let cleanUp: () => Promise<void> = async () => { }
 
 interface Metrics extends MetricsDefinition {
-    publishMessagesPerSecond: Metric
-    publishBytesPerSecond: Metric
+    broadcastMessagesPerSecond: Metric
+    broadcastBytesPerSecond: Metric
 }
 
 export interface StreamrNodeConfig {
@@ -77,8 +77,8 @@ export class StreamrNode extends EventEmitter<Events> {
         this.streams = new Map()
         this.metricsContext = config.metricsContext ?? new MetricsContext()
         this.metrics = {
-            publishMessagesPerSecond: new RateMetric(),
-            publishBytesPerSecond: new RateMetric()
+            broadcastMessagesPerSecond: new RateMetric(),
+            broadcastBytesPerSecond: new RateMetric()
         }
         this.metricsContext.addMetrics('node', this.metrics)
     }
@@ -134,8 +134,8 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         this.streams.get(streamPartId)!.layer2.broadcast(msg)
         // TODO rename metrics: publish -> broadcast
-        this.metrics.publishMessagesPerSecond.record(1)
-        this.metrics.publishBytesPerSecond.record(msg.content.length)
+        this.metrics.broadcastMessagesPerSecond.record(1)
+        this.metrics.broadcastBytesPerSecond.record(msg.content.length)
     }
 
     leaveStream(streamPartId: StreamPartID): void {
