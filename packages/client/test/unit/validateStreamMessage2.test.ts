@@ -1,4 +1,5 @@
 import {
+    ContentType,
     EncryptedGroupKey,
     GroupKeyMessage,
     GroupKeyRequest,
@@ -28,6 +29,7 @@ const groupKeyMessageToStreamMessage = async (
         prevMsgRef,
         serializedContent: utf8ToBinary(groupKeyMessage.serialize()),
         messageType: groupKeyMessage.messageType,
+        contentType: ContentType.JSON,
         authentication
     })
 }
@@ -76,14 +78,16 @@ describe('Validator2', () => {
         msg = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
             serializedContent: MOCK_CONTENT,
-            authentication: publisherAuthentication
+            authentication: publisherAuthentication,
+            contentType: ContentType.JSON
         })
 
         msgWithNewGroupKey = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
             serializedContent: MOCK_CONTENT,
             newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
-            authentication: publisherAuthentication
+            authentication: publisherAuthentication,
+            contentType: ContentType.JSON
         })
         assert.notStrictEqual(msg.signature, msgWithNewGroupKey.signature)
 
@@ -91,7 +95,8 @@ describe('Validator2', () => {
             messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, publisher, 'msgChainId'),
             serializedContent: MOCK_CONTENT,
             prevMsgRef: new MessageRef(1000, 0),
-            authentication: publisherAuthentication
+            authentication: publisherAuthentication,
+            contentType: ContentType.JSON
         })
         assert.notStrictEqual(msg.signature, msgWithPrevMsgRef.signature)
 

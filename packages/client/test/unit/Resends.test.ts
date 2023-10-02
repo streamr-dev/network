@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { ContentType, MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress, startTestServer } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import range from 'lodash/range'
@@ -61,7 +61,8 @@ describe('Resends', () => {
                 const msg = new StreamMessage({
                     messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisherId, ''),
                     content: MOCK_CONTENT,
-                    signature: hexToBinary('0x1234')
+                    signature: hexToBinary('0x1234'),
+                    contentType: ContentType.JSON
                 })
                 res.write(`${msg.serialize()}\n`)
             }
