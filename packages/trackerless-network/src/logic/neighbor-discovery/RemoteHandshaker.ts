@@ -23,11 +23,9 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
         const request: StreamHandshakeRequest = {
             randomGraphId: this.graphId,
             requestId: new UUID().toString(),
-            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
             neighborIds: neighborIds.map((id) => hexToBinary(id)),
             concurrentHandshakeTargetId: (concurrentHandshakeTargetId !== undefined) ? hexToBinary(concurrentHandshakeTargetId) : undefined,
-            interleaveSourceId: (interleaveSourceId !== undefined) ? hexToBinary(interleaveSourceId) : undefined,
-            senderDescriptor: ownPeerDescriptor
+            interleaveSourceId: (interleaveSourceId !== undefined) ? hexToBinary(interleaveSourceId) : undefined
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor,
@@ -55,8 +53,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
         }
         const notification: InterleaveNotice = {
             randomGraphId: this.graphId,
-            interleaveTargetDescriptor: originatorDescriptor,
-            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor))
+            interleaveTargetDescriptor: originatorDescriptor
         }
         this.client.interleaveNotice(notification, options).catch(() => {
             logger.debug('Failed to send interleaveNotice')

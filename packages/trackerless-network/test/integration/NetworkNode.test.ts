@@ -8,7 +8,7 @@ import {
     StreamPartIDUtils,
     toStreamID
 } from '@streamr/protocol'
-import { EthereumAddress, waitForCondition, hexToBinary } from '@streamr/utils'
+import { EthereumAddress, waitForCondition, hexToBinary, utf8ToBinary } from '@streamr/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 
@@ -76,9 +76,9 @@ describe('NetworkNode', () => {
                 'msgChainId'
             ),
             prevMsgRef: new MessageRef(665, 0),
-            content: {
+            content: utf8ToBinary(JSON.stringify({
                 hello: 'world'
-            },
+            })),
             messageType: StreamMessageType.MESSAGE,
             signature: hexToBinary('0x1234'),
         })
