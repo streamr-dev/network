@@ -1,4 +1,5 @@
 import {
+    ContentType,
     EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
@@ -89,6 +90,7 @@ describe('proxy group key exchange', () => {
                 '0'
             ),
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
+            contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
             content: requestContent,
             signature: hexToBinary('1234')
@@ -119,6 +121,7 @@ describe('proxy group key exchange', () => {
                 '0'
             ),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
+            contentType: ContentType.JSON,
             encryptionType: EncryptionType.RSA,
             content: responseContent,
             signature: hexToBinary('1234')

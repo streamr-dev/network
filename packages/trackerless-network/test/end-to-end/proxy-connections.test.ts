@@ -1,4 +1,4 @@
-import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { ContentType, MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
@@ -24,7 +24,8 @@ const MESSAGE = new StreamMessage({
         hello: 'world'
     })),
     messageType: StreamMessageType.MESSAGE,
-    signature: hexToBinary('0x1234')
+    signature: hexToBinary('0x1234'),
+    contentType: ContentType.JSON
 })
 
 describe('Proxy connections', () => {
