@@ -224,16 +224,20 @@ export class StreamrNode extends EventEmitter<Events> {
         if (this.config.acceptProxyConnections) {
             throw new Error('cannot set proxies when acceptProxyConnections=true')
         }
-        if (this.streams.get(streamPartId)?.type === StreamNodeType.PROXY && nodes.length > 0) {
-            const proxyClient = this.streams.get(streamPartId)!.layer2 as ProxyStreamConnectionClient
+        const shouldEnable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))
+        if (shouldEnable) {
+            let proxyClient: ProxyStreamConnectionClient
+            const alreadyProxied = this.isProxiedStreamPart(streamPartId)
+            if (alreadyProxied) {
+                proxyClient = this.streams.get(streamPartId)!.layer2 as ProxyStreamConnectionClient
+            } else {
+                proxyClient = this.createProxyStream(streamPartId, userId)
+                await proxyClient.start()
+            }
             await proxyClient.setProxies(streamPartId, nodes, direction, userId, connectionCount)
-        } else if (this.streams.get(streamPartId)?.type === StreamNodeType.PROXY && nodes.length === 0) {
-            this.streams.get(streamPartId)!.layer2.stop()
-            this.streams.delete(streamPartId)
         } else {
-            const proxyClient = this.createProxyStream(streamPartId, userId)
-            await proxyClient.start()
-            await proxyClient.setProxies(streamPartId, nodes, direction, userId, connectionCount)
+            this.streams.get(streamPartId)?.layer2.stop()
+            this.streams.delete(streamPartId)
         }
     }
 

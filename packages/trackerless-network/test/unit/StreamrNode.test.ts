@@ -74,11 +74,26 @@ describe('StreamrNode', () => {
             expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
         })
 
-        it('remove by setting connection count to 0', () => {
+        it('empty node list', () => {
             const streamPartId = StreamPartIDUtils.parse('stream#0')
             const proxy = createMockPeerDescriptor()
             const userId = randomEthereumAddress()
+            node.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
             node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(true)
+            node.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
+        })
+
+        it('connection count to 0', () => {
+            const streamPartId = StreamPartIDUtils.parse('stream#0')
+            const proxy = createMockPeerDescriptor()
+            const userId = randomEthereumAddress()
+            node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
+            node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(true)
             node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
             expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
         })
