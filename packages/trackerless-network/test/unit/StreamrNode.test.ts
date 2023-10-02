@@ -64,37 +64,37 @@ describe('StreamrNode', () => {
     })
 
     describe('proxied stream', () => {
-        it('happy path', () => {
+        it('happy path', async () => {
             const streamPartId = StreamPartIDUtils.parse('stream#0')
             const proxy = createMockPeerDescriptor()
             const userId = randomEthereumAddress()
-            node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
+            await node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
             expect(node.isProxiedStreamPart(streamPartId)).toBe(true)
-            node.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
+            await node.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
             expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
         })
 
-        it('empty node list', () => {
+        it('empty node list', async () => {
             const streamPartId = StreamPartIDUtils.parse('stream#0')
             const proxy = createMockPeerDescriptor()
             const userId = randomEthereumAddress()
-            node.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
+            await node.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
             expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
-            node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
+            await node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
             expect(node.isProxiedStreamPart(streamPartId)).toBe(true)
-            node.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
+            await node.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
             expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
         })
 
-        it('connection count to 0', () => {
+        it('connection count to 0', async () => {
             const streamPartId = StreamPartIDUtils.parse('stream#0')
             const proxy = createMockPeerDescriptor()
             const userId = randomEthereumAddress()
-            node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
+            await node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
             expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
-            node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
+            await node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
             expect(node.isProxiedStreamPart(streamPartId)).toBe(true)
-            node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
+            await node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
             expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
         })
     })
