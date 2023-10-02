@@ -1,6 +1,6 @@
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary, waitForCondition } from '@streamr/utils'
+import { hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { createMockPeerDescriptor } from '../utils/utils'
 
@@ -48,9 +48,9 @@ describe('inspect', () => {
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),
-        content: {
+        content: utf8ToBinary(JSON.stringify({
             hello: 'world'
-        },
+        })),
         messageType: StreamMessageType.MESSAGE,
         signature: hexToBinary('0x1234'),
     })

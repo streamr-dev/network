@@ -2,7 +2,7 @@
 
 import { LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
 import { MessageID, StreamMessage, StreamMessageType, StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { hexToBinary, waitForEvent3 } from '@streamr/utils'
+import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import fs from 'fs'
 import { PeerDescriptor } from '../../../dht/src/exports'
 import { NetworkNode } from '../../src/NetworkNode'
@@ -81,9 +81,9 @@ const measureJoiningTime = async (count: number) => {
                 'msgChainId'
             ),
             prevMsgRef: null,
-            content: {
+            content: utf8ToBinary(JSON.stringify({
                 hello: 'world'
-            },
+            })),
             messageType: StreamMessageType.MESSAGE,
             signature: hexToBinary('0x1234'),
         })

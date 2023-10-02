@@ -1,25 +1,25 @@
-import { 
+import {
     ITransport,
     ListeningRpcCommunicator,
     PeerDescriptor
 } from '@streamr/dht'
-import { LeaveStreamNotice, MessageID, MessageRef, ProxyDirection, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { IStreamNode } from '../IStreamNode'
-import { EventEmitter } from 'eventemitter3'
 import { ConnectionLocker } from '@streamr/dht/src/exports'
-import { StreamNodeServer } from '../StreamNodeServer'
-import { Logger, wait, binaryToHex, EthereumAddress, addManagedEventListener } from '@streamr/utils'
-import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
-import { NodeList } from '../NodeList'
-import { Propagation } from '../propagation/Propagation'
-import { sampleSize } from 'lodash'
-import { RemoteProxyServer } from './RemoteProxyServer'
-import { NetworkRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
-import { markAndCheckDuplicate } from '../utils'
 import { StreamPartID } from '@streamr/protocol'
+import { EthereumAddress, Logger, addManagedEventListener, wait } from '@streamr/utils'
+import { EventEmitter } from 'eventemitter3'
+import { sampleSize } from 'lodash'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { LeaveStreamNotice, MessageID, MessageRef, ProxyDirection, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { NetworkRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
+import { IStreamNode } from '../IStreamNode'
+import { NodeList } from '../NodeList'
+import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
+import { StreamNodeServer } from '../StreamNodeServer'
+import { Propagation } from '../propagation/Propagation'
+import { markAndCheckDuplicate } from '../utils'
+import { RemoteProxyServer } from './RemoteProxyServer'
 
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
     // eslint-disable-next-line no-constant-condition
@@ -76,8 +76,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             randomGraphId: this.config.streamPartId,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
-            onLeaveNotice: (notice: LeaveStreamNotice) => {
-                const senderId = binaryToHex(notice.senderId) as NodeID
+            onLeaveNotice: (senderId: NodeID) => {
                 const contact = this.targetNeighbors.getNeighborById(senderId)
                 if (contact) {
                     setImmediate(() => this.onNodeDisconnected(contact.getPeerDescriptor()))
