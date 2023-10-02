@@ -11,8 +11,8 @@ export const setAbortableTimeout = createAbortableTimerFn(setTimeout, clearTimeo
 export const setAbortableInterval = createAbortableTimerFn(setInterval, clearInterval, false)
 
 function createAbortableTimerFn(
-    setupTimerFn: (cb: () => void, ms?: number) => NodeJS.Timer,
-    clearFn: (ref: NodeJS.Timer) => void,
+    setupTimerFn: (cb: () => void, ms?: number) => NodeJS.Timeout,
+    clearFn: (ref: NodeJS.Timeout) => void,
     removeListenerOnCb: boolean
 ): (cb: () => void, ms: number, abortSignal: AbortSignal) => void {
     return (callback, ms, abortSignal): void => {
