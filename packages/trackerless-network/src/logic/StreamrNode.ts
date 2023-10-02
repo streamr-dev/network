@@ -216,7 +216,7 @@ export class StreamrNode extends EventEmitter<Events> {
 
     async setProxies(
         streamPartId: StreamPartID,
-        contactPeerDescriptors: PeerDescriptor[],
+        nodes: PeerDescriptor[],
         direction: ProxyDirection,
         userId: EthereumAddress,
         connectionCount?: number
@@ -224,16 +224,16 @@ export class StreamrNode extends EventEmitter<Events> {
         if (this.config.acceptProxyConnections) {
             throw new Error('cannot set proxies when acceptProxyConnections=true')
         }
-        if (this.streams.get(streamPartId)?.type === StreamNodeType.PROXY && contactPeerDescriptors.length > 0) {
+        if (this.streams.get(streamPartId)?.type === StreamNodeType.PROXY && nodes.length > 0) {
             const proxyClient = this.streams.get(streamPartId)!.layer2 as ProxyStreamConnectionClient
-            await proxyClient.setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
-        } else if (this.streams.get(streamPartId)?.type === StreamNodeType.PROXY && contactPeerDescriptors.length === 0) {
+            await proxyClient.setProxies(streamPartId, nodes, direction, userId, connectionCount)
+        } else if (this.streams.get(streamPartId)?.type === StreamNodeType.PROXY && nodes.length === 0) {
             this.streams.get(streamPartId)!.layer2.stop()
             this.streams.delete(streamPartId)
         } else {
             const proxyClient = this.createProxyStream(streamPartId, userId)
             await proxyClient.start()
-            await proxyClient.setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
+            await proxyClient.setProxies(streamPartId, nodes, direction, userId, connectionCount)
         }
     }
 
