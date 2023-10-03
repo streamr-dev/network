@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AutoCertifierClient = void 0;
+exports.AutoCertifierClient = exports.AUTOCERTIFIER_SERVICE_ID = void 0;
 const eventemitter3_1 = require("eventemitter3");
 const utils_1 = require("@streamr/utils");
 const RestClient_1 = require("./RestClient");
@@ -34,22 +34,28 @@ const fs_1 = __importDefault(require("fs"));
 const forge = __importStar(require("node-forge"));
 const utils_2 = require("@streamr/utils");
 const logger = new utils_2.Logger(module);
+exports.AUTOCERTIFIER_SERVICE_ID = 'AutoCertifier';
 class AutoCertifierClient extends eventemitter3_1.EventEmitter {
     constructor(subdomainPath, streamrWebSocketPort, restApiUrl, restApiCaCert, registerRpcMethod) {
+        console.log("HERE3", restApiUrl);
         super();
-        this.SERVICE_ID = 'AutoCertifier';
         this.ONE_DAY = 1000 * 60 * 60 * 24;
         this.ongoingSessions = new Set();
         this.createCertificate = async () => {
+            console.log("CREATE CERTIFICATE 0");
             const sessionId = await this.restClient.createSession();
             let certifiedSubdomain;
+            console.log("CREATE CERTIFICATE 1");
             this.ongoingSessions.add(sessionId);
             try {
+                console.log("CREATE CERTIFICATE 2");
                 certifiedSubdomain = await this.restClient.createNewSubdomainAndCertificate(this.streamrWebSocketPort, sessionId);
+                console.log("CREATE CERTIFICATE 3");
             }
             finally {
                 this.ongoingSessions.delete(sessionId);
             }
+            console.log(this);
             fs_1.default.writeFileSync(this.subdomainPath, JSON.stringify(certifiedSubdomain));
             const certObj = forge.pki.certificateFromPem(certifiedSubdomain.certificate.cert);
             const expiryTime = certObj.validity.notAfter.getTime();
@@ -83,9 +89,10 @@ class AutoCertifierClient extends eventemitter3_1.EventEmitter {
         this.restClient = new RestClient_1.RestClient(restApiUrl, restApiCaCert);
         this.subdomainPath = (0, utils_1.filePathToNodeFormat)(subdomainPath);
         this.streamrWebSocketPort = streamrWebSocketPort;
-        registerRpcMethod(this.SERVICE_ID, 'getSessionId', this.getSessionId.bind(this));
+        console.log("HERE4");
+        registerRpcMethod(exports.AUTOCERTIFIER_SERVICE_ID, 'getSessionId', this.getSessionId.bind(this));
         /*
-        this.rpcCommunicator = new ListeningRpcCommunicator(this.SERVICE_ID, rpcTransport)
+        this.rpcCommunicator = new ListeningRpcCommunicator(this.AUTOCERTIFIER_SERVICE_ID, rpcTransport)
         this.rpcCommunicator.registerRpcMethod(
             SessionIdRequest,
             SessionIdResponse,
@@ -95,13 +102,17 @@ class AutoCertifierClient extends eventemitter3_1.EventEmitter {
         */
     }
     async start() {
+        console.log("START HERE1");
         if (!fs_1.default.existsSync(this.subdomainPath)) {
+            console.log("START HERE2");
             await this.createCertificate();
         }
         else {
+            console.log("START HERE3");
             const subdomain = JSON.parse(fs_1.default.readFileSync(this.subdomainPath, 'utf8'));
             const certObj = forge.pki.certificateFromPem(subdomain.certificate.cert);
             const expiryTime = certObj.validity.notAfter.getTime();
+            console.log("START HERE4");
             if (Date.now() > expiryTime) {
                 await this.updateCertificate();
             }

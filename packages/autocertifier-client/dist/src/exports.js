@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Err = exports.ErrorCode = exports.FailedToConnectToStreamrWebSocket = exports.InvalidSubdomainOrToken = exports.DatabaseError = exports.SteamrWebSocketPortMissing = exports.TokenMissing = exports.FailedToExtractIpAddress = exports.UnspecifiedError = exports.ServerError = exports.HttpStatus = exports.AutoCertifierClient = void 0;
+exports.SessionIdResponse = exports.SessionIdRequest = exports.Err = exports.ErrorCode = exports.FailedToConnectToStreamrWebSocket = exports.InvalidSubdomainOrToken = exports.DatabaseError = exports.SteamrWebSocketPortMissing = exports.TokenMissing = exports.FailedToExtractIpAddress = exports.UnspecifiedError = exports.ServerError = exports.HttpStatus = exports.AUTOCERTIFIER_SERVICE_ID = exports.AutoCertifierClient = void 0;
 var AutoCertifierClient_1 = require("./AutoCertifierClient");
 Object.defineProperty(exports, "AutoCertifierClient", { enumerable: true, get: function () { return AutoCertifierClient_1.AutoCertifierClient; } });
+Object.defineProperty(exports, "AUTOCERTIFIER_SERVICE_ID", { enumerable: true, get: function () { return AutoCertifierClient_1.AUTOCERTIFIER_SERVICE_ID; } });
 var HttpStatus_1 = require("./data/HttpStatus");
 Object.defineProperty(exports, "HttpStatus", { enumerable: true, get: function () { return HttpStatus_1.HttpStatus; } });
 var errors_1 = require("./errors");
@@ -25,4 +26,7 @@ var errors_9 = require("./errors");
 Object.defineProperty(exports, "ErrorCode", { enumerable: true, get: function () { return errors_9.ErrorCode; } });
 var errors_10 = require("./errors");
 Object.defineProperty(exports, "Err", { enumerable: true, get: function () { return errors_10.Err; } });
+var AutoCertifier_1 = require("./proto/packages/autocertifier/protos/AutoCertifier");
+Object.defineProperty(exports, "SessionIdRequest", { enumerable: true, get: function () { return AutoCertifier_1.SessionIdRequest; } });
+Object.defineProperty(exports, "SessionIdResponse", { enumerable: true, get: function () { return AutoCertifier_1.SessionIdResponse; } });
 //# sourceMappingURL=exports.js.map

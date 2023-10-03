@@ -25,7 +25,11 @@ import { Handshaker } from '../Handshaker'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
 import { sample } from 'lodash'
+import { AutoCertifierClient, AUTOCERTIFIER_SERVICE_ID, SessionIdRequest, SessionIdResponse } from '@streamr/autocertifier-client'
+import { readFileSync } from 'fs'
+import path from 'path'
 
+const cert = '-----BEGIN CERTIFICATE----- MIIDlzCCAn+gAwIBAgIBATANBgkqhkiG9w0BAQsFADBvMQ4wDAYDVQQDEwVNeSBDQTELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xEzARBgNVBAoTCk15IENvbXBhbnkxDjAMBgNVBAsTBU15IENBMCAXDTIzMTAwMzExMzQzMFoYDzIxMjMxMDAzMTEzNDMwWjBvMQ4wDAYDVQQDEwVNeSBDQTELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xEzARBgNVBAoTCk15IENvbXBhbnkxDjAMBgNVBAsTBU15IENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAr2+dbqXfXutH20Lfr5y3zvLY+bB8/mni2LDEGoqi0BkJLJwauLUAS4Dsf/UYvsoMRSAA8L1ndn+o/gl95dgzGZDOHNmWrLSFpdSNO0ZbR4WGmgA2h0DhuE3FxX/xTD5qz3RmMx0v4u0tgt5u3pE/OSjXnH6ATccLeYgxITb+7a0rBRkBobrLxYVlrddLeWRV3880kSN4qINBfBZmSQ9SHa112YvC4VZwf/ggpCpeqcUdBzyr2UZl0sUbNe206icQeEaHMSUdW6a0Mdd0zMG6ApJGGwlO7b23DS+dDomne7rjiKrSztaxpsRMsLSTG/WximUELFYH65PtZXyBwlqqIQIDAQABozwwOjAMBgNVHRMEBTADAQH/MAsGA1UdDwQEAwIC9DAdBgNVHQ4EFgQUvBI/BHmUuwo4lCRdm6C17ehoL+4wDQYJKoZIhvcNAQELBQADggEBACFJYwUz42MbjvS+DLS/uGewMeVvlE+IAasU0vCquuhIzDQ3UPYK01pTrL3mD63J90BlaD1V1joZAuDlGZfTVaZSn2mdiO9qN51LMf+Mq/+QfnMnEmrCpzKrWgGe75D8glDsb+6MfTmS8eLwe+S6LE/MN0+jBEDucM5giA+NG3AHQZA/hMsH412T3OaecR8r4R+eEmzA83YB2UE4wbfIa+YafBIIsWdiRYsqS1HzwOA99Aq0Slh6cfFa1PMat4Ryd3u2EEYIH84GpMTNFZSsT+Gk1mPKkjPbdlpUz6ItIM9+bqZ6q0H+GAu9ohkQkHcgsYe26aDM77KBtYRe+ZXBfJM= -----END CERTIFICATE-----'
 const logger = new Logger(module)
 
 export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string => {
@@ -42,6 +46,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private incomingConnectionCallback: (connection: ManagedConnection) => boolean
+    private readonly autocertifierRpcCommunicator: ListeningRpcCommunicator
+    private autocertifierClient?: AutoCertifierClient
     private portRange?: PortRange
     private host?: string
     private entrypoints?: PeerDescriptor[]
@@ -57,6 +63,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         rpcTransport: ITransport,
         fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
         incomingConnectionCallback: (connection: ManagedConnection) => boolean,
+        autocertifierRpcCommunicator: ListeningRpcCommunicator,
         portRange?: PortRange,
         host?: string,
         entrypoints?: PeerDescriptor[],
@@ -69,7 +76,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         this.host = host
         this.entrypoints = entrypoints
         this.tlsCertificate = tlsCertificate
-
+        this.autocertifierRpcCommunicator = autocertifierRpcCommunicator
         this.canConnectFunction = fnCanConnect.bind(this)
 
         this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, rpcTransport, {
@@ -113,6 +120,21 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             })
             const port = await this.webSocketServer.start(this.portRange!, this.tlsCertificate)
             this.selectedPort = port
+            if (this.selectedPort) {
+                console.log("HERE1.5")
+                this.autocertifierClient = new AutoCertifierClient('~/subdomain.json', this.selectedPort!,
+                    'https://ns1.fe6a54d8-8d6f-4743-890d-e9ecd680a4c7.xyz:59833', cert, (_, rpcMethodName, method) => {
+                        this.autocertifierRpcCommunicator.registerRpcMethod(
+                            SessionIdRequest,
+                            SessionIdResponse,
+                            rpcMethodName,
+                            method
+                        )                        
+                    })
+                console.log("HERE2")
+                await this.autocertifierClient.start()
+            }
+            
             this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.tlsCertificate !== undefined, this.host)
         }
     }
@@ -233,10 +255,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         }
     }
 
-    public getSelectedPort(): number | undefined {
-        return this.selectedPort
-    }
-
     public setOwnPeerDescriptor(ownPeerDescriptor: PeerDescriptor): void {
         this.ownPeerDescriptor = ownPeerDescriptor
     }
@@ -244,7 +262,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     public async destroy(): Promise<void> {
         this.destroyed = true
         this.rpcCommunicator.stop()
-
+        this.autocertifierRpcCommunicator.stop()
+        this.autocertifierClient?.stop()
         const requests = Array.from(this.ongoingConnectRequests.values())
         await Promise.allSettled(requests.map((conn) => conn.close('OTHER')))
 

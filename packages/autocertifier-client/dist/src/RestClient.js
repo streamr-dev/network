@@ -14,8 +14,14 @@ class RestClient {
     }
     async createSession() {
         const url = this.baseUrl + '/sessions';
-        const response = await this.post(url, {});
-        return response.sessionId;
+        try {
+            const response = await this.post(url, {});
+            return response.sessionId;
+        }
+        catch (err) {
+            console.error(err);
+            throw err;
+        }
     }
     async createNewSubdomainAndCertificate(streamrWebSocketPort, sessionId) {
         const url = this.baseUrl + '/certifiedSubdomains';

@@ -16,9 +16,10 @@ interface AutoCertifierClientEvents {
 
 const logger = new Logger(module)
 
+export const AUTOCERTIFIER_SERVICE_ID = 'AutoCertifier'
+
 export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents> implements IAutoCertifierService {
 
-    private readonly SERVICE_ID = 'AutoCertifier'
     private readonly ONE_DAY = 1000 * 60 * 60 * 24
     //private readonly rpcCommunicator: ListeningRpcCommunicator
     private updateTimeout?: NodeJS.Timeout
@@ -30,15 +31,17 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     constructor(subdomainPath: string, streamrWebSocketPort: number, restApiUrl: string, restApiCaCert: string,
         registerRpcMethod: (serviceId: string, rpcMethodName: string, 
             method: (request: SessionIdRequest, context: ServerCallContext) => Promise<SessionIdResponse>) => void) {
+        console.log("HERE3", restApiUrl)
+
         super()
 
         this.restClient = new RestClient(restApiUrl, restApiCaCert)
         this.subdomainPath = filePathToNodeFormat(subdomainPath)
         this.streamrWebSocketPort = streamrWebSocketPort
-
-        registerRpcMethod(this.SERVICE_ID, 'getSessionId', this.getSessionId.bind(this))
+        console.log("HERE4")
+        registerRpcMethod(AUTOCERTIFIER_SERVICE_ID, 'getSessionId', this.getSessionId.bind(this))
         /*
-        this.rpcCommunicator = new ListeningRpcCommunicator(this.SERVICE_ID, rpcTransport)
+        this.rpcCommunicator = new ListeningRpcCommunicator(this.AUTOCERTIFIER_SERVICE_ID, rpcTransport)
         this.rpcCommunicator.registerRpcMethod(
             SessionIdRequest,
             SessionIdResponse,
@@ -49,12 +52,17 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     public async start(): Promise<void> {
+        console.log("START HERE1")
         if (!fs.existsSync(this.subdomainPath)) {
+            console.log("START HERE2")
             await this.createCertificate()
         } else {
+            console.log("START HERE3")
             const subdomain = JSON.parse(fs.readFileSync(this.subdomainPath, 'utf8')) as CertifiedSubdomain
             const certObj = forge.pki.certificateFromPem(subdomain.certificate.cert)
             const expiryTime = certObj.validity.notAfter.getTime()
+
+            console.log("START HERE4")
 
             if (Date.now() > expiryTime) {
                 await this.updateCertificate()
@@ -89,17 +97,21 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     private createCertificate = async (): Promise<void> => {
+        console.log("CREATE CERTIFICATE 0")
         const sessionId = await this.restClient.createSession()
         let certifiedSubdomain: CertifiedSubdomain
 
+        console.log("CREATE CERTIFICATE 1")
         this.ongoingSessions.add(sessionId)
 
         try {
+            console.log("CREATE CERTIFICATE 2")
             certifiedSubdomain = await this.restClient.createNewSubdomainAndCertificate(this.streamrWebSocketPort, sessionId)
+            console.log("CREATE CERTIFICATE 3")
         } finally {
             this.ongoingSessions.delete(sessionId)
         }
-
+        console.log(this)
         fs.writeFileSync(this.subdomainPath, JSON.stringify(certifiedSubdomain))
         const certObj = forge.pki.certificateFromPem(certifiedSubdomain.certificate.cert)
 

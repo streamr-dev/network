@@ -6,8 +6,8 @@ import { CertifiedSubdomain } from './data/CertifiedSubdomain';
 interface AutoCertifierClientEvents {
     updatedSubdomain: (domain: CertifiedSubdomain) => void;
 }
+export declare const AUTOCERTIFIER_SERVICE_ID = "AutoCertifier";
 export declare class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents> implements IAutoCertifierService {
-    private readonly SERVICE_ID;
     private readonly ONE_DAY;
     private updateTimeout?;
     private readonly restClient;

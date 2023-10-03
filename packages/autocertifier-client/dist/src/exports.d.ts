@@ -1,4 +1,4 @@
-export { AutoCertifierClient } from './AutoCertifierClient';
+export { AutoCertifierClient, AUTOCERTIFIER_SERVICE_ID } from './AutoCertifierClient';
 export { CertifiedSubdomain } from './data/CertifiedSubdomain';
 export { Session } from './data/Session';
 export { Certificate } from './data/Certificate';
@@ -16,3 +16,4 @@ export { InvalidSubdomainOrToken } from './errors';
 export { FailedToConnectToStreamrWebSocket } from './errors';
 export { ErrorCode } from './errors';
 export { Err } from './errors';
+export { SessionIdRequest, SessionIdResponse } from './proto/packages/autocertifier/protos/AutoCertifier';

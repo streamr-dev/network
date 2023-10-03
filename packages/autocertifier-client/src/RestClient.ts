@@ -19,8 +19,14 @@ export class RestClient {
 
     public async createSession(): Promise<string> {
         const url = this.baseUrl + '/sessions'
-        const response = await this.post<Session>(url, {})
-        return response.sessionId
+        try {
+            const response = await this.post<Session>(url, {})
+            return response.sessionId
+
+        } catch (err) {
+            console.error(err)
+            throw err
+        }
     }
 
     public async createNewSubdomainAndCertificate(streamrWebSocketPort: number, sessionId: string): Promise<CertifiedSubdomain> {
