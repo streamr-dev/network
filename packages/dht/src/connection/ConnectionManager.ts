@@ -354,9 +354,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private isConnectionToSelf(peerDescriptor: PeerDescriptor): boolean { 
-        if (!this.ownPeerDescriptor) {
-            return false
-        }
         return isSamePeerDescriptor(peerDescriptor, this.ownPeerDescriptor!) || this.isOwnWebSocketServer(peerDescriptor)
     }
 
