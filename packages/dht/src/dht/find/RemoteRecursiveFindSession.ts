@@ -23,7 +23,7 @@ export class RemoteRecursiveFindSession extends Remote<IRecursiveFindSessionServ
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.peerDescriptor
+            targetDescriptor: this.getPeerDescriptor()
         }
 
         this.client.reportRecursiveFindResult(report, options).catch((_e) => {

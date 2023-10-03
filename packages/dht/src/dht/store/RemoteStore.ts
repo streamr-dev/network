@@ -16,14 +16,14 @@ export class RemoteStore extends Remote<IStoreServiceClient> {
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         const options: DhtRpcOptions = {
             sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.peerDescriptor,
+            targetDescriptor: this.getPeerDescriptor(),
             timeout: 10000
         }
         try {
             return await this.client.storeData(request, options)
         } catch (err) {
             throw Error(
-                `Could not store data to ${keyFromPeerDescriptor(this.peerDescriptor)} from ${keyFromPeerDescriptor(this.ownPeerDescriptor)} ${err}`
+                `Could not store data to ${keyFromPeerDescriptor(this.getPeerDescriptor())} from ${keyFromPeerDescriptor(this.ownPeerDescriptor)} ${err}`
             )
         }
     }
@@ -31,14 +31,14 @@ export class RemoteStore extends Remote<IStoreServiceClient> {
     async deleteData(request: DeleteDataRequest): Promise<DeleteDataResponse> {
         const options: DhtRpcOptions = {
             sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.peerDescriptor,
+            targetDescriptor: this.getPeerDescriptor(),
             timeout: 10000
         }
         try {
             return await this.client.deleteData(request, options)
         } catch (err) {
             throw Error(
-                `Could not call delete data to ${keyFromPeerDescriptor(this.peerDescriptor)} ${err}`
+                `Could not call delete data to ${keyFromPeerDescriptor(this.getPeerDescriptor())} ${err}`
             )
         }
     }
@@ -47,12 +47,12 @@ export class RemoteStore extends Remote<IStoreServiceClient> {
         
         const options: DhtRpcOptions = {
             sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.peerDescriptor,
+            targetDescriptor: this.getPeerDescriptor(),
             timeout: 10000,
             doNotConnect
         }
 
-        return this.client.migrateData(request, options)      
+        return this.client.migrateData(request, options)
     }
 
 }

@@ -12,7 +12,7 @@ export class RemoteExternalApi extends Remote<IExternalApiServiceClient> {
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.peerDescriptor,
+            targetDescriptor: this.getPeerDescriptor(),
             timeout: 10000
         }
         try {
