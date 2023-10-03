@@ -249,6 +249,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.ownPeerDescriptor = ownPeerDescriptor
             this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
             this.webrtcConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
+            if (!this.config.tlsCertificate) {
+                await this.webSocketConnector!.autoCertify()
+            }
         }
     }
 
