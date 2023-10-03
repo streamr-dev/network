@@ -35,7 +35,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const temporaryConnectionServer = new TemporaryConnectionRpcServer({
         randomGraphId: config.randomGraphId,
         rpcCommunicator,
-        ownNodeId
+        ownPeerDescriptor: config.ownPeerDescriptor
     })
     const proxyConnectionServer = acceptProxyConnections ? new ProxyStreamConnectionServer({
         ownPeerDescriptor: config.ownPeerDescriptor,
@@ -75,7 +75,6 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
         targetNeighbors,
         nearbyNodeView,
-        ownNodeId,
         ownPeerDescriptor: config.ownPeerDescriptor,
         neighborFinder,
         randomGraphId: config.randomGraphId,

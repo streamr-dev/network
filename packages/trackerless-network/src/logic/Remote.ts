@@ -2,11 +2,13 @@ import { DhtRpcOptions, PeerDescriptor } from '@streamr/dht'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 
 export abstract class Remote<T> {
+    protected ownPeerDescriptor: PeerDescriptor
     protected remotePeerDescriptor: PeerDescriptor
     protected client: ProtoRpcClient<T>
     protected graphId: string
 
-    constructor(peerDescriptor: PeerDescriptor, graphId: string, client: ProtoRpcClient<T>) {
+    constructor(ownPeerDescriptor: PeerDescriptor, peerDescriptor: PeerDescriptor, graphId: string, client: ProtoRpcClient<T>) {
+        this.ownPeerDescriptor = ownPeerDescriptor
         this.remotePeerDescriptor = peerDescriptor
         this.client = client
         this.graphId = graphId

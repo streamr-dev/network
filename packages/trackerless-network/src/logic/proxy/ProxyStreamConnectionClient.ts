@@ -161,15 +161,16 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     private async attemptConnection(nodeId: NodeID, direction: ProxyDirection, userId: EthereumAddress): Promise<void> {
         const peerDescriptor = this.definition!.nodes.get(nodeId)!
         const client = toProtoRpcClient(new ProxyConnectionRpcClient(this.rpcCommunicator.getRpcClientTransport()))
-        const proxyNode = new RemoteProxyServer(peerDescriptor, this.config.streamPartId, client)
+        const proxyNode = new RemoteProxyServer(this.config.ownPeerDescriptor, peerDescriptor, this.config.streamPartId, client)
         const accepted = await proxyNode.requestConnection(this.config.ownPeerDescriptor, direction, userId)
         if (accepted) {
             this.config.connectionLocker.lockConnection(peerDescriptor, 'proxy-stream-connection-client')
             this.connections.set(nodeId, direction)
             const remote = new RemoteRandomGraphNode(
+                this.config.ownPeerDescriptor,
                 peerDescriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator.getRpcClientTransport()))   
+                toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             this.targetNeighbors.add(remote)
             this.propagation.onNeighborJoined(nodeId)

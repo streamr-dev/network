@@ -7,10 +7,9 @@ import { INeighborFinder } from './NeighborFinder'
 import { NodeList } from '../NodeList'
 import { RemoteNeighborUpdateManager } from './RemoteNeighborUpdateManager'
 import { NeighborUpdateManagerServer } from './NeighborUpdateManagerServer'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 interface NeighborUpdateManagerConfig {
-    ownNodeId: NodeID
     ownPeerDescriptor: PeerDescriptor
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
@@ -62,6 +61,6 @@ export class NeighborUpdateManager implements INeighborUpdateManager {
     }
 
     private createRemote(targetPeerDescriptor: PeerDescriptor): RemoteNeighborUpdateManager {
-        return new RemoteNeighborUpdateManager(targetPeerDescriptor, this.config.randomGraphId, this.client)
+        return new RemoteNeighborUpdateManager(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.randomGraphId, this.client)
     }
 }
