@@ -18,15 +18,7 @@ const createMessage = (id: number): StreamMessage => {
 describe('NetworkNode', () => {
 
     it('message listener', async () => {
-        const streamrNode = new class extends EventEmitter<Events> {
-            // eslint-disable-next-line class-methods-use-this
-            isProxiedStreamPart() { 
-                return false
-            }
-            // eslint-disable-next-line class-methods-use-this
-            safeJoinStream() {
-            }
-        }()
+        const streamrNode = new EventEmitter<Events>()
         const stack: Partial<NetworkStack> = {
             getStreamrNode: () => streamrNode as any,
             joinStreamPart: async () => {}
