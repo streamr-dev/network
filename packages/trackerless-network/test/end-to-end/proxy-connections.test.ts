@@ -210,6 +210,6 @@ describe('Proxy connections', () => {
             ProxyDirection.SUBSCRIBE,
             PROXIED_NODE_USER_ID
         )
-        await expect(proxiedNode.broadcast(MESSAGE)).rejects.toThrow('Cannot publish')
+        await expect(proxiedNode.broadcast(MESSAGE)).rejects.toThrow('Cannot broadcast')
     })
 })
