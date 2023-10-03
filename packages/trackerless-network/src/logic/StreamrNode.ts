@@ -133,7 +133,6 @@ export class StreamrNode extends EventEmitter<Events> {
                 })
         }
         this.streams.get(streamPartId)!.layer2.broadcast(msg)
-        // TODO rename metrics: publish -> broadcast
         this.metrics.broadcastMessagesPerSecond.record(1)
         this.metrics.broadcastBytesPerSecond.record(msg.content.length)
     }
