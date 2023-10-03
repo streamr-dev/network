@@ -19,8 +19,10 @@ export class RemoteStore extends Remote<IStoreServiceClient> {
         try {
             return await this.client.storeData(request, options)
         } catch (err) {
+            const to = keyFromPeerDescriptor(this.getPeerDescriptor())
+            const from = keyFromPeerDescriptor(this.ownPeerDescriptor)
             throw Error(
-                `Could not store data to ${keyFromPeerDescriptor(this.getPeerDescriptor())} from ${keyFromPeerDescriptor(this.ownPeerDescriptor)} ${err}`
+                `Could not store data to ${to} from ${from} ${err}`
             )
         }
     }
