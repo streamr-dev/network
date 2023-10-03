@@ -37,4 +37,7 @@ export abstract class Remote<T> implements IContact {
         return this.serviceId
     }
 
+    getClient(): ProtoRpcClient<T> {
+        return this.client
+    }
 }
