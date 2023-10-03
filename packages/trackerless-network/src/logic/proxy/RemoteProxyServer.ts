@@ -16,7 +16,7 @@ export class RemoteProxyServer extends Remote<IProxyConnectionRpcClient> {
             timeout: 5000
         })
         try {
-            const res = await this.client.requestConnection(request, options)
+            const res = await this.getClient().requestConnection(request, options)
             return res.accepted
         } catch (err) {
             logger.warn(`ProxyConnectionRequest failed with error: ${err}`)

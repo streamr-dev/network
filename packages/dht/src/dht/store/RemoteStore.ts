@@ -17,10 +17,10 @@ export class RemoteStore extends Remote<IStoreServiceClient> {
             timeout: 10000
         })
         try {
-            return await this.client.storeData(request, options)
+            return await this.getClient().storeData(request, options)
         } catch (err) {
             const to = keyFromPeerDescriptor(this.getPeerDescriptor())
-            const from = keyFromPeerDescriptor(this.ownPeerDescriptor)
+            const from = keyFromPeerDescriptor(this.getOwnPeerDescriptor())
             throw Error(
                 `Could not store data to ${to} from ${from} ${err}`
             )
@@ -32,7 +32,7 @@ export class RemoteStore extends Remote<IStoreServiceClient> {
             timeout: 10000
         })
         try {
-            return await this.client.deleteData(request, options)
+            return await this.getClient().deleteData(request, options)
         } catch (err) {
             throw Error(
                 `Could not call delete data to ${keyFromPeerDescriptor(this.getPeerDescriptor())} ${err}`
@@ -45,7 +45,7 @@ export class RemoteStore extends Remote<IStoreServiceClient> {
             timeout: 10000,
             doNotConnect
         })
-        return this.client.migrateData(request, options)
+        return this.getClient().migrateData(request, options)
     }
 
 }

@@ -20,7 +20,7 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
             removeMe: false
         }
         try {
-            const response = await this.client.neighborUpdate(request, this.formDhtRpcOptions())
+            const response = await this.getClient().neighborUpdate(request, this.formDhtRpcOptions())
             return {
                 peerDescriptors: response.neighborDescriptors,
                 removeMe: response.removeMe

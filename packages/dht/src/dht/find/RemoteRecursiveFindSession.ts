@@ -19,7 +19,7 @@ export class RemoteRecursiveFindSession extends Remote<IRecursiveFindSessionServ
             dataEntries,
             noCloserNodesFound
         }
-        this.client.reportRecursiveFindResult(report, this.formDhtRpcOptions()).catch((_e) => {
+        this.getClient().reportRecursiveFindResult(report, this.formDhtRpcOptions()).catch((_e) => {
             logger.trace('Failed to send RecursiveFindResult')
         })
     }

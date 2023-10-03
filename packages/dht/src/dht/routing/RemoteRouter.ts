@@ -27,7 +27,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             timeout: 10000
         })
         try {
-            const ack = await this.client.routeMessage(message, options)
+            const ack = await this.getClient().routeMessage(message, options)
             // Success signal if sent to destination and error includes duplicate
             if (
                 isSamePeerDescriptor(params.destinationPeer!, this.getPeerDescriptor())
@@ -60,7 +60,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             timeout: 10000
         })
         try {
-            const ack = await this.client.forwardMessage(message, options)
+            const ack = await this.getClient().forwardMessage(message, options)
             if (ack.error.length > 0) {
                 return false
             }
@@ -90,7 +90,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             timeout: 10000
         })
         try {
-            const ack = await this.client.findRecursively(message, options)
+            const ack = await this.getClient().findRecursively(message, options)
             if (ack.error.length > 0) {
                 logger.debug('Next hop responded with error ' + ack.error)
                 return false

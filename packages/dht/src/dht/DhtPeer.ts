@@ -37,52 +37,52 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
     }
 
     async getClosestPeers(kademliaId: Uint8Array): Promise<PeerDescriptor[]> {
-        logger.trace(`Requesting getClosestPeers on ${this.serviceId} from ${this.getPeerId().toKey()}`)
+        logger.trace(`Requesting getClosestPeers on ${this.getServiceId()} from ${this.getPeerId().toKey()}`)
         const request: ClosestPeersRequest = {
             kademliaId,
             requestId: v4()
         }
         try {
-            const peers = await this.client.getClosestPeers(request, this.formDhtRpcOptions())
+            const peers = await this.getClient().getClosestPeers(request, this.formDhtRpcOptions())
             return peers.peers
         } catch (err) {
-            logger.trace(`getClosestPeers error ${this.serviceId}`, { err })
+            logger.trace(`getClosestPeers error ${this.getServiceId()}`, { err })
             throw err
         }
     }
 
     async ping(): Promise<boolean> {
-        logger.trace(`Requesting ping on ${this.serviceId} from ${this.getPeerId().toKey()}`)
+        logger.trace(`Requesting ping on ${this.getServiceId()} from ${this.getPeerId().toKey()}`)
         const request: PingRequest = {
             requestId: v4()
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor,
+            sourceDescriptor: this.getOwnPeerDescriptor(),
             targetDescriptor: this.getPeerDescriptor(),
             timeout: 10000
         }
         try {
-            const pong = await this.client.ping(request, options)
+            const pong = await this.getClient().ping(request, options)
             if (pong.requestId === request.requestId) {
                 return true
             }
         } catch (err) {
-            logger.trace(`ping failed on ${this.serviceId} to ${this.getPeerId().toKey()}: ${err}`)
+            logger.trace(`ping failed on ${this.getServiceId()} to ${this.getPeerId().toKey()}: ${err}`)
         }
         return false
     }
 
     leaveNotice(): void {
-        logger.trace(`Sending leaveNotice on ${this.serviceId} from ${this.getPeerId().toKey()}`)
+        logger.trace(`Sending leaveNotice on ${this.getServiceId()} from ${this.getPeerId().toKey()}`)
         const request: LeaveNotice = {
-            serviceId: this.serviceId
+            serviceId: this.getServiceId()
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor,
+            sourceDescriptor: this.getOwnPeerDescriptor(),
             targetDescriptor: this.getPeerDescriptor(),
             notification: true
         }
-        this.client.leaveNotice(request, options).catch((e) => {
+        this.getClient().leaveNotice(request, options).catch((e) => {
             logger.trace('Failed to send leaveNotice' + e)
         })
     }
