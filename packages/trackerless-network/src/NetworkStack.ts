@@ -93,7 +93,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     async broadcast(msg: StreamMessage): Promise<void> {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
         if (this.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.messageType === StreamMessageType.MESSAGE)) {
-            throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
+            throw new Error(`Cannot broadcast to ${streamPartId} as proxy subscribe connections have been set`)
         }
         await this.joinLayer0IfRequired(streamPartId)
         this.getStreamrNode().broadcast(msg)
