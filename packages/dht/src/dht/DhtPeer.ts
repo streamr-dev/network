@@ -20,16 +20,18 @@ export interface KBucketContact {
 }
 
 export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketContact {
+
     private static counter = 0
     public vectorClock: number
     public readonly id: Uint8Array
+
     constructor(
         ownPeerDescriptor: PeerDescriptor,
         peerDescriptor: PeerDescriptor,
         client: ProtoRpcClient<IDhtRpcServiceClient>,
         serviceId: string
     ) {
-        super(ownPeerDescriptor, peerDescriptor, client, serviceId)
+        super(ownPeerDescriptor, peerDescriptor, serviceId, client, )
         this.id = this.getPeerId().value
         this.vectorClock = DhtPeer.counter++
     }

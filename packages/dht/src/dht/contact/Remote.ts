@@ -7,17 +7,17 @@ import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 
 export abstract class Remote<T> implements IContact {
 
+    protected readonly ownPeerDescriptor: PeerDescriptor
     protected readonly remotePeerId: PeerID
     protected readonly remotePeerDescriptor: PeerDescriptor
-    protected readonly client: ProtoRpcClient<T>
     protected readonly serviceId: string
-    protected readonly ownPeerDescriptor: PeerDescriptor
+    protected readonly client: ProtoRpcClient<T>
 
     constructor(
         ownPeerDescriptor: PeerDescriptor,
         remotePeerDescriptor: PeerDescriptor,
-        client: ProtoRpcClient<T>,
-        serviceId: string
+        serviceId: string,
+        client: ProtoRpcClient<T>
     ) {
         this.ownPeerDescriptor = ownPeerDescriptor
         this.remotePeerId = peerIdFromPeerDescriptor(remotePeerDescriptor)

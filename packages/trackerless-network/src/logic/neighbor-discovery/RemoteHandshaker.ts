@@ -20,7 +20,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
         serviceId: string,
         client: ProtoRpcClient<IHandshakeRpcClient>
     ) {
-        super(ownPeerDescriptor, remotePeerDescriptor, client, serviceId)
+        super(ownPeerDescriptor, remotePeerDescriptor, serviceId, client)
     }
 
     async handshake(

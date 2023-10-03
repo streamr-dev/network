@@ -14,7 +14,7 @@ export class RemoteTemporaryConnectionRpcServer extends Remote<ITemporaryConnect
         serviceId: string,
         client: ProtoRpcClient<ITemporaryConnectionRpcClient>
     ) {
-        super(ownPeerDescriptor, remotePeerDescriptor, client, serviceId)
+        super(ownPeerDescriptor, remotePeerDescriptor, serviceId, client)
     }
 
     async openConnection(): Promise<boolean> {

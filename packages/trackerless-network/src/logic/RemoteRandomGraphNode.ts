@@ -17,7 +17,7 @@ export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
         serviceId: string,
         client: ProtoRpcClient<INetworkRpcClient>,
     ) {
-        super(ownPeerDescriptor, remotePeerDescriptor, client, serviceId)
+        super(ownPeerDescriptor, remotePeerDescriptor, serviceId, client)
     }
 
     async sendData(msg: StreamMessage): Promise<void> {

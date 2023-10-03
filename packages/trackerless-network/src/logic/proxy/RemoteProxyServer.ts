@@ -14,7 +14,7 @@ export class RemoteProxyServer extends Remote<IProxyConnectionRpcClient> {
         serviceId: string,
         client: ProtoRpcClient<IProxyConnectionRpcClient>
     ) {
-        super(ownPeerDescriptor, remotePeerDescriptor, client, serviceId)
+        super(ownPeerDescriptor, remotePeerDescriptor, serviceId, client)
     }
 
     async requestConnection(direction: ProxyDirection, userId: EthereumAddress): Promise<boolean> {

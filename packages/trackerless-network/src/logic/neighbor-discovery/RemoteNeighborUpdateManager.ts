@@ -20,7 +20,7 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
         serviceId: string,
         client: ProtoRpcClient<INeighborUpdateRpcClient>
     ) {
-        super(ownPeerDescriptor, remotePeerDescriptor, client, serviceId)
+        super(ownPeerDescriptor, remotePeerDescriptor, serviceId, client)
     }
 
     async updateNeighbors(neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
