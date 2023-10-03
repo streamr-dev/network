@@ -59,6 +59,7 @@ describe('RemoteNeighborUpdateManager', () => {
             }
         )
         neighborUpdateRpcClient = new RemoteNeighborUpdateManager(
+            clientNode,
             serverNode,
             'test-stream',
             toProtoRpcClient(new NeighborUpdateRpcClient(clientRpc.getRpcClientTransport()))
@@ -74,7 +75,7 @@ describe('RemoteNeighborUpdateManager', () => {
     })
 
     it('updateNeighbors', async () => {
-        const res = await neighborUpdateRpcClient.updateNeighbors(clientNode, [])
+        const res = await neighborUpdateRpcClient.updateNeighbors([])
         expect(res.peerDescriptors.length).toEqual(1)
     })
 })

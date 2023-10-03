@@ -11,15 +11,16 @@ describe('RemoteProxyServer', () => {
         const client = {
             requestConnection: jest.fn()
         }
+        const clientPeerDescriptor = createMockPeerDescriptor()
         const serverPeerDescriptor = createMockPeerDescriptor()
         const server = new RemoteProxyServer(
+            clientPeerDescriptor,
             serverPeerDescriptor,
             StreamPartIDUtils.parse('stream#0'),
             client
         )
-        const clientPeerDescriptor = createMockPeerDescriptor()
         const userId = randomEthereumAddress()
-        server.requestConnection(clientPeerDescriptor, ProxyDirection.PUBLISH, userId)
+        server.requestConnection(ProxyDirection.PUBLISH, userId)
         expect(client.requestConnection).toBeCalledWith({
             direction: ProxyDirection.PUBLISH,
             userId: hexToBinary(userId)
