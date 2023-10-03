@@ -88,9 +88,4 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
             logger.trace('Failed to send leaveNotice' + e)
         })
     }
-
-    getPeerDescriptor(): PeerDescriptor {
-        return this.peerDescriptor
-    }
-
 }
