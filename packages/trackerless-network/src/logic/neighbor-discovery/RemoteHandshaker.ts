@@ -24,7 +24,6 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
     }
 
     async handshake(
-        ownPeerDescriptor: PeerDescriptor,
         neighborIds: NodeID[],
         concurrentHandshakeTargetId?: NodeID,
         interleaveSourceId?: NodeID
@@ -36,9 +35,8 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
             concurrentHandshakeTargetId: (concurrentHandshakeTargetId !== undefined) ? hexToBinary(concurrentHandshakeTargetId) : undefined,
             interleaveSourceId: (interleaveSourceId !== undefined) ? hexToBinary(interleaveSourceId) : undefined
         }
-        const options = this.formDhtRpcOptions(ownPeerDescriptor)
         try {
-            const response = await this.getClient().handshake(request, options)
+            const response = await this.getClient().handshake(request, this.formDhtRpcOptions())
             return {
                 accepted: response.accepted,
                 interleaveTargetDescriptor: response.interleaveTargetDescriptor
@@ -51,14 +49,14 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
         }
     }
 
-    interleaveNotice(ownPeerDescriptor: PeerDescriptor, originatorDescriptor: PeerDescriptor): void {
-        const options = this.formDhtRpcOptions(ownPeerDescriptor, {
-            notification: true
-        })
+    interleaveNotice(originatorDescriptor: PeerDescriptor): void {
         const notification: InterleaveNotice = {
             randomGraphId: this.getServiceId(),
             interleaveTargetDescriptor: originatorDescriptor
         }
+        const options = this.formDhtRpcOptions({
+            notification: true
+        })
         this.getClient().interleaveNotice(notification, options).catch(() => {
             logger.debug('Failed to send interleaveNotice')
         })

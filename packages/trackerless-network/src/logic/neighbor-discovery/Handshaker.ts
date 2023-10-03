@@ -125,7 +125,6 @@ export class Handshaker implements IHandshaker {
         const targetNodeId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
         this.ongoingHandshakes.add(targetNodeId)
         const result = await targetNeighbor.handshake(
-            this.config.ownPeerDescriptor,
             this.config.targetNeighbors.getIds(),
             concurrentNodeId
         )
@@ -150,7 +149,6 @@ export class Handshaker implements IHandshaker {
         const targetNodeId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
         this.ongoingHandshakes.add(targetNodeId)
         const result = await targetNeighbor.handshake(
-            this.config.ownPeerDescriptor,
             this.config.targetNeighbors.getIds(),
             undefined,
             interleaveSourceId

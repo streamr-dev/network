@@ -17,14 +17,14 @@ export class RemoteProxyServer extends Remote<IProxyConnectionRpcClient> {
         super(ownPeerDescriptor, remotePeerDescriptor, client, serviceId)
     }
 
-    async requestConnection(ownPeerDescriptor: PeerDescriptor, direction: ProxyDirection, userId: EthereumAddress): Promise<boolean> {
-        const options = this.formDhtRpcOptions(ownPeerDescriptor, {
-            timeout: 5000
-        })
+    async requestConnection(direction: ProxyDirection, userId: EthereumAddress): Promise<boolean> {
         const request: ProxyConnectionRequest = {
             direction,
             userId: hexToBinary(userId)
         }
+        const options = this.formDhtRpcOptions({
+            timeout: 5000
+        })
         try {
             const res = await this.client.requestConnection(request, options)
             return res.accepted

@@ -17,10 +17,9 @@ export class RemoteTemporaryConnectionRpcServer extends Remote<ITemporaryConnect
         super(ownPeerDescriptor, remotePeerDescriptor, client, serviceId)
     }
 
-    async openConnection(ownPeerDescriptor: PeerDescriptor): Promise<boolean> {
-        const options = this.formDhtRpcOptions(ownPeerDescriptor)
+    async openConnection(): Promise<boolean> {
         try {
-            const response = await this.client.openConnection({}, options)
+            const response = await this.client.openConnection({}, this.formDhtRpcOptions())
             return response.accepted
         } catch (err: any) {
             logger.debug(`temporaryConnection to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)

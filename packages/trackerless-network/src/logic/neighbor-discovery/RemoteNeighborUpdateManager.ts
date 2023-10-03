@@ -23,15 +23,14 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
         super(ownPeerDescriptor, remotePeerDescriptor, client, serviceId)
     }
 
-    async updateNeighbors(ownPeerDescriptor: PeerDescriptor, neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
-        const options: DhtRpcOptions = this.formDhtRpcOptions(ownPeerDescriptor)
+    async updateNeighbors(neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
         const request: NeighborUpdate = {
             randomGraphId: this.getServiceId(),
             neighborDescriptors: neighbors,
             removeMe: false
         }
         try {
-            const response = await this.client.neighborUpdate(request, options)
+            const response = await this.client.neighborUpdate(request, this.formDhtRpcOptions())
             return {
                 peerDescriptors: response.neighborDescriptors,
                 removeMe: response.removeMe

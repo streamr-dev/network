@@ -42,12 +42,9 @@ export abstract class Remote<T> implements IContact {
         return this.client
     }
 
-    formDhtRpcOptions(
-        ownPeerDescriptor: PeerDescriptor,
-        opts?: Omit<Partial<DhtRpcOptions>, 'sourceDescriptor' | 'targetDescriptor'>
-    ): DhtRpcOptions {
+    formDhtRpcOptions(opts?: Omit<DhtRpcOptions, 'sourceDescriptor' | 'targetDescriptor'>): DhtRpcOptions {
         return {
-            sourceDescriptor: ownPeerDescriptor,
+            sourceDescriptor: this.ownPeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor,
             ...opts
         }

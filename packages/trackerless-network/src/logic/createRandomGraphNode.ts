@@ -48,9 +48,9 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
             const remote = targetNeighbors.getNeighborById(neighborId) ?? temporaryConnectionServer.getNodes().getNeighborById(neighborId)
             const proxyConnection = proxyConnectionServer?.getConnection(neighborId)
             if (remote) {
-                await remote.sendData(config.ownPeerDescriptor, msg)
+                await remote.sendData(msg)
             } else if (proxyConnection) {
-                await proxyConnection.remote.sendData(config.ownPeerDescriptor, msg)
+                await proxyConnection.remote.sendData(msg)
             } else {
                 throw new Error('Propagation target not found')
             }

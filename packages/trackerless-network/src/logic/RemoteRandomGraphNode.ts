@@ -20,8 +20,8 @@ export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
         super(ownPeerDescriptor, remotePeerDescriptor, client, serviceId)
     }
 
-    async sendData(ownPeerDescriptor: PeerDescriptor, msg: StreamMessage): Promise<void> {
-        const options = this.formDhtRpcOptions(ownPeerDescriptor, {
+    async sendData(msg: StreamMessage): Promise<void> {
+        const options = this.formDhtRpcOptions({
             notification: true
         })
         this.getClient().sendData(msg, options).catch(() => {
@@ -29,13 +29,13 @@ export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
         })
     }
 
-    leaveStreamNotice(ownPeerDescriptor: PeerDescriptor): void {
-        const options = this.formDhtRpcOptions(ownPeerDescriptor, {
-            notification: true
-        })
+    leaveStreamNotice(): void {
         const notification: LeaveStreamNotice = {
             randomGraphId: this.getServiceId()
         }
+        const options = this.formDhtRpcOptions({
+            notification: true
+        })
         this.getClient().leaveStreamNotice(notification, options).catch(() => {
             logger.debug('Failed to send leaveStreamNotice')
         })
