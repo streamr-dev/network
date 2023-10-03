@@ -30,7 +30,7 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
         client: ProtoRpcClient<IDhtRpcServiceClient>,
         serviceId: string
     ) {
-        super(ownPeerDescriptor, peerDescriptor, serviceId, client, )
+        super(ownPeerDescriptor, peerDescriptor, serviceId, client)
         this.id = this.getPeerId().value
         this.vectorClock = DhtPeer.counter++
     }
