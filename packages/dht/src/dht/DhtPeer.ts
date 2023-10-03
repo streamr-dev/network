@@ -42,12 +42,8 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
             kademliaId,
             requestId: v4()
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.getPeerDescriptor()
-        }
         try {
-            const peers = await this.client.getClosestPeers(request, options)
+            const peers = await this.client.getClosestPeers(request, this.formDhtRpcOptions())
             return peers.peers
         } catch (err) {
             logger.trace(`getClosestPeers error ${this.serviceId}`, { err })

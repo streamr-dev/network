@@ -8,17 +8,14 @@ import {
     StoreDataRequest,
     StoreDataResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 export class RemoteStore extends Remote<IStoreServiceClient> {
 
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.getPeerDescriptor(),
+        const options = this.formDhtRpcOptions({
             timeout: 10000
-        }
+        })
         try {
             return await this.client.storeData(request, options)
         } catch (err) {
@@ -29,11 +26,9 @@ export class RemoteStore extends Remote<IStoreServiceClient> {
     }
 
     async deleteData(request: DeleteDataRequest): Promise<DeleteDataResponse> {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.getPeerDescriptor(),
+        const options = this.formDhtRpcOptions({
             timeout: 10000
-        }
+        })
         try {
             return await this.client.deleteData(request, options)
         } catch (err) {
@@ -44,14 +39,10 @@ export class RemoteStore extends Remote<IStoreServiceClient> {
     }
 
     async migrateData(request: MigrateDataRequest, doNotConnect: boolean = false): Promise<MigrateDataResponse> {
-        
-        const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.getPeerDescriptor(),
+        const options = this.formDhtRpcOptions({
             timeout: 10000,
             doNotConnect
-        }
-
+        })
         return this.client.migrateData(request, options)
     }
 

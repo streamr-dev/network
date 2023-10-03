@@ -1,6 +1,5 @@
 import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
-import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import {
     isSamePeerDescriptor,
     keyFromPeerDescriptor,
@@ -24,11 +23,9 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             reachableThrough: params.reachableThrough || [],
             routingPath: params.routingPath
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: params.previousPeer,
-            targetDescriptor: this.getPeerDescriptor(),
+        const options = this.formDhtRpcOptions({
             timeout: 10000
-        }
+        })
         try {
             const ack = await this.client.routeMessage(message, options)
             // Success signal if sent to destination and error includes duplicate
@@ -59,11 +56,9 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             reachableThrough: params.reachableThrough || [],
             routingPath: params.routingPath
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: params.previousPeer,
-            targetDescriptor: this.getPeerDescriptor(),
+        const options = this.formDhtRpcOptions({
             timeout: 10000
-        }
+        })
         try {
             const ack = await this.client.forwardMessage(message, options)
             if (ack.error.length > 0) {
@@ -91,11 +86,9 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             reachableThrough: params.reachableThrough || [],
             routingPath: params.routingPath
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: params.previousPeer,
-            targetDescriptor: this.getPeerDescriptor(),
+        const options = this.formDhtRpcOptions({
             timeout: 10000
-        }
+        })
         try {
             const ack = await this.client.findRecursively(message, options)
             if (ack.error.length > 0) {
