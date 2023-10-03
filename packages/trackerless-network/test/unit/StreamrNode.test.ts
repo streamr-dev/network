@@ -31,35 +31,30 @@ describe('StreamrNode', () => {
 
         const streamPartId = StreamPartIDUtils.parse('stream#0')
         const message = createStreamMessage(
-            JSON.stringify({ hello: 'WORLD' }), 
-            streamPartId, 
+            JSON.stringify({ hello: 'WORLD' }),
+            streamPartId,
             randomEthereumAddress()
         )
 
         beforeEach(async () => {
             node.setStreamPartEntryPoints(streamPartId, [node.getPeerDescriptor()])
         })
-    
+
         it('can join streams', async () => {
             await node.joinStream(streamPartId)
             expect(node.hasStream(streamPartId)).toEqual(true)
         })
-    
+
         it('can leave streams', async () => {
             await node.joinStream(streamPartId)
             expect(node.hasStream(streamPartId)).toEqual(true)
             node.leaveStream(streamPartId)
             expect(node.hasStream(streamPartId)).toEqual(false)
         })
-    
+
         it('broadcast joins stream', async () => {
             node.broadcast(message)
             await waitForCondition(() => node.hasStream(streamPartId))
-        })
-    
-        it('can leave', async () => {
-            await node.joinStream(streamPartId)
-            node.leaveStream(streamPartId)
         })
     })
 

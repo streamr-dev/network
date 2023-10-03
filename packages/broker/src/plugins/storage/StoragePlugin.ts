@@ -102,7 +102,6 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             {
                 onStreamPartAdded: async (streamPart) => {
                     try {
-                        // TODO check if this slows down tests? (or do we need to wait for any neighbor?)
                         await node.join(streamPart, { minCount: 1, timeout: 5000 }) // best-effort, can time out
                     } catch (_e) {
                         // no-op

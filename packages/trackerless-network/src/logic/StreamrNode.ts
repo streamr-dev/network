@@ -129,11 +129,10 @@ export class StreamrNode extends EventEmitter<Events> {
         if (!this.streams.has(streamPartId)) {
             this.joinStream(streamPartId)
                 .catch((err) => {
-                    logger.warn(`Failed to publish to stream ${streamPartId} with error: ${err}`)
+                    logger.warn(`Failed to broadcast to stream ${streamPartId} with error: ${err}`)
                 })
         }
         this.streams.get(streamPartId)!.layer2.broadcast(msg)
-        // TODO rename metrics: publish -> broadcast
         this.metrics.broadcastMessagesPerSecond.record(1)
         this.metrics.broadcastBytesPerSecond.record(msg.content.length)
     }

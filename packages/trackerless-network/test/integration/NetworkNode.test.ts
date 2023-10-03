@@ -65,7 +65,7 @@ describe('NetworkNode', () => {
         Simulator.useFakeTimers(false)
     })
 
-    it('wait for join + publish and subscribe', async () => {
+    it('wait for join + broadcast and subscribe', async () => {
         const streamMessage = new StreamMessage({
             messageId: new MessageID(
                 toStreamID('test'),
