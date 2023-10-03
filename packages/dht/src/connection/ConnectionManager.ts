@@ -38,6 +38,8 @@ import {
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
+import { AutoCertifierClient } from '@streamr/autocertifier-client'
+import { ListeningRpcCommunicator } from '../transport/ListeningRpcCommunicator'
 
 export class ConnectionManagerConfig {
     transportLayer?: ITransport
@@ -242,7 +244,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             await this.webSocketConnector!.start()
             const selectedWsPort = this.webSocketConnector!.getSelectedPort()
             if (selectedWsPort) {
-                const autocertifier = new AutoCertifierClient(subdomainPath, selectedWsPort,
+                const autocertifier = new AutoCertifierClient('integration-testing', selectedWsPort,
                     autoCertifierUrl, restServerCa, (serviceId, rpcMethodName, method) => {
                         clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, this)
                         clientRpcCommunicator.registerRpcMethod(
