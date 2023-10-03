@@ -146,6 +146,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         super()
         this.config = new ConnectionManagerConfig(conf)
         this.onData = this.onData.bind(this)
+        this.send = this.send.bind(this)
         this.incomingConnectionCallback = this.incomingConnectionCallback.bind(this)
         this.metricsContext = this.config.metricsContext || new MetricsContext()
         this.metrics = {
@@ -196,7 +197,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             }, this.incomingConnectionCallback)
         }
         this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'
-        this.send = this.send.bind(this)
         this.rpcCommunicator = new RoutingRpcCommunicator(this.serviceId, this.send, {
             rpcRequestTimeout: 10000
         })
