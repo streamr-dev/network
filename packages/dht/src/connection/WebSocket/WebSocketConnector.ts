@@ -233,6 +233,10 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         }
     }
 
+    public getSelectedPort(): number | undefined {
+        return this.selectedPort
+    }
+
     public setOwnPeerDescriptor(ownPeerDescriptor: PeerDescriptor): void {
         this.ownPeerDescriptor = ownPeerDescriptor
     }

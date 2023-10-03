@@ -28,22 +28,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     private httpServer?: HttpServer | HttpsServer
     private wsServer?: WsServer
     private readonly abortController = new AbortController()
-    private autocertifier?: AutoCertifierClient
-
-    /*
-    create the autocertifier client like this:
-
-    const client = new AutoCertifierClient(subdomainPath, streamrWebSocketPort,
-            autoCertifierUrl, restServerCa, (serviceId, rpcMethodName, method) => {
-                clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
-                clientRpcCommunicator.registerRpcMethod(
-                    SessionIdRequest,
-                    SessionIdResponse,
-                    rpcMethodName,
-                    method
-                )
-            })
-    */
+    private autocertifier?: AutoCertifierClient    
 
     public async start(portRange: PortRange, tlsCertificate?: TlsCertificate): Promise<number> {
         const ports = range(portRange.min, portRange.max + 1)

@@ -240,6 +240,20 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }, 5000)
         if (!this.config.simulator) {
             await this.webSocketConnector!.start()
+            const selectedWsPort = this.webSocketConnector!.getSelectedPort()
+            if (selectedWsPort) {
+                const autocertifier = new AutoCertifierClient(subdomainPath, selectedWsPort,
+                    autoCertifierUrl, restServerCa, (serviceId, rpcMethodName, method) => {
+                        clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, this)
+                        clientRpcCommunicator.registerRpcMethod(
+                            SessionIdRequest,
+                            SessionIdResponse,
+                            rpcMethodName,
+                            method
+                        )
+                    })
+            }
+            
             const connectivityResponse = await this.webSocketConnector!.checkConnectivity()
             const ownPeerDescriptor = peerDescriptorGeneratorCallback!(connectivityResponse)
             this.ownPeerDescriptor = ownPeerDescriptor
