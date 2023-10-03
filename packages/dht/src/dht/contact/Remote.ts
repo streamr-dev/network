@@ -6,31 +6,31 @@ import { IContact } from './Contact'
 
 export abstract class Remote<T> implements IContact {
 
-    protected readonly peerId: PeerID
-    protected readonly peerDescriptor: PeerDescriptor
+    protected readonly remotePeerId: PeerID
+    protected readonly remotePeerDescriptor: PeerDescriptor
     protected readonly client: ProtoRpcClient<T>
     protected readonly serviceId: string
     protected readonly ownPeerDescriptor: PeerDescriptor
 
     constructor(
         ownPeerDescriptor: PeerDescriptor,
-        peerDescriptor: PeerDescriptor,
+        remotePeerDescriptor: PeerDescriptor,
         client: ProtoRpcClient<T>,
         serviceId: string
     ) {
         this.ownPeerDescriptor = ownPeerDescriptor
-        this.peerId = peerIdFromPeerDescriptor(peerDescriptor)
-        this.peerDescriptor = peerDescriptor
+        this.remotePeerId = peerIdFromPeerDescriptor(remotePeerDescriptor)
+        this.remotePeerDescriptor = remotePeerDescriptor
         this.client = client
         this.serviceId = serviceId
     }
 
     getPeerId(): PeerID {
-        return this.peerId
+        return this.remotePeerId
     }
 
     getPeerDescriptor(): PeerDescriptor {
-        return this.peerDescriptor
+        return this.remotePeerDescriptor
     }
 
     getServiceId(): string {
