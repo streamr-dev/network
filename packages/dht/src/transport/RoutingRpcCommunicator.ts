@@ -3,6 +3,9 @@ import { v4 } from 'uuid'
 import { RpcCommunicator, RpcCommunicatorConfig } from '@streamr/proto-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RpcMessage } from '../proto/packages/proto-rpc/protos/ProtoRpc'
+import { Logger } from '@streamr/utils'
+
+const logger = new Logger(module)
 
 export class RoutingRpcCommunicator extends RpcCommunicator {
     private ownServiceId: string
@@ -41,6 +44,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
             if (msg.header.response || callContext && callContext.doNotConnect && callContext.doNotMindStopped ) {
                 return this.sendFn(message, true, true)
             } else if (msg.header.response || callContext && callContext.doNotConnect) {
+                logger.trace('SENDING RESPONSE')
                 return this.sendFn(message, true)
             } else {
                 return this.sendFn(message)
