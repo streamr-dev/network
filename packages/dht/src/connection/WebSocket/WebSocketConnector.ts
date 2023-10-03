@@ -6,6 +6,7 @@ import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
     ConnectivityMethod,
     ConnectivityResponse,
+    NodeType,
     PeerDescriptor,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
@@ -132,6 +133,12 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                         )                        
                     })
                 console.log("HERE2")
+
+                // set fake peerDescriptor
+                this.ownPeerDescriptor = {
+                    kademliaId: new Uint8Array([1,2,3]),
+                    type: NodeType.NODEJS
+                }
                 await this.autocertifierClient.start()
             }
             
