@@ -6,7 +6,6 @@ import {
     PingRequest
 } from '../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
-import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { Remote } from './contact/Remote'
@@ -56,11 +55,9 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
         const request: PingRequest = {
             requestId: v4()
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: this.getOwnPeerDescriptor(),
-            targetDescriptor: this.getPeerDescriptor(),
+        const options = this.formDhtRpcOptions({
             timeout: 10000
-        }
+        })
         try {
             const pong = await this.getClient().ping(request, options)
             if (pong.requestId === request.requestId) {
@@ -77,11 +74,9 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
         const request: LeaveNotice = {
             serviceId: this.getServiceId()
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: this.getOwnPeerDescriptor(),
-            targetDescriptor: this.getPeerDescriptor(),
+        const options = this.formDhtRpcOptions({
             notification: true
-        }
+        })
         this.getClient().leaveNotice(request, options).catch((e) => {
             logger.trace('Failed to send leaveNotice' + e)
         })
