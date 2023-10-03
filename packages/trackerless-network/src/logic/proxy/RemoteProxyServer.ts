@@ -1,5 +1,4 @@
-import { PeerDescriptor, Remote } from '@streamr/dht'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
+import { Remote } from '@streamr/dht'
 import { EthereumAddress, Logger, hexToBinary } from '@streamr/utils'
 import { ProxyConnectionRequest, ProxyDirection } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -7,15 +6,6 @@ import { IProxyConnectionRpcClient } from '../../proto/packages/trackerless-netw
 const logger = new Logger(module)
 
 export class RemoteProxyServer extends Remote<IProxyConnectionRpcClient> {
-
-    constructor(
-        ownPeerDescriptor: PeerDescriptor,
-        remotePeerDescriptor: PeerDescriptor,
-        serviceId: string,
-        client: ProtoRpcClient<IProxyConnectionRpcClient>
-    ) {
-        super(ownPeerDescriptor, remotePeerDescriptor, serviceId, client)
-    }
 
     async requestConnection(direction: ProxyDirection, userId: EthereumAddress): Promise<boolean> {
         const request: ProxyConnectionRequest = {

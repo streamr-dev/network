@@ -1,5 +1,4 @@
-import { PeerDescriptor, Remote } from '@streamr/dht'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
+import { Remote } from '@streamr/dht'
 import { Logger } from '@streamr/utils'
 import {
     LeaveStreamNotice,
@@ -10,15 +9,6 @@ import { INetworkRpcClient } from '../proto/packages/trackerless-network/protos/
 const logger = new Logger(module)
 
 export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
-
-    constructor(
-        ownPeerDescriptor: PeerDescriptor,
-        remotePeerDescriptor: PeerDescriptor,
-        serviceId: string,
-        client: ProtoRpcClient<INetworkRpcClient>,
-    ) {
-        super(ownPeerDescriptor, remotePeerDescriptor, serviceId, client)
-    }
 
     async sendData(msg: StreamMessage): Promise<void> {
         const options = this.formDhtRpcOptions({

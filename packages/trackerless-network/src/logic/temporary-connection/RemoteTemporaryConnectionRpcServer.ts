@@ -1,5 +1,4 @@
-import { PeerDescriptor, Remote } from '@streamr/dht'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
+import { Remote } from '@streamr/dht'
 import { Logger } from '@streamr/utils'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { ITemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -7,15 +6,6 @@ import { ITemporaryConnectionRpcClient } from '../../proto/packages/trackerless-
 const logger = new Logger(module)
 
 export class RemoteTemporaryConnectionRpcServer extends Remote<ITemporaryConnectionRpcClient> {
-
-    constructor(
-        ownPeerDescriptor: PeerDescriptor,
-        remotePeerDescriptor: PeerDescriptor,
-        serviceId: string,
-        client: ProtoRpcClient<ITemporaryConnectionRpcClient>
-    ) {
-        super(ownPeerDescriptor, remotePeerDescriptor, serviceId, client)
-    }
 
     async openConnection(): Promise<boolean> {
         try {

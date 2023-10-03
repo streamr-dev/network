@@ -1,5 +1,4 @@
 import { PeerDescriptor, Remote, UUID } from '@streamr/dht'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger, hexToBinary } from '@streamr/utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { InterleaveNotice, StreamHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
@@ -13,15 +12,6 @@ interface HandshakeResponse {
 }
 
 export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
-
-    constructor(
-        ownPeerDescriptor: PeerDescriptor,
-        remotePeerDescriptor: PeerDescriptor,
-        serviceId: string,
-        client: ProtoRpcClient<IHandshakeRpcClient>
-    ) {
-        super(ownPeerDescriptor, remotePeerDescriptor, serviceId, client)
-    }
 
     async handshake(
         neighborIds: NodeID[],
