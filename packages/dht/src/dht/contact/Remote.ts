@@ -3,6 +3,7 @@ import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerID } from '../../helpers/PeerID'
 import { IContact } from './Contact'
+import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 
 export abstract class Remote<T> implements IContact {
 
@@ -39,5 +40,16 @@ export abstract class Remote<T> implements IContact {
 
     getClient(): ProtoRpcClient<T> {
         return this.client
+    }
+
+    formDhtRpcOptions(
+        ownPeerDescriptor: PeerDescriptor,
+        opts?: Omit<Partial<DhtRpcOptions>, 'sourceDescriptor' | 'targetDescriptor'>
+    ): DhtRpcOptions {
+        return {
+            sourceDescriptor: ownPeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor,
+            ...opts
+        }
     }
 }
