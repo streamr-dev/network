@@ -328,6 +328,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         logger.trace('CONNECTION MANAGER SEND CALLED 2')
+        console.log("OWN PEER DESCRIPTOR", this.ownPeerDescriptor)
         const peerDescriptor = message.targetDescriptor!
         if (this.isConnectionToSelf(peerDescriptor)) {
             logger.trace('CONNECTION MANAGER SEND CALLED 3')
