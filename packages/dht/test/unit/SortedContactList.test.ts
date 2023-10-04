@@ -124,4 +124,16 @@ describe('SortedContactList', () => {
         const ret = list.removeContact(PeerID.fromValue(Buffer.from([0, 0, 0, 6])))
         expect(ret).toEqual(false)
     })
+
+    it('max size', () => {
+        const list = new SortedContactList(id0, 3)
+        const onContactRemoved = jest.fn()
+        list.on('contactRemoved', onContactRemoved)
+        list.addContact(peer1)
+        list.addContact(peer4)
+        list.addContact(peer3)
+        list.addContact(peer2)
+        expect(list.getSize()).toEqual(3)
+        expect(onContactRemoved).toBeCalledWith(descriptor4, [descriptor1, descriptor2, descriptor3])
+    })
 })
