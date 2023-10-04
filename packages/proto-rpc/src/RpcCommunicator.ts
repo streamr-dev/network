@@ -77,11 +77,17 @@ class OngoingRequest {
 
     private resolveDeferredPromises(response: RpcMessage): void {
         if (this.deferredPromises.message.state === DeferredState.PENDING) {
-            const parsedResponse = this.deferredPromises.messageParser(response.body!.value)
-            this.deferredPromises.message.resolve(parsedResponse)
-            this.deferredPromises.header.resolve({})
-            this.deferredPromises.status.resolve({ code: StatusCode.OK, detail: '' })
-            this.deferredPromises.trailer.resolve({})
+            try {
+                const parsedResponse = this.deferredPromises.messageParser(response.body!.value)
+                this.deferredPromises.message.resolve(parsedResponse)
+                this.deferredPromises.header.resolve({})
+                this.deferredPromises.status.resolve({ code: StatusCode.OK, detail: '' })
+                this.deferredPromises.trailer.resolve({})
+            } catch (err) {
+                logger.debug(`Could not parse response, received message is likely `)
+                const error = new Err.FailedToParse(`Failed to parse received response, network protocol version likely is likely incompatible`, err)
+                this.rejectDeferredPromises(error, StatusCode.SERVER_ERROR)
+            }
         }
     }
 
