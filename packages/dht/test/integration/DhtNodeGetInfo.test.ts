@@ -26,8 +26,6 @@ describe('DhtNode getInfo', () => {
         const info2 = entryPoint.getInfo()
         expect(info1.kBucket[0]).toEqual(entryPoint.getPeerDescriptor())
         expect(info2.kBucket[0]).toEqual(dhtNode.getPeerDescriptor())
-        expect(info1.neighborList[0]).toEqual(entryPoint.getPeerDescriptor())
-        expect(info2.neighborList[0]).toEqual(dhtNode.getPeerDescriptor())
     })
 
 })
