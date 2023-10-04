@@ -43,9 +43,9 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     public async start(): Promise<void> {
-        console.log("START HERE1")
+        logger.trace("START HERE1")
         if (!fs.existsSync(this.subdomainPath)) {
-            console.log("START HERE2")
+            logger.trace("START HERE2")
             await this.createCertificate()
         } else {
             this.checkSubdomainValidity()
@@ -56,7 +56,9 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         const sub = this.loadSubdomainFromDisk()
 
         if (Date.now() >= sub.expiryTime - this.ONE_DAY) {
+            logger.trace(`UPDATING CERTIFICATE`)
             await this.updateCertificate()
+            logger.trace(`CERTIFICATE UPDATED`)
         } else {
             await this.updateSubdomainIpAndPort()
             this.scheduleCertificateUpdate(sub.expiryTime)
@@ -100,21 +102,20 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     private createCertificate = async (): Promise<void> => {
-        console.log("CREATE CERTIFICATE 0")
+        logger.trace("CREATE CERTIFICATE 0")
         const sessionId = await this.restClient.createSession()
         let certifiedSubdomain: CertifiedSubdomain
 
-        console.log("CREATE CERTIFICATE 1")
+        logger.trace("CREATE CERTIFICATE 1")
         this.ongoingSessions.add(sessionId)
 
         try {
-            console.log("CREATE CERTIFICATE 2")
+            logger.trace("CREATE CERTIFICATE 2")
             certifiedSubdomain = await this.restClient.createNewSubdomainAndCertificate(this.streamrWebSocketPort, sessionId)
-            console.log("CREATE CERTIFICATE 3")
+            logger.trace("CREATE CERTIFICATE 3")
         } finally {
             this.ongoingSessions.delete(sessionId)
         }
-        console.log(this)
         fs.writeFileSync(this.subdomainPath, JSON.stringify(certifiedSubdomain))
         const certObj = forge.pki.certificateFromPem(certifiedSubdomain.certificate.cert)
 
