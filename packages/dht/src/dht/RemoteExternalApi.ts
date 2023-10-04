@@ -8,7 +8,7 @@ export class RemoteExternalApi extends Remote<IExternalApiServiceClient> {
     async findData(idToFind: Uint8Array): Promise<DataEntry[]> {
         const request: FindDataRequest = {
             kademliaId: idToFind,
-            requestor: this.getOwnPeerDescriptor(),
+            requestor: this.getLocalPeerDescriptor(),
         }
         const options = this.formDhtRpcOptions({
             timeout: 10000

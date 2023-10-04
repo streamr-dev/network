@@ -7,19 +7,19 @@ import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 
 export abstract class Remote<T> implements IContact {
 
-    private readonly ownPeerDescriptor: PeerDescriptor
+    private readonly localPeerDescriptor: PeerDescriptor
     private readonly remotePeerId: PeerID
     private readonly remotePeerDescriptor: PeerDescriptor
     private readonly serviceId: string
     private readonly client: ProtoRpcClient<T>
 
     constructor(
-        ownPeerDescriptor: PeerDescriptor,
+        localPeerDescriptor: PeerDescriptor,
         remotePeerDescriptor: PeerDescriptor,
         serviceId: string,
         client: ProtoRpcClient<T>
     ) {
-        this.ownPeerDescriptor = ownPeerDescriptor
+        this.localPeerDescriptor = localPeerDescriptor
         this.remotePeerId = peerIdFromPeerDescriptor(remotePeerDescriptor)
         this.remotePeerDescriptor = remotePeerDescriptor
         this.client = client
@@ -34,8 +34,8 @@ export abstract class Remote<T> implements IContact {
         return this.remotePeerDescriptor
     }
 
-    getOwnPeerDescriptor(): PeerDescriptor {
-        return this.ownPeerDescriptor
+    getLocalPeerDescriptor(): PeerDescriptor {
+        return this.localPeerDescriptor
     }
 
     getServiceId(): string {
@@ -48,7 +48,7 @@ export abstract class Remote<T> implements IContact {
 
     formDhtRpcOptions(opts?: Omit<DhtRpcOptions, 'sourceDescriptor' | 'targetDescriptor'>): DhtRpcOptions {
         return {
-            sourceDescriptor: this.ownPeerDescriptor,
+            sourceDescriptor: this.localPeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor,
             ...opts
         }
