@@ -32,9 +32,8 @@ export class NetworkNode {
                         listener(translated)
                     }
                 } catch (err) {
-                    logger.debug(`Could not translate message: ${err}`)
+                    logger.trace(`Could not translate message: ${err}`)
                 }
-                
             }
         })
     }
@@ -55,12 +54,8 @@ export class NetworkNode {
         }
 
         await this.stack.joinLayer0IfRequired(streamPartId)
-        try {
-            const msg = StreamMessageTranslator.toProtobuf(streamMessage)
-            this.stack.getStreamrNode().publishToStream(msg)
-        } catch (err) {
-            logger.debug(`Could not publish message: ${err}`)
-        }
+        const msg = StreamMessageTranslator.toProtobuf(streamMessage)
+        this.stack.getStreamrNode().publishToStream(msg)
     }
 
     async subscribe(streamPartId: StreamPartID): Promise<void> {
