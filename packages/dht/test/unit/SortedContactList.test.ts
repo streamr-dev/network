@@ -41,40 +41,37 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
     }
 }
 
+const getId = (descriptor: PeerDescriptor): PeerID => {
+    return PeerID.fromValue(descriptor.kademliaId)
+}
+
 describe('SortedContactList', () => {
     const serviceId = 'sorted'
-    const id0 = PeerID.fromValue(Buffer.from([0, 0, 0, 0]))
-    const id1 = PeerID.fromValue(Buffer.from([0, 0, 0, 1]))
-    const id2 = PeerID.fromValue(Buffer.from([0, 0, 0, 2]))
-    const id3 = PeerID.fromValue(Buffer.from([0, 0, 0, 3]))
-    const id4 = PeerID.fromValue(Buffer.from([0, 0, 0, 4]))
-
-    const descriptor0: PeerDescriptor = { kademliaId: id0.value, type: NodeType.NODEJS }
-    const descriptor1: PeerDescriptor = { kademliaId: id1.value, type: NodeType.NODEJS }
-    const descriptor2: PeerDescriptor = { kademliaId: id2.value, type: NodeType.NODEJS }
-    const descriptor3: PeerDescriptor = { kademliaId: id3.value, type: NodeType.NODEJS }
-    const descriptor4: PeerDescriptor = { kademliaId: id4.value, type: NodeType.NODEJS }
-
+    const descriptor0: PeerDescriptor = { kademliaId: new Uint8Array([0, 0, 0, 0]), type: NodeType.NODEJS }
+    const descriptor1: PeerDescriptor = { kademliaId: new Uint8Array([0, 0, 0, 1]), type: NodeType.NODEJS }
+    const descriptor2: PeerDescriptor = { kademliaId: new Uint8Array([0, 0, 0, 2]), type: NodeType.NODEJS }
+    const descriptor3: PeerDescriptor = { kademliaId: new Uint8Array([0, 0, 0, 3]), type: NodeType.NODEJS }
+    const descriptor4: PeerDescriptor = { kademliaId: new Uint8Array([0, 0, 0, 4]), type: NodeType.NODEJS }
     const peer1 = new DhtPeer(descriptor0, descriptor1, toProtoRpcClient(new MockRpcClient()), serviceId)
     const peer2 = new DhtPeer(descriptor0, descriptor2, toProtoRpcClient(new MockRpcClient()), serviceId)
     const peer3 = new DhtPeer(descriptor0, descriptor3, toProtoRpcClient(new MockRpcClient()), serviceId)
     const peer4 = new DhtPeer(descriptor0, descriptor4, toProtoRpcClient(new MockRpcClient()), serviceId)
 
     it('compares Ids correctly', async () => {
-        const list = new SortedContactList(id0, 10)
-        expect(list.compareIds(id0, id0)).toBe(0)
-        expect(list.compareIds(id1, id1)).toBe(0)
-        expect(list.compareIds(id0, id1)).toBe(-1)
-        expect(list.compareIds(id0, id2)).toBe(-2)
-        expect(list.compareIds(id1, id0)).toBe(1)
-        expect(list.compareIds(id2, id0)).toBe(2)
-        expect(list.compareIds(id2, id3)).toBe(-1)
-        expect(list.compareIds(id1, id4)).toBe(-3)
+        const list = new SortedContactList(getId(descriptor0), 10)
+        expect(list.compareIds(getId(descriptor0), getId(descriptor0))).toBe(0)
+        expect(list.compareIds(getId(descriptor1), getId(descriptor1))).toBe(0)
+        expect(list.compareIds(getId(descriptor0), getId(descriptor1))).toBe(-1)
+        expect(list.compareIds(getId(descriptor0), getId(descriptor2))).toBe(-2)
+        expect(list.compareIds(getId(descriptor1), getId(descriptor0))).toBe(1)
+        expect(list.compareIds(getId(descriptor2), getId(descriptor0))).toBe(2)
+        expect(list.compareIds(getId(descriptor2), getId(descriptor3))).toBe(-1)
+        expect(list.compareIds(getId(descriptor1), getId(descriptor4))).toBe(-3)
     })
     
     it('orders itself correctly', async () => {
 
-        const list = new SortedContactList(id0, 10)
+        const list = new SortedContactList(getId(descriptor0), 10)
 
         list.addContact(peer3)
         list.addContact(peer2)
@@ -88,13 +85,13 @@ describe('SortedContactList', () => {
     })
     
     it('handles contacted nodes correctly', async () => {
-        const list = new SortedContactList(id0, 10)
+        const list = new SortedContactList(getId(descriptor0), 10)
 
         list.addContact(peer3)
         list.addContact(peer2)
         list.addContact(peer1)
 
-        list.setContacted(id2)
+        list.setContacted(getId(descriptor2))
         const contacts = list.getUncontactedContacts(3)
         expect(contacts.length).toEqual(2)
         expect(contacts[0]).toEqual(peer1)
@@ -102,7 +99,7 @@ describe('SortedContactList', () => {
     })
 
     it('cannot exceed maxSize', async () => {
-        const list = new SortedContactList(id0, 3)
+        const list = new SortedContactList(getId(descriptor0), 3)
         const onContactRemoved = jest.fn()
         list.on('contactRemoved', onContactRemoved)
         list.addContact(peer1)
@@ -111,19 +108,46 @@ describe('SortedContactList', () => {
         list.addContact(peer2)
         expect(list.getSize()).toEqual(3)
         expect(onContactRemoved).toBeCalledWith(descriptor4, [descriptor1, descriptor2, descriptor3])
+        expect(list.getContact(getId(descriptor4))).toBeFalsy()
     })
 
     it('removing contacts', async () => {
-        const list = new SortedContactList(id0, 8)
+        const list = new SortedContactList(getId(descriptor0), 8)
+        const onContactRemoved = jest.fn()
+        list.on('contactRemoved', onContactRemoved)
         list.addContact(peer4)
         list.addContact(peer3)
         list.addContact(peer2)
         list.addContact(peer1)
-        list.removeContact(id2)
+        list.removeContact(getId(descriptor2))
         expect(list.getSize()).toEqual(3)
-        expect(list.getContact(id2)).toBeFalsy()
+        expect(list.getContact(getId(descriptor2))).toBeFalsy()
         expect(list.getContactIds()).toEqual(list.getContactIds().sort(list.compareIds))
+        expect(list.getAllContacts()).toEqual([peer1, peer3, peer4])
+        expect(onContactRemoved).toBeCalledWith(descriptor2, [descriptor1, descriptor3, descriptor4])
         const ret = list.removeContact(PeerID.fromValue(Buffer.from([0, 0, 0, 6])))
         expect(ret).toEqual(false)
+    })
+
+    it('get closes contacts', () => {
+        const list = new SortedContactList(getId(descriptor0), 8)
+        list.addContact(peer1)
+        list.addContact(peer3)
+        list.addContact(peer4)
+        list.addContact(peer2)
+        expect(list.getClosestContacts(2)).toEqual([peer1, peer2])
+        expect(list.getClosestContacts()).toEqual([peer1, peer2, peer3, peer4])
+    })
+
+    it('get active contacts', () => {
+        const list = new SortedContactList(getId(descriptor0), 8)
+        list.addContact(peer1)
+        list.addContact(peer3)
+        list.addContact(peer4)
+        list.addContact(peer2)
+        list.setActive(getId(descriptor2))
+        list.setActive(getId(descriptor3))
+        list.setActive(getId(descriptor4))
+        expect(list.getActiveContacts()).toEqual([peer2, peer3, peer4])
     })
 })
