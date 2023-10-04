@@ -48,6 +48,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             logger.trace("START HERE2")
             await this.createCertificate()
         } else {
+            logger.trace("START HERE3")
             this.checkSubdomainValidity()
         }
     }
@@ -60,6 +61,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             await this.updateCertificate()
             logger.trace(`CERTIFICATE UPDATED`)
         } else {
+            logger.trace(`UPDATING SUBDOMAIN AND PORT`)
             await this.updateSubdomainIpAndPort()
             this.scheduleCertificateUpdate(sub.expiryTime)
             this.emit('updatedSubdomain', sub.subdomain)
