@@ -85,15 +85,20 @@ export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'k
     }
 }
 
-export const createMockRemoteNode = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
-    return new RemoteRandomGraphNode(peerDescriptor || createMockPeerDescriptor(), 'mock', {} as any)
+export const createMockRemoteNode = (remotePeerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
+    return new RemoteRandomGraphNode(createMockPeerDescriptor(), remotePeerDescriptor || createMockPeerDescriptor(), 'mock', {} as any)
 }
 
 export const createMockRemoteHandshaker = (): RemoteHandshaker => {
-    return new RemoteHandshaker(createMockPeerDescriptor(), 'mock', {
-        handshake: async () => {},
-        interleaveNotice: async () => {}
-    } as any)
+    return new RemoteHandshaker(
+        createMockPeerDescriptor(),
+        createMockPeerDescriptor(), 
+        'mock',
+        {
+            handshake: async () => {},
+            interleaveNotice: async () => {}
+        } as any
+    )
 }
 
 export const createNetworkNodeWithSimulator = (

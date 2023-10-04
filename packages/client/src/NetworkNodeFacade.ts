@@ -36,7 +36,7 @@ export interface NetworkNodeStub {
     /** @internal */
     setProxies: (
         streamPartId: StreamPartID,
-        peerDescriptors: PeerDescriptor[],
+        nodes: PeerDescriptor[],
         direction: ProxyDirection,
         userId: EthereumAddress,
         connectionCount?: number
@@ -203,14 +203,14 @@ export class NetworkNodeFacade {
 
     async setProxies(
         streamPartId: StreamPartID,
-        proxyNodes: NetworkPeerDescriptor[],
+        nodes: NetworkPeerDescriptor[],
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask(false)
         }
-        const peerDescriptors = proxyNodes.map(peerDescriptorTranslator)
+        const peerDescriptors = nodes.map(peerDescriptorTranslator)
         await this.cachedNode!.setProxies(
             streamPartId,
             peerDescriptors,

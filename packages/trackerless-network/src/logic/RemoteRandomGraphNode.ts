@@ -1,37 +1,32 @@
-import { DhtRpcOptions, PeerDescriptor } from '@streamr/dht'
+import { Remote } from '@streamr/dht'
 import { Logger } from '@streamr/utils'
 import {
     LeaveStreamNotice,
     StreamMessage
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { INetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { Remote } from './Remote'
 
 const logger = new Logger(module)
 
 export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
 
-    async sendData(ownPeerDescriptor: PeerDescriptor, msg: StreamMessage): Promise<void> {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor,
+    async sendData(msg: StreamMessage): Promise<void> {
+        const options = this.formDhtRpcOptions({
             notification: true
-        }
-        this.client.sendData(msg, options).catch(() => {
+        })
+        this.getClient().sendData(msg, options).catch(() => {
             logger.trace('Failed to sendData')
         })
     }
 
-    leaveStreamNotice(ownPeerDescriptor: PeerDescriptor): void {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor,
-            notification: true
-        }
+    leaveStreamNotice(): void {
         const notification: LeaveStreamNotice = {
-            randomGraphId: this.graphId
+            randomGraphId: this.getServiceId()
         }
-        this.client.leaveStreamNotice(notification, options).catch(() => {
+        const options = this.formDhtRpcOptions({
+            notification: true
+        })
+        this.getClient().leaveStreamNotice(notification, options).catch(() => {
             logger.debug('Failed to send leaveStreamNotice')
         })
     }

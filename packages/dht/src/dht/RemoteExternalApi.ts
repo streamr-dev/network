@@ -1,4 +1,3 @@
-import { DhtRpcOptions } from '../exports'
 import { Any } from '../proto/google/protobuf/any'
 import { DataEntry, ExternalStoreDataRequest, FindDataRequest, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { IExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
@@ -9,15 +8,13 @@ export class RemoteExternalApi extends Remote<IExternalApiServiceClient> {
     async findData(idToFind: Uint8Array): Promise<DataEntry[]> {
         const request: FindDataRequest = {
             kademliaId: idToFind,
-            requestor: this.ownPeerDescriptor,
+            requestor: this.getLocalPeerDescriptor(),
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.peerDescriptor,
+        const options = this.formDhtRpcOptions({
             timeout: 10000
-        }
+        })
         try {
-            const data = await this.client.findData(request, options)
+            const data = await this.getClient().findData(request, options)
             return data.dataEntries
         } catch (err) {
             return []
@@ -29,13 +26,11 @@ export class RemoteExternalApi extends Remote<IExternalApiServiceClient> {
             key,
             data
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.peerDescriptor,
+        const options = this.formDhtRpcOptions({
             timeout: 10000
-        }
+        })
         try {
-            const response = await this.client.externalStoreData(request, options)
+            const response = await this.getClient().externalStoreData(request, options)
             return response.storers
         } catch (err) {
             return []

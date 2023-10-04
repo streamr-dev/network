@@ -78,7 +78,7 @@ export class HandshakerServer implements IHandshakeRpc {
         const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
         if (furthest) {
             const remote = this.config.createRemoteHandshaker(furthest.getPeerDescriptor())
-            remote.interleaveNotice(this.config.ownPeerDescriptor, requester)
+            remote.interleaveNotice(requester)
             this.config.targetNeighbors.remove(furthest.getPeerDescriptor())
             this.config.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.config.randomGraphId)
         }

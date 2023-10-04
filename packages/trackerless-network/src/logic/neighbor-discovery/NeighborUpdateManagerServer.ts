@@ -1,7 +1,8 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext, ListeningRpcCommunicator } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht/src/exports'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
@@ -10,7 +11,7 @@ import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { INeighborFinder } from './NeighborFinder'
 
 interface NeighborUpdateManagerConfig {
-    ownNodeId: NodeID
+    ownPeerDescriptor: PeerDescriptor
     randomGraphId: string
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
@@ -34,10 +35,12 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
             const newPeerDescriptors = message.neighborDescriptors
                 .filter((peerDescriptor) => {
                     const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-                    return nodeId !== this.config.ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
+                    const ownNodeId = getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)
+                    return nodeId !== ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
                 })
             newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
                 new RemoteRandomGraphNode(
+                    this.config.ownPeerDescriptor,
                     peerDescriptor,
                     this.config.randomGraphId,
                     toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))

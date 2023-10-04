@@ -90,7 +90,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
                 const remote = this.targetNeighbors.getNeighborById(neighborId)
                 if (remote) {
-                    await remote.sendData(config.ownPeerDescriptor, msg)
+                    await remote.sendData(msg)
                 } else {
                     throw new Error('Propagation target not found')
                 }
@@ -108,24 +108,24 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
 
     async setProxies(
         streamPartId: StreamPartID,
-        peerDescriptors: PeerDescriptor[],
+        nodes: PeerDescriptor[],
         direction: ProxyDirection,
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
-        logger.trace('Setting proxies', { streamPartId, peerDescriptors, direction, userId, connectionCount })
-        if (connectionCount !== undefined && connectionCount > peerDescriptors.length) {
+        logger.trace('Setting proxies', { streamPartId, peerDescriptors: nodes, direction, userId, connectionCount })
+        if (connectionCount !== undefined && connectionCount > nodes.length) {
             throw Error('Cannot set connectionCount above the size of the configured array of nodes')
         }
-        const nodes = new Map()
-        peerDescriptors.forEach((peerDescriptor) => {
-            nodes.set(getNodeIdFromPeerDescriptor(peerDescriptor), peerDescriptor)
+        const nodesIds = new Map()
+        nodes.forEach((peerDescriptor) => {
+            nodesIds.set(getNodeIdFromPeerDescriptor(peerDescriptor), peerDescriptor)
         })
         this.definition = {
-            nodes,
+            nodes: nodesIds,
             userId,
             direction,
-            connectionCount: connectionCount ?? peerDescriptors.length
+            connectionCount: connectionCount ?? nodes.length
         }
         await this.updateConnections()
     }
@@ -161,15 +161,16 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     private async attemptConnection(nodeId: NodeID, direction: ProxyDirection, userId: EthereumAddress): Promise<void> {
         const peerDescriptor = this.definition!.nodes.get(nodeId)!
         const client = toProtoRpcClient(new ProxyConnectionRpcClient(this.rpcCommunicator.getRpcClientTransport()))
-        const proxyNode = new RemoteProxyServer(peerDescriptor, this.config.streamPartId, client)
-        const accepted = await proxyNode.requestConnection(this.config.ownPeerDescriptor, direction, userId)
+        const proxyNode = new RemoteProxyServer(this.config.ownPeerDescriptor, peerDescriptor, this.config.streamPartId, client)
+        const accepted = await proxyNode.requestConnection(direction, userId)
         if (accepted) {
             this.config.connectionLocker.lockConnection(peerDescriptor, 'proxy-stream-connection-client')
             this.connections.set(nodeId, direction)
             const remote = new RemoteRandomGraphNode(
+                this.config.ownPeerDescriptor,
                 peerDescriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator.getRpcClientTransport()))   
+                toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             this.targetNeighbors.add(remote)
             this.propagation.onNeighborJoined(nodeId)
@@ -196,7 +197,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
                 nodeId
             })
             const server = this.targetNeighbors.getNeighborById(nodeId)
-            server?.leaveStreamNotice(this.config.ownPeerDescriptor)
+            server?.leaveStreamNotice()
             this.removeConnection(nodeId)
         }
     }
@@ -248,7 +249,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     stop(): void {
         this.targetNeighbors.getNodes().map((remote) => {
             this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), 'proxy-stream-connection-client')
-            remote.leaveStreamNotice(this.config.ownPeerDescriptor)
+            remote.leaveStreamNotice()
         })
         this.targetNeighbors.stop()
         this.rpcCommunicator.stop()

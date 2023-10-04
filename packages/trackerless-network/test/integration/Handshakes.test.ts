@@ -112,9 +112,10 @@ describe('Handshakes', () => {
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
             new RemoteHandshaker(
+                peerDescriptor2,
                 peerDescriptor1,
                 randomGraphId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport())),
+                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
             )
         )
         expect(res).toEqual(true)
@@ -126,9 +127,10 @@ describe('Handshakes', () => {
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
             new RemoteHandshaker(
+                peerDescriptor2,
                 peerDescriptor1,
                 randomGraphId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport())),
+                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
             )
         )
         expect(res).toEqual(true)
@@ -140,9 +142,10 @@ describe('Handshakes', () => {
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
             new RemoteHandshaker(
+                peerDescriptor2,
                 peerDescriptor1,
                 randomGraphId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport())),
+                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
             )
         )
         expect(res).toEqual(false)
@@ -155,9 +158,10 @@ describe('Handshakes', () => {
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
             new RemoteHandshaker(
+                peerDescriptor2,
                 peerDescriptor1,
                 randomGraphId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport())),
+                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
             )
         )
         expect(res).toEqual(true)

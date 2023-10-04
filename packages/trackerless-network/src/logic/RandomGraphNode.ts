@@ -195,6 +195,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     private updateNearbyNodeView(nodes: PeerDescriptor[]) {
         this.config.nearbyNodeView.replaceAll(Array.from(nodes).map((descriptor) =>
             new RemoteRandomGraphNode(
+                this.config.ownPeerDescriptor,
                 descriptor,
                 this.config.randomGraphId,
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
@@ -206,6 +207,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             }
             this.config.nearbyNodeView.add(
                 new RemoteRandomGraphNode(
+                    this.config.ownPeerDescriptor,
                     descriptor,
                     this.config.randomGraphId,
                     toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
@@ -220,6 +222,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         }
         this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
             new RemoteRandomGraphNode(
+                this.config.ownPeerDescriptor,
                 descriptor,
                 this.config.randomGraphId,
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
@@ -237,6 +240,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         }
         this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
             new RemoteRandomGraphNode(
+                this.config.ownPeerDescriptor,
                 descriptor,
                 this.config.randomGraphId,
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
@@ -278,7 +282,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.stopped = true
         this.abortController.abort()
         this.config.proxyConnectionServer?.stop()
-        this.config.targetNeighbors.getNodes().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor))
+        this.config.targetNeighbors.getNodes().map((remote) => remote.leaveStreamNotice())
         this.config.rpcCommunicator.stop()
         this.removeAllListeners()
         this.config.nearbyNodeView.stop()

@@ -54,7 +54,7 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
     }
 
     stop(): void {
-        this.connections.forEach((connection) => connection.remote.leaveStreamNotice(this.config.ownPeerDescriptor))
+        this.connections.forEach((connection) => connection.remote.leaveStreamNotice())
         this.connections.clear()
         this.removeAllListeners()
     }
@@ -83,9 +83,10 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
             direction: request.direction,
             userId: toEthereumAddress(binaryToHex(request.userId, true)),
             remote: new RemoteRandomGraphNode(
+                this.config.ownPeerDescriptor,
                 senderPeerDescriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))    
+                toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         })
         const response: ProxyConnectionResponse = {

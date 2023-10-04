@@ -57,6 +57,7 @@ describe('RemoteHandshaker', () => {
         )
 
         remoteHandshaker = new RemoteHandshaker(
+            clientNode,
             serverNode,
             'test-stream',
             toProtoRpcClient(new HandshakeRpcClient(clientRpc.getRpcClientTransport()))
@@ -73,7 +74,7 @@ describe('RemoteHandshaker', () => {
     })
 
     it('handshake', async () => {
-        const result = await remoteHandshaker.handshake(clientNode, [])
+        const result = await remoteHandshaker.handshake([])
         expect(result.accepted).toEqual(true)
     })
 })
