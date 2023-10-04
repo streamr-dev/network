@@ -108,6 +108,7 @@ export class StreamEntryPointDiscovery {
         if (this.networkSplitAvoidedNodes.has(streamPartId)) {
             const filtered = discoveredEntryPoints.filter((node) => 
                 !this.networkSplitAvoidedNodes.get(streamPartId)!.has(getNodeIdFromPeerDescriptor(node)))
+            // If all discovered entry points have previously beed detected as offline, try again
             if (filtered.length > 0) {
                 discoveredEntryPoints = filtered
             }
@@ -203,17 +204,18 @@ export class StreamEntryPointDiscovery {
                 const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartId)
                 await stream.layer1!.joinDht(rediscoveredEntrypoints, false, false)
                 if (stream.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
+                    // Filter out nodes that are not in the k-bucket, assumed to be offline
                     const nodesToAvoid = rediscoveredEntrypoints.filter((peer) => !stream.layer1!.getKBucketPeers().includes(peer))
-                    this.setAvoidedNodes(streamPartId, nodesToAvoid)
+                    this.addAvoidedNodes(streamPartId, nodesToAvoid)
                     throw new Error(`Network split is still possible`)
                 }
-                this.networkSplitAvoidedNodes.delete(streamPartId)
             }
         }, 'avoid network split', this.abortController.signal)
+        this.networkSplitAvoidedNodes.delete(streamPartId)
         logger.trace(`Network split avoided`)
     }
 
-    private setAvoidedNodes(streamPartId: StreamPartID, nodesToAvoid: PeerDescriptor[]): void {
+    private addAvoidedNodes(streamPartId: StreamPartID, nodesToAvoid: PeerDescriptor[]): void {
         if (!this.networkSplitAvoidedNodes.has(streamPartId)) {
             this.networkSplitAvoidedNodes.set(streamPartId, new Set())
         }
