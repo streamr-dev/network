@@ -45,27 +45,24 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
     }
 }
 
+const getId = (descriptor: PeerDescriptor): PeerID => {
+    return PeerID.fromValue(descriptor.kademliaId)
+}
+
 describe('RandomContactList', () => {
     const serviceId = 'random'
-    const id0 = PeerID.fromValue(Buffer.from([0, 0, 0, 0]))
-    const id1 = PeerID.fromValue(Buffer.from([0, 0, 0, 1]))
-    const id2 = PeerID.fromValue(Buffer.from([0, 0, 0, 2]))
-    const id3 = PeerID.fromValue(Buffer.from([0, 0, 0, 3]))
-    const id4 = PeerID.fromValue(Buffer.from([0, 0, 0, 4]))
-
-    const descriptor0: PeerDescriptor = { kademliaId: id0.value, type: NodeType.NODEJS }
-    const descriptor1: PeerDescriptor = { kademliaId: id1.value, type: NodeType.NODEJS }
-    const descriptor2: PeerDescriptor = { kademliaId: id2.value, type: NodeType.NODEJS }
-    const descriptor3: PeerDescriptor = { kademliaId: id3.value, type: NodeType.NODEJS }
-    const descriptor4: PeerDescriptor = { kademliaId: id4.value, type: NodeType.NODEJS }
-
+    const descriptor0: PeerDescriptor = { kademliaId: new Uint8Array([0, 0, 0, 0]), type: NodeType.NODEJS }
+    const descriptor1: PeerDescriptor = { kademliaId: new Uint8Array([0, 0, 0, 1]), type: NodeType.NODEJS }
+    const descriptor2: PeerDescriptor = { kademliaId: new Uint8Array([0, 0, 0, 2]), type: NodeType.NODEJS }
+    const descriptor3: PeerDescriptor = { kademliaId: new Uint8Array([0, 0, 0, 3]), type: NodeType.NODEJS }
+    const descriptor4: PeerDescriptor = { kademliaId: new Uint8Array([0, 0, 0, 4]), type: NodeType.NODEJS }
     const peer1 = new DhtPeer(descriptor0, descriptor1, toProtoRpcClient(new MockRpcClient()), serviceId)
     const peer2 = new DhtPeer(descriptor0, descriptor2, toProtoRpcClient(new MockRpcClient()), serviceId)
     const peer3 = new DhtPeer(descriptor0, descriptor3, toProtoRpcClient(new MockRpcClient()), serviceId)
     const peer4 = new DhtPeer(descriptor0, descriptor4, toProtoRpcClient(new MockRpcClient()), serviceId)
 
     it('adds contacts correctly', () => {
-        const list = new RandomContactList(id0, 5, 1)
+        const list = new RandomContactList(getId(descriptor0), 5, 1)
         list.addContact(peer1)
         list.addContact(peer2)
         list.addContact(peer3)
@@ -76,15 +73,15 @@ describe('RandomContactList', () => {
     })
 
     it('removes contacts correctly', () => {
-        const list = new RandomContactList(id0, 5, 1)
+        const list = new RandomContactList(getId(descriptor0), 5, 1)
         list.addContact(peer1)
         list.addContact(peer2)
         list.addContact(peer3)
         list.addContact(peer4)
-        list.removeContact(id2)
-        expect(list.getContact(id1)).toBeTruthy()
-        expect(list.getContact(id3)).toBeTruthy()
-        expect(list.getContact(id4)).toBeTruthy()
+        list.removeContact(getId(descriptor2))
+        expect(list.getContact(getId(descriptor1))).toBeTruthy()
+        expect(list.getContact(getId(descriptor3))).toBeTruthy()
+        expect(list.getContact(getId(descriptor4))).toBeTruthy()
         expect(list.getContacts()).toEqual(
             [peer1, peer3, peer4]
         )
