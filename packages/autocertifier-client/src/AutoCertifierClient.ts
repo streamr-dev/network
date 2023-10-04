@@ -69,9 +69,13 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     private loadSubdomainFromDisk(): { subdomain: CertifiedSubdomain, expiryTime: number } {
+        logger.trace(`LOADING FROM DISK`)
         const subdomain = JSON.parse(fs.readFileSync(this.subdomainPath, 'utf8')) as CertifiedSubdomain
+        logger.trace(`LOADED FROM DISK`)
         const certObj = forge.pki.certificateFromPem(subdomain.certificate.cert)
+        logger.trace(`FORGED`)
         const expiryTime = certObj.validity.notAfter.getTime()
+        logger.trace(`EXPIRYTIME`)
         return { subdomain, expiryTime }
     }
 
