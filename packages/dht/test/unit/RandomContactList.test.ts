@@ -70,6 +70,9 @@ describe('RandomContactList', () => {
         list.addContact(peer4)
         list.addContact(peer4)
         expect(list.getSize()).toEqual(4)
+        expect(list.getContacts()).toEqual(
+            [peer1, peer2, peer3, peer4]
+        )
     })
 
     it('removes contacts correctly', () => {
