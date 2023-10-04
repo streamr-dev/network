@@ -152,7 +152,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     public removeContact(id: PeerID): boolean {
         if (this.contactsById.has(id.toKey())) {
             const removedDescriptor = this.contactsById.get(id.toKey())!.contact.getPeerDescriptor()
-            const index = this.contactIds.indexOf(id)
+            const index = this.contactIds.findIndex((element) => element.equals(id))
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id.toKey())
             this.emit(
