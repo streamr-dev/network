@@ -55,7 +55,7 @@ describe('Scaling down a Dht network', () => {
             const nodeIsCleaned = nodes.every((node) =>
                 node.getAllConnectionPeerDescriptors().every((peer) => {
                     if (isSamePeerDescriptor(peer, stoppingPeerDescriptor)) {
-                        logger.error(' ' + node.getNodeName() + ', ' + stoppingPeerDescriptor.nodeName + ' cleaning up failed')
+                        logger.error(' ' + node.getPeerDescriptor().nodeName + ', ' + stoppingPeerDescriptor.nodeName + ' cleaning up failed')
                     }
                     return !isSamePeerDescriptor(peer, stoppingPeerDescriptor)
                 })

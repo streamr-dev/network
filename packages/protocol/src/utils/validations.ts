@@ -50,6 +50,16 @@ export function validateIsNotNegativeInteger(varName: string, varValue: unknown,
     }
 }
 
+export function validateIsNotEmptyByteArray(varName: string, varValue: unknown, allowNull = false): void | never {
+    if (allowNull && varValue == null) {
+        return
+    }
+    validateIsNotNullOrUndefined(varName, varValue)
+    if (!(varValue instanceof Uint8Array) || varValue.length === 0) {
+        throw new ValidationError(`Expected ${varName} to be a non-empty byte array`)
+    }
+}
+
 export function validateIsArray(varName: string, varValue: unknown, allowNull = false): void | never {
     if (allowNull && varValue == null) {
         return

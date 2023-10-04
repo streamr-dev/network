@@ -76,23 +76,29 @@ export const createRandomNodeId = (): NodeID => {
     return randomBytes(10).toString('hex') as NodeID
 }
 
-export const createMockRemoteNode = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
-    const mockPeerDescriptor: PeerDescriptor = {
+// TODO use this in tests
+export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'kademliaId' | 'type'>): PeerDescriptor => {
+    return {
+        ...opts,
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS
     }
-    return new RemoteRandomGraphNode(peerDescriptor || mockPeerDescriptor, 'mock', {} as any)
+}
+
+export const createMockRemoteNode = (remotePeerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
+    return new RemoteRandomGraphNode(createMockPeerDescriptor(), remotePeerDescriptor || createMockPeerDescriptor(), 'mock', {} as any)
 }
 
 export const createMockRemoteHandshaker = (): RemoteHandshaker => {
-    const mockPeerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
-    return new RemoteHandshaker(mockPeerDescriptor, 'mock', {
-        handshake: async () => {},
-        interleaveNotice: async () => {}
-    } as any)
+    return new RemoteHandshaker(
+        createMockPeerDescriptor(),
+        createMockPeerDescriptor(), 
+        'mock',
+        {
+            handshake: async () => {},
+            interleaveNotice: async () => {}
+        } as any
+    )
 }
 
 export const createNetworkNodeWithSimulator = (

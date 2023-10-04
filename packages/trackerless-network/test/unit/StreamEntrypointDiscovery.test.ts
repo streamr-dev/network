@@ -1,14 +1,14 @@
-import { StreamEntryPointDiscovery } from '../../src/logic/StreamEntryPointDiscovery'
-import { PeerDescriptor, isSamePeerDescriptor, RecursiveFindResult, NodeType } from '@streamr/dht'
-import { StreamObject } from '../../src/logic/StreamrNode'
-import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { Any } from '../../src/proto/google/protobuf/any'
-import { hexToBinary, wait } from '@streamr/utils'
+import { PeerDescriptor, RecursiveFindResult, isSamePeerDescriptor } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { createRandomNodeId } from '../utils/utils'
-import { MockLayer1 } from '../utils/mock/MockLayer1'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { wait } from '@streamr/utils'
 import { range } from 'lodash'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { StreamEntryPointDiscovery } from '../../src/logic/StreamEntryPointDiscovery'
+import { StreamObject } from '../../src/logic/StreamrNode'
+import { Any } from '../../src/proto/google/protobuf/any'
+import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { MockLayer1 } from '../utils/mock/MockLayer1'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('StreamEntryPointDiscovery', () => {
 
@@ -17,17 +17,12 @@ describe('StreamEntryPointDiscovery', () => {
     let storeCalled: number
     let streams = new Map<string, StreamObject>()
 
-    const peerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
+    const peerDescriptor = createMockPeerDescriptor({
         nodeName: 'fake'
-    }
-
-    const deletedPeerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
+    })
+    const deletedPeerDescriptor = createMockPeerDescriptor({
         nodeName: 'deleted'
-    }
+    })
 
     const fakeData: DataEntry = {
         data: Any.pack(peerDescriptor, PeerDescriptor),

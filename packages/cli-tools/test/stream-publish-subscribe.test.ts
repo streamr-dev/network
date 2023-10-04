@@ -70,9 +70,31 @@ describe('publish and subscribe', () => {
         const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
         subscriberAbortController.abort()
         expect(JSON.parse(receivedMessage)).toMatchObject({
-            message: {
+            content: {
                 foo: 123
             },
+            metadata: {
+                streamId,
+                streamPartition: 0,
+                timestamp: expect.any(Number),
+                sequenceNumber: 0,
+                publisherId: new Wallet(publisherPrivateKey).address.toLowerCase(),
+                msgChainId: expect.stringMatching(/[0-9a-zA-Z]+/)
+            }
+        })
+    }, TIMEOUT)
+
+    it('with metadata and raw', async () => {
+        const subscriberAbortController = new AbortController()
+        const subscriberOutputIterable = startCommand(`stream subscribe ${streamId} --with-metadata --raw`, {
+            privateKey: subscriberPrivateKey,
+            abortSignal: subscriberAbortController.signal,
+        })
+        publishViaCliCommand()
+        const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
+        subscriberAbortController.abort()
+        expect(JSON.parse(receivedMessage)).toMatchObject({
+            content: expect.stringMatching(/^[0-9a-fA-F]+$/),
             metadata: {
                 streamId,
                 streamPartition: 0,

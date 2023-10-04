@@ -130,16 +130,16 @@ export class DataStore implements IStoreService {
         const remoteStore = new RemoteStore(
             this.ownPeerDescriptor,
             contact,
-            toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport())),
-            this.serviceId
+            this.serviceId,
+            toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport()))
         )
         try {
             const response = await remoteStore.migrateData({ dataEntry }, doNotConnect)
             if (response.error) {
-                logger.debug('RemoteStore::migrateData() returned error: ' + response.error)
+                logger.trace('RemoteStore::migrateData() returned error: ' + response.error)
             }
         } catch (e) {
-            logger.debug('RemoteStore::migrateData() threw an exception ' + e)
+            logger.trace('RemoteStore::migrateData() threw an exception ' + e)
         }
     }
 
@@ -168,8 +168,8 @@ export class DataStore implements IStoreService {
             const remoteStore = new RemoteStore(
                 this.ownPeerDescriptor,
                 closestNodes[i],
-                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport())),
-                this.serviceId
+                this.serviceId,
+                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             try {
                 const response = await remoteStore.storeData({ kademliaId: key, data, ttl, storerTime })
@@ -177,10 +177,10 @@ export class DataStore implements IStoreService {
                     successfulNodes.push(closestNodes[i])
                     logger.trace('remoteStore.storeData() returned success')
                 } else {
-                    logger.debug('remoteStore.storeData() returned error: ' + response.error)
+                    logger.trace('remoteStore.storeData() returned error: ' + response.error)
                 }
             } catch (e) {
-                logger.debug('remoteStore.storeData() threw an exception ' + e)
+                logger.trace('remoteStore.storeData() threw an exception ' + e)
             }
         }
         return successfulNodes
@@ -209,19 +209,19 @@ export class DataStore implements IStoreService {
             const remoteStore = new RemoteStore(
                 this.ownPeerDescriptor,
                 closestNodes[i],
-                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport())),
-                this.serviceId
+                this.serviceId,
+                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             try {
                 const response = await remoteStore.deleteData({ kademliaId: key })
                 if (response.deleted) {
                     logger.trace('remoteStore.deleteData() returned success')
                 } else {
-                    logger.debug('could not delete data from ' + PeerID.fromValue(closestNodes[i].kademliaId))
+                    logger.trace('could not delete data from ' + PeerID.fromValue(closestNodes[i].kademliaId))
                 }
                 successfulNodes.push(closestNodes[i])
             } catch (e) {
-                logger.debug('remoteStore.deleteData() threw an exception ' + e)
+                logger.trace('remoteStore.deleteData() threw an exception ' + e)
             }
         }
     }

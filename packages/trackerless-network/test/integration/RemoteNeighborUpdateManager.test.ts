@@ -1,4 +1,3 @@
-import { NeighborUpdate } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     ListeningRpcCommunicator,
@@ -8,12 +7,11 @@ import {
     SimulatorTransport
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { RemoteNeighborUpdateManager } from '../../src/logic/neighbor-discovery/RemoteNeighborUpdateManager'
+import { NeighborUpdate } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import {
     NeighborUpdateRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { RemoteNeighborUpdateManager } from '../../src/logic/neighbor-discovery/RemoteNeighborUpdateManager'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
-import { hexToBinary } from '@streamr/utils'
 
 describe('RemoteNeighborUpdateManager', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -50,9 +48,7 @@ describe('RemoteNeighborUpdateManager', () => {
                     kademliaId: new Uint8Array([4, 2, 4]),
                     type: NodeType.NODEJS
                 }
-
                 const update: NeighborUpdate = {
-                    senderId: hexToBinary(getNodeIdFromPeerDescriptor(node)),
                     randomGraphId: 'testStream',
                     neighborDescriptors: [
                         node
@@ -63,6 +59,7 @@ describe('RemoteNeighborUpdateManager', () => {
             }
         )
         neighborUpdateRpcClient = new RemoteNeighborUpdateManager(
+            clientNode,
             serverNode,
             'test-stream',
             toProtoRpcClient(new NeighborUpdateRpcClient(clientRpc.getRpcClientTransport()))
@@ -78,7 +75,7 @@ describe('RemoteNeighborUpdateManager', () => {
     })
 
     it('updateNeighbors', async () => {
-        const res = await neighborUpdateRpcClient.updateNeighbors(clientNode, [])
+        const res = await neighborUpdateRpcClient.updateNeighbors([])
         expect(res.peerDescriptors.length).toEqual(1)
     })
 })

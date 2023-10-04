@@ -46,8 +46,8 @@ export class Inspector implements IInspector {
     }
 
     async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: string): Promise<void> {
-        const remoteRandomGraphNode = new RemoteTemporaryConnectionRpcServer(peerDescriptor, this.graphId, this.client)
-        await remoteRandomGraphNode.openConnection(this.ownPeerDescriptor)
+        const remoteRandomGraphNode = new RemoteTemporaryConnectionRpcServer(this.ownPeerDescriptor, peerDescriptor, this.graphId, this.client)
+        await remoteRandomGraphNode.openConnection()
         this.connectionLocker.lockConnection(peerDescriptor, lockId)
     }
 

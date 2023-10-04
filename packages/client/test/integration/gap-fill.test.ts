@@ -24,7 +24,7 @@ describe('gap fill', () => {
 
     const publish = async (msg: StreamMessage) => {
         const node = environment.startNode()
-        await node.publish(msg)
+        await node.broadcast(msg)
     }
 
     beforeEach(async () => {
