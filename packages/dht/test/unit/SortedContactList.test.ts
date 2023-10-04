@@ -103,12 +103,14 @@ describe('SortedContactList', () => {
 
     it('cannot exceed maxSize', async () => {
         const list = new SortedContactList(id0, 3)
+        const onContactRemoved = jest.fn()
+        list.on('contactRemoved', onContactRemoved)
+        list.addContact(peer1)
         list.addContact(peer4)
         list.addContact(peer3)
         list.addContact(peer2)
-        list.addContact(peer1)
         expect(list.getSize()).toEqual(3)
-        expect(list.getContact(id4)).toBeFalsy()
+        expect(onContactRemoved).toBeCalledWith(descriptor4, [descriptor1, descriptor2, descriptor3])
     })
 
     it('removing contacts', async () => {
