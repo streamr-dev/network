@@ -65,8 +65,8 @@ describe('NodeMetrics', () => {
         await waitForCondition(() => report !== undefined, 10000)
         expect(report!).toMatchObject({
             node: {
-                publishMessagesPerSecond: expect.any(Number),
-                publishBytesPerSecond: expect.any(Number),
+                broadcastMessagesPerSecond: expect.any(Number),
+                broadcastBytesPerSecond: expect.any(Number),
                 sendMessagesPerSecond: expect.any(Number),
                 sendBytesPerSecond: expect.any(Number),
                 receiveMessagesPerSecond: expect.any(Number),

@@ -156,7 +156,7 @@ export const startPublisherKeyExchangeSubscription = async (
     publisherClient: StreamrClient,
     streamPartId: StreamPartID): Promise<void> => {
     const node = await publisherClient.getNode()
-    await node.subscribe(streamPartId)
+    await node.join(streamPartId)
 }
 
 export const createRandomAuthentication = (): Authentication => {

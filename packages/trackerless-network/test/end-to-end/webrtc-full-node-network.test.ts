@@ -48,7 +48,6 @@ describe('Full node network with WebRTC connections', () => {
             await node.start()
             node.getStreamrNode().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
             await node.getStreamrNode().joinStream(randomGraphId)
-            node.getStreamrNode().subscribeToStream(randomGraphId)
         }))
 
     }, 90000)
@@ -80,7 +79,7 @@ describe('Full node network with WebRTC connections', () => {
             randomGraphId,
             randomEthereumAddress()
         )
-        entryPoint.getStreamrNode()!.publishToStream(msg)
+        entryPoint.getStreamrNode()!.broadcast(msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
     }, 120000)
 

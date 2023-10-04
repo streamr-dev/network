@@ -89,13 +89,13 @@ describe('StreamrNode', () => {
     })
 
     it('Publishing after joining and waiting for neighbors', async () => {
-        node1.subscribeToStream(STREAM_PART_ID)
+        await node1.joinStream(STREAM_PART_ID)
         await node2.joinStream(STREAM_PART_ID)
         await waitForCondition(() => node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1)
         await waitForCondition(() => node2.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1)
         await Promise.all([
             waitForEvent3<Events>(node1, 'newMessage'),
-            node2.publishToStream(msg)
+            node2.broadcast(msg)
         ])
     })
 
@@ -107,8 +107,6 @@ describe('StreamrNode', () => {
         await node1.joinStream(streamPartId2)
         await node2.joinStream(STREAM_PART_ID)
         await node2.joinStream(streamPartId2)
-        node1.subscribeToStream(STREAM_PART_ID)
-        node2.subscribeToStream(streamPartId2)
         await Promise.all([
             waitForCondition(() => node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1),
             waitForCondition(() => node2.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1),
@@ -123,8 +121,8 @@ describe('StreamrNode', () => {
         await Promise.all([
             waitForEvent3<Events>(node1, 'newMessage'),
             waitForEvent3<Events>(node2, 'newMessage'),
-            node1.publishToStream(msg2),
-            node2.publishToStream(msg)
+            node1.broadcast(msg2),
+            node2.broadcast(msg)
         ])
     })
 
