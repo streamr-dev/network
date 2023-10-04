@@ -40,10 +40,11 @@ import { DataStore } from './store/DataStore'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/WebRTC/WebRtcConnector'
-import { registerExternalApiRpcMethod } from './registerExternalApiRpcMethod'
+import { registerExternalApiRpcMethods } from './registerExternalApiRpcMethods'
 import { RemoteExternalApi } from './RemoteExternalApi'
 import { UUID } from '../exports'
 import { isNodeJS } from '../helpers/browser/isNodeJS'
+import { sample } from 'lodash'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -299,7 +300,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.bucket!.closest(id, n)
             }
         })
-        registerExternalApiRpcMethod(this)
+        registerExternalApiRpcMethods(this)
         if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
             && !isSamePeerDescriptor(this.config.entryPoints[0], this.ownPeerDescriptor!)) {
             this.connectToEntryPoint(this.config.entryPoints[0])
@@ -640,7 +641,20 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
+        if (this.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
+            return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
+        }
         return this.dataStore!.storeDataToDht(key, data)
+    }
+
+    public async storeDataViaPeer(key: Uint8Array, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
+        const target = new RemoteExternalApi(
+            this.ownPeerDescriptor!,
+            peer,
+            this.config.serviceId,
+            toProtoRpcClient(new ExternalApiServiceClient(this.rpcCommunicator!.getRpcClientTransport()))
+        )
+        return await target.storeData(key, data)
     }
 
     public async getDataFromDht(idToFind: Uint8Array): Promise<RecursiveFindResult> {
