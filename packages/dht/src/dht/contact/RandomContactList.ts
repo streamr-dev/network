@@ -77,7 +77,7 @@ export class RandomContactList<Contact extends IContact> extends EventEmitter<Ev
                 ret.push(contact.contact)
             }
         })
-        return ret.splice(0, limit)
+        return ret.slice(0, limit)
     }
 
     public clear(): void {
