@@ -45,29 +45,8 @@ describe('StreamrNode', () => {
         expect(node.hasStream(streamPartId)).toEqual(false)
     })
 
-    it('subscribe and wait for join', async () => {
-        await node.waitForJoinAndSubscribe(streamPartId)
-        expect(node.hasStream(streamPartId)).toEqual(true)
-    })
-
-    it('publish and wait for join', async () => {
-        await node.waitForJoinAndPublish(streamPartId, message)
-        expect(node.hasStream(streamPartId)).toEqual(true)
-    })
-
-    it('subscribe joins stream', async () => {
-        node.subscribeToStream(streamPartId)
+    it('broadcast joins stream', async () => {
+        node.broadcast(message)
         await waitForCondition(() => node.hasStream(streamPartId))
     })
-
-    it('publish joins stream', async () => {
-        node.publishToStream(message)
-        await waitForCondition(() => node.hasStream(streamPartId))
-    })
-
-    it('can unsubscribe', async () => {
-        await node.joinStream(streamPartId)
-        node.unsubscribeFromStream(streamPartId)
-    })
-
 })

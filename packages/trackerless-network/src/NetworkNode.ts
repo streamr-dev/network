@@ -1,4 +1,4 @@
-import { StreamMessage, StreamPartID, StreamMessageType } from '@streamr/protocol'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
@@ -46,24 +46,13 @@ export class NetworkNode {
         return this.stack.getStreamrNode().inspect(node, streamPartId)
     }
 
-    async publish(streamMessage: StreamMessage): Promise<void> {
-        const streamPartId = streamMessage.getStreamPartID()
-        if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) 
-            && streamMessage.messageType === StreamMessageType.MESSAGE) {
-            throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
-        }
-
-        await this.stack.joinLayer0IfRequired(streamPartId)
+    async broadcast(streamMessage: StreamMessage): Promise<void> {
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
-        this.stack.getStreamrNode().publishToStream(msg)
+        await this.stack.broadcast(msg)
     }
 
-    async subscribe(streamPartId: StreamPartID): Promise<void> {
-        if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
-            throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
-        }
-        await this.stack.joinLayer0IfRequired(streamPartId)
-        this.stack.getStreamrNode().subscribeToStream(streamPartId)
+    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
+        await this.stack.joinStreamPart(streamPartId, neighborRequirement)
     }
 
     async setProxies(
@@ -74,6 +63,10 @@ export class NetworkNode {
         connectionCount?: number
     ): Promise<void> {
         await this.stack.getStreamrNode().setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
+    }
+
+    isProxiedStreamPart(streamPartId: StreamPartID): boolean {
+        return this.stack.getStreamrNode().isProxiedStreamPart(streamPartId)
     }
 
     addMessageListener(cb: (msg: StreamMessage) => void): void {
@@ -88,37 +81,11 @@ export class NetworkNode {
         pull(this.messageListeners, cb)
     }
 
-    async subscribeAndWaitForJoin(
-        streamPartId: StreamPartID,
-        timeout?: number,
-        expectedNeighbors?: number
-    ): Promise<number> {
-        if (this.stack.getStreamrNode()!.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
-            throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
-        }
-        return this.stack.getStreamrNode().waitForJoinAndSubscribe(streamPartId, timeout, expectedNeighbors)
-    }
-
-    async waitForJoinAndPublish(streamMessage: StreamMessage, timeout?: number): Promise<number> {
-        const streamPartId = streamMessage.getStreamPartID()
-        try {
-            const msg = StreamMessageTranslator.toProtobuf(streamMessage)
-            if (this.stack.getStreamrNode()!.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE)) {
-                throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
-            }
-    
-            return this.stack.getStreamrNode().waitForJoinAndPublish(streamPartId, msg, timeout)
-        } catch (err) {
-            logger.debug(`Could not publish message: ${err}`)
-            return 0
-        }
-    }
-
-    unsubscribe(streamPartId: StreamPartID): void {
+    leave(streamPartId: StreamPartID): void {
         if (this.stopped) {
             return
         }
-        this.stack.getStreamrNode().unsubscribeFromStream(streamPartId)
+        this.stack.getStreamrNode().leaveStream(streamPartId)
     }
 
     getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
@@ -150,10 +117,6 @@ export class NetworkNode {
 
     getStreamParts(): StreamPartID[] {
         return this.stack.getStreamrNode().getStreamParts()
-    }
-
-    getNeighbors(): NodeID[] {
-        return this.stack.getStreamrNode().getNeighbors()
     }
 
     // eslint-disable-next-line class-methods-use-this
