@@ -46,7 +46,7 @@ const prepareStream = async (streamId: string) => {
     const streamPartId = toStreamPartID(toStreamID(streamId), 0)
     const streamPublisher = createNetworkNodeWithSimulator(peerDescriptor, simulator, [layer0Ep])
     await streamPublisher.start()
-    streamPublisher.subscribe(streamPartId)
+    streamPublisher.join(streamPartId)
     nodes.push(streamPublisher)
     streams.set(streamPartId, streamPublisher)
 }
@@ -87,7 +87,7 @@ const measureJoiningTime = async (count: number) => {
             messageType: StreamMessageType.MESSAGE,
             signature: hexToBinary('0x1234'),
         })
-        streams.get(stream)!.publish(streamMessage)
+        streams.get(stream)!.broadcast(streamMessage)
     }, 1000)
     // get random node from network to use as entrypoint
     const randomNode = nodes[Math.floor(Math.random() * nodes.length)]
@@ -98,7 +98,7 @@ const measureJoiningTime = async (count: number) => {
 
     await Promise.all([
         waitForEvent3(streamSubscriber.stack.getStreamrNode() as any, 'newMessage', 60000),
-        streamSubscriber.subscribe(stream)
+        streamSubscriber.join(stream)
     ])
 
     const end = performance.now()

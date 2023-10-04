@@ -96,7 +96,7 @@ describe('proxy group key exchange', () => {
 
         await Promise.all([
             waitForEvent3(publisher.stack.getStreamrNode()! as any, 'newMessage'),
-            subscriber.publish(request)
+            subscriber.broadcast(request)
         ])
     })
 
@@ -126,7 +126,7 @@ describe('proxy group key exchange', () => {
 
         await Promise.all([
             waitForEvent3(subscriber.stack.getStreamrNode()! as any, 'newMessage'),
-            publisher.publish(response)
+            publisher.broadcast(response)
         ])
     })
 })

@@ -1,8 +1,9 @@
 import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor } from '@streamr/dht'
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
-import { MetricsContext, waitForEvent3 } from '@streamr/utils'
+import { Logger, MetricsContext, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { StreamPartID } from '@streamr/protocol'
+import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
+import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
 
 interface ReadinessEvents {
     done: () => void
@@ -46,6 +47,8 @@ export interface NetworkStackEvents {
 
 const DEFAULT_FIRST_CONNECTION_TIMEOUT = 5000
 
+const logger = new Logger(module)
+
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     private layer0DhtNode?: DhtNode
@@ -66,6 +69,34 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             nodeName: options.networkNode?.nodeName ?? options.layer0?.nodeName,
             metricsContext: this.metricsContext
         })
+    }
+
+    async joinStreamPart(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
+        if (this.getStreamrNode().isProxiedStreamPart(streamPartId)) {
+            throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
+        }
+        await this.joinLayer0IfRequired(streamPartId)
+        setImmediate(async () => {
+            try {
+                await this.getStreamrNode().joinStream(streamPartId)
+            } catch (err) {
+                logger.warn(`Failed to join to stream ${streamPartId} with error: ${err}`)
+            }
+        })
+        if (neighborRequirement !== undefined) {
+            await waitForCondition(() => {
+                return this.getStreamrNode().getNeighbors(streamPartId).length >= neighborRequirement.minCount
+            }, neighborRequirement.timeout)
+        }
+    }
+
+    async broadcast(msg: StreamMessage): Promise<void> {
+        const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
+        if (this.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.messageType === StreamMessageType.MESSAGE)) {
+            throw new Error(`Cannot broadcast to ${streamPartId} as proxy subscribe connections have been set`)
+        }
+        await this.joinLayer0IfRequired(streamPartId)
+        this.getStreamrNode().broadcast(msg)
     }
 
     async start(doJoin = true): Promise<void> {
