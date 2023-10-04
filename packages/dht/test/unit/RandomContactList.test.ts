@@ -79,9 +79,16 @@ describe('RandomContactList', () => {
         const list = new RandomContactList(id0, 5, 1)
         list.addContact(peer1)
         list.addContact(peer2)
+        list.addContact(peer3)
+        list.addContact(peer4)
         list.removeContact(id2)
         expect(list.getContact(id1)).toBeTruthy()
-        expect(list.getSize()).toEqual(1)
+        expect(list.getContact(id3)).toBeTruthy()
+        expect(list.getContact(id4)).toBeTruthy()
+        expect(list.getContacts()).toEqual(
+            [peer1, peer3, peer4]
+        )
+        expect(list.getSize()).toEqual(3)
     })
 
 })

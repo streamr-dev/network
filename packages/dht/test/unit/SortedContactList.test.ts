@@ -123,6 +123,7 @@ describe('SortedContactList', () => {
         expect(list.getSize()).toEqual(3)
         expect(list.getContact(id2)).toBeFalsy()
         expect(list.getContactIds()).toEqual(list.getContactIds().sort(list.compareIds))
+        expect(list.getAllContacts()).toEqual([peer1, peer3, peer4])
         const ret = list.removeContact(PeerID.fromValue(Buffer.from([0, 0, 0, 6])))
         expect(ret).toEqual(false)
     })
