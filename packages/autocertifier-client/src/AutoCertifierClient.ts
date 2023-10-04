@@ -43,7 +43,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     public async start(): Promise<void> {
-        logger.trace("START HERE1")
+        logger.trace("START HERE1 " + this.subdomainPath)
         if (!fs.existsSync(this.subdomainPath)) {
             logger.trace("START HERE2")
             await this.createCertificate()
