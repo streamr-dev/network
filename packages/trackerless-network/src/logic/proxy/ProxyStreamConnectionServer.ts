@@ -78,7 +78,7 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
     }
 
-    getProxyPropagationTargets(msg: StreamMessage): NodeID[] {
+    getPropagationTargets(msg: StreamMessage): NodeID[] {
         if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             try {
                 const recipientId = GroupKeyRequest.fromBinary(msg.content).recipientId
