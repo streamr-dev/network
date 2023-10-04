@@ -128,4 +128,26 @@ describe('SortedContactList', () => {
         const ret = list.removeContact(PeerID.fromValue(Buffer.from([0, 0, 0, 6])))
         expect(ret).toEqual(false)
     })
+
+    it('get closes contacts', () => {
+        const list = new SortedContactList(getId(descriptor0), 8)
+        list.addContact(peer1)
+        list.addContact(peer3)
+        list.addContact(peer4)
+        list.addContact(peer2)
+        expect(list.getClosestContacts(2)).toEqual([peer1, peer2])
+        expect(list.getClosestContacts()).toEqual([peer1, peer2, peer3, peer4])
+    })
+
+    it('get active contacts', () => {
+        const list = new SortedContactList(getId(descriptor0), 8)
+        list.addContact(peer1)
+        list.addContact(peer3)
+        list.addContact(peer4)
+        list.addContact(peer2)
+        list.setActive(getId(descriptor2))
+        list.setActive(getId(descriptor3))
+        list.setActive(getId(descriptor4))
+        expect(list.getActiveContacts()).toEqual([peer2, peer3, peer4])
+    })
 })
