@@ -113,6 +113,8 @@ describe('SortedContactList', () => {
 
     it('removing contacts', async () => {
         const list = new SortedContactList(getId(descriptor0), 8)
+        const onContactRemoved = jest.fn()
+        list.on('contactRemoved', onContactRemoved)
         list.addContact(peer4)
         list.addContact(peer3)
         list.addContact(peer2)
@@ -122,6 +124,7 @@ describe('SortedContactList', () => {
         expect(list.getContact(getId(descriptor2))).toBeFalsy()
         expect(list.getContactIds()).toEqual(list.getContactIds().sort(list.compareIds))
         expect(list.getAllContacts()).toEqual([peer1, peer3, peer4])
+        expect(onContactRemoved).toBeCalledWith(descriptor2, [descriptor1, descriptor3, descriptor4])
         const ret = list.removeContact(PeerID.fromValue(Buffer.from([0, 0, 0, 6])))
         expect(ret).toEqual(false)
     })
