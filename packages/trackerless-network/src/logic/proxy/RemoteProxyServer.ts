@@ -23,7 +23,7 @@ export class RemoteProxyServer extends Remote<IProxyConnectionRpcClient> {
             const res = await this.client.requestConnection(request, options)
             return res.accepted
         } catch (err) {
-            logger.warn(`ProxyConnectionRequest failed with error: ${err}`)
+            logger.debug(`ProxyConnectionRequest failed with error: ${err}`)
             return false
         }
     }

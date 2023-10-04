@@ -174,7 +174,13 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             this.targetNeighbors.add(remote)
             this.propagation.onNeighborJoined(nodeId)
             logger.info('Open proxy connection', {
-                nodeId
+                nodeId,
+                streamPartId: this.config.streamPartId
+            })
+        } else {
+            logger.warn('Unable to open proxy connection', {
+                nodeId,
+                streamPartId: this.config.streamPartId
             })
         }
     }
