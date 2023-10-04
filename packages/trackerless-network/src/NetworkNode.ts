@@ -53,12 +53,12 @@ export class NetworkNode {
 
     async setProxies(
         streamPartId: StreamPartID,
-        contactPeerDescriptors: PeerDescriptor[],
+        nodes: PeerDescriptor[],
         direction: ProxyDirection,
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
-        await this.stack.getStreamrNode().setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
+        await this.stack.getStreamrNode().setProxies(streamPartId, nodes, direction, userId, connectionCount)
     }
 
     isProxiedStreamPart(streamPartId: StreamPartID): boolean {

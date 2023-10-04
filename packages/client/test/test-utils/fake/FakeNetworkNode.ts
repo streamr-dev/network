@@ -104,12 +104,12 @@ export class FakeNetworkNode implements NetworkNodeStub {
 
     async setProxies(
         streamPartId: StreamPartID,
-        peerDescriptors: PeerDescriptor[],
+        nodes: PeerDescriptor[],
         _direction: ProxyDirection,
         _userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
-        const enable = (peerDescriptors.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))
+        const enable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))
         if (enable) {
             this.proxiedStreamParts.add(streamPartId)
         } else {

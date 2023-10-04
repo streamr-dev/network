@@ -108,24 +108,24 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
 
     async setProxies(
         streamPartId: StreamPartID,
-        peerDescriptors: PeerDescriptor[],
+        nodes: PeerDescriptor[],
         direction: ProxyDirection,
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
-        logger.trace('Setting proxies', { streamPartId, peerDescriptors, direction, userId, connectionCount })
-        if (connectionCount !== undefined && connectionCount > peerDescriptors.length) {
+        logger.trace('Setting proxies', { streamPartId, peerDescriptors: nodes, direction, userId, connectionCount })
+        if (connectionCount !== undefined && connectionCount > nodes.length) {
             throw Error('Cannot set connectionCount above the size of the configured array of nodes')
         }
-        const nodes = new Map()
-        peerDescriptors.forEach((peerDescriptor) => {
-            nodes.set(getNodeIdFromPeerDescriptor(peerDescriptor), peerDescriptor)
+        const nodesIds = new Map()
+        nodes.forEach((peerDescriptor) => {
+            nodesIds.set(getNodeIdFromPeerDescriptor(peerDescriptor), peerDescriptor)
         })
         this.definition = {
-            nodes,
+            nodes: nodesIds,
             userId,
             direction,
-            connectionCount: connectionCount ?? peerDescriptors.length
+            connectionCount: connectionCount ?? nodes.length
         }
         await this.updateConnections()
     }
