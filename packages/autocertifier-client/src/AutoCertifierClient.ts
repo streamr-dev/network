@@ -21,6 +21,7 @@ export const AUTOCERTIFIER_SERVICE_ID = 'AutoCertifier'
 export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents> implements IAutoCertifierService {
 
     private readonly ONE_DAY = 1000 * 60 * 60 * 24
+    private MAX_INT_32 = 2147483647
     //private readonly rpcCommunicator: ListeningRpcCommunicator
     private updateTimeout?: NodeJS.Timeout
     private readonly restClient: RestClient
@@ -29,26 +30,16 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     private readonly ongoingSessions: Set<string> = new Set()
 
     constructor(subdomainPath: string, streamrWebSocketPort: number, restApiUrl: string, restApiCaCert: string,
-        registerRpcMethod: (serviceId: string, rpcMethodName: string, 
+        registerRpcMethod: (serviceId: string, rpcMethodName: string,
             method: (request: SessionIdRequest, context: ServerCallContext) => Promise<SessionIdResponse>) => void) {
-        console.log("HERE3", restApiUrl)
 
         super()
 
         this.restClient = new RestClient(restApiUrl, restApiCaCert)
         this.subdomainPath = filePathToNodeFormat(subdomainPath)
         this.streamrWebSocketPort = streamrWebSocketPort
-        console.log("HERE4")
+
         registerRpcMethod(AUTOCERTIFIER_SERVICE_ID, 'getSessionId', this.getSessionId.bind(this))
-        /*
-        this.rpcCommunicator = new ListeningRpcCommunicator(this.AUTOCERTIFIER_SERVICE_ID, rpcTransport)
-        this.rpcCommunicator.registerRpcMethod(
-            SessionIdRequest,
-            SessionIdResponse,
-            'getSessionId',
-            (req: SessionIdRequest, context) => this.getSessionId(req, context)
-        )
-        */
     }
 
     public async start(): Promise<void> {
@@ -57,21 +48,27 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             console.log("START HERE2")
             await this.createCertificate()
         } else {
-            console.log("START HERE3")
-            const subdomain = JSON.parse(fs.readFileSync(this.subdomainPath, 'utf8')) as CertifiedSubdomain
-            const certObj = forge.pki.certificateFromPem(subdomain.certificate.cert)
-            const expiryTime = certObj.validity.notAfter.getTime()
-
-            console.log("START HERE4")
-
-            if (Date.now() > expiryTime) {
-                await this.updateCertificate()
-            } else {
-                await this.updateSubdomainIpAndPort()
-                this.scheduleCertificateUpdate(expiryTime)
-                this.emit('updatedSubdomain', subdomain)
-            }
+            this.checkSubdomainValidity()
         }
+    }
+
+    private async checkSubdomainValidity(): Promise<void> {
+        const sub = this.loadSubdomainFromDisk()
+
+        if (Date.now() >= sub.expiryTime - this.ONE_DAY) {
+            await this.updateCertificate()
+        } else {
+            await this.updateSubdomainIpAndPort()
+            this.scheduleCertificateUpdate(sub.expiryTime)
+            this.emit('updatedSubdomain', sub.subdomain)
+        }
+    }
+
+    private loadSubdomainFromDisk(): { subdomain: CertifiedSubdomain, expiryTime: number } {
+        const subdomain = JSON.parse(fs.readFileSync(this.subdomainPath, 'utf8')) as CertifiedSubdomain
+        const certObj = forge.pki.certificateFromPem(subdomain.certificate.cert)
+        const expiryTime = certObj.validity.notAfter.getTime()
+        return { subdomain, expiryTime }
     }
 
     public async stop(): Promise<void> {
@@ -93,7 +90,13 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             updateIn = updateIn - this.ONE_DAY
         }
 
-        this.updateTimeout = setTimeout(this.updateCertificate, updateIn)
+        if (updateIn > this.MAX_INT_32) {
+            updateIn = this.MAX_INT_32
+        }
+
+        logger.info('' + updateIn + ' milliseconds until certificate update')
+
+        this.updateTimeout = setTimeout(this.checkSubdomainValidity, updateIn)
     }
 
     private createCertificate = async (): Promise<void> => {
@@ -126,7 +129,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         this.ongoingSessions.add(sessionId)
 
         const oldSubdomain = JSON.parse(fs.readFileSync(this.subdomainPath, 'utf8')) as CertifiedSubdomain
-        const certifiedSubdomain = await this.restClient.updateCertificate(oldSubdomain.subdomain, 
+        const certifiedSubdomain = await this.restClient.updateCertificate(oldSubdomain.subdomain,
             this.streamrWebSocketPort, oldSubdomain.token, sessionId)
 
         this.ongoingSessions.delete(sessionId)
