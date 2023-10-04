@@ -49,6 +49,7 @@ service ConnectionLocker {
 
 service ExternalApiService {
   rpc findData (FindDataRequest) returns (FindDataResponse);
+  rpc externalStoreData (ExternalStoreDataRequest) returns (ExternalStoreDataResponse);
 }
 
 // Used inside RpcMessage
@@ -62,6 +63,15 @@ message StoreDataRequest {
 
 message StoreDataResponse {
   string error = 1;
+}
+
+message ExternalStoreDataRequest {
+  bytes key = 1;
+  google.protobuf.Any data = 2;
+}
+
+message ExternalStoreDataResponse {
+  repeated PeerDescriptor storers = 1;
 }
 
 message MigrateDataRequest {
