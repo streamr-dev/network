@@ -39,5 +39,14 @@ describe('DhtNodeExternalApi', () => {
         const foundData = await remote.findDataViaPeer(PeerID.fromString('key').value, dhtNode1.getPeerDescriptor())
         expect(foundData).toEqual([])
     })
+
+    it('external store data happy path', async () => {
+        const data = Any.pack(dhtNode1.getPeerDescriptor(), PeerDescriptor)
+        const key = PeerID.fromString('key').value 
+
+        await remote.storeDataViaPeer(key, data, dhtNode1.getPeerDescriptor())
+        const foundData = await remote.findDataViaPeer(key, dhtNode1.getPeerDescriptor())
+        expect(Any.unpack(foundData[0].data!, PeerDescriptor)).toEqual(dhtNode1.getPeerDescriptor())
+    })
   
 })
