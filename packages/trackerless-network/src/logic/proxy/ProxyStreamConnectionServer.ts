@@ -74,10 +74,6 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         return Array.from(this.connections.values())
     }
 
-    private getSubscribers(): NodeID[] {
-        return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
-    }
-
     getPropagationTargets(msg: StreamMessage): NodeID[] {
         if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             try {
@@ -94,6 +90,10 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
 
     private getNodeIdsForUserId(userId: EthereumAddress): NodeID[] {
         return Array.from(this.connections.keys()).filter((nodeId) => this.connections.get(nodeId)!.userId === userId)
+    }
+
+    private getSubscribers(): NodeID[] {
+        return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
     }
 
     // IProxyConnectionRpc server method
