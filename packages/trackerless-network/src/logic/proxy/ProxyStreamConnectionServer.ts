@@ -1,5 +1,12 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { GroupKeyRequest, ProxyConnectionRequest, ProxyConnectionResponse, ProxyDirection, StreamMessage, StreamMessageType } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { 
+    GroupKeyRequest,
+    ProxyConnectionRequest,
+    ProxyConnectionResponse,
+    ProxyDirection,
+    StreamMessage,
+    StreamMessageType
+} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
@@ -71,12 +78,12 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
     }
 
-    getProxyPropagationTargets(msg: StreamMessage) : NodeID[] {
+    getProxyPropagationTargets(msg: StreamMessage): NodeID[] {
         if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             try {
                 const recipientId = GroupKeyRequest.fromBinary(msg.content).recipientId
                 return this.getNodeIdsForUserId(toEthereumAddress(binaryToHex(recipientId, true)))
-            } catch(err) {
+            } catch (err) {
                 logger.trace(`Could not parse GroupKeyRequest: ${err}`)
                 return []
             }
