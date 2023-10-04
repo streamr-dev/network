@@ -56,13 +56,14 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
                 this.contactIds.sort(this.compareIds)
             } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.getPeerId()) > 0) {
                 const removed = this.contactIds.pop()
+                const removedDescriptor = this.contactsById.get(removed!.toKey())!.contact.getPeerDescriptor()
                 this.contactsById.delete(removed!.toKey())
                 this.contactsById.set(contact.getPeerId().toKey(), new ContactState(contact))
                 this.contactIds.push(contact.getPeerId())
                 this.contactIds.sort(this.compareIds)
                 this.emit(
                     'contactRemoved',
-                    contact.getPeerDescriptor(),
+                    removedDescriptor,
                     this.getClosestContacts().map((contact: Contact) => contact.getPeerDescriptor())
                 )
             }
