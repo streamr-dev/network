@@ -108,6 +108,7 @@ describe('SortedContactList', () => {
         list.addContact(peer2)
         expect(list.getSize()).toEqual(3)
         expect(onContactRemoved).toBeCalledWith(descriptor4, [descriptor1, descriptor2, descriptor3])
+        expect(list.getContact(getId(descriptor4))).toBeFalsy()
     })
 
     it('removing contacts', async () => {
