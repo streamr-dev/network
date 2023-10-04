@@ -11,7 +11,7 @@ import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/p
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { expect } from 'expect'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
-import { createRandomNodeId } from '../utils/utils'
+import { createMockPeerDescriptor, createRandomNodeId } from '../utils/utils'
 import { binaryToHex } from '@streamr/utils'
 
 describe('NodeList', () => {
@@ -35,7 +35,7 @@ describe('NodeList', () => {
         const mockClient = mockCommunicator.getRpcClientTransport()
         
         mockTransports.push(mockTransport)
-        return new RemoteRandomGraphNode(peerDescriptor, graphId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
+        return new RemoteRandomGraphNode(createMockPeerDescriptor(), peerDescriptor, graphId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
     }
 
     beforeEach(() => {

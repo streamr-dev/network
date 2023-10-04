@@ -8,51 +8,44 @@ import {
     StoreDataRequest,
     StoreDataResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 export class RemoteStore extends Remote<IStoreServiceClient> {
 
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.peerDescriptor,
+        const options = this.formDhtRpcOptions({
             timeout: 10000
-        }
+        })
         try {
-            return await this.client.storeData(request, options)
+            return await this.getClient().storeData(request, options)
         } catch (err) {
+            const to = keyFromPeerDescriptor(this.getPeerDescriptor())
+            const from = keyFromPeerDescriptor(this.getLocalPeerDescriptor())
             throw Error(
-                `Could not store data to ${keyFromPeerDescriptor(this.peerDescriptor)} from ${keyFromPeerDescriptor(this.ownPeerDescriptor)} ${err}`
+                `Could not store data to ${to} from ${from} ${err}`
             )
         }
     }
 
     async deleteData(request: DeleteDataRequest): Promise<DeleteDataResponse> {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.peerDescriptor,
+        const options = this.formDhtRpcOptions({
             timeout: 10000
-        }
+        })
         try {
-            return await this.client.deleteData(request, options)
+            return await this.getClient().deleteData(request, options)
         } catch (err) {
             throw Error(
-                `Could not call delete data to ${keyFromPeerDescriptor(this.peerDescriptor)} ${err}`
+                `Could not call delete data to ${keyFromPeerDescriptor(this.getPeerDescriptor())} ${err}`
             )
         }
     }
 
     async migrateData(request: MigrateDataRequest, doNotConnect: boolean = false): Promise<MigrateDataResponse> {
-        
-        const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.peerDescriptor,
+        const options = this.formDhtRpcOptions({
             timeout: 10000,
             doNotConnect
-        }
-
-        return this.client.migrateData(request, options)      
+        })
+        return this.getClient().migrateData(request, options)
     }
 
 }

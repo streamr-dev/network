@@ -195,8 +195,8 @@ export class RecursiveFinder implements IRecursiveFinder {
             const remoteSession = new RemoteRecursiveFindSession(
                 this.ownPeerDescriptor,
                 targetPeerDescriptor,
-                toProtoRpcClient(new RecursiveFindSessionServiceClient(remoteCommunicator.getRpcClientTransport())),
-                serviceId
+                serviceId,
+                toProtoRpcClient(new RecursiveFindSessionServiceClient(remoteCommunicator.getRpcClientTransport()))
             )
             remoteSession.reportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         }

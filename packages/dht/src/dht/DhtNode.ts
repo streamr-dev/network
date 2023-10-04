@@ -651,8 +651,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         const target = new RemoteExternalApi(
             this.ownPeerDescriptor!,
             peer,
-            toProtoRpcClient(new ExternalApiServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-            this.config.serviceId
+            this.config.serviceId,
+            toProtoRpcClient(new ExternalApiServiceClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         return await target.storeData(key, data)
     }
@@ -671,8 +671,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         const target = new RemoteExternalApi(
             this.ownPeerDescriptor!,
             peer,
-            toProtoRpcClient(new ExternalApiServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-            this.config.serviceId
+            this.config.serviceId,
+            toProtoRpcClient(new ExternalApiServiceClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         return await target.findData(idToFind)
     }
