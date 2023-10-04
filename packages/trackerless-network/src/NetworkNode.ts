@@ -2,7 +2,7 @@ import { StreamMessage, StreamPartID, StreamMessageType } from '@streamr/protoco
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
-import { EthereumAddress, MetricsContext } from '@streamr/utils'
+import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
 import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { NodeID } from './identifiers'
 import { pull } from 'lodash'
@@ -11,10 +11,10 @@ export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
     return new NetworkNode(new NetworkStack(opts))
 }
 
+const logger = new Logger(module)
 /**
  * Convenience wrapper for building client-facing functionality. Used by client.
  */
-
 export class NetworkNode {
 
     readonly stack: NetworkStack
@@ -26,10 +26,15 @@ export class NetworkNode {
         this.stack = stack
         this.stack.getStreamrNode().on('newMessage', (msg) => {
             if (this.messageListeners.length > 0) {
-                const translated = StreamMessageTranslator.toClientProtocol(msg)
-                for (const listener of this.messageListeners) {
-                    listener(translated)
+                try {
+                    const translated = StreamMessageTranslator.toClientProtocol(msg)
+                    for (const listener of this.messageListeners) {
+                        listener(translated)
+                    }
+                } catch (err) {
+                    logger.debug(`Could not translate message: ${err}`)
                 }
+                
             }
         })
     }
@@ -50,8 +55,12 @@ export class NetworkNode {
         }
 
         await this.stack.joinLayer0IfRequired(streamPartId)
-        const msg = StreamMessageTranslator.toProtobuf(streamMessage)
-        this.stack.getStreamrNode().publishToStream(msg)
+        try {
+            const msg = StreamMessageTranslator.toProtobuf(streamMessage)
+            this.stack.getStreamrNode().publishToStream(msg)
+        } catch (err) {
+            logger.debug(`Could not publish message: ${err}`)
+        }
     }
 
     async subscribe(streamPartId: StreamPartID): Promise<void> {
@@ -97,13 +106,17 @@ export class NetworkNode {
 
     async waitForJoinAndPublish(streamMessage: StreamMessage, timeout?: number): Promise<number> {
         const streamPartId = streamMessage.getStreamPartID()
-        const msg = StreamMessageTranslator.toProtobuf(streamMessage)
-
-        if (this.stack.getStreamrNode()!.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE)) {
-            throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
+        try {
+            const msg = StreamMessageTranslator.toProtobuf(streamMessage)
+            if (this.stack.getStreamrNode()!.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE)) {
+                throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
+            }
+    
+            return this.stack.getStreamrNode().waitForJoinAndPublish(streamPartId, msg, timeout)
+        } catch (err) {
+            logger.debug(`Could not publish message: ${err}`)
+            return 0
         }
-
-        return this.stack.getStreamrNode().waitForJoinAndPublish(streamPartId, msg, timeout)
     }
 
     unsubscribe(streamPartId: StreamPartID): void {
