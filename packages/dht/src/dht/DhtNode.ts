@@ -736,8 +736,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public getInfo(): DhtNodeInfo {
         return {
-            kBucket: this.getKBucketPeers(),
-            neighborList: this.getNeighborList().getAllContacts().map((contact) => contact.getPeerDescriptor())
+            kBucket: this.getKBucketPeers()
         }
     }
 

@@ -332,7 +332,6 @@ message FindDataResponse {
 
 message DhtNodeInfo {
   repeated PeerDescriptor kBucket = 1;
-  repeated PeerDescriptor neighborList = 2;
 }
 
 message ConnectionManagerInfo {

@@ -713,10 +713,6 @@ export interface DhtNodeInfo {
      * @generated from protobuf field: repeated dht.PeerDescriptor kBucket = 1;
      */
     kBucket: PeerDescriptor[];
-    /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor neighborList = 2;
-     */
-    neighborList: PeerDescriptor[];
 }
 /**
  * @generated from protobuf message dht.ConnectionManagerInfo
@@ -1364,8 +1360,7 @@ export const FindDataResponse = new FindDataResponse$Type();
 class DhtNodeInfo$Type extends MessageType$<DhtNodeInfo> {
     constructor() {
         super("dht.DhtNodeInfo", [
-            { no: 1, name: "kBucket", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
-            { no: 2, name: "neighborList", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+            { no: 1, name: "kBucket", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }
