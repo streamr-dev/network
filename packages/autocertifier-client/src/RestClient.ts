@@ -34,7 +34,7 @@ export class RestClient {
     }
 
     public async updateCertificate(subdomain: string, streamrWebSocketPort: number, sessioId: string, token: string): Promise<CertifiedSubdomain> {
-        const url = this.baseUrl + '/subdomains/' + subdomain
+        const url = this.baseUrl + '/certifiedsubdomains/' + subdomain
         const body: UpdateIpAndPortRequest = {
             token: token,
             sessionId: sessioId,
@@ -54,7 +54,7 @@ export class RestClient {
         await this.put<any>(url, body)
     }
 
-    private async post<T>(url: string, body: any): Promise<T> {
+    private post<T>(url: string, body: any): Promise<T> {
         return new Promise((resolve, reject) => {
             request.post(url, { json: body, ca: this.caCert }, (error, response, body) => {
                 if (error) {
@@ -68,7 +68,7 @@ export class RestClient {
         })
     }
 
-    private async put<T>(url: string, body: any): Promise<T> {
+    private put<T>(url: string, body: any): Promise<T> {
         return new Promise((resolve, reject) => {
             request.put(url, { json: body, ca: this.caCert }, (error, response, body) => {
                 if (error) {
@@ -82,7 +82,7 @@ export class RestClient {
         })
     }
 
-    private async patch<T>(url: string, body: any): Promise<T> {
+    private patch<T>(url: string, body: any): Promise<T> {
         return new Promise((resolve, reject) => {
             request.patch(url, { json: body, ca: this.caCert }, (error, response, body) => {
                 if (error) {

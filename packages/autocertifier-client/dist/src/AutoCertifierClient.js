@@ -39,6 +39,7 @@ class AutoCertifierClient extends eventemitter3_1.EventEmitter {
         super();
         this.SERVICE_ID = 'AutoCertifier';
         this.ONE_DAY = 1000 * 60 * 60 * 24;
+        this.MAX_INT_32 = 2147483647;
         this.ongoingSessions = new Set();
         this.createCertificate = async () => {
             const sessionId = await this.restClient.createSession();
@@ -84,33 +85,31 @@ class AutoCertifierClient extends eventemitter3_1.EventEmitter {
         this.subdomainPath = (0, utils_1.filePathToNodeFormat)(subdomainPath);
         this.streamrWebSocketPort = streamrWebSocketPort;
         registerRpcMethod(this.SERVICE_ID, 'getSessionId', this.getSessionId.bind(this));
-        /*
-        this.rpcCommunicator = new ListeningRpcCommunicator(this.SERVICE_ID, rpcTransport)
-        this.rpcCommunicator.registerRpcMethod(
-            SessionIdRequest,
-            SessionIdResponse,
-            'getSessionId',
-            (req: SessionIdRequest, context) => this.getSessionId(req, context)
-        )
-        */
     }
     async start() {
         if (!fs_1.default.existsSync(this.subdomainPath)) {
             await this.createCertificate();
         }
         else {
-            const subdomain = JSON.parse(fs_1.default.readFileSync(this.subdomainPath, 'utf8'));
-            const certObj = forge.pki.certificateFromPem(subdomain.certificate.cert);
-            const expiryTime = certObj.validity.notAfter.getTime();
-            if (Date.now() > expiryTime) {
-                await this.updateCertificate();
-            }
-            else {
-                await this.updateSubdomainIpAndPort();
-                this.scheduleCertificateUpdate(expiryTime);
-                this.emit('updatedSubdomain', subdomain);
-            }
+            this.checkSubdomainValidity();
         }
+    }
+    async checkSubdomainValidity() {
+        const sub = this.loadSubdomainFromDisk();
+        if (Date.now() >= sub.expiryTime - this.ONE_DAY) {
+            await this.updateCertificate();
+        }
+        else {
+            await this.updateSubdomainIpAndPort();
+            this.scheduleCertificateUpdate(sub.expiryTime);
+            this.emit('updatedSubdomain', sub.subdomain);
+        }
+    }
+    loadSubdomainFromDisk() {
+        const subdomain = JSON.parse(fs_1.default.readFileSync(this.subdomainPath, 'utf8'));
+        const certObj = forge.pki.certificateFromPem(subdomain.certificate.cert);
+        const expiryTime = certObj.validity.notAfter.getTime();
+        return { subdomain, expiryTime };
     }
     async stop() {
         if (this.updateTimeout) {
@@ -128,7 +127,11 @@ class AutoCertifierClient extends eventemitter3_1.EventEmitter {
         if (updateIn > this.ONE_DAY) {
             updateIn = updateIn - this.ONE_DAY;
         }
-        this.updateTimeout = setTimeout(this.updateCertificate, updateIn);
+        if (updateIn > this.MAX_INT_32) {
+            updateIn = this.MAX_INT_32;
+        }
+        logger.info('' + updateIn + ' milliseconds until certificate update');
+        this.updateTimeout = setTimeout(this.checkSubdomainValidity, updateIn);
     }
     // IAutoCertifierService implementation
     async getSessionId(request, _context) {

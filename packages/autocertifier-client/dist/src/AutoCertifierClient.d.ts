@@ -9,6 +9,7 @@ interface AutoCertifierClientEvents {
 export declare class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents> implements IAutoCertifierService {
     private readonly SERVICE_ID;
     private readonly ONE_DAY;
+    private MAX_INT_32;
     private updateTimeout?;
     private readonly restClient;
     private readonly subdomainPath;
@@ -16,6 +17,8 @@ export declare class AutoCertifierClient extends EventEmitter<AutoCertifierClien
     private readonly ongoingSessions;
     constructor(subdomainPath: string, streamrWebSocketPort: number, restApiUrl: string, restApiCaCert: string, registerRpcMethod: (serviceId: string, rpcMethodName: string, method: (request: SessionIdRequest, context: ServerCallContext) => Promise<SessionIdResponse>) => void);
     start(): Promise<void>;
+    private checkSubdomainValidity;
+    private loadSubdomainFromDisk;
     stop(): Promise<void>;
     private scheduleCertificateUpdate;
     private createCertificate;
