@@ -158,7 +158,7 @@ describe('Group Key Persistence', () => {
             })
             const node2 = await subscriber2.getNode()
             await until(async () => {
-                return node2.getNeighborsForStreamPart(toStreamPartID(stream.id, DEFAULT_PARTITION)).length >= 1
+                return node2.getNeighbors(toStreamPartID(stream.id, DEFAULT_PARTITION)).length >= 1
             })
 
             await Promise.all([
