@@ -69,7 +69,8 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
         for (const streamPartId of streamPartIds) {
             this.allStreamParts.add(streamPartId)
         }
-        this.recalculateAssignments(`streamsStaked:${streamIds.join()}`) // TODO: optimize; calculate efficiently by only considering added stream parts
+        // TODO: optimize; calculate efficiently by only considering added stream parts
+        this.recalculateAssignments(`streamsStaked:${streamIds.join()}`)
     })
 
     private streamUnstaked = this.concurrencyLimiter(async (streamId: StreamID): Promise<void> => {
@@ -77,7 +78,8 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
         for (const streamPartId of streamPartIds) {
             this.allStreamParts.delete(streamPartId)
         }
-        this.recalculateAssignments(`streamUnstaked:${streamId}`) // TODO: optimize; calculate efficiently by only considering removed stream parts
+        // TODO: optimize; calculate efficiently by only considering removed stream parts
+        this.recalculateAssignments(`streamUnstaked:${streamId}`)
     })
 
     private recalculateAssignments(context: string): void {
