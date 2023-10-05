@@ -28,8 +28,8 @@ service TemporaryConnectionRpc {
   rpc openConnection (TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
 }
 
-service InfoService {
-  rpc getInfo (InfoRequest) return (InfoResponse)
+service InfoRpc {
+  rpc getInfo (InfoRequest) returns (InfoResponse);
 }
 
 message MessageID {
@@ -153,8 +153,18 @@ message StreamPartitionInfo {
   repeated string neighbors = 2;
 }
 
+message GetStreamInfo {
+  repeated string streamPartIds = 4;
+}
+
 message InfoRequest {
-  bool getControlLayerInfo = 1;
-  bool getStreamInfo = 2;
-  repeated streamIds = 3;
+  bool getConnectionManagerInfo = 1;
+  bool getDhtNodeInfo = 2;
+  optional GetStreamInfo getStreamrNodeInfo = 3; 
+}
+
+message InfoResponse {
+  optional StreamrNodeInfo streamrNode = 1;
+  optional dht.DhtNodeInfo dhtNode = 2;
+  optional dht.ConnectionManagerInfo connectionManager = 3;
 }

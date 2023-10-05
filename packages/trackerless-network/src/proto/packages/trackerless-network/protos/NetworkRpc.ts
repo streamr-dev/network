@@ -4,6 +4,8 @@
 import { Empty } from "../../../google/protobuf/empty";
 import { ServiceType } from "@protobuf-ts/runtime-rpc";
 import { MessageType } from "@protobuf-ts/runtime";
+import { ConnectionManagerInfo } from "../../dht/protos/DhtRpc";
+import { DhtNodeInfo } from "../../dht/protos/DhtRpc";
 import { PeerDescriptor } from "../../dht/protos/DhtRpc";
 /**
  * @generated from protobuf message MessageID
@@ -281,6 +283,49 @@ export interface StreamPartitionInfo {
      * @generated from protobuf field: repeated string neighbors = 2;
      */
     neighbors: string[];
+}
+/**
+ * @generated from protobuf message GetStreamInfo
+ */
+export interface GetStreamInfo {
+    /**
+     * @generated from protobuf field: repeated string streamPartIds = 4;
+     */
+    streamPartIds: string[];
+}
+/**
+ * @generated from protobuf message InfoRequest
+ */
+export interface InfoRequest {
+    /**
+     * @generated from protobuf field: bool getConnectionManagerInfo = 1;
+     */
+    getConnectionManagerInfo: boolean;
+    /**
+     * @generated from protobuf field: bool getDhtNodeInfo = 2;
+     */
+    getDhtNodeInfo: boolean;
+    /**
+     * @generated from protobuf field: optional GetStreamInfo getStreamrNodeInfo = 3;
+     */
+    getStreamrNodeInfo?: GetStreamInfo;
+}
+/**
+ * @generated from protobuf message InfoResponse
+ */
+export interface InfoResponse {
+    /**
+     * @generated from protobuf field: optional StreamrNodeInfo streamrNode = 1;
+     */
+    streamrNode?: StreamrNodeInfo;
+    /**
+     * @generated from protobuf field: optional dht.DhtNodeInfo dhtNode = 2;
+     */
+    dhtNode?: DhtNodeInfo;
+    /**
+     * @generated from protobuf field: optional dht.ConnectionManagerInfo connectionManager = 3;
+     */
+    connectionManager?: ConnectionManagerInfo;
 }
 /**
  * @generated from protobuf enum StreamMessageType
@@ -571,6 +616,46 @@ class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
  * @generated MessageType for protobuf message StreamPartitionInfo
  */
 export const StreamPartitionInfo = new StreamPartitionInfo$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetStreamInfo$Type extends MessageType<GetStreamInfo> {
+    constructor() {
+        super("GetStreamInfo", [
+            { no: 4, name: "streamPartIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetStreamInfo
+ */
+export const GetStreamInfo = new GetStreamInfo$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class InfoRequest$Type extends MessageType<InfoRequest> {
+    constructor() {
+        super("InfoRequest", [
+            { no: 1, name: "getConnectionManagerInfo", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "getDhtNodeInfo", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "getStreamrNodeInfo", kind: "message", T: () => GetStreamInfo }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message InfoRequest
+ */
+export const InfoRequest = new InfoRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class InfoResponse$Type extends MessageType<InfoResponse> {
+    constructor() {
+        super("InfoResponse", [
+            { no: 1, name: "streamrNode", kind: "message", T: () => StreamrNodeInfo },
+            { no: 2, name: "dhtNode", kind: "message", T: () => DhtNodeInfo },
+            { no: 3, name: "connectionManager", kind: "message", T: () => ConnectionManagerInfo }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message InfoResponse
+ */
+export const InfoResponse = new InfoResponse$Type();
 /**
  * @generated ServiceType for protobuf service NetworkRpc
  */
@@ -602,4 +687,10 @@ export const NeighborUpdateRpc = new ServiceType("NeighborUpdateRpc", [
  */
 export const TemporaryConnectionRpc = new ServiceType("TemporaryConnectionRpc", [
     { name: "openConnection", options: {}, I: TemporaryConnectionRequest, O: TemporaryConnectionResponse }
+]);
+/**
+ * @generated ServiceType for protobuf service InfoRpc
+ */
+export const InfoRpc = new ServiceType("InfoRpc", [
+    { name: "getInfo", options: {}, I: InfoRequest, O: InfoResponse }
 ]);

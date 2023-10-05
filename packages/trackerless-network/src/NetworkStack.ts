@@ -4,6 +4,7 @@ import { Logger, MetricsContext, waitForCondition, waitForEvent3 } from '@stream
 import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { InfoRpcServer } from './logic/info-rpc/InfoRpcServer'
 
 interface ReadinessEvents {
     done: () => void
@@ -50,11 +51,11 @@ const DEFAULT_FIRST_CONNECTION_TIMEOUT = 5000
 const logger = new Logger(module)
 
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
-
     private layer0DhtNode?: DhtNode
     private streamrNode?: StreamrNode
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
+    private infoServer?: InfoRpcServer
 
     constructor(options: NetworkOptions) {
         super()
@@ -112,6 +113,10 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             }
         }
         await this.streamrNode?.start(this.layer0DhtNode!, connectionManager, connectionManager)
+        if (this.streamrNode) {
+            this.infoServer = new InfoRpcServer(this)
+            this.infoServer.registerDefaultServerMethods()
+        }
     }
 
     private async joinDht(): Promise<void> {
@@ -148,6 +153,10 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     getLayer0DhtNode(): DhtNode {
         return this.layer0DhtNode!
+    }
+
+    getConnectionManager(): ConnectionManager {
+        return this.layer0DhtNode!.getTransport() as ConnectionManager
     }
 
     getMetricsContext(): MetricsContext {

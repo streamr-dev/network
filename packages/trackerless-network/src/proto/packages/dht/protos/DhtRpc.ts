@@ -40,6 +40,28 @@ export interface StoreDataResponse {
     error: string;
 }
 /**
+ * @generated from protobuf message dht.ExternalStoreDataRequest
+ */
+export interface ExternalStoreDataRequest {
+    /**
+     * @generated from protobuf field: bytes key = 1;
+     */
+    key: Uint8Array;
+    /**
+     * @generated from protobuf field: google.protobuf.Any data = 2;
+     */
+    data?: Any;
+}
+/**
+ * @generated from protobuf message dht.ExternalStoreDataResponse
+ */
+export interface ExternalStoreDataResponse {
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor storers = 1;
+     */
+    storers: PeerDescriptor[];
+}
+/**
  * @generated from protobuf message dht.MigrateDataRequest
  */
 export interface MigrateDataRequest {
@@ -691,10 +713,6 @@ export interface DhtNodeInfo {
      * @generated from protobuf field: repeated dht.PeerDescriptor kBucket = 1;
      */
     kBucket: PeerDescriptor[];
-    /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor neighborList = 2;
-     */
-    neighborList: PeerDescriptor[];
 }
 /**
  * @generated from protobuf message dht.ConnectionManagerInfo
@@ -827,6 +845,31 @@ class StoreDataResponse$Type extends MessageType$<StoreDataResponse> {
  * @generated MessageType for protobuf message dht.StoreDataResponse
  */
 export const StoreDataResponse = new StoreDataResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ExternalStoreDataRequest$Type extends MessageType$<ExternalStoreDataRequest> {
+    constructor() {
+        super("dht.ExternalStoreDataRequest", [
+            { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "data", kind: "message", T: () => Any }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.ExternalStoreDataRequest
+ */
+export const ExternalStoreDataRequest = new ExternalStoreDataRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ExternalStoreDataResponse$Type extends MessageType$<ExternalStoreDataResponse> {
+    constructor() {
+        super("dht.ExternalStoreDataResponse", [
+            { no: 1, name: "storers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.ExternalStoreDataResponse
+ */
+export const ExternalStoreDataResponse = new ExternalStoreDataResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class MigrateDataRequest$Type extends MessageType$<MigrateDataRequest> {
     constructor() {
@@ -1317,8 +1360,7 @@ export const FindDataResponse = new FindDataResponse$Type();
 class DhtNodeInfo$Type extends MessageType$<DhtNodeInfo> {
     constructor() {
         super("dht.DhtNodeInfo", [
-            { no: 1, name: "kBucket", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
-            { no: 2, name: "neighborList", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+            { no: 1, name: "kBucket", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }
@@ -1395,5 +1437,6 @@ export const ConnectionLocker = new ServiceType("dht.ConnectionLocker", [
  * @generated ServiceType for protobuf service dht.ExternalApiService
  */
 export const ExternalApiService = new ServiceType("dht.ExternalApiService", [
-    { name: "findData", options: {}, I: FindDataRequest, O: FindDataResponse }
+    { name: "findData", options: {}, I: FindDataRequest, O: FindDataResponse },
+    { name: "externalStoreData", options: {}, I: ExternalStoreDataRequest, O: ExternalStoreDataResponse }
 ]);
