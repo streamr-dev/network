@@ -23,7 +23,7 @@ export class InfoClient {
         getLayer0DhtNodeInfo: boolean,
         streamParts: StreamPartID[]
     ): Promise<InfoResponse> {
-        const remote = new RemoteInfoRpcServer(node, INFO_RPC_SERVICE_ID, this.infoRpcClient)
-        return remote.getInfo(this.ownPeerDescriptor, getConnectionManagerInfo, getLayer0DhtNodeInfo, streamParts)
+        const remote = new RemoteInfoRpcServer(this.ownPeerDescriptor, node, INFO_RPC_SERVICE_ID, this.infoRpcClient)
+        return remote.getInfo(getConnectionManagerInfo, getLayer0DhtNodeInfo, streamParts)
     }
 }

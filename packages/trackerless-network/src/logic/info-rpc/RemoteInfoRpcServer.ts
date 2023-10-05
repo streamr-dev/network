@@ -1,14 +1,12 @@
 import { StreamPartID } from '@streamr/protocol'
 import { InfoRequest, InfoResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IInfoRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { Remote } from '../Remote'
-import { DhtRpcOptions, PeerDescriptor } from '@streamr/dht'
+import { DhtRpcOptions, PeerDescriptor, Remote } from '@streamr/dht'
 
 export class RemoteInfoRpcServer extends Remote<IInfoRpcClient> {
 
     // streams is a list of stream partition IDs if empty list then return info about all streams
     async getInfo(
-        ownPeerDescriptor: PeerDescriptor,
         getConnectionManagerInfo: boolean,
         getLayer0DhtNodeInfo: boolean,
         streamParts?: StreamPartID[]
@@ -20,12 +18,8 @@ export class RemoteInfoRpcServer extends Remote<IInfoRpcClient> {
                 streamPartIds: streamParts 
             } : undefined
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor
-        }
         // TODO: Why does TS think this is Promise<void>
-        const result = await this.client.getInfo(request, options)
+        const result = await this.getClient().getInfo(request, this.formDhtRpcOptions({}))
         return result as unknown as InfoResponse
     }
 

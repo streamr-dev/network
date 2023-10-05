@@ -1,11 +1,10 @@
-import { NodeType, PeerDescriptor } from '@streamr/dht'
-import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamID, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { waitForEvent3, hexToBinary } from '@streamr/utils'
-import { ProxyDirection, StreamMessage as InternalStreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { StreamNodeType } from '../../src/logic/StreamrNode'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { createRandomNodeId } from '../utils/utils'
+import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
+import { StreamNodeType } from '../../src/logic/StreamrNode'
+import { StreamMessage as InternalStreamMessage, ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 const PROXIED_NODE_USER_ID = randomEthereumAddress()
 
@@ -20,9 +19,9 @@ const createMessage = (streamId: StreamID): StreamMessage => {
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),
-        content: {
+        content: utf8ToBinary(JSON.stringify({
             hello: 'world'
-        },
+        })),
         messageType: StreamMessageType.MESSAGE,
         signature: hexToBinary('0x1234'),
     })
@@ -30,16 +29,11 @@ const createMessage = (streamId: StreamID): StreamMessage => {
 
 describe('proxy and full node', () => {
 
-    const proxyNodeDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
+    const proxyNodeDescriptor = createMockPeerDescriptor({
         nodeName: 'proxyNode',
         websocket: { host: '127.0.0.1', port: 23135, tls: false }
-    }
-    const proxiedNodeDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
-    }
+    })
+    const proxiedNodeDescriptor = createMockPeerDescriptor()
 
     const proxyStreamId = toStreamPartID(toStreamID('proxy-stream'), 0)
     const regularStreamId1 = toStreamPartID(toStreamID('regular-stream1'), 0)
@@ -93,14 +87,14 @@ describe('proxy and full node', () => {
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage'),
-            proxiedNode.publish(regularMessage1)
+            proxiedNode.broadcast(regularMessage1)
         ])
 
         expect(proxiedNode.stack.getLayer0DhtNode().hasJoined()).toBe(true)
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage'),
-            proxiedNode.publish(proxiedMessage)
+            proxiedNode.broadcast(proxiedMessage)
         ])
 
         expect(proxiedNode.stack.getStreamrNode().getStream(proxyStreamId)!.type).toBe(StreamNodeType.PROXY)
@@ -120,17 +114,17 @@ describe('proxy and full node', () => {
                 (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream3'),
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
                 (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream4'),
-            proxiedNode.publish(regularMessage1),
-            proxiedNode.publish(regularMessage2),
-            proxiedNode.publish(regularMessage3),
-            proxiedNode.publish(regularMessage4)
+            proxiedNode.broadcast(regularMessage1),
+            proxiedNode.broadcast(regularMessage2),
+            proxiedNode.broadcast(regularMessage3),
+            proxiedNode.broadcast(regularMessage4)
         ])
 
         expect(proxiedNode.stack.getLayer0DhtNode().hasJoined()).toBe(true)
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage'),
-            proxiedNode.publish(proxiedMessage)
+            proxiedNode.broadcast(proxiedMessage)
         ])
 
         expect(proxiedNode.stack.getStreamrNode().getStream(proxyStreamId)!.type).toBe(StreamNodeType.PROXY)

@@ -148,8 +148,8 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 return new RemoteRouter(
                     this.ownPeerDescriptor,
                     contact.getPeerDescriptor(),
-                    toProtoRpcClient(new RoutingServiceClient(this.rpcCommunicator.getRpcClientTransport())),
-                    contact.getServiceId()
+                    contact.getServiceId(),
+                    toProtoRpcClient(new RoutingServiceClient(this.rpcCommunicator.getRpcClientTransport()))
                 )  
             })
         this.contactList.addContacts(contacts)

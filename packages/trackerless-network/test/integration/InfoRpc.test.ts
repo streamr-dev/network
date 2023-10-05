@@ -74,7 +74,7 @@ describe('NetworkStack InfoRpc', () => {
         const streamPartId = StreamPartIDUtils.parse('stream1#0')
         await stack1.getStreamrNode().joinStream(streamPartId)
         await stack2.getStreamrNode().joinStream(streamPartId)
-        await waitForCondition(() => stack1.getStreamrNode().getNeighbors().length === 1 && stack2.getStreamrNode().getNeighbors().length === 1)
+        await waitForCondition(() => stack1.getStreamrNode().getNeighbors(streamPartId).length === 1 && stack2.getStreamrNode().getNeighbors(streamPartId).length === 1)
         const result = await infoClient.getInfo(stack1PeerDescriptor, false, false, [streamPartId])
         expect(result.streamrNode!.streamPartitions[0].id).toEqual(streamPartId)
         expect(result.streamrNode!.streamPartitions[0].neighbors[0]).toEqual(stack2.getStreamrNode().getNodeId())

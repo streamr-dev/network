@@ -86,7 +86,7 @@ describe('Kademlia correctness', () => {
                     correctNeighbors++
                 }
             } catch (e) {
-                console.error('Node ' + nodes[i].getNodeName() + ' had only ' + kademliaNeighbors.length + ' kademlia neighbors')
+                console.error('Node ' + nodes[i].getPeerDescriptor().nodeName + ' had only ' + kademliaNeighbors.length + ' kademlia neighbors')
             }
             if (correctNeighbors === 0) {
                 console.log('No correct neighbors found for node ' + i)

@@ -114,13 +114,13 @@ describe('Migrating data from node to node in DHT', () => {
                 hasDataMarker = '<-'
             }
 
-            logger.info(contact.getPeerDescriptor().nodeName + ' ' + node.getNodeName() + hasDataMarker)
+            logger.info(contact.getPeerDescriptor().nodeName + ' ' + node.getPeerDescriptor().nodeName + hasDataMarker)
         })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
             nodes.map((node) => {
-                if (node.getNodeName() != '0') {
+                if (node.getPeerDescriptor().nodeName != '0') {
                     node.joinDht([entrypointDescriptor])
                 }
             })
@@ -142,7 +142,7 @@ describe('Migrating data from node to node in DHT', () => {
                 hasDataMarker = '<-'
             }
 
-            logger.info('' + node.getNodeName() + hasDataMarker)
+            logger.info('' + node.getPeerDescriptor().nodeName + hasDataMarker)
         })
 
         const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().kademliaId).toKey())!

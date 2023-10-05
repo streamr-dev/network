@@ -9,7 +9,7 @@ import {
     StreamMessageType as OldStreamMessageType,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress } from '@streamr/utils'
+import { binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 
 describe('StreamMessageTranslator', () => {
 
@@ -31,7 +31,7 @@ describe('StreamMessageTranslator', () => {
     const oldProtocolMsg = new OldStreamMessage({
         messageId,
         prevMsgRef: null,
-        content: { hello: 'WORLD' },
+        content: utf8ToBinary(JSON.stringify({ hello: 'WORLD' })),
         messageType: OldStreamMessageType.MESSAGE,
         encryptionType: EncryptionType.NONE,
         signature,
