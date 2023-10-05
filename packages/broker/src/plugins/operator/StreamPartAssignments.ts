@@ -40,8 +40,8 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
         this.consistentHashRing.add(myNodeId)
         this.operatorFleetState.on('added', this.nodeAdded)
         this.operatorFleetState.on('removed', this.nodeRemoved)
-        this.maintainTopologyHelper.on('addStakedStreams', this.streamsAdded)
-        this.maintainTopologyHelper.on('removeStakedStream', this.streamRemoved)
+        this.maintainTopologyHelper.on('addStakedStreams', this.streamsStaked)
+        this.maintainTopologyHelper.on('removeStakedStream', this.streamUnstaked)
     }
 
     getMyStreamParts(): StreamPartID[] {
@@ -53,7 +53,7 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
             return
         }
         this.consistentHashRing.add(nodeId)
-        this.recalculateAssignments()
+        this.recalculateAssignments(`nodeAdded:${nodeId}`)
     })
 
     private nodeRemoved = this.concurrencyLimiter(async (nodeId: NodeID): Promise<void> => {
@@ -61,38 +61,43 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
             return
         }
         this.consistentHashRing.remove(nodeId)
-        this.recalculateAssignments()
+        this.recalculateAssignments(`nodeRemoved:${nodeId}`)
     })
 
-    private streamsAdded = this.concurrencyLimiter(async (streamIds: StreamID[]): Promise<void> => {
+    private streamsStaked = this.concurrencyLimiter(async (streamIds: StreamID[]): Promise<void> => {
         const streamPartIds = (await Promise.all(streamIds.map(this.getStreamPartIds))).flat()
         for (const streamPartId of streamPartIds) {
             this.allStreamParts.add(streamPartId)
         }
-        this.recalculateAssignments() // TODO: optimize; calculate efficiently by only considering added stream parts
+        this.recalculateAssignments(`streamsStaked:${streamIds.join()}`) // TODO: optimize; calculate efficiently by only considering added stream parts
     })
 
-    private streamRemoved = this.concurrencyLimiter(async (streamId: StreamID): Promise<void> => {
+    private streamUnstaked = this.concurrencyLimiter(async (streamId: StreamID): Promise<void> => {
         const streamPartIds = await this.getStreamPartIds(streamId)
         for (const streamPartId of streamPartIds) {
             this.allStreamParts.delete(streamPartId)
         }
-        this.recalculateAssignments() // TODO: optimize; calculate efficiently by only considering removed stream parts
+        this.recalculateAssignments(`streamUnstaked:${streamId}`) // TODO: optimize; calculate efficiently by only considering removed stream parts
     })
 
-    private recalculateAssignments(): void {
+    private recalculateAssignments(context: string): void {
+        const assigned: StreamPartID[] = []
+        const unassigned: StreamPartID[] = []
         for (const streamPartId of this.allStreamParts) {
             if (this.consistentHashRing.get(streamPartId).includes(this.myNodeId) && !this.myStreamParts.has(streamPartId)) {
+                assigned.push(streamPartId)
                 this.myStreamParts.add(streamPartId)
                 this.emit('assigned', streamPartId)
             }
         }
         for (const streamPartId of this.myStreamParts) {
             if (!this.allStreamParts.has(streamPartId) || !this.consistentHashRing.get(streamPartId).includes(this.myNodeId)) {
+                unassigned.push(streamPartId)
                 this.myStreamParts.delete(streamPartId)
                 this.emit('unassigned', streamPartId)
             }
         }
+        logger.info('Recalculate assignments', { assigned, unassigned, context })
     }
 
     private getStreamPartIds = async (streamId: StreamID): Promise<StreamPartID[]> => {
