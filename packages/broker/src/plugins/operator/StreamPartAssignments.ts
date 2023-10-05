@@ -9,12 +9,12 @@ import { NodeID } from '@streamr/trackerless-network'
 
 const logger = new Logger(module)
 
-export interface StreamAssignmentLoadBalancerEvents {
+export interface StreamPartAssignmentEvents {
     assigned(streamPartId: StreamPartID): void
     unassigned(streamPartId: StreamPartID): void
 }
 
-export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignmentLoadBalancerEvents> {
+export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEvents> {
     private readonly allStreamParts = new Set<StreamPartID>()
     private readonly myStreamParts = new Set<StreamPartID>()
     private readonly concurrencyLimit = pLimit(1)
