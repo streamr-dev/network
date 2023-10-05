@@ -4,7 +4,7 @@ import { AutoCertifierClient } from '@streamr/autocertifier-client'
 import os from 'os'
 import fs from 'fs'
 import { CertifiedSubdomain } from '@streamr/autocertifier-client'
-import { Logger } from '@streamr/utils'
+import { Logger, filePathToNodeFormat } from '@streamr/utils'
 import { SessionIdRequest, SessionIdResponse } from '../../src/proto/packages/autocertifier/protos/AutoCertifier'
 
 const logger = new Logger(module)
@@ -45,7 +45,7 @@ describe('production', () => {
             fs.unlinkSync(subdomainPath)
         }
 
-        restServerCa = fs.readFileSync(restServerCACertPath!, 'utf8')
+        restServerCa = fs.readFileSync(filePathToNodeFormat(restServerCACertPath!), 'utf8')
 
         clientConnectionManager = new ConnectionManager({
             transportLayer: mockTransport,
