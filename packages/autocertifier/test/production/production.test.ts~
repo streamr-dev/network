@@ -98,7 +98,7 @@ describe('production', () => {
             done()
         })
 
-        client.start().then(() => { return }).catch((e) => {
+        client.start().then(() => { return }).catch((e) => { 
             expect(e).toBeFalsy()
             done() 
         })
