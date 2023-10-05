@@ -330,10 +330,7 @@ message FindDataResponse {
   optional string error = 2;
 }
 
-message DhtNodeInfo {
+message ControlLayerInfo {
   repeated PeerDescriptor kBucket = 1;
-}
-
-message ConnectionManagerInfo {
-  repeated PeerDescriptor connections = 1;
+  repeated PeerDescriptor connections = 2;
 }

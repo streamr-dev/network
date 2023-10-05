@@ -17,7 +17,7 @@ import {
     PingResponse,
     FindMode,
     DataEntry,
-    DhtNodeInfo,
+    ControlLayerInfo,
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
@@ -734,9 +734,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.config.entryPoints || []
     }
 
-    public getInfo(): DhtNodeInfo {
+    public getInfo(): ControlLayerInfo {
         return {
-            kBucket: this.getKBucketPeers()
+            connections: Array.from(this.connections.values()).map((peer) => peer.getPeerDescriptor()),
+            kBucket: this.getKBucketPeers(),
         }
     }
 
