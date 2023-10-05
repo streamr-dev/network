@@ -14,6 +14,8 @@ export const DEFAULT_UPDATE_INTERVAL_IN_MS = 1000 * 10
 
 const DEFAULT_PRUNE_AGE_IN_MS = 5 * 60 * 1000
 
+const DEFAULT_IGNORE_AGE_IN_MS = 60 * 1000
+
 const DEFAULT_PRUNE_INTERVAL_IN_MS = 30 * 1000
 
 const DEFAULT_LATENCY_EXTRA_MS = 2000
@@ -34,6 +36,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly timeProvider: () => number
     private readonly pruneAgeInMs: number
     private readonly pruneIntervalInMs: number
+	private readonly ignoreAgeInMs: number
     private readonly heartbeatIntervalInMs: number
     private readonly latencyExtraInMs: number
     private readonly latestHeartbeats = new Map<NodeID, Heartbeat>()
@@ -48,7 +51,8 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         pruneAgeInMs = DEFAULT_PRUNE_AGE_IN_MS,
         pruneIntervalInMs = DEFAULT_PRUNE_INTERVAL_IN_MS,
         heartbeatIntervalInMs = DEFAULT_UPDATE_INTERVAL_IN_MS,
-        latencyExtraInMs = DEFAULT_LATENCY_EXTRA_MS
+        latencyExtraInMs = DEFAULT_LATENCY_EXTRA_MS,
+		ignoreAgeInMs = DEFAULT_IGNORE_AGE_IN_MS
     ) {
         super()
         this.streamrClient = streamrClient
@@ -58,13 +62,14 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         this.pruneIntervalInMs = pruneIntervalInMs
         this.heartbeatIntervalInMs = heartbeatIntervalInMs
         this.latencyExtraInMs = latencyExtraInMs
+		this.ignoreAgeInMs = ignoreAgeInMs
     }
 
     async start(): Promise<void> {
         if (this.subscription !== undefined) {
             throw new Error('already started')
         }
-        this.subscription = await this.streamrClient.subscribe(this.coordinationStreamId, (rawContent) => {
+        this.subscription = await this.streamrClient.subscribe(this.coordinationStreamId, (rawContent, metadata) => {
             let message: HeartbeatMessage
             try {
                 message = HeartbeatMessageSchema.parse(rawContent)
@@ -77,19 +82,28 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
             }
             if (message.msgType === 'heartbeat') {
                 const nodeId = message.peerDescriptor.id as NodeID
-                const exists = this.latestHeartbeats.has(nodeId)
-                this.latestHeartbeats.set(nodeId, {
-                    timestamp: this.timeProvider(),
-                    peerDescriptor: message.peerDescriptor
-                })
-				logger.trace(`Got heartbeat: ${nodeId}, ${JSON.stringify(this.latestHeartbeats.get(nodeId))}`)
-                if (!exists) {
-                    this.emit('added', nodeId)
-					logger.trace(`Added node: ${nodeId}, ${JSON.stringify(this.latestHeartbeats.get(nodeId))}`)
-                }
-                if (!this.ready.isOpen()) {
-                    this.launchOpenReadyGateTimer()
-                }
+				const heartbeatAge = this.timeProvider() - metadata.timestamp
+
+				if (heartbeatAge >= this.ignoreAgeInMs) {
+					logger.warn(`Received old heartbeat from operator node ${message.peerDescriptor.id}: ${metadata.timestamp} (age: ${this.timeProvider}). The node clock may be incorrect?`)
+				} else {
+					const exists = this.latestHeartbeats.has(nodeId)
+
+					this.latestHeartbeats.set(nodeId, {
+						timestamp: this.timeProvider(),
+						peerDescriptor: message.peerDescriptor
+					})
+
+					logger.info(`Got heartbeat: ${nodeId}, ${JSON.stringify(this.latestHeartbeats.get(nodeId))}`)
+
+					if (!exists) {
+						this.emit('added', nodeId)
+						logger.info(`Added node: ${nodeId}, ${JSON.stringify(this.latestHeartbeats.get(nodeId))}`)
+					}
+					if (!this.ready.isOpen()) {
+						this.launchOpenReadyGateTimer()
+					}
+				}
             }
         })
         setAbortableInterval(() => this.pruneOfflineNodes(), this.pruneIntervalInMs, this.abortController.signal)
@@ -110,7 +124,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
 
     getNodeIds(): NodeID[] {
 		const nodeIds = [...this.latestHeartbeats.keys()]
-		logger.trace(`getNodeIds: ${JSON.stringify(nodeIds)}`)
+		logger.info(`getNodeIds: ${JSON.stringify(nodeIds)}`)
         return nodeIds
     }
 
@@ -128,7 +142,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         const now = this.timeProvider()
         for (const [nodeId, { timestamp }] of this.latestHeartbeats) {
             if (now - timestamp >= this.pruneAgeInMs) {
-				logger.trace(`Pruning ${nodeId}, latest heartbeat: ${timestamp}, age: ${now - timestamp}, now: ${now}`)
+				logger.info(`Pruning ${nodeId}, latest heartbeat: ${timestamp}, age: ${now - timestamp}, now: ${now}`)
                 this.latestHeartbeats.delete(nodeId)
                 this.emit('removed', nodeId)
             }
