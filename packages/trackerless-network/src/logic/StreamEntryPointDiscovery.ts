@@ -137,13 +137,13 @@ export class StreamEntryPointDiscovery {
         entryPointsFromDht: boolean,
         currentEntrypointCount: number
     ): Promise<void> {
-        if (!this.config.streams.has(streamPartId)) {
+        if (!this.config.streams.has(streamPartId) || !entryPointsFromDht) {
             return
         }
         if (this.config.streams.get(streamPartId)!.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
             await this.storeSelfAsEntryPoint(streamPartId)
             setImmediate(() => this.avoidNetworkSplit(streamPartId))
-        } else if (entryPointsFromDht && currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) {
+        } else if (currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) {
             await this.storeSelfAsEntryPoint(streamPartId)
         }
     }
