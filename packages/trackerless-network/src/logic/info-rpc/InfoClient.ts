@@ -19,11 +19,10 @@ export class InfoClient {
 
     async getInfo(
         node: PeerDescriptor,
-        getConnectionManagerInfo: boolean,
-        getLayer0DhtNodeInfo: boolean,
+        getControlLayerInfo: boolean,
         streamParts: StreamPartID[]
     ): Promise<InfoResponse> {
         const remote = new RemoteInfoRpcServer(this.ownPeerDescriptor, node, INFO_RPC_SERVICE_ID, this.infoRpcClient)
-        return remote.getInfo(getConnectionManagerInfo, getLayer0DhtNodeInfo, streamParts)
+        return remote.getInfo(getControlLayerInfo, streamParts)
     }
 }

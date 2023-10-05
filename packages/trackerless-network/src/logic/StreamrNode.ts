@@ -16,7 +16,7 @@ import {
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
-import { ProxyDirection, StreamMessage, StreamrNodeInfo } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection, StreamMessage, StreamInfo } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ILayer0 } from './ILayer0'
 import { ILayer1 } from './ILayer1'
 import { IStreamNode } from './IStreamNode'
@@ -271,7 +271,7 @@ export class StreamrNode extends EventEmitter<Events> {
         return false
     }
 
-    getInfo(streamPartsIds?: StreamPartID[]): StreamrNodeInfo {
+    getInfo(streamPartsIds?: StreamPartID[]): StreamInfo {
         const filtered = streamPartsIds ? Array.from(this.streams.entries())
             .filter(([streamPartId]) => streamPartsIds!.includes(StreamPartIDUtils.parse(streamPartId)))
             : Array.from(this.streams.entries())

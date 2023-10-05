@@ -4,8 +4,7 @@
 import { Empty } from "../../../google/protobuf/empty";
 import { ServiceType } from "@protobuf-ts/runtime-rpc";
 import { MessageType } from "@protobuf-ts/runtime";
-import { ConnectionManagerInfo } from "../../dht/protos/DhtRpc";
-import { DhtNodeInfo } from "../../dht/protos/DhtRpc";
+import { ControlLayerInfo } from "../../dht/protos/DhtRpc";
 import { PeerDescriptor } from "../../dht/protos/DhtRpc";
 /**
  * @generated from protobuf message MessageID
@@ -263,9 +262,9 @@ export interface TemporaryConnectionResponse {
     accepted: boolean;
 }
 /**
- * @generated from protobuf message StreamrNodeInfo
+ * @generated from protobuf message StreamInfo
  */
-export interface StreamrNodeInfo {
+export interface StreamInfo {
     /**
      * @generated from protobuf field: repeated StreamPartitionInfo streamPartitions = 1;
      */
@@ -293,7 +292,7 @@ export interface StreamPartitionInfo {
  */
 export interface GetStreamInfo {
     /**
-     * @generated from protobuf field: repeated string streamPartIds = 4;
+     * @generated from protobuf field: repeated string streamPartIds = 1;
      */
     streamPartIds: string[];
 }
@@ -302,34 +301,26 @@ export interface GetStreamInfo {
  */
 export interface InfoRequest {
     /**
-     * @generated from protobuf field: bool getConnectionManagerInfo = 1;
+     * @generated from protobuf field: bool getControlLayerInfo = 1;
      */
-    getConnectionManagerInfo: boolean;
+    getControlLayerInfo: boolean;
     /**
-     * @generated from protobuf field: bool getDhtNodeInfo = 2;
+     * @generated from protobuf field: optional GetStreamInfo getStreamInfo = 2;
      */
-    getDhtNodeInfo: boolean;
-    /**
-     * @generated from protobuf field: optional GetStreamInfo getStreamrNodeInfo = 3;
-     */
-    getStreamrNodeInfo?: GetStreamInfo;
+    getStreamInfo?: GetStreamInfo;
 }
 /**
  * @generated from protobuf message InfoResponse
  */
 export interface InfoResponse {
     /**
-     * @generated from protobuf field: optional StreamrNodeInfo streamrNode = 1;
+     * @generated from protobuf field: optional StreamInfo StreamInfo = 1 [json_name = "StreamInfo"];
      */
-    streamrNode?: StreamrNodeInfo;
+    streamInfo?: StreamInfo;
     /**
-     * @generated from protobuf field: optional dht.DhtNodeInfo dhtNode = 2;
+     * @generated from protobuf field: optional dht.ControlLayerInfo controlLayerInfo = 2;
      */
-    dhtNode?: DhtNodeInfo;
-    /**
-     * @generated from protobuf field: optional dht.ConnectionManagerInfo connectionManager = 3;
-     */
-    connectionManager?: ConnectionManagerInfo;
+    controlLayerInfo?: ControlLayerInfo;
 }
 /**
  * @generated from protobuf enum StreamMessageType
@@ -596,17 +587,17 @@ class TemporaryConnectionResponse$Type extends MessageType<TemporaryConnectionRe
  */
 export const TemporaryConnectionResponse = new TemporaryConnectionResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class StreamrNodeInfo$Type extends MessageType<StreamrNodeInfo> {
+class StreamInfo$Type extends MessageType<StreamInfo> {
     constructor() {
-        super("StreamrNodeInfo", [
+        super("StreamInfo", [
             { no: 1, name: "streamPartitions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => StreamPartitionInfo }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message StreamrNodeInfo
+ * @generated MessageType for protobuf message StreamInfo
  */
-export const StreamrNodeInfo = new StreamrNodeInfo$Type();
+export const StreamInfo = new StreamInfo$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
     constructor() {
@@ -625,7 +616,7 @@ export const StreamPartitionInfo = new StreamPartitionInfo$Type();
 class GetStreamInfo$Type extends MessageType<GetStreamInfo> {
     constructor() {
         super("GetStreamInfo", [
-            { no: 4, name: "streamPartIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "streamPartIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -637,9 +628,8 @@ export const GetStreamInfo = new GetStreamInfo$Type();
 class InfoRequest$Type extends MessageType<InfoRequest> {
     constructor() {
         super("InfoRequest", [
-            { no: 1, name: "getConnectionManagerInfo", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "getDhtNodeInfo", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 3, name: "getStreamrNodeInfo", kind: "message", T: () => GetStreamInfo }
+            { no: 1, name: "getControlLayerInfo", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "getStreamInfo", kind: "message", T: () => GetStreamInfo }
         ]);
     }
 }
@@ -651,9 +641,8 @@ export const InfoRequest = new InfoRequest$Type();
 class InfoResponse$Type extends MessageType<InfoResponse> {
     constructor() {
         super("InfoResponse", [
-            { no: 1, name: "streamrNode", kind: "message", T: () => StreamrNodeInfo },
-            { no: 2, name: "dhtNode", kind: "message", T: () => DhtNodeInfo },
-            { no: 3, name: "connectionManager", kind: "message", T: () => ConnectionManagerInfo }
+            { no: 1, name: "StreamInfo", kind: "message", jsonName: "StreamInfo", T: () => StreamInfo },
+            { no: 2, name: "controlLayerInfo", kind: "message", T: () => ControlLayerInfo }
         ]);
     }
 }

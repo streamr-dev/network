@@ -706,20 +706,15 @@ export interface FindDataResponse {
     error?: string;
 }
 /**
- * @generated from protobuf message dht.DhtNodeInfo
+ * @generated from protobuf message dht.ControlLayerInfo
  */
-export interface DhtNodeInfo {
+export interface ControlLayerInfo {
     /**
      * @generated from protobuf field: repeated dht.PeerDescriptor kBucket = 1;
      */
     kBucket: PeerDescriptor[];
-}
-/**
- * @generated from protobuf message dht.ConnectionManagerInfo
- */
-export interface ConnectionManagerInfo {
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor connections = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor connections = 2;
      */
     connections: PeerDescriptor[];
 }
@@ -1357,29 +1352,18 @@ class FindDataResponse$Type extends MessageType$<FindDataResponse> {
  */
 export const FindDataResponse = new FindDataResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class DhtNodeInfo$Type extends MessageType$<DhtNodeInfo> {
+class ControlLayerInfo$Type extends MessageType$<ControlLayerInfo> {
     constructor() {
-        super("dht.DhtNodeInfo", [
-            { no: 1, name: "kBucket", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+        super("dht.ControlLayerInfo", [
+            { no: 1, name: "kBucket", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 2, name: "connections", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.DhtNodeInfo
+ * @generated MessageType for protobuf message dht.ControlLayerInfo
  */
-export const DhtNodeInfo = new DhtNodeInfo$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class ConnectionManagerInfo$Type extends MessageType$<ConnectionManagerInfo> {
-    constructor() {
-        super("dht.ConnectionManagerInfo", [
-            { no: 1, name: "connections", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.ConnectionManagerInfo
- */
-export const ConnectionManagerInfo = new ConnectionManagerInfo$Type();
+export const ControlLayerInfo = new ControlLayerInfo$Type();
 /**
  * @generated ServiceType for protobuf service dht.DhtRpcService
  */

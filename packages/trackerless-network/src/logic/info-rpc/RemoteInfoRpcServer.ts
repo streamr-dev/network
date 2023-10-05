@@ -7,14 +7,12 @@ export class RemoteInfoRpcServer extends Remote<IInfoRpcClient> {
 
     // streams is a list of stream partition IDs if empty list then return info about all streams
     async getInfo(
-        getConnectionManagerInfo: boolean,
-        getLayer0DhtNodeInfo: boolean,
+        getControlLayerInfo: boolean,
         streamParts?: StreamPartID[]
     ): Promise<InfoResponse> {
         const request: InfoRequest = {
-            getConnectionManagerInfo,
-            getDhtNodeInfo: getLayer0DhtNodeInfo,
-            getStreamrNodeInfo: streamParts ? {
+            getControlLayerInfo,
+            getStreamInfo: streamParts ? {
                 streamPartIds: streamParts 
             } : undefined
         }

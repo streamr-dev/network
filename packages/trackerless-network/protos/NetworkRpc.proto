@@ -144,7 +144,7 @@ enum ProxyDirection {
   SUBSCRIBE = 1;
 }
 
-message StreamrNodeInfo {
+message StreamInfo {
   repeated StreamPartitionInfo streamPartitions = 1;
 }
 
@@ -155,17 +155,15 @@ message StreamPartitionInfo {
 }
 
 message GetStreamInfo {
-  repeated string streamPartIds = 4;
+  repeated string streamPartIds = 1;
 }
 
 message InfoRequest {
-  bool getConnectionManagerInfo = 1;
-  bool getDhtNodeInfo = 2;
-  optional GetStreamInfo getStreamrNodeInfo = 3; 
+  bool getControlLayerInfo = 1;
+  optional GetStreamInfo getStreamInfo = 2; 
 }
 
 message InfoResponse {
-  optional StreamrNodeInfo streamrNode = 1;
-  optional dht.DhtNodeInfo dhtNode = 2;
-  optional dht.ConnectionManagerInfo connectionManager = 3;
+  optional StreamInfo streamInfo = 1;
+  optional dht.ControlLayerInfo controlLayerInfo = 2;
 }

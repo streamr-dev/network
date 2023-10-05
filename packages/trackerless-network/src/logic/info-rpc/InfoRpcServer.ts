@@ -23,10 +23,9 @@ export class InfoRpcServer implements IInfoRpc {
 
     async getInfo(request: InfoRequest, _context: ServerCallContext): Promise<InfoResponse> {
         return {
-            connectionManager: request.getConnectionManagerInfo ? this.stack.getConnectionManager().getInfo() : undefined,
-            dhtNode: request.getDhtNodeInfo ? this.stack.getLayer0DhtNode().getInfo() : undefined,
-            streamrNode: request.getStreamrNodeInfo ? this.stack.getStreamrNode().getInfo(
-                request.getStreamrNodeInfo.streamPartIds.map((id) => StreamPartIDUtils.parse(id))
+            controlLayerInfo: request.getControlLayerInfo ? this.stack.getLayer0DhtNode().getInfo() : undefined,
+            streamInfo: request.getStreamInfo ? this.stack.getStreamrNode().getInfo(
+                request.getStreamInfo.streamPartIds.map((id) => StreamPartIDUtils.parse(id))
             ) : undefined
         }
     }
