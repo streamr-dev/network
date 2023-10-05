@@ -155,10 +155,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         return this.layer0DhtNode!
     }
 
-    getConnectionManager(): ConnectionManager {
-        return this.layer0DhtNode!.getTransport() as ConnectionManager
-    }
-
     getMetricsContext(): MetricsContext {
         return this.metricsContext
     }

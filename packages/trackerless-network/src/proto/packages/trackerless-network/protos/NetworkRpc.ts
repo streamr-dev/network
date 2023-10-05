@@ -314,7 +314,7 @@ export interface InfoRequest {
  */
 export interface InfoResponse {
     /**
-     * @generated from protobuf field: optional StreamInfo StreamInfo = 1 [json_name = "StreamInfo"];
+     * @generated from protobuf field: optional StreamInfo streamInfo = 1;
      */
     streamInfo?: StreamInfo;
     /**
@@ -641,7 +641,7 @@ export const InfoRequest = new InfoRequest$Type();
 class InfoResponse$Type extends MessageType<InfoResponse> {
     constructor() {
         super("InfoResponse", [
-            { no: 1, name: "StreamInfo", kind: "message", jsonName: "StreamInfo", T: () => StreamInfo },
+            { no: 1, name: "streamInfo", kind: "message", T: () => StreamInfo },
             { no: 2, name: "controlLayerInfo", kind: "message", T: () => ControlLayerInfo }
         ]);
     }
