@@ -76,9 +76,10 @@ describe('NetworkStack InfoRpc', () => {
         await waitForCondition(() => stack1.getStreamrNode().getNeighbors(streamPartId).length === 1 
             && stack2.getStreamrNode().getNeighbors(streamPartId).length === 1)
         const result = await infoClient.getInfo(stack1PeerDescriptor, false, [streamPartId])
+        expect(isSamePeerDescriptor(result.peerDescriptor!, stack1PeerDescriptor)).toEqual(true)
         expect(result.streamInfo!.streamPartitions[0].id).toEqual(streamPartId)
         expect(result.streamInfo!.streamPartitions[0].neighbors[0]).toEqual(stack2.getStreamrNode().getNodeId())
-        expect(isSamePeerDescriptor(result.streamInfo!.streamPartitions[0].kBucket[0], stack2PeerDescriptor)).toBeTruthy()
+        expect(isSamePeerDescriptor(result.streamInfo!.streamPartitions[0].kBucket[0], stack2PeerDescriptor)).toEqual(true)
     })
 
 })

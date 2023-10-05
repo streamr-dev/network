@@ -314,11 +314,15 @@ export interface InfoRequest {
  */
 export interface InfoResponse {
     /**
-     * @generated from protobuf field: optional StreamInfo streamInfo = 1;
+     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 1;
+     */
+    peerDescriptor?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: optional StreamInfo streamInfo = 2;
      */
     streamInfo?: StreamInfo;
     /**
-     * @generated from protobuf field: optional dht.ControlLayerInfo controlLayerInfo = 2;
+     * @generated from protobuf field: optional dht.ControlLayerInfo controlLayerInfo = 3;
      */
     controlLayerInfo?: ControlLayerInfo;
 }
@@ -641,8 +645,9 @@ export const InfoRequest = new InfoRequest$Type();
 class InfoResponse$Type extends MessageType<InfoResponse> {
     constructor() {
         super("InfoResponse", [
-            { no: 1, name: "streamInfo", kind: "message", T: () => StreamInfo },
-            { no: 2, name: "controlLayerInfo", kind: "message", T: () => ControlLayerInfo }
+            { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "streamInfo", kind: "message", T: () => StreamInfo },
+            { no: 3, name: "controlLayerInfo", kind: "message", T: () => ControlLayerInfo }
         ]);
     }
 }

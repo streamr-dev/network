@@ -164,6 +164,7 @@ message InfoRequest {
 }
 
 message InfoResponse {
-  optional StreamInfo streamInfo = 1;
-  optional dht.ControlLayerInfo controlLayerInfo = 2;
+  dht.PeerDescriptor peerDescriptor = 1;
+  optional StreamInfo streamInfo = 2;
+  optional dht.ControlLayerInfo controlLayerInfo = 3;
 }
