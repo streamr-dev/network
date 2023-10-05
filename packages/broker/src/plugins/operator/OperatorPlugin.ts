@@ -17,7 +17,7 @@ import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
-import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
+import { StreamPartAssignments } from './StreamPartAssignments'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { inspectRandomNode } from './inspectRandomNode'
 import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
@@ -67,7 +67,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         const announceNodeToContractHelper = new AnnounceNodeToContractHelper(serviceConfig)
 
         const fleetState = new OperatorFleetState(streamrClient, formCoordinationStreamId(operatorContractAddress))
-        const loadBalancer = new StreamAssignmentLoadBalancer(
+        const loadBalancer = new StreamPartAssignments(
             nodeId,
             redundancyFactor,
             async (streamId) => {

@@ -18,21 +18,13 @@ const createMessage = (id: number): StreamMessage => {
 describe('NetworkNode', () => {
 
     it('message listener', async () => {
-        const streamrNode = new class extends EventEmitter<Events> {
-            // eslint-disable-next-line class-methods-use-this
-            isProxiedStreamPart() { 
-                return false
-            }
-            // eslint-disable-next-line class-methods-use-this
-            subscribeToStream() {
-            }
-        }()
+        const streamrNode = new EventEmitter<Events>()
         const stack: Partial<NetworkStack> = {
             getStreamrNode: () => streamrNode as any,
-            joinLayer0IfRequired: async () => {}
+            joinStreamPart: async () => {}
         }
         const node = new NetworkNode(stack as any)
-        await node.subscribe(STREAM_PART)
+        await node.join(STREAM_PART)
         const onMessage = jest.fn()
 
         node.addMessageListener(onMessage)

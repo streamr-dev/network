@@ -130,8 +130,8 @@ export class DataStore implements IStoreService {
         const remoteStore = new RemoteStore(
             this.ownPeerDescriptor,
             contact,
-            toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport())),
-            this.serviceId
+            this.serviceId,
+            toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport()))
         )
         try {
             const response = await remoteStore.migrateData({ dataEntry }, doNotConnect)
@@ -168,8 +168,8 @@ export class DataStore implements IStoreService {
             const remoteStore = new RemoteStore(
                 this.ownPeerDescriptor,
                 closestNodes[i],
-                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport())),
-                this.serviceId
+                this.serviceId,
+                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             try {
                 const response = await remoteStore.storeData({ kademliaId: key, data, ttl, storerTime })
@@ -209,8 +209,8 @@ export class DataStore implements IStoreService {
             const remoteStore = new RemoteStore(
                 this.ownPeerDescriptor,
                 closestNodes[i],
-                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport())),
-                this.serviceId
+                this.serviceId,
+                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             try {
                 const response = await remoteStore.deleteData({ kademliaId: key })

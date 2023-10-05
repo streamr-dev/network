@@ -1,24 +1,17 @@
-import { ListeningRpcCommunicator, NodeType, PeerDescriptor } from '@streamr/dht'
+import { ListeningRpcCommunicator } from '@streamr/dht'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
 import { LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/Transport'
-import { hexToBinary } from '@streamr/utils'
-import { createRandomNodeId, createStreamMessage } from '../utils/utils'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('StreamNodeServer', () => {
 
     let streamNodeServer: StreamNodeServer
-    const peerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
+    const peerDescriptor = createMockPeerDescriptor()
 
-    const mockSender: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
+    const mockSender = createMockPeerDescriptor()
 
     const message = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
@@ -57,7 +50,6 @@ describe('StreamNodeServer', () => {
 
     it('Server leaveStreamNotice()', async () => {
         const leaveNotice: LeaveStreamNotice = {
-            senderId: hexToBinary(createRandomNodeId()),
             randomGraphId: 'random-graph'
         }
         await streamNodeServer.leaveStreamNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)

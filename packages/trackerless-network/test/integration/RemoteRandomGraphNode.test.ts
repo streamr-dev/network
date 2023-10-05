@@ -67,6 +67,7 @@ describe('RemoteRandomGraphNode', () => {
         )
 
         remoteRandomGraphNode = new RemoteRandomGraphNode(
+            clientNode,
             serverNode,
             'test-stream',
             toProtoRpcClient(new NetworkRpcClient(clientRpc.getRpcClientTransport()))
@@ -88,12 +89,12 @@ describe('RemoteRandomGraphNode', () => {
             randomEthereumAddress()
         )
 
-        await remoteRandomGraphNode.sendData(clientNode, msg)
+        await remoteRandomGraphNode.sendData(msg)
         await waitForCondition(() => recvCounter === 1)
     })
 
     it('leaveNotice', async () => {
-        remoteRandomGraphNode.leaveStreamNotice(clientNode)
+        remoteRandomGraphNode.leaveStreamNotice()
         await waitForCondition(() => recvCounter === 1)
     })
 

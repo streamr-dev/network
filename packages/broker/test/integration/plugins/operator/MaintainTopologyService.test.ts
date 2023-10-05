@@ -13,7 +13,7 @@ import {
     stake
 } from './contractUtils'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
-import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
+import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 
@@ -79,7 +79,7 @@ describe('MaintainTopologyService', () => {
 
         operatorFleetState = new OperatorFleetState(client, formCoordinationStreamId(serviceHelperConfig.operatorContractAddress))
         const maintainTopologyHelper = new MaintainTopologyHelper(serviceHelperConfig)
-        const loadBalancer = new StreamAssignmentLoadBalancer(
+        const assignments = new StreamPartAssignments(
             await client.getNodeId(),
             3,
             async (streamId) => {
@@ -89,7 +89,7 @@ describe('MaintainTopologyService', () => {
             operatorFleetState,
             maintainTopologyHelper
         )
-        new MaintainTopologyService(client, loadBalancer)
+        new MaintainTopologyService(client, assignments)
         await operatorFleetState.start()
         await maintainTopologyHelper.start()
 
