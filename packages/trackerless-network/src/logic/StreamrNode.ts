@@ -163,7 +163,7 @@ export class StreamrNode extends EventEmitter<Events> {
             forwardingNode
         )
         entryPoints = entryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT), true)
+        await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT))
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
             discoveryResult.entryPointsFromDht,
