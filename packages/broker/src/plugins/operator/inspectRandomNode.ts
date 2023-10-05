@@ -1,6 +1,6 @@
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
-import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
+import { StreamPartAssignments } from './StreamPartAssignments'
 import { StreamrClient } from 'streamr-client'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { findNodesForTarget, findTarget, inspectTarget } from './inspectionUtils'
@@ -14,7 +14,7 @@ export type InspectTargetFn = typeof inspectTarget
 export async function inspectRandomNode(
     operatorContractAddress: EthereumAddress,
     helper: InspectRandomNodeHelper,
-    loadBalancer: StreamAssignmentLoadBalancer,
+    assignments: StreamPartAssignments,
     streamrClient: StreamrClient,
     heartbeatTimeoutInMs: number,
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
@@ -25,7 +25,7 @@ export async function inspectRandomNode(
 ): Promise<void> {
     logger.info('Select a random operator to inspect')
 
-    const target = await findTargetFn(operatorContractAddress, helper, loadBalancer)
+    const target = await findTargetFn(operatorContractAddress, helper, assignments)
     if (target === undefined) {
         return
     }

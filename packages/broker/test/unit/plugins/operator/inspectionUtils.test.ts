@@ -5,7 +5,7 @@ import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/pro
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { findNodesForTarget, findTarget, inspectTarget } from '../../../../src/plugins/operator/inspectionUtils'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
-import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
+import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
 import { EthereumAddress } from '@streamr/utils'
 
 const MY_OPERATOR_ADDRESS = randomEthereumAddress()
@@ -25,7 +25,7 @@ const PEER_DESCRIPTOR_THREE = { id: '0x3333' }
 
 describe(findTarget, () => {
     let helper: MockProxy<InspectRandomNodeHelper>
-    let loadBalancer: MockProxy<StreamAssignmentLoadBalancer>
+    let assignments: MockProxy<StreamPartAssignments>
 
     function setupEnv(sponsorships: Array<{ address: EthereumAddress, operators: EthereumAddress[], streamId: StreamID }>) {
         helper.getSponsorshipsOfOperator.mockImplementation(async (operatorAddress) => {
@@ -43,17 +43,17 @@ describe(findTarget, () => {
     }
 
     function setStreamPartsAssignedToMe(streamParts: StreamPartID[]): void {
-        loadBalancer.getMyStreamParts.mockReturnValue(streamParts)
+        assignments.getMyStreamParts.mockReturnValue(streamParts)
     }
 
     beforeEach(() => {
         helper = mock<InspectRandomNodeHelper>()
-        loadBalancer = mock<StreamAssignmentLoadBalancer>()
+        assignments = mock<StreamPartAssignments>()
     })
 
     it('returns undefined if no sponsorships are found', async () => {
         setupEnv([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, assignments)
         expect(result).toBeUndefined()
     })
 
@@ -63,7 +63,7 @@ describe(findTarget, () => {
             operators: [MY_OPERATOR_ADDRESS],
             streamId: STREAM_ID,
         }])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, assignments)
         expect(result).toBeUndefined()
     })
 
@@ -74,7 +74,7 @@ describe(findTarget, () => {
             streamId: STREAM_ID,
         }])
         setStreamPartsAssignedToMe([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, assignments)
         expect(result).toBeUndefined()
     })
 
@@ -90,7 +90,7 @@ describe(findTarget, () => {
             toStreamPartID(STREAM_ID, 2),
         ])
 
-        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, assignments)
         expect(result).toMatchObject({
             sponsorshipAddress: SPONSORSHIP_ADDRESS,
             operatorAddress: OTHER_OPERATOR_ADDRESS,
