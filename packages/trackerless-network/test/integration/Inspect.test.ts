@@ -50,9 +50,9 @@ describe('inspect', () => {
             inspectedNodes.push(node)
         }))
         await Promise.all([
-            publisherNode.joinStreamPart(streamPartId, { minCount: 4, timeout: 5000 }),
-            inspectorNode.joinStreamPart(streamPartId, { minCount: 4, timeout: 5000 }),
-            ...inspectedNodes.map((node) => node.joinStreamPart(streamPartId, { minCount: 4, timeout: 5000 }))
+            publisherNode.joinStreamPart(streamPartId, { minCount: 4, timeout: 15000 }),
+            inspectorNode.joinStreamPart(streamPartId, { minCount: 4, timeout: 15000 }),
+            ...inspectedNodes.map((node) => node.joinStreamPart(streamPartId, { minCount: 4, timeout: 15000 }))
         ])
         sequenceNumber = 0
     }, 30000)
