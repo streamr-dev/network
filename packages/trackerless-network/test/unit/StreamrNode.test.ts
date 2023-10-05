@@ -95,8 +95,10 @@ describe('StreamrNode', () => {
         })
     })
 
-    describe('info methods', () => {
+    describe('getInfo', () => {
+
         const streamPartId = StreamPartIDUtils.parse('stream#0')
+
         it('getInfo returns queried streamPartition', async () => {
             await node.joinStream(streamPartId)
             const info = node.getInfo([streamPartId])
@@ -108,7 +110,7 @@ describe('StreamrNode', () => {
             expect(info.streamPartitions.length).toEqual(0)
         })
     
-        it('getInfo without specified streamPartitions to query returns all streams', async () => {
+        it('getInfo without specified streamPartitions returns all streams', async () => {
             await node.joinStream(streamPartId)
             const info = node.getInfo()
             expect(info.streamPartitions.length).toEqual(1)
