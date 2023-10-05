@@ -9,6 +9,7 @@ import { Any } from '../proto/google/protobuf/any'
 import { Logger, setAbortableTimeout, wait } from '@streamr/utils'
 import { StreamObject } from './StreamrNode'
 import { StreamPartID } from '@streamr/protocol'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): Uint8Array => {
     return new Uint8Array(createHash('md5').update(streamPartId).digest())
@@ -69,6 +70,7 @@ export class StreamEntryPointDiscovery {
     private readonly config: StreamEntryPointDiscoveryConfig
     private readonly servicedStreamParts: Map<StreamPartID, NodeJS.Timeout>
     private readonly cacheInterval: number
+    private readonly networkSplitAvoidedNodes: Map<StreamPartID, Set<NodeID>> = new Map()
 
     constructor(config: StreamEntryPointDiscoveryConfig) {
         this.config = config
@@ -100,8 +102,18 @@ export class StreamEntryPointDiscovery {
 
     private async discoverEntryPoints(streamPartId: StreamPartID, forwardingNode?: PeerDescriptor): Promise<PeerDescriptor[]> {
         const dataKey = streamPartIdToDataKey(streamPartId)
-        return forwardingNode ? 
-            this.queryEntryPointsViaNode(dataKey, forwardingNode) : await this.queryEntrypoints(dataKey)
+        let discoveredEntryPoints = forwardingNode ? 
+            await this.queryEntryPointsViaNode(dataKey, forwardingNode) : await this.queryEntrypoints(dataKey)
+    
+        if (this.networkSplitAvoidedNodes.has(streamPartId)) {
+            const filtered = discoveredEntryPoints.filter((node) => 
+                !this.networkSplitAvoidedNodes.get(streamPartId)!.has(getNodeIdFromPeerDescriptor(node)))
+            // If all discovered entry points have previously beed detected as offline, try again
+            if (filtered.length > 0) {
+                discoveredEntryPoints = filtered
+            }
+        }
+        return discoveredEntryPoints
     }
 
     private async queryEntrypoints(key: Uint8Array): Promise<PeerDescriptor[]> {
@@ -192,11 +204,22 @@ export class StreamEntryPointDiscovery {
                 const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartId)
                 await stream.layer1!.joinDht(rediscoveredEntrypoints, false, false)
                 if (stream.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
+                    // Filter out nodes that are not in the k-bucket, assumed to be offline
+                    const nodesToAvoid = rediscoveredEntrypoints.filter((peer) => !stream.layer1!.getKBucketPeers().includes(peer))
+                    this.addAvoidedNodes(streamPartId, nodesToAvoid)
                     throw new Error(`Network split is still possible`)
                 }
             }
         }, 'avoid network split', this.abortController.signal)
+        this.networkSplitAvoidedNodes.delete(streamPartId)
         logger.trace(`Network split avoided`)
+    }
+
+    private addAvoidedNodes(streamPartId: StreamPartID, nodesToAvoid: PeerDescriptor[]): void {
+        if (!this.networkSplitAvoidedNodes.has(streamPartId)) {
+            this.networkSplitAvoidedNodes.set(streamPartId, new Set())
+        }
+        nodesToAvoid.forEach((node) => this.networkSplitAvoidedNodes.get(streamPartId)!.add(getNodeIdFromPeerDescriptor(node)))
     }
 
     removeSelfAsEntryPoint(streamPartId: StreamPartID): void {
