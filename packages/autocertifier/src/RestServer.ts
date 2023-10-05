@@ -23,6 +23,7 @@ export class RestServer {
     private server?: ServerType
     private engine: RestInterface
 
+    private ownFqdn: string
     private ownIpAddress: string
     private port: string
     private caCertPath: string
@@ -30,10 +31,11 @@ export class RestServer {
     private certPath: string
     private keyPath: string
 
-    constructor(ownIpAddress: string, port: string, caCertPath: string,
+    constructor(ownFqdn: string, ownIpAddress: string, port: string, caCertPath: string,
         caKeyPath: string, certPath: string, keyPath: string,
         engine: RestInterface) {
 
+        this.ownFqdn = ownFqdn
         this.ownIpAddress = ownIpAddress
         this.port = port
         this.caCertPath = filePathToNodeFormat(caCertPath)
@@ -202,7 +204,7 @@ export class RestServer {
 
         if (!fs.existsSync(this.caCertPath) || !fs.existsSync(this.caKeyPath) ||
             !fs.existsSync(this.certPath) || !fs.existsSync(this.keyPath)) {
-            const certs = createSelfSignedCertificate(1200)
+            const certs = createSelfSignedCertificate(this.ownFqdn, 1200)
 
             if (!fs.existsSync(path.dirname(this.caCertPath))) {
                 fs.mkdirSync(path.dirname(this.caCertPath), { recursive: true })
