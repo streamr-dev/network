@@ -23,7 +23,7 @@ describe('production', () => {
     if (!restServerUrl) {
         throw new Error('REST_SERVER_CA_CERT_PATH environment variable is not set')
     }
-    const subdomainPath = os.tmpdir() + 'subdomain.json'
+    const subdomainPath = os.tmpdir() + '/subdomain.json'
 
     const mockPeerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('tester1').value,
@@ -78,6 +78,9 @@ describe('production', () => {
     it.only('The client can start', (done) => {
         const streamrWebSocketPort = clientConnectionManager.getPeerDescriptor().websocket!.port
 
+        logger.info(subdomainPath)
+        logger.info(restServerUrl)
+        
         client = new AutoCertifierClient(subdomainPath, streamrWebSocketPort,
             restServerUrl, restServerCa, (serviceId, rpcMethodName, method) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
