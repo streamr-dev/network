@@ -1,7 +1,7 @@
 import { StreamPartID } from '@streamr/protocol'
 import { InfoRequest, InfoResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IInfoRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { DhtRpcOptions, PeerDescriptor, Remote } from '@streamr/dht'
+import { Remote } from '@streamr/dht'
 
 export class RemoteInfoRpcServer extends Remote<IInfoRpcClient> {
 
