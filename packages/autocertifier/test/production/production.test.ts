@@ -3,14 +3,12 @@ import { createPeerDescriptor } from '@streamr/dht/dist/src/dht/DhtNode'
 import { AutoCertifierClient } from '@streamr/autocertifier-client'
 import os from 'os'
 import fs from 'fs'
-import { CertifiedSubdomain } from '@streamr/autocertifier-client'
 import { Logger, filePathToNodeFormat } from '@streamr/utils'
 import { SessionIdRequest, SessionIdResponse } from '../../src/proto/packages/autocertifier/protos/AutoCertifier'
 
 const logger = new Logger(module)
 
 let restServerCa: string
-let certifiedSubdomain: CertifiedSubdomain
 
 describe('production', () => {
 
@@ -93,14 +91,13 @@ describe('production', () => {
             })
 
         client.on('updatedSubdomain', (subdomain) => {
+            logger.info('received a subdomain')
             logger.info(JSON.stringify(subdomain))
-            expect(subdomain).toEqual(certifiedSubdomain)
             done()
         })
 
         client.start().then(() => { return }).catch((e) => {
             expect(e).toBeFalsy()
-            done() 
         })
     }, 120000)
 
