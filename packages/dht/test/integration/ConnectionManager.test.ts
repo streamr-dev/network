@@ -340,5 +340,4 @@ describe('ConnectionManager', () => {
         
         await connectionManager1.stop()
     })
-
 })
