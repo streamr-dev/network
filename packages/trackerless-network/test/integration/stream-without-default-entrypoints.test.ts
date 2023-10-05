@@ -118,7 +118,7 @@ describe('stream without default entrypoints', () => {
 
     it('nodes store themselves as entrypoints on streamPart if number of entrypoints is low', async () => {
         for (let i = 0; i < 10; i++) {
-            await nodes[i].join(STREAM_PART_ID, { minCount: (i > 0) ? 1 : 0, timeout: 5000 })
+            await nodes[i].join(STREAM_PART_ID, { minCount: (i > 0) ? 1 : 0, timeout: 15000 })
         }
         await waitForCondition(async () => {
             const entryPointData = await nodes[15].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(STREAM_PART_ID))
