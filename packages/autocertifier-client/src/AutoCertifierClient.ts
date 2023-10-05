@@ -44,7 +44,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         if (!fs.existsSync(this.subdomainPath)) {
             await this.createCertificate()
         } else {
-            this.checkSubdomainValidity()
+            await this.checkSubdomainValidity()
         }
     }
 

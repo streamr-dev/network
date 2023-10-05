@@ -91,7 +91,7 @@ class AutoCertifierClient extends eventemitter3_1.EventEmitter {
             await this.createCertificate();
         }
         else {
-            this.checkSubdomainValidity();
+            await this.checkSubdomainValidity();
         }
     }
     async checkSubdomainValidity() {

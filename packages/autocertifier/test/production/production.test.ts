@@ -73,7 +73,7 @@ describe('production', () => {
         await client.stop()
     })
 
-    it.only('The client can start', (done) => {
+    it('The client can start', (done) => {
         const streamrWebSocketPort = clientConnectionManager.getPeerDescriptor().websocket!.port
 
         logger.info(subdomainPath)
@@ -101,9 +101,12 @@ describe('production', () => {
         })
     }, 120000)
 
-    it('Starting the client throws an exception if AutoCertifier cannot connect to it using WebSocket', async () => {
-        const streamrWebSocketPort = 100
+    it('The client can start if the subdomain already exits', async() => {
+        const streamrWebSocketPort = clientConnectionManager.getPeerDescriptor().websocket!.port
 
+        logger.info(subdomainPath)
+        logger.info(restServerUrl)
+        
         client = new AutoCertifierClient(subdomainPath, streamrWebSocketPort,
             restServerUrl, restServerCa, (serviceId, rpcMethodName, method) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
@@ -115,6 +118,9 @@ describe('production', () => {
                 )
             })
 
-        await expect(client.start()).rejects.toThrow('Autocertifier failed to connect')
-    })
+        await client.start()
+        await client.stop()
+        await client.start()
+
+    }, 120000)
 })
