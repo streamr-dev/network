@@ -64,7 +64,7 @@ export function createSelfSignedCertificate(fqdn: string, validMonths: number, v
     serverCert.setExtensions([
         { name: 'basicConstraints', cA: false },
         { name: 'keyUsage', digitalSignature: true, nonRepudiation: true, keyEncipherment: true, dataEncipherment: true },
-        { name: 'subjectAltName', altNames: [{ type: 2, value: 'localhost' }] },
+        { name: 'subjectAltName', altNames: [{ type: 2, value: fqdn }] },
         { name: 'subjectKeyIdentifier' }
     ])
     serverCert.sign(caKeys.privateKey, forge.md.sha256.create())
