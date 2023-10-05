@@ -1,4 +1,4 @@
-import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
+import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
 import EventEmitter3 from 'eventemitter3'
 import { OperatorFleetStateEvents } from '../../../../src/plugins/operator/OperatorFleetState'
 import { MaintainTopologyHelperEvents } from '../../../../src/plugins/operator/MaintainTopologyHelper'
@@ -23,11 +23,11 @@ const streamPartMappings = new Map<StreamID, StreamPartID[]>()
     .set(S3, range(3).map((p) => toStreamPartID(S3, p)))
     .set(S4, range(1).map((p) => toStreamPartID(S4, p)))
 
-describe(StreamAssignmentLoadBalancer, () => {
+describe(StreamPartAssignments, () => {
     let events: [string, ...any[]][]
     let operatorFleetState: EventEmitter3<OperatorFleetStateEvents>
     let maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>
-    let balancer: StreamAssignmentLoadBalancer
+    let assigments: StreamPartAssignments
 
     function clearEvents(): void {
         events.length = 0
@@ -44,14 +44,14 @@ describe(StreamAssignmentLoadBalancer, () => {
         })
         operatorFleetState = new EventEmitter3()
         maintainTopologyHelper = new EventEmitter3()
-        balancer = new StreamAssignmentLoadBalancer(
+        assigments = new StreamPartAssignments(
             MY_NODE_ID,
             1,
             getStreamParts,
             operatorFleetState,
             maintainTopologyHelper
         )
-        events = eventsWithArgsToArray(balancer as any, ['assigned', 'unassigned'])
+        events = eventsWithArgsToArray(assigments as any, ['assigned', 'unassigned'])
     })
 
     it('no events emitted if no assigned streams', async () => {
@@ -75,7 +75,7 @@ describe(StreamAssignmentLoadBalancer, () => {
     })
 
     it('getMyStreamParts returns empty array if no assigned streams', () => {
-        expect(balancer.getMyStreamParts()).toEqual([])
+        expect(assigments.getMyStreamParts()).toEqual([])
     })
 
     it('all streams get assigned to myself if no other nodes present', async () => {
@@ -91,7 +91,7 @@ describe(StreamAssignmentLoadBalancer, () => {
             ['assigned', toStreamPartID(S3, 2)]
         ])
 
-        expect(balancer.getMyStreamParts()).toIncludeSameMembers([
+        expect(assigments.getMyStreamParts()).toIncludeSameMembers([
             ...streamPartMappings.get(S1)!,
             ...streamPartMappings.get(S2)!,
             ...streamPartMappings.get(S3)!
@@ -111,7 +111,7 @@ describe(StreamAssignmentLoadBalancer, () => {
             ['unassigned', toStreamPartID(S1, 1)]
         ])
 
-        expect(balancer.getMyStreamParts()).toIncludeSameMembers([
+        expect(assigments.getMyStreamParts()).toIncludeSameMembers([
             ...streamPartMappings.get(S2)!,
             ...streamPartMappings.get(S3)!
         ])
@@ -131,7 +131,7 @@ describe(StreamAssignmentLoadBalancer, () => {
             ['unassigned', toStreamPartID(S3, 2)]
         ])
 
-        expect(balancer.getMyStreamParts()).toIncludeSameMembers([
+        expect(assigments.getMyStreamParts()).toIncludeSameMembers([
             ...streamPartMappings.get(S1)!,
             ...streamPartMappings.get(S2)!,
             toStreamPartID(S3, 0),
@@ -155,7 +155,7 @@ describe(StreamAssignmentLoadBalancer, () => {
             ['assigned', toStreamPartID(S3, 2)]
         ])
 
-        expect(balancer.getMyStreamParts()).toIncludeSameMembers([...streamPartMappings.values()].flat())
+        expect(assigments.getMyStreamParts()).toIncludeSameMembers([...streamPartMappings.values()].flat())
     })
 
     it('stream assignments in the presence of other nodes', async () => {
@@ -171,7 +171,7 @@ describe(StreamAssignmentLoadBalancer, () => {
             ['assigned', toStreamPartID(S3, 0)]
         ])
 
-        expect(balancer.getMyStreamParts()).toEqual([
+        expect(assigments.getMyStreamParts()).toEqual([
             toStreamPartID(S4, 0),
             toStreamPartID(S3, 0)
         ])
@@ -213,5 +213,5 @@ describe(StreamAssignmentLoadBalancer, () => {
         }).flat())
     })
 
-    // TODO: test with multiple balancers, verify that partitioning is complete
+    // TODO: test with multiple StreamPartAssignments instances, verify that partitioning is complete
 })
