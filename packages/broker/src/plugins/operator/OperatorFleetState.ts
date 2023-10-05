@@ -82,9 +82,10 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
                     timestamp: this.timeProvider(),
                     peerDescriptor: message.peerDescriptor
                 })
-				logger.trace(`Got heartbeat: ${nodeId}, ${this.latestHeartbeats.get(nodeId)}`)
+				logger.trace(`Got heartbeat: ${nodeId}, ${JSON.stringify(this.latestHeartbeats.get(nodeId))}`)
                 if (!exists) {
                     this.emit('added', nodeId)
+					logger.trace(`Added node: ${nodeId}, ${JSON.stringify(this.latestHeartbeats.get(nodeId))}`)
                 }
                 if (!this.ready.isOpen()) {
                     this.launchOpenReadyGateTimer()
@@ -109,7 +110,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
 
     getNodeIds(): NodeID[] {
 		const nodeIds = [...this.latestHeartbeats.keys()]
-		logger.trace(`getNodeIds: ${nodeIds}`)
+		logger.trace(`getNodeIds: ${JSON.stringify(nodeIds)}`)
         return nodeIds
     }
 
@@ -127,7 +128,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         const now = this.timeProvider()
         for (const [nodeId, { timestamp }] of this.latestHeartbeats) {
             if (now - timestamp >= this.pruneAgeInMs) {
-				logger.trace(`Pruning ${nodeId}, latest heartbeat: ${timestamp}, age: ${now - timestamp}`)
+				logger.trace(`Pruning ${nodeId}, latest heartbeat: ${timestamp}, age: ${now - timestamp}, now: ${now}`)
                 this.latestHeartbeats.delete(nodeId)
                 this.emit('removed', nodeId)
             }
