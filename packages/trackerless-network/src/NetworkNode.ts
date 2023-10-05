@@ -84,10 +84,8 @@ export class NetworkNode {
         this.stack.getStreamrNode().leaveStream(streamPartId)
     }
 
-    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
-        return this.hasStreamPart(streamPartId)
-            ? this.stack.getStreamrNode().getStream(streamPartId)!.layer2.getTargetNeighborIds()
-            : []
+    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
+        return this.stack.getStreamrNode().getNeighbors(streamPartId)
     }
 
     hasStreamPart(streamPartId: StreamPartID): boolean {
