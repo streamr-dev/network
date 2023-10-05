@@ -78,7 +78,7 @@ export class AutoCertifier implements RestInterface {
         logger.info('updating subdomain ip and port for ' + subdomain + ' to ' + ipAddress + ':' + port)
 
         // this will throw if the client cannot answer the challenge of getting sessionId 
-        this.streamrChallenger.testStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
+        await this.streamrChallenger.testStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
 
         await this.dnsServer!.updateSubdomainIpAndPort(subdomain, ipAddress, port, token)
     }
@@ -181,7 +181,7 @@ export class AutoCertifier implements RestInterface {
         await this.certificateCreator.start()
         logger.info('certificate creator is running')
 
-        this.restServer = new RestServer(ownIpAddress, restServerPort, restServerCaCertPath, restServerCaKeyPath,
+        this.restServer = new RestServer(ownHostName + '.' + this.domainName, ownIpAddress, restServerPort, restServerCaCertPath, restServerCaKeyPath,
             restServerCertPath, restServerKeyPath, this)
         await this.restServer.start()
         logger.info('rest server is running on port ' + restServerPort)
