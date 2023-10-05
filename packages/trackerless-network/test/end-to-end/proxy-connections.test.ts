@@ -1,6 +1,6 @@
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary, utf8ToBinary, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { NodeID } from '../../src/identifiers'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
@@ -190,6 +190,8 @@ describe('Proxy connections', () => {
         expect(hasConnectionFromProxy(proxyNode1)).toBe(false)
         await proxyNode1.stack.getStreamrNode()!.joinStream(STREAM_PART_ID)
         await waitForCondition(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE), 25000)
+        // TODO why wait is needed?
+        await wait(100)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true)
     }, 30000)
 
