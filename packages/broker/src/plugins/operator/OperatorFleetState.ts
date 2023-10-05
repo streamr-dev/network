@@ -85,7 +85,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
 				const heartbeatAge = this.timeProvider() - metadata.timestamp
 
 				if (heartbeatAge >= this.ignoreAgeInMs) {
-					logger.warn(`Received old heartbeat from operator node ${message.peerDescriptor.id}: ${metadata.timestamp} (age: ${this.timeProvider}). The node clock may be incorrect?`)
+					logger.warn(`Received old heartbeat from operator node ${message.peerDescriptor.id}: ${metadata.timestamp} (age: ${this.timeProvider() - metadata.timestamp}). The node clock may be incorrect?`)
 				} else {
 					const exists = this.latestHeartbeats.has(nodeId)
 
