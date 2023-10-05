@@ -98,11 +98,16 @@ describe('production', () => {
             done()
         })
 
-        client.start().then(() => { return }).catch((e) => { 
+<<<<<<< HEAD
+        client.start().then(() => { return }).catch((e) => {
             expect(e).toBeFalsy()
             done() 
         })
     })
+=======
+        client.start().then(() => { return }).catch((e) => { done.fail(e) })
+    }, 120000)
+>>>>>>> d31db6a30730996c786810aba7960c4d552fb4a7
 
     it('Starting the client throws an exception if AutoCertifier cannot connect to it using WebSocket', async () => {
         const streamrWebSocketPort = 100

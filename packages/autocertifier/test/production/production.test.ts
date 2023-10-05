@@ -102,7 +102,7 @@ describe('production', () => {
             expect(e).toBeFalsy()
             done() 
         })
-    })
+    }, 120000)
 
     it('Starting the client throws an exception if AutoCertifier cannot connect to it using WebSocket', async () => {
         const streamrWebSocketPort = 100
