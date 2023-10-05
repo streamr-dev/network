@@ -3,12 +3,14 @@ import { createPeerDescriptor } from '@streamr/dht/dist/src/dht/DhtNode'
 import { AutoCertifierClient } from '@streamr/autocertifier-client'
 import os from 'os'
 import fs from 'fs'
+import { CertifiedSubdomain } from '@streamr/autocertifier-client'
 import { Logger, filePathToNodeFormat } from '@streamr/utils'
 import { SessionIdRequest, SessionIdResponse } from '../../src/proto/packages/autocertifier/protos/AutoCertifier'
 
 const logger = new Logger(module)
 
 let restServerCa: string
+let certifiedSubdomain: CertifiedSubdomain
 
 describe('production', () => {
 
@@ -91,15 +93,21 @@ describe('production', () => {
             })
 
         client.on('updatedSubdomain', (subdomain) => {
-            logger.info('received a subdomain')
             logger.info(JSON.stringify(subdomain))
+            expect(subdomain).toEqual(certifiedSubdomain)
             done()
         })
 
+<<<<<<< HEAD
         client.start().then(() => { return }).catch((e) => {
             expect(e).toBeFalsy()
+            done() 
         })
+    })
+=======
+        client.start().then(() => { return }).catch((e) => { done.fail(e) })
     }, 120000)
+>>>>>>> d31db6a30730996c786810aba7960c4d552fb4a7
 
     it('Starting the client throws an exception if AutoCertifier cannot connect to it using WebSocket', async () => {
         const streamrWebSocketPort = 100
