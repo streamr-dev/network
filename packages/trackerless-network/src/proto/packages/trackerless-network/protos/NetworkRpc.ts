@@ -283,6 +283,10 @@ export interface StreamPartitionInfo {
      * @generated from protobuf field: repeated string neighbors = 2;
      */
     neighbors: string[];
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor kBucket = 3;
+     */
+    kBucket: PeerDescriptor[];
 }
 /**
  * @generated from protobuf message GetStreamInfo
@@ -608,7 +612,8 @@ class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
     constructor() {
         super("StreamPartitionInfo", [
             { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "neighbors", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "neighbors", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "kBucket", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }

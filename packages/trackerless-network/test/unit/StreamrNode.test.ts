@@ -57,22 +57,6 @@ describe('StreamrNode', () => {
             await waitForCondition(() => node.hasStream(streamPartId))
         })
 
-        it('getInfo returns queried streamPartition', async () => {
-            await node.joinStream(streamPartId)
-            const info = node.getInfo([streamPartId])
-            expect(info.streamPartitions[0].id).toEqual(streamPartId)
-        })
-    
-        it('getInfo does not return queried streamPart if it does not exist', async () => {
-            const info = node.getInfo([streamPartId])
-            expect(info.streamPartitions.length).toEqual(0)
-        })
-    
-        it('getInfo without specified streamPartitions to query returns all streams', async () => {
-            await node.joinStream(streamPartId)
-            const info = node.getInfo()
-            expect(info.streamPartitions.length).toEqual(1)
-        })
     })
 
     describe('proxied stream', () => {
@@ -108,6 +92,26 @@ describe('StreamrNode', () => {
             expect(node.isProxiedStreamPart(streamPartId)).toBe(true)
             await node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
             expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
+        })
+    })
+
+    describe('info methods', () => {
+        const streamPartId = StreamPartIDUtils.parse('stream#0')
+        it('getInfo returns queried streamPartition', async () => {
+            await node.joinStream(streamPartId)
+            const info = node.getInfo([streamPartId])
+            expect(info.streamPartitions[0].id).toEqual(streamPartId)
+        })
+    
+        it('getInfo does not return queried streamPart if it does not exist', async () => {
+            const info = node.getInfo([streamPartId])
+            expect(info.streamPartitions.length).toEqual(0)
+        })
+    
+        it('getInfo without specified streamPartitions to query returns all streams', async () => {
+            await node.joinStream(streamPartId)
+            const info = node.getInfo()
+            expect(info.streamPartitions.length).toEqual(1)
         })
     })
 

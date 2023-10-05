@@ -151,6 +151,7 @@ message StreamrNodeInfo {
 message StreamPartitionInfo {
   string id = 1;
   repeated string neighbors = 2;
+  repeated dht.PeerDescriptor kBucket = 3;
 }
 
 message GetStreamInfo {

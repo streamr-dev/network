@@ -278,7 +278,8 @@ export class StreamrNode extends EventEmitter<Events> {
         return {
             streamPartitions: filtered.map(([streamPartId, stream]) => ({
                 id: streamPartId,
-                neighbors: stream.layer2.getTargetNeighborIds()
+                neighbors: stream.layer2.getTargetNeighborIds(),
+                kBucket: stream.layer1?.getKBucketPeers() ?? []
             }))
         }
     }

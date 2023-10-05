@@ -1,4 +1,4 @@
-import { Simulator, PeerDescriptor, NodeType, SimulatorTransport, ListeningRpcCommunicator } from '@streamr/dht'
+import { Simulator, PeerDescriptor, NodeType, SimulatorTransport, ListeningRpcCommunicator, isSamePeerDescriptor } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
 import { hexToBinary } from '../../../utils/dist/src/binaryUtils'
 import { createRandomNodeId } from '../utils/utils'
@@ -79,6 +79,7 @@ describe('NetworkStack InfoRpc', () => {
         const result = await infoClient.getInfo(stack1PeerDescriptor, false, false, [streamPartId])
         expect(result.streamrNode!.streamPartitions[0].id).toEqual(streamPartId)
         expect(result.streamrNode!.streamPartitions[0].neighbors[0]).toEqual(stack2.getStreamrNode().getNodeId())
+        expect(isSamePeerDescriptor(result.streamrNode!.streamPartitions[0].kBucket[0], stack2PeerDescriptor)).toBeTruthy()
     })
 
 })
