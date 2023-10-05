@@ -297,7 +297,10 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     getNeighbors(streamPartId: StreamPartID): NodeID[] {
-        return this.streams.get(streamPartId)?.layer2.getTargetNeighborIds() ?? []
+        const stream = this.streams.get(streamPartId)
+        return (stream?.type == StreamNodeType.RANDOM_GRAPH)
+            ? stream.layer2.getTargetNeighborIds()
+            : []
     }
 
     getStreamParts(): StreamPartID[] {
