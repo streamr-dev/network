@@ -67,7 +67,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         const announceNodeToContractHelper = new AnnounceNodeToContractHelper(serviceConfig)
 
         const fleetState = new OperatorFleetState(streamrClient, formCoordinationStreamId(operatorContractAddress))
-        const loadBalancer = new StreamPartAssignments(
+        const streamPartAssignments = new StreamPartAssignments(
             nodeId,
             redundancyFactor,
             async (streamId) => {
@@ -80,7 +80,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
 
         // Important: must be created before maintainTopologyHelper#start is invoked!
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const maintainTopologyService = new MaintainTopologyService(streamrClient, loadBalancer)
+        const maintainTopologyService = new MaintainTopologyService(streamrClient, streamPartAssignments)
         await fleetState.start()
         await maintainTopologyHelper.start()
 
@@ -145,7 +145,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     await inspectRandomNode(
                         operatorContractAddress,
                         inspectRandomNodeHelper,
-                        loadBalancer,
+                        streamPartAssignments,
                         streamrClient,
                         2 * 60 * 1000, // 2 minutes
                         (operatorContractAddress) => fetchRedundancyFactor({
