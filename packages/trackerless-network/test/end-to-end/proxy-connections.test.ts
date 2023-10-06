@@ -136,7 +136,7 @@ describe('Proxy connections', () => {
             PROXIED_NODE_USER_ID
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
-        expect(proxiedNode.stack.getStreamrNode().getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length).toBe(2)
+        expect(proxiedNode.getNeighbors(STREAM_PART_ID).length).toBe(2)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
         expect(hasConnectionFromProxy(proxyNode2)).toBe(true) 
     })
@@ -149,12 +149,12 @@ describe('Proxy connections', () => {
             PROXIED_NODE_USER_ID
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
-        expect(proxiedNode.stack.getStreamrNode().getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length).toBe(2)
+        expect(proxiedNode.getNeighbors(STREAM_PART_ID).length).toBe(2)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
         expect(hasConnectionFromProxy(proxyNode2)).toBe(true)
         await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
-        expect(proxiedNode.stack.getStreamrNode().getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length).toBe(1)
+        expect(proxiedNode.getNeighbors(STREAM_PART_ID).length).toBe(1)
         await waitForCondition(() => hasConnectionFromProxy(proxyNode2) === false)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true)
     })
@@ -167,7 +167,7 @@ describe('Proxy connections', () => {
             PROXIED_NODE_USER_ID
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
-        expect(proxiedNode.stack.getStreamrNode().getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length).toBe(2)
+        expect(proxiedNode.getNeighbors(STREAM_PART_ID).length).toBe(2)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
         expect(hasConnectionFromProxy(proxyNode2)).toBe(true)
 
