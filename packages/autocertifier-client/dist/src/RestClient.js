@@ -39,8 +39,8 @@ class RestClient {
         return response;
     }
     async updateSubdomainIpAndPort(subdomain, streamrWebSocketPort, sessioId, token) {
-        logger.warn('updateSubdomainIpAndPort() subdomain: ' + subdomain + ', streamrWebSocketPort:  ' + streamrWebSocketPort);
-        logger.warn('sessioId: ' + sessioId + ', token: ' + token);
+        logger.info('updateSubdomainIpAndPort() subdomain: ' + subdomain + ', streamrWebSocketPort:  ' + streamrWebSocketPort);
+        logger.info('sessioId: ' + sessioId + ', token: ' + token);
         const url = this.baseUrl + '/certifiedsubdomains/' + encodeURIComponent(subdomain) + '/ip';
         const body = {
             token: token,

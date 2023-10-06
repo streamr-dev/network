@@ -101,7 +101,7 @@ describe('production', () => {
         })
     }, 120000)
 
-    it.only('The client can start if the subdomain already exits', async () => {
+    it('The client can start if the subdomain already exits', async () => {
         const streamrWebSocketPort = clientConnectionManager.getPeerDescriptor().websocket!.port
 
         logger.info(subdomainPath)

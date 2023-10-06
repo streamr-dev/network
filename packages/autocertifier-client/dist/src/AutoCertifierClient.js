@@ -76,6 +76,7 @@ class AutoCertifierClient extends eventemitter3_1.EventEmitter {
                 return;
             }
             const oldSubdomain = JSON.parse(fs_1.default.readFileSync(this.subdomainPath, 'utf8'));
+            logger.info('updateSubdomainIpAndPort() called for ' + JSON.stringify(oldSubdomain));
             const sessionId = await this.restClient.createSession();
             this.ongoingSessions.add(sessionId);
             await this.restClient.updateSubdomainIpAndPort(oldSubdomain.subdomain, this.streamrWebSocketPort, sessionId, oldSubdomain.token);
