@@ -65,7 +65,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             serviceHelperConfig: this.serviceConfig,
             operatorFleetState: this.fleetState
         })
-        await this.maintainTopologyService.start()
 
         const maintainOperatorValueHelper = new MaintainOperatorValueHelper(this.serviceConfig)
         const announceNodeToContractHelper = new AnnounceNodeToContractHelper(this.serviceConfig)
