@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RestClient = void 0;
 const request_1 = __importDefault(require("request"));
 const errors_1 = require("./errors");
+const utils_1 = require("@streamr/utils");
+const logger = new utils_1.Logger(module);
 class RestClient {
     // the caCert MUST be hard-coded into the Streamr node config
     constructor(baseUrl, caCert) {
@@ -37,6 +39,8 @@ class RestClient {
         return response;
     }
     async updateSubdomainIpAndPort(subdomain, streamrWebSocketPort, sessioId, token) {
+        logger.warn('updateSubdomainIpAndPort() subdomain: ' + subdomain + ', streamrWebSocketPort:  ' + streamrWebSocketPort);
+        logger.warn('sessioId: ' + sessioId + ', token: ' + token);
         const url = this.baseUrl + '/certifiedsubdomains/' + encodeURIComponent(subdomain) + '/ip';
         const body = {
             token: token,
