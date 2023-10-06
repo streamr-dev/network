@@ -30,7 +30,7 @@ export enum StreamNodeType {
     PROXY = 'proxy'
 }
 
-export interface StreamObject { // TODO rename to StreamPartDelivery, maybe have "proxied: boolean" instead of StreamNodeType
+export interface StreamPartDelivery { // TODO rename maybe have "proxied: boolean" instead of StreamNodeType
     layer1?: ILayer1
     layer2: IStreamNode
     type: StreamNodeType
@@ -67,7 +67,7 @@ export class StreamrNode extends EventEmitter<Events> {
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
     public config: StreamrNodeConfig
-    private readonly streams: Map<string, StreamObject>
+    private readonly streams: Map<string, StreamPartDelivery>
     private readonly knownStreamEntryPoints: Map<string, PeerDescriptor[]> = new Map()
     private started = false
     private destroyed = false
@@ -288,7 +288,7 @@ export class StreamrNode extends EventEmitter<Events> {
             && ((direction === undefined) || (this.streams.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction)
     }
 
-    getStream(streamPartId: StreamPartID): StreamObject | undefined {
+    getStream(streamPartId: StreamPartID): StreamPartDelivery | undefined {
         return this.streams.get(streamPartId)
     }
 

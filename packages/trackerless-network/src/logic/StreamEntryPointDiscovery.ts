@@ -7,7 +7,7 @@ import {
 } from '@streamr/dht'
 import { Any } from '../proto/google/protobuf/any'
 import { Logger, setAbortableTimeout, wait } from '@streamr/utils'
-import { StreamObject } from './StreamrNode'
+import { StreamPartDelivery } from './StreamrNode'
 import { StreamPartID } from '@streamr/protocol'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 
@@ -56,7 +56,7 @@ const ENTRYPOINT_STORE_LIMIT = 8
 export const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 
 interface StreamEntryPointDiscoveryConfig {
-    streams: Map<string, StreamObject>
+    streams: Map<string, StreamPartDelivery>
     ownPeerDescriptor: PeerDescriptor
     getEntryPointData: (key: Uint8Array) => Promise<RecursiveFindResult>
     getEntryPointDataViaNode: (key: Uint8Array, node: PeerDescriptor) => Promise<DataEntry[]>

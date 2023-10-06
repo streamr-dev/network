@@ -4,7 +4,7 @@ import { wait } from '@streamr/utils'
 import { range } from 'lodash'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { StreamEntryPointDiscovery } from '../../src/logic/StreamEntryPointDiscovery'
-import { StreamObject } from '../../src/logic/StreamrNode'
+import { StreamPartDelivery } from '../../src/logic/StreamrNode'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { MockLayer1 } from '../utils/mock/MockLayer1'
@@ -15,7 +15,7 @@ describe('StreamEntryPointDiscovery', () => {
     let streamEntryPointDiscoveryWithData: StreamEntryPointDiscovery
     let streamEntryPointDiscoveryWithoutData: StreamEntryPointDiscovery
     let storeCalled: number
-    let streams = new Map<string, StreamObject>()
+    let streams = new Map<string, StreamPartDelivery>()
 
     const peerDescriptor = createMockPeerDescriptor({
         nodeName: 'fake'
@@ -95,7 +95,7 @@ describe('StreamEntryPointDiscovery', () => {
         })
         streamEntryPointDiscoveryWithoutData = new StreamEntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
-            streams: new Map<string, StreamObject>(),
+            streams: new Map<string, StreamPartDelivery>(),
             getEntryPointData: fakeEmptyGetEntryPointData,
             getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
