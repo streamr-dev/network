@@ -26,11 +26,10 @@ import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient
 
 export type StreamObject = { // TODO rename to StreamPartDelivery
     proxied: false,
-    layer1?: ILayer1
+    layer1: ILayer1
     layer2: RandomGraphNode
 } | {
     proxied: true
-    layer1?: ILayer1
     layer2: ProxyStreamConnectionClient
 }
 
@@ -150,7 +149,7 @@ export class StreamrNode extends EventEmitter<Events> {
         const layer1 = this.createLayer1Node(streamPartId, this.knownStreamEntryPoints.get(streamPartId) ?? [])
         const layer2 = this.createRandomGraphNode(streamPartId, layer1)
         stream = {
-            proxied: false, 
+            proxied: false,
             layer1,
             layer2
         }
