@@ -37,7 +37,7 @@ describe('production', () => {
 
     let client: AutoCertifierClient
 
-    beforeAll(async () => {
+    beforeEach(async () => {
 
         if (fs.existsSync(subdomainPath)) {
             fs.unlinkSync(subdomainPath)
@@ -58,10 +58,6 @@ describe('production', () => {
         })
     })
 
-    afterAll(async () => {
-        await clientConnectionManager.stop()
-    })
-
     afterEach(async () => {
         if (fs.existsSync(subdomainPath)) {
             fs.unlinkSync(subdomainPath)
@@ -70,6 +66,7 @@ describe('production', () => {
         if (clientRpcCommunicator) {
             await clientRpcCommunicator.stop()
         }
+        await clientConnectionManager.stop()
         await client.stop()
     })
 
