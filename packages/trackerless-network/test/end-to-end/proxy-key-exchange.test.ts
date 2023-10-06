@@ -5,11 +5,9 @@ import {
     MessageID,
     StreamMessage,
     StreamMessageType,
-    StreamPartIDUtils,
-    toStreamID,
-    toStreamPartID
+    StreamPartIDUtils
 } from '@streamr/protocol'
-import { hexToBinary, utf8ToBinary, toEthereumAddress, waitForEvent3 } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'

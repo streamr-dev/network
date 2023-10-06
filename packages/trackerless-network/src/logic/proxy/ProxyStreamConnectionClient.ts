@@ -10,7 +10,13 @@ import { EthereumAddress, Logger, addManagedEventListener, wait } from '@streamr
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { LeaveStreamPartNotice, MessageID, MessageRef, ProxyDirection, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import {
+    LeaveStreamPartNotice,
+    MessageID,
+    MessageRef,
+    ProxyDirection,
+    StreamMessage
+} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { NetworkRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
 import { IStreamNode } from '../IStreamNode'
