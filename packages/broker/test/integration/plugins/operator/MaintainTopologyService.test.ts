@@ -60,6 +60,7 @@ describe('MaintainTopologyService', () => {
 
     afterEach(async () => {
         await client?.destroy()
+        await operatorFleetState?.destroy()
     })
 
     it('happy path', async () => {
