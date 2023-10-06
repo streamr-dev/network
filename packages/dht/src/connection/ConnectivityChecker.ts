@@ -69,14 +69,18 @@ export class ConnectivityChecker {
                 }, ConnectivityChecker.CONNECTIVITY_CHECKER_TIMEOUT)
                 const listener = (bytes: Uint8Array) => {
                     outgoingConnection.close('OTHER')
-                    const message: Message = Message.fromBinary(bytes)
-                    if (message.body.oneofKind === 'connectivityResponse') {
-                        const connectivityResponseMessage = message.body.connectivityResponse
-                        outgoingConnection!.off('data', listener)
-                        clearTimeout(timeoutId)
-                        resolve(connectivityResponseMessage)
-                    } else {
-                        return
+                    try {
+                        const message: Message = Message.fromBinary(bytes)
+                        if (message.body.oneofKind === 'connectivityResponse') {
+                            const connectivityResponseMessage = message.body.connectivityResponse
+                            outgoingConnection!.off('data', listener)
+                            clearTimeout(timeoutId)
+                            resolve(connectivityResponseMessage)
+                        } else {
+                            return
+                        }
+                    } catch (err) {
+                        logger.trace(`Could not parse message: ${err}`)
                     }
                 }
                 outgoingConnection!.on('data', listener)
@@ -97,16 +101,21 @@ export class ConnectivityChecker {
     public listenToIncomingConnectivityRequests(connectionToListenTo: ServerWebSocket): void {
         connectionToListenTo.on('data', (data: Uint8Array) => {
             logger.trace('server received data')
-            const message = Message.fromBinary(data)
-            if (message.body.oneofKind === 'connectivityRequest') {
-                logger.trace('received connectivity request')
-                this.handleIncomingConnectivityRequest(connectionToListenTo, message.body.connectivityRequest).then(() => {
-                    logger.trace('handleIncomingConnectivityRequest ok')
-                    return
-                }).catch((e) => {
-                    logger.error('handleIncomingConnectivityRequest' + e)
-                })
+            try {
+                const message = Message.fromBinary(data)
+                if (message.body.oneofKind === 'connectivityRequest') {
+                    logger.trace('received connectivity request')
+                    this.handleIncomingConnectivityRequest(connectionToListenTo, message.body.connectivityRequest).then(() => {
+                        logger.trace('handleIncomingConnectivityRequest ok')
+                        return
+                    }).catch((e) => {
+                        logger.error('handleIncomingConnectivityRequest' + e)
+                    })
+                }
+            } catch (err) {
+                logger.trace(`Could not parse message: ${err}`)
             }
+            
         })
     }
 

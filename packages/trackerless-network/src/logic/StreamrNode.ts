@@ -152,19 +152,18 @@ export class StreamrNode extends EventEmitter<Events> {
             return
         }
         logger.debug(`Joining stream ${streamPartId}`)
-        const knownEntryPoints = this.knownStreamEntryPoints.get(streamPartId) ?? []
-        let entryPoints = knownEntryPoints.concat(knownEntryPoints)
-        const [layer1, layer2] = this.createStream(streamPartId, knownEntryPoints)
+        let entryPoints = this.knownStreamEntryPoints.get(streamPartId) ?? []
+        const [layer1, layer2] = this.createStream(streamPartId, entryPoints)
         await layer1.start()
         await layer2.start()
         const forwardingNode = this.layer0!.isJoinOngoing() ? this.layer0!.getKnownEntryPoints()[0] : undefined
         const discoveryResult = await this.streamEntryPointDiscovery!.discoverEntryPointsFromDht(
             streamPartId,
-            knownEntryPoints.length,
+            entryPoints.length,
             forwardingNode
         )
-        entryPoints = knownEntryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT), true, knownEntryPoints.length > 0)
+        entryPoints = entryPoints.concat(discoveryResult.discoveredEntryPoints)
+        await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT))
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
             discoveryResult.entryPointsFromDht,
@@ -310,7 +309,10 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     getNeighbors(streamPartId: StreamPartID): NodeID[] {
-        return this.streams.get(streamPartId)?.layer2.getTargetNeighborIds() ?? []
+        const stream = this.streams.get(streamPartId)
+        return (stream?.type == StreamNodeType.RANDOM_GRAPH)
+            ? stream.layer2.getTargetNeighborIds()
+            : []
     }
 
     getStreamParts(): StreamPartID[] {

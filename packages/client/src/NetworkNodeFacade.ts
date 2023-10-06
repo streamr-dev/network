@@ -23,7 +23,7 @@ export interface NetworkNodeStub {
     leave: (streamPartId: StreamPartID) => void
     broadcast: (streamMessage: StreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
-    getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>
+    getNeighbors: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>
     getPeerDescriptor: () => PeerDescriptor
     getMetricsContext: () => MetricsContext
     getDiagnosticInfo: () => Record<string, unknown>
