@@ -283,9 +283,9 @@ export class StreamrNode extends EventEmitter<Events> {
         this.knownStreamEntryPoints.set(streamPartId, entryPoints)
     }
 
-    isProxiedStreamPart(streamId: string, direction?: ProxyDirection): boolean {
-        return this.streamParts.get(streamId)?.type === StreamNodeType.PROXY 
-            && ((direction === undefined) || (this.streamParts.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction)
+    isProxiedStreamPart(streamPartId: StreamPartID, direction?: ProxyDirection): boolean {
+        return this.streamParts.get(streamPartId)?.type === StreamNodeType.PROXY 
+            && ((direction === undefined) || (this.streamParts.get(streamPartId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction)
     }
 
     getStream(streamPartId: StreamPartID): StreamPartDelivery | undefined {
