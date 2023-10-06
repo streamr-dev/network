@@ -143,7 +143,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             return
         }
         const oldSubdomain = JSON.parse(fs.readFileSync(this.subdomainPath, 'utf8')) as CertifiedSubdomain
-        logger.info('updateSubdomainIpAndPort() called for ' + JSON.stringify(oldSubdomain))
+        console.error('updateSubdomainIpAndPort() called for ' + JSON.stringify(oldSubdomain))
         const sessionId = await this.restClient.createSession()
         this.ongoingSessions.add(sessionId)
         await this.restClient.updateSubdomainIpAndPort(oldSubdomain.subdomain, this.streamrWebSocketPort, sessionId, oldSubdomain.token)
