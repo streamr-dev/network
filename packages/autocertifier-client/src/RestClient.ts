@@ -34,7 +34,7 @@ export class RestClient {
     }
 
     public async updateCertificate(subdomain: string, streamrWebSocketPort: number, sessioId: string, token: string): Promise<CertifiedSubdomain> {
-        const url = this.baseUrl + '/certifiedsubdomains/' + subdomain
+        const url = this.baseUrl + '/certifiedsubdomains/' + encodeURIComponent(subdomain)
         const body: UpdateIpAndPortRequest = {
             token: token,
             sessionId: sessioId,
@@ -45,7 +45,7 @@ export class RestClient {
     }
 
     public async updateSubdomainIpAndPort(subdomain: string, streamrWebSocketPort: number, sessioId: string, token: string): Promise<void> {
-        const url = this.baseUrl + '/certifiedsubdomains/' + subdomain + '/ip'
+        const url = this.baseUrl + '/certifiedsubdomains/' + encodeURIComponent(subdomain) + '/ip'
         const body: UpdateIpAndPortRequest = {
             token: token,
             sessionId: sessioId,
