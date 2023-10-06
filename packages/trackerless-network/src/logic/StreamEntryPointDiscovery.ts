@@ -10,6 +10,7 @@ import { Logger, setAbortableTimeout, wait } from '@streamr/utils'
 import { StreamObject } from './StreamrNode'
 import { StreamPartID } from '@streamr/protocol'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { ILayer1 } from './ILayer1'
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): Uint8Array => {
     return new Uint8Array(createHash('md5').update(streamPartId).digest())
@@ -152,7 +153,7 @@ export class StreamEntryPointDiscovery {
         if (!this.config.streams.has(streamPartId) || !entryPointsFromDht) {
             return
         }
-        if (this.config.streams.get(streamPartId)!.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
+        if ((this.config.streams.get(streamPartId)! as { layer1: ILayer1 }).layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
             await this.storeSelfAsEntryPoint(streamPartId)
             setImmediate(() => this.avoidNetworkSplit(streamPartId))
         } else if (currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) {
@@ -200,7 +201,7 @@ export class StreamEntryPointDiscovery {
     private async avoidNetworkSplit(streamPartId: StreamPartID): Promise<void> {
         await exponentialRunOff(async () => {
             if (this.config.streams.has(streamPartId)) {
-                const stream = this.config.streams.get(streamPartId)!
+                const stream = this.config.streams.get(streamPartId)! as { layer1: ILayer1 }
                 const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartId)
                 await stream.layer1!.joinDht(rediscoveredEntrypoints, false, false)
                 if (stream.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
