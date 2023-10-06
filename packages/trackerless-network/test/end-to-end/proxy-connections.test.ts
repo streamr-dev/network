@@ -40,9 +40,9 @@ describe('Proxy connections', () => {
             : false
     }
     
-    const hasConnectionToProxy = (proxyNodeId_: NodeID, direction: ProxyDirection): boolean => {
+    const hasConnectionToProxy = (proxyNodeId: NodeID, direction: ProxyDirection): boolean => {
         const client = (proxiedNode.stack.getStreamrNode()!.getStream(STREAM_PART_ID) as { client: ProxyStreamConnectionClient }).client
-        return client.hasProxyConnection(proxyNodeId_, direction)
+        return client.hasProxyConnection(proxyNodeId, direction)
     }
 
     beforeEach(async () => {
