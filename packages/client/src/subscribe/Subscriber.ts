@@ -49,6 +49,7 @@ export class Subscriber {
         // add subscription to subSession
         try {
             await subSession.add(sub)
+			this.logger.debug('Added sub', { sub })
         } catch (err) {
             this.logger.debug('Failed to add Subscription to SubscriptionSession', err)
             // clean up if fail
@@ -63,6 +64,7 @@ export class Subscriber {
             return
         }
         await subSession.remove(sub)
+		this.logger.debug('Removed sub', { sub, remaining: subSession.count() })
     }
 
     getSubscriptions(): Subscription[] {

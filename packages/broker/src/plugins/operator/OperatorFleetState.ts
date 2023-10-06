@@ -7,6 +7,7 @@ import min from 'lodash/min'
 import once from 'lodash/once'
 import { NetworkPeerDescriptor } from 'streamr-client'
 import { HeartbeatMessage, HeartbeatMessageSchema } from './heartbeatUtils'
+import { nodeModuleABI } from '@streamr/network-contracts'
 
 const logger = new Logger(module)
 
@@ -14,7 +15,7 @@ export const DEFAULT_UPDATE_INTERVAL_IN_MS = 1000 * 10
 
 const DEFAULT_PRUNE_AGE_IN_MS = 5 * 60 * 1000
 
-const DEFAULT_IGNORE_AGE_IN_MS = 60 * 1000
+const DEFAULT_IGNORE_HEARTBEATS_OLDER_THAN_MS = 60 * 1000
 
 const DEFAULT_PRUNE_INTERVAL_IN_MS = 30 * 1000
 
@@ -36,7 +37,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly timeProvider: () => number
     private readonly pruneAgeInMs: number
     private readonly pruneIntervalInMs: number
-	private readonly ignoreAgeInMs: number
+	private readonly ignoreHeartbeatsOlderThanMs: number
     private readonly heartbeatIntervalInMs: number
     private readonly latencyExtraInMs: number
     private readonly latestHeartbeats = new Map<NodeID, Heartbeat>()
@@ -52,7 +53,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         pruneIntervalInMs = DEFAULT_PRUNE_INTERVAL_IN_MS,
         heartbeatIntervalInMs = DEFAULT_UPDATE_INTERVAL_IN_MS,
         latencyExtraInMs = DEFAULT_LATENCY_EXTRA_MS,
-		ignoreAgeInMs = DEFAULT_IGNORE_AGE_IN_MS
+		ignoreHeartbeatsOlderThanMs = DEFAULT_IGNORE_HEARTBEATS_OLDER_THAN_MS
     ) {
         super()
         this.streamrClient = streamrClient
@@ -62,7 +63,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         this.pruneIntervalInMs = pruneIntervalInMs
         this.heartbeatIntervalInMs = heartbeatIntervalInMs
         this.latencyExtraInMs = latencyExtraInMs
-		this.ignoreAgeInMs = ignoreAgeInMs
+		this.ignoreHeartbeatsOlderThanMs = ignoreHeartbeatsOlderThanMs
     }
 
     async start(): Promise<void> {
@@ -84,8 +85,8 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
                 const nodeId = message.peerDescriptor.id as NodeID
 				const heartbeatAge = this.timeProvider() - metadata.timestamp
 
-				if (heartbeatAge >= this.ignoreAgeInMs) {
-					logger.warn(`Received old heartbeat from operator node ${message.peerDescriptor.id}: ${metadata.timestamp} (age: ${this.timeProvider() - metadata.timestamp}). The node clock may be incorrect?`)
+				if (heartbeatAge >= this.ignoreHeartbeatsOlderThanMs) {
+					logger.warn(`Received old heartbeat from operator node ${message.peerDescriptor.id}: ${metadata.timestamp} (age: ${this.timeProvider() - metadata.timestamp} ms). The node clock may be incorrect?`)
 				} else {
 					const exists = this.latestHeartbeats.has(nodeId)
 
@@ -104,9 +105,26 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
 						this.launchOpenReadyGateTimer()
 					}
 				}
-            }
+            } else {
+				logger.error(`Non-heartbeat message received in coordination stream: ${JSON.stringify(message)}`)
+			}
         })
         setAbortableInterval(() => this.pruneOfflineNodes(), this.pruneIntervalInMs, this.abortController.signal)
+
+		setInterval(async () => {
+			const subs = await this.streamrClient.getSubscriptions({
+				streamId: this.coordinationStreamId
+			})
+			const streamPartIds = subs.map((sub) => sub.streamPartId)
+			logger.info('Subscription streamPartIds: ', { streamPartIds })
+
+			const node = await this.streamrClient.getNode()
+			const nodeStreamParts = node.getStreamParts()
+
+			logger.info('Node streamPartIds: ', { nodeStreamParts })
+
+			logger.info(`Leader is: ${this.getLeaderNodeId()}`)
+		}, 5000)
     }
 
     async waitUntilReady(): Promise<void> {
@@ -114,6 +132,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     }
 
     async destroy(): Promise<void> {
+		logger.info('Destroy called')
         this.abortController.abort()
         await this.subscription?.unsubscribe()
     }

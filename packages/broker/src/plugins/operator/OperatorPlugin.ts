@@ -102,7 +102,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                             streamrClient
                         )
                     }
-                }, 10 * 60 * 1000, true, this.abortController.signal)
+                }, 60 * 1000, true, this.abortController.signal)
             } catch (err) {
                 logger.fatal('Encountered fatal error in announceNodeToContract', { err })
                 process.exit(1)

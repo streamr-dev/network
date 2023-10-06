@@ -1,4 +1,5 @@
 import { StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
+import { Logger } from '@streamr/utils'
 import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
 import { PushPipeline } from '../utils/PushPipeline'
 import { Scaffold } from '../utils/Scaffold'
@@ -165,6 +166,7 @@ export class SubscriptionSession {
         })
 
         await this.updateSubscriptions()
+		console.log('Added:', sub)
     }
 
     /**
@@ -179,8 +181,11 @@ export class SubscriptionSession {
         this.pendingRemoval.add(sub)
         this.subscriptions.delete(sub)
 
+		console.log('Removed:', sub)
+
         try {
             if (!sub.isDone()) {
+				console.log('Sub is done!', sub)
                 await sub.unsubscribe()
             }
         } finally {
