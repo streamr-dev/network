@@ -95,7 +95,7 @@ export class StreamrNode extends EventEmitter<Events> {
         this.connectionLocker = connectionLocker
         this.streamEntryPointDiscovery = new StreamEntryPointDiscovery({
             ownPeerDescriptor: this.getPeerDescriptor(),
-            streams: this.streamParts,
+            streamParts: this.streamParts,
             getEntryPointData: (key) => this.layer0!.getDataFromDht(key),
             getEntryPointDataViaNode: (key, node) => this.layer0!.findDataViaPeer(key, node),
             storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data),

@@ -15,7 +15,7 @@ describe('StreamEntryPointDiscovery', () => {
     let streamEntryPointDiscoveryWithData: StreamEntryPointDiscovery
     let streamEntryPointDiscoveryWithoutData: StreamEntryPointDiscovery
     let storeCalled: number
-    let streams = new Map<string, StreamPartDelivery>()
+    let streamParts = new Map<string, StreamPartDelivery>()
 
     const peerDescriptor = createMockPeerDescriptor({
         nodeName: 'fake'
@@ -81,12 +81,12 @@ describe('StreamEntryPointDiscovery', () => {
     let layer1: MockLayer1
     beforeEach(() => {
         storeCalled = 0
-        streams = new Map()
+        streamParts = new Map()
         layer1 = new MockLayer1(getNodeIdFromPeerDescriptor(peerDescriptor))
-        streams.set(streamPartId, { layer1 } as any)
+        streamParts.set(streamPartId, { layer1 } as any)
         streamEntryPointDiscoveryWithData = new StreamEntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
-            streams,
+            streamParts: streamParts,
             getEntryPointData: fakeGetEntryPointData,
             getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
@@ -95,7 +95,7 @@ describe('StreamEntryPointDiscovery', () => {
         })
         streamEntryPointDiscoveryWithoutData = new StreamEntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
-            streams: new Map<string, StreamPartDelivery>(),
+            streamParts: new Map<string, StreamPartDelivery>(),
             getEntryPointData: fakeEmptyGetEntryPointData,
             getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
@@ -155,7 +155,7 @@ describe('StreamEntryPointDiscovery', () => {
     it('will stop recaching is stream is left', async () => {
         await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, 0)
         expect(storeCalled).toEqual(1)
-        streams.delete(streamPartId)
+        streamParts.delete(streamPartId)
         await wait(4500)
         expect(storeCalled).toEqual(1)
     })

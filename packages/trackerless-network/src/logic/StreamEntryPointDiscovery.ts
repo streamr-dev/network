@@ -56,7 +56,7 @@ const ENTRYPOINT_STORE_LIMIT = 8
 export const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 
 interface StreamEntryPointDiscoveryConfig {
-    streams: Map<string, StreamPartDelivery>
+    streamParts: Map<string, StreamPartDelivery>
     ownPeerDescriptor: PeerDescriptor
     getEntryPointData: (key: Uint8Array) => Promise<RecursiveFindResult>
     getEntryPointDataViaNode: (key: Uint8Array, node: PeerDescriptor) => Promise<DataEntry[]>
@@ -149,10 +149,10 @@ export class StreamEntryPointDiscovery {
         entryPointsFromDht: boolean,
         currentEntrypointCount: number
     ): Promise<void> {
-        if (!this.config.streams.has(streamPartId) || !entryPointsFromDht) {
+        if (!this.config.streamParts.has(streamPartId) || !entryPointsFromDht) {
             return
         }
-        if (this.config.streams.get(streamPartId)!.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
+        if (this.config.streamParts.get(streamPartId)!.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
             await this.storeSelfAsEntryPoint(streamPartId)
             setImmediate(() => this.avoidNetworkSplit(streamPartId))
         } else if (currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) {
@@ -172,11 +172,11 @@ export class StreamEntryPointDiscovery {
     }
 
     private keepSelfAsEntryPoint(streamPartId: StreamPartID): void {
-        if (!this.config.streams.has(streamPartId) || this.servicedStreamParts.has(streamPartId)) {
+        if (!this.config.streamParts.has(streamPartId) || this.servicedStreamParts.has(streamPartId)) {
             return
         }
         this.servicedStreamParts.set(streamPartId, setTimeout(async () => {
-            if (!this.config.streams.has(streamPartId)) {
+            if (!this.config.streamParts.has(streamPartId)) {
                 this.servicedStreamParts.delete(streamPartId)
                 return
             }
@@ -199,8 +199,8 @@ export class StreamEntryPointDiscovery {
 
     private async avoidNetworkSplit(streamPartId: StreamPartID): Promise<void> {
         await exponentialRunOff(async () => {
-            if (this.config.streams.has(streamPartId)) {
-                const stream = this.config.streams.get(streamPartId)!
+            if (this.config.streamParts.has(streamPartId)) {
+                const stream = this.config.streamParts.get(streamPartId)!
                 const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartId)
                 await stream.layer1!.joinDht(rediscoveredEntrypoints, false, false)
                 if (stream.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
