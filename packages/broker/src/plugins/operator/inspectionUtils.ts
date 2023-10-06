@@ -1,7 +1,7 @@
 import { shuffle } from 'lodash'
 import { NetworkPeerDescriptor, StreamrClient } from 'streamr-client'
 import { OperatorFleetState } from './OperatorFleetState'
-import { StreamID, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { ConsistentHashRing } from './ConsistentHashRing'
 import { StreamPartAssignments } from './StreamPartAssignments'
@@ -9,6 +9,7 @@ import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
 import { weightedSample } from '../../helpers/weightedSample'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
+import { formCoordinationStreamId } from './formCoordinationStreamId'
 
 const logger = new Logger(module)
 
@@ -95,7 +96,7 @@ export async function findNodesForTarget(
     })
     const targetOperatorFleetState = new OperatorFleetState(
         streamrClient,
-        toStreamID('/operator/coordination', target.operatorAddress)
+        formCoordinationStreamId(target.operatorAddress)
     )
     try {
         await targetOperatorFleetState.start()

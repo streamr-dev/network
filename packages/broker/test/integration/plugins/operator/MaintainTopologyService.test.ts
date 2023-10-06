@@ -1,10 +1,7 @@
-import { StreamPartID, toStreamID } from '@streamr/protocol'
+import { StreamPartID } from '@streamr/protocol'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { Stream, StreamrClient } from 'streamr-client'
-import {
-    setUpAndStartMaintainTopologyService
-} from '../../../../src/plugins/operator/MaintainTopologyService'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { createClient, createTestStream } from '../../../utils'
 import {
@@ -15,6 +12,10 @@ import {
     generateWalletWithGasAndTokens,
     stake
 } from './contractUtils'
+import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
+import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
+import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
+import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -59,6 +60,7 @@ describe('MaintainTopologyService', () => {
 
     afterEach(async () => {
         await client?.destroy()
+        await operatorFleetState?.destroy()
     })
 
     it('happy path', async () => {
@@ -76,13 +78,21 @@ describe('MaintainTopologyService', () => {
             theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl
         }
 
-        operatorFleetState = new OperatorFleetState(client, toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress))
-        await setUpAndStartMaintainTopologyService({
-            streamrClient: client,
-            redundancyFactor: 3,
-            serviceHelperConfig,
-            operatorFleetState
-        })
+        operatorFleetState = new OperatorFleetState(client, formCoordinationStreamId(serviceHelperConfig.operatorContractAddress))
+        const maintainTopologyHelper = new MaintainTopologyHelper(serviceHelperConfig)
+        const assignments = new StreamPartAssignments(
+            await client.getNodeId(),
+            3,
+            async (streamId) => {
+                const stream = await client.getStream(streamId)
+                return stream.getStreamParts()
+            },
+            operatorFleetState,
+            maintainTopologyHelper
+        )
+        new MaintainTopologyService(client, assignments)
+        await operatorFleetState.start()
+        await maintainTopologyHelper.start()
 
         await waitForCondition(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), stream1.getStreamParts())
