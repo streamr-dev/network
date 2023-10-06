@@ -53,11 +53,11 @@ describe('proxy and full node', () => {
             }
         })
         await proxyNode.start()
-        proxyNode.stack.getStreamrNode()!.joinStream(proxiedStreamPart)
-        proxyNode.stack.getStreamrNode()!.joinStream(regularStreamPart1)
-        proxyNode.stack.getStreamrNode()!.joinStream(regularStreamPart2)
-        proxyNode.stack.getStreamrNode()!.joinStream(regularStreamPart3)
-        proxyNode.stack.getStreamrNode()!.joinStream(regularStreamPart4)
+        proxyNode.stack.getStreamrNode()!.joinStreamPart(proxiedStreamPart)
+        proxyNode.stack.getStreamrNode()!.joinStreamPart(regularStreamPart1)
+        proxyNode.stack.getStreamrNode()!.joinStreamPart(regularStreamPart2)
+        proxyNode.stack.getStreamrNode()!.joinStreamPart(regularStreamPart3)
+        proxyNode.stack.getStreamrNode()!.joinStreamPart(regularStreamPart4)
 
         proxiedNode = createNetworkNode({
             layer0: {

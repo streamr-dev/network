@@ -80,8 +80,8 @@ describe('StreamrNode', () => {
     })
 
     it('Joining stream', async () => {
-        node1.joinStream(STREAM_PART_ID)
-        node2.joinStream(STREAM_PART_ID)
+        node1.joinStreamPart(STREAM_PART_ID)
+        node2.joinStreamPart(STREAM_PART_ID)
         await waitForCondition(() => node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1)
         await waitForCondition(() => node2.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1)
         expect(node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length).toEqual(1)
@@ -89,8 +89,8 @@ describe('StreamrNode', () => {
     })
 
     it('Publishing after joining and waiting for neighbors', async () => {
-        node1.joinStream(STREAM_PART_ID)
-        node2.joinStream(STREAM_PART_ID)
+        node1.joinStreamPart(STREAM_PART_ID)
+        node2.joinStreamPart(STREAM_PART_ID)
         await waitForCondition(() => node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1)
         await waitForCondition(() => node2.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1)
         await Promise.all([
@@ -103,10 +103,10 @@ describe('StreamrNode', () => {
         const streamPartId2 = StreamPartIDUtils.parse('test2#0')
         node1.setStreamPartEntryPoints(streamPartId2, [peerDescriptor1])
         node2.setStreamPartEntryPoints(streamPartId2, [peerDescriptor1])
-        node1.joinStream(STREAM_PART_ID)
-        node1.joinStream(streamPartId2)
-        node2.joinStream(STREAM_PART_ID)
-        node2.joinStream(streamPartId2)
+        node1.joinStreamPart(STREAM_PART_ID)
+        node1.joinStreamPart(streamPartId2)
+        node2.joinStreamPart(STREAM_PART_ID)
+        node2.joinStreamPart(streamPartId2)
         await Promise.all([
             waitForCondition(() => node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1),
             waitForCondition(() => node2.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1),
@@ -127,13 +127,13 @@ describe('StreamrNode', () => {
     })
 
     it('leaving streams', async () => {
-        node1.joinStream(STREAM_PART_ID)
-        node2.joinStream(STREAM_PART_ID)
+        node1.joinStreamPart(STREAM_PART_ID)
+        node2.joinStreamPart(STREAM_PART_ID)
         await Promise.all([
             waitForCondition(() => node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1),
             waitForCondition(() => node2.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1)
         ])
-        node2.leaveStream(STREAM_PART_ID)
+        node2.leaveStreamPart(STREAM_PART_ID)
         await waitForCondition(() => node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 0)
     })
 

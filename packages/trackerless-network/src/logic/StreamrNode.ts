@@ -127,13 +127,13 @@ export class StreamrNode extends EventEmitter<Events> {
 
     broadcast(msg: StreamMessage): void {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
-        this.joinStream(streamPartId)
+        this.joinStreamPart(streamPartId)
         this.streamParts.get(streamPartId)!.layer2.broadcast(msg)
         this.metrics.broadcastMessagesPerSecond.record(1)
         this.metrics.broadcastBytesPerSecond.record(msg.content.length)
     }
 
-    leaveStream(streamPartId: StreamPartID): void { // TODO rename to leaveStreamPart
+    leaveStreamPart(streamPartId: StreamPartID): void {
         const stream = this.streamParts.get(streamPartId)
         if (stream) {
             stream.layer2.stop()
@@ -143,7 +143,7 @@ export class StreamrNode extends EventEmitter<Events> {
         this.streamEntryPointDiscovery!.removeSelfAsEntryPoint(streamPartId)
     }
 
-    joinStream(streamPartId: StreamPartID): void { // TODO rename to joinStreamPart
+    joinStreamPart(streamPartId: StreamPartID): void {
         logger.debug(`Join stream part ${streamPartId}`)
         let stream = this.streamParts.get(streamPartId)
         if (stream !== undefined) {
