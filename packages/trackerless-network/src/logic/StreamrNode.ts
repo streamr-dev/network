@@ -174,7 +174,7 @@ export class StreamrNode extends EventEmitter<Events> {
         logger.debug(`Start layers and join DHT for stream part ${streamPartId}`)
         const stream = this.streams.get(streamPartId)
         if ((stream === undefined) || stream.proxied) {
-            // leaveStream has been called (or leaveStream called, and then setProxied called)
+            // leaveStream has been called (or leaveStream called, and then setProxies called)
             return
         }
         await stream.layer1.start()
