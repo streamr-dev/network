@@ -55,7 +55,7 @@ const logger = new Logger(module)
 const ENTRYPOINT_STORE_LIMIT = 8
 export const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 
-interface StreamEntryPointDiscoveryConfig {
+interface StreamPartEntryPointDiscoveryConfig {
     streamParts: Map<string, StreamPartDelivery>
     ownPeerDescriptor: PeerDescriptor
     getEntryPointData: (key: Uint8Array) => Promise<RecursiveFindResult>
@@ -65,14 +65,14 @@ interface StreamEntryPointDiscoveryConfig {
     cacheInterval?: number
 }
 
-export class StreamEntryPointDiscovery {
+export class StreamPartEntryPointDiscovery {
     private readonly abortController: AbortController
-    private readonly config: StreamEntryPointDiscoveryConfig
+    private readonly config: StreamPartEntryPointDiscoveryConfig
     private readonly servicedStreamParts: Map<StreamPartID, NodeJS.Timeout>
     private readonly cacheInterval: number
     private readonly networkSplitAvoidedNodes: Map<StreamPartID, Set<NodeID>> = new Map()
 
-    constructor(config: StreamEntryPointDiscoveryConfig) {
+    constructor(config: StreamPartEntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
         this.cacheInterval = this.config.cacheInterval ?? 60000

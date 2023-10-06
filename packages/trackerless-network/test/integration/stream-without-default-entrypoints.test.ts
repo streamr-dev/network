@@ -10,7 +10,7 @@ import {
 import { EthereumAddress, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
+import { streamPartIdToDataKey } from '../../src/logic/StreamPartEntryPointDiscovery'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')

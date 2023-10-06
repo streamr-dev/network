@@ -7,7 +7,7 @@ import fs from 'fs'
 import { PeerDescriptor } from '../../../dht/src/exports'
 import { NetworkNode } from '../../src/NetworkNode'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
-import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
+import { streamPartIdToDataKey } from '../../src/logic/StreamPartEntryPointDiscovery'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
 
 const numNodes = 10000

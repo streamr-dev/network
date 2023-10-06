@@ -1,6 +1,6 @@
 import { NodeType, PeerDescriptor, Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
-import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
+import { streamPartIdToDataKey } from '../../src/logic/StreamPartEntryPointDiscovery'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { createStreamMessage } from '../utils/utils'
