@@ -174,12 +174,12 @@ export class StreamrNode extends EventEmitter<Events> {
 
     private async startLayersAndJoinDht(streamPartId: StreamPartID): Promise<void> {
         logger.debug(`Start layers and join DHT for stream part ${streamPartId}`)
-        const stream = this.streams.get(streamPartId)!
+        const stream = this.streams.get(streamPartId)
         if ((stream === undefined) || stream.proxied) {
             // leaveStream has been called (or leaveStream called, and then setProxied called)
             return
         }
-        await stream.layer1!.start()
+        await stream.layer1.start()
         await stream.node.start()
         let entryPoints = this.knownStreamEntryPoints.get(streamPartId) ?? []
         const forwardingNode = this.layer0!.isJoinOngoing() ? this.layer0!.getKnownEntryPoints()[0] : undefined
@@ -189,7 +189,7 @@ export class StreamrNode extends EventEmitter<Events> {
             forwardingNode
         )
         entryPoints = entryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await stream.layer1!.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT))
+        await stream.layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT))
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
             discoveryResult.entryPointsFromDht,
