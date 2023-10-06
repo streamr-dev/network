@@ -8,7 +8,7 @@ import "packages/dht/protos/DhtRpc.proto";
 
 service NetworkRpc {
   rpc sendData (StreamMessage) returns (google.protobuf.Empty);
-  rpc leaveStreamNotice (LeaveStreamNotice) returns (google.protobuf.Empty);
+  rpc leaveStreamPartNotice (LeaveStreamPartNotice) returns (google.protobuf.Empty);
 }
 
 service ProxyConnectionRpc {
@@ -109,7 +109,7 @@ message InterleaveNotice {
   dht.PeerDescriptor interleaveTargetDescriptor = 2;
 }
 
-message LeaveStreamNotice {
+message LeaveStreamPartNotice {
   string randomGraphId = 1;
 }
 

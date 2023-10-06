@@ -199,9 +199,9 @@ export interface InterleaveNotice {
     interleaveTargetDescriptor?: PeerDescriptor;
 }
 /**
- * @generated from protobuf message LeaveStreamNotice
+ * @generated from protobuf message LeaveStreamPartNotice
  */
-export interface LeaveStreamNotice {
+export interface LeaveStreamPartNotice {
     /**
      * @generated from protobuf field: string randomGraphId = 1;
      */
@@ -452,17 +452,17 @@ class InterleaveNotice$Type extends MessageType<InterleaveNotice> {
  */
 export const InterleaveNotice = new InterleaveNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class LeaveStreamNotice$Type extends MessageType<LeaveStreamNotice> {
+class LeaveStreamPartNotice$Type extends MessageType<LeaveStreamPartNotice> {
     constructor() {
-        super("LeaveStreamNotice", [
+        super("LeaveStreamPartNotice", [
             { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message LeaveStreamNotice
+ * @generated MessageType for protobuf message LeaveStreamPartNotice
  */
-export const LeaveStreamNotice = new LeaveStreamNotice$Type();
+export const LeaveStreamPartNotice = new LeaveStreamPartNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class NeighborUpdate$Type extends MessageType<NeighborUpdate> {
     constructor() {
@@ -529,7 +529,7 @@ export const TemporaryConnectionResponse = new TemporaryConnectionResponse$Type(
  */
 export const NetworkRpc = new ServiceType("NetworkRpc", [
     { name: "sendData", options: {}, I: StreamMessage, O: Empty },
-    { name: "leaveStreamNotice", options: {}, I: LeaveStreamNotice, O: Empty }
+    { name: "leaveStreamPartNotice", options: {}, I: LeaveStreamPartNotice, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service ProxyConnectionRpc

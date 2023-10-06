@@ -9,7 +9,7 @@ import { StreamPartHandshakeResponse } from "./NetworkRpc";
 import { StreamPartHandshakeRequest } from "./NetworkRpc";
 import { ProxyConnectionResponse } from "./NetworkRpc";
 import { ProxyConnectionRequest } from "./NetworkRpc";
-import { LeaveStreamNotice } from "./NetworkRpc";
+import { LeaveStreamPartNotice } from "./NetworkRpc";
 import { Empty } from "../../../google/protobuf/empty";
 import { StreamMessage } from "./NetworkRpc";
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
@@ -22,9 +22,9 @@ export interface INetworkRpc<T = ServerCallContext> {
      */
     sendData(request: StreamMessage, context: T): Promise<Empty>;
     /**
-     * @generated from protobuf rpc: leaveStreamNotice(LeaveStreamNotice) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: leaveStreamPartNotice(LeaveStreamPartNotice) returns (google.protobuf.Empty);
      */
-    leaveStreamNotice(request: LeaveStreamNotice, context: T): Promise<Empty>;
+    leaveStreamPartNotice(request: LeaveStreamPartNotice, context: T): Promise<Empty>;
 }
 /**
  * @generated from protobuf service ProxyConnectionRpc

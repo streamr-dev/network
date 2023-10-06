@@ -16,7 +16,7 @@ import type { ProxyConnectionRequest } from "./NetworkRpc";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { NetworkRpc } from "./NetworkRpc";
-import type { LeaveStreamNotice } from "./NetworkRpc";
+import type { LeaveStreamPartNotice } from "./NetworkRpc";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Empty } from "../../../google/protobuf/empty";
 import type { StreamMessage } from "./NetworkRpc";
@@ -31,9 +31,9 @@ export interface INetworkRpcClient {
      */
     sendData(input: StreamMessage, options?: RpcOptions): UnaryCall<StreamMessage, Empty>;
     /**
-     * @generated from protobuf rpc: leaveStreamNotice(LeaveStreamNotice) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: leaveStreamPartNotice(LeaveStreamPartNotice) returns (google.protobuf.Empty);
      */
-    leaveStreamNotice(input: LeaveStreamNotice, options?: RpcOptions): UnaryCall<LeaveStreamNotice, Empty>;
+    leaveStreamPartNotice(input: LeaveStreamPartNotice, options?: RpcOptions): UnaryCall<LeaveStreamPartNotice, Empty>;
 }
 /**
  * @generated from protobuf service NetworkRpc
@@ -52,11 +52,11 @@ export class NetworkRpcClient implements INetworkRpcClient, ServiceInfo {
         return stackIntercept<StreamMessage, Empty>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: leaveStreamNotice(LeaveStreamNotice) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: leaveStreamPartNotice(LeaveStreamPartNotice) returns (google.protobuf.Empty);
      */
-    leaveStreamNotice(input: LeaveStreamNotice, options?: RpcOptions): UnaryCall<LeaveStreamNotice, Empty> {
+    leaveStreamPartNotice(input: LeaveStreamPartNotice, options?: RpcOptions): UnaryCall<LeaveStreamPartNotice, Empty> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<LeaveStreamNotice, Empty>("unary", this._transport, method, opt, input);
+        return stackIntercept<LeaveStreamPartNotice, Empty>("unary", this._transport, method, opt, input);
     }
 }
 /**
