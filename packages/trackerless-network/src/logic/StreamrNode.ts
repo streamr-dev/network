@@ -151,9 +151,7 @@ export class StreamrNode extends EventEmitter<Events> {
             proxied: false,
             layer1,
             node,
-            broadcast: () => {
-                // TODO
-            },
+            broadcast: (msg: StreamMessage) => node.broadcast(msg),
             stop: () => {
                 node.stop()
                 layer1.stop()
