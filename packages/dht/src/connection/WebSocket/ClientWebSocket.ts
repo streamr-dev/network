@@ -27,7 +27,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
 
             this.socket.onerror = (error: Error) => {
                 if (!this.destroyed) {
-                    logger.trace('WebSocket Client error: ' + error)
+                    logger.trace('WebSocket Client error: ' + JSON.stringify(error))
                     this.emit('error', error.name)
                 }
             }

@@ -178,6 +178,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                         method
                     )                        
                 })
+            this.autocertifierClient.on('updatedSubdomain', (subdomain) => {
+                this.webSocketServer!.updateCertificate(subdomain.certificate)
+            })
             await this.autocertifierClient.start()
         }
     }

@@ -8,7 +8,7 @@ import {
 } from '../IConnectionSource'
 
 import { Logger, asAbortable } from '@streamr/utils'
-import { AutoCertifierClient } from '@streamr/autocertifier-client' 
+import { AutoCertifierClient, Certificate } from '@streamr/autocertifier-client' 
 import { WebSocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
@@ -100,9 +100,14 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
         })
     }
 
+    public updateCertificate(certificate: Certificate): void {
+        this.httpServer?.setSecureContext(certificate)
+    }
+
     public stop(): Promise<void> {
         this.abortController.abort()
         this.removeAllListeners()
+        this.autocertifier?.removeAllListeners()
         return new Promise((resolve, _reject) => {
             this.wsServer?.shutDown()
             this.httpServer?.close(() => {
