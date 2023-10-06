@@ -8,8 +8,8 @@ import { NeighborUpdateRpc } from "./NetworkRpc";
 import type { NeighborUpdate } from "./NetworkRpc";
 import { HandshakeRpc } from "./NetworkRpc";
 import type { InterleaveNotice } from "./NetworkRpc";
-import type { StreamHandshakeResponse } from "./NetworkRpc";
-import type { StreamHandshakeRequest } from "./NetworkRpc";
+import type { StreamPartHandshakeResponse } from "./NetworkRpc";
+import type { StreamPartHandshakeRequest } from "./NetworkRpc";
 import { ProxyConnectionRpc } from "./NetworkRpc";
 import type { ProxyConnectionResponse } from "./NetworkRpc";
 import type { ProxyConnectionRequest } from "./NetworkRpc";
@@ -90,9 +90,9 @@ export class ProxyConnectionRpcClient implements IProxyConnectionRpcClient, Serv
  */
 export interface IHandshakeRpcClient {
     /**
-     * @generated from protobuf rpc: handshake(StreamHandshakeRequest) returns (StreamHandshakeResponse);
+     * @generated from protobuf rpc: handshake(StreamPartHandshakeRequest) returns (StreamPartHandshakeResponse);
      */
-    handshake(input: StreamHandshakeRequest, options?: RpcOptions): UnaryCall<StreamHandshakeRequest, StreamHandshakeResponse>;
+    handshake(input: StreamPartHandshakeRequest, options?: RpcOptions): UnaryCall<StreamPartHandshakeRequest, StreamPartHandshakeResponse>;
     /**
      * @generated from protobuf rpc: interleaveNotice(InterleaveNotice) returns (google.protobuf.Empty);
      */
@@ -108,11 +108,11 @@ export class HandshakeRpcClient implements IHandshakeRpcClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: handshake(StreamHandshakeRequest) returns (StreamHandshakeResponse);
+     * @generated from protobuf rpc: handshake(StreamPartHandshakeRequest) returns (StreamPartHandshakeResponse);
      */
-    handshake(input: StreamHandshakeRequest, options?: RpcOptions): UnaryCall<StreamHandshakeRequest, StreamHandshakeResponse> {
+    handshake(input: StreamPartHandshakeRequest, options?: RpcOptions): UnaryCall<StreamPartHandshakeRequest, StreamPartHandshakeResponse> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<StreamHandshakeRequest, StreamHandshakeResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<StreamPartHandshakeRequest, StreamPartHandshakeResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: interleaveNotice(InterleaveNotice) returns (google.protobuf.Empty);

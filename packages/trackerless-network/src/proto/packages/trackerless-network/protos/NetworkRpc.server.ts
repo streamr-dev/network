@@ -5,8 +5,8 @@ import { TemporaryConnectionResponse } from "./NetworkRpc";
 import { TemporaryConnectionRequest } from "./NetworkRpc";
 import { NeighborUpdate } from "./NetworkRpc";
 import { InterleaveNotice } from "./NetworkRpc";
-import { StreamHandshakeResponse } from "./NetworkRpc";
-import { StreamHandshakeRequest } from "./NetworkRpc";
+import { StreamPartHandshakeResponse } from "./NetworkRpc";
+import { StreamPartHandshakeRequest } from "./NetworkRpc";
 import { ProxyConnectionResponse } from "./NetworkRpc";
 import { ProxyConnectionRequest } from "./NetworkRpc";
 import { LeaveStreamNotice } from "./NetworkRpc";
@@ -40,9 +40,9 @@ export interface IProxyConnectionRpc<T = ServerCallContext> {
  */
 export interface IHandshakeRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: handshake(StreamHandshakeRequest) returns (StreamHandshakeResponse);
+     * @generated from protobuf rpc: handshake(StreamPartHandshakeRequest) returns (StreamPartHandshakeResponse);
      */
-    handshake(request: StreamHandshakeRequest, context: T): Promise<StreamHandshakeResponse>;
+    handshake(request: StreamPartHandshakeRequest, context: T): Promise<StreamPartHandshakeResponse>;
     /**
      * @generated from protobuf rpc: interleaveNotice(InterleaveNotice) returns (google.protobuf.Empty);
      */
