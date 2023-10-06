@@ -2,7 +2,6 @@ import { MessageID, MessageRef, StreamID, StreamMessage, StreamMessageType, toSt
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { StreamNodeType } from '../../src/logic/StreamrNode'
 import { StreamMessage as InternalStreamMessage, ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
@@ -97,8 +96,8 @@ describe('proxy and full node', () => {
             proxiedNode.broadcast(proxiedMessage)
         ])
 
-        expect(proxiedNode.stack.getStreamrNode().getStream(proxyStreamId)!.type).toBe(StreamNodeType.PROXY)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId1)!.type).toBe(StreamNodeType.RANDOM_GRAPH)
+        expect(proxiedNode.stack.getStreamrNode().getStream(proxyStreamId)!.proxied).toBe(true)
+        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId1)!.proxied).toBe(false)
     })
 
     it('proxied node can act as full node on multiple streams', async () => {
@@ -127,11 +126,11 @@ describe('proxy and full node', () => {
             proxiedNode.broadcast(proxiedMessage)
         ])
 
-        expect(proxiedNode.stack.getStreamrNode().getStream(proxyStreamId)!.type).toBe(StreamNodeType.PROXY)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId1)!.type).toBe(StreamNodeType.RANDOM_GRAPH)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId2)!.type).toBe(StreamNodeType.RANDOM_GRAPH)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId3)!.type).toBe(StreamNodeType.RANDOM_GRAPH)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId4)!.type).toBe(StreamNodeType.RANDOM_GRAPH)
+        expect(proxiedNode.stack.getStreamrNode().getStream(proxyStreamId)!.proxied).toBe(true)
+        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId1)!.proxied).toBe(false)
+        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId2)!.proxied).toBe(false)
+        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId3)!.proxied).toBe(false)
+        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId4)!.proxied).toBe(false)
     })
 
 })
