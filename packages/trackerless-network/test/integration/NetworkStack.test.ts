@@ -48,7 +48,7 @@ describe('NetworkStack', () => {
 
     it('Can use NetworkNode pub/sub via NetworkStack', async () => {
         let receivedMessages = 0
-        await stack1.getStreamrNode().joinStream(streamPartId)
+        stack1.getStreamrNode().joinStream(streamPartId)
         stack1.getStreamrNode().on('newMessage', () => {
             receivedMessages += 1
         })
