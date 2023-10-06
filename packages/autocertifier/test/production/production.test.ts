@@ -48,7 +48,7 @@ describe('production', () => {
         clientConnectionManager = new ConnectionManager({
             transportLayer: mockTransport,
             websocketHost: '127.0.0.1',
-            websocketPortRange: { min: 9991, max: 9991 }
+            websocketPortRange: { min: 9991, max: 9995 }
         })
 
         await clientConnectionManager.start((report) => {
