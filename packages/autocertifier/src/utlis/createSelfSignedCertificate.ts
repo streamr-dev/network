@@ -7,7 +7,7 @@ interface Certificates {
     serverKey: string
 }
 
-export function createSelfSignedCertificate(validMonths: number, validMilliseconds?: number): Certificates {
+export function createSelfSignedCertificate(fqdn: string, validMonths: number, validMilliseconds?: number): Certificates {
     // Generate a new RSA key pair for the certificate authority
     const caKeys = forge.pki.rsa.generateKeyPair(2048)
 
@@ -25,7 +25,7 @@ export function createSelfSignedCertificate(validMonths: number, validMillisecon
     }
     
     const attrs = [
-        { name: 'commonName', value: 'My CA' },
+        { name: 'commonName', value: fqdn },
         { name: 'countryName', value: 'US' },
         { shortName: 'ST', value: 'California' },
         { name: 'localityName', value: 'San Francisco' },
@@ -52,7 +52,7 @@ export function createSelfSignedCertificate(validMonths: number, validMillisecon
     serverCert.validity.notAfter = new Date()
     serverCert.validity.notAfter.setFullYear(serverCert.validity.notBefore.getFullYear() + 1)
     const serverAttrs = [
-        { name: 'commonName', value: 'localhost' },
+        { name: 'commonName', value: fqdn },
         { name: 'countryName', value: 'US' },
         { shortName: 'ST', value: 'California' },
         { name: 'localityName', value: 'San Francisco' },
@@ -64,7 +64,7 @@ export function createSelfSignedCertificate(validMonths: number, validMillisecon
     serverCert.setExtensions([
         { name: 'basicConstraints', cA: false },
         { name: 'keyUsage', digitalSignature: true, nonRepudiation: true, keyEncipherment: true, dataEncipherment: true },
-        { name: 'subjectAltName', altNames: [{ type: 2, value: 'localhost' }] },
+        { name: 'subjectAltName', altNames: [{ type: 2, value: fqdn }] },
         { name: 'subjectKeyIdentifier' }
     ])
     serverCert.sign(caKeys.privateKey, forge.md.sha256.create())

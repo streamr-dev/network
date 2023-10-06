@@ -4,7 +4,9 @@ import request from 'request'
 import { UpdateIpAndPortRequest } from './data/UpdateIpAndPortRequest'
 import { CreateCertifiedSubdomainRequest } from './data/CreateCertifiedSubdomainRequest'
 import { ServerError } from './errors'
+import { Logger } from '@streamr/utils'
 
+const logger = new Logger(module) 
 export class RestClient {
 
     private baseUrl: string
@@ -40,7 +42,7 @@ export class RestClient {
     }
 
     public async updateCertificate(subdomain: string, streamrWebSocketPort: number, sessioId: string, token: string): Promise<CertifiedSubdomain> {
-        const url = this.baseUrl + '/certifiedsubdomains/' + subdomain
+        const url = this.baseUrl + '/certifiedsubdomains/' + encodeURIComponent(subdomain)
         const body: UpdateIpAndPortRequest = {
             token: token,
             sessionId: sessioId,
@@ -51,7 +53,9 @@ export class RestClient {
     }
 
     public async updateSubdomainIpAndPort(subdomain: string, streamrWebSocketPort: number, sessioId: string, token: string): Promise<void> {
-        const url = this.baseUrl + '/certifiedsubdomains/' + subdomain + '/ip'
+        logger.info('updateSubdomainIpAndPort() subdomain: ' + subdomain + ', streamrWebSocketPort:  ' + streamrWebSocketPort)
+        logger.info('sessioId: ' + sessioId + ', token: ' + token)
+        const url = this.baseUrl + '/certifiedsubdomains/' + encodeURIComponent(subdomain) + '/ip'
         const body: UpdateIpAndPortRequest = {
             token: token,
             sessionId: sessioId,

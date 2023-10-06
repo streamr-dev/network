@@ -48,8 +48,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             logger.trace("START HERE2")
             await this.createCertificate()
         } else {
-            logger.trace("START HERE3")
-            this.checkSubdomainValidity()
+            await this.checkSubdomainValidity()
         }
     }
 
@@ -158,6 +157,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             return
         }
         const oldSubdomain = JSON.parse(fs.readFileSync(this.subdomainPath, 'utf8')) as CertifiedSubdomain
+        logger.info('updateSubdomainIpAndPort() called for ' + JSON.stringify(oldSubdomain))
         const sessionId = await this.restClient.createSession()
         this.ongoingSessions.add(sessionId)
         await this.restClient.updateSubdomainIpAndPort(oldSubdomain.subdomain, this.streamrWebSocketPort, sessionId, oldSubdomain.token)

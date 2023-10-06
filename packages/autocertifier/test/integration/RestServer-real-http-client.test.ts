@@ -17,7 +17,7 @@ describe('RestServer', () => {
 
     beforeAll(async () => {
 
-        server = new RestServer('localhost', '3000', dir + '/restServerCaCert.pem', dir + '/restServerCaKey.pem',
+        server = new RestServer('localhost', 'localhost', '3000', dir + '/restServerCaCert.pem', dir + '/restServerCaKey.pem',
             dir + '/restServerCert.pem', dir + '/restServerKey.pem', {
                 async createSession(): Promise<Session> {
                     return { sessionId: sessionId }
