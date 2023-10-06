@@ -7,7 +7,8 @@ import {
     StreamID,
     StreamMessage as OldStreamMessage,
     StreamMessageType as OldStreamMessageType,
-    StreamPartIDUtils
+    StreamPartIDUtils,
+    toStreamID
 } from '@streamr/protocol'
 import { binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 
@@ -21,7 +22,7 @@ describe('StreamMessageTranslator', () => {
         publisherId
     )
     const messageId = new MessageID(
-        'TEST' as StreamID,
+        toStreamID('TEST'),
         0,
         Date.now(),
         0,

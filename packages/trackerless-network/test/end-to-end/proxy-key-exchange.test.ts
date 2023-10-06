@@ -25,7 +25,7 @@ describe('proxy group key exchange', () => {
     const publisherUserId = toEthereumAddress('0x823A026e226EB47980c88616e01E1D3305Ef8Ecb')
     const subscriberUserId = toEthereumAddress('0x73E6183bf9b79D30533bEC7B28e982e9Af649B23')
 
-    const streamPartId = toStreamPartID(toStreamID('proxy-test'), 0)
+    const streamPartId = StreamPartIDUtils.parse('proxy-test#0')
 
     let proxyNode: NetworkNode
     let publisher: NetworkNode
