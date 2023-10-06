@@ -6,7 +6,7 @@ import {
 } from '../../../../src/plugins/operator/inspectRandomNode'
 import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { mock, MockProxy } from 'jest-mock-extended'
-import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
+import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { EthereumAddress, wait, waitForCondition } from '@streamr/utils'
@@ -30,7 +30,7 @@ const PEER_DESCRIPTOR_TWO = { id: '0x2222' }
 
 describe(inspectRandomNode, () => {
     let helper: MockProxy<InspectRandomNodeHelper>
-    let loadBalancer: MockProxy<StreamAssignmentLoadBalancer>
+    let assigments: MockProxy<StreamPartAssignments>
     let streamrClient: MockProxy<StreamrClient>
     let findTargetFn: jest.MockedFn<FindTargetFn>
     let findNodesForTargetFn: jest.MockedFn<FindNodesForTargetFn>
@@ -40,7 +40,7 @@ describe(inspectRandomNode, () => {
 
     beforeEach(() => {
         helper = mock<InspectRandomNodeHelper>()
-        loadBalancer = mock<StreamAssignmentLoadBalancer>()
+        assigments = mock<StreamPartAssignments>()
         streamrClient = mock<StreamrClient>()
         findTargetFn = jest.fn()
         findNodesForTargetFn = jest.fn()
@@ -58,7 +58,7 @@ describe(inspectRandomNode, () => {
         return inspectRandomNode(
             MY_OPERATOR_ADDRESS,
             helper,
-            loadBalancer,
+            assigments,
             streamrClient,
             200,
             getRedundancyFactorFn,
@@ -113,7 +113,7 @@ describe(inspectRandomNode, () => {
         await doInspection()
         await waitForCondition(() => helper.flag.mock.calls.length > 0)
 
-        expect(findTargetFn).toHaveBeenCalledWith(MY_OPERATOR_ADDRESS, helper, loadBalancer)
+        expect(findTargetFn).toHaveBeenCalledWith(MY_OPERATOR_ADDRESS, helper, assigments)
         expect(inspectTargetFn).toHaveBeenCalledWith({
             target,
             targetPeerDescriptors: [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO],

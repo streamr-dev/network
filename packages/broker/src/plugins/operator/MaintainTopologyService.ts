@@ -2,7 +2,7 @@ import { Logger } from '@streamr/utils'
 import { StreamrClient, Subscription } from 'streamr-client'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import pLimit from 'p-limit'
-import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
+import { StreamPartAssignments } from './StreamPartAssignments'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { OperatorServiceConfig } from './OperatorPlugin'
 import { OperatorFleetState } from './OperatorFleetState'
@@ -29,7 +29,7 @@ export async function setUpAndStartMaintainTopologyService({
     const nodeId = await streamrClient.getNodeId()
     const service = new MaintainTopologyService(
         streamrClient,
-        new StreamAssignmentLoadBalancer(
+        new StreamPartAssignments(
             nodeId,
             redundancyFactor,
             async (streamId) => {
@@ -47,18 +47,18 @@ export async function setUpAndStartMaintainTopologyService({
 
 export class MaintainTopologyService {
     private readonly streamrClient: StreamrClient
-    private readonly streamAssignmentLoadBalancer: StreamAssignmentLoadBalancer
+    private readonly assignments: StreamPartAssignments
     private readonly subscriptions = new Map<StreamPartID, Subscription>()
     private readonly concurrencyLimit = pLimit(1)
 
-    constructor(streamrClient: StreamrClient, streamAssignmentLoadBalancer: StreamAssignmentLoadBalancer) {
+    constructor(streamrClient: StreamrClient, assignments: StreamPartAssignments) {
         this.streamrClient = streamrClient
-        this.streamAssignmentLoadBalancer = streamAssignmentLoadBalancer
+        this.assignments = assignments
     }
 
     async start(): Promise<void> {
-        this.streamAssignmentLoadBalancer.on('assigned', this.onAddStakedStreamPart)
-        this.streamAssignmentLoadBalancer.on('unassigned', this.onRemoveStakedStreamPart)
+        this.assignments.on('assigned', this.onAddStakedStreamPart)
+        this.assignments.on('unassigned', this.onRemoveStakedStreamPart)
         logger.info('Started')
     }
 

@@ -58,12 +58,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    getNeighbors(): string[] {
-        throw new Error('not implemented')
-    }
-
-    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
+    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
         const allNodes = this.network.getNodes()
         return allNodes
             .filter((node) => (node.id !== this.id))
