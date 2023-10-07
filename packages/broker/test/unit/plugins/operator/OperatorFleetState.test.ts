@@ -2,13 +2,13 @@ import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFle
 import { mock, MockProxy } from 'jest-mock-extended'
 import { StreamrClient, MessageListener, Subscription } from 'streamr-client'
 import { wait, waitForCondition, waitForEvent } from '@streamr/utils'
-import { toStreamID } from '@streamr/protocol'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
 import { createHeartbeatMessage } from '../../../../src/plugins/operator/heartbeatUtils'
 import { NodeID } from '@streamr/trackerless-network'
+import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 
 const ADDRESS = randomEthereumAddress()
-const coordinationStreamId = toStreamID('/operator/coordination', ADDRESS)
+const coordinationStreamId = formCoordinationStreamId(ADDRESS)
 
 const READY_WAIT_MS = 500
 const JITTER = 100

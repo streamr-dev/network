@@ -49,14 +49,12 @@ describe('MaintainTopologyService', () => {
     let streamrClient: MockProxy<StreamrClient>
     let fixtures: Record<StreamPartID, MockSubscription>
     let assignments: EventEmitter3<StreamPartAssignmentEvents>
-    let service: MaintainTopologyService
 
     beforeEach(async () => {
         streamrClient = mock<StreamrClient>()
         fixtures = setUpFixturesAndMocks(streamrClient)
         assignments = new EventEmitter3()
-        service = new MaintainTopologyService(streamrClient, assignments as any)
-        await service.start()
+        new MaintainTopologyService(streamrClient, assignments as any)
     })
 
     it('handles "assigned" event (happy path)', async () => {
