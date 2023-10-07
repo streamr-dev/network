@@ -3,63 +3,18 @@ import { StreamrClient, Subscription } from 'streamr-client'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import pLimit from 'p-limit'
 import { StreamPartAssignments } from './StreamPartAssignments'
-import { MaintainTopologyHelper } from './MaintainTopologyHelper'
-import { OperatorServiceConfig } from './OperatorPlugin'
-import { OperatorFleetState } from './OperatorFleetState'
 
 const logger = new Logger(module)
 
-/**
- * Helper function for setting up and starting a MaintainTopologyService along
- * with all its dependencies.
- */
-export async function setUpAndStartMaintainTopologyService({
-    streamrClient,
-    redundancyFactor,
-    serviceHelperConfig,
-    operatorFleetState
-}: {
-    streamrClient: StreamrClient
-    redundancyFactor: number
-    serviceHelperConfig: OperatorServiceConfig
-    operatorFleetState: OperatorFleetState
-}): Promise<MaintainTopologyService> {
-    // TODO: check that operatorFleetState is NOT started
-    const maintainTopologyHelper = new MaintainTopologyHelper(serviceHelperConfig)
-    const nodeId = await streamrClient.getNodeId()
-    const service = new MaintainTopologyService(
-        streamrClient,
-        new StreamPartAssignments(
-            nodeId,
-            redundancyFactor,
-            async (streamId) => {
-                const stream = await streamrClient.getStream(streamId)
-                return stream.getStreamParts()
-            },
-            operatorFleetState,
-            maintainTopologyHelper
-        )
-    )
-    await service.start()
-    await maintainTopologyHelper.start()
-    return service
-}
-
 export class MaintainTopologyService {
     private readonly streamrClient: StreamrClient
-    private readonly assignments: StreamPartAssignments
     private readonly subscriptions = new Map<StreamPartID, Subscription>()
     private readonly concurrencyLimit = pLimit(1)
 
     constructor(streamrClient: StreamrClient, assignments: StreamPartAssignments) {
         this.streamrClient = streamrClient
-        this.assignments = assignments
-    }
-
-    async start(): Promise<void> {
-        this.assignments.on('assigned', this.onAddStakedStreamPart)
-        this.assignments.on('unassigned', this.onRemoveStakedStreamPart)
-        logger.info('Started')
+        assignments.on('assigned', this.onAddStakedStreamPart)
+        assignments.on('unassigned', this.onRemoveStakedStreamPart)
     }
 
     private onAddStakedStreamPart = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
