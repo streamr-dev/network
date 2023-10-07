@@ -29,7 +29,7 @@ function setUpFixturesAndMocks(streamrClient: MockProxy<StreamrClient>): Record<
     for (const streamPartId of ALL_STREAM_PARTS) {
         result[streamPartId] = { unsubscribe: jest.fn() }
     }
-    streamrClient.subscribe.mockImplementation(async (opts) => {
+    streamrClient.subscribe.mockImplementation(async (opts, msgHandler) => {
         if ((opts as any).id === STREAM_NOT_EXIST) {
             throw new Error('non-existing stream')
         }
@@ -63,8 +63,8 @@ describe('MaintainTopologyService', () => {
 
         await waitForCondition(() => streamrClient.subscribe.mock.calls.length >= 2)
         expect(streamrClient.subscribe).toHaveBeenCalledTimes(2)
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(SP1))
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(SP2))
+        expect(streamrClient.subscribe.mock.calls[0][0]).toEqual(formRawSubscriptionParam(SP1))
+        expect(streamrClient.subscribe.mock.calls[1][0]).toEqual(formRawSubscriptionParam(SP2))
     })
 
     it('handles "assigned" event given non-existing stream (does not crash)', async () => {
