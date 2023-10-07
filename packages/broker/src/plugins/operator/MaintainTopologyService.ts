@@ -26,7 +26,11 @@ export class MaintainTopologyService {
                 id,
                 partition,
                 raw: true
-            })
+            }, () => {})
+
+			subscription.on('error', (err) => {
+				logger.error(`Subscription error: ${err}`)
+			})
         } catch (err) {
             logger.warn(`Failed to join stream partition ${streamPartId}`, { reason: err?.reason })
             return
