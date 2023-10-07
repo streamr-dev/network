@@ -29,7 +29,7 @@ function setUpFixturesAndMocks(streamrClient: MockProxy<StreamrClient>): Record<
     for (const streamPartId of ALL_STREAM_PARTS) {
         result[streamPartId] = { unsubscribe: jest.fn() }
     }
-    streamrClient.subscribe.mockImplementation(async (opts, msgHandler) => {
+    streamrClient.subscribe.mockImplementation(async (opts) => {
         if ((opts as any).id === STREAM_NOT_EXIST) {
             throw new Error('non-existing stream')
         }
