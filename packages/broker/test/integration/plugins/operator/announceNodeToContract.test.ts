@@ -1,9 +1,9 @@
 import { waitForCondition } from '@streamr/utils'
 import { setupOperatorContract } from './contractUtils'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
+import { announceNodeToContract } from '../../../../src/plugins/operator/announceNodeToContract'
 
-// TODO rename test file
-describe('AnnounceNodeToContractHelper', () => {
+describe('announceNodeToContract', () => {
 
     let contractFacade: ContractFacade
 
@@ -20,9 +20,10 @@ describe('AnnounceNodeToContractHelper', () => {
     it('read empty heartbeat, then write heartbeat then read timestamp', async () => {
         expect(await contractFacade.getTimestampOfLastHeartbeat()).toBeUndefined()
 
-        await contractFacade.writeHeartbeat({
-            id: 'foobar'
-        })
+        const streamrClient = {
+            getPeerDescriptor: () => 'foobar' as any
+        }
+        await announceNodeToContract(0, contractFacade, streamrClient as any)
         const approximateWriteTimestamp = Date.now()
         await waitForCondition(async () => await contractFacade.getTimestampOfLastHeartbeat() !== undefined, 10 * 1000, 1000)
 
