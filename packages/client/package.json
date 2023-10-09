@@ -121,7 +121,7 @@
     "split2": "^4.2.0",
     "sqlite": "^5.0.1",
     "sqlite3": "^5.0.3",
-    "ts-essentials": "^9.4.0",
+    "ts-essentials": "^9.4.1",
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.8.0",
     "uuid": "^9.0.1"
