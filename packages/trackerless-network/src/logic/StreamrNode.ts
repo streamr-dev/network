@@ -30,7 +30,7 @@ export enum StreamNodeType {
     PROXY = 'proxy'
 }
 
-export interface StreamPartDelivery { // TODO rename maybe have "proxied: boolean" instead of StreamNodeType
+export interface StreamPartDelivery { // TODO maybe have "proxied: boolean" instead of StreamNodeType
     layer1?: ILayer1
     layer2: IStreamNode
     type: StreamNodeType
