@@ -15,8 +15,7 @@ import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 const TIMEOUT = 90 * 1000
 
-// TODO rename test file
-describe('InspectRandomNodeHelper', () => {
+describe('inspectRandomNode', () => {
 
     let streamId1: string
     let streamId2: string
@@ -72,7 +71,7 @@ describe('InspectRandomNodeHelper', () => {
         expect(operators).toEqual([toEthereumAddress(operatorContract.address)])
     }, TIMEOUT)
 
-    it('works to flag through the inspectRandomNodeHelper', async () => {
+    it('works to flag through the contractFacade', async () => {
         const flagger = await setupOperatorContract({ nodeCount: 1 })
         const target = await setupOperatorContract()
 
@@ -84,6 +83,7 @@ describe('InspectRandomNodeHelper', () => {
         await stake(flagger.operatorContract, sponsorship.address, 150)
         await stake(target.operatorContract, sponsorship.address, 250)
 
+        // TODO call flagging via inspectRandomNode function
         const contractFacade = ContractFacade.createInstance({
             ...flagger.operatorServiceConfig,
             signer: flagger.nodeWallets[0]
