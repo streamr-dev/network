@@ -125,9 +125,9 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         await layer1Node3.joinDht([entrypointDescriptor])
         await layer1Node4.joinDht([entrypointDescriptor])
 
-        expect(layer1Node1.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(layer1Node2.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(layer1Node3.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(layer1Node4.getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(layer1Node1.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(layer1Node2.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(layer1Node3.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(layer1Node4.getPeerCount()).toBeGreaterThanOrEqual(2)
     }, 60000)
 })

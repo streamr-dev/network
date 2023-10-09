@@ -70,11 +70,11 @@ describe('Layer0MixedConnectionTypes', () => {
             node5.joinDht([epPeerDescriptor])
         ])
 
-        expect(node1.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node2.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node3.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node4.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node5.getBucketSize()).toBeGreaterThanOrEqual(1)
+        expect(node1.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(node2.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(node3.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(node4.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(node5.getPeerCount()).toBeGreaterThanOrEqual(1)
 
     }, 15000)
 
@@ -86,10 +86,10 @@ describe('Layer0MixedConnectionTypes', () => {
             node4.joinDht([epPeerDescriptor]),
             node5.joinDht([epPeerDescriptor])
         ])
-        expect(node1.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node2.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node3.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node4.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node5.getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(node1.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(node2.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(node3.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(node4.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(node5.getPeerCount()).toBeGreaterThanOrEqual(2)
     }, 30000)
 })

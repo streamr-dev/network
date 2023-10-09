@@ -199,7 +199,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
-        for (const descriptor of this.config.layer1.getKBucketPeers()) {
+        for (const descriptor of this.config.layer1.getPeers()) {
             if (this.config.nearbyNodeView.size() >= this.config.nodeViewSize) {
                 break
             }
@@ -260,7 +260,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.config.layer1.getNeighborList().getClosestContacts(this.config.nodeViewSize).forEach((contact: DhtPeer) => {
             uniqueNodes.add(contact.getPeerDescriptor())
         })
-        this.config.layer1.getKBucketPeers().forEach((peer: PeerDescriptor) => {
+        this.config.layer1.getPeers().forEach((peer: PeerDescriptor) => {
             uniqueNodes.add(peer)
         })
         return Array.from(uniqueNodes)

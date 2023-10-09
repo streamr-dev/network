@@ -136,9 +136,9 @@ run().then(() => {
     const streamParts = currentNode.stack.getStreamrNode()!.getStreamParts()
     const foundData = nodes[0].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
-    console.log(currentNode.stack.getLayer0DhtNode().getKBucketPeers().length)
+    console.log(currentNode.stack.getLayer0DhtNode().getPeers().length)
     console.log(currentNode.stack.getLayer0DhtNode().getNumberOfConnections())
-    console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer1!.getKBucketPeers())
+    console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer1!.getPeers())
     console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer2.getTargetNeighborIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {

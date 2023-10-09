@@ -53,9 +53,9 @@ describe('Layer0', () => {
             node4.joinDht([epPeerDescriptor])
         ])
 
-        expect(node1.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node2.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node3.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node4.getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(node1.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(node2.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(node3.getPeerCount()).toBeGreaterThanOrEqual(2)
+        expect(node4.getPeerCount()).toBeGreaterThanOrEqual(2)
     }, 10000)
 })

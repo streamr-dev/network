@@ -23,11 +23,11 @@ export class MockLayer1 extends EventEmitter implements ILayer1 {
         return this.neighborList
     }
 
-    getKBucketPeers(): PeerDescriptor[] {
+    getPeers(): PeerDescriptor[] {
         return this.kbucketPeers
     }
 
-    getBucketSize(): number {
+    getPeerCount(): number {
         return this.kbucketPeers.length
     }
 

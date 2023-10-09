@@ -32,7 +32,7 @@ interface DataStoreConfig {
     highestTtl: number
     numberOfCopies: number
     dhtNodeEmitter: EventEmitter<Events>
-    getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtPeer[]
+    getNodesClosestToIdFromKBuckets: (id: Uint8Array, n?: number) => DhtPeer[]
 }
 
 const logger = new Logger(module)
@@ -48,7 +48,7 @@ export class DataStore implements IStoreService {
     private readonly highestTtl: number
     private readonly numberOfCopies: number
     private readonly dhtNodeEmitter: EventEmitter<Events>
-    private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtPeer[]
+    private readonly getNodesClosestToIdFromKBuckets: (id: Uint8Array, n?: number) => DhtPeer[]
 
     constructor(config: DataStoreConfig) {
         this.rpcCommunicator = config.rpcCommunicator
@@ -60,7 +60,7 @@ export class DataStore implements IStoreService {
         this.highestTtl = config.highestTtl
         this.numberOfCopies = config.numberOfCopies
         this.dhtNodeEmitter = config.dhtNodeEmitter
-        this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
+        this.getNodesClosestToIdFromKBuckets = config.getNodesClosestToIdFromKBuckets
         this.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
             (request: StoreDataRequest, context: ServerCallContext) => this.storeData(request, context))
         this.rpcCommunicator.registerRpcMethod(MigrateDataRequest, MigrateDataResponse, 'migrateData',
@@ -85,7 +85,7 @@ export class DataStore implements IStoreService {
         const newNodeId = PeerID.fromValue(newNode.kademliaId)
         const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
 
-        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
+        const closestToData = this.getNodesClosestToIdFromKBuckets(dataEntry.kademliaId, 10)
 
         const sortedList = new SortedContactList<Contact>(dataId, 20, undefined, true)
         sortedList.addContact(new Contact(this.ownPeerDescriptor))
@@ -188,7 +188,7 @@ export class DataStore implements IStoreService {
 
     private selfIsOneOfClosestPeers(dataId: Uint8Array): boolean {
         const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
-        const closestPeers = this.getNodesClosestToIdFromBucket(dataId, this.numberOfCopies)
+        const closestPeers = this.getNodesClosestToIdFromKBuckets(dataId, this.numberOfCopies)
         const sortedList = new SortedContactList<Contact>(ownPeerId, this.numberOfCopies, undefined, true)
         sortedList.addContact(new Contact(this.ownPeerDescriptor))
         closestPeers.forEach((con) => sortedList.addContact(new Contact(con.getPeerDescriptor())))
@@ -281,7 +281,7 @@ export class DataStore implements IStoreService {
         const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
         const dataId = PeerID.fromValue(dataEntry.kademliaId)
         const incomingPeerId = PeerID.fromValue(incomingPeer.kademliaId)
-        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
+        const closestToData = this.getNodesClosestToIdFromKBuckets(dataEntry.kademliaId, 10)
 
         const sortedList = new SortedContactList<Contact>(dataId, this.numberOfCopies, undefined, true)
         sortedList.addContact(new Contact(this.ownPeerDescriptor))

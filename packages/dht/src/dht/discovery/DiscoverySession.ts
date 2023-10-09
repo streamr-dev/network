@@ -17,7 +17,7 @@ interface DiscoverySessionEvents {
 }
 
 interface DiscoverySessionConfig {
-    bucket: KBucket<DhtPeer>
+    kBuckets: KBucket<DhtPeer>
     neighborList: SortedContactList<DhtPeer>
     targetId: Uint8Array
     ownPeerDescriptor: PeerDescriptor
@@ -98,7 +98,7 @@ export class DiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(peer.getPeerId().toKey())
-        this.config.bucket.remove(peer.getPeerId().value)
+        this.config.kBuckets.remove(peer.getPeerId().value)
         this.config.neighborList.removeContact(peer.getPeerId())
     }
 

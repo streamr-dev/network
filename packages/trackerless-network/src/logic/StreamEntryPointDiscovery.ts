@@ -152,7 +152,7 @@ export class StreamEntryPointDiscovery {
         if (!this.config.streams.has(streamPartId) || !entryPointsFromDht) {
             return
         }
-        if (this.config.streams.get(streamPartId)!.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
+        if (this.config.streams.get(streamPartId)!.layer1!.getPeerCount() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
             await this.storeSelfAsEntryPoint(streamPartId)
             setImmediate(() => this.avoidNetworkSplit(streamPartId))
         } else if (currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) {
@@ -203,9 +203,9 @@ export class StreamEntryPointDiscovery {
                 const stream = this.config.streams.get(streamPartId)!
                 const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartId)
                 await stream.layer1!.joinDht(rediscoveredEntrypoints, false, false)
-                if (stream.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
+                if (stream.layer1!.getPeerCount() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
                     // Filter out nodes that are not in the k-bucket, assumed to be offline
-                    const nodesToAvoid = rediscoveredEntrypoints.filter((peer) => !stream.layer1!.getKBucketPeers().includes(peer))
+                    const nodesToAvoid = rediscoveredEntrypoints.filter((peer) => !stream.layer1!.getPeers().includes(peer))
                     this.addAvoidedNodes(streamPartId, nodesToAvoid)
                     throw new Error(`Network split is still possible`)
                 }

@@ -59,7 +59,7 @@ describe('Storing data in DHT with two peers', () => {
 
     it('Can store on one peer DHT', async () => {
         await otherNode.stop()
-        await waitForCondition(() => entryPoint.getBucketSize() === 0)
+        await waitForCondition(() => entryPoint.getPeerCount() === 0)
         const dataKey = PeerID.fromString('data-to-store')
         const data = Any.pack(entryPoint.getPeerDescriptor(), PeerDescriptor)
         const successfulStorers = await entryPoint.storeDataToDht(dataKey.value, data)
