@@ -40,7 +40,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
         } catch (err) {
             const fromNode = params.previousPeer ?
                 peerIdFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
-            logger.trace(`Failed to send routeMessage from ${fromNode} to ${this.getPeerId().toKey()} with: ${err}`)
+            logger.trace(`Failed to send routeMessage from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
             return false
         }
         return true
@@ -69,7 +69,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
                 keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
 
             logger.trace(
-                `Failed to send forwardMessage from ${fromNode} to ${this.getPeerId().toKey()} with: ${err}`
+                `Failed to send forwardMessage from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`
             )
             return false
         }
@@ -97,7 +97,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             }
         } catch (err) {
             const fromNode = params.previousPeer ? keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
-            logger.debug(`Failed to send recursiveFind message from ${fromNode} to ${this.getPeerId().toKey()} with: ${err}`)
+            logger.debug(`Failed to send recursiveFind message from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
             return false
         }
         return true
