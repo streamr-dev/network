@@ -1,7 +1,6 @@
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import fetch from 'node-fetch'
-import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
 import { createClient, createTestStream } from '../../../utils'
 import {
     TEST_CHAIN_CONFIG,
@@ -12,10 +11,12 @@ import {
     sponsor,
     stake
 } from './contractUtils'
+import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 const TIMEOUT = 90 * 1000
 
-describe(InspectRandomNodeHelper, () => {
+// TODO rename test file
+describe('InspectRandomNodeHelper', () => {
 
     let streamId1: string
     let streamId2: string
@@ -36,7 +37,7 @@ describe(InspectRandomNodeHelper, () => {
 
     it('getSponsorshipsOfOperator, getOperatorsInSponsorship', async () => {
         const { operatorWallet, operatorContract, operatorServiceConfig } = await setupOperatorContract()
-        const inspectRandomNodeHelper = new InspectRandomNodeHelper({
+        const contractFacade = new ContractFacade({
             ...operatorServiceConfig,
             signer: undefined as any
         })
@@ -49,11 +50,11 @@ describe(InspectRandomNodeHelper, () => {
         await stake(operatorContract, sponsorship2.address, 100)
 
         await waitForCondition(async (): Promise<boolean> => {
-            const res = await inspectRandomNodeHelper.getSponsorshipsOfOperator(toEthereumAddress(operatorContract.address))
+            const res = await contractFacade.getSponsorshipsOfOperator(toEthereumAddress(operatorContract.address))
             return res.length === 2
         }, 10000, 500)
 
-        const sponsorships = await inspectRandomNodeHelper.getSponsorshipsOfOperator(toEthereumAddress(operatorContract.address))
+        const sponsorships = await contractFacade.getSponsorshipsOfOperator(toEthereumAddress(operatorContract.address))
         expect(sponsorships).toIncludeSameMembers([
             {
                 sponsorshipAddress: toEthereumAddress(sponsorship1.address),
@@ -67,7 +68,7 @@ describe(InspectRandomNodeHelper, () => {
             }
         ])
 
-        const operators = await inspectRandomNodeHelper.getOperatorsInSponsorship(toEthereumAddress(sponsorship1.address))
+        const operators = await contractFacade.getOperatorsInSponsorship(toEthereumAddress(sponsorship1.address))
         expect(operators).toEqual([toEthereumAddress(operatorContract.address)])
     }, TIMEOUT)
 
@@ -83,11 +84,11 @@ describe(InspectRandomNodeHelper, () => {
         await stake(flagger.operatorContract, sponsorship.address, 150)
         await stake(target.operatorContract, sponsorship.address, 250)
 
-        const inspectRandomNodeHelper = new InspectRandomNodeHelper({
+        const contractFacade = new ContractFacade({
             ...flagger.operatorServiceConfig,
             signer: flagger.nodeWallets[0]
         })
-        await inspectRandomNodeHelper.flag(toEthereumAddress(sponsorship.address), toEthereumAddress(target.operatorContract.address), 2)
+        await contractFacade.flag(toEthereumAddress(sponsorship.address), toEthereumAddress(target.operatorContract.address), 2)
 
         await waitForCondition(async (): Promise<boolean> => {
             const result = await graphClient.queryEntity<{ operator: { flagsOpened: any[] } }>({ query: `

@@ -2,7 +2,6 @@ import { Contract } from '@ethersproject/contracts'
 import { parseEther } from '@ethersproject/units'
 import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { MaintainOperatorValueHelper } from '../../../../src/plugins/operator/MaintainOperatorValueHelper'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
 import { createClient, createTestStream } from '../../../utils'
 import {
@@ -15,6 +14,7 @@ import {
     sponsor,
     stake
 } from './contractUtils'
+import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 const logger = new Logger(module)
 
@@ -58,20 +58,18 @@ describe('checkOperatorValueBreach', () => {
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
         const allowedDifference = valueBeforeWithdraw.mul(await streamrConfig.maxAllowedEarningsFraction()).div(ONE_ETHER).toBigInt()
-        const helper = new MaintainOperatorValueHelper({
+        const contractFacade = new ContractFacade({
             ...watcherConfig,
             signer: watcherWallets[0]
         })
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
-        helper.getRandomOperator = async () => {
+        contractFacade.getRandomOperator = async () => {
             return toEthereumAddress(operatorContract.address)
         }
 
         logger.debug('Waiting until above', { allowedDifference })
         await waitForCondition(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
-        await checkOperatorValueBreach(
-            helper
-        )
+        await checkOperatorValueBreach(contractFacade)
 
         const earnings = await getEarnings(operatorContract)
         expect(earnings).toBeLessThan(allowedDifference)

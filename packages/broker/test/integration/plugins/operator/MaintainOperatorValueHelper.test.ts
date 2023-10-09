@@ -1,9 +1,10 @@
 import { Contract } from '@ethersproject/contracts'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { OperatorFactory, operatorFactoryABI } from '@streamr/network-contracts'
-import { MaintainOperatorValueHelper } from '../../../../src/plugins/operator/MaintainOperatorValueHelper'
 import { SetupOperatorContractOpts, getAdminWallet, setupOperatorContract } from './contractUtils'
+import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
+// TODO rename test file
 describe('MaintainOperatorValueHelper', () => {
 
     let deployConfig: SetupOperatorContractOpts
@@ -21,11 +22,11 @@ describe('MaintainOperatorValueHelper', () => {
         // deploy another operator to make sure there are at least 2 operators
         await setupOperatorContract(deployConfig)
 
-        const helper = new MaintainOperatorValueHelper({
+        const contractFacade = new ContractFacade({
             ...operatorServiceConfig,
             signer: nodeWallets[0]
         })
-        const randomOperatorAddress = await helper.getRandomOperator()
+        const randomOperatorAddress = await contractFacade.getRandomOperator()
         expect(randomOperatorAddress).toBeDefined()
 
         // check it's a valid operator, deployed by the OperatorFactory
