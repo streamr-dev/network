@@ -10,9 +10,9 @@ export class RandomContactList<C extends IContact> extends ContactList<C> {
         ownId: PeerID,
         maxSize: number,
         randomness = 0.20,
-        getContactsLimit?: number
+        defaultContactQueryLimit?: number
     ) {
-        super(ownId, maxSize, getContactsLimit)
+        super(ownId, maxSize, defaultContactQueryLimit)
         this.randomness = randomness
     }
 
@@ -54,7 +54,7 @@ export class RandomContactList<C extends IContact> extends ContactList<C> {
         return false
     }
 
-    public getContacts(limit = this.getContactsLimit): C[] {
+    public getContacts(limit = this.defaultContactQueryLimit): C[] {
         const ret: C[] = []
         this.contactIds.forEach((contactId) => {
             const contact = this.contactsById.get(contactId.toKey())

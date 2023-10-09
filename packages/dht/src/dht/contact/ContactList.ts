@@ -8,17 +8,17 @@ export class ContactList<C extends IContact> extends EventEmitter<Events> {
     protected contactIds: PeerID[] = []
     protected ownId: PeerID
     protected maxSize: number
-    protected getContactsLimit
+    protected defaultContactQueryLimit
 
     constructor(
         ownId: PeerID,
         maxSize: number,
-        getContactsLimit = 20
+        defaultContactQueryLimit = 20
     ) {
         super()
         this.ownId = ownId
         this.maxSize = maxSize
-        this.getContactsLimit = getContactsLimit
+        this.defaultContactQueryLimit = defaultContactQueryLimit
     }
 
     public getContact(id: PeerID): ContactState<C> {

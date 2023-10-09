@@ -12,12 +12,12 @@ export class SortedContactList<C extends IContact> extends ContactList<C> {
     constructor(
         ownId: PeerID,
         maxSize: number,
-        getContactsLimit?: number,
+        defaultContactQueryLimit?: number,
         allowOwnPeerId = false,
         peerIdDistanceLimit?: PeerID,
         excludedPeerIDs?: PeerID[]
     ) {
-        super(ownId, maxSize, getContactsLimit)
+        super(ownId, maxSize, defaultContactQueryLimit)
         this.compareIds = this.compareIds.bind(this)
         this.allowOwnPeerId = allowOwnPeerId
         this.peerIdDistanceLimit = peerIdDistanceLimit
@@ -84,7 +84,7 @@ export class SortedContactList<C extends IContact> extends ContactList<C> {
         }
     }
 
-    public getClosestContacts(limit = this.getContactsLimit): C[] {
+    public getClosestContacts(limit = this.defaultContactQueryLimit): C[] {
         const ret: C[] = []
         this.contactIds.forEach((contactId) => {
             const contact = this.contactsById.get(contactId.toKey())
