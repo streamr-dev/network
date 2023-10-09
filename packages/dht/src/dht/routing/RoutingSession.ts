@@ -156,11 +156,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         return this.contactList.getUncontactedContacts(this.parallelism)
     }
 
-    public getClosestContacts = (limit: number): PeerDescriptor[] => {
-        const contacts = this.contactList.getClosestContacts(limit)
-        return contacts.map((contact) => contact.getPeerDescriptor())
-    }
-
     private sendMoreRequests = (uncontacted: RemoteRouter[]) => {
         logger.trace('sendMoreRequests() sessionId: ' + this.sessionId)
         if (this.stopped) {
