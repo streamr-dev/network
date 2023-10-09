@@ -14,9 +14,9 @@ export class ContactState<TContact> {
 
 export interface IContact { getPeerId: () => PeerID, getPeerDescriptor: () => PeerDescriptor }
 
-export interface Events {
-    contactRemoved: (removedDescriptor: PeerDescriptor, closestDescriptors: PeerDescriptor[]) => void
-    newContact: (newDescriptor: PeerDescriptor, closestDescriptors: PeerDescriptor[]) => void
+export interface Events<C> {
+    contactRemoved: (removedContact: C, closestContacts: C[]) => void
+    newContact: (newContact: C, closestContacts: C[]) => void
 }
 
 export class Contact implements IContact {

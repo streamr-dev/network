@@ -1,8 +1,8 @@
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import EventEmitter from 'eventemitter3'
-import { Events, IContact, ContactState } from './Contact'
+import { Events, ContactState } from './Contact'
 
-export class ContactList<C extends IContact> extends EventEmitter<Events> {
+export class ContactList<C extends { getPeerId: () => PeerID }> extends EventEmitter<Events<C>> {
 
     protected contactsById: Map<PeerIDKey, ContactState<C>> = new Map()
     protected contactIds: PeerID[] = []

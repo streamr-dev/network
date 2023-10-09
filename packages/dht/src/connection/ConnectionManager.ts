@@ -207,7 +207,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.connections.size <= maxConnections) {
             return
         }
-        const disconnectionCandidates = new SortedContactList(peerIdFromPeerDescriptor(this.ownPeerDescriptor!), 100000)
+        const disconnectionCandidates = new SortedContactList<Contact>(peerIdFromPeerDescriptor(this.ownPeerDescriptor!), 100000)
         this.connections.forEach((connection) => {
             if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
                 logger.trace('disconnecting in timeout interval: ' + this.ownPeerDescriptor?.nodeName + ', '
