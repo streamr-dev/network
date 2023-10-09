@@ -6,8 +6,8 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from '@streamr/network-contracts'
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts'
 import { fastPrivateKey } from '@streamr/test-utils'
-import { toEthereumAddress } from '@streamr/utils'
-import { BigNumber, Wallet, logger } from 'ethers'
+import { Logger, toEthereumAddress } from '@streamr/utils'
+import { BigNumber, Wallet } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { range } from 'lodash'
 
@@ -38,6 +38,8 @@ export interface SetupOperatorContractReturnType {
     operatorServiceConfig: Omit<OperatorServiceConfig, 'signer'>
     nodeWallets: Wallet[]
 }
+
+const logger = new Logger(module)
 
 export async function setupOperatorContract(
     opts?: SetupOperatorContractOpts
