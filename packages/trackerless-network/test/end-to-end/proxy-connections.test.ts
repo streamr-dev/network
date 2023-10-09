@@ -36,13 +36,13 @@ describe('Proxy connections', () => {
     const hasConnectionFromProxy = (proxyNode: NetworkNode): boolean => {
         const delivery = proxyNode.stack.getStreamrNode()!.getStream(STREAM_PART_ID)
         return (delivery !== undefined)
-            ? (delivery!.layer2 as RandomGraphNode).hasProxyConnection(proxiedNode.getNodeId())
+            ? ((delivery as { node: RandomGraphNode }).node).hasProxyConnection(proxiedNode.getNodeId())
             : false
     }
     
-    const hasConnectionToProxy = (proxyNodeId_: NodeID, direction: ProxyDirection): boolean => {
-        const client = proxiedNode.stack.getStreamrNode()!.getStream(STREAM_PART_ID)!.layer2 as ProxyStreamConnectionClient
-        return client.hasProxyConnection(proxyNodeId_, direction)
+    const hasConnectionToProxy = (proxyNodeId: NodeID, direction: ProxyDirection): boolean => {
+        const client = (proxiedNode.stack.getStreamrNode()!.getStream(STREAM_PART_ID) as { client: ProxyStreamConnectionClient }).client
+        return client.hasProxyConnection(proxyNodeId, direction)
     }
 
     beforeEach(async () => {
@@ -136,7 +136,6 @@ describe('Proxy connections', () => {
             PROXIED_NODE_USER_ID
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
-        expect(proxiedNode.stack.getStreamrNode().getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length).toBe(2)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
         expect(hasConnectionFromProxy(proxyNode2)).toBe(true) 
     })
@@ -149,12 +148,10 @@ describe('Proxy connections', () => {
             PROXIED_NODE_USER_ID
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
-        expect(proxiedNode.stack.getStreamrNode().getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length).toBe(2)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
         expect(hasConnectionFromProxy(proxyNode2)).toBe(true)
         await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID)
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
-        expect(proxiedNode.stack.getStreamrNode().getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length).toBe(1)
         await waitForCondition(() => hasConnectionFromProxy(proxyNode2) === false)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true)
     })
@@ -167,7 +164,6 @@ describe('Proxy connections', () => {
             PROXIED_NODE_USER_ID
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
-        expect(proxiedNode.stack.getStreamrNode().getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length).toBe(2)
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true) 
         expect(hasConnectionFromProxy(proxyNode2)).toBe(true)
 

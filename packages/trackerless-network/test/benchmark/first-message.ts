@@ -9,6 +9,8 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
+import { ILayer1 } from '../../src/logic/ILayer1'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 
 const numNodes = 10000
 
@@ -138,8 +140,9 @@ run().then(() => {
     console.log(foundData)
     console.log(currentNode.stack.getLayer0DhtNode().getKBucketPeers().length)
     console.log(currentNode.stack.getLayer0DhtNode().getNumberOfConnections())
-    console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer1!.getKBucketPeers())
-    console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer2.getTargetNeighborIds())
+    const stream = currentNode.stack.getStreamrNode().getStream(streamParts[0])! as { layer1: ILayer1, node: RandomGraphNode }
+    console.log(stream.layer1.getKBucketPeers())
+    console.log(stream.node.getTargetNeighborIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {
         clearInterval(publishInterval)
