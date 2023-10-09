@@ -3,7 +3,7 @@ import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
-import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { InfoResponse, ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { NodeID } from './identifiers'
 import { pull } from 'lodash'
 
@@ -115,6 +115,10 @@ export class NetworkNode {
 
     getStreamParts(): StreamPartID[] {
         return this.stack.getStreamrNode().getStreamParts()
+    }
+
+    async fetchNodeInfo(node: PeerDescriptor, getControlLayerInfo: boolean, getStreamPartitionInfo: StreamPartID[]): Promise<InfoResponse> {
+        return this.stack.fetchNodeInfo(node, getControlLayerInfo, getStreamPartitionInfo)
     }
 
     // eslint-disable-next-line class-methods-use-this

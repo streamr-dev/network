@@ -11,9 +11,9 @@ export class InfoRpcServer implements IInfoRpc {
     private readonly stack: NetworkStack
     private readonly rpcCommunicator: ListeningRpcCommunicator
  
-    constructor(stack: NetworkStack) {
+    constructor(stack: NetworkStack, rpcCommunicator: ListeningRpcCommunicator) {
         this.stack = stack
-        this.rpcCommunicator = new ListeningRpcCommunicator(INFO_RPC_SERVICE_ID, stack.getConnectionManager())
+        this.rpcCommunicator = rpcCommunicator
     }
 
     registerDefaultServerMethods(): void {

@@ -82,4 +82,21 @@ describe('NetworkStack InfoRpc', () => {
         expect(isSamePeerDescriptor(result.streamInfo!.streamPartitions[0].kBucket[0], stack2PeerDescriptor)).toEqual(true)
     })
 
+    it('InfoClient can query all streams', async () => {
+        const streamPartId1 = StreamPartIDUtils.parse('stream1#0')
+        const streamPartId2 = StreamPartIDUtils.parse('stream1#1')
+        await stack1.getStreamrNode().joinStream(streamPartId1)
+        await stack2.getStreamrNode().joinStream(streamPartId1)
+        await stack1.getStreamrNode().joinStream(streamPartId2)
+        await stack2.getStreamrNode().joinStream(streamPartId2)
+        await waitForCondition(() => 
+            stack1.getStreamrNode().getNeighbors(streamPartId1).length === 1 
+            && stack2.getStreamrNode().getNeighbors(streamPartId1).length === 1
+            && stack2.getStreamrNode().getNeighbors(streamPartId2).length === 1
+            && stack2.getStreamrNode().getNeighbors(streamPartId2).length === 1
+        )
+        const result = await infoClient.getInfo(stack1PeerDescriptor, false, [])
+        expect(result.streamInfo!.streamPartitions.length).toEqual(2)
+    })
+
 })

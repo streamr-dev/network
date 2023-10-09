@@ -1,10 +1,11 @@
-import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor } from '@streamr/dht'
+import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor, ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
 import { Logger, MetricsContext, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
-import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
-import { InfoRpcServer } from './logic/info-rpc/InfoRpcServer'
+import { InfoResponse, ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { INFO_RPC_SERVICE_ID, InfoRpcServer } from './logic/info-rpc/InfoRpcServer'
+import { InfoClient } from './logic/info-rpc/InfoClient'
 
 interface ReadinessEvents {
     done: () => void
@@ -56,6 +57,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
     private infoServer?: InfoRpcServer
+    private infoClient?: InfoClient
 
     constructor(options: NetworkOptions) {
         super()
@@ -114,8 +116,13 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         }
         await this.streamrNode?.start(this.layer0DhtNode!, connectionManager, connectionManager)
         if (this.streamrNode) {
-            this.infoServer = new InfoRpcServer(this)
+            const infoRpcCommunicator = new ListeningRpcCommunicator(INFO_RPC_SERVICE_ID, this.getConnectionManager())
+            this.infoServer = new InfoRpcServer(this, infoRpcCommunicator)
             this.infoServer.registerDefaultServerMethods()
+            this.infoClient = new InfoClient(
+                this.layer0DhtNode!.getPeerDescriptor(),
+                infoRpcCommunicator
+            )
         }
     }
 
@@ -161,6 +168,10 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     getMetricsContext(): MetricsContext {
         return this.metricsContext
+    }
+
+    async fetchNodeInfo(node: PeerDescriptor, getControlLayerInfo: boolean, getStreamPartitionInfo: StreamPartID[]): Promise<InfoResponse> {
+        return this.infoClient!.getInfo(node, getControlLayerInfo, getStreamPartitionInfo)
     }
 
     async stop(): Promise<void> {

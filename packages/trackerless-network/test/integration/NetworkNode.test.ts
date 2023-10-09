@@ -94,4 +94,17 @@ describe('NetworkNode', () => {
         await waitForCondition(() => msgCount === 1)
     })
 
+    it('fetchNodeInfo', async () => {
+        await node1.join(STREAM_PART_ID)
+        await node2.join(STREAM_PART_ID)
+        const result1 = await node1.fetchNodeInfo(pd2, true, [])
+        const result2 = await node2.fetchNodeInfo(pd1, true, [])
+        expect(result1.streamInfo!.streamPartitions.length).toEqual(1)
+        expect(result2.streamInfo!.streamPartitions.length).toEqual(1)
+        expect(result1.controlLayerInfo!.connections.length).toEqual(1)
+        expect(result2.controlLayerInfo!.connections.length).toEqual(1)
+        expect(result1.controlLayerInfo!.kBucket.length).toEqual(1)
+        expect(result2.controlLayerInfo!.kBucket.length).toEqual(1)
+    })
+
 })
