@@ -1,14 +1,10 @@
 import KBucket from 'k-bucket'
-import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import EventEmitter from 'eventemitter3'
-import { Events, IContact, ContactState } from './Contact'
+import { PeerID } from '../../helpers/PeerID'
+import { ContactState, IContact } from './Contact'
+import { ContactList } from './ContactList'
 
-export class SortedContactList<Contact extends IContact> extends EventEmitter<Events> {
-    private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
-    private contactIds: PeerID[] = []
-    private ownId: PeerID
-    private maxSize: number
-    private getContactsLimit: number
+export class SortedContactList<C extends IContact> extends ContactList<C> {
+
     private allowOwnPeerId: boolean
     private peerIdDistanceLimit?: PeerID
     private excludedPeerIDs?: PeerID[]
@@ -16,16 +12,13 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     constructor(
         ownId: PeerID,
         maxSize: number,
-        getContactsLimit = 20,
+        defaultContactQueryLimit?: number,
         allowOwnPeerId = false,
         peerIdDistanceLimit?: PeerID,
         excludedPeerIDs?: PeerID[]
     ) {
-        super()
+        super(ownId, maxSize, defaultContactQueryLimit)
         this.compareIds = this.compareIds.bind(this)
-        this.ownId = ownId
-        this.maxSize = maxSize
-        this.getContactsLimit = getContactsLimit
         this.allowOwnPeerId = allowOwnPeerId
         this.peerIdDistanceLimit = peerIdDistanceLimit
         this.excludedPeerIDs = excludedPeerIDs
@@ -39,7 +32,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
         return this.contactIds
     }
 
-    public addContact(contact: Contact): void {
+    public addContact(contact: C): void {
         if (this.excludedPeerIDs
             && this.excludedPeerIDs.some((peerId) => contact.getPeerId().equals(peerId))) {
             return
@@ -64,18 +57,18 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
                 this.emit(
                     'contactRemoved',
                     removedDescriptor,
-                    this.getClosestContacts().map((contact: Contact) => contact.getPeerDescriptor())
+                    this.getClosestContacts().map((contact: C) => contact.getPeerDescriptor())
                 )
             }
             this.emit(
                 'newContact',
                 contact.getPeerDescriptor(),
-                this.getClosestContacts().map((contact: Contact) => contact.getPeerDescriptor())
+                this.getClosestContacts().map((contact: C) => contact.getPeerDescriptor())
             )
         }
     }
 
-    public addContacts(contacts: Contact[]): void {
+    public addContacts(contacts: C[]): void {
         contacts.forEach((contact) => this.addContact(contact))
     }
 
@@ -91,8 +84,8 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
         }
     }
 
-    public getClosestContacts(limit = this.getContactsLimit): Contact[] {
-        const ret: Contact[] = []
+    public getClosestContacts(limit = this.defaultContactQueryLimit): C[] {
+        const ret: C[] = []
         this.contactIds.forEach((contactId) => {
             const contact = this.contactsById.get(contactId.toKey())
             if (contact) {
@@ -102,8 +95,8 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
         return ret.slice(0, limit)
     }
 
-    public getUncontactedContacts(num: number): Contact[] {
-        const ret: Contact[] = []
+    public getUncontactedContacts(num: number): C[] {
+        const ret: C[] = []
         for (const contactId of this.contactIds) {
             const contact = this.contactsById.get(contactId.toKey())
             if (contact && !contact.contacted) {
@@ -116,8 +109,8 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
         return ret
     }
 
-    public getActiveContacts(limit?: number): Contact[] {
-        const ret: Contact[] = []
+    public getActiveContacts(limit?: number): C[] {
+        const ret: C[] = []
         this.contactIds.forEach((contactId) => {
             const contact = this.contactsById.get(contactId.toKey())
             if (contact && contact.active) {
@@ -141,14 +134,6 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
         return this.contactIds.map((peerId) => peerId.toKey())
     }
 
-    public getSize(): number {
-        return this.contactIds.length
-    }
-
-    public getContact(id: PeerID): ContactState<Contact> {
-        return this.contactsById.get(id.toKey())!
-    }
-
     public removeContact(id: PeerID): boolean {
         if (this.contactsById.has(id.toKey())) {
             const removedDescriptor = this.contactsById.get(id.toKey())!.contact.getPeerDescriptor()
@@ -158,22 +143,18 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
             this.emit(
                 'contactRemoved',
                 removedDescriptor,
-                this.getClosestContacts().map((contact: Contact) => contact.getPeerDescriptor())
+                this.getClosestContacts().map((contact: C) => contact.getPeerDescriptor())
             )
             return true
         }
         return false
     }
 
-    public hasContact(id: PeerID): boolean {
-        return this.contactsById.has(id.toKey())
-    }
-
     public isActive(id: PeerID): boolean {
         return this.contactsById.has(id.toKey()) ? this.contactsById.get(id.toKey())!.active : false
     }
 
-    public getAllContacts(): Contact[] {
+    public getAllContacts(): C[] {
         return this.contactIds.map((peerId) => this.contactsById.get(peerId.toKey())!.contact)
     }
 
@@ -183,15 +164,5 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
 
     public setAllAsUncontacted(): void {
         this.contactsById.forEach((contact) => contact.contacted = false)
-    }
-
-    public clear(): void {
-        this.contactsById.clear()
-        this.contactIds = []
-    }
-
-    public stop(): void {
-        this.removeAllListeners()
-        this.clear()
     }
 }
