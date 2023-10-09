@@ -57,7 +57,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         }
         logger.info('Fetched redundancy factor', { redundancyFactor })
 
-        const contractFacade = new ContractFacade(serviceConfig)
+        const contractFacade = ContractFacade.createInstance(serviceConfig)
         const maintainTopologyHelper = new MaintainTopologyHelper(serviceConfig)
 
         const fleetState = new OperatorFleetState(streamrClient, formCoordinationStreamId(operatorContractAddress))

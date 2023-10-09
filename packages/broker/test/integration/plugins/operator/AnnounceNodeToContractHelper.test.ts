@@ -11,7 +11,7 @@ describe('AnnounceNodeToContractHelper', () => {
         const { operatorServiceConfig, nodeWallets } = await setupOperatorContract({
             nodeCount: 1
         })
-        contractFacade = new ContractFacade({
+        contractFacade = ContractFacade.createInstance({
             ...operatorServiceConfig,
             signer: nodeWallets[0]
         })

@@ -45,7 +45,7 @@ describe.skip('VoteOnSuspectNodeHelper', () => {
     beforeEach(() => {
         listener = jest.fn()
         fakeOperator = new EventEmitter()
-        helper = undefined as any // TODO new ContractFacade({} as any, fakeOperator as any)
+        helper = undefined as any // TODO ContractFacade.createInstance({} as any, fakeOperator as any)
         abortController = new AbortController()
         helper.addReviewRequestListener(listener, abortController.signal)
     })

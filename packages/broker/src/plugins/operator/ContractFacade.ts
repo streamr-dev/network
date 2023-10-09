@@ -76,14 +76,23 @@ export class ContractFacade {
     private readonly theGraphClient: TheGraphClient
     private readonly config: OperatorServiceConfig
 
-    constructor(config: OperatorServiceConfig) {
-        this.operatorContract = new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator
-        this.theGraphClient = new TheGraphClient({
-            serverUrl: config.theGraphUrl,
-            fetch,
-            logger
-        })
+    constructor(operatorContract: Operator, theGraphClient: TheGraphClient, config: OperatorServiceConfig) {
+        this.operatorContract = operatorContract
+        this.theGraphClient = theGraphClient
         this.config = config
+    }
+
+    // TODO maybe move to test utils?
+    static createInstance(config: OperatorServiceConfig): ContractFacade {
+        return new ContractFacade(
+            new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator,
+            new TheGraphClient({
+                serverUrl: config.theGraphUrl,
+                fetch,
+                logger
+            }),
+            config
+        )
     }
 
     // AnnounceToConractHelper (TODO remove this comment)

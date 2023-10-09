@@ -22,7 +22,7 @@ describe('MaintainOperatorValueHelper', () => {
         // deploy another operator to make sure there are at least 2 operators
         await setupOperatorContract(deployConfig)
 
-        const contractFacade = new ContractFacade({
+        const contractFacade = ContractFacade.createInstance({
             ...operatorServiceConfig,
             signer: nodeWallets[0]
         })

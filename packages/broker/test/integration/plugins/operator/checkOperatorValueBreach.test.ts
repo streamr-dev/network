@@ -58,7 +58,7 @@ describe('checkOperatorValueBreach', () => {
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
         const allowedDifference = valueBeforeWithdraw.mul(await streamrConfig.maxAllowedEarningsFraction()).div(ONE_ETHER).toBigInt()
-        const contractFacade = new ContractFacade({
+        const contractFacade = ContractFacade.createInstance({
             ...watcherConfig,
             signer: watcherWallets[0]
         })

@@ -41,7 +41,7 @@ describe('maintainOperatorValue', () => {
         await sponsor(sponsorer, sponsorship.address, 250)
         await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
         await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
-        const contractFacade = new ContractFacade({ ...operatorServiceConfig, signer: nodeWallets[0] })
+        const contractFacade = ContractFacade.createInstance({ ...operatorServiceConfig, signer: nodeWallets[0] })
         const { maxAllowedEarningsDataWei } = await contractFacade.getMyEarnings()
         const triggerWithdrawLimitDataWei = multiply(maxAllowedEarningsDataWei, 1 - SAFETY_FRACTION)
         await waitForCondition(async () => {

@@ -36,7 +36,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
 
     constructor(config: OperatorServiceConfig) {
         super()
-        this.contractFacade = new ContractFacade(config)
+        this.contractFacade = ContractFacade.createInstance(config)
     }
 
     async start(): Promise<void> {

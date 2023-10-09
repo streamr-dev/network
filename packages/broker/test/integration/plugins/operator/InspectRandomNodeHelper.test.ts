@@ -37,7 +37,7 @@ describe('InspectRandomNodeHelper', () => {
 
     it('getSponsorshipsOfOperator, getOperatorsInSponsorship', async () => {
         const { operatorWallet, operatorContract, operatorServiceConfig } = await setupOperatorContract()
-        const contractFacade = new ContractFacade({
+        const contractFacade = ContractFacade.createInstance({
             ...operatorServiceConfig,
             signer: undefined as any
         })
@@ -84,7 +84,7 @@ describe('InspectRandomNodeHelper', () => {
         await stake(flagger.operatorContract, sponsorship.address, 150)
         await stake(target.operatorContract, sponsorship.address, 250)
 
-        const contractFacade = new ContractFacade({
+        const contractFacade = ContractFacade.createInstance({
             ...flagger.operatorServiceConfig,
             signer: flagger.nodeWallets[0]
         })
