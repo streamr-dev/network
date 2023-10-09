@@ -19,7 +19,6 @@ import {
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { NetworkRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
-import { IStreamNode } from '../IStreamNode'
 import { NodeList } from '../NodeList'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { StreamNodeServer } from '../StreamNodeServer'
@@ -60,7 +59,7 @@ interface ProxyDefinition {
 
 const logger = new Logger(module)
 
-export class ProxyStreamConnectionClient extends EventEmitter implements IStreamNode {
+export class ProxyStreamConnectionClient extends EventEmitter {
 
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly server: StreamNodeServer

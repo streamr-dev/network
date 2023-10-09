@@ -26,7 +26,6 @@ import { Propagation } from './propagation/Propagation'
 import { INeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { INeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
 import { StreamNodeServer } from './StreamNodeServer'
-import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 import { IInspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
@@ -67,7 +66,7 @@ export interface StrictRandomGraphNodeConfig {
 
 const logger = new Logger(module)
 
-export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode {
+export class RandomGraphNode extends EventEmitter<Events> {
     private stopped = false
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
