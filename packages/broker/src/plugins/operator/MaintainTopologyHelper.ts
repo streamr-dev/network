@@ -1,12 +1,11 @@
 import { Contract } from '@ethersproject/contracts'
-import type { Operator, Sponsorship } from '@streamr/network-contracts'
-import { operatorABI, sponsorshipABI } from '@streamr/network-contracts'
+import type { Sponsorship } from '@streamr/network-contracts'
+import { sponsorshipABI } from '@streamr/network-contracts'
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import fetch from 'node-fetch'
-import { OperatorServiceConfig } from './OperatorPlugin'
 import { ContractFacade } from './ContractFacade'
+import { OperatorServiceConfig } from './OperatorPlugin'
 
 const logger = new Logger(module)
 

@@ -1,11 +1,11 @@
 import { Operator, Sponsorship, operatorABI, sponsorshipABI } from '@streamr/network-contracts'
 import { StreamID, ensureValidStreamPartitionIndex, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, TheGraphClient, addManagedEventListener, toEthereumAddress } from '@streamr/utils'
-import { Contract, Signer } from 'ethers'
+import { Contract } from 'ethers'
 import sample from 'lodash/sample'
+import fetch from 'node-fetch'
 import { NetworkPeerDescriptor } from 'streamr-client'
 import { OperatorServiceConfig } from './OperatorPlugin'
-import fetch from 'node-fetch'
 
 interface RawResult {
     operator: null | { latestHeartbeatTimestamp: string | null }
@@ -16,7 +16,6 @@ interface EarningsData {
     sumDataWei: bigint
     maxAllowedEarningsDataWei: bigint
 }
-
 
 export const VOTE_KICK = '0x0000000000000000000000000000000000000000000000000000000000000001'
 export const VOTE_NO_KICK = '0x0000000000000000000000000000000000000000000000000000000000000000'
@@ -313,7 +312,7 @@ export class ContractFacade {
             return response.operator.stakes
         }
         this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
-        const queryResult = this.theGraphClient.queryEntities<any>(createQuery, parseItems) // TODO: add type
+        return this.theGraphClient.queryEntities<any>(createQuery, parseItems) // TODO: add type
     }
 
     // VoteOnSuspectNodeHelper (TODO remove this comments)
