@@ -1,29 +1,22 @@
-import { Events, IContact, ContactState } from './Contact'
+import { PeerID } from '../../helpers/PeerID'
+import { ContactState, IContact } from './Contact'
+import { ContactList } from './ContactList'
 
-import EventEmitter from 'eventemitter3'
-import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-export class RandomContactList<Contact extends IContact> extends EventEmitter<Events> {
-    private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
-    private contactIds: PeerID[] = []
-    private ownId: PeerID
-    private maxSize: number
+export class RandomContactList<C extends IContact> extends ContactList<C> {
+
     private randomness = 0.20
-    private getContactsLimit = 20
 
     constructor(
         ownId: PeerID,
         maxSize: number,
         randomness = 0.20,
-        getContactsLimit = 20
+        getContactsLimit?: number
     ) {
-        super()
-        this.ownId = ownId
-        this.maxSize = maxSize
+        super(ownId, maxSize, getContactsLimit)
         this.randomness = randomness
-        this.getContactsLimit = getContactsLimit
     }
 
-    addContact(contact: Contact): void {
+    addContact(contact: C): void {
         if (this.ownId.equals(contact.getPeerId())) {
             return
         }
@@ -39,13 +32,13 @@ export class RandomContactList<Contact extends IContact> extends EventEmitter<Ev
                 this.emit(
                     'newContact',
                     contact.getPeerDescriptor(),
-                    this.getContacts().map((contact: Contact) => contact.getPeerDescriptor())
+                    this.getContacts().map((contact: C) => contact.getPeerDescriptor())
                 )
             }
         }
     }
 
-    addContacts(contacts: Contact[]): void {
+    addContacts(contacts: C[]): void {
         contacts.forEach((contact) => this.addContact(contact))
     }
 
@@ -55,22 +48,14 @@ export class RandomContactList<Contact extends IContact> extends EventEmitter<Ev
             const index = this.contactIds.findIndex((element) => element.equals(id))
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id.toKey())
-            this.emit('contactRemoved', removedDescriptor, this.getContacts().map((contact: Contact) => contact.getPeerDescriptor()))
+            this.emit('contactRemoved', removedDescriptor, this.getContacts().map((contact: C) => contact.getPeerDescriptor()))
             return true
         }
         return false
     }
 
-    public getSize(): number {
-        return this.contactIds.length
-    }
-
-    public getContact(id: PeerID): ContactState<Contact> {
-        return this.contactsById.get(id.toKey())!
-    }
-
-    public getContacts(limit = this.getContactsLimit): Contact[] {
-        const ret: Contact[] = []
+    public getContacts(limit = this.getContactsLimit): C[] {
+        const ret: C[] = []
         this.contactIds.forEach((contactId) => {
             const contact = this.contactsById.get(contactId.toKey())
             if (contact) {
@@ -78,15 +63,5 @@ export class RandomContactList<Contact extends IContact> extends EventEmitter<Ev
             }
         })
         return ret.slice(0, limit)
-    }
-
-    public clear(): void {
-        this.contactsById.clear()
-        this.contactIds = []
-    }
-
-    public stop(): void {
-        this.removeAllListeners()
-        this.clear()
     }
 }
