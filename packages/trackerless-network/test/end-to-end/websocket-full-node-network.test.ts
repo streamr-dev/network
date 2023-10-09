@@ -31,7 +31,7 @@ describe('Full node network with WebSocket connections only', () => {
         })
         await entryPoint.start()
         entryPoint.getStreamrNode()!.setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
-        await entryPoint.getStreamrNode()!.joinStream(randomGraphId)
+        entryPoint.getStreamrNode()!.joinStream(randomGraphId)
 
         await Promise.all(range(NUM_OF_NODES).map(async (i) => {
             const node = new NetworkStack({
@@ -45,7 +45,7 @@ describe('Full node network with WebSocket connections only', () => {
             nodes.push(node)
             await node.start()
             node.getStreamrNode().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
-            await node.getStreamrNode().joinStream(randomGraphId)
+            node.getStreamrNode().joinStream(randomGraphId)
         }))
 
     }, 120000)

@@ -66,7 +66,7 @@ describe('Proxy connections', () => {
         })
         await proxyNode1.start()
         proxyNode1.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor1])
-        await proxyNode1.stack.getStreamrNode()!.joinStream(STREAM_PART_ID)
+        proxyNode1.stack.getStreamrNode()!.joinStream(STREAM_PART_ID)
         proxyNode2 = createNetworkNode({
             layer0: {
                 entryPoints: [proxyNodeDescriptor1],
@@ -78,7 +78,7 @@ describe('Proxy connections', () => {
         })
         await proxyNode2.start()
         proxyNode2.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor1])
-        await proxyNode2.stack.getStreamrNode()!.joinStream(STREAM_PART_ID)
+        proxyNode2.stack.getStreamrNode()!.joinStream(STREAM_PART_ID)
         proxiedNode = createNetworkNode({
             layer0: {
                 entryPoints: [proxyNode1.getPeerDescriptor()],
@@ -188,7 +188,7 @@ describe('Proxy connections', () => {
         proxyNode1.leave(STREAM_PART_ID)
         await waitForCondition(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE))
         expect(hasConnectionFromProxy(proxyNode1)).toBe(false)
-        await proxyNode1.stack.getStreamrNode()!.joinStream(STREAM_PART_ID)
+        proxyNode1.stack.getStreamrNode()!.joinStream(STREAM_PART_ID)
         await waitForCondition(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE), 25000)
         // TODO why wait is needed?
         await wait(100)

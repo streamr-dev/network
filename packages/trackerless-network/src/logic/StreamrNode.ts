@@ -30,7 +30,7 @@ export enum StreamNodeType {
     PROXY = 'proxy'
 }
 
-export interface StreamObject {
+export interface StreamObject { // TODO rename to StreamPartDelivery, maybe have "proxied: boolean" instead of StreamNodeType
     layer1?: ILayer1
     layer2: IStreamNode
     type: StreamNodeType
@@ -58,6 +58,7 @@ export interface StreamrNodeConfig {
     acceptProxyConnections?: boolean
 }
 
+// TODO rename class?
 export class StreamrNode extends EventEmitter<Events> {
     private P2PTransport?: ITransport
     private connectionLocker?: ConnectionLocker
@@ -126,18 +127,13 @@ export class StreamrNode extends EventEmitter<Events> {
 
     broadcast(msg: StreamMessage): void {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
-        if (!this.streams.has(streamPartId)) {
-            this.joinStream(streamPartId)
-                .catch((err) => {
-                    logger.warn(`Failed to broadcast to stream ${streamPartId} with error: ${err}`)
-                })
-        }
+        this.joinStream(streamPartId)
         this.streams.get(streamPartId)!.layer2.broadcast(msg)
         this.metrics.broadcastMessagesPerSecond.record(1)
         this.metrics.broadcastBytesPerSecond.record(msg.content.length)
     }
 
-    leaveStream(streamPartId: StreamPartID): void {
+    leaveStream(streamPartId: StreamPartID): void { // TODO rename to leaveStreamPart
         const stream = this.streams.get(streamPartId)
         if (stream) {
             stream.layer2.stop()
@@ -147,15 +143,42 @@ export class StreamrNode extends EventEmitter<Events> {
         this.streamEntryPointDiscovery!.removeSelfAsEntryPoint(streamPartId)
     }
 
-    async joinStream(streamPartId: StreamPartID): Promise<void> {
-        if (this.streams.has(streamPartId)) {
+    joinStream(streamPartId: StreamPartID): void { // TODO rename to joinStreamPart
+        logger.debug(`Join stream part ${streamPartId}`)
+        let stream = this.streams.get(streamPartId)
+        if (stream !== undefined) {
             return
         }
-        logger.debug(`Joining stream ${streamPartId}`)
+        const layer1 = this.createLayer1Node(streamPartId, this.knownStreamEntryPoints.get(streamPartId) ?? [])
+        const layer2 = this.createRandomGraphNode(streamPartId, layer1)
+        stream = {
+            type: StreamNodeType.RANDOM_GRAPH,
+            layer1,
+            layer2
+        }
+        this.streams.set(streamPartId, stream)
+        layer2.on('message', (message: StreamMessage) => {
+            this.emit('newMessage', message)
+        })
+        setImmediate(async () => {
+            try {
+                await this.startLayersAndJoinDht(streamPartId)
+            } catch (err) {
+                logger.warn(`Failed to join to stream ${streamPartId} with error: ${err}`)
+            }
+        })
+    }
+
+    private async startLayersAndJoinDht(streamPartId: StreamPartID): Promise<void> {
+        logger.debug(`Start layers and join DHT for stream part ${streamPartId}`)
+        const stream = this.streams.get(streamPartId)!
+        if ((stream === undefined) || (stream.type !== StreamNodeType.RANDOM_GRAPH)) {
+            // leaveStream has been called (or leaveStream called, and then setProxies called)
+            return
+        }
+        await stream.layer1!.start()
+        await stream.layer2.start()
         let entryPoints = this.knownStreamEntryPoints.get(streamPartId) ?? []
-        const [layer1, layer2] = this.createStream(streamPartId, entryPoints)
-        await layer1.start()
-        await layer2.start()
         const forwardingNode = this.layer0!.isJoinOngoing() ? this.layer0!.getKnownEntryPoints()[0] : undefined
         const discoveryResult = await this.streamEntryPointDiscovery!.discoverEntryPointsFromDht(
             streamPartId,
@@ -163,26 +186,12 @@ export class StreamrNode extends EventEmitter<Events> {
             forwardingNode
         )
         entryPoints = entryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT))
+        await stream.layer1!.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT))
         await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartId,
             discoveryResult.entryPointsFromDht,
             entryPoints.length
         )
-    }
-
-    private createStream(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): [ILayer1, RandomGraphNode] {
-        const layer1 = this.createLayer1Node(streamPartId, entryPoints)
-        const layer2 = this.createRandomGraphNode(streamPartId, layer1)
-        this.streams.set(streamPartId, {
-            type: StreamNodeType.RANDOM_GRAPH,
-            layer1,
-            layer2
-        })
-        layer2.on('message', (message: StreamMessage) => {
-            this.emit('newMessage', message)
-        })
-        return [layer1, layer2]
     }
 
     private createLayer1Node = (streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): ILayer1 => {
