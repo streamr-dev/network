@@ -44,9 +44,9 @@
     "@streamr/test-utils": "8.5.5",
     "@types/heap": "^0.2.32",
     "@types/lodash": "^4.14.199",
-    "@types/uuid": "^9.0.4",
-    "@types/websocket": "^1.0.6",
-    "@types/ws": "^8.5.5",
+    "@types/uuid": "^9.0.5",
+    "@types/websocket": "^1.0.7",
+    "@types/ws": "^8.5.6",
     "@types/yallist": "^4.0.2",
     "express": "^4.17.1"
   },
