@@ -1,6 +1,5 @@
 import { PeerID } from '../../helpers/PeerID'
-import { ContactState } from './Contact'
-import { ContactList } from './ContactList'
+import { ContactList, ContactState } from './ContactList'
 
 export class RandomContactList<C extends { getPeerId: () => PeerID }> extends ContactList<C> {
 

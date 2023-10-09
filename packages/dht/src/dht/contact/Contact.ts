@@ -2,21 +2,6 @@ import { PeerID } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
-export class ContactState<C> {
-    public contacted = false
-    public active = false
-    public contact: C
-
-    constructor(contact: C) {
-        this.contact = contact
-    }
-}
-
-export interface Events<C> {
-    contactRemoved: (removedContact: C, closestContacts: C[]) => void
-    newContact: (newContact: C, closestContacts: C[]) => void
-}
-
 export class Contact {
     private peerDescriptor: PeerDescriptor
 
