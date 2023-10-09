@@ -98,7 +98,7 @@
     "@ethersproject/wallet": "^5.5.0",
     "@ethersproject/web": "^5.5.0",
     "@lit-protocol/core": "^2.2.5",
-    "@lit-protocol/uint8arrays": "^2.2.54",
+    "@lit-protocol/uint8arrays": "^2.2.61",
     "@streamr/config": "^4.0.6",
     "@streamr/network-node": "8.5.5",
     "@streamr/protocol": "8.5.5",
