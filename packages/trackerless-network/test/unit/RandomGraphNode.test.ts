@@ -1,6 +1,6 @@
 import { PeerDescriptor } from '@streamr/dht'
 import { waitForCondition } from '@streamr/utils'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { NodeList } from '../../src/logic/NodeList'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
