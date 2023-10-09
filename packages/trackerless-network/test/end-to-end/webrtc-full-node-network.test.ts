@@ -34,7 +34,7 @@ describe('Full node network with WebRTC connections', () => {
         })
         await entryPoint.start()
         entryPoint.getStreamrNode()!.setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
-        await entryPoint.getStreamrNode()!.joinStream(randomGraphId)
+        entryPoint.getStreamrNode()!.joinStream(randomGraphId)
 
         await Promise.all(range(NUM_OF_NODES).map(async () => {
             const peerDescriptor = createMockPeerDescriptor()
@@ -47,7 +47,7 @@ describe('Full node network with WebRTC connections', () => {
             nodes.push(node)
             await node.start()
             node.getStreamrNode().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
-            await node.getStreamrNode().joinStream(randomGraphId)
+            node.getStreamrNode().joinStream(randomGraphId)
         }))
 
     }, 90000)
