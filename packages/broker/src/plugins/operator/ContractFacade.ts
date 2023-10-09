@@ -29,7 +29,7 @@ export class ParseError extends Error {
     }
 }
 
-export function parsePartitionFromMetadata(metadataAsString: string | undefined): number | never {
+export function parsePartitionFromReviewRequestMetadata(metadataAsString: string | undefined): number | never {
     if (metadataAsString === undefined) {
         throw new ParseError('no metadata')
     }
@@ -333,7 +333,7 @@ export class ContractFacade {
             (sponsorship: string, targetOperator: string, metadataAsString?: string) => {
                 let partition: number
                 try {
-                    partition = parsePartitionFromMetadata(metadataAsString)
+                    partition = parsePartitionFromReviewRequestMetadata(metadataAsString)
                 } catch (err) {
                     if (err instanceof ParseError) {
                         logger.warn(`Skip review request (${err.reasonText})`, {

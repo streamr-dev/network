@@ -1,7 +1,7 @@
 import {
     ContractFacade,
     ParseError,
-    parsePartitionFromMetadata, ReviewRequestListener,
+    parsePartitionFromReviewRequestMetadata, ReviewRequestListener,
 } from '../../../../src/plugins/operator/ContractFacade'
 import { EventEmitter } from 'eventemitter3'
 import { randomEthereumAddress } from '@streamr/test-utils'
@@ -9,29 +9,29 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 const sponsorshipAddress = randomEthereumAddress()
 const operatorContractAddress = randomEthereumAddress()
 
-describe(parsePartitionFromMetadata, () => {
+describe(parsePartitionFromReviewRequestMetadata, () => {
     it('throws given undefined', () => {
-        expect(() => parsePartitionFromMetadata(undefined)).toThrowError(ParseError)
+        expect(() => parsePartitionFromReviewRequestMetadata(undefined)).toThrowError(ParseError)
     })
 
     it('throws given invalid json', () => {
-        expect(() => parsePartitionFromMetadata('invalidjson')).toThrowError(ParseError)
+        expect(() => parsePartitionFromReviewRequestMetadata('invalidjson')).toThrowError(ParseError)
     })
 
     it('throws given valid json without field "partition"', () => {
-        expect(() => parsePartitionFromMetadata('{}')).toThrowError(ParseError)
+        expect(() => parsePartitionFromReviewRequestMetadata('{}')).toThrowError(ParseError)
     })
 
     it('throws given valid json with field "partition" but not as a number', () => {
-        expect(() => parsePartitionFromMetadata('{ "partition": "foo" }')).toThrowError(ParseError)
+        expect(() => parsePartitionFromReviewRequestMetadata('{ "partition": "foo" }')).toThrowError(ParseError)
     })
 
     it('throws given valid json with field "partition" but outside integer range', () => {
-        expect(() => parsePartitionFromMetadata('{ "partition": -50 }')).toThrowError(ParseError)
+        expect(() => parsePartitionFromReviewRequestMetadata('{ "partition": -50 }')).toThrowError(ParseError)
     })
 
     it('returns partition given valid json with field "partition" within integer range', () => {
-        expect(parsePartitionFromMetadata('{ "partition": 50 }')).toEqual(50)
+        expect(parsePartitionFromReviewRequestMetadata('{ "partition": 50 }')).toEqual(50)
     })
 })
 
