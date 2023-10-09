@@ -9,11 +9,8 @@ export interface ILayer1Events {
 
 export interface ILayer1 {
     on<T extends keyof ILayer1Events>(eventName: T, listener: (contact: DhtPeer, contacts: DhtPeer[]) => void): void
-
     once<T extends keyof ILayer1Events>(eventName: T, listener: (contact: DhtPeer, contacts: DhtPeer[]) => void): void
-
     off<T extends keyof ILayer1Events>(eventName: T, listener: (contact: DhtPeer, contacts: DhtPeer[]) => void): void
-    
     removeContact: (peerDescriptor: PeerDescriptor, removeFromOpenInternetPeers?: boolean) => void
     getNeighborList: () => SortedContactList<DhtPeer>
     getKBucketPeers: () => PeerDescriptor[]
