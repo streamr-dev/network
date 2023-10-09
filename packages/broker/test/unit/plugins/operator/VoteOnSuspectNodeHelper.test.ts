@@ -36,7 +36,7 @@ describe(parsePartitionFromMetadata, () => {
 })
 
 // TODO enable test and rename test file
-describe.skip('VoteOnSuspectNodeHelper', () => {
+describe('VoteOnSuspectNodeHelper', () => {
     let listener: jest.MockedFn<ReviewRequestListener>
     let fakeOperator: EventEmitter
     let abortController: AbortController
@@ -45,7 +45,7 @@ describe.skip('VoteOnSuspectNodeHelper', () => {
     beforeEach(() => {
         listener = jest.fn()
         fakeOperator = new EventEmitter()
-        helper = undefined as any // TODO ContractFacade.createInstance({} as any, fakeOperator as any)
+        helper = new ContractFacade(fakeOperator as any, undefined as any, undefined as any)
         abortController = new AbortController()
         helper.addReviewRequestListener(listener, abortController.signal)
     })
