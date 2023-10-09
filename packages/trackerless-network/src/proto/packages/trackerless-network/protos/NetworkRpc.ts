@@ -142,9 +142,9 @@ export interface GroupKey {
     data: Uint8Array;
 }
 /**
- * @generated from protobuf message StreamHandshakeRequest
+ * @generated from protobuf message StreamPartHandshakeRequest
  */
-export interface StreamHandshakeRequest {
+export interface StreamPartHandshakeRequest {
     /**
      * @generated from protobuf field: string randomGraphId = 1;
      */
@@ -167,9 +167,9 @@ export interface StreamHandshakeRequest {
     interleaveSourceId?: Uint8Array;
 }
 /**
- * @generated from protobuf message StreamHandshakeResponse
+ * @generated from protobuf message StreamPartHandshakeResponse
  */
-export interface StreamHandshakeResponse {
+export interface StreamPartHandshakeResponse {
     /**
      * @generated from protobuf field: bool accepted = 1;
      */
@@ -199,9 +199,9 @@ export interface InterleaveNotice {
     interleaveTargetDescriptor?: PeerDescriptor;
 }
 /**
- * @generated from protobuf message LeaveStreamNotice
+ * @generated from protobuf message LeaveStreamPartNotice
  */
-export interface LeaveStreamNotice {
+export interface LeaveStreamPartNotice {
     /**
      * @generated from protobuf field: string randomGraphId = 1;
      */
@@ -409,9 +409,9 @@ class GroupKey$Type extends MessageType<GroupKey> {
  */
 export const GroupKey = new GroupKey$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class StreamHandshakeRequest$Type extends MessageType<StreamHandshakeRequest> {
+class StreamPartHandshakeRequest$Type extends MessageType<StreamPartHandshakeRequest> {
     constructor() {
-        super("StreamHandshakeRequest", [
+        super("StreamPartHandshakeRequest", [
             { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "concurrentHandshakeTargetId", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ },
@@ -421,13 +421,13 @@ class StreamHandshakeRequest$Type extends MessageType<StreamHandshakeRequest> {
     }
 }
 /**
- * @generated MessageType for protobuf message StreamHandshakeRequest
+ * @generated MessageType for protobuf message StreamPartHandshakeRequest
  */
-export const StreamHandshakeRequest = new StreamHandshakeRequest$Type();
+export const StreamPartHandshakeRequest = new StreamPartHandshakeRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class StreamHandshakeResponse$Type extends MessageType<StreamHandshakeResponse> {
+class StreamPartHandshakeResponse$Type extends MessageType<StreamPartHandshakeResponse> {
     constructor() {
-        super("StreamHandshakeResponse", [
+        super("StreamPartHandshakeResponse", [
             { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "interleaveTargetDescriptor", kind: "message", T: () => PeerDescriptor }
@@ -435,9 +435,9 @@ class StreamHandshakeResponse$Type extends MessageType<StreamHandshakeResponse> 
     }
 }
 /**
- * @generated MessageType for protobuf message StreamHandshakeResponse
+ * @generated MessageType for protobuf message StreamPartHandshakeResponse
  */
-export const StreamHandshakeResponse = new StreamHandshakeResponse$Type();
+export const StreamPartHandshakeResponse = new StreamPartHandshakeResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class InterleaveNotice$Type extends MessageType<InterleaveNotice> {
     constructor() {
@@ -452,17 +452,17 @@ class InterleaveNotice$Type extends MessageType<InterleaveNotice> {
  */
 export const InterleaveNotice = new InterleaveNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class LeaveStreamNotice$Type extends MessageType<LeaveStreamNotice> {
+class LeaveStreamPartNotice$Type extends MessageType<LeaveStreamPartNotice> {
     constructor() {
-        super("LeaveStreamNotice", [
+        super("LeaveStreamPartNotice", [
             { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message LeaveStreamNotice
+ * @generated MessageType for protobuf message LeaveStreamPartNotice
  */
-export const LeaveStreamNotice = new LeaveStreamNotice$Type();
+export const LeaveStreamPartNotice = new LeaveStreamPartNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class NeighborUpdate$Type extends MessageType<NeighborUpdate> {
     constructor() {
@@ -529,7 +529,7 @@ export const TemporaryConnectionResponse = new TemporaryConnectionResponse$Type(
  */
 export const NetworkRpc = new ServiceType("NetworkRpc", [
     { name: "sendData", options: {}, I: StreamMessage, O: Empty },
-    { name: "leaveStreamNotice", options: {}, I: LeaveStreamNotice, O: Empty }
+    { name: "leaveStreamPartNotice", options: {}, I: LeaveStreamPartNotice, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service ProxyConnectionRpc
@@ -541,7 +541,7 @@ export const ProxyConnectionRpc = new ServiceType("ProxyConnectionRpc", [
  * @generated ServiceType for protobuf service HandshakeRpc
  */
 export const HandshakeRpc = new ServiceType("HandshakeRpc", [
-    { name: "handshake", options: {}, I: StreamHandshakeRequest, O: StreamHandshakeResponse },
+    { name: "handshake", options: {}, I: StreamPartHandshakeRequest, O: StreamPartHandshakeResponse },
     { name: "interleaveNotice", options: {}, I: InterleaveNotice, O: Empty }
 ]);
 /**

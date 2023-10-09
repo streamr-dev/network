@@ -10,7 +10,13 @@ import { EthereumAddress, Logger, addManagedEventListener, wait } from '@streamr
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { LeaveStreamNotice, MessageID, MessageRef, ProxyDirection, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import {
+    LeaveStreamPartNotice,
+    MessageID,
+    MessageRef,
+    ProxyDirection,
+    StreamMessage
+} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { NetworkRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
 import { NodeList } from '../NodeList'
@@ -101,8 +107,8 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     private registerDefaultServerMethods(): void {
         this.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendData',
             (msg: StreamMessage, context) => this.server.sendData(msg, context))
-        this.rpcCommunicator.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice',
-            (req: LeaveStreamNotice, context) => this.server.leaveStreamNotice(req, context))
+        this.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice',
+            (req: LeaveStreamPartNotice, context) => this.server.leaveStreamPartNotice(req, context))
     }
 
     async setProxies(
@@ -196,7 +202,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
                 nodeId
             })
             const server = this.targetNeighbors.getNeighborById(nodeId)
-            server?.leaveStreamNotice()
+            server?.leaveStreamPartNotice()
             this.removeConnection(nodeId)
         }
     }
@@ -248,7 +254,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     stop(): void {
         this.targetNeighbors.getNodes().map((remote) => {
             this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), 'proxy-stream-connection-client')
-            remote.leaveStreamNotice()
+            remote.leaveStreamPartNotice()
         })
         this.targetNeighbors.stop()
         this.rpcCommunicator.stop()

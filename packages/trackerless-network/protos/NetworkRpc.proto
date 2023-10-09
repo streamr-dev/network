@@ -8,7 +8,7 @@ import "packages/dht/protos/DhtRpc.proto";
 
 service NetworkRpc {
   rpc sendData (StreamMessage) returns (google.protobuf.Empty);
-  rpc leaveStreamNotice (LeaveStreamNotice) returns (google.protobuf.Empty);
+  rpc leaveStreamPartNotice (LeaveStreamPartNotice) returns (google.protobuf.Empty);
 }
 
 service ProxyConnectionRpc {
@@ -16,7 +16,7 @@ service ProxyConnectionRpc {
 }
 
 service HandshakeRpc {
-  rpc handshake (StreamHandshakeRequest) returns (StreamHandshakeResponse);
+  rpc handshake (StreamPartHandshakeRequest) returns (StreamPartHandshakeResponse);
   rpc interleaveNotice (InterleaveNotice) returns (google.protobuf.Empty);
 }
 
@@ -89,7 +89,7 @@ message GroupKey {
   bytes data = 2;
 }
 
-message StreamHandshakeRequest {
+message StreamPartHandshakeRequest {
   string randomGraphId = 1;
   string requestId = 2;
   optional bytes concurrentHandshakeTargetId = 3;
@@ -97,7 +97,7 @@ message StreamHandshakeRequest {
   optional bytes interleaveSourceId = 5;
 }
 
-message StreamHandshakeResponse {
+message StreamPartHandshakeResponse {
   bool accepted = 1;
   string requestId = 2;
   optional dht.PeerDescriptor interleaveTargetDescriptor = 3;
@@ -109,7 +109,7 @@ message InterleaveNotice {
   dht.PeerDescriptor interleaveTargetDescriptor = 2;
 }
 
-message LeaveStreamNotice {
+message LeaveStreamPartNotice {
   string randomGraphId = 1;
 }
 
