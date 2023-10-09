@@ -26,7 +26,7 @@ export class MaintainTopologyService {
                 id,
                 partition,
                 raw: true
-            })
+            }, () => {})
         } catch (err) {
             logger.warn(`Failed to join stream partition ${streamPartId}`, { reason: err?.reason })
             return
