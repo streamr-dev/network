@@ -6,6 +6,7 @@ import { EthereumAddress, Logger, TheGraphClient, toEthereumAddress } from '@str
 import { EventEmitter } from 'eventemitter3'
 import fetch from 'node-fetch'
 import { OperatorServiceConfig } from './OperatorPlugin'
+import { ContractFacade } from './ContractFacade'
 
 const logger = new Logger(module)
 
@@ -32,26 +33,18 @@ export interface MaintainTopologyHelperEvents {
 export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperEvents> {
     private readonly streamIdOfSponsorship: Map<EthereumAddress, StreamID> = new Map()
     private readonly sponsorshipCountOfStream: Map<StreamID, number> = new Map()
-    private readonly operatorContractAddress: EthereumAddress
-    private readonly operatorContract: Operator
-    private readonly theGraphClient: TheGraphClient
+    private readonly contractFacade: ContractFacade
 
-    constructor({ operatorContractAddress, signer, theGraphUrl }: OperatorServiceConfig) {
+    constructor(config: OperatorServiceConfig) {
         super()
-        this.operatorContractAddress = operatorContractAddress
-        this.operatorContract = new Contract(operatorContractAddress, operatorABI, signer) as unknown as Operator
-        this.theGraphClient = new TheGraphClient({
-            serverUrl: theGraphUrl,
-            fetch,
-            logger
-        })
+        this.contractFacade = new ContractFacade(config)
     }
 
     async start(): Promise<void> {
         logger.info('Starting')
-        const latestBlock = await this.operatorContract.provider.getBlockNumber()
+        const latestBlock = await this.contractFacade.operatorContract.provider.getBlockNumber()
 
-        this.operatorContract.on('Staked', async (sponsorship: string) => {
+        this.contractFacade.operatorContract.on('Staked', async (sponsorship: string) => {
             logger.info('Receive "Staked" event', { sponsorship })
             const sponsorshipAddress = toEthereumAddress(sponsorship)
             const streamId = await this.getStreamId(sponsorshipAddress) // TODO: add catching here
@@ -67,7 +60,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
                 this.emit('addStakedStreams', [streamId])
             }
         })
-        this.operatorContract.on('Unstaked', (sponsorship: string) => {
+        this.contractFacade.operatorContract.on('Unstaked', (sponsorship: string) => {
             logger.info('Receive "Unstaked" event', { sponsorship })
             const sponsorshipAddress = toEthereumAddress(sponsorship)
             const streamId = this.streamIdOfSponsorship.get(sponsorshipAddress)
@@ -84,51 +77,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
             }
         })
         
-        const initialStreams = await this.pullStakedStreams(latestBlock)
-        if (initialStreams.length > 0) {
-            this.emit('addStakedStreams', initialStreams)
-        }
-    }
-
-    async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
-        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, this.operatorContract.provider) as unknown as Sponsorship
-        return toStreamID(await sponsorship.streamId())
-    }
-
-    private async pullStakedStreams(requiredBlockNumber: number): Promise<StreamID[]> {
-        const createQuery = (lastId: string, pageSize: number) => {
-            return {
-                query: `
-                    {
-                        operator(id: "${this.operatorContractAddress}") {
-                            stakes(where: {id_gt: "${lastId}"}, first: ${pageSize}) {
-                                sponsorship {
-                                    id
-                                    stream {
-                                        id
-                                    }
-                                }
-                            }
-                        }
-                        _meta {
-                            block {
-                            number
-                            }
-                        }
-                    }
-                    `
-            }
-        }
-        const parseItems = (response: any) => {
-            if (!response.operator) {
-                logger.error('Unable to find operator in The Graph', { operatorContractAddress: this.operatorContractAddress })
-                return []
-            }
-            return response.operator.stakes
-        }
-        this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
-        const queryResult = this.theGraphClient.queryEntities<any>(createQuery, parseItems) // TODO: add type
-
+        const queryResult = await this.contractFacade.pullStakedStreams(latestBlock)
         for await (const stake of queryResult) {
             const sponsorshipId = stake.sponsorship?.id
             const streamId = toStreamIDSafe(stake.sponsorship?.stream?.id)
@@ -139,11 +88,20 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
                 this.sponsorshipCountOfStream.set(streamId, sponsorshipCount)
             }
         }
-        return Array.from(this.sponsorshipCountOfStream.keys())
+        const initialStreams = Array.from(this.sponsorshipCountOfStream.keys())
+        if (initialStreams.length > 0) {
+            this.emit('addStakedStreams', initialStreams)
+        }
+    }
+
+    async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
+        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, this.contractFacade.operatorContract.provider) as unknown as Sponsorship
+        return toStreamID(await sponsorship.streamId())
     }
 
     stop(): void {
-        this.operatorContract.removeAllListeners()
+        // TODO can't remove all listeners!
+        this.contractFacade.operatorContract.removeAllListeners()
         this.removeAllListeners()
     }
 }
