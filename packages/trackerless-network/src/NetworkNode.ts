@@ -2,7 +2,7 @@ import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
-import { EthereumAddress, MetricsContext } from '@streamr/utils'
+import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
 import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { NodeID } from './identifiers'
 import { pull } from 'lodash'
@@ -11,10 +11,10 @@ export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
     return new NetworkNode(new NetworkStack(opts))
 }
 
+const logger = new Logger(module)
 /**
  * Convenience wrapper for building client-facing functionality. Used by client.
  */
-
 export class NetworkNode {
 
     readonly stack: NetworkStack
@@ -26,9 +26,13 @@ export class NetworkNode {
         this.stack = stack
         this.stack.getStreamrNode().on('newMessage', (msg) => {
             if (this.messageListeners.length > 0) {
-                const translated = StreamMessageTranslator.toClientProtocol(msg)
-                for (const listener of this.messageListeners) {
-                    listener(translated)
+                try {
+                    const translated = StreamMessageTranslator.toClientProtocol(msg)
+                    for (const listener of this.messageListeners) {
+                        listener(translated)
+                    }
+                } catch (err) {
+                    logger.trace(`Could not translate message: ${err}`)
                 }
             }
         })

@@ -1,4 +1,3 @@
-import { toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Signer } from 'ethers'
@@ -6,7 +5,7 @@ import { StreamrClient } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { maintainOperatorValue } from './maintainOperatorValue'
-import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
+import { MaintainTopologyService } from './MaintainTopologyService'
 import { DEFAULT_UPDATE_INTERVAL_IN_MS, OperatorFleetState } from './OperatorFleetState'
 import { inspectSuspectNode } from './inspectSuspectNode'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
@@ -17,6 +16,11 @@ import { checkOperatorValueBreach } from './checkOperatorValueBreach'
 import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
+import { formCoordinationStreamId } from './formCoordinationStreamId'
+import { StreamPartAssignments } from './StreamPartAssignments'
+import { MaintainTopologyHelper } from './MaintainTopologyHelper'
+import { inspectRandomNode } from './inspectRandomNode'
+import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
@@ -36,40 +40,54 @@ export interface OperatorServiceConfig {
 const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
-    private maintainTopologyService?: MaintainTopologyService
-    private fleetState?: OperatorFleetState
-    private serviceConfig?: OperatorServiceConfig
     private readonly abortController: AbortController = new AbortController()
 
     async start(streamrClient: StreamrClient): Promise<void> {
         const signer = await streamrClient.getSigner()
-        this.serviceConfig = {
+        const nodeId = await streamrClient.getNodeId()
+        const operatorContractAddress = toEthereumAddress(this.pluginConfig.operatorContractAddress)
+        const serviceConfig = {
             signer,
-            operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
+            operatorContractAddress,
             theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl,
             maxSponsorshipsInWithdraw: DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW,
             minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
         }
-        this.fleetState = new OperatorFleetState(
-            streamrClient,
-            toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
-        )
-        const redundancyFactor = await fetchRedundancyFactor(this.serviceConfig)
+
+        const redundancyFactor = await fetchRedundancyFactor(serviceConfig)
         if (redundancyFactor === undefined) {
             throw new Error('Failed to retrieve redundancy factor')
         }
         logger.info('Fetched redundancy factor', { redundancyFactor })
-        this.maintainTopologyService = await setUpAndStartMaintainTopologyService({
-            streamrClient,
-            redundancyFactor,
-            serviceHelperConfig: this.serviceConfig,
-            operatorFleetState: this.fleetState
-        })
-        await this.maintainTopologyService.start()
 
-        const maintainOperatorValueHelper = new MaintainOperatorValueHelper(this.serviceConfig)
-        const announceNodeToContractHelper = new AnnounceNodeToContractHelper(this.serviceConfig)
-        await this.fleetState.start()
+        const inspectRandomNodeHelper = new InspectRandomNodeHelper(serviceConfig)
+        const voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(serviceConfig)
+        const maintainOperatorValueHelper = new MaintainOperatorValueHelper(serviceConfig)
+        const maintainTopologyHelper = new MaintainTopologyHelper(serviceConfig)
+        const announceNodeToContractHelper = new AnnounceNodeToContractHelper(serviceConfig)
+
+        const fleetState = new OperatorFleetState(streamrClient, formCoordinationStreamId(operatorContractAddress))
+        const streamPartAssignments = new StreamPartAssignments(
+            nodeId,
+            redundancyFactor,
+            async (streamId) => {
+                const stream = await streamrClient.getStream(streamId)
+                return stream.getStreamParts()
+            },
+            fleetState,
+            maintainTopologyHelper
+        )
+
+        // Important: must be created before maintainTopologyHelper#start is invoked!
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const maintainTopologyService = new MaintainTopologyService(streamrClient, streamPartAssignments)
+        await fleetState.start()
+        await maintainTopologyHelper.start()
+
+        this.abortController.signal.addEventListener('abort', async () => {
+            await fleetState.destroy()
+        })
+
         // start tasks in background so that operations which take significant amount of time (e.g. fleetState.waitUntilReady())
         // don't block the startup of Broker
         setImmediate(async () => {
@@ -91,8 +109,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 true,
                 this.abortController.signal
             )
-            await this.fleetState!.waitUntilReady()
-            const isLeader = await createIsLeaderFn(streamrClient, this.fleetState!, logger)
+            await fleetState!.waitUntilReady()
+            const isLeader = await createIsLeaderFn(streamrClient, fleetState!, logger)
             try {
                 await scheduleAtInterval(async () => {
                     if (isLeader()) {
@@ -124,24 +142,23 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
 
             await scheduleAtInterval(async () => {
                 try {
-                    /*await inspectRandomNode(
-                        this.serviceConfig!.operatorContractAddress,
-                        new InspectRandomNodeHelper(this.serviceConfig!),
-                        undefind as any, TODO: make loadbalacner accessible
+                    await inspectRandomNode(
+                        operatorContractAddress,
+                        inspectRandomNodeHelper,
+                        streamPartAssignments,
                         streamrClient,
-                        this.heartbeatTimeoutInMs,
+                        2 * 60 * 1000, // 2 minutes
                         (operatorContractAddress) => fetchRedundancyFactor({
                             operatorContractAddress,
                             signer
                         }),
                         this.abortController.signal
-                    )*/
+                    )
                 } catch (err) {
                     logger.error('Encountered error while inspecting random node', { err })
                 }
             }, 15 * 60 * 1000, false, this.abortController.signal)
 
-            const voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(this.serviceConfig!)
             voteOnSuspectNodeHelper.addReviewRequestListener(async (sponsorship, targetOperator, partition) => {
                 if (isLeader()) {
                     await inspectSuspectNode(
@@ -163,8 +180,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
 
     async stop(): Promise<void> {
         this.abortController.abort()
-        await this.fleetState!.destroy()
-        //await this.inspectRandomNodeService.stop()
     }
 
     // eslint-disable-next-line class-methods-use-this

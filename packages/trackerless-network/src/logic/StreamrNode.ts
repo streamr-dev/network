@@ -173,7 +173,7 @@ export class StreamrNode extends EventEmitter<Events> {
         logger.debug(`Start layers and join DHT for stream part ${streamPartId}`)
         const stream = this.streamParts.get(streamPartId)!
         if ((stream === undefined) || (stream.type !== StreamNodeType.RANDOM_GRAPH)) {
-            // leaveStream has been called (or leaveStream called, and then setProxied called)
+            // leaveStream has been called (or leaveStream called, and then setProxies called)
             return
         }
         await stream.layer1!.start()
@@ -283,9 +283,9 @@ export class StreamrNode extends EventEmitter<Events> {
         this.knownStreamPartEntryPoints.set(streamPartId, entryPoints)
     }
 
-    isProxiedStreamPart(streamPartId: StreamPartID, direction?: ProxyDirection): boolean {
-        return this.streamParts.get(streamPartId)?.type === StreamNodeType.PROXY 
-            && ((direction === undefined) || (this.streamParts.get(streamPartId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction)
+    isProxiedStreamPart(streamId: string, direction?: ProxyDirection): boolean {
+        return this.streamParts.get(streamId)?.type === StreamNodeType.PROXY 
+            && ((direction === undefined) || (this.streamParts.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction)
     }
 
     getStream(streamPartId: StreamPartID): StreamPartDelivery | undefined {
