@@ -4,7 +4,7 @@ import { ContactList } from './ContactList'
 
 export class RandomContactList<C extends IContact> extends ContactList<C> {
 
-    private randomness = 0.20
+    private randomness: number
 
     constructor(
         ownId: PeerID,
