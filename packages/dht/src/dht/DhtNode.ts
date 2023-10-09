@@ -46,16 +46,16 @@ import { UUID } from '../exports'
 import { isNodeJS } from '../helpers/browser/isNodeJS'
 import { sample } from 'lodash'
 
-export interface DhtNodeEvents<C> {
-    newContact: (contact: C, closestContacts: C[]) => void
-    contactRemoved: (contact: C, closestContacts: C[]) => void
+export interface DhtNodeEvents {
+    newContact: (contact: DhtPeer, closestContacts: DhtPeer[]) => void
+    contactRemoved: (contact: DhtPeer, closestContacts: DhtPeer[]) => void
     joinCompleted: () => void
     newKbucketContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     kbucketContactRemoved: (peerDescriptor: PeerDescriptor) => void
-    newOpenInternetContact: (contact: C, closestContacts: C[]) => void
-    openInternetContactRemoved: (contact: C, closestContacts: C[]) => void
-    newRandomContact: (contact: C, closestContacts: C[]) => void
-    randomContactRemoved: (peerDescriptor: C, closestContacts: C[]) => void
+    newOpenInternetContact: (contact: DhtPeer, closestContacts: DhtPeer[]) => void
+    openInternetContactRemoved: (contact: DhtPeer, closestContacts: DhtPeer[]) => void
+    newRandomContact: (contact: DhtPeer, closestContacts: DhtPeer[]) => void
+    randomContactRemoved: (peerDescriptor: DhtPeer, closestContacts: DhtPeer[]) => void
 }
 
 export interface DhtNodeOptions {
@@ -134,7 +134,7 @@ export class DhtNodeConfig {
 
 const logger = new Logger(module)
 
-export type Events = TransportEvents & DhtNodeEvents<DhtPeer>
+export type Events = TransportEvents & DhtNodeEvents
 
 export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string, nodeName?: string): PeerDescriptor => {
     let kademliaId: Uint8Array
