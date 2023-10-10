@@ -6,10 +6,11 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from '@streamr/network-contracts'
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts'
 import { fastPrivateKey } from '@streamr/test-utils'
-import { Logger, toEthereumAddress } from '@streamr/utils'
+import { Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import { BigNumber, Wallet } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { range } from 'lodash'
+import fetch from 'node-fetch'
 
 export const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
@@ -177,6 +178,14 @@ export function getTokenContract(): TestToken {
 
 export const getAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
     return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider())
+}
+
+export const createTheGraphClient = (): TheGraphClient => {
+    return new TheGraphClient({
+        serverUrl: TEST_CHAIN_CONFIG.theGraphUrl,
+        fetch,
+        logger: new Logger(module)
+    })
 }
 
 interface GenerateWalletWithGasAndTokensOpts {
