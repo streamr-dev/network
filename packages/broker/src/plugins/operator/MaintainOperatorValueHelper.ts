@@ -15,12 +15,16 @@ interface EarningsData {
 }
 
 export class MaintainOperatorValueHelper {
+    private readonly config: OperatorServiceConfig
+    private readonly minSponsorshipEarningsInWithdraw: number
+    private readonly maxSponsorshipsInWithdraw: number
     private readonly operator: Operator
     private readonly theGraphClient: TheGraphClient
-    private readonly config: OperatorServiceConfig
 
-    constructor(config: OperatorServiceConfig) {
+    constructor(config: OperatorServiceConfig, minSponsorshipEarningsInWithdraw: number, maxSponsorshipsInWithdraw: number) {
         this.config = config
+        this.minSponsorshipEarningsInWithdraw = minSponsorshipEarningsInWithdraw
+        this.maxSponsorshipsInWithdraw = maxSponsorshipsInWithdraw
         this.operator = new Contract(config.operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
         this.theGraphClient = new TheGraphClient({
             serverUrl: config.theGraphUrl,
@@ -47,7 +51,7 @@ export class MaintainOperatorValueHelper {
      */
     async getEarningsOf(operatorContractAddress: EthereumAddress): Promise<EarningsData> {
         const operator = new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
-        const minSponsorshipEarningsInWithdrawWei = BigInt(this.config.minSponsorshipEarningsInWithdraw ?? 0)
+        const minSponsorshipEarningsInWithdrawWei = BigInt(this.minSponsorshipEarningsInWithdraw ?? 0)
         const {
             addresses: allSponsorshipAddresses,
             earnings,
@@ -58,7 +62,7 @@ export class MaintainOperatorValueHelper {
             .map((address, i) => ({ address, earnings: earnings[i].toBigInt() }))
             .filter((sponsorship) => sponsorship.earnings >= minSponsorshipEarningsInWithdrawWei)
             .sort((a, b) => Number(b.earnings - a.earnings)) // TODO: after Node 20, use .toSorted() instead
-            .slice(0, this.config.maxSponsorshipsInWithdraw) // take all if maxSponsorshipsInWithdraw is undefined
+            .slice(0, this.maxSponsorshipsInWithdraw) // take all if maxSponsorshipsInWithdraw is undefined
 
         return {
             sponsorshipAddresses: sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address)),

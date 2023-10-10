@@ -41,7 +41,10 @@ describe('maintainOperatorValue', () => {
         await sponsor(sponsorer, sponsorship.address, 250)
         await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
         await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
-        const helper = new MaintainOperatorValueHelper({ ...operatorServiceConfig, signer: nodeWallets[0] })
+        const helper = new MaintainOperatorValueHelper({
+            ...operatorServiceConfig,
+            signer: nodeWallets[0]
+        }, 1, 20)
         const { maxAllowedEarningsDataWei } = await helper.getMyEarnings()
         const triggerWithdrawLimitDataWei = multiply(maxAllowedEarningsDataWei, 1 - SAFETY_FRACTION)
         await waitForCondition(async () => {

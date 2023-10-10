@@ -12,6 +12,111 @@
       "type": "string",
       "description": "Operator contract Ethereum address",
       "format": "ethereum-address"
+    },
+    "heartbeatUpdateIntervalInMs": {
+      "type": "integer",
+      "description": "The interval (in milliseconds) at which heartbeats get published to coordination stream",
+      "minimum": 0,
+      "default": 10000
+    },
+    "fleetState": {
+      "type": "object",
+      "description": "Operator fleet state settings (both for me and targets)",
+      "additionalProperties": false,
+      "properties": {
+        "pruneAgeInMs": {
+          "type": "integer",
+          "description": "The maximum time (in milliseconds) of a heartbeat to count towards a node being online",
+          "minimum": 0,
+          "default": 300000
+        },
+        "pruneIntervalInMs": {
+          "type": "integer",
+          "description": "The interval (in milliseconds) at which to prune old heartbeats",
+          "minimum": 0,
+          "default": 30000
+        },
+        "latencyExtraInMs": {
+          "type": "integer",
+          "description": "Account for extra latency (milliseconds) due to networking",
+          "minimum": 0,
+          "default": 2000
+        }
+      }
+    },
+    "checkOperatorValueBreachIntervalInMs": {
+      "type": "integer",
+      "description": "The interval (in milliseconds) at which to check for operator value breach",
+      "minimum": 0,
+      "default": 3600000
+    },
+    "announceNodeToContract": {
+      "type": "object",
+      "description": "Announce node to contract settings",
+      "additionalProperties": false,
+      "properties": {
+        "pollIntervalInMs": {
+          "type": "integer",
+          "description": "The interval (in milliseconds) at which to poll for need to write new value to contract",
+          "minimum": 0,
+          "default": 600000
+        },
+        "writeIntervalInMs": {
+          "type": "integer",
+          "description": "How often (in milliseconds) should a new value be written to contract",
+          "minimum": 0,
+          "default": 86400000
+        }
+      }
+    },
+    "maintainOperatorValue": {
+      "type": "object",
+      "description": "Maintain operator value settings",
+      "additionalProperties": false,
+      "properties": {
+        "intervalInMs": {
+          "type": "integer",
+          "description": "How often to run (in milliseconds)",
+          "minimum": 0,
+          "default": 3600000
+        },
+        "withdrawLimitSafetyFraction": {
+          "type": "number",
+          "description": "The fraction of the withdraw limit to use as a safety margin",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5
+        },
+        "minSponsorshipEarningsInWithdraw": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1
+        },
+        "maxSponsorshipsInWithdraw": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 20
+        }
+      }
+    },
+    "inspectRandomNode": {
+      "type": "object",
+      "description": "Inspect random node settings",
+      "additionalProperties": false,
+      "properties": {
+        "intervalInMs": {
+          "type": "integer",
+          "description": "How often to run (in milliseconds)",
+          "minimum": 0,
+          "default": 900000
+        },
+        "heartbeatTimeoutInMs": {
+          "type": "integer",
+          "description": "The maximum time (in milliseconds) to wait for the 1st heartbeat of a target operator's nodes",
+          "minimum": 0,
+          "default": 120000
+        }
+      }
     }
   }
 }

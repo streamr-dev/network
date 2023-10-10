@@ -6,7 +6,7 @@ import { Plugin } from '../../Plugin'
 import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { maintainOperatorValue } from './maintainOperatorValue'
 import { MaintainTopologyService } from './MaintainTopologyService'
-import { DEFAULT_UPDATE_INTERVAL_IN_MS, OperatorFleetState } from './OperatorFleetState'
+import { OperatorFleetState } from './OperatorFleetState'
 import { inspectSuspectNode } from './inspectSuspectNode'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { createIsLeaderFn } from './createIsLeaderFn'
@@ -22,19 +22,35 @@ import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { inspectRandomNode } from './inspectRandomNode'
 import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
 
-export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
-export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
-
 export interface OperatorPluginConfig {
     operatorContractAddress: string
+    heartbeatUpdateIntervalInMs: number // 10 secs
+    fleetState: {
+        pruneAgeInMs: number // 5 mins
+        pruneIntervalInMs: number // 30 secs
+        latencyExtraInMs: number // 2 secs
+    }
+    checkOperatorValueBreachIntervalInMs: number // 1 hour
+    announceNodeToContract: {
+        pollIntervalInMs: number // 10 mins
+        writeIntervalInMs: number // 24 hours
+    }
+    maintainOperatorValue: {
+        intervalInMs: number // 1 hour
+        withdrawLimitSafetyFraction: number // 0.5
+        minSponsorshipEarningsInWithdraw: number // 1
+        maxSponsorshipsInWithdraw: number // 20
+    }
+    inspectRandomNode: {
+        intervalInMs: number // 15 mins
+        heartbeatTimeoutInMs: number // 2 mins
+    }
 }
 
 export interface OperatorServiceConfig {
     signer: Signer
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
-    maxSponsorshipsInWithdraw?: number
-    minSponsorshipEarningsInWithdraw?: number
 }
 
 const logger = new Logger(module)
@@ -49,9 +65,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         const serviceConfig = {
             signer,
             operatorContractAddress,
-            theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl,
-            maxSponsorshipsInWithdraw: DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW,
-            minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
+            theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl
         }
 
         const redundancyFactor = await fetchRedundancyFactor(serviceConfig)
@@ -62,11 +76,22 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
 
         const inspectRandomNodeHelper = new InspectRandomNodeHelper(serviceConfig)
         const voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(serviceConfig)
-        const maintainOperatorValueHelper = new MaintainOperatorValueHelper(serviceConfig)
+        const maintainOperatorValueHelper = new MaintainOperatorValueHelper(
+            serviceConfig,
+            this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
+            this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
+        )
         const maintainTopologyHelper = new MaintainTopologyHelper(serviceConfig)
         const announceNodeToContractHelper = new AnnounceNodeToContractHelper(serviceConfig)
+        const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
+            streamrClient,
+            this.pluginConfig.heartbeatUpdateIntervalInMs,
+            this.pluginConfig.fleetState.pruneAgeInMs,
+            this.pluginConfig.fleetState.pruneIntervalInMs,
+            this.pluginConfig.fleetState.latencyExtraInMs
+        )
 
-        const fleetState = new OperatorFleetState(streamrClient, formCoordinationStreamId(operatorContractAddress))
+        const fleetState = createOperatorFleetState(formCoordinationStreamId(operatorContractAddress))
         const streamPartAssignments = new StreamPartAssignments(
             nodeId,
             redundancyFactor,
@@ -98,14 +123,14 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         streamrClient
                     )
                 })()
-            }, DEFAULT_UPDATE_INTERVAL_IN_MS, this.abortController.signal)
+            }, this.pluginConfig.heartbeatUpdateIntervalInMs, this.abortController.signal)
             await scheduleAtInterval(
                 async () => checkOperatorValueBreach(
                     maintainOperatorValueHelper
                 ).catch((err) => {
                     logger.warn('Encountered error', { err })
                 }),
-                1000 * 60 * 60, // 1 hour
+                this.pluginConfig.checkOperatorValueBreachIntervalInMs,
                 true,
                 this.abortController.signal
             )
@@ -115,12 +140,12 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 await scheduleAtInterval(async () => {
                     if (isLeader()) {
                         await announceNodeToContract(
-                            24 * 60 * 60 * 1000,
+                            this.pluginConfig.announceNodeToContract.writeIntervalInMs,
                             announceNodeToContractHelper,
                             streamrClient
                         )
                     }
-                }, 10 * 60 * 1000, true, this.abortController.signal)
+                }, this.pluginConfig.announceNodeToContract.pollIntervalInMs, true, this.abortController.signal)
             } catch (err) {
                 logger.fatal('Encountered fatal error in announceNodeToContract', { err })
                 process.exit(1)
@@ -129,13 +154,16 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 async () => {
                     if (isLeader()) {
                         try {
-                            await maintainOperatorValue(0.5, maintainOperatorValueHelper)
+                            await maintainOperatorValue(
+                                this.pluginConfig.maintainOperatorValue.withdrawLimitSafetyFraction,
+                                maintainOperatorValueHelper
+                            )
                         } catch (err) {
                             logger.error('Encountered error while checking earnings', { err })
                         }
                     }
                 },
-                1000 * 60 * 60 * 24, // 1 day
+                this.pluginConfig.maintainOperatorValue.intervalInMs,
                 true,
                 this.abortController.signal
             )
@@ -147,17 +175,18 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         inspectRandomNodeHelper,
                         streamPartAssignments,
                         streamrClient,
-                        2 * 60 * 1000, // 2 minutes
+                        this.pluginConfig.inspectRandomNode.heartbeatTimeoutInMs,
                         (operatorContractAddress) => fetchRedundancyFactor({
                             operatorContractAddress,
                             signer
                         }),
+                        createOperatorFleetState,
                         this.abortController.signal
                     )
                 } catch (err) {
                     logger.error('Encountered error while inspecting random node', { err })
                 }
-            }, 15 * 60 * 1000, false, this.abortController.signal)
+            }, this.pluginConfig.inspectRandomNode.intervalInMs, false, this.abortController.signal)
 
             voteOnSuspectNodeHelper.addReviewRequestListener(async (sponsorship, targetOperator, partition) => {
                 if (isLeader()) {
@@ -171,7 +200,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         (operatorContractAddress) => fetchRedundancyFactor({
                             operatorContractAddress,
                             signer
-                        })
+                        }),
+                        createOperatorFleetState
                     )
                 }
             }, this.abortController.signal)

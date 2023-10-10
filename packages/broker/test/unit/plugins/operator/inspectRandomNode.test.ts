@@ -11,6 +11,7 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { EthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import { StreamrClient } from 'streamr-client'
+import { CreateOperatorFleetStateFn } from '../../../../src/plugins/operator/OperatorFleetState'
 
 const MY_OPERATOR_ADDRESS = randomEthereumAddress()
 const OTHER_OPERATOR_ADDRESS = randomEthereumAddress()
@@ -36,6 +37,7 @@ describe(inspectRandomNode, () => {
     let findNodesForTargetFn: jest.MockedFn<FindNodesForTargetFn>
     let inspectTargetFn: jest.MockedFn<InspectTargetFn>
     let getRedundancyFactorFn: jest.MockedFn<(operatorContractAddress: EthereumAddress) => Promise<number | undefined>>
+    let createOperatorFleetState: CreateOperatorFleetStateFn
     let abortController: AbortController
 
     beforeEach(() => {
@@ -47,6 +49,7 @@ describe(inspectRandomNode, () => {
         inspectTargetFn = jest.fn()
         getRedundancyFactorFn = jest.fn()
         getRedundancyFactorFn.mockResolvedValueOnce(1)
+        createOperatorFleetState = jest.fn()
         abortController = new AbortController()
     })
 
@@ -62,6 +65,7 @@ describe(inspectRandomNode, () => {
             streamrClient,
             200,
             getRedundancyFactorFn,
+            createOperatorFleetState,
             abortController.signal,
             findTargetFn,
             findNodesForTargetFn,

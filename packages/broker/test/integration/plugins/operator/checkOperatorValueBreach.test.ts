@@ -60,8 +60,8 @@ describe('checkOperatorValueBreach', () => {
         const allowedDifference = valueBeforeWithdraw.mul(await streamrConfig.maxAllowedEarningsFraction()).div(ONE_ETHER).toBigInt()
         const helper = new MaintainOperatorValueHelper({
             ...watcherConfig,
-            signer: watcherWallets[0]
-        })
+            signer: watcherWallets[0],
+        }, 1, 20)
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
         helper.getRandomOperator = async () => {
             return toEthereumAddress(operatorContract.address)
