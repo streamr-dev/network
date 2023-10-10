@@ -40,8 +40,8 @@ describe(OperatorFleetState, () => {
         currentTime = 0
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             streamrClient,
-            10,
             READY_WAIT_MS,
+            10,
             100,
             0,
             () => currentTime
