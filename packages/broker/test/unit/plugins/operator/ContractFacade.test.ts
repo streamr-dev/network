@@ -6,33 +6,33 @@ import {
 import { EventEmitter } from 'eventemitter3'
 import { randomEthereumAddress } from '@streamr/test-utils'
 
-describe('ContractFacade', () => {
-
-    describe(parsePartitionFromReviewRequestMetadata, () => {
-        it('throws given undefined', () => {
-            expect(() => parsePartitionFromReviewRequestMetadata(undefined)).toThrowError(ParseError)
-        })
-    
-        it('throws given invalid json', () => {
-            expect(() => parsePartitionFromReviewRequestMetadata('invalidjson')).toThrowError(ParseError)
-        })
-    
-        it('throws given valid json without field "partition"', () => {
-            expect(() => parsePartitionFromReviewRequestMetadata('{}')).toThrowError(ParseError)
-        })
-    
-        it('throws given valid json with field "partition" but not as a number', () => {
-            expect(() => parsePartitionFromReviewRequestMetadata('{ "partition": "foo" }')).toThrowError(ParseError)
-        })
-    
-        it('throws given valid json with field "partition" but outside integer range', () => {
-            expect(() => parsePartitionFromReviewRequestMetadata('{ "partition": -50 }')).toThrowError(ParseError)
-        })
-    
-        it('returns partition given valid json with field "partition" within integer range', () => {
-            expect(parsePartitionFromReviewRequestMetadata('{ "partition": 50 }')).toEqual(50)
-        })
+describe(parsePartitionFromReviewRequestMetadata, () => {
+    it('throws given undefined', () => {
+        expect(() => parsePartitionFromReviewRequestMetadata(undefined)).toThrowError(ParseError)
     })
+
+    it('throws given invalid json', () => {
+        expect(() => parsePartitionFromReviewRequestMetadata('invalidjson')).toThrowError(ParseError)
+    })
+
+    it('throws given valid json without field "partition"', () => {
+        expect(() => parsePartitionFromReviewRequestMetadata('{}')).toThrowError(ParseError)
+    })
+
+    it('throws given valid json with field "partition" but not as a number', () => {
+        expect(() => parsePartitionFromReviewRequestMetadata('{ "partition": "foo" }')).toThrowError(ParseError)
+    })
+
+    it('throws given valid json with field "partition" but outside integer range', () => {
+        expect(() => parsePartitionFromReviewRequestMetadata('{ "partition": -50 }')).toThrowError(ParseError)
+    })
+
+    it('returns partition given valid json with field "partition" within integer range', () => {
+        expect(parsePartitionFromReviewRequestMetadata('{ "partition": 50 }')).toEqual(50)
+    })
+})
+
+describe('ContractFacade', () => {
 
     describe('addReviewRequestListener', () => {
 
