@@ -280,8 +280,7 @@ export class ContractFacade {
         return operatorAddresses
     }
 
-    // TODO better return type (maybe refine the data already here instead of MaintainTopologyHelper)
-    async pullStakedStreams(requiredBlockNumber: number): Promise<any> {
+    pullStakedStreams(requiredBlockNumber: number): AsyncGenerator<{ sponsorship: { id: string, stream: { id: string } } }> {
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
@@ -313,7 +312,7 @@ export class ContractFacade {
             return response.operator.stakes
         }
         this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
-        return this.theGraphClient.queryEntities<any>(createQuery, parseItems) // TODO: add type
+        return this.theGraphClient.queryEntities<{ id: string, sponsorship: { id: string, stream: { id: string } } }>(createQuery, parseItems)
     }
 
     addReviewRequestListener(listener: ReviewRequestListener, abortSignal: AbortSignal): void {

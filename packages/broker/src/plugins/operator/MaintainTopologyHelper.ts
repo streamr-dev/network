@@ -6,14 +6,6 @@ import { OperatorServiceConfig } from './OperatorPlugin'
 
 const logger = new Logger(module)
 
-function toStreamIDSafe(input: string): StreamID | undefined {
-    try {
-        return toStreamID(input)
-    } catch {
-        return undefined
-    }
-}
-
 export interface MaintainTopologyHelperEvents {
     /**
      * Emitted when staking into a Sponsorship on a stream that we haven't staked on before (in another Sponsorship)
@@ -78,12 +70,11 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
         }
         this.contractFacade.addOperatorContractStakeEventListener('Unstaked', this.onUnstakedListener)
         
-        const queryResult = await this.contractFacade.pullStakedStreams(latestBlock)
+        const queryResult = this.contractFacade.pullStakedStreams(latestBlock)
         for await (const stake of queryResult) {
-            const sponsorshipId = stake.sponsorship?.id
-            const streamId = toStreamIDSafe(stake.sponsorship?.stream?.id)
-            // TODO: null-checks needed or being too defensive?
-            if (streamId !== undefined && sponsorshipId !== undefined && this.streamIdOfSponsorship.get(sponsorshipId) !== streamId) {
+            const sponsorshipId = toEthereumAddress(stake.sponsorship.id)
+            const streamId = toStreamID(stake.sponsorship.stream.id)
+            if (this.streamIdOfSponsorship.get(sponsorshipId) !== streamId) {
                 this.streamIdOfSponsorship.set(sponsorshipId, streamId)
                 const sponsorshipCount = (this.sponsorshipCountOfStream.get(streamId) || 0) + 1
                 this.sponsorshipCountOfStream.set(streamId, sponsorshipCount)
