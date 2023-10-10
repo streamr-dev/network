@@ -31,7 +31,7 @@ describe('Network RPC', () => {
         client = toProtoRpcClient(new NetworkRpcClient(rpcCommunicator1.getRpcClientTransport()))
         rpcCommunicator2.registerRpcNotification(
             StreamMessage,
-            'sendData',
+            'sendStreamMessage',
             async (_msg: StreamMessage, _context: ServerCallContext): Promise<Empty> => {
                 recvCounter += 1
                 return {}
@@ -51,7 +51,7 @@ describe('Network RPC', () => {
             StreamPartIDUtils.parse('testStream#0'),
             randomEthereumAddress()
         )
-        await client.sendData(msg)
+        await client.sendStreamMessage(msg)
         await waitForCondition(() => recvCounter === 1)
     })
 })

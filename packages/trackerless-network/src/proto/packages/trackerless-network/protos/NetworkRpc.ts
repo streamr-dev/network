@@ -528,7 +528,7 @@ export const TemporaryConnectionResponse = new TemporaryConnectionResponse$Type(
  * @generated ServiceType for protobuf service NetworkRpc
  */
 export const NetworkRpc = new ServiceType("NetworkRpc", [
-    { name: "sendData", options: {}, I: StreamMessage, O: Empty },
+    { name: "sendStreamMessage", options: {}, I: StreamMessage, O: Empty },
     { name: "leaveStreamPartNotice", options: {}, I: LeaveStreamPartNotice, O: Empty }
 ]);
 /**

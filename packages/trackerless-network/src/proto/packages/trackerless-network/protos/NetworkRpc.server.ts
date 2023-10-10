@@ -18,9 +18,9 @@ import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
  */
 export interface INetworkRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: sendData(StreamMessage) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendStreamMessage(StreamMessage) returns (google.protobuf.Empty);
      */
-    sendData(request: StreamMessage, context: T): Promise<Empty>;
+    sendStreamMessage(request: StreamMessage, context: T): Promise<Empty>;
     /**
      * @generated from protobuf rpc: leaveStreamPartNotice(LeaveStreamPartNotice) returns (google.protobuf.Empty);
      */

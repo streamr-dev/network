@@ -7,7 +7,7 @@ import "google/protobuf/any.proto";
 import "packages/dht/protos/DhtRpc.proto";
 
 service NetworkRpc {
-  rpc sendData (StreamMessage) returns (google.protobuf.Empty);
+  rpc sendStreamMessage (StreamMessage) returns (google.protobuf.Empty);
   rpc leaveStreamPartNotice (LeaveStreamPartNotice) returns (google.protobuf.Empty);
 }
 

@@ -41,8 +41,8 @@ describe('StreamNodeServer', () => {
         })
     })
     
-    it('Server sendData()', async () => {
-        await streamNodeServer.sendData(message, { incomingSourceDescriptor: mockSender } as any)
+    it('Server sendStreamMessage()', async () => {
+        await streamNodeServer.sendStreamMessage(message, { incomingSourceDescriptor: mockSender } as any)
         expect(mockDuplicateCheck).toHaveBeenCalledTimes(1)
         expect(mockBroadcast).toHaveBeenCalledTimes(1)
         expect(mockMarkForInspection).toHaveBeenCalledTimes(1)
