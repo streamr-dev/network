@@ -13,7 +13,7 @@ interface IndexState {
 class EmulatedTheGraphIndex {
 
     private states: IndexState[]
-    private timer: NodeJS.Timer | undefined
+    private timer: NodeJS.Timeout | undefined
 
     constructor(states: IndexState[]) {
         this.states = states
