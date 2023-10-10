@@ -8,7 +8,7 @@ import {
 } from '@streamr/dht'
 import {
     StreamMessage,
-    LeaveStreamNotice,
+    LeaveStreamPartNotice,
     MessageRef,
     TemporaryConnectionRequest,
     TemporaryConnectionResponse,
@@ -26,7 +26,6 @@ import { Propagation } from './propagation/Propagation'
 import { INeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { INeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
 import { StreamNodeServer } from './StreamNodeServer'
-import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 import { IInspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
@@ -67,7 +66,7 @@ export interface StrictRandomGraphNodeConfig {
 
 const logger = new Logger(module)
 
-export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode {
+export class RandomGraphNode extends EventEmitter<Events> {
     private stopped = false
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
@@ -163,10 +162,10 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     }
 
     private registerDefaultServerMethods(): void {
-        this.config.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendData',
-            (msg: StreamMessage, context) => this.server.sendData(msg, context))
-        this.config.rpcCommunicator.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice',
-            (req: LeaveStreamNotice, context) => this.server.leaveStreamNotice(req, context))
+        this.config.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendStreamMessage',
+            (msg: StreamMessage, context) => this.server.sendStreamMessage(msg, context))
+        this.config.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice',
+            (req: LeaveStreamPartNotice, context) => this.server.leaveStreamPartNotice(req, context))
         this.config.rpcCommunicator.registerRpcMethod(TemporaryConnectionRequest, TemporaryConnectionResponse, 'openConnection',
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionServer.openConnection(req, context))
     }
@@ -280,7 +279,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.stopped = true
         this.abortController.abort()
         this.config.proxyConnectionServer?.stop()
-        this.config.targetNeighbors.getNodes().map((remote) => remote.leaveStreamNotice())
+        this.config.targetNeighbors.getNodes().map((remote) => remote.leaveStreamPartNotice())
         this.config.rpcCommunicator.stop()
         this.removeAllListeners()
         this.config.nearbyNodeView.stop()

@@ -3,7 +3,7 @@ import { hexToBinary } from '@streamr/utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { NodeList } from '../../src/logic/NodeList'
 import { HandshakerServer } from '../../src/logic/neighbor-discovery/HandshakerServer'
-import { InterleaveNotice, StreamHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { InterleaveNotice, StreamPartHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor, createMockRemoteHandshaker, createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
 
 describe('HandshakerServer', () => {
@@ -39,7 +39,7 @@ describe('HandshakerServer', () => {
     })
 
     it('handshake', async () => {
-        const req = StreamHandshakeRequest.create({
+        const req = StreamPartHandshakeRequest.create({
             randomGraphId: 'random-graph',
             requestId: 'requestId'
         })
@@ -56,7 +56,7 @@ describe('HandshakerServer', () => {
         targetNeighbors.add(createMockRemoteNode())
         targetNeighbors.add(createMockRemoteNode())
         targetNeighbors.add(createMockRemoteNode())
-        const req = StreamHandshakeRequest.create({
+        const req = StreamPartHandshakeRequest.create({
             randomGraphId: 'random-graph',
             requestId: 'requestId'
         })
@@ -72,7 +72,7 @@ describe('HandshakerServer', () => {
         ongoingHandshakes.add('0x3333' as NodeID)
         ongoingHandshakes.add('0x4444' as NodeID)
         ongoingHandshakes.add('0x5555' as NodeID)
-        const req = StreamHandshakeRequest.create({
+        const req = StreamPartHandshakeRequest.create({
             randomGraphId: 'random-graph',
             requestId: 'requestId'
         })

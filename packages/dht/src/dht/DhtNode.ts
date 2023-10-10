@@ -18,7 +18,6 @@ import {
     FindMode,
     DataEntry,
 } from '../proto/packages/dht/protos/DhtRpc'
-import * as Err from '../helpers/errors'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, ConnectionManagerConfig, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
@@ -734,13 +733,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async stop(): Promise<void> {
-        if (this.stopped) {
+        if (this.stopped || !this.started) {
             return
         }
         logger.trace('stop()')
-        if (!this.started) {
-            throw new Err.CouldNotStop('Cannot not stop() before start()')
-        }
         this.stopped = true
 
         if (this.entryPointDisconnectTimeout) {
