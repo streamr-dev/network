@@ -228,7 +228,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         return this.definition!.direction
     }
 
-    async onNodeDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
+    private async onNodeDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         if (this.connections.has(nodeId)) {
             this.config.connectionLocker.unlockConnection(peerDescriptor, 'proxy-stream-connection-client')
