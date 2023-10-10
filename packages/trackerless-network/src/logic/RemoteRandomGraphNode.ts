@@ -1,7 +1,7 @@
 import { Remote } from '@streamr/dht'
 import { Logger } from '@streamr/utils'
 import {
-    LeaveStreamNotice,
+    LeaveStreamPartNotice,
     StreamMessage
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { INetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -19,15 +19,15 @@ export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
         })
     }
 
-    leaveStreamNotice(): void {
-        const notification: LeaveStreamNotice = {
+    leaveStreamPartNotice(): void {
+        const notification: LeaveStreamPartNotice = {
             randomGraphId: this.getServiceId()
         }
         const options = this.formDhtRpcOptions({
             notification: true
         })
-        this.getClient().leaveStreamNotice(notification, options).catch(() => {
-            logger.debug('Failed to send leaveStreamNotice')
+        this.getClient().leaveStreamPartNotice(notification, options).catch(() => {
+            logger.debug('Failed to send leaveStreamPartNotice')
         })
     }
 }
