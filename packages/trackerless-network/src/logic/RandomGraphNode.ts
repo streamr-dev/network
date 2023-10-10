@@ -110,33 +110,25 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         addManagedEventListener<any, any>(
             this.config.layer1 as any,
             'newContact',
-            (contact: DhtPeer, closestContacts: DhtPeer[]) => {
-                this.newContact(contact.getPeerDescriptor(), closestContacts.map((c) => c.getPeerDescriptor()))
-            },
+            (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.newContact(peerDescriptor, closestPeers),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1 as any,
             'contactRemoved',
-            (contact: DhtPeer, closestContacts: DhtPeer[]) => {
-                this.removedContact(contact.getPeerDescriptor(), closestContacts.map((c) => c.getPeerDescriptor()))
-            },
+            (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.removedContact(peerDescriptor, closestPeers),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1 as any,
             'newRandomContact',
-            (contact: DhtPeer, randomContacts: DhtPeer[]) => {
-                this.newRandomContact(contact.getPeerDescriptor(), randomContacts.map((c) => c.getPeerDescriptor()))
-            },
+            (peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.newRandomContact(peerDescriptor, randomPeers),
             this.abortController.signal
         )   
         addManagedEventListener<any, any>(
             this.config.layer1 as any,
             'randomContactRemoved',
-            (contact: DhtPeer, randomContacts: DhtPeer[]) => {
-                this.removedRandomContact(contact.getPeerDescriptor(), randomContacts.map((c) => c.getPeerDescriptor()))
-            },
+            (peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.removedRandomContact(peerDescriptor, randomPeers),
             this.abortController.signal
         )   
         addManagedEventListener<any, any>(

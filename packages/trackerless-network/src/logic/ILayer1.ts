@@ -1,16 +1,16 @@
 import { PeerDescriptor, SortedContactList, DhtPeer } from '@streamr/dht'
 
 export interface ILayer1Events {
-    newContact: (contact: DhtPeer, closestContacts: DhtPeer[]) => void
-    contactRemoved: (contact: DhtPeer, closestContacts: DhtPeer[]) => void
-    newRandomContact: (contact: DhtPeer, randomContacts: DhtPeer[]) => void
-    randomContactRemoved: (contact: DhtPeer, randomContacts: DhtPeer[]) => void
+    newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    newRandomContact: (peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => void
+    randomContactRemoved: (peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => void
 }
 
 export interface ILayer1 {
-    on<T extends keyof ILayer1Events>(eventName: T, listener: (contact: DhtPeer, contacts: DhtPeer[]) => void): void
-    once<T extends keyof ILayer1Events>(eventName: T, listener: (contact: DhtPeer, contacts: DhtPeer[]) => void): void
-    off<T extends keyof ILayer1Events>(eventName: T, listener: (contact: DhtPeer, contacts: DhtPeer[]) => void): void
+    on<T extends keyof ILayer1Events>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
+    once<T extends keyof ILayer1Events>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
+    off<T extends keyof ILayer1Events>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
     removeContact: (peerDescriptor: PeerDescriptor, removeFromOpenInternetPeers?: boolean) => void
     getNeighborList: () => SortedContactList<DhtPeer>
     getKBucketPeers: () => PeerDescriptor[]
