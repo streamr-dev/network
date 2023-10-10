@@ -12,7 +12,7 @@ import {
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { NodeList } from '../../src/logic/NodeList'
 import { mockConnectionLocker } from '../utils/utils'
-import { StreamHandshakeRequest, StreamHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
@@ -39,24 +39,24 @@ describe('Handshakes', () => {
     let handshaker: Handshaker
     const randomGraphId = 'handshaker'
 
-    const acceptHandshake = async (request: StreamHandshakeRequest, _context: ServerCallContext): Promise<StreamHandshakeResponse> => {
-        const response: StreamHandshakeResponse = {
+    const acceptHandshake = async (request: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
+        const response: StreamPartHandshakeResponse = {
             requestId: request.requestId,
             accepted: true
         }
         return response
     }
 
-    const rejectHandshake = async (request: StreamHandshakeRequest, _context: ServerCallContext): Promise<StreamHandshakeResponse> => {
-        const response: StreamHandshakeResponse = {
+    const rejectHandshake = async (request: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
+        const response: StreamPartHandshakeResponse = {
             requestId: request.requestId,
             accepted: false
         }
         return response
     }
 
-    const interleavingHandshake = async (request: StreamHandshakeRequest, _context: ServerCallContext): Promise<StreamHandshakeResponse> => {
-        const response: StreamHandshakeResponse = {
+    const interleavingHandshake = async (request: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
+        const response: StreamPartHandshakeResponse = {
             requestId: request.requestId,
             accepted: true,
             interleaveTargetDescriptor: peerDescriptor3
@@ -108,7 +108,7 @@ describe('Handshakes', () => {
     })
 
     it('Two nodes can handshake', async () => {
-        rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
+        rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
             new RemoteHandshaker(
@@ -123,7 +123,7 @@ describe('Handshakes', () => {
     })
 
     it('Handshake accepted', async () => {
-        rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
+        rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
             new RemoteHandshaker(
@@ -138,7 +138,7 @@ describe('Handshakes', () => {
     })
 
     it('Handshake rejected', async () => {
-        rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', rejectHandshake)
+        rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', rejectHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
             new RemoteHandshaker(
@@ -153,8 +153,8 @@ describe('Handshakes', () => {
     })
 
     it('Handshake with Interleaving', async () => {
-        rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', interleavingHandshake)
-        rpcCommunicator3.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
+        rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', interleavingHandshake)
+        rpcCommunicator3.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
             new RemoteHandshaker(

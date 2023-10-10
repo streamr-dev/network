@@ -135,7 +135,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private webrtcConnector?: WebRtcConnector
     private simulatorConnector?: SimulatorConnector
     private rpcCommunicator?: RoutingRpcCommunicator
-    private disconnectorIntervalRef?: NodeJS.Timer
+    private disconnectorIntervalRef?: NodeJS.Timeout
     private serviceId: ServiceId
     private state = ConnectionManagerState.IDLE
 

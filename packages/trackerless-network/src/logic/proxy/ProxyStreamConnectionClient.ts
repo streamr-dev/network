@@ -10,10 +10,15 @@ import { EthereumAddress, Logger, addManagedEventListener, wait } from '@streamr
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { LeaveStreamNotice, MessageID, MessageRef, ProxyDirection, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import {
+    LeaveStreamPartNotice,
+    MessageID,
+    MessageRef,
+    ProxyDirection,
+    StreamMessage
+} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { NetworkRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
-import { IStreamNode } from '../IStreamNode'
 import { NodeList } from '../NodeList'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { StreamNodeServer } from '../StreamNodeServer'
@@ -43,6 +48,7 @@ interface ProxyStreamConnectionClientConfig {
     connectionLocker: ConnectionLocker
     userId: EthereumAddress
     nodeName?: string
+    minPropagationTargets?: number // TODO could be required option if we apply all defaults somewhere at higher level
 }
 
 interface ProxyDefinition {
@@ -54,7 +60,7 @@ interface ProxyDefinition {
 
 const logger = new Logger(module)
 
-export class ProxyStreamConnectionClient extends EventEmitter implements IStreamNode {
+export class ProxyStreamConnectionClient extends EventEmitter {
 
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly server: StreamNodeServer
@@ -86,11 +92,11 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             markForInspection: (_senderId: NodeID, _messageId: MessageID) => {}
         })
         this.propagation = new Propagation({
-            minPropagationTargets: 2,
+            minPropagationTargets: config.minPropagationTargets ?? 2,
             sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
                 const remote = this.targetNeighbors.getNeighborById(neighborId)
                 if (remote) {
-                    await remote.sendData(msg)
+                    await remote.sendStreamMessage(msg)
                 } else {
                     throw new Error('Propagation target not found')
                 }
@@ -100,10 +106,10 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     }
 
     private registerDefaultServerMethods(): void {
-        this.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendData',
-            (msg: StreamMessage, context) => this.server.sendData(msg, context))
-        this.rpcCommunicator.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice',
-            (req: LeaveStreamNotice, context) => this.server.leaveStreamNotice(req, context))
+        this.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendStreamMessage',
+            (msg: StreamMessage, context) => this.server.sendStreamMessage(msg, context))
+        this.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice',
+            (req: LeaveStreamPartNotice, context) => this.server.leaveStreamPartNotice(req, context))
     }
 
     async setProxies(
@@ -197,7 +203,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
                 nodeId
             })
             const server = this.targetNeighbors.getNeighborById(nodeId)
-            server?.leaveStreamNotice()
+            server?.leaveStreamPartNotice()
             this.removeConnection(nodeId)
         }
     }
@@ -249,7 +255,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     stop(): void {
         this.targetNeighbors.getNodes().map((remote) => {
             this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), 'proxy-stream-connection-client')
-            remote.leaveStreamNotice()
+            remote.leaveStreamPartNotice()
         })
         this.targetNeighbors.stop()
         this.rpcCommunicator.stop()

@@ -8,8 +8,8 @@ import {
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
     InterleaveNotice,
-    StreamHandshakeRequest,
-    StreamHandshakeResponse
+    StreamPartHandshakeRequest,
+    StreamPartHandshakeResponse
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Logger } from '@streamr/utils'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
@@ -60,8 +60,8 @@ export class Handshaker implements IHandshaker {
         })
         this.config.rpcCommunicator.registerRpcNotification(InterleaveNotice, 'interleaveNotice',
             (req: InterleaveNotice, context) => this.server.interleaveNotice(req, context))
-        this.config.rpcCommunicator.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake',
-            (req: StreamHandshakeRequest, context) => this.server.handshake(req, context))
+        this.config.rpcCommunicator.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake',
+            (req: StreamPartHandshakeRequest, context) => this.server.handshake(req, context))
     }
 
     public async attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]> {

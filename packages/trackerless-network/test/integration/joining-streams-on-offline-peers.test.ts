@@ -1,6 +1,6 @@
 import { NodeType, PeerDescriptor, Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
-import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
+import { streamPartIdToDataKey } from '../../src/logic/StreamPartEntryPointDiscovery'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { createStreamMessage } from '../utils/utils'
@@ -91,7 +91,7 @@ describe('Joining streams on offline nodes', () => {
         await entryPoint.getLayer0DhtNode().storeDataToDht(streamPartIdToDataKey(streamPartId), Any.pack(offlineDescriptor1, PeerDescriptor))
         await entryPoint.getLayer0DhtNode().storeDataToDht(streamPartIdToDataKey(streamPartId), Any.pack(offlineDescriptor2, PeerDescriptor))
         
-        node1.getStreamrNode().joinStream(streamPartId)
+        node1.getStreamrNode().joinStreamPart(streamPartId)
         node1.getStreamrNode().on('newMessage', () => { messageReceived = true })
         const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), streamPartId, randomEthereumAddress())
         node2.getStreamrNode().broadcast(msg)
