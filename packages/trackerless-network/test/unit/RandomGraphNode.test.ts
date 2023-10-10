@@ -68,8 +68,8 @@ describe('RandomGraphNode', () => {
         const peerDescriptor2 = createMockPeerDescriptor()
         layer1.emit('newContact', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
         await waitForCondition(() => nearbyNodeView.size() === 2)
-        expect(nearbyNodeView.getNeighborById(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
-        expect(nearbyNodeView.getNeighborById(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
+        expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
+        expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
     })
 
     it('Adds Random Nodes from layer1 newRandomContact event to randomNodeView', async () => {
@@ -77,8 +77,8 @@ describe('RandomGraphNode', () => {
         const peerDescriptor2 = createMockPeerDescriptor()
         layer1.emit('newRandomContact', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
         await waitForCondition(() => randomNodeView.size() === 2)
-        expect(randomNodeView.getNeighborById(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
-        expect(randomNodeView.getNeighborById(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
+        expect(randomNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
+        expect(randomNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
     })
 
     it('Adds Nodes from layer1 KBucket to nearbyNodeView if its size is below nodeViewSize', async () => {
@@ -87,8 +87,8 @@ describe('RandomGraphNode', () => {
         layer1.addNewRandomPeerToKBucket()
         layer1.emit('newContact', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
         await waitForCondition(() => nearbyNodeView.size() === 3)
-        expect(nearbyNodeView.getNeighborById(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
-        expect(nearbyNodeView.getNeighborById(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
+        expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
+        expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
     })
 
 })

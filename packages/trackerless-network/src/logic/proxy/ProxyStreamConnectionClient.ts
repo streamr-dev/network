@@ -82,7 +82,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
             onLeaveNotice: (senderId: NodeID) => {
-                const contact = this.targetNeighbors.getNeighborById(senderId)
+                const contact = this.targetNeighbors.get(senderId)
                 if (contact) {
                     setImmediate(() => this.onNodeDisconnected(contact.getPeerDescriptor()))
                 }
@@ -93,7 +93,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         this.propagation = new Propagation({
             minPropagationTargets: 2,
             sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
-                const remote = this.targetNeighbors.getNeighborById(neighborId)
+                const remote = this.targetNeighbors.get(neighborId)
                 if (remote) {
                     await remote.sendData(msg)
                 } else {
@@ -201,7 +201,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
             logger.info('Close proxy connection', {
                 nodeId
             })
-            const server = this.targetNeighbors.getNeighborById(nodeId)
+            const server = this.targetNeighbors.get(nodeId)
             server?.leaveStreamPartNotice()
             this.removeConnection(nodeId)
         }
