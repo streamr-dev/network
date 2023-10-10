@@ -49,7 +49,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
         this.onStakedListener = async (sponsorship: string) => {
             logger.info('Receive "Staked" event', { sponsorship })
             const sponsorshipAddress = toEthereumAddress(sponsorship)
-            const streamId = await this.getStreamId(sponsorshipAddress) // TODO: add catching here
+            const streamId = await this.contractFacade.getStreamId(sponsorshipAddress) // TODO: add catching here
             if (this.streamIdOfSponsorship.has(sponsorshipAddress)) {
                 logger.debug('Ignore already staked into sponsorship', { sponsorship })
                 return
@@ -96,11 +96,6 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
         if (initialStreams.length > 0) {
             this.emit('addStakedStreams', initialStreams)
         }
-    }
-
-    async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
-        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, this.contractFacade.operatorContract.provider) as unknown as Sponsorship
-        return toStreamID(await sponsorship.streamId())
     }
 
     stop(): void {
