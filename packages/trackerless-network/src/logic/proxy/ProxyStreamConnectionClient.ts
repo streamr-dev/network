@@ -48,6 +48,7 @@ interface ProxyStreamConnectionClientConfig {
     connectionLocker: ConnectionLocker
     userId: EthereumAddress
     nodeName?: string
+    minPropagationTargets?: number // TODO could be required option if we apply all defaults somewhere at higher level
 }
 
 interface ProxyDefinition {
@@ -91,7 +92,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
             markForInspection: (_senderId: NodeID, _messageId: MessageID) => {}
         })
         this.propagation = new Propagation({
-            minPropagationTargets: 2,
+            minPropagationTargets: config.minPropagationTargets ?? 2,
             sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
                 const remote = this.targetNeighbors.getNeighborById(neighborId)
                 if (remote) {
