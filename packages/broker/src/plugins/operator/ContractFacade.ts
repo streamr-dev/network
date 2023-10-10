@@ -103,7 +103,7 @@ export class ContractFacade {
     async getTimestampOfLastHeartbeat(): Promise<number | undefined> {
         const result = await this.theGraphClient.queryEntity<RawResult>({
             query: `{
-                operator(id: "${this.operatorContract.address}") {
+                operator(id: "${this.getOperatorContractAddress()}") {
                     latestHeartbeatTimestamp
                 }
             }`
@@ -119,8 +119,8 @@ export class ContractFacade {
         }
     }
 
-    getOperatorContractAddress(): string {
-        return this.operatorContract.address
+    getOperatorContractAddress(): EthereumAddress {
+        return toEthereumAddress(this.operatorContract.address)
     }
 
     async getSponsorshipsOfOperator(operatorAddress: EthereumAddress): Promise<SponsorshipResult[]> {
@@ -211,8 +211,8 @@ export class ContractFacade {
     async getRandomOperator(): Promise<EthereumAddress | undefined> {
         const latestBlock = await this.operatorContract.provider.getBlockNumber()
         const operators = await this.getOperatorAddresses(latestBlock)
-        // filter out my own operator
-        const operatorAddresses = operators.filter((id) => id !== this.operatorContract.address)
+        const excluded = this.getOperatorContractAddress()
+        const operatorAddresses = operators.filter((id) => id !== excluded)
         logger.debug(`Found ${operatorAddresses.length} operators`, { operatorAddresses })
         return sample(operatorAddresses)
     }
@@ -247,7 +247,7 @@ export class ContractFacade {
     }
 
     async getMyEarnings(): Promise<EarningsData> {
-        return this.getEarningsOf(toEthereumAddress(this.operatorContract.address))
+        return this.getEarningsOf(this.getOperatorContractAddress())
     }
 
     async withdrawMyEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
@@ -285,7 +285,7 @@ export class ContractFacade {
             return {
                 query: `
                     {
-                        operator(id: "${this.operatorContract.address}") {
+                        operator(id: "${this.getOperatorContractAddress()}") {
                             stakes(where: {id_gt: "${lastId}"}, first: ${pageSize}) {
                                 sponsorship {
                                     id
