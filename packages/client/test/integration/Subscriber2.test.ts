@@ -338,7 +338,7 @@ describe('Subscriber', () => {
                 for (let i = 0; i < NUM_MESSAGES; i++) {
                     const serializedContent = (i === MAX_ITEMS) ? 'invalid-json' : JSON.stringify({ foo: i })
                     const msg = await createMockMessage(utf8ToBinary(serializedContent), i)
-                    await node.publish(msg)
+                    await node.broadcast(msg)
                     published.push(msg)
                 }
 

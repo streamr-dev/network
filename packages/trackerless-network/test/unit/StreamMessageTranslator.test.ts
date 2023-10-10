@@ -1,16 +1,16 @@
-import { createStreamMessage } from '../utils/utils'
-import { StreamMessageType } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { StreamMessageTranslator } from '../../src/logic/protocol-integration/stream-message/StreamMessageTranslator'
 import {
     EncryptionType,
     MessageID,
-    StreamID,
     StreamMessage as OldStreamMessage,
     StreamMessageType as OldStreamMessageType,
     StreamPartIDUtils,
-    ContentType
+    ContentType,
+    toStreamID
 } from '@streamr/protocol'
 import { binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { StreamMessageTranslator } from '../../src/logic/protocol-integration/stream-message/StreamMessageTranslator'
+import { StreamMessageType } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { createStreamMessage } from '../utils/utils'
 
 describe('StreamMessageTranslator', () => {
 
@@ -22,7 +22,7 @@ describe('StreamMessageTranslator', () => {
         publisherId
     )
     const messageId = new MessageID(
-        'TEST' as StreamID,
+        toStreamID('TEST'),
         0,
         Date.now(),
         0,

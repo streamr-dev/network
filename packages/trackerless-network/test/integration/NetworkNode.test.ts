@@ -11,6 +11,8 @@ import {
 } from '@streamr/protocol'
 import { EthereumAddress, waitForCondition, hexToBinary, utf8ToBinary } from '@streamr/utils'
 
+const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
+
 describe('NetworkNode', () => {
 
     let transport1: SimulatorTransport
@@ -28,8 +30,6 @@ describe('NetworkNode', () => {
         kademliaId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
-
-    const STREAM_ID = StreamPartIDUtils.parse('test#0')
 
     beforeEach(async () => {
         Simulator.useFakeTimers()
@@ -53,9 +53,9 @@ describe('NetworkNode', () => {
         })
 
         await node1.start()
-        node1.setStreamPartEntryPoints(STREAM_ID, [pd1])
+        node1.setStreamPartEntryPoints(STREAM_PART_ID, [pd1])
         await node2.start()
-        node2.setStreamPartEntryPoints(STREAM_ID, [pd1])
+        node2.setStreamPartEntryPoints(STREAM_PART_ID, [pd1])
     })
 
     afterEach(async () => {
@@ -66,7 +66,7 @@ describe('NetworkNode', () => {
         Simulator.useFakeTimers(false)
     })
 
-    it('wait for join + publish and subscribe', async () => {
+    it('wait for join + broadcast and subscribe', async () => {
         const streamMessage = new StreamMessage({
             messageId: new MessageID(
                 toStreamID('test'),
@@ -86,13 +86,13 @@ describe('NetworkNode', () => {
         })
 
         let msgCount = 0
-        await node1.subscribeAndWaitForJoin(STREAM_ID)
+        await node1.join(STREAM_PART_ID)
         node1.addMessageListener((msg) => {
             expect(msg.messageId.timestamp).toEqual(666)
             expect(msg.getSequenceNumber()).toEqual(0)
             msgCount += 1
         })
-        await node2.waitForJoinAndPublish(streamMessage)
+        await node2.broadcast(streamMessage)
         await waitForCondition(() => msgCount === 1)
     })
 

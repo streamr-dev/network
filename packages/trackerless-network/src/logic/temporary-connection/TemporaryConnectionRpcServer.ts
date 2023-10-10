@@ -7,12 +7,12 @@ import { NodeList } from '../NodeList'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { NodeID } from '../../identifiers'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 interface TemporaryConnectionRpcServerConfig {
     randomGraphId: string
     rpcCommunicator: ListeningRpcCommunicator
-    ownNodeId: NodeID
+    ownPeerDescriptor: PeerDescriptor
 } 
 
 export class TemporaryConnectionRpcServer implements ITemporaryConnectionRpc {
@@ -22,7 +22,7 @@ export class TemporaryConnectionRpcServer implements ITemporaryConnectionRpc {
 
     constructor(config: TemporaryConnectionRpcServerConfig) {
         this.config = config
-        this.temporaryNodes = new NodeList(config.ownNodeId, 10)
+        this.temporaryNodes = new NodeList(getNodeIdFromPeerDescriptor(config.ownPeerDescriptor), 10)
     }
 
     getNodes(): NodeList {
@@ -39,6 +39,7 @@ export class TemporaryConnectionRpcServer implements ITemporaryConnectionRpc {
     ): Promise<TemporaryConnectionResponse> {
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
         const remote = new RemoteRandomGraphNode(
+            this.config.ownPeerDescriptor,
             sender,
             this.config.randomGraphId,
             toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))

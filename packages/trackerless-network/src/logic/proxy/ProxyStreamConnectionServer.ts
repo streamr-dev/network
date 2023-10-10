@@ -1,5 +1,12 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { ProxyConnectionRequest, ProxyConnectionResponse, ProxyDirection } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { 
+    GroupKeyRequest,
+    ProxyConnectionRequest,
+    ProxyConnectionResponse,
+    ProxyDirection,
+    StreamMessage,
+    StreamMessageType
+} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
@@ -54,7 +61,7 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
     }
 
     stop(): void {
-        this.connections.forEach((connection) => connection.remote.leaveStreamNotice(this.config.ownPeerDescriptor))
+        this.connections.forEach((connection) => connection.remote.leaveStreamPartNotice())
         this.connections.clear()
         this.removeAllListeners()
     }
@@ -67,12 +74,26 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         return Array.from(this.connections.values())
     }
 
-    getSubscribers(): NodeID[] {
-        return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
+    getPropagationTargets(msg: StreamMessage): NodeID[] {
+        if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
+            try {
+                const recipientId = GroupKeyRequest.fromBinary(msg.content).recipientId
+                return this.getNodeIdsForUserId(toEthereumAddress(binaryToHex(recipientId, true)))
+            } catch (err) {
+                logger.trace(`Could not parse GroupKeyRequest: ${err}`)
+                return []
+            }
+        } else {
+            return this.getSubscribers()
+        }
     }
 
-    public getNodeIdsForUserId(userId: EthereumAddress): NodeID[] {
+    private getNodeIdsForUserId(userId: EthereumAddress): NodeID[] {
         return Array.from(this.connections.keys()).filter((nodeId) => this.connections.get(nodeId)!.userId === userId)
+    }
+
+    private getSubscribers(): NodeID[] {
+        return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
     }
 
     // IProxyConnectionRpc server method
@@ -83,9 +104,10 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
             direction: request.direction,
             userId: toEthereumAddress(binaryToHex(request.userId, true)),
             remote: new RemoteRandomGraphNode(
+                this.config.ownPeerDescriptor,
                 senderPeerDescriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))    
+                toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         })
         const response: ProxyConnectionResponse = {

@@ -6,11 +6,9 @@ import {
     MessageID,
     StreamMessage,
     StreamMessageType,
-    StreamPartIDUtils,
-    toStreamID,
-    toStreamPartID
+    StreamPartIDUtils
 } from '@streamr/protocol'
-import { hexToBinary, utf8ToBinary, toEthereumAddress, waitForEvent3 } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -26,7 +24,7 @@ describe('proxy group key exchange', () => {
     const publisherUserId = toEthereumAddress('0x823A026e226EB47980c88616e01E1D3305Ef8Ecb')
     const subscriberUserId = toEthereumAddress('0x73E6183bf9b79D30533bEC7B28e982e9Af649B23')
 
-    const streamPartId = toStreamPartID(toStreamID('proxy-test'), 0)
+    const streamPartId = StreamPartIDUtils.parse('proxy-test#0')
 
     let proxyNode: NetworkNode
     let publisher: NetworkNode
@@ -44,7 +42,7 @@ describe('proxy group key exchange', () => {
         })
         await proxyNode.start()
         proxyNode.setStreamPartEntryPoints(streamPartId, [proxyNodeDescriptor])
-        await proxyNode.stack.getStreamrNode()!.joinStream(streamPartId)
+        proxyNode.stack.getStreamrNode()!.joinStreamPart(streamPartId)
         publisher = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
@@ -98,7 +96,7 @@ describe('proxy group key exchange', () => {
 
         await Promise.all([
             waitForEvent3(publisher.stack.getStreamrNode()! as any, 'newMessage'),
-            subscriber.publish(request)
+            subscriber.broadcast(request)
         ])
     })
 
@@ -129,7 +127,7 @@ describe('proxy group key exchange', () => {
 
         await Promise.all([
             waitForEvent3(subscriber.stack.getStreamrNode()! as any, 'newMessage'),
-            publisher.publish(response)
+            publisher.broadcast(response)
         ])
     })
 })

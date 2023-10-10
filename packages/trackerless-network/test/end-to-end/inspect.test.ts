@@ -80,18 +80,16 @@ describe('inspect', () => {
 
         await publisherNode.start()
         await inspectedNode.start()
-        await inspectorNode.start()    
+        await inspectorNode.start()
 
-        await Promise.all([
-            publisherNode.stack.getStreamrNode()!.joinStream(streamPartId),
-            inspectedNode.stack.getStreamrNode()!.joinStream(streamPartId),
-            inspectorNode.stack.getStreamrNode()!.joinStream(streamPartId)
-        ])
+        publisherNode.stack.getStreamrNode()!.joinStreamPart(streamPartId)
+        inspectedNode.stack.getStreamrNode()!.joinStreamPart(streamPartId)
+        inspectorNode.stack.getStreamrNode()!.joinStreamPart(streamPartId)
 
         await waitForCondition(() => 
-            publisherNode.getNeighbors().length === 2 
-            && inspectedNode.getNeighbors().length === 2 
-            && inspectorNode.getNeighbors().length === 2
+            publisherNode.stack.getStreamrNode().getNeighbors(streamPartId).length === 2 
+            && inspectedNode.stack.getStreamrNode().getNeighbors(streamPartId).length === 2 
+            && inspectorNode.stack.getStreamrNode().getNeighbors(streamPartId).length === 2
         )
     }, 30000)
 
@@ -105,7 +103,7 @@ describe('inspect', () => {
 
     it('should inspect succesfully', async () => {
         setTimeout(async () => {
-            await publisherNode.publish(message)
+            await publisherNode.broadcast(message)
         }, 250)
         const success = await inspectorNode.inspect(inspectedDescriptor, streamPartId)
         expect(success).toBe(true)

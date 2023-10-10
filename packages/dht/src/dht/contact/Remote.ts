@@ -3,38 +3,54 @@ import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerID } from '../../helpers/PeerID'
 import { IContact } from './Contact'
+import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 
 export abstract class Remote<T> implements IContact {
 
-    protected readonly peerId: PeerID
-    protected readonly peerDescriptor: PeerDescriptor
-    protected readonly client: ProtoRpcClient<T>
-    protected readonly serviceId: string
-    protected readonly ownPeerDescriptor: PeerDescriptor
+    private readonly localPeerDescriptor: PeerDescriptor
+    private readonly remotePeerId: PeerID
+    private readonly remotePeerDescriptor: PeerDescriptor
+    private readonly serviceId: string
+    private readonly client: ProtoRpcClient<T>
 
     constructor(
-        ownPeerDescriptor: PeerDescriptor,
-        peerDescriptor: PeerDescriptor,
-        client: ProtoRpcClient<T>,
-        serviceId: string
+        localPeerDescriptor: PeerDescriptor,
+        remotePeerDescriptor: PeerDescriptor,
+        serviceId: string,
+        client: ProtoRpcClient<T>
     ) {
-        this.ownPeerDescriptor = ownPeerDescriptor
-        this.peerId = peerIdFromPeerDescriptor(peerDescriptor)
-        this.peerDescriptor = peerDescriptor
+        this.localPeerDescriptor = localPeerDescriptor
+        this.remotePeerId = peerIdFromPeerDescriptor(remotePeerDescriptor)
+        this.remotePeerDescriptor = remotePeerDescriptor
         this.client = client
         this.serviceId = serviceId
     }
 
     getPeerId(): PeerID {
-        return this.peerId
+        return this.remotePeerId
     }
 
     getPeerDescriptor(): PeerDescriptor {
-        return this.peerDescriptor
+        return this.remotePeerDescriptor
+    }
+
+    getLocalPeerDescriptor(): PeerDescriptor {
+        return this.localPeerDescriptor
     }
 
     getServiceId(): string {
         return this.serviceId
     }
 
+    getClient(): ProtoRpcClient<T> {
+        return this.client
+    }
+
+    formDhtRpcOptions(opts?: Omit<DhtRpcOptions, 'sourceDescriptor' | 'targetDescriptor'>): DhtRpcOptions {
+        return {
+            sourceDescriptor: this.localPeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor,
+            ...opts
+        }
+    }
 }

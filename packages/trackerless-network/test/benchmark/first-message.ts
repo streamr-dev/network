@@ -16,8 +16,10 @@ import fs from 'fs'
 import { PeerDescriptor } from '../../../dht/src/exports'
 import { NetworkNode } from '../../src/NetworkNode'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
-import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
+import { streamPartIdToDataKey } from '../../src/logic/StreamPartEntryPointDiscovery'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
+import { ILayer1 } from '../../src/logic/ILayer1'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 
 const numNodes = 10000
 
@@ -25,7 +27,7 @@ let nodes: NetworkNode[]
 let simulator: Simulator
 let layer0Ep: PeerDescriptor
 const publishIntervals: NodeJS.Timeout[] = []
-const streams: Map<StreamPartID, NetworkNode> = new Map()
+const streamParts: Map<StreamPartID, NetworkNode> = new Map()
 let currentNode: NetworkNode
 let publishInterval: NodeJS.Timeout | undefined
 let i = 0
@@ -55,9 +57,9 @@ const prepareStream = async (streamId: string) => {
     const streamPartId = toStreamPartID(toStreamID(streamId), 0)
     const streamPublisher = createNetworkNodeWithSimulator(peerDescriptor, simulator, [layer0Ep])
     await streamPublisher.start()
-    streamPublisher.subscribe(streamPartId)
+    streamPublisher.join(streamPartId)
     nodes.push(streamPublisher)
-    streams.set(streamPartId, streamPublisher)
+    streamParts.set(streamPartId, streamPublisher)
 }
 
 const shutdownNetwork = async () => {
@@ -76,7 +78,7 @@ const measureJoiningTime = async (count: number) => {
     console.log('starting node with id ', getNodeIdFromPeerDescriptor(peerDescriptor))
 
     // start publishing ons stream
-    const stream = Array.from(streams.keys())[Math.floor(Math.random() * streams.size)]
+    const stream = Array.from(streamParts.keys())[Math.floor(Math.random() * streamParts.size)]
     console.log(stream)
     publishInterval = setInterval(() => {
         i += 1
@@ -97,7 +99,7 @@ const measureJoiningTime = async (count: number) => {
             contentType: ContentType.JSON,
             signature: hexToBinary('0x1234'),
         })
-        streams.get(stream)!.publish(streamMessage)
+        streamParts.get(stream)!.broadcast(streamMessage)
     }, 1000)
     // get random node from network to use as entrypoint
     const randomNode = nodes[Math.floor(Math.random() * nodes.length)]
@@ -108,7 +110,7 @@ const measureJoiningTime = async (count: number) => {
 
     await Promise.all([
         waitForEvent3(streamSubscriber.stack.getStreamrNode() as any, 'newMessage', 60000),
-        streamSubscriber.subscribe(stream)
+        streamSubscriber.join(stream)
     ])
 
     const end = performance.now()
@@ -148,8 +150,9 @@ run().then(() => {
     console.log(foundData)
     console.log(currentNode.stack.getLayer0DhtNode().getKBucketPeers().length)
     console.log(currentNode.stack.getLayer0DhtNode().getNumberOfConnections())
-    console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer1!.getKBucketPeers())
-    console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer2.getTargetNeighborIds())
+    const stream = currentNode.stack.getStreamrNode().getStream(streamParts[0])! as { layer1: ILayer1, node: RandomGraphNode }
+    console.log(stream.layer1.getKBucketPeers())
+    console.log(stream.node.getTargetNeighborIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {
         clearInterval(publishInterval)

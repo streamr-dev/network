@@ -35,7 +35,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const temporaryConnectionServer = new TemporaryConnectionRpcServer({
         randomGraphId: config.randomGraphId,
         rpcCommunicator,
-        ownNodeId
+        ownPeerDescriptor: config.ownPeerDescriptor
     })
     const proxyConnectionServer = acceptProxyConnections ? new ProxyStreamConnectionServer({
         ownPeerDescriptor: config.ownPeerDescriptor,
@@ -48,9 +48,9 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
             const remote = targetNeighbors.getNeighborById(neighborId) ?? temporaryConnectionServer.getNodes().getNeighborById(neighborId)
             const proxyConnection = proxyConnectionServer?.getConnection(neighborId)
             if (remote) {
-                await remote.sendData(config.ownPeerDescriptor, msg)
+                await remote.sendStreamMessage(msg)
             } else if (proxyConnection) {
-                await proxyConnection.remote.sendData(config.ownPeerDescriptor, msg)
+                await proxyConnection.remote.sendStreamMessage(msg)
             } else {
                 throw new Error('Propagation target not found')
             }
@@ -75,7 +75,6 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
         targetNeighbors,
         nearbyNodeView,
-        ownNodeId,
         ownPeerDescriptor: config.ownPeerDescriptor,
         neighborFinder,
         randomGraphId: config.randomGraphId,

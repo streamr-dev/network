@@ -1,14 +1,15 @@
 import { shuffle } from 'lodash'
 import { NetworkPeerDescriptor, StreamrClient } from 'streamr-client'
 import { OperatorFleetState } from './OperatorFleetState'
-import { StreamID, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { ConsistentHashRing } from './ConsistentHashRing'
-import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
+import { StreamPartAssignments } from './StreamPartAssignments'
 import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
 import { weightedSample } from '../../helpers/weightedSample'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
+import { formCoordinationStreamId } from './formCoordinationStreamId'
 
 const logger = new Logger(module)
 
@@ -25,29 +26,29 @@ function createStreamIDMatcher(streamId: StreamID): (streamPart: StreamPartID) =
 }
 
 function isAnyPartitionOfStreamAssignedToMe(
-    loadBalancer: StreamAssignmentLoadBalancer,
+    assignments: StreamPartAssignments,
     streamId: StreamID
 ): boolean {
-    return loadBalancer.getMyStreamParts().some(createStreamIDMatcher(streamId))
+    return assignments.getMyStreamParts().some(createStreamIDMatcher(streamId))
 }
 
 function getPartitionsOfStreamAssignedToMe(
-    loadBalancer: StreamAssignmentLoadBalancer,
+    assignments: StreamPartAssignments,
     streamId: StreamID
 ): StreamPartID[] {
-    return loadBalancer.getMyStreamParts().filter(createStreamIDMatcher(streamId))
+    return assignments.getMyStreamParts().filter(createStreamIDMatcher(streamId))
 }
 
 export async function findTarget(
     myOperatorContractAddress: EthereumAddress,
     helper: InspectRandomNodeHelper,
-    loadBalancer: StreamAssignmentLoadBalancer
+    assignments: StreamPartAssignments
 ): Promise<Target | undefined> {
     // choose sponsorship
     const sponsorships = await helper.getSponsorshipsOfOperator(myOperatorContractAddress)
     const suitableSponsorships = sponsorships
         .filter(({ operatorCount }) => operatorCount >= 2)  // exclude sponsorships with only self
-        .filter(({ streamId }) => isAnyPartitionOfStreamAssignedToMe(loadBalancer, streamId))
+        .filter(({ streamId }) => isAnyPartitionOfStreamAssignedToMe(assignments, streamId))
     if (suitableSponsorships.length === 0) {
         logger.info('Skip inspection (no suitable sponsorship)', { totalSponsorships: sponsorships.length })
         return undefined
@@ -67,7 +68,7 @@ export async function findTarget(
     }
 
     // choose stream part
-    const streamParts = getPartitionsOfStreamAssignedToMe(loadBalancer, targetSponsorship.streamId)
+    const streamParts = getPartitionsOfStreamAssignedToMe(assignments, targetSponsorship.streamId)
     const targetStreamPart = sample(streamParts)
     if (targetStreamPart === undefined) {
         // Only happens if during the async awaits the stream parts I am assigned to have changed.
@@ -95,7 +96,7 @@ export async function findNodesForTarget(
     })
     const targetOperatorFleetState = new OperatorFleetState(
         streamrClient,
-        toStreamID('/operator/coordination', target.operatorAddress)
+        formCoordinationStreamId(target.operatorAddress)
     )
     try {
         await targetOperatorFleetState.start()
