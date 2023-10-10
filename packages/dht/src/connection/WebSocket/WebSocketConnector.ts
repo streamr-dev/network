@@ -34,7 +34,8 @@ const cert = '-----BEGIN CERTIFICATE----- MIIDlzCCAn+gAwIBAgIBATANBgkqhkiG9w0BAQ
 const logger = new Logger(module)
 
 export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string => {
-    return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
+    // return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
+    return 'wss://' + ws.host + ':' + ws.port
 }
 
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5

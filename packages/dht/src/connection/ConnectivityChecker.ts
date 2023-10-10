@@ -164,6 +164,7 @@ export class ConnectivityChecker {
     ): Promise<IConnection> {
         const socket = new ClientWebSocket()
         const url = `${connectivityMethodToWebSocketUrl(wsServerInfo)}?${mode}=true`
+        console.log(this.webSocketPort, url)
         let result: RunAndRaceEventsReturnType<ConnectionEvents>
         try {
             result = await runAndRaceEvents3<ConnectionEvents>([

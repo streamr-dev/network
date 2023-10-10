@@ -28,10 +28,11 @@
     "start": "node dist/src/main.js"
   },
   "dependencies": {
+    "@streamr/autocertifier-client": "1.0.0",
+    "@streamr/utils": "0.0.1-tatum.2",
     "body-parser": "^1.20.2",
     "express": "^4.17.1",
     "dns2": "^2.1.0",
-    "@streamr/utils": "0.0.1-tatum.2",
     "sqlite": "^5.0.1",
     "sqlite3": "^5.1.6",
     "eventemitter3": "^5.0.0",

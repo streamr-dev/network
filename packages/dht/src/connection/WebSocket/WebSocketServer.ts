@@ -8,11 +8,12 @@ import {
 } from '../IConnectionSource'
 
 import { Logger, asAbortable } from '@streamr/utils'
-import { AutoCertifierClient, Certificate } from '@streamr/autocertifier-client' 
+import { AutoCertifierClient, Certificate, createSelfSignedCertificate } from '@streamr/autocertifier-client' 
 import { WebSocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
 import fs from 'fs'
+import { UUID } from '../../helpers/UUID'
 
 const logger = new Logger(module)
 
@@ -25,7 +26,7 @@ declare class NodeJsWsServer extends WsServer { }
 
 export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
 
-    private httpServer?: HttpServer | HttpsServer
+    private httpsServer?: HttpsServer
     private wsServer?: WsServer
     private readonly abortController = new AbortController()
     private autocertifier?: AutoCertifierClient    
@@ -54,19 +55,27 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
             response.end()
         }
         return new Promise((resolve, reject) => {
-            this.httpServer = tlsCertificate ? 
+            const createSelfSignedCert = () => {
+                const certificate = createSelfSignedCertificate('streamr-self-signed-' + new UUID().toString(), 1000)
+                return {
+                    key: certificate.serverKey,
+                    cert: certificate.serverCert,
+                    // ca: certificate.caCert
+                }
+            }
+            this.httpsServer = tlsCertificate ? 
                 createHttpsServer({
                     key: fs.readFileSync(tlsCertificate.privateKeyFileName),
                     cert: fs.readFileSync(tlsCertificate.certFileName)
                 }, requestListener)
                 : 
-                createHttpServer(requestListener)
+                createHttpsServer(createSelfSignedCert(), requestListener)
 
             function originIsAllowed(_uorigin: string) {
                 return true
             }
 
-            this.wsServer = this.createWsServer(this.httpServer)
+            this.wsServer = this.createWsServer(this.httpsServer)
             
             this.wsServer.on('request', (request) => {
                 if (!originIsAllowed(request.origin)) {
@@ -82,18 +91,18 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
 
                 this.emit('connected', new ServerWebSocket(connection, request.resourceURL))
             })
-            this.httpServer.once('error', (err: Error) => {
+            this.httpsServer.once('error', (err: Error) => {
                 reject(new WebSocketServerStartError('Starting Websocket server failed', err))
             })
 
-            this.httpServer.once('listening', () => {
+            this.httpsServer.once('listening', () => {
                 logger.debug('Websocket server is listening on port ' + port)
                 resolve()
             })
 
             try {
                 // Listen only to IPv4 network interfaces, default value listens to IPv6 as well
-                this.httpServer.listen(port, '0.0.0.0')
+                this.httpsServer.listen(port, '0.0.0.0')
             } catch (e) {
                 reject(new WebSocketServerStartError('Websocket server threw an exception', e))
             }
@@ -101,7 +110,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     }
 
     public updateCertificate(certificate: Certificate): void {
-        this.httpServer?.setSecureContext(certificate)
+        // this.httpServer?.setSecureContext(certificate)
     }
 
     public stop(): Promise<void> {
@@ -110,13 +119,13 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
         this.autocertifier?.removeAllListeners()
         return new Promise((resolve, _reject) => {
             this.wsServer?.shutDown()
-            this.httpServer?.close(() => {
+            this.httpsServer?.close(() => {
                 resolve()
             })
         })
     }
 
-    private createWsServer(httpServer: HttpServer | HttpsServer): WsServer {
+    private createWsServer(httpServer: HttpsServer): WsServer {
         // Use the real nodejs WebSocket server in Electron tests
 
         if (typeof NodeJsWsServer !== 'undefined') {

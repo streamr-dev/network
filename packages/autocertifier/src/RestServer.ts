@@ -8,10 +8,8 @@ import bodyParser from 'body-parser'
 import * as https from 'https'
 import * as fs from 'fs'
 import * as path from 'path'
-import { createSelfSignedCertificate } from './utlis/createSelfSignedCertificate'
 import { filePathToNodeFormat } from '@streamr/utils'
-import { CreateCertifiedSubdomainRequest } from '@streamr/autocertifier-client'
-import { UpdateIpAndPortRequest } from '@streamr/autocertifier-client'
+import { CreateCertifiedSubdomainRequest, createSelfSignedCertificate, UpdateIpAndPortRequest } from '@streamr/autocertifier-client'
 
 const logger = new Logger(module)
 
