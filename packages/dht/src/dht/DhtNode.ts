@@ -18,7 +18,6 @@ import {
     FindMode,
     DataEntry,
 } from '../proto/packages/dht/protos/DhtRpc'
-import * as Err from '../helpers/errors'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, ConnectionManagerConfig, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
@@ -47,15 +46,15 @@ import { isNodeJS } from '../helpers/browser/isNodeJS'
 import { sample } from 'lodash'
 
 export interface DhtNodeEvents {
-    newContact: (contact: DhtPeer, closestContacts: DhtPeer[]) => void
-    contactRemoved: (contact: DhtPeer, closestContacts: DhtPeer[]) => void
+    newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     joinCompleted: () => void
     newKbucketContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     kbucketContactRemoved: (peerDescriptor: PeerDescriptor) => void
-    newOpenInternetContact: (contact: DhtPeer, closestContacts: DhtPeer[]) => void
-    openInternetContactRemoved: (contact: DhtPeer, closestContacts: DhtPeer[]) => void
-    newRandomContact: (contact: DhtPeer, closestContacts: DhtPeer[]) => void
-    randomContactRemoved: (peerDescriptor: DhtPeer, closestContacts: DhtPeer[]) => void
+    newOpenInternetContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    openInternetContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
 }
 
 export interface DhtNodeOptions {
@@ -324,7 +323,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             if (this.stopped) {
                 return
             }
-            this.emit('contactRemoved', removedContact, activeContacts)
+            this.emit('contactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
             this.randomPeers!.addContact(
                 new DhtPeer(
                     this.ownPeerDescriptor!,
@@ -335,14 +334,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             )
         })
         this.neighborList.on('newContact', (newContact: DhtPeer, activeContacts: DhtPeer[]) =>
-            this.emit('newContact', newContact, activeContacts)
+            this.emit('newContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
         this.openInternetPeers = new SortedContactList(selfId, this.config.maxNeighborListSize / 2)
         this.openInternetPeers.on('contactRemoved', (removedContact: DhtPeer, activeContacts: DhtPeer[]) =>
-            this.emit('openInternetContactRemoved', removedContact, activeContacts)
+            this.emit('openInternetContactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
         this.openInternetPeers.on('newContact', (newContact: DhtPeer, activeContacts: DhtPeer[]) =>
-            this.emit('newOpenInternetContact', newContact, activeContacts)
+            this.emit('newOpenInternetContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
         this.transportLayer!.on('connected', (peerDescriptor: PeerDescriptor) => this.onTransportConnected(peerDescriptor))
 
@@ -365,10 +364,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         })
         this.randomPeers = new RandomContactList(selfId, this.config.maxNeighborListSize)
         this.randomPeers.on('contactRemoved', (removedContact: DhtPeer, activeContacts: DhtPeer[]) =>
-            this.emit('randomContactRemoved', removedContact, activeContacts)
+            this.emit('randomContactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
         this.randomPeers.on('newContact', (newContact: DhtPeer, activeContacts: DhtPeer[]) =>
-            this.emit('newRandomContact', newContact, activeContacts)
+            this.emit('newRandomContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
     }
 
@@ -734,13 +733,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async stop(): Promise<void> {
-        if (this.stopped) {
+        if (this.stopped || !this.started) {
             return
         }
         logger.trace('stop()')
-        if (!this.started) {
-            throw new Err.CouldNotStop('Cannot not stop() before start()')
-        }
         this.stopped = true
 
         if (this.entryPointDisconnectTimeout) {

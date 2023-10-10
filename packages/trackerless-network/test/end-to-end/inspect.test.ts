@@ -81,11 +81,9 @@ describe('inspect', () => {
         await inspectedNode.start()
         await inspectorNode.start()
 
-        await Promise.all([
-            publisherNode.stack.getStreamrNode()!.joinStream(streamPartId),
-            inspectedNode.stack.getStreamrNode()!.joinStream(streamPartId),
-            inspectorNode.stack.getStreamrNode()!.joinStream(streamPartId)
-        ])
+        publisherNode.stack.getStreamrNode()!.joinStreamPart(streamPartId)
+        inspectedNode.stack.getStreamrNode()!.joinStreamPart(streamPartId)
+        inspectorNode.stack.getStreamrNode()!.joinStreamPart(streamPartId)
 
         await waitForCondition(() => 
             publisherNode.stack.getStreamrNode().getNeighbors(streamPartId).length === 2 

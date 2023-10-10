@@ -5,10 +5,14 @@ module.exports = {
     // Preset ts-jest
     preset: 'ts-jest',
 
-    globals: {
-        'ts-jest': {
-            babelConfig: false,
-        }
+    transform: {
+        '^.+\\.ts$': [
+            'ts-jest',
+            {
+                tsconfig: 'tsconfig.jest.json',
+                babelConfig: false
+            }
+        ]
     },
 
     // Automatically clear mock calls and instances between every test

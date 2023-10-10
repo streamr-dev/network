@@ -68,11 +68,11 @@ export class DataStore implements IStoreService {
         this.rpcCommunicator.registerRpcMethod(DeleteDataRequest, DeleteDataResponse, 'deleteData',
             (request: DeleteDataRequest, context: ServerCallContext) => this.deleteData(request, context))
 
-        this.dhtNodeEmitter.on('newContact', (contact: DhtPeer, _closestContacts: DhtPeer[]) => {
+        this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor, _closestPeers: PeerDescriptor[]) => {
             this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
                 dataMap.forEach((dataEntry) => {
-                    if (this.shouldMigrateDataToNewNode(dataEntry.dataEntry, contact.getPeerDescriptor())) {
-                        this.migrateDataToContact(dataEntry.dataEntry, contact.getPeerDescriptor())
+                    if (this.shouldMigrateDataToNewNode(dataEntry.dataEntry, peerDescriptor)) {
+                        this.migrateDataToContact(dataEntry.dataEntry, peerDescriptor)
                     }
                 })
             })
