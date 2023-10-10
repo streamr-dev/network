@@ -30,8 +30,11 @@ export interface MaintainTopologyHelperEvents {
 }
 
 export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperEvents> {
+
     private readonly streamIdOfSponsorship: Map<EthereumAddress, StreamID> = new Map()
     private readonly sponsorshipCountOfStream: Map<StreamID, number> = new Map()
+    private onStakedListener?: (sponsorship: string) => unknown
+    private onUnstakedListener?: (sponsorship: string) => unknown
     private readonly contractFacade: ContractFacade
 
     constructor(config: OperatorServiceConfig) {
@@ -43,7 +46,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
         logger.info('Starting')
         const latestBlock = await this.contractFacade.operatorContract.provider.getBlockNumber()
 
-        this.contractFacade.operatorContract.on('Staked', async (sponsorship: string) => {
+        this.onStakedListener = async (sponsorship: string) => {
             logger.info('Receive "Staked" event', { sponsorship })
             const sponsorshipAddress = toEthereumAddress(sponsorship)
             const streamId = await this.getStreamId(sponsorshipAddress) // TODO: add catching here
@@ -58,8 +61,9 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
             if (sponsorshipCount === 1) {
                 this.emit('addStakedStreams', [streamId])
             }
-        })
-        this.contractFacade.operatorContract.on('Unstaked', (sponsorship: string) => {
+        }
+        this.contractFacade.addOperatorContractStakeEventListener('Staked', this.onStakedListener)
+        this.onUnstakedListener = (sponsorship: string) => {
             logger.info('Receive "Unstaked" event', { sponsorship })
             const sponsorshipAddress = toEthereumAddress(sponsorship)
             const streamId = this.streamIdOfSponsorship.get(sponsorshipAddress)
@@ -74,7 +78,8 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
                 this.sponsorshipCountOfStream.delete(streamId)
                 this.emit('removeStakedStream', streamId)
             }
-        })
+        }
+        this.contractFacade.addOperatorContractStakeEventListener('Unstaked', this.onUnstakedListener)
         
         const queryResult = await this.contractFacade.pullStakedStreams(latestBlock)
         for await (const stake of queryResult) {
@@ -99,8 +104,8 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     }
 
     stop(): void {
-        // TODO can't remove all listeners!
-        this.contractFacade.operatorContract.removeAllListeners()
+        this.contractFacade.removeOperatorContractStakeEventListener('Staked', this.onStakedListener!)
+        this.contractFacade.removeOperatorContractStakeEventListener('Unstaked', this.onUnstakedListener!)
         this.removeAllListeners()
     }
 }

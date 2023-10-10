@@ -367,4 +367,12 @@ export class ContractFacade {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
         await (await this.operatorContract.voteOnFlag(sponsorship, targetOperator, voteData)).wait()
     }
+
+    addOperatorContractStakeEventListener(eventName: 'Staked' | 'Unstaked', listener: (sponsorship: string) => unknown): void {
+        this.operatorContract.on(eventName, listener)
+    }
+
+    removeOperatorContractStakeEventListener(eventName: 'Staked' | 'Unstaked', listener: (sponsorship: string) => unknown): void {
+        this.operatorContract.off(eventName, listener)
+    }
 }
