@@ -279,7 +279,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.stopped = true
         this.abortController.abort()
         this.config.proxyConnectionServer?.stop()
-        this.config.targetNeighbors.getNodes().map((remote) => remote.leaveStreamPartNotice())
+        this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice())
         this.config.rpcCommunicator.stop()
         this.removeAllListeners()
         this.config.nearbyNodeView.stop()

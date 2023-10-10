@@ -96,7 +96,7 @@ export class NodeList extends EventEmitter<Events> {
         return included[included.length - 1]
     }
 
-    getNodes(): RemoteRandomGraphNode[] {
+    getAll(): RemoteRandomGraphNode[] {
         return Array.from(this.nodes.values())
     }
 
