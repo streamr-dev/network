@@ -76,13 +76,13 @@ export class ContractFacade {
     private readonly theGraphClient: TheGraphClient
     private readonly config: OperatorServiceConfig
 
+    // for tests
     constructor(operatorContract: Operator, theGraphClient: TheGraphClient, config: OperatorServiceConfig) {
         this.operatorContract = operatorContract
         this.theGraphClient = theGraphClient
         this.config = config
     }
 
-    // TODO maybe move to test utils?
     static createInstance(config: OperatorServiceConfig): ContractFacade {
         return new ContractFacade(
             new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator,
