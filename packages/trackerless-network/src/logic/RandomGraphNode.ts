@@ -162,8 +162,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
     }
 
     private registerDefaultServerMethods(): void {
-        this.config.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendData',
-            (msg: StreamMessage, context) => this.server.sendData(msg, context))
+        this.config.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendStreamMessage',
+            (msg: StreamMessage, context) => this.server.sendStreamMessage(msg, context))
         this.config.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice',
             (req: LeaveStreamPartNotice, context) => this.server.leaveStreamPartNotice(req, context))
         this.config.rpcCommunicator.registerRpcMethod(TemporaryConnectionRequest, TemporaryConnectionResponse, 'openConnection',

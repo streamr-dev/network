@@ -27,9 +27,9 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
  */
 export interface INetworkRpcClient {
     /**
-     * @generated from protobuf rpc: sendData(StreamMessage) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendStreamMessage(StreamMessage) returns (google.protobuf.Empty);
      */
-    sendData(input: StreamMessage, options?: RpcOptions): UnaryCall<StreamMessage, Empty>;
+    sendStreamMessage(input: StreamMessage, options?: RpcOptions): UnaryCall<StreamMessage, Empty>;
     /**
      * @generated from protobuf rpc: leaveStreamPartNotice(LeaveStreamPartNotice) returns (google.protobuf.Empty);
      */
@@ -45,9 +45,9 @@ export class NetworkRpcClient implements INetworkRpcClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: sendData(StreamMessage) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendStreamMessage(StreamMessage) returns (google.protobuf.Empty);
      */
-    sendData(input: StreamMessage, options?: RpcOptions): UnaryCall<StreamMessage, Empty> {
+    sendStreamMessage(input: StreamMessage, options?: RpcOptions): UnaryCall<StreamMessage, Empty> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
         return stackIntercept<StreamMessage, Empty>("unary", this._transport, method, opt, input);
     }

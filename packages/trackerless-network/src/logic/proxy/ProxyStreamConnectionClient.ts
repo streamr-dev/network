@@ -95,7 +95,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
             sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
                 const remote = this.targetNeighbors.getNeighborById(neighborId)
                 if (remote) {
-                    await remote.sendData(msg)
+                    await remote.sendStreamMessage(msg)
                 } else {
                     throw new Error('Propagation target not found')
                 }
@@ -105,8 +105,8 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     }
 
     private registerDefaultServerMethods(): void {
-        this.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendData',
-            (msg: StreamMessage, context) => this.server.sendData(msg, context))
+        this.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendStreamMessage',
+            (msg: StreamMessage, context) => this.server.sendStreamMessage(msg, context))
         this.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice',
             (req: LeaveStreamPartNotice, context) => this.server.leaveStreamPartNotice(req, context))
     }

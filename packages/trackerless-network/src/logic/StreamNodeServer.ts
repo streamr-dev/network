@@ -28,7 +28,7 @@ export class StreamNodeServer implements INetworkRpc {
         this.config = config
     }
 
-    async sendData(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
+    async sendStreamMessage(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
         const previousNode = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
         this.config.markForInspection(previousNode, message.messageId!)
         if (this.config.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {

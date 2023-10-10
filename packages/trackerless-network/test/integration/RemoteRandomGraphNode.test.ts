@@ -50,7 +50,7 @@ describe('RemoteRandomGraphNode', () => {
 
         mockServerRpc.registerRpcNotification(
             StreamMessage,
-            'sendData',
+            'sendStreamMessage',
             async (_msg: StreamMessage, _context: ServerCallContext): Promise<Empty> => {
                 recvCounter += 1
                 return Empty
@@ -82,14 +82,14 @@ describe('RemoteRandomGraphNode', () => {
         simulator.stop()
     })
 
-    it('sendData', async () => {
+    it('sendStreamMessage', async () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             StreamPartIDUtils.parse('test-stream#0'),
             randomEthereumAddress()
         )
 
-        await remoteRandomGraphNode.sendData(msg)
+        await remoteRandomGraphNode.sendStreamMessage(msg)
         await waitForCondition(() => recvCounter === 1)
     })
 

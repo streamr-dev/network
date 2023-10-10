@@ -10,12 +10,12 @@ const logger = new Logger(module)
 
 export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
 
-    async sendData(msg: StreamMessage): Promise<void> {
+    async sendStreamMessage(msg: StreamMessage): Promise<void> {
         const options = this.formDhtRpcOptions({
             notification: true
         })
-        this.getClient().sendData(msg, options).catch(() => {
-            logger.trace('Failed to sendData')
+        this.getClient().sendStreamMessage(msg, options).catch(() => {
+            logger.trace('Failed to sendStreamMessage')
         })
     }
 
