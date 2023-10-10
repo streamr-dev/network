@@ -23,6 +23,7 @@
       "type": "object",
       "description": "Operator fleet state settings (both for me and targets)",
       "additionalProperties": false,
+      "default": {},
       "properties": {
         "pruneAgeInMs": {
           "type": "integer",
@@ -54,6 +55,7 @@
       "type": "object",
       "description": "Announce node to contract settings",
       "additionalProperties": false,
+      "default": {},
       "properties": {
         "pollIntervalInMs": {
           "type": "integer",
@@ -73,6 +75,7 @@
       "type": "object",
       "description": "Maintain operator value settings",
       "additionalProperties": false,
+      "default": {},
       "properties": {
         "intervalInMs": {
           "type": "integer",
@@ -103,6 +106,7 @@
       "type": "object",
       "description": "Inspect random node settings",
       "additionalProperties": false,
+      "default": {},
       "properties": {
         "intervalInMs": {
           "type": "integer",
