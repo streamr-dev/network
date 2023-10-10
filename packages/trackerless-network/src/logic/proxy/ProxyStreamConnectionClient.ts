@@ -220,7 +220,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         this.propagation.feedUnseenMessage(msg, this.targetNeighbors.getIds(), previousNode ?? null)
     }
 
-    hasProxyConnection(nodeId: NodeID, direction: ProxyDirection): boolean {
+    hasConnection(nodeId: NodeID, direction: ProxyDirection): boolean {
         return this.connections.has(nodeId) && this.connections.get(nodeId) === direction
     }
 
