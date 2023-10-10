@@ -95,8 +95,6 @@ export class ContractFacade {
         )
     }
 
-    // AnnounceToConractHelper (TODO remove this comment)
-
     async writeHeartbeat(nodeDescriptor: NetworkPeerDescriptor): Promise<void> {
         const metadata = JSON.stringify(nodeDescriptor)
         await (await this.operatorContract.heartbeat(metadata)).wait()
@@ -124,8 +122,6 @@ export class ContractFacade {
     getOperatorContractAddress(): string {
         return this.operatorContract.address
     }
-
-    // InspectRandomNodeHelper  (TODO remove this comment)
 
     async getSponsorshipsOfOperator(operatorAddress: EthereumAddress): Promise<SponsorshipResult[]> {
         interface Stake {
@@ -212,8 +208,6 @@ export class ContractFacade {
         await (await this.operatorContract.flag(sponsorship, operator, metadata)).wait()
     }
 
-    // MaintainOperatorValueHelper (TODO remove this comment)
-
     async getRandomOperator(): Promise<EthereumAddress | undefined> {
         const latestBlock = await this.operatorContract.provider.getBlockNumber()
         const operators = await this.getOperatorAddresses(latestBlock)
@@ -286,8 +280,6 @@ export class ContractFacade {
         return operatorAddresses
     }
 
-    // MaintainTopologyHelper (TODO remove this comment)
-
     // TODO better return type (maybe refine the data already here instead of MaintainTopologyHelper)
     async pullStakedStreams(requiredBlockNumber: number): Promise<any> {
         const createQuery = (lastId: string, pageSize: number) => {
@@ -323,8 +315,6 @@ export class ContractFacade {
         this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
         return this.theGraphClient.queryEntities<any>(createQuery, parseItems) // TODO: add type
     }
-
-    // VoteOnSuspectNodeHelper (TODO remove this comments)
 
     addReviewRequestListener(listener: ReviewRequestListener, abortSignal: AbortSignal): void {
         addManagedEventListener<any, any>(
