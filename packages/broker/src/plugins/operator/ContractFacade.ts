@@ -1,3 +1,4 @@
+import { Provider } from '@ethersproject/providers'
 import { Operator, Sponsorship, operatorABI, sponsorshipABI } from '@streamr/network-contracts'
 import { StreamID, ensureValidStreamPartitionIndex, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, TheGraphClient, addManagedEventListener, toEthereumAddress } from '@streamr/utils'
@@ -71,8 +72,7 @@ export interface SponsorshipResult {
 
 export class ContractFacade {
 
-    // TODO private
-    public readonly operatorContract: Operator
+    private readonly operatorContract: Operator
     private readonly theGraphClient: TheGraphClient
     private readonly config: OperatorServiceConfig
 
@@ -374,5 +374,10 @@ export class ContractFacade {
 
     removeOperatorContractStakeEventListener(eventName: 'Staked' | 'Unstaked', listener: (sponsorship: string) => unknown): void {
         this.operatorContract.off(eventName, listener)
+    }
+
+    getProvider(): Provider {
+        // TODO could this be config.signer?
+        return this.operatorContract.provider
     }
 }

@@ -1,6 +1,3 @@
-import { Contract } from '@ethersproject/contracts'
-import type { Sponsorship } from '@streamr/network-contracts'
-import { sponsorshipABI } from '@streamr/network-contracts'
 import { StreamID, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -44,7 +41,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
 
     async start(): Promise<void> {
         logger.info('Starting')
-        const latestBlock = await this.contractFacade.operatorContract.provider.getBlockNumber()
+        const latestBlock = await this.contractFacade.getProvider().getBlockNumber()
 
         this.onStakedListener = async (sponsorship: string) => {
             logger.info('Receive "Staked" event', { sponsorship })
