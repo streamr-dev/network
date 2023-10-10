@@ -1,5 +1,5 @@
 import { PeerDescriptor } from '../../exports'
-import { DhtPeer } from '../DhtPeer'
+import { RemoteDhtNode } from '../RemoteDhtNode'
 import { SortedContactList } from '../contact/SortedContactList'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { Logger } from '@streamr/utils'
@@ -38,7 +38,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     private contactList: SortedContactList<RemoteRouter>
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly messageToRoute: RouteMessageWrapper
-    private connections: Map<PeerIDKey, DhtPeer>
+    private connections: Map<PeerIDKey, RemoteDhtNode>
     private readonly parallelism: number
     private failedHopCounter = 0
     private successfulHopCounter = 0
@@ -49,7 +49,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         rpcCommunicator: RoutingRpcCommunicator,
         ownPeerDescriptor: PeerDescriptor,
         messageToRoute: RouteMessageWrapper,
-        connections: Map<PeerIDKey, DhtPeer>,
+        connections: Map<PeerIDKey, RemoteDhtNode>,
         parallelism: number,
         mode: RoutingMode = RoutingMode.ROUTE,
         destinationId?: Uint8Array,

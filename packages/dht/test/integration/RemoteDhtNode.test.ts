@@ -1,4 +1,4 @@
-import { DhtPeer } from '../../src/dht/DhtPeer'
+import { RemoteDhtNode } from '../../src/dht/RemoteDhtNode'
 import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { getMockPeers, MockDhtRpc } from '../utils/utils'
 import {
@@ -14,9 +14,9 @@ import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.
 import { generateId } from '../utils/utils'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
-describe('DhtPeer', () => {
+describe('RemoteDhtNode', () => {
 
-    let dhtPeer: DhtPeer
+    let remoteDhtNode: RemoteDhtNode
     let clientRpcCommunicator: RpcCommunicator
     let serverRpcCommunicator: RpcCommunicator
     const serviceId = 'test'
@@ -41,7 +41,7 @@ describe('DhtPeer', () => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new DhtRpcServiceClient(clientRpcCommunicator.getRpcClientTransport()))
-        dhtPeer = new DhtPeer(clientPeerDescriptor, serverPeerDescriptor, client, serviceId)
+        remoteDhtNode = new RemoteDhtNode(clientPeerDescriptor, serverPeerDescriptor, client, serviceId)
     })
 
     afterEach(() => {
@@ -50,24 +50,24 @@ describe('DhtPeer', () => {
     })
 
     it('Ping happy path', async () => {
-        const active = await dhtPeer.ping()
+        const active = await remoteDhtNode.ping()
         expect(active).toEqual(true)
     })
 
     it('getClosestPeers happy path', async () => {
-        const neighbors = await dhtPeer.getClosestPeers(clientPeerDescriptor.kademliaId)
+        const neighbors = await remoteDhtNode.getClosestPeers(clientPeerDescriptor.kademliaId)
         expect(neighbors.length).toEqual(getMockPeers().length)
     })
 
     it('ping error path', async () => {
         serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.throwPingError)
-        const active = await dhtPeer.ping()
+        const active = await remoteDhtNode.ping()
         expect(active).toEqual(false)
     })
 
     it('getClosestPeers error path', async () => {
         serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.throwGetClosestPeersError)
-        await expect(dhtPeer.getClosestPeers(clientPeerDescriptor.kademliaId))
+        await expect(remoteDhtNode.getClosestPeers(clientPeerDescriptor.kademliaId))
             .rejects.toThrow('Closest peers error')
     })
 

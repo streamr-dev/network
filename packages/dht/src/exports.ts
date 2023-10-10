@@ -7,7 +7,7 @@ export { PeerDescriptor, Message, NodeType, DataEntry } from './proto/packages/d
 export { ITransport } from './transport/ITransport'
 export { ConnectionManager, ConnectionLocker, PortRange, TlsCertificate } from './connection/ConnectionManager'
 export { PeerID, PeerIDKey } from './helpers/PeerID'
-export { DhtPeer } from './dht/DhtPeer'
+export { RemoteDhtNode as DhtPeer } from './dht/RemoteDhtNode'
 export { UUID } from './helpers/UUID'
 export { DhtRpcOptions } from './rpc-protocol/DhtRpcOptions'
 export { protoClasses } from './helpers/protoClasses'

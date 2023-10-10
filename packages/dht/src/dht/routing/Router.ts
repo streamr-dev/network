@@ -7,7 +7,7 @@ import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DuplicateDetector } from './DuplicateDetector'
 import { ConnectionManager } from '../../connection/ConnectionManager'
-import { DhtPeer } from '../DhtPeer'
+import { RemoteDhtNode } from '../RemoteDhtNode'
 import { v4 } from 'uuid'
 import { IRoutingService } from '../../proto/packages/dht/protos/DhtRpc.server'
 
@@ -30,7 +30,7 @@ export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
     ownPeerDescriptor: PeerDescriptor
     ownPeerId: PeerID
-    connections: Map<PeerIDKey, DhtPeer>
+    connections: Map<PeerIDKey, RemoteDhtNode>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     serviceId: string
     connectionManager?: ConnectionManager
@@ -59,7 +59,7 @@ export class Router implements IRouter {
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly ownPeerId: PeerID
-    private readonly connections: Map<PeerIDKey, DhtPeer>
+    private readonly connections: Map<PeerIDKey, RemoteDhtNode>
     private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     private readonly serviceId: string
     private readonly connectionManager?: ConnectionManager

@@ -7,7 +7,7 @@ import { PeerID } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { DhtRpcServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { SortedContactList } from '../contact/SortedContactList'
-import { DhtPeer } from '../DhtPeer'
+import { RemoteDhtNode } from '../RemoteDhtNode'
 import { peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
@@ -17,15 +17,15 @@ interface DiscoverySessionEvents {
 }
 
 interface DiscoverySessionConfig {
-    bucket: KBucket<DhtPeer>
-    neighborList: SortedContactList<DhtPeer>
+    bucket: KBucket<RemoteDhtNode>
+    neighborList: SortedContactList<RemoteDhtNode>
     targetId: Uint8Array
     ownPeerDescriptor: PeerDescriptor
     serviceId: string
     rpcCommunicator: RpcCommunicator
     parallelism: number
     noProgressLimit: number
-    newContactListener?: (dhtPeer: DhtPeer) => void
+    newContactListener?: (dhtPeer: RemoteDhtNode) => void
     nodeName?: string
 }
 
@@ -50,7 +50,7 @@ export class DiscoverySession {
             return
         }
         contacts.forEach((contact) => {
-            const dhtPeer = new DhtPeer(
+            const dhtPeer = new RemoteDhtNode(
                 this.config.ownPeerDescriptor,
                 contact,
                 toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
@@ -67,7 +67,7 @@ export class DiscoverySession {
         })
     }
 
-    private async getClosestPeersFromContact(contact: DhtPeer): Promise<PeerDescriptor[]> {
+    private async getClosestPeersFromContact(contact: RemoteDhtNode): Promise<PeerDescriptor[]> {
         if (this.stopped) {
             return []
         }
@@ -93,7 +93,7 @@ export class DiscoverySession {
         }
     }
 
-    private onClosestPeersRequestFailed(peer: DhtPeer, _exception: Error) {
+    private onClosestPeersRequestFailed(peer: RemoteDhtNode, _exception: Error) {
         if (!this.ongoingClosestPeersRequests.has(peer.getPeerId().toKey())) {
             return
         }
@@ -128,7 +128,7 @@ export class DiscoverySession {
         }
     }
 
-    public async findClosestNodes(timeout: number): Promise<SortedContactList<DhtPeer>> {
+    public async findClosestNodes(timeout: number): Promise<SortedContactList<RemoteDhtNode>> {
         if (this.config.neighborList.getUncontactedContacts(this.config.parallelism).length < 1) {
             logger.trace('getUncontactedContacts length was 0 in beginning of discovery, this.neighborList.size: '
                 + this.config.neighborList.getSize())

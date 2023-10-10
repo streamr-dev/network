@@ -10,7 +10,7 @@ import type { ClosestPeersResponse } from '../../src/proto/packages/dht/protos/D
 import type { ClosestPeersRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { UnaryCall } from '@protobuf-ts/runtime-rpc'
 import type { RpcOptions } from '@protobuf-ts/runtime-rpc'
-import { DhtPeer } from '../../src/dht/DhtPeer'
+import { RemoteDhtNode } from '../../src/dht/RemoteDhtNode'
 import { IMessageType } from '@protobuf-ts/runtime'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 
@@ -56,10 +56,10 @@ describe('RandomContactList', () => {
     const descriptor2: PeerDescriptor = { kademliaId: new Uint8Array([0, 0, 0, 2]), type: NodeType.NODEJS }
     const descriptor3: PeerDescriptor = { kademliaId: new Uint8Array([0, 0, 0, 3]), type: NodeType.NODEJS }
     const descriptor4: PeerDescriptor = { kademliaId: new Uint8Array([0, 0, 0, 4]), type: NodeType.NODEJS }
-    const peer1 = new DhtPeer(descriptor0, descriptor1, toProtoRpcClient(new MockRpcClient()), serviceId)
-    const peer2 = new DhtPeer(descriptor0, descriptor2, toProtoRpcClient(new MockRpcClient()), serviceId)
-    const peer3 = new DhtPeer(descriptor0, descriptor3, toProtoRpcClient(new MockRpcClient()), serviceId)
-    const peer4 = new DhtPeer(descriptor0, descriptor4, toProtoRpcClient(new MockRpcClient()), serviceId)
+    const peer1 = new RemoteDhtNode(descriptor0, descriptor1, toProtoRpcClient(new MockRpcClient()), serviceId)
+    const peer2 = new RemoteDhtNode(descriptor0, descriptor2, toProtoRpcClient(new MockRpcClient()), serviceId)
+    const peer3 = new RemoteDhtNode(descriptor0, descriptor3, toProtoRpcClient(new MockRpcClient()), serviceId)
+    const peer4 = new RemoteDhtNode(descriptor0, descriptor4, toProtoRpcClient(new MockRpcClient()), serviceId)
 
     it('adds contacts correctly', () => {
         const list = new RandomContactList(getId(descriptor0), 5, 1)

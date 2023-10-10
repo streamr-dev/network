@@ -1,5 +1,5 @@
 import { DiscoverySession } from './DiscoverySession'
-import { DhtPeer } from '../DhtPeer'
+import { RemoteDhtNode } from '../RemoteDhtNode'
 import crypto from 'crypto'
 import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
@@ -15,11 +15,11 @@ interface PeerDiscoveryConfig {
     rpcCommunicator: RoutingRpcCommunicator
     ownPeerDescriptor: PeerDescriptor
     ownPeerId: PeerID
-    bucket: KBucket<DhtPeer>
-    connections: Map<PeerIDKey, DhtPeer>
-    neighborList: SortedContactList<DhtPeer>
-    randomPeers: RandomContactList<DhtPeer>
-    openInternetPeers: SortedContactList<DhtPeer>
+    bucket: KBucket<RemoteDhtNode>
+    connections: Map<PeerIDKey, RemoteDhtNode>
+    neighborList: SortedContactList<RemoteDhtNode>
+    randomPeers: RandomContactList<RemoteDhtNode>
+    openInternetPeers: SortedContactList<RemoteDhtNode>
     joinNoProgressLimit: number
     getClosestContactsLimit: number
     serviceId: string
@@ -72,7 +72,7 @@ export class PeerDiscovery {
             rpcCommunicator: this.config.rpcCommunicator,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
-            newContactListener: (newPeer: DhtPeer) => this.config.addContact(newPeer.getPeerDescriptor()),
+            newContactListener: (newPeer: RemoteDhtNode) => this.config.addContact(newPeer.getPeerDescriptor()),
             nodeName: this.config.ownPeerDescriptor.nodeName
         }
         const session = new DiscoverySession(sessionOptions)
@@ -141,7 +141,7 @@ export class PeerDiscovery {
         if (this.stopped) {
             return
         }
-        await Promise.allSettled(this.config.bucket.closest(this.config.ownPeerId.value, this.config.parallelism).map(async (peer: DhtPeer) => {
+        await Promise.allSettled(this.config.bucket.closest(this.config.ownPeerId.value, this.config.parallelism).map(async (peer: RemoteDhtNode) => {
             const contacts = await peer.getClosestPeers(this.config.ownPeerDescriptor.kademliaId)
             contacts.forEach((contact) => {
                 this.config.addContact(contact)
