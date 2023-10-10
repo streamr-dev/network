@@ -377,7 +377,6 @@ export class ContractFacade {
     }
 
     getProvider(): Provider {
-        // TODO could this be config.signer?
-        return this.operatorContract.provider
+        return this.config.signer.provider!
     }
 }
