@@ -150,7 +150,7 @@ export class ConnectivityChecker {
         }
         if (outgoingConnection) {
             outgoingConnection.close('OTHER')
-            logger.trace('Connectivity test produced positive result, communicating reply to the requester')
+            logger.trace('Connectivity test produced positive result, communicating reply to the requester ' + host + ':' + connectivityRequest.port)
             connectivityResponseMessage = {
                 openInternet: true,
                 host,
