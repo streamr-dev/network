@@ -1,13 +1,13 @@
 name: release
 on:
   workflow_run:
-    branches: [main]
+    branches: [main, streamr-1.0]
     workflows: [validate]
     types:
       - completed
 jobs:
   tracker-docker-image:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main' }}
     uses: ./.github/workflows/docker-build.yml
     with:
       docker_file: Dockerfile.tracker
