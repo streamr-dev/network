@@ -307,7 +307,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         const timeDifference = firstOperationTime - currentTime
 
         this.simulatorTimeout = setTimeout(this.executeQueuedOperations, timeDifference)
-       
+
         if (Simulator.clock) {
             Simulator.clock.runAllAsync()
         }
@@ -395,5 +395,54 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         if (this.simulatorTimeout) {
             clearTimeout(this.simulatorTimeout)
         }
+    }
+
+    public getAssociationsAsUndirectedGraph(): Map<PeerIDKey, Array<PeerIDKey>> {
+        const ret = new Map<PeerIDKey, Array<PeerIDKey>>()
+        this.associations.forEach((association) => {
+            if (association.destinationConnection) {
+                let sourceKey = keyFromPeerDescriptor(association.sourceConnection.getPeerDescriptor()!)
+                let targetKey = keyFromPeerDescriptor(association.destinationConnection.getPeerDescriptor()!)
+                // order source and target keys so that the key with the lower value is the source
+                if (sourceKey > targetKey) {
+                    const tmp = sourceKey
+                    sourceKey = targetKey
+                    targetKey = tmp
+                }
+
+                if (!ret.has(sourceKey)) {
+                    ret.set(sourceKey, [targetKey])
+                } else {
+                    if (!ret.get(sourceKey)!.includes(targetKey)) {
+                        ret.get(sourceKey)!.push(targetKey)
+                    }
+                }
+            }
+        })
+        return ret
+    }
+
+    public getNumberOdConnectedComponents(): number {
+        const graph = this.getAssociationsAsUndirectedGraph()
+        const visited: Map<string, boolean> = new Map()
+        let count = 0
+
+        for (const node of graph.keys()) {
+            if (!visited.get(node)) {
+                dfs(node)
+                count++
+            }
+        }
+
+        function dfs(node: PeerIDKey) {
+            visited.set(node, true)
+            for (const neighbor of graph.get(node)!) {
+                if (!visited.get(neighbor)) {
+                    dfs(neighbor)
+                }
+            }
+        }
+        
+        return count
     }
 }

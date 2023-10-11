@@ -147,9 +147,9 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerIdString?: 
 
 interface IDhtNodeTest {
     getNeighborList: () => SortedContactList<DhtPeer>
-    getKBucketPeers: () => PeerDescriptor[],
+    getKBucketPeers: () => PeerDescriptor[]
     getConnections: () => Map<PeerIDKey, DhtPeer>
-    getBucketSize: () =>  number
+    getBucketSize: () => number
 }
 
 export class DhtNode extends EventEmitter<Events> implements ITransport {
