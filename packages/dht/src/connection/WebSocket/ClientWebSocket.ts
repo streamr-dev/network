@@ -21,7 +21,6 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public connect(address: string): void {
-        console.log(address)
         if (!this.destroyed) {
             this.socket = new WebSocket(address, undefined, undefined, undefined, {rejectUnauthorized: false})
             this.socket.binaryType = BINARY_TYPE

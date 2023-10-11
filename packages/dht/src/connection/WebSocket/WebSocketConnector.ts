@@ -169,7 +169,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
     public async autoCertify(): Promise<void> {
         if (this.selectedPort) {
-            console.log("HERE1.5")
             this.autocertifierClient = new AutoCertifierClient('~/subdomain.json', this.selectedPort!,
                 'https://ns1.fe6a54d8-8d6f-4743-890d-e9ecd680a4c7.xyz:59833', cert, (_, rpcMethodName, method) => {
                     this.autocertifierRpcCommunicator.registerRpcMethod(
