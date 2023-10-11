@@ -1,6 +1,6 @@
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { isSamePeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('Layer0-Layer1', () => {
     const epPeerDescriptor: PeerDescriptor = {
@@ -76,14 +76,14 @@ describe('Layer0-Layer1', () => {
             stream2Node1.joinDht([epPeerDescriptor]),
             stream2Node2.joinDht([epPeerDescriptor])
         ])
-        expect(stream1Node1.getNeighborList().getSize()).toEqual(1)
-        expect(stream1Node2.getNeighborList().getSize()).toEqual(1)
-        expect(stream2Node1.getNeighborList().getSize()).toEqual(1)
-        expect(stream2Node2.getNeighborList().getSize()).toEqual(1)
+        expect(stream1Node1.getClosestContacts()).toHaveLength(1)
+        expect(stream1Node2.getClosestContacts()).toHaveLength(1)
+        expect(stream2Node1.getClosestContacts()).toHaveLength(1)
+        expect(stream2Node2.getClosestContacts()).toHaveLength(1)
 
-        expect(stream1Node1.getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(node1.getPeerDescriptor()))).toEqual(true)
-        expect(stream1Node2.getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(epPeerDescriptor))).toEqual(true)
-        expect(stream2Node1.getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(node2.getPeerDescriptor()))).toEqual(true)
-        expect(stream2Node2.getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(epPeerDescriptor))).toEqual(true)
+        expect(isSamePeerDescriptor(stream1Node1.getClosestContacts()[0], node1.getPeerDescriptor())).toBe(true)
+        expect(isSamePeerDescriptor(stream1Node2.getClosestContacts()[0], epPeerDescriptor)).toBe(true)
+        expect(isSamePeerDescriptor(stream2Node1.getClosestContacts()[0], node2.getPeerDescriptor())).toBe(true)
+        expect(isSamePeerDescriptor(stream2Node2.getClosestContacts()[0], epPeerDescriptor)).toBe(true)
     })
 })

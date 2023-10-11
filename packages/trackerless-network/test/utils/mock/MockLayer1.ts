@@ -19,8 +19,8 @@ export class MockLayer1 extends EventEmitter implements ILayer1 {
 
     }
 
-    getNeighborList(): SortedContactList<DhtPeer> {
-        return this.neighborList
+    getClosestContacts(maxCount?: number): PeerDescriptor[] {
+        return this.neighborList.getClosestContacts(maxCount).map((c) => c.getPeerDescriptor())
     }
 
     getKBucketPeers(): PeerDescriptor[] {

@@ -1,4 +1,4 @@
-import { PeerDescriptor, SortedContactList, DhtPeer } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 
 export interface ILayer1Events {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -15,7 +15,7 @@ export interface ILayer1 {
     off<T extends keyof ILayer1Events>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
     
     removeContact: (peerDescriptor: PeerDescriptor, removeFromOpenInternetPeers?: boolean) => void
-    getNeighborList: () => SortedContactList<DhtPeer>
+    getClosestContacts: (maxCount?: number) => PeerDescriptor[]
     getKBucketPeers: () => PeerDescriptor[]
     getBucketSize: () => number
     joinDht: (entryPoints: PeerDescriptor[], doRandomJoin?: boolean, retry?: boolean) => Promise<void>
