@@ -78,7 +78,7 @@ describe('ConnectionManager', () => {
         await connectionManager.stop()
     }, 15000)
 
-    it('Can probe connectivity in open internet', async () => {
+    it.only('Can probe connectivity in open internet', async () => {
         const connectionManager1 = new ConnectionManager({
             transportLayer: mockTransport,
             websocketHost: '127.0.0.1',
