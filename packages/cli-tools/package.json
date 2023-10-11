@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cli-tools",
-  "version": "0.0.1-tatum.4",
+  "version": "0.0.1-tatum.5",
   "description": "Command line tools for Streamr",
   "repository": {
     "type": "git",
@@ -28,15 +28,15 @@
   "dependencies": {
     "@ethersproject/wallet": "^5.5.0",
     "@snapshot-labs/snapshot.js": "^0.7.3",
-    "@streamr/utils": "0.0.1-tatum.4",
+    "@streamr/utils": "0.0.1-tatum.5",
     "commander": "^11.0.0",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",
-    "streamr-client": "0.0.1-tatum.4"
+    "streamr-client": "0.0.1-tatum.5"
   },
   "devDependencies": {
-    "@streamr/test-utils": "0.0.1-tatum.4",
+    "@streamr/test-utils": "0.0.1-tatum.5",
     "@types/event-stream": "^4.0.2",
     "@types/lodash": "^4.14.199",
     "@types/merge2": "^1.4.2",
