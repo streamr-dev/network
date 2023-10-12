@@ -15,7 +15,7 @@ export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
     createMessageSignature: (payload: string) => Promise<Uint8Array>
-    getStreamRegistryChainSigner: () => Promise<Signer & { provider: Provider }>
+    getStreamRegistryChainSigner: () => Promise<Signer & { readonly provider: Provider }>
 }
 
 export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictStreamrClientConfig, 'contracts'>): Authentication => {

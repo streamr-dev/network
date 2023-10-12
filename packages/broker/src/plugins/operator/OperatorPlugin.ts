@@ -31,7 +31,7 @@ export interface OperatorPluginConfig {
 }
 
 export interface OperatorServiceConfig {
-    signer: Signer & { provider: Provider }
+    signer: Signer & { readonly provider: Provider }
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
     maxSponsorshipsInWithdraw?: number
