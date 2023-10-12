@@ -1,7 +1,6 @@
 import KBucket from 'k-bucket'
 import { PeerID } from '../../helpers/PeerID'
-import { ContactState } from './Contact'
-import { ContactList } from './ContactList'
+import { ContactList, ContactState } from './ContactList'
 
 export class SortedContactList<C extends { getPeerId: () => PeerID }> extends ContactList<C> {
 
