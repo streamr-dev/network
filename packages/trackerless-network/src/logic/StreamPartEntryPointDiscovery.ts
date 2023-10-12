@@ -1,15 +1,14 @@
-import { createHash } from 'crypto'
 import {
-    isSamePeerDescriptor,
+    DataEntry,
     PeerDescriptor,
     RecursiveFindResult,
-    DataEntry
+    isSamePeerDescriptor
 } from '@streamr/dht'
-import { Any } from '../proto/google/protobuf/any'
-import { Logger, setAbortableTimeout, wait } from '@streamr/utils'
-import { StreamPartDelivery } from './StreamrNode'
 import { StreamPartID } from '@streamr/protocol'
+import { Logger, scheduleAtInterval, wait } from '@streamr/utils'
+import { createHash } from 'crypto'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { Any } from '../proto/google/protobuf/any'
 import { ILayer1 } from './ILayer1'
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): Uint8Array => {
@@ -57,8 +56,9 @@ const ENTRYPOINT_STORE_LIMIT = 8
 export const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 
 interface StreamPartEntryPointDiscoveryConfig {
-    streamParts: Map<string, StreamPartDelivery>
+    streamPartId: StreamPartID
     ownPeerDescriptor: PeerDescriptor
+    layer1: ILayer1
     getEntryPointData: (key: Uint8Array) => Promise<RecursiveFindResult>
     getEntryPointDataViaNode: (key: Uint8Array, node: PeerDescriptor) => Promise<DataEntry[]>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
@@ -69,19 +69,16 @@ interface StreamPartEntryPointDiscoveryConfig {
 export class StreamPartEntryPointDiscovery {
     private readonly abortController: AbortController
     private readonly config: StreamPartEntryPointDiscoveryConfig
-    private readonly servicedStreamParts: Map<StreamPartID, NodeJS.Timeout>
     private readonly cacheInterval: number
-    private readonly networkSplitAvoidedNodes: Map<StreamPartID, Set<NodeID>> = new Map()
+    private readonly networkSplitAvoidedNodes: Set<NodeID> = new Set()
 
     constructor(config: StreamPartEntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
         this.cacheInterval = this.config.cacheInterval ?? 60000
-        this.servicedStreamParts = new Map()
     }
 
     async discoverEntryPointsFromDht(
-        streamPartId: StreamPartID,
         knownEntryPointCount: number,
         forwardingNode?: PeerDescriptor
     ): Promise<FindEntryPointsResult> {
@@ -91,7 +88,7 @@ export class StreamPartEntryPointDiscovery {
                 discoveredEntryPoints: []
             }
         }
-        const discoveredEntryPoints = await this.discoverEntryPoints(streamPartId, forwardingNode)
+        const discoveredEntryPoints = await this.discoverEntryPoints(forwardingNode)
         if (discoveredEntryPoints.length === 0) {
             discoveredEntryPoints.push(this.config.ownPeerDescriptor)
         }
@@ -101,20 +98,19 @@ export class StreamPartEntryPointDiscovery {
         }
     }
 
-    private async discoverEntryPoints(streamPartId: StreamPartID, forwardingNode?: PeerDescriptor): Promise<PeerDescriptor[]> {
-        const dataKey = streamPartIdToDataKey(streamPartId)
-        let discoveredEntryPoints = forwardingNode ? 
+    private async discoverEntryPoints(forwardingNode?: PeerDescriptor): Promise<PeerDescriptor[]> {
+        const dataKey = streamPartIdToDataKey(this.config.streamPartId)
+        const discoveredEntryPoints = forwardingNode ? 
             await this.queryEntryPointsViaNode(dataKey, forwardingNode) : await this.queryEntrypoints(dataKey)
     
-        if (this.networkSplitAvoidedNodes.has(streamPartId)) {
-            const filtered = discoveredEntryPoints.filter((node) => 
-                !this.networkSplitAvoidedNodes.get(streamPartId)!.has(getNodeIdFromPeerDescriptor(node)))
-            // If all discovered entry points have previously beed detected as offline, try again
-            if (filtered.length > 0) {
-                discoveredEntryPoints = filtered
-            }
+        const filtered = discoveredEntryPoints.filter((node) => 
+            !this.networkSplitAvoidedNodes.has(getNodeIdFromPeerDescriptor(node)))
+        // If all discovered entry points have previously been detected as offline, try again
+        if (filtered.length > 0) {
+            return filtered
+        } else {
+            return discoveredEntryPoints
         }
-        return discoveredEntryPoints
     }
 
     private async queryEntrypoints(key: Uint8Array): Promise<PeerDescriptor[]> {
@@ -131,6 +127,7 @@ export class StreamPartEntryPointDiscovery {
         }
     }
 
+    // TODO remove this method in NET-1122
     private async queryEntryPointsViaNode(key: Uint8Array, node: PeerDescriptor): Promise<PeerDescriptor[]> {
         logger.trace(`Finding data via node ${this.config.ownPeerDescriptor.nodeName}`)
         try {
@@ -145,96 +142,64 @@ export class StreamPartEntryPointDiscovery {
         }
     }
 
-    async storeSelfAsEntryPointIfNecessary(
-        streamPartId: StreamPartID,
-        entryPointsFromDht: boolean,
-        currentEntrypointCount: number
-    ): Promise<void> {
-        if (!this.config.streamParts.has(streamPartId) || !entryPointsFromDht) {
+    async storeSelfAsEntryPointIfNecessary(currentEntrypointCount: number): Promise<void> {
+        if (this.abortController.signal.aborted) {
             return
         }
-        if ((this.config.streamParts.get(streamPartId)! as { layer1: ILayer1 }).layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
-            await this.storeSelfAsEntryPoint(streamPartId)
-            setImmediate(() => this.avoidNetworkSplit(streamPartId))
-        } else if (currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) {
-            await this.storeSelfAsEntryPoint(streamPartId)
+        const possibleNetworkSplitDetected = this.config.layer1.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT
+        if ((currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) || possibleNetworkSplitDetected) {
+            await this.storeSelfAsEntryPoint()
+            await this.keepSelfAsEntryPoint()
+        }
+        if (possibleNetworkSplitDetected) {
+            setImmediate(() => this.avoidNetworkSplit())
         }
     }
 
-    private async storeSelfAsEntryPoint(streamPartId: StreamPartID): Promise<void> {
+    private async storeSelfAsEntryPoint(): Promise<void> {
         const ownPeerDescriptor = this.config.ownPeerDescriptor
         const dataToStore = Any.pack(ownPeerDescriptor, PeerDescriptor)
         try {
-            await this.config.storeEntryPointData(streamPartIdToDataKey(streamPartId), dataToStore)
-            this.keepSelfAsEntryPoint(streamPartId)
+            await this.config.storeEntryPointData(streamPartIdToDataKey(this.config.streamPartId), dataToStore)
         } catch (err) {
-            logger.warn(`Failed to store self as entrypoint for ${streamPartId}`)
+            logger.warn(`Failed to store self as entrypoint for ${this.config.streamPartId}`)
         }
     }
 
-    private keepSelfAsEntryPoint(streamPartId: StreamPartID): void {
-        if (!this.config.streamParts.has(streamPartId) || this.servicedStreamParts.has(streamPartId)) {
-            return
-        }
-        this.servicedStreamParts.set(streamPartId, setTimeout(async () => {
-            if (!this.config.streamParts.has(streamPartId)) {
-                this.servicedStreamParts.delete(streamPartId)
-                return
-            }
-            logger.trace(`Attempting to keep self as entrypoint for ${streamPartId}`)
+    private async keepSelfAsEntryPoint(): Promise<void> {
+        await scheduleAtInterval(async () => {
+            logger.trace(`Attempting to keep self as entrypoint for ${this.config.streamPartId}`)
             try {
-                const discovered = await this.discoverEntryPoints(streamPartId)
+                const discovered = await this.discoverEntryPoints()
                 if (discovered.length < ENTRYPOINT_STORE_LIMIT 
                     || discovered.some((peerDescriptor) => isSamePeerDescriptor(peerDescriptor, this.config.ownPeerDescriptor))) {
-                    await this.storeSelfAsEntryPoint(streamPartId)
-                    this.servicedStreamParts.delete(streamPartId)
-                    this.keepSelfAsEntryPoint(streamPartId)
-                } else {
-                    this.servicedStreamParts.delete(streamPartId)
+                    await this.storeSelfAsEntryPoint()
                 }
             } catch (err) {
-                logger.debug(`Failed to keep self as entrypoint for ${streamPartId}`)
+                logger.debug(`Failed to keep self as entrypoint for ${this.config.streamPartId}`)
             }
-        }, this.cacheInterval))
+        }, this.cacheInterval, false, this.abortController.signal)
     }
 
-    private async avoidNetworkSplit(streamPartId: StreamPartID): Promise<void> {
+    private async avoidNetworkSplit(): Promise<void> {
         await exponentialRunOff(async () => {
-            if (this.config.streamParts.has(streamPartId)) {
-                const stream = this.config.streamParts.get(streamPartId)! as { layer1: ILayer1 }
-                const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartId)
-                await stream.layer1!.joinDht(rediscoveredEntrypoints, false, false)
-                if (stream.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
-                    // Filter out nodes that are not in the k-bucket, assumed to be offline
-                    const nodesToAvoid = rediscoveredEntrypoints.filter((peer) => !stream.layer1!.getKBucketPeers().includes(peer))
-                    this.addAvoidedNodes(streamPartId, nodesToAvoid)
-                    throw new Error(`Network split is still possible`)
-                }
+            const rediscoveredEntrypoints = await this.discoverEntryPoints()
+            await this.config.layer1.joinDht(rediscoveredEntrypoints, false, false)
+            if (this.config.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
+                // Filter out nodes that are not in the k-bucket, assumed to be offline
+                const nodesToAvoid = rediscoveredEntrypoints
+                    .filter((peer) => !this.config.layer1!.getKBucketPeers().includes(peer))
+                    .map((peer) => getNodeIdFromPeerDescriptor(peer))
+                nodesToAvoid.forEach((node) => this.networkSplitAvoidedNodes.add(node))
+                throw new Error(`Network split is still possible`)
             }
         }, 'avoid network split', this.abortController.signal)
-        this.networkSplitAvoidedNodes.delete(streamPartId)
+        this.networkSplitAvoidedNodes.clear()
         logger.trace(`Network split avoided`)
     }
 
-    private addAvoidedNodes(streamPartId: StreamPartID, nodesToAvoid: PeerDescriptor[]): void {
-        if (!this.networkSplitAvoidedNodes.has(streamPartId)) {
-            this.networkSplitAvoidedNodes.set(streamPartId, new Set())
-        }
-        nodesToAvoid.forEach((node) => this.networkSplitAvoidedNodes.get(streamPartId)!.add(getNodeIdFromPeerDescriptor(node)))
-    }
-
-    removeSelfAsEntryPoint(streamPartId: StreamPartID): void {
-        if (this.servicedStreamParts.has(streamPartId)) {
-            setAbortableTimeout(() => this.config.deleteEntryPointData(streamPartIdToDataKey(streamPartId)), 0, this.abortController.signal)
-            clearTimeout(this.servicedStreamParts.get(streamPartId))
-            this.servicedStreamParts.delete(streamPartId)
-        }
-    }
-
     async destroy(): Promise<void> {
-        this.servicedStreamParts.forEach((_, streamPartId) => this.removeSelfAsEntryPoint(streamPartId))
-        this.servicedStreamParts.clear()
         this.abortController.abort()
+        await this.config.deleteEntryPointData(streamPartIdToDataKey(this.config.streamPartId))
     }
-
 }
