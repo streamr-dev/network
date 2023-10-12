@@ -215,7 +215,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             socket.on('disconnected', delFunc)
             managedConnection.on('handshakeCompleted', delFunc)
 
-            socket.connect(url)
+            socket.connect(url, targetPeerDescriptor.websocket!.selfSignedCA)
 
             return managedConnection
         }
