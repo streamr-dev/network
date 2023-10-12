@@ -80,8 +80,8 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
                 this.sponsorshipCountOfStream.set(streamId, sponsorshipCount)
             }
         }
-        const initialStreams = Array.from(this.sponsorshipCountOfStream.keys())
-        if (initialStreams.length > 0) {
+        if (this.sponsorshipCountOfStream.size > 0) {
+            const initialStreams = Array.from(this.sponsorshipCountOfStream.keys())
             this.emit('addStakedStreams', initialStreams)
         }
     }
