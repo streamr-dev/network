@@ -1,7 +1,6 @@
 import { EventEmitter } from 'eventemitter3'
 import {
     PeerDescriptor,
-    DhtPeer,
     ListeningRpcCommunicator,
     ITransport,
     ConnectionLocker
@@ -256,8 +255,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     private getNeighborCandidatesFromLayer1(): PeerDescriptor[] {
         const uniqueNodes = new Set<PeerDescriptor>()
-        this.config.layer1.getNeighborList().getClosestContacts(this.config.nodeViewSize).forEach((contact: DhtPeer) => {
-            uniqueNodes.add(contact.getPeerDescriptor())
+        this.config.layer1.getClosestContacts(this.config.nodeViewSize).forEach((peer: PeerDescriptor) => {
+            uniqueNodes.add(peer)
         })
         this.config.layer1.getKBucketPeers().forEach((peer: PeerDescriptor) => {
             uniqueNodes.add(peer)

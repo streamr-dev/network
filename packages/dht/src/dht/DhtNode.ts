@@ -555,8 +555,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return undefined
     }
 
-    public getNeighborList(): SortedContactList<DhtPeer> {
-        return this.neighborList!
+    public getClosestContacts(maxCount?: number): PeerDescriptor[] {
+        return this.neighborList!.getClosestContacts(maxCount).map((c) => c.getPeerDescriptor())
     }
 
     public getNodeId(): PeerID {
