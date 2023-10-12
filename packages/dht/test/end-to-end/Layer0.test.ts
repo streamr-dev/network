@@ -20,10 +20,10 @@ describe('Layer0', () => {
         await epDhtNode.joinDht([epPeerDescriptor])
 
         console.log(epPeerDescriptor)
-        node1 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
-        node3 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
-        node4 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ websocketHost: 'localhost', websocketPortRange, entryPoints: [epPeerDescriptor] })
+        node2 = new DhtNode({ websocketHost: 'localhost', websocketPortRange, entryPoints: [epPeerDescriptor] })
+        node3 = new DhtNode({ websocketHost: 'localhost', websocketPortRange, entryPoints: [epPeerDescriptor] })
+        node4 = new DhtNode({ websocketHost: 'localhost', websocketPortRange, entryPoints: [epPeerDescriptor] })
         
         await node1.start()
         await node2.start()
