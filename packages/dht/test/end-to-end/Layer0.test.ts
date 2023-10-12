@@ -2,12 +2,6 @@ import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dh
 import { DhtNode } from '../../src/dht/DhtNode'
 
 describe('Layer0', () => {
-
-    const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: Uint8Array.from([1, 2, 3]),
-        type: NodeType.NODEJS,
-        websocket: { host: '127.0.0.1', port: 10011, tls: false }
-    }
     
     let epDhtNode: DhtNode
     let node1: DhtNode
@@ -15,12 +9,14 @@ describe('Layer0', () => {
     let node3: DhtNode
     let node4: DhtNode
 
+    let epPeerDescriptor: PeerDescriptor
+
     const websocketPortRange = { min: 10012, max: 10015 } 
     beforeEach(async () => {
         
-        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
+        epDhtNode = new DhtNode({ websocketPortRange: { min: 10011, max: 10012 }})
         await epDhtNode.start()
-        
+        epPeerDescriptor = epDhtNode.getPeerDescriptor()
         await epDhtNode.joinDht([epPeerDescriptor])
 
         node1 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })

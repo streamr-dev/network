@@ -6,7 +6,6 @@ import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
     ConnectivityMethod,
     ConnectivityResponse,
-    NodeType,
     PeerDescriptor,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
@@ -151,8 +150,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     }
                     return preconfiguredConnectivityResponse
                 } else {
-                    // Do real connectivity checking     
-                    return await this.connectivityChecker!.sendConnectivityRequest(sample(this.entrypoints)!)
+                    // Do real connectivity checking
+                    const passSelfSignedCa = this.ownPeerDescriptor ? this.webSocketServer!.getSelfSignedCertification()!.caCert : undefined
+                    return await this.connectivityChecker!.sendConnectivityRequest(sample(this.entrypoints)!, passSelfSignedCa)
                 }
             }
         } catch (err) {

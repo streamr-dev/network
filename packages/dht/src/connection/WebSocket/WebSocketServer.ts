@@ -8,7 +8,7 @@ import {
 } from '../IConnectionSource'
 
 import { Logger, asAbortable } from '@streamr/utils'
-import { AutoCertifierClient, Certificate, createSelfSignedCertificate } from '@streamr/autocertifier-client' 
+import { AutoCertifierClient, Certificate, createSelfSignedCertificate, Certificates } from '@streamr/autocertifier-client' 
 import { WebSocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
@@ -30,6 +30,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     private wsServer?: WsServer
     private readonly abortController = new AbortController()
     private autocertifier?: AutoCertifierClient    
+    private selfSignedCertification?: Certificates
 
     public async start(portRange: PortRange, tlsCertificate?: TlsCertificate): Promise<number> {
         const ports = range(portRange.min, portRange.max + 1)
@@ -56,11 +57,11 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
         }
         return new Promise((resolve, reject) => {
             const createSelfSignedCert = () => {
-                const certificate = createSelfSignedCertificate('streamr-self-signed-' + new UUID().toString(), 1000)
+                this.selfSignedCertification = createSelfSignedCertificate('streamr-self-signed-' + new UUID().toString(), 1000)
                 return {
-                    key: certificate.serverKey,
-                    cert: certificate.serverCert,
-                    // ca: certificate.caCert
+                    key: this.selfSignedCertification.serverKey,
+                    cert: this.selfSignedCertification.serverCert,
+                    ca: this.selfSignedCertification.caCert
                 }
             }
             this.httpsServer = tlsCertificate ? 
@@ -111,6 +112,10 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
 
     public updateCertificate(certificate: Certificate): void {
         // this.httpServer?.setSecureContext(certificate)
+    }
+
+    public getSelfSignedCertification(): Certificates | undefined {
+        return this.selfSignedCertification
     }
 
     public stop(): Promise<void> {

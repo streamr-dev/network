@@ -252,6 +252,10 @@ export interface ConnectivityMethod {
      * @generated from protobuf field: bool tls = 3;
      */
     tls: boolean;
+    /**
+     * @generated from protobuf field: optional string selfSignedCA = 4;
+     */
+    selfSignedCA?: string;
 }
 /**
  * @generated from protobuf message dht.RouteMessageWrapper
@@ -325,6 +329,10 @@ export interface ConnectivityRequest {
      * @generated from protobuf field: optional string host = 3;
      */
     host?: string;
+    /**
+     * @generated from protobuf field: optional string selfSignedCA = 4;
+     */
+    selfSignedCA?: string;
 }
 /**
  * @generated from protobuf message dht.ConnectivityResponse
@@ -987,7 +995,8 @@ class ConnectivityMethod$Type extends MessageType$<ConnectivityMethod> {
         super("dht.ConnectivityMethod", [
             { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 2, name: "host", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 3, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 4, name: "selfSignedCA", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1034,7 +1043,8 @@ class ConnectivityRequest$Type extends MessageType$<ConnectivityRequest> {
         super("dht.ConnectivityRequest", [
             { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 2, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 3, name: "host", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 3, name: "host", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "selfSignedCA", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

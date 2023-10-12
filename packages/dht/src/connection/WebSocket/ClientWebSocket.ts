@@ -20,14 +20,14 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
         this.connectionId = new ConnectionID()
     }
 
-    public connect(address: string): void {
+    public connect(address: string, caCert?: string): void {
         if (!this.destroyed) {
-            this.socket = new WebSocket(address, undefined, undefined, undefined, {rejectUnauthorized: false})
+            this.socket = new WebSocket(address, undefined, undefined, undefined, { tlsOptions: { ca: caCert }})
             this.socket.binaryType = BINARY_TYPE
 
             this.socket.onerror = (error: Error) => {
                 if (!this.destroyed) {
-                    logger.trace('WebSocket Client error: ' + JSON.stringify(error))
+                    logger.error('WebSocket Client error: ' + JSON.stringify(error))
                     this.emit('error', error.name)
                 }
             }

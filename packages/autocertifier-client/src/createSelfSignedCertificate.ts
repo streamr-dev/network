@@ -1,6 +1,6 @@
 import * as forge from 'node-forge'
 
-interface Certificates {
+export interface Certificates {
     caCert: string
     caKey: string
     serverCert: string
