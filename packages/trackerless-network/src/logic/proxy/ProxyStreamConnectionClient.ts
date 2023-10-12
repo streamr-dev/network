@@ -1,9 +1,9 @@
 import {
+    ConnectionLocker,
     ITransport,
     ListeningRpcCommunicator,
     PeerDescriptor
 } from '@streamr/dht'
-import { ConnectionLocker } from '@streamr/dht/src/exports'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, Logger, addManagedEventListener, wait } from '@streamr/utils'
