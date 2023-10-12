@@ -21,6 +21,7 @@ import { StreamPartAssignments } from './StreamPartAssignments'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { inspectRandomNode } from './inspectRandomNode'
 import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
+import { Provider } from '@ethersproject/providers'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
@@ -30,7 +31,7 @@ export interface OperatorPluginConfig {
 }
 
 export interface OperatorServiceConfig {
-    signer: Signer
+    signer: Signer & { provider: Provider }
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
     maxSponsorshipsInWithdraw?: number

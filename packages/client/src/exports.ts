@@ -68,4 +68,5 @@ export {
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht' 
 export type { ConnectionInfo } from '@ethersproject/web'
-export type { ExternalProvider } from '@ethersproject/providers'
+export type { Signer } from '@ethersproject/abstract-signer'
+export type { ExternalProvider, Provider } from '@ethersproject/providers'
