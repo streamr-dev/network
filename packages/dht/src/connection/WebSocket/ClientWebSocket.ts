@@ -22,7 +22,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
 
     public connect(address: string, caCert?: string): void {
         if (!this.destroyed) {
-            this.socket = new WebSocket(address, undefined, undefined, undefined, { tlsOptions: { ca: caCert }})
+            this.socket = new WebSocket(address, undefined, undefined, undefined, undefined, { tlsOptions: { ca: caCert } })
             this.socket.binaryType = BINARY_TYPE
 
             this.socket.onerror = (error: Error) => {
