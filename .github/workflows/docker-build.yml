@@ -13,6 +13,8 @@ on:
         type: string
       test_script:
         type: string
+      branch:
+        type: string
       push_image:
         type: boolean
       host_machine_platform:
@@ -35,6 +37,8 @@ jobs:
     runs-on: ${{ inputs.host_machine_platform }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
       - name: Cache Docker layers
         uses: actions/cache@v3.3.2
         with:
@@ -74,7 +78,8 @@ jobs:
             latest=false
           tags: |
             type=match,pattern=broker/(v.*),group=1,value=${{ env.broker_head_tag }}
-            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=dev,enable=${{ inputs.branch == 'refs/heads/main' }}
+            type=raw,value=dev-tatum,enable=${{ inputs.branch == 'refs/heads/streamr-1.0' }}
 
       - name: Build
         if: ${{!inputs.push_image}}
