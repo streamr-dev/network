@@ -62,7 +62,7 @@ interface StreamPartEntryPointDiscoveryConfig {
     getEntryPointData: (key: Uint8Array) => Promise<RecursiveFindResult>
     getEntryPointDataViaNode: (key: Uint8Array, node: PeerDescriptor) => Promise<DataEntry[]>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
-    deleteEntryPointData: (key: Uint8Array) => Promise<unknown>
+    deleteEntryPointData: (key: Uint8Array) => Promise<void>
     cacheInterval?: number
 }
 
