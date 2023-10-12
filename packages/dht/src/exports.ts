@@ -6,7 +6,6 @@ export { getRandomRegion, getRegionDelayMatrix } from './connection/Simulator/pi
 export { PeerDescriptor, Message, NodeType, DataEntry } from './proto/packages/dht/protos/DhtRpc'
 export { ITransport } from './transport/ITransport'
 export { ConnectionManager, ConnectionLocker, PortRange, TlsCertificate } from './connection/ConnectionManager'
-export { UUID } from './helpers/UUID'
 export { DhtRpcOptions } from './rpc-protocol/DhtRpcOptions'
 export { Remote } from './dht/contact/Remote'
 export { RecursiveFindResult } from './dht/find/RecursiveFinder'
