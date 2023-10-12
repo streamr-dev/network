@@ -13,6 +13,8 @@ on:
         type: string
       test_script:
         type: string
+      branch:
+        type: string
       push_image:
         type: boolean
       host_machine_platform:
@@ -35,6 +37,8 @@ jobs:
     runs-on: ${{ inputs.host_machine_platform }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
       - name: Cache Docker layers
         uses: actions/cache@v3.3.2
         with:

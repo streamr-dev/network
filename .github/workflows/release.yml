@@ -25,6 +25,7 @@ jobs:
       image_name: streamr/broker-node
       host_machine_platform: self-hosted
       build_platforms: linux/amd64,linux/arm64
+      branch: ${{ github.event.workflow_run.head_branch }}
       push_image: true
     secrets:
       dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
