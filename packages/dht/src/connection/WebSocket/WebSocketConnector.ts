@@ -147,7 +147,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                         openInternet: true,
                         host: this.host!,
                         natType: NatType.OPEN_INTERNET,
-                        websocket: { host: this.host!, port: this.selectedPort!, tls: this.tlsCertificate !== undefined, selfSignedCA: selfSignedCa }
+                        websocket: { host: this.host!, port: this.selectedPort!, tls: true, selfSignedCA: selfSignedCa }
                     }
                     return preconfiguredConnectivityResponse
                 } else {

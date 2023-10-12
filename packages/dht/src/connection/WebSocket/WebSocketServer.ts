@@ -57,11 +57,11 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
         }
         return new Promise((resolve, reject) => {
             const createSelfSignedCert = () => {
-                this.selfSignedCertification = createSelfSignedCertificate('streamr-self-signed-' + new UUID().toString(), 1000)
+                this.selfSignedCertification = createSelfSignedCertificate('localhost', 1000)
                 return {
                     key: this.selfSignedCertification.serverKey,
                     cert: this.selfSignedCertification.serverCert,
-                    // ca: this.selfSignedCertification.caCert
+                    ca: this.selfSignedCertification.caCert
                 }
             }
             this.httpsServer = tlsCertificate ? 
