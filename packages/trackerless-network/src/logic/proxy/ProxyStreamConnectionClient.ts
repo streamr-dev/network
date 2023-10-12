@@ -83,7 +83,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
             onLeaveNotice: (senderId: NodeID) => {
-                const contact = this.targetNeighbors.getNeighborById(senderId)
+                const contact = this.targetNeighbors.get(senderId)
                 if (contact) {
                     setImmediate(() => this.onNodeDisconnected(contact.getPeerDescriptor()))
                 }
@@ -94,7 +94,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         this.propagation = new Propagation({
             minPropagationTargets: config.minPropagationTargets ?? 2,
             sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
-                const remote = this.targetNeighbors.getNeighborById(neighborId)
+                const remote = this.targetNeighbors.get(neighborId)
                 if (remote) {
                     await remote.sendStreamMessage(msg)
                 } else {
@@ -202,7 +202,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
             logger.info('Close proxy connection', {
                 nodeId
             })
-            const server = this.targetNeighbors.getNeighborById(nodeId)
+            const server = this.targetNeighbors.get(nodeId)
             server?.leaveStreamPartNotice()
             this.removeConnection(nodeId)
         }
@@ -221,11 +221,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         this.propagation.feedUnseenMessage(msg, this.targetNeighbors.getIds(), previousNode ?? null)
     }
 
-    getTargetNeighborIds(): NodeID[] {
-        return this.targetNeighbors.getIds()
-    }
-
-    hasProxyConnection(nodeId: NodeID, direction: ProxyDirection): boolean {
+    hasConnection(nodeId: NodeID, direction: ProxyDirection): boolean {
         return this.connections.has(nodeId) && this.connections.get(nodeId) === direction
     }
 
@@ -233,7 +229,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         return this.definition!.direction
     }
 
-    async onNodeDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
+    private async onNodeDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         if (this.connections.has(nodeId)) {
             this.config.connectionLocker.unlockConnection(peerDescriptor, 'proxy-stream-connection-client')
@@ -253,7 +249,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     }
 
     stop(): void {
-        this.targetNeighbors.getNodes().map((remote) => {
+        this.targetNeighbors.getAll().map((remote) => {
             this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), 'proxy-stream-connection-client')
             remote.leaveStreamPartNotice()
         })
