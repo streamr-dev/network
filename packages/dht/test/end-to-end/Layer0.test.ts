@@ -14,11 +14,12 @@ describe('Layer0', () => {
     const websocketPortRange = { min: 10012, max: 10015 } 
     beforeEach(async () => {
         
-        epDhtNode = new DhtNode({ websocketPortRange: { min: 10011, max: 10012 }})
+        epDhtNode = new DhtNode({ websocketHost: '127.0.0.1', websocketPortRange: { min: 10011, max: 10012 }})
         await epDhtNode.start()
         epPeerDescriptor = epDhtNode.getPeerDescriptor()
         await epDhtNode.joinDht([epPeerDescriptor])
 
+        console.log(epPeerDescriptor)
         node1 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
         node2 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
         node3 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })

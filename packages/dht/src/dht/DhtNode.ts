@@ -143,7 +143,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
     }
     const ret: PeerDescriptor = { kademliaId, nodeName: nodeName, type: NodeType.NODEJS }
     if (msg && msg.websocket) {
-        ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
+        ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls, selfSignedCA: msg.websocket.selfSignedCA }
         ret.openInternet = true
     }
     return ret
@@ -447,6 +447,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private generatePeerDescriptorCallBack = (connectivityResponse: ConnectivityResponse) => {
         if (this.config.peerDescriptor) {
             this.ownPeerDescriptor = this.config.peerDescriptor
+            if (this.ownPeerDescriptor.websocket) {
+                this.ownPeerDescriptor.websocket.selfSignedCA = connectivityResponse.websocket?.selfSignedCA
+            }
         } else {
             this.ownPeerDescriptor = createPeerDescriptor(connectivityResponse,
                 this.config.peerId,

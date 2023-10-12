@@ -45,7 +45,7 @@ export class ConnectivityChecker {
                     host: entryPoint.websocket!.host, 
                     port: entryPoint.websocket!.port,
                     tls: entryPoint.websocket!.tls,
-                    selfSignedCA: selfSignedCa
+                    selfSignedCA: entryPoint.websocket!.selfSignedCA
                 },
                 mode: ConnectionMode.REQUEST
             })
@@ -53,7 +53,7 @@ export class ConnectivityChecker {
             throw new Err.ConnectionFailed('Failed to connect to the entrypoints', e)
         }
         // send connectivity request
-        const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort, host: this.host, tls: this.tls }
+        const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort, host: this.host, tls: this.tls, selfSignedCA: selfSignedCa }
         const msg: Message = {
             serviceId: ConnectivityChecker.CONNECTIVITY_CHECKER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_REQUEST, messageId: v4(),
@@ -146,7 +146,7 @@ export class ConnectivityChecker {
                 openInternet: true,
                 host,
                 natType: NatType.OPEN_INTERNET,
-                websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls }
+                websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls, selfSignedCA: connectivityRequest.selfSignedCA }
             }
         }
         const msg: Message = {

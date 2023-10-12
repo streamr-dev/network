@@ -61,7 +61,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
                 return {
                     key: this.selfSignedCertification.serverKey,
                     cert: this.selfSignedCertification.serverCert,
-                    ca: this.selfSignedCertification.caCert
+                    // ca: this.selfSignedCertification.caCert
                 }
             }
             this.httpsServer = tlsCertificate ? 

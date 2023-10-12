@@ -140,18 +140,18 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                 // If no websocket server, return openInternet: false
                 return noServerConnectivityResponse
             } else {
+                const selfSignedCa = !this.ownPeerDescriptor ? this.webSocketServer!.getSelfSignedCertification()!.caCert : undefined
                 if (!this.entrypoints || this.entrypoints.length < 1) {
                     // return connectivity info given in config
                     const preconfiguredConnectivityResponse: ConnectivityResponse = {
                         openInternet: true,
                         host: this.host!,
                         natType: NatType.OPEN_INTERNET,
-                        websocket: { host: this.host!, port: this.selectedPort!, tls: this.tlsCertificate !== undefined }
+                        websocket: { host: this.host!, port: this.selectedPort!, tls: this.tlsCertificate !== undefined, selfSignedCA: selfSignedCa }
                     }
                     return preconfiguredConnectivityResponse
                 } else {
                     // Do real connectivity checking
-                    const selfSignedCa = !this.ownPeerDescriptor ? this.webSocketServer!.getSelfSignedCertification()!.caCert : undefined
                     return await this.connectivityChecker!.sendConnectivityRequest(sample(this.entrypoints)!, selfSignedCa)
                 }
             }
