@@ -3,7 +3,6 @@ import { Schema } from 'ajv'
 import { Signer } from 'ethers'
 import { StreamrClient } from 'streamr-client'
 import { Plugin } from '../../Plugin'
-import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { maintainOperatorValue } from './maintainOperatorValue'
 import { MaintainTopologyService } from './MaintainTopologyService'
 import { DEFAULT_UPDATE_INTERVAL_IN_MS, OperatorFleetState } from './OperatorFleetState'
@@ -13,14 +12,12 @@ import { createIsLeaderFn } from './createIsLeaderFn'
 import { announceNodeToContract } from './announceNodeToContract'
 import { announceNodeToStream } from './announceNodeToStream'
 import { checkOperatorValueBreach } from './checkOperatorValueBreach'
-import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
-import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
 import { StreamPartAssignments } from './StreamPartAssignments'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { inspectRandomNode } from './inspectRandomNode'
-import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
+import { ContractFacade } from './ContractFacade'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
 export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
@@ -60,11 +57,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         }
         logger.info('Fetched redundancy factor', { redundancyFactor })
 
-        const inspectRandomNodeHelper = new InspectRandomNodeHelper(serviceConfig)
-        const voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(serviceConfig)
-        const maintainOperatorValueHelper = new MaintainOperatorValueHelper(serviceConfig)
+        const contractFacade = ContractFacade.createInstance(serviceConfig)
         const maintainTopologyHelper = new MaintainTopologyHelper(serviceConfig)
-        const announceNodeToContractHelper = new AnnounceNodeToContractHelper(serviceConfig)
 
         const fleetState = new OperatorFleetState(streamrClient, formCoordinationStreamId(operatorContractAddress))
         const streamPartAssignments = new StreamPartAssignments(
@@ -101,7 +95,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             }, DEFAULT_UPDATE_INTERVAL_IN_MS, this.abortController.signal)
             await scheduleAtInterval(
                 async () => checkOperatorValueBreach(
-                    maintainOperatorValueHelper
+                    contractFacade
                 ).catch((err) => {
                     logger.warn('Encountered error', { err })
                 }),
@@ -116,7 +110,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     if (isLeader()) {
                         await announceNodeToContract(
                             24 * 60 * 60 * 1000,
-                            announceNodeToContractHelper,
+                            contractFacade,
                             streamrClient
                         )
                     }
@@ -129,7 +123,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 async () => {
                     if (isLeader()) {
                         try {
-                            await maintainOperatorValue(0.5, maintainOperatorValueHelper)
+                            await maintainOperatorValue(0.5, contractFacade)
                         } catch (err) {
                             logger.error('Encountered error while checking earnings', { err })
                         }
@@ -144,7 +138,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 try {
                     await inspectRandomNode(
                         operatorContractAddress,
-                        inspectRandomNodeHelper,
+                        contractFacade,
                         streamPartAssignments,
                         streamrClient,
                         2 * 60 * 1000, // 2 minutes
@@ -159,13 +153,13 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 }
             }, 15 * 60 * 1000, false, this.abortController.signal)
 
-            voteOnSuspectNodeHelper.addReviewRequestListener(async (sponsorship, targetOperator, partition) => {
+            contractFacade.addReviewRequestListener(async (sponsorship, targetOperator, partition) => {
                 if (isLeader()) {
                     await inspectSuspectNode(
                         sponsorship,
                         targetOperator,
                         partition,
-                        voteOnSuspectNodeHelper,
+                        contractFacade,
                         streamrClient,
                         this.abortController.signal,
                         (operatorContractAddress) => fetchRedundancyFactor({
