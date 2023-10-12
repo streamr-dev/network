@@ -57,7 +57,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
         }
         return new Promise((resolve, reject) => {
             const createSelfSignedCert = () => {
-                this.selfSignedCertification = createSelfSignedCertificate('localhost', 1000)
+                this.selfSignedCertification = createSelfSignedCertificate('streamr-self-signed', 1000)
                 return {
                     key: this.selfSignedCertification.serverKey,
                     cert: this.selfSignedCertification.serverCert,
