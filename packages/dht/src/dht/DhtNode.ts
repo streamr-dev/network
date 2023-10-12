@@ -142,7 +142,8 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
     } else {
         kademliaId = hexToBinary(peerId!)
     }
-    const ret: PeerDescriptor = { kademliaId, nodeName: nodeName ? nodeName : binaryToHex(kademliaId), type: NodeType.NODEJS }
+    const nodeType = isNodeJS() ? NodeType.NODEJS : NodeType.BROWSER
+    const ret: PeerDescriptor = { kademliaId, nodeName: nodeName ? nodeName : binaryToHex(kademliaId), type: nodeType }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
         ret.openInternet = true
