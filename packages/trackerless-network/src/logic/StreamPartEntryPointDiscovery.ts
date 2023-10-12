@@ -105,7 +105,7 @@ export class StreamPartEntryPointDiscovery {
     
         const filtered = discoveredEntryPoints.filter((node) => 
             !this.networkSplitAvoidedNodes.has(getNodeIdFromPeerDescriptor(node)))
-        // If all discovered entry points have previously beed detected as offline, try again
+        // If all discovered entry points have previously been detected as offline, try again
         if (filtered.length > 0) {
             return filtered
         } else {
