@@ -128,7 +128,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private config: ConnectionManagerConfig
     private readonly metricsContext: MetricsContext
     private ownPeerDescriptor?: PeerDescriptor
-    private readonly messageDuplicateDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
+    private readonly duplicateMessageDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
     private readonly metrics: ConnectionManagerMetrics
     private locks = new ConnectionLockHandler()
     private connections: Map<PeerIDKey, ManagedConnection> = new Map()
@@ -290,7 +290,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.state = ConnectionManagerState.STOPPED
         this.rpcCommunicator!.stop()
         this.config.transportLayer = undefined
-        this.messageDuplicateDetector.clear()
+        this.duplicateMessageDetector.clear()
         this.locks.clear()
         this.removeAllListeners()
         if (!this.config.simulator) {
@@ -415,12 +415,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             logger.trace('Filtered out non-RPC message of type ' + message.messageType)
             return
         }
-        if (this.messageDuplicateDetector.isMostLikelyDuplicate(message.messageId)) {
+        if (this.duplicateMessageDetector.isMostLikelyDuplicate(message.messageId)) {
             logger.trace('handleMessage filtered duplicate ' + this.ownPeerDescriptor?.nodeName + ', '
                 + message.sourceDescriptor?.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
             return
         }
-        this.messageDuplicateDetector.add(message.messageId)
+        this.duplicateMessageDetector.add(message.messageId)
         if (message.serviceId === this.serviceId) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {

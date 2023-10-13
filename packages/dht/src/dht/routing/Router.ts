@@ -65,7 +65,7 @@ export class Router implements IRouter {
     private readonly connectionManager?: ConnectionManager
     private readonly forwardingTable: Map<string, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
-    private readonly routerDuplicateDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
+    private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
     private stopped = false
 
     constructor(config: RouterConfig) {
@@ -170,11 +170,11 @@ export class Router implements IRouter {
     }
 
     public isMostLikelyDuplicate(requestId: string): boolean {
-        return this.routerDuplicateDetector.isMostLikelyDuplicate(requestId)
+        return this.duplicateRequestDetector.isMostLikelyDuplicate(requestId)
     }
 
     public addToDuplicateDetector(requestId: string): void {
-        this.routerDuplicateDetector.add(requestId)
+        this.duplicateRequestDetector.add(requestId)
     }
 
     public addRoutingSession(session: RoutingSession): void {
@@ -195,14 +195,14 @@ export class Router implements IRouter {
             clearTimeout(entry.timeout)
         })
         this.forwardingTable.clear()
-        this.routerDuplicateDetector.clear()
+        this.duplicateRequestDetector.clear()
     }
     
     // IRoutingService method
     async routeMessage(routedMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
-        } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
+        } else if (this.duplicateRequestDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
             logger.trace(`Peer ${this.ownPeerId?.value} routing message ${routedMessage.requestId} 
                 from ${routedMessage.sourcePeer!.kademliaId} to ${routedMessage.destinationPeer!.kademliaId} is likely a duplicate`)
             return createRouteMessageAck(routedMessage, 'message given to routeMessage() service is likely a duplicate')
@@ -246,7 +246,7 @@ export class Router implements IRouter {
     async forwardMessage(forwardMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         if (this.stopped) {
             return createRouteMessageAck(forwardMessage, 'forwardMessage() service is not running')
-        } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(forwardMessage.requestId)) {
+        } else if (this.duplicateRequestDetector.isMostLikelyDuplicate(forwardMessage.requestId)) {
             logger.trace(`Peer ${this.ownPeerId.value} forwarding message ${forwardMessage.requestId} 
         from ${forwardMessage.sourcePeer?.kademliaId} to ${forwardMessage.destinationPeer?.kademliaId} is likely a duplicate`)
             return createRouteMessageAck(forwardMessage, 'message given to forwardMessage() service is likely a duplicate')
