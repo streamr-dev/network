@@ -83,7 +83,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const inspector = config.inspector ?? new Inspector({
         ownPeerDescriptor: config.ownPeerDescriptor,
         rpcCommunicator,
-        graphId: config.streamPartId,
+        streamPartId: config.streamPartId,
         connectionLocker: config.connectionLocker
     })
     return {
