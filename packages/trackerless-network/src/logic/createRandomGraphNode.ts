@@ -76,7 +76,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         nearbyNodeView,
         ownPeerDescriptor: config.ownPeerDescriptor,
         neighborFinder,
-        randomGraphId: config.streamPartId,
+        streamPartId: config.streamPartId,
         rpcCommunicator,
         neighborUpdateInterval
     })

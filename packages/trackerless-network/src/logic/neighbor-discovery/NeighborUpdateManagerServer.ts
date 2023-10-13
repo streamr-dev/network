@@ -9,10 +9,11 @@ import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/pro
 import { NodeList } from '../NodeList'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { INeighborFinder } from './NeighborFinder'
+import { StreamPartID } from '@streamr/protocol'
 
-interface NeighborUpdateManagerConfig {
+interface NeighborUpdateManagerServerConfig {
     ownPeerDescriptor: PeerDescriptor
-    randomGraphId: string
+    streamPartId: StreamPartID
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
     neighborFinder: INeighborFinder
@@ -21,9 +22,9 @@ interface NeighborUpdateManagerConfig {
 
 export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
 
-    private readonly config: NeighborUpdateManagerConfig
+    private readonly config: NeighborUpdateManagerServerConfig
 
-    constructor(config: NeighborUpdateManagerConfig) {
+    constructor(config: NeighborUpdateManagerServerConfig) {
         this.config = config
     }
 
@@ -42,20 +43,20 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
                 new RemoteRandomGraphNode(
                     this.config.ownPeerDescriptor,
                     peerDescriptor,
-                    this.config.randomGraphId,
+                    this.config.streamPartId,
                     toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
                 ))
             )
             this.config.neighborFinder.start()
             const response: NeighborUpdate = {
-                streamPartId: this.config.randomGraphId,
+                streamPartId: this.config.streamPartId,
                 neighborDescriptors: this.config.targetNeighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
                 removeMe: false
             }
             return response
         } else {
             const response: NeighborUpdate = {
-                streamPartId: this.config.randomGraphId,
+                streamPartId: this.config.streamPartId,
                 neighborDescriptors: this.config.targetNeighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
                 removeMe: true
             }
