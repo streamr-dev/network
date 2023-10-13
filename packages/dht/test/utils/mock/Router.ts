@@ -21,7 +21,7 @@ export class MockRouter implements IRouter {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    checkDuplicate(_messageId: string): boolean {
+    isMostLikelyDuplicate(_messageId: string): boolean {
         return false
     }
 
