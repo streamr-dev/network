@@ -110,7 +110,7 @@ message InterleaveNotice {
 }
 
 message LeaveStreamPartNotice {
-  string randomGraphId = 1;
+  string streamPartId = 1;
 }
 
 message NeighborUpdate {

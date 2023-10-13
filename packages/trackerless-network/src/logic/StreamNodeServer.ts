@@ -38,7 +38,7 @@ export class StreamNodeServer implements INetworkRpc {
     }
 
     async leaveStreamPartNotice(message: LeaveStreamPartNotice, context: ServerCallContext): Promise<Empty> {
-        if (message.randomGraphId === this.config.randomGraphId) {
+        if (message.streamPartId === this.config.randomGraphId) {
             const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
             const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
             this.config.onLeaveNotice(senderId)

@@ -203,9 +203,9 @@ export interface InterleaveNotice {
  */
 export interface LeaveStreamPartNotice {
     /**
-     * @generated from protobuf field: string randomGraphId = 1;
+     * @generated from protobuf field: string streamPartId = 1;
      */
-    randomGraphId: string;
+    streamPartId: string;
 }
 /**
  * @generated from protobuf message NeighborUpdate
@@ -455,7 +455,7 @@ export const InterleaveNotice = new InterleaveNotice$Type();
 class LeaveStreamPartNotice$Type extends MessageType<LeaveStreamPartNotice> {
     constructor() {
         super("LeaveStreamPartNotice", [
-            { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

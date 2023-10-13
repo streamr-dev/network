@@ -50,7 +50,7 @@ describe('StreamNodeServer', () => {
 
     it('Server leaveStreamPartNotice()', async () => {
         const leaveNotice: LeaveStreamPartNotice = {
-            randomGraphId: 'random-graph'
+            streamPartId: StreamPartIDUtils.parse('stream#0')
         }
         await streamNodeServer.leaveStreamPartNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)
         expect(mockOnLeaveNotice).toHaveBeenCalledTimes(1)
