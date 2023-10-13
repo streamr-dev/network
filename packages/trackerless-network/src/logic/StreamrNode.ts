@@ -219,7 +219,6 @@ export class StreamrNode extends EventEmitter<Events> {
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
             numOfTargetNeighbors: this.config.streamPartitionNumOfNeighbors,
-            name: this.config.nodeName,
             acceptProxyConnections: this.config.acceptProxyConnections
         })
     }

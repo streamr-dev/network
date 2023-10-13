@@ -53,11 +53,6 @@ export interface StrictRandomGraphNodeConfig {
     propagation: Propagation
     rpcCommunicator: ListeningRpcCommunicator
     numOfTargetNeighbors: number
-    maxNumberOfContacts: number
-    minPropagationTargets: number
-    name: string
-    acceptProxyConnections: boolean
-    neighborUpdateInterval: number
     inspector: IInspector
     temporaryConnectionServer: TemporaryConnectionRpcServer
     proxyConnectionServer?: ProxyStreamConnectionServer
