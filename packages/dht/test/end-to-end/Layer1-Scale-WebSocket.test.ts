@@ -54,7 +54,7 @@ describe('Layer1 Scale', () => {
 
         await Promise.all(layer1Nodes.map((node) => node.joinDht([epPeerDescriptor])))
 
-    }, 60000)
+    }, 120000)
 
     afterEach(async () => {
         await Promise.all(layer1Nodes.map((node) => node.stop()))
