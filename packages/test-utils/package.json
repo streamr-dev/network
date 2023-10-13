@@ -1,6 +1,6 @@
 {
   "name": "@streamr/test-utils",
-  "version": "0.0.1-tatum.4",
+  "version": "0.0.1-tatum.5",
   "description": "A collection of shared test utilities",
   "repository": {
     "type": "git",
@@ -20,12 +20,12 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@ethersproject/wallet": "^5.5.0",
-    "@streamr/utils": "0.0.1-tatum.4",
+    "@streamr/utils": "0.0.1-tatum.5",
     "cors": "^2.8.5",
     "express": "^4.17.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.14",
-    "@types/express": "^4.17.18"
+    "@types/express": "^4.17.19"
   }
 }

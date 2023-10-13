@@ -1,5 +1,5 @@
 import { Empty } from '../../proto/google/protobuf/empty'
-import { InterleaveNotice, StreamHandshakeRequest, StreamHandshakeResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { InterleaveNotice, StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { NodeList } from '../NodeList'
 import { ConnectionLocker, DhtCallContext, PeerDescriptor } from '@streamr/dht'
@@ -29,11 +29,11 @@ export class HandshakerServer implements IHandshakeRpc {
         this.config = config
     }
 
-    async handshake(request: StreamHandshakeRequest, context: ServerCallContext): Promise<StreamHandshakeResponse> {
+    async handshake(request: StreamPartHandshakeRequest, context: ServerCallContext): Promise<StreamPartHandshakeResponse> {
         return this.handleRequest(request, context)
     }
 
-    private handleRequest(request: StreamHandshakeRequest, context: ServerCallContext): StreamHandshakeResponse {
+    private handleRequest(request: StreamPartHandshakeRequest, context: ServerCallContext): StreamPartHandshakeResponse {
         const senderDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const getInterleaveSourceIds = () => (request.interleaveSourceId !== undefined) ? [binaryToHex(request.interleaveSourceId) as NodeID] : []
         if (this.config.targetNeighbors.hasNode(senderDescriptor)
@@ -49,8 +49,8 @@ export class HandshakerServer implements IHandshakeRpc {
         }
     }
 
-    private acceptHandshake(request: StreamHandshakeRequest, requester: PeerDescriptor) {
-        const res: StreamHandshakeResponse = {
+    private acceptHandshake(request: StreamPartHandshakeRequest, requester: PeerDescriptor) {
+        const res: StreamPartHandshakeResponse = {
             requestId: request.requestId,
             accepted: true
         }
@@ -60,15 +60,15 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private rejectHandshake(request: StreamHandshakeRequest) {
-        const res: StreamHandshakeResponse = {
+    private rejectHandshake(request: StreamPartHandshakeRequest) {
+        const res: StreamPartHandshakeResponse = {
             requestId: request.requestId,
             accepted: false
         }
         return res
     }
 
-    private acceptHandshakeWithInterleaving(request: StreamHandshakeRequest, requester: PeerDescriptor): StreamHandshakeResponse {
+    private acceptHandshakeWithInterleaving(request: StreamPartHandshakeRequest, requester: PeerDescriptor): StreamPartHandshakeResponse {
         const exclude = request.neighborIds.map((id: Uint8Array) => binaryToHex(id) as NodeID)
         exclude.push(getNodeIdFromPeerDescriptor(requester))
         if (request.interleaveSourceId !== undefined) {

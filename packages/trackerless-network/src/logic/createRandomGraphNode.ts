@@ -45,12 +45,12 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const propagation = config.propagation ?? new Propagation({
         minPropagationTargets,
         sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
-            const remote = targetNeighbors.getNeighborById(neighborId) ?? temporaryConnectionServer.getNodes().getNeighborById(neighborId)
+            const remote = targetNeighbors.get(neighborId) ?? temporaryConnectionServer.getNodes().get(neighborId)
             const proxyConnection = proxyConnectionServer?.getConnection(neighborId)
             if (remote) {
-                await remote.sendData(msg)
+                await remote.sendStreamMessage(msg)
             } else if (proxyConnection) {
-                await proxyConnection.remote.sendData(msg)
+                await proxyConnection.remote.sendStreamMessage(msg)
             } else {
                 throw new Error('Propagation target not found')
             }

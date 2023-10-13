@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
+import { PeerID } from '../../src/exports'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
@@ -70,7 +71,7 @@ describe('Kademlia correctness', () => {
                 groundTruthString += groundTruth[i + ''][j].name + ','
             }
 
-            const kademliaNeighbors = nodes[i].getNeighborList().getContactIds()
+            const kademliaNeighbors = nodes[i].getClosestContacts().map((p) => PeerID.fromValue(p.kademliaId))
 
             let kadString = 'kademliaNeighbors: '
             kademliaNeighbors.forEach((neighbor) => {

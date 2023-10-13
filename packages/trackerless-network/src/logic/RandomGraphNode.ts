@@ -1,14 +1,13 @@
 import { EventEmitter } from 'eventemitter3'
 import {
     PeerDescriptor,
-    DhtPeer,
     ListeningRpcCommunicator,
     ITransport,
     ConnectionLocker
 } from '@streamr/dht'
 import {
     StreamMessage,
-    LeaveStreamNotice,
+    LeaveStreamPartNotice,
     MessageRef,
     TemporaryConnectionRequest,
     TemporaryConnectionResponse,
@@ -26,7 +25,6 @@ import { Propagation } from './propagation/Propagation'
 import { INeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { INeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
 import { StreamNodeServer } from './StreamNodeServer'
-import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 import { IInspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
@@ -67,7 +65,7 @@ export interface StrictRandomGraphNodeConfig {
 
 const logger = new Logger(module)
 
-export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode {
+export class RandomGraphNode extends EventEmitter<Events> {
     private stopped = false
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
@@ -86,9 +84,9 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
             onLeaveNotice: (senderId: NodeID) => {
-                const contact = this.config.nearbyNodeView.getNeighborById(senderId)
-                || this.config.randomNodeView.getNeighborById(senderId)
-                || this.config.targetNeighbors.getNeighborById(senderId)
+                const contact = this.config.nearbyNodeView.get(senderId)
+                || this.config.randomNodeView.get(senderId)
+                || this.config.targetNeighbors.get(senderId)
                 || this.config.proxyConnectionServer?.getConnection(senderId )?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
@@ -163,10 +161,10 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     }
 
     private registerDefaultServerMethods(): void {
-        this.config.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendData',
-            (msg: StreamMessage, context) => this.server.sendData(msg, context))
-        this.config.rpcCommunicator.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice',
-            (req: LeaveStreamNotice, context) => this.server.leaveStreamNotice(req, context))
+        this.config.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendStreamMessage',
+            (msg: StreamMessage, context) => this.server.sendStreamMessage(msg, context))
+        this.config.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice',
+            (req: LeaveStreamPartNotice, context) => this.server.leaveStreamPartNotice(req, context))
         this.config.rpcCommunicator.registerRpcMethod(TemporaryConnectionRequest, TemporaryConnectionResponse, 'openConnection',
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionServer.openConnection(req, context))
     }
@@ -257,8 +255,8 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
 
     private getNeighborCandidatesFromLayer1(): PeerDescriptor[] {
         const uniqueNodes = new Set<PeerDescriptor>()
-        this.config.layer1.getNeighborList().getClosestContacts(this.config.nodeViewSize).forEach((contact: DhtPeer) => {
-            uniqueNodes.add(contact.getPeerDescriptor())
+        this.config.layer1.getClosestContacts(this.config.nodeViewSize).forEach((peer: PeerDescriptor) => {
+            uniqueNodes.add(peer)
         })
         this.config.layer1.getPeers().forEach((peer: PeerDescriptor) => {
             uniqueNodes.add(peer)
@@ -280,7 +278,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.stopped = true
         this.abortController.abort()
         this.config.proxyConnectionServer?.stop()
-        this.config.targetNeighbors.getNodes().map((remote) => remote.leaveStreamNotice())
+        this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice())
         this.config.rpcCommunicator.stop()
         this.removeAllListeners()
         this.config.nearbyNodeView.stop()

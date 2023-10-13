@@ -38,6 +38,7 @@ import {
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
+import { isPrivateIPv4 } from '../helpers/AddressTools'
 
 export class ConnectionManagerConfig {
     transportLayer?: ITransport
@@ -135,7 +136,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private webrtcConnector?: WebRtcConnector
     private simulatorConnector?: SimulatorConnector
     private rpcCommunicator?: RoutingRpcCommunicator
-    private disconnectorIntervalRef?: NodeJS.Timer
+    private disconnectorIntervalRef?: NodeJS.Timeout
     private serviceId: ServiceId
     private state = ConnectionManagerState.IDLE
 
@@ -207,7 +208,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.connections.size <= maxConnections) {
             return
         }
-        const disconnectionCandidates = new SortedContactList(peerIdFromPeerDescriptor(this.ownPeerDescriptor!), 100000)
+        const disconnectionCandidates = new SortedContactList<Contact>(peerIdFromPeerDescriptor(this.ownPeerDescriptor!), 100000)
         this.connections.forEach((connection) => {
             if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
                 logger.trace('disconnecting in timeout interval: ' + this.ownPeerDescriptor?.nodeName + ', '
@@ -359,12 +360,24 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
         if (this.simulatorConnector) {
             return this.simulatorConnector.connect(peerDescriptor)
-        } else if (peerDescriptor.websocket || this.ownPeerDescriptor!.websocket) {
-            if (!(peerDescriptor.type === NodeType.BROWSER && this.ownPeerDescriptor!.websocket?.tls)) {
+        } else if ((peerDescriptor.websocket || this.ownPeerDescriptor!.websocket)) {
+            if (this.canOpenWsConnection(peerDescriptor)) {
                 return this.webSocketConnector!.connect(peerDescriptor)
             }
         }
         return this.webrtcConnector!.connect(peerDescriptor)
+    }
+
+    private canOpenWsConnection(peerDescriptor: PeerDescriptor): boolean {
+        if (!(this.ownPeerDescriptor!.type === NodeType.BROWSER || peerDescriptor.type === NodeType.BROWSER)) {
+            return true
+        }
+        if (this.ownPeerDescriptor!.websocket) {
+            return (peerDescriptor.type === NodeType.BROWSER && this.ownPeerDescriptor!.websocket!.tls) 
+                || (this.ownPeerDescriptor!.websocket!.host === 'localhost' || (isPrivateIPv4(this.ownPeerDescriptor!.websocket!.host)))
+        }
+        return (this.ownPeerDescriptor!.type === NodeType.BROWSER && peerDescriptor.websocket!.tls)
+            || (peerDescriptor.websocket!.host === 'localhost' || (isPrivateIPv4(peerDescriptor.websocket!.host)))
     }
 
     public getConnection(peerDescriptor: PeerDescriptor): ManagedConnection | undefined {

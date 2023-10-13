@@ -39,7 +39,7 @@ describe('Mock connection Dht joining with latencies', () => {
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
         nodes.forEach((node) => {
             expect(node.getPeerCount()).toBeGreaterThanOrEqual(node.getK() - 2)
-            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 2)
+            expect(node.getClosestContacts().length).toBeGreaterThanOrEqual(node.getK() - 2)
         })
         expect(entryPoint.getPeerCount()).toBeGreaterThanOrEqual(entryPoint.getK() - 2)
     }, 60 * 1000)

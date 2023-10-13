@@ -74,7 +74,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
         }
         await this.joinLayer0IfRequired(streamPartId)
-        this.getStreamrNode().joinStream(streamPartId)
+        this.getStreamrNode().joinStreamPart(streamPartId)
         if (neighborRequirement !== undefined) {
             await waitForCondition(() => {
                 return this.getStreamrNode().getNeighbors(streamPartId).length >= neighborRequirement.minCount
@@ -122,7 +122,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         await readinessListener.waitUntilReady(timeout)
     }
 
-    async joinLayer0IfRequired(streamPartId: StreamPartID): Promise<void> {
+    private async joinLayer0IfRequired(streamPartId: StreamPartID): Promise<void> {
         if (this.streamrNode!.isProxiedStreamPart(streamPartId)) {
             return
         }
