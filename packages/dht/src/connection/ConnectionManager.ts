@@ -420,7 +420,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 + message.sourceDescriptor?.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
             return
         }
-        this.messageDuplicateDetector.add(message.messageId, message.sourceDescriptor!.nodeName!, message)
+        this.messageDuplicateDetector.add(message.messageId)
         if (message.serviceId === this.serviceId) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {

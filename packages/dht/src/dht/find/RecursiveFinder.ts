@@ -258,7 +258,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         const senderKey = keyFromPeerDescriptor(routedMessage.previousPeer || routedMessage.sourcePeer!)
         logger.trace(`Node ${this.ownPeerId.toKey()} received findRecursively call from ${senderKey}`)
         this.addContact(routedMessage.sourcePeer!, true)
-        this.router.addToDuplicateDetector(routedMessage.requestId, keyFromPeerDescriptor(routedMessage.sourcePeer!))
+        this.router.addToDuplicateDetector(routedMessage.requestId)
         return this.doFindRecursevily(routedMessage)
     }
 

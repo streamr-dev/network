@@ -16,7 +16,7 @@ export class MockRouter implements IRouter {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    addToDuplicateDetector(_messageId: string, _senderId: string, _message?: Message): void {
+    addToDuplicateDetector(_messageId: string): void {
         return
     }
 

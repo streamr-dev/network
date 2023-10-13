@@ -45,7 +45,7 @@ interface IRouterFunc {
     doRouteMessage(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RouteMessageAck
     send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void>
     checkDuplicate(messageId: string): boolean
-    addToDuplicateDetector(messageId: string, senderId: string, message?: Message): void
+    addToDuplicateDetector(messageId: string): void
     addRoutingSession(session: RoutingSession): void
     removeRoutingSession(sessionId: string): void
     stop(): void
@@ -173,8 +173,8 @@ export class Router implements IRouter {
         return this.routerDuplicateDetector.isMostLikelyDuplicate(messageId)
     }
 
-    public addToDuplicateDetector(messageId: string, senderId: string, message?: Message): void {
-        this.routerDuplicateDetector.add(messageId, senderId, message)
+    public addToDuplicateDetector(messageId: string): void {
+        this.routerDuplicateDetector.add(messageId)
     }
 
     public addRoutingSession(session: RoutingSession): void {
@@ -209,7 +209,7 @@ export class Router implements IRouter {
         }
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
         this.addContact(routedMessage.sourcePeer!, true)
-        this.addToDuplicateDetector(routedMessage.requestId, keyFromPeerDescriptor(routedMessage.sourcePeer!))
+        this.addToDuplicateDetector(routedMessage.requestId)
         if (this.ownPeerId.equals(peerIdFromPeerDescriptor(routedMessage.destinationPeer!))) {
             logger.trace(`${this.ownPeerDescriptor.nodeName} routing message targeted to self ${routedMessage.requestId}`)
             this.setForwardingEntries(routedMessage)
@@ -253,7 +253,7 @@ export class Router implements IRouter {
         }
         logger.trace(`Processing received forward routeMessage ${forwardMessage.requestId}`)
         this.addContact(forwardMessage.sourcePeer!, true)
-        this.addToDuplicateDetector(forwardMessage.requestId, keyFromPeerDescriptor(forwardMessage.sourcePeer!))
+        this.addToDuplicateDetector(forwardMessage.requestId)
         if (this.ownPeerId.equals(peerIdFromPeerDescriptor(forwardMessage.destinationPeer!))) {
             return this.forwardToDestination(forwardMessage)
         } else {
