@@ -63,7 +63,7 @@ export class Handshaker implements IHandshaker {
             (req: StreamPartHandshakeRequest, context) => this.server.handshake(req, context))
     }
 
-    public async attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]> {
+    async attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]> {
         if (this.config.targetNeighbors.size() + this.ongoingHandshakes.size < this.config.N - 2) {
             logger.trace(`Attempting parallel handshakes with ${PARALLEL_HANDSHAKE_COUNT} targets`)
             return this.selectParallelTargetsAndHandshake(excludedIds)
@@ -173,7 +173,7 @@ export class Handshaker implements IHandshaker {
         )
     }
 
-    public getOngoingHandshakes(): Set<string> {
+    getOngoingHandshakes(): Set<string> {
         return this.ongoingHandshakes
     }
 

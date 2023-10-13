@@ -259,7 +259,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         return Array.from(uniqueNodes)
     }
 
-    public hasProxyConnection(nodeId: NodeID): boolean {
+    hasProxyConnection(nodeId: NodeID): boolean {
         if (this.config.proxyConnectionServer) {
             return this.config.proxyConnectionServer.hasConnection(nodeId)
         }
