@@ -4,6 +4,7 @@ import { range } from 'lodash'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('RandomGraphNode-DhtNode-Latencies', () => {
     const numOfNodes = 64
@@ -12,7 +13,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
     let entryPointRandomGraphNode: RandomGraphNode
     let graphNodes: RandomGraphNode[]
 
-    const streamId = 'Stream1'
+    const streamPartId = StreamPartIDUtils.parse('stream#0')
     const entrypointDescriptor = createMockPeerDescriptor()
 
     const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => createMockPeerDescriptor())
@@ -27,22 +28,22 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         dhtEntryPoint = new DhtNode({
             transportLayer: entrypointCm,
             peerDescriptor: entrypointDescriptor,
-            serviceId: streamId
+            serviceId: streamPartId
         })
         dhtNodes = range(numOfNodes).map((i) => new DhtNode({
             transportLayer: cms[i],
             peerDescriptor: peerDescriptors[i],
-            serviceId: streamId
+            serviceId: streamPartId
         }))
         graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
-            randomGraphId: streamId,
+            randomGraphId: streamPartId,
             layer1: dhtNodes[i],
             P2PTransport: cms[i],
             connectionLocker: cms[i],
             ownPeerDescriptor: peerDescriptors[i]
         }))
         entryPointRandomGraphNode = createRandomGraphNode({
-            randomGraphId: streamId,
+            randomGraphId: streamPartId,
             layer1: dhtEntryPoint,
             P2PTransport: entrypointCm,
             connectionLocker: entrypointCm,

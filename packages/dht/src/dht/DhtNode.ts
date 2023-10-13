@@ -142,7 +142,8 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
     } else {
         kademliaId = hexToBinary(peerId!)
     }
-    const ret: PeerDescriptor = { kademliaId, nodeName: nodeName ? nodeName : binaryToHex(kademliaId), type: NodeType.NODEJS }
+    const nodeType = isNodeJS() ? NodeType.NODEJS : NodeType.BROWSER
+    const ret: PeerDescriptor = { kademliaId, nodeName: nodeName ? nodeName : binaryToHex(kademliaId), type: nodeType }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
         ret.openInternet = true
@@ -319,29 +320,29 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             // TODO: Update contact info to the connection manager and reconnect
         })
         this.neighborList = new SortedContactList(selfId, this.config.maxNeighborListSize)
-        this.neighborList.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
+        this.neighborList.on('contactRemoved', (removedContact: RemoteDhtNode, activeContacts: RemoteDhtNode[]) => {
             if (this.stopped) {
                 return
             }
-            this.emit('contactRemoved', peerDescriptor, activeContacts)
+            this.emit('contactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
             this.randomPeers!.addContact(
                 new RemoteDhtNode(
                     this.ownPeerDescriptor!,
-                    peerDescriptor,
+                    removedContact.getPeerDescriptor(),
                     toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
                     this.config.serviceId
                 )
             )
         })
-        this.neighborList.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newContact', peerDescriptor, activeContacts)
+        this.neighborList.on('newContact', (newContact: RemoteDhtNode, activeContacts: RemoteDhtNode[]) =>
+            this.emit('newContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
         this.openInternetPeers = new SortedContactList(selfId, this.config.maxNeighborListSize / 2)
-        this.openInternetPeers.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('openInternetContactRemoved', peerDescriptor, activeContacts)
+        this.openInternetPeers.on('contactRemoved', (removedContact: RemoteDhtNode, activeContacts: RemoteDhtNode[]) =>
+            this.emit('openInternetContactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
-        this.openInternetPeers.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newOpenInternetContact', peerDescriptor, activeContacts)
+        this.openInternetPeers.on('newContact', (newContact: RemoteDhtNode, activeContacts: RemoteDhtNode[]) =>
+            this.emit('newOpenInternetContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
         this.transportLayer!.on('connected', (peerDescriptor: PeerDescriptor) => this.onTransportConnected(peerDescriptor))
 
@@ -363,11 +364,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.connections.set(peerId.toKey(), remoteDhtNode)
         })
         this.randomPeers = new RandomContactList(selfId, this.config.maxNeighborListSize)
-        this.randomPeers.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('randomContactRemoved', peerDescriptor, activeContacts)
+        this.randomPeers.on('contactRemoved', (removedContact: RemoteDhtNode, activeContacts: RemoteDhtNode[]) =>
+            this.emit('randomContactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
-        this.randomPeers.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newRandomContact', peerDescriptor, activeContacts)
+        this.randomPeers.on('newContact', (newContact: RemoteDhtNode, activeContacts: RemoteDhtNode[]) =>
+            this.emit('newRandomContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
     }
 
@@ -555,8 +556,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return undefined
     }
 
-    public getNeighborList(): SortedContactList<RemoteDhtNode> {
-        return this.neighborList!
+    public getClosestContacts(maxCount?: number): PeerDescriptor[] {
+        return this.neighborList!.getClosestContacts(maxCount).map((c) => c.getPeerDescriptor())
     }
 
     public getNodeId(): PeerID {

@@ -1,6 +1,6 @@
 {
   "name": "@streamr/trackerless-network",
-  "version": "0.0.1-tatum.4",
+  "version": "0.0.1-tatum.5",
   "description": "Minimal and extendable implementation of the Streamr Network node.",
   "repository": {
     "type": "git",
@@ -30,11 +30,11 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/dht": "0.0.1-tatum.4",
-    "@streamr/proto-rpc": "0.0.1-tatum.4",
-    "@streamr/protocol": "0.0.1-tatum.4",
-    "@streamr/test-utils": "0.0.1-tatum.4",
-    "@streamr/utils": "0.0.1-tatum.4",
+    "@streamr/dht": "0.0.1-tatum.5",
+    "@streamr/proto-rpc": "0.0.1-tatum.5",
+    "@streamr/protocol": "0.0.1-tatum.5",
+    "@streamr/test-utils": "0.0.1-tatum.5",
+    "@streamr/utils": "0.0.1-tatum.5",
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
     "yallist": "^4.0.0"
@@ -46,8 +46,8 @@
     "commander": "^11.0.0",
     "expect": "^29.6.2",
     "express": "^4.17.1",
-    "ts-essentials": "^9.4.0",
-    "ts-loader": "^9.4.4",
+    "ts-essentials": "^9.4.1",
+    "ts-loader": "^9.5.0",
     "ts-node": "^10.9.1"
   }
 }

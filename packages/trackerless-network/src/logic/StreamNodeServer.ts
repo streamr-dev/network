@@ -1,7 +1,7 @@
 import { ListeningRpcCommunicator, PeerDescriptor, DhtCallContext } from '@streamr/dht'
 import { Empty } from '../proto/google/protobuf/empty'
 import {
-    LeaveStreamNotice,
+    LeaveStreamPartNotice,
     MessageID,
     MessageRef,
     StreamMessage
@@ -28,7 +28,7 @@ export class StreamNodeServer implements INetworkRpc {
         this.config = config
     }
 
-    async sendData(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
+    async sendStreamMessage(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
         const previousNode = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
         this.config.markForInspection(previousNode, message.messageId!)
         if (this.config.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
@@ -37,7 +37,7 @@ export class StreamNodeServer implements INetworkRpc {
         return Empty
     }
 
-    async leaveStreamNotice(message: LeaveStreamNotice, context: ServerCallContext): Promise<Empty> {
+    async leaveStreamPartNotice(message: LeaveStreamPartNotice, context: ServerCallContext): Promise<Empty> {
         if (message.randomGraphId === this.config.randomGraphId) {
             const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
             const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)

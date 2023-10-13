@@ -237,7 +237,7 @@ export class RecursiveFinder implements IRecursiveFinder {
 
     private getClosestConnections(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
         const connectedPeers = Array.from(this.connections.values())
-        const closestPeers = new SortedContactList(
+        const closestPeers = new SortedContactList<RemoteDhtNode>(
             PeerID.fromValue(kademliaId),
             limit,
             undefined,

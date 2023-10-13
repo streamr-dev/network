@@ -3,9 +3,9 @@ import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, waitForCondition } from '@streamr/utils'
 import { createClient, createTestStream } from '../../../utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
-import { MaintainOperatorValueHelper } from '../../../../src/plugins/operator/MaintainOperatorValueHelper'
 import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
 import { multiply } from '../../../../src/helpers/multiply'
+import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 const logger = new Logger(module)
 
@@ -41,11 +41,11 @@ describe('maintainOperatorValue', () => {
         await sponsor(sponsorer, sponsorship.address, 250)
         await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
         await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
-        const helper = new MaintainOperatorValueHelper({ ...operatorServiceConfig, signer: nodeWallets[0] })
-        const { maxAllowedEarningsDataWei } = await helper.getMyEarnings()
+        const contractFacade = ContractFacade.createInstance({ ...operatorServiceConfig, signer: nodeWallets[0] })
+        const { maxAllowedEarningsDataWei } = await contractFacade.getMyEarnings()
         const triggerWithdrawLimitDataWei = multiply(maxAllowedEarningsDataWei, 1 - SAFETY_FRACTION)
         await waitForCondition(async () => {
-            const { sumDataWei } = await helper.getMyEarnings()
+            const { sumDataWei } = await contractFacade.getMyEarnings()
             const earnings = sumDataWei
             return earnings > triggerWithdrawLimitDataWei
         }, 10000, 1000)
@@ -53,7 +53,7 @@ describe('maintainOperatorValue', () => {
 
         await maintainOperatorValue(
             SAFETY_FRACTION,
-            helper
+            contractFacade
         )
         const valueAfterWithdraw = await operatorContract.valueWithoutEarnings()
         expect(valueAfterWithdraw.toBigInt()).toBeGreaterThan(valueBeforeWithdraw.toBigInt())

@@ -2,7 +2,7 @@ import { ListeningRpcCommunicator } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
-import { LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { LeaveStreamPartNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
@@ -41,18 +41,18 @@ describe('StreamNodeServer', () => {
         })
     })
     
-    it('Server sendData()', async () => {
-        await streamNodeServer.sendData(message, { incomingSourceDescriptor: mockSender } as any)
+    it('Server sendStreamMessage()', async () => {
+        await streamNodeServer.sendStreamMessage(message, { incomingSourceDescriptor: mockSender } as any)
         expect(mockDuplicateCheck).toHaveBeenCalledTimes(1)
         expect(mockBroadcast).toHaveBeenCalledTimes(1)
         expect(mockMarkForInspection).toHaveBeenCalledTimes(1)
     })
 
-    it('Server leaveStreamNotice()', async () => {
-        const leaveNotice: LeaveStreamNotice = {
+    it('Server leaveStreamPartNotice()', async () => {
+        const leaveNotice: LeaveStreamPartNotice = {
             randomGraphId: 'random-graph'
         }
-        await streamNodeServer.leaveStreamNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)
+        await streamNodeServer.leaveStreamPartNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)
         expect(mockOnLeaveNotice).toHaveBeenCalledTimes(1)
     })
 

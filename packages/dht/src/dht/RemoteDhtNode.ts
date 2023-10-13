@@ -9,6 +9,7 @@ import { v4 } from 'uuid'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { Remote } from './contact/Remote'
+import { PeerID, peerIdFromPeerDescriptor } from '../exports'
 
 const logger = new Logger(module)
 
@@ -80,5 +81,9 @@ export class RemoteDhtNode extends Remote<IDhtRpcServiceClient> implements KBuck
         this.getClient().leaveNotice(request, options).catch((e) => {
             logger.trace('Failed to send leaveNotice' + e)
         })
+    }
+
+    getPeerId(): PeerID {
+        return peerIdFromPeerDescriptor(this.getPeerDescriptor())
     }
 }
