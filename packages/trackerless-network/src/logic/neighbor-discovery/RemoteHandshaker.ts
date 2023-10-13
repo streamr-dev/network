@@ -19,7 +19,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
         interleaveSourceId?: NodeID
     ): Promise<HandshakeResponse> {
         const request: StreamPartHandshakeRequest = {
-            randomGraphId: this.getServiceId(),
+            streamPartId: this.getServiceId(),
             requestId: new UUID().toString(),
             neighborIds: neighborIds.map((id) => hexToBinary(id)),
             concurrentHandshakeTargetId: (concurrentHandshakeTargetId !== undefined) ? hexToBinary(concurrentHandshakeTargetId) : undefined,
@@ -41,7 +41,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
 
     interleaveNotice(originatorDescriptor: PeerDescriptor): void {
         const notification: InterleaveNotice = {
-            randomGraphId: this.getServiceId(),
+            streamPartId: this.getServiceId(),
             interleaveTargetDescriptor: originatorDescriptor
         }
         const options = this.formDhtRpcOptions({

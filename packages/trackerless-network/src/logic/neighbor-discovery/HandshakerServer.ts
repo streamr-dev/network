@@ -92,7 +92,7 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     async interleaveNotice(message: InterleaveNotice, context: ServerCallContext): Promise<Empty> {
-        if (message.randomGraphId === this.config.randomGraphId) {
+        if (message.streamPartId === this.config.randomGraphId) {
             const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
             const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
             if (this.config.targetNeighbors.hasNodeById(senderId)) {
