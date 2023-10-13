@@ -65,7 +65,7 @@ export class StreamrNode extends EventEmitter<Events> {
     private layer0?: ILayer0
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
-    public config: StreamrNodeConfig
+    private readonly config: StreamrNodeConfig
     private readonly streamParts: Map<string, StreamPartDelivery>
     private readonly knownStreamPartEntryPoints: Map<string, PeerDescriptor[]> = new Map()
     private started = false
