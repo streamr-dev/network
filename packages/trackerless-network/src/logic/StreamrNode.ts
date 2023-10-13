@@ -55,7 +55,6 @@ export interface StreamrNodeConfig {
     streamPartitionNumOfNeighbors?: number
     streamPartitionMinPropagationTargets?: number
     nodeName?: string
-    firstConnectionTimeout?: number
     acceptProxyConnections?: boolean
 }
 

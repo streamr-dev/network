@@ -111,6 +111,12 @@ export interface ControlLayerConfig {
      * port mappings on the public side.
     */
     externalIp?: string
+
+    /**
+     * The maximum time to wait when forming a connection to the control layer. If the connection
+     * is not formed within this time, the client's network node will throw an error.
+     */
+    connectionTimeout?: number
 }
 
 export interface NetworkNodeConfig {
@@ -129,13 +135,6 @@ export interface NetworkNodeConfig {
      * will attempt to propagate messages to
      */
     streamPartitionMinPropagationTargets?: number
-
-    /**
-     * The waited time for the first connection to be formed when first connecting
-     * to the network. If the connection is not formed within this time, the client's
-     * network node will throw an error.
-     */
-    firstConnectionTimeout?: number
 
     /**
      * Whether to accept proxy connections. Enabling this option allows

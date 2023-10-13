@@ -36,7 +36,7 @@ class ReadinessListener {
 }
 
 export interface NetworkOptions {
-    layer0?: DhtNodeOptions
+    layer0?: DhtNodeOptions & { connectionTimeout?: number }
     networkNode?: StreamrNodeConfig
     metricsContext?: MetricsContext
 }
@@ -118,7 +118,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     private async waitForFirstConnection(): Promise<void> {
         const readinessListener = new ReadinessListener(this, this.layer0DhtNode!)
-        const timeout = this.options.networkNode?.firstConnectionTimeout ?? DEFAULT_FIRST_CONNECTION_TIMEOUT
+        const timeout = this.options.layer0?.connectionTimeout ?? DEFAULT_FIRST_CONNECTION_TIMEOUT
         await readinessListener.waitUntilReady(timeout)
     }
 
