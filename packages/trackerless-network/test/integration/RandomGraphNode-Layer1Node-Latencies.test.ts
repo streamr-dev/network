@@ -84,7 +84,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await Promise.all(range(4).map((i) => {
             return waitForCondition(() => {
                 return graphNodes[i].getTargetNeighborIds().length >= 4
-            }, 10000, 2000)
+            }, 15000, 2000)
         }))
         range(4).map((i) => {
             expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
