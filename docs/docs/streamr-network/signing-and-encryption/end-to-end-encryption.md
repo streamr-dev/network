@@ -1,5 +1,6 @@
 ---
 sidebar_position: 3
+keywords: [encryption, key exchange, key rotation]
 ---
 
 # End-to-end encryption

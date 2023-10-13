@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+keywords: [streamr network, p2p]
 ---
 
 # What is the Streamr Network

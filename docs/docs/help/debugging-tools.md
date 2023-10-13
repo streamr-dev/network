@@ -1,5 +1,6 @@
 ---
 sidebar_position: 2
+keywords: [debugging, streams, connections]
 ---
 
 # Debugging streams

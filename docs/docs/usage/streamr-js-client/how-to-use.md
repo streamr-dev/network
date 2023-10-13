@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+keywords: [how to, browser, react]
 ---
 
 # How to use

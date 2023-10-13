@@ -1,5 +1,6 @@
 ---
 sidebar_position: 4
+keywords: [subscribing, subscribe]
 ---
 
 import Tabs from '@theme/Tabs';

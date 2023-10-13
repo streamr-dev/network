@@ -1,5 +1,6 @@
 ---
 sidebar_position: 3
+keywords: [streams, deleting, updating]
 ---
 
 # Interacting with streams

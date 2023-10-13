@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+keywords: [faq, frequently asked questions, sdk, store, cost]
 ---
 
 # Developer FAQ

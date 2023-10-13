@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+keywords: [broker, authentication, configuration, websocket, mqtt]
 ---
 
 # Connect to a Broker node

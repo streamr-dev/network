@@ -1,5 +1,6 @@
 ---
 sidebar_position: 3
+keywords: [api, dashboard, rewards, annual percentage yield, apy]
 ---
 
 # Dashboards and APIs

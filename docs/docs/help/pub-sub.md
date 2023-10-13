@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+keywords: [pub, sub, publisher, subscriber, use cases]
 ---
 
 # What is pub/sub?

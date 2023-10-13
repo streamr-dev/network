@@ -1,5 +1,6 @@
 ---
 sidebar_position: 3
+keywords: [broker node, broker, mqtt]
 ---
 
 # Use any language or device

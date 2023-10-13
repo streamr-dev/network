@@ -1,5 +1,6 @@
 ---
 sidebar_position: 6
+keywords: [store, storage, historical, resend]
 ---
 
 # Store and retrieve data

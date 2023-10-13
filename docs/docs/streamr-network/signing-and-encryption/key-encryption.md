@@ -1,5 +1,6 @@
 ---
 sidebar_position: 2
+keywords: [key encryption, use cases, key update, keys]
 ---
 
 # Key encryption

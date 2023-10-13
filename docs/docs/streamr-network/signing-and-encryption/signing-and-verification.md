@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+keywords: [signing, verification]
 ---
 
 # Data signing and verification

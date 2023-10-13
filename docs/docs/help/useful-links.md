@@ -1,5 +1,6 @@
 ---
 sidebar_position: 7
+keywords: [links, github]
 ---
 
 # Useful links

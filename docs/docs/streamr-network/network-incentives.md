@@ -1,5 +1,6 @@
 ---
 sidebar_position: 4
+keywords: [incentives, tokenomics, roles, free riding]
 ---
 
 # Network incentives

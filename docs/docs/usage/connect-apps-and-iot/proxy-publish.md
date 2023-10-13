@@ -1,5 +1,6 @@
 ---
 sidebar_position: 3
+keywords: [broker, proxy]
 ---
 
 # Connect to a proxy Broker node

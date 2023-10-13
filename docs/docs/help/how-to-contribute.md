@@ -1,5 +1,6 @@
 ---
 sidebar_position: 4
+keywords: [contribute, contributors]
 ---
 
 # How to contribute

@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+keywords: [streams, example]
 ---
 
 # What are streams

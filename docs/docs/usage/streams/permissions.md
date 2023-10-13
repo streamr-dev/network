@@ -1,5 +1,6 @@
 ---
 sidebar_position: 6
+keywords: [permissions, grant, revoke]
 ---
 
 # Permissions

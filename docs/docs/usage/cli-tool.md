@@ -1,5 +1,6 @@
 ---
 sidebar_position: 4
+keywords: [cli, command line interface, tool]
 ---
 
 # Streamr CLI tool

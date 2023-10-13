@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+keywords: [nodejs, client, streamr client, permissions, publish, subscribe]
 ---
 
 # NodeJS

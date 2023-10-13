@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+keywords: [node, node running]
 ---
 
 # Run a Streamr node
