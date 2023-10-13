@@ -6,7 +6,7 @@ interface FindNeighborsSessionConfig {
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
     doFindNeighbors: (excludedNodes: NodeID[]) => Promise<NodeID[]>
-    N: number
+    minCount: number
 }
 
 const INITIAL_WAIT = 100
@@ -33,7 +33,7 @@ export class NeighborFinder implements INeighborFinder {
             return
         }
         const newExcludes = await this.config.doFindNeighbors(excluded)
-        if (this.config.targetNeighbors.size() < this.config.N && newExcludes.length < this.config.nearbyNodeView.size()) {
+        if (this.config.targetNeighbors.size() < this.config.minCount && newExcludes.length < this.config.nearbyNodeView.size()) {
             setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL, this.abortController.signal)
         } else {
             this.running = false
