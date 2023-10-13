@@ -122,7 +122,7 @@ describe('stream without default entrypoints', () => {
         }
         await waitForCondition(async () => {
             const entryPointData = await nodes[15].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(STREAM_PART_ID))
-            return entryPointData.dataEntries!.length >= 7
+            return entryPointData.length >= 7
         }, 15000)
         
     }, 90000)

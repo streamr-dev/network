@@ -1,4 +1,4 @@
-import { PeerDescriptor, RecursiveFindResult, isSamePeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, isSamePeerDescriptor } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { wait } from '@streamr/utils'
 import { range } from 'lodash'
@@ -42,15 +42,8 @@ describe('StreamPartEntryPointDiscovery', () => {
         deleted: true
     }
 
-    const fakeGetEntryPointData = async (_key: Uint8Array): Promise<RecursiveFindResult> => {
-        return {
-            closestNodes: [peerDescriptor],
-            dataEntries: [fakeData, fakeDeletedData]
-        }
-    }
-
-    const fakegetEntryPointDataViaNode = async (_key: Uint8Array, _node: PeerDescriptor): Promise<DataEntry[]> => {
-        return [fakeData]
+    const fakeGetEntryPointData = async (_key: Uint8Array): Promise<DataEntry[]> => {
+        return [fakeData, fakeDeletedData]
     }
 
     const fakeStoreEntryPointData = async (_key: Uint8Array, _data: Any): Promise<PeerDescriptor[]> => {
@@ -58,11 +51,8 @@ describe('StreamPartEntryPointDiscovery', () => {
         return [peerDescriptor]
     }
 
-    const fakeEmptyGetEntryPointData = async (_key: Uint8Array): Promise<RecursiveFindResult> => {
-        return {
-            closestNodes: [],
-            dataEntries: []
-        }
+    const fakeEmptyGetEntryPointData = async (_key: Uint8Array): Promise<DataEntry[]> => {
+        return []
     }
 
     const fakeDeleteEntryPointData = async (_key: Uint8Array): Promise<void> => {}
@@ -86,7 +76,6 @@ describe('StreamPartEntryPointDiscovery', () => {
             streamPartId: STREAM_PART_ID,
             layer1,
             getEntryPointData: fakeGetEntryPointData,
-            getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
             cacheInterval: 2000
@@ -96,7 +85,6 @@ describe('StreamPartEntryPointDiscovery', () => {
             streamPartId: STREAM_PART_ID,
             layer1,
             getEntryPointData: fakeEmptyGetEntryPointData,
-            getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
             cacheInterval: 2000
