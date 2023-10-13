@@ -48,14 +48,14 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
             )
             this.config.neighborFinder.start()
             const response: NeighborUpdate = {
-                randomGraphId: this.config.randomGraphId,
+                streamPartId: this.config.randomGraphId,
                 neighborDescriptors: this.config.targetNeighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
                 removeMe: false
             }
             return response
         } else {
             const response: NeighborUpdate = {
-                randomGraphId: this.config.randomGraphId,
+                streamPartId: this.config.randomGraphId,
                 neighborDescriptors: this.config.targetNeighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
                 removeMe: true
             }

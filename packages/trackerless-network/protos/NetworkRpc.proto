@@ -114,7 +114,7 @@ message LeaveStreamPartNotice {
 }
 
 message NeighborUpdate {
-  string randomGraphId = 1;
+  string streamPartId = 1;
   bool removeMe = 2;
   repeated dht.PeerDescriptor neighborDescriptors = 3;
 }

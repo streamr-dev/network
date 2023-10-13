@@ -212,9 +212,9 @@ export interface LeaveStreamPartNotice {
  */
 export interface NeighborUpdate {
     /**
-     * @generated from protobuf field: string randomGraphId = 1;
+     * @generated from protobuf field: string streamPartId = 1;
      */
-    randomGraphId: string;
+    streamPartId: string;
     /**
      * @generated from protobuf field: bool removeMe = 2;
      */
@@ -467,7 +467,7 @@ export const LeaveStreamPartNotice = new LeaveStreamPartNotice$Type();
 class NeighborUpdate$Type extends MessageType<NeighborUpdate> {
     constructor() {
         super("NeighborUpdate", [
-            { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "removeMe", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 3, name: "neighborDescriptors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
