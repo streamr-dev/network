@@ -26,7 +26,7 @@ export const mockConnectionLocker: ConnectionLocker = {
 export const createMockRandomGraphNodeAndDhtNode = (
     ownPeerDescriptor: PeerDescriptor,
     entryPointDescriptor: PeerDescriptor,
-    randomGraphId: string,
+    streamPartId: StreamPartID,
     simulator: Simulator
 ): [ DhtNode, RandomGraphNode ] => {
     const mockCm = new SimulatorTransport(ownPeerDescriptor, simulator)
@@ -37,7 +37,7 @@ export const createMockRandomGraphNodeAndDhtNode = (
         entryPoints: [entryPointDescriptor]
     })
     const randomGraphNode = createRandomGraphNode({
-        randomGraphId,
+        streamPartId,
         P2PTransport: mockCm,
         layer1: dhtNode,
         connectionLocker: mockCm,

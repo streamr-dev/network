@@ -36,14 +36,14 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             serviceId: streamPartId
         }))
         graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
-            randomGraphId: streamPartId,
+            streamPartId,
             layer1: dhtNodes[i],
             P2PTransport: cms[i],
             connectionLocker: cms[i],
             ownPeerDescriptor: peerDescriptors[i]
         }))
         entryPointRandomGraphNode = createRandomGraphNode({
-            randomGraphId: streamPartId,
+            streamPartId,
             layer1: dhtEntryPoint,
             P2PTransport: entrypointCm,
             connectionLocker: entrypointCm,

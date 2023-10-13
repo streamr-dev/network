@@ -31,6 +31,7 @@ import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryCo
 import { markAndCheckDuplicate } from './utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { ILayer1 } from './ILayer1'
+import { StreamPartID } from '@streamr/protocol'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -38,7 +39,7 @@ export interface Events {
 }
 
 export interface StrictRandomGraphNodeConfig {
-    randomGraphId: string
+    streamPartId: StreamPartID
     layer1: ILayer1
     P2PTransport: ITransport
     connectionLocker: ConnectionLocker
@@ -79,7 +80,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.duplicateDetectors = new Map()
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
-            randomGraphId: this.config.randomGraphId,
+            randomGraphId: this.config.streamPartId,
             rpcCommunicator: this.config.rpcCommunicator,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
@@ -93,7 +94,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                     this.config.layer1.removeContact(contact.getPeerDescriptor(), true)
                     this.config.targetNeighbors.remove(contact.getPeerDescriptor())
                     this.config.nearbyNodeView.remove(contact.getPeerDescriptor())
-                    this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.randomGraphId)
+                    this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.streamPartId)
                     this.config.neighborFinder.start([senderId])
                     this.config.proxyConnectionServer?.removeConnection(senderId)
                 }
@@ -193,7 +194,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             new RemoteRandomGraphNode(
                 this.config.ownPeerDescriptor,
                 descriptor,
-                this.config.randomGraphId,
+                this.config.streamPartId,
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
@@ -205,7 +206,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 new RemoteRandomGraphNode(
                     this.config.ownPeerDescriptor,
                     descriptor,
-                    this.config.randomGraphId,
+                    this.config.streamPartId,
                     toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
                 )
             )
@@ -220,7 +221,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             new RemoteRandomGraphNode(
                 this.config.ownPeerDescriptor,
                 descriptor,
-                this.config.randomGraphId,
+                this.config.streamPartId,
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
@@ -238,7 +239,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             new RemoteRandomGraphNode(
                 this.config.ownPeerDescriptor,
                 descriptor,
-                this.config.randomGraphId,
+                this.config.streamPartId,
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
@@ -247,7 +248,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
     private onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
         if (this.config.targetNeighbors.hasNode(peerDescriptor)) {
             this.config.targetNeighbors.remove(peerDescriptor)
-            this.config.connectionLocker.unlockConnection(peerDescriptor, this.config.randomGraphId)
+            this.config.connectionLocker.unlockConnection(peerDescriptor, this.config.streamPartId)
             this.config.neighborFinder.start([getNodeIdFromPeerDescriptor(peerDescriptor)])
             this.config.temporaryConnectionServer.removeNode(peerDescriptor)
         }
