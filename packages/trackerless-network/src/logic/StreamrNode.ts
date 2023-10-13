@@ -244,7 +244,7 @@ export class StreamrNode extends EventEmitter<Events> {
                 proxyClient = this.createProxyStream(streamPartId)
                 await proxyClient.start()
             }
-            await proxyClient.setProxies(streamPartId, nodes, direction, userId, connectionCount)
+            await proxyClient.setProxies(nodes, direction, userId, connectionCount)
         } else {
             this.streamParts.get(streamPartId)?.stop()
             this.streamParts.delete(streamPartId)
