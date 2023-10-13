@@ -32,7 +32,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const targetNeighbors = config.targetNeighbors ?? new NodeList(ownNodeId, maxNumberOfContacts)
 
     const temporaryConnectionServer = new TemporaryConnectionRpcServer({
-        randomGraphId: config.streamPartId,
+        streamPartId: config.streamPartId,
         rpcCommunicator,
         ownPeerDescriptor: config.ownPeerDescriptor
     })
