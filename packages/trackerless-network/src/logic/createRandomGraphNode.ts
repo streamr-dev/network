@@ -57,7 +57,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     })
     const handshaker = config.handshaker ?? new Handshaker({
         ownPeerDescriptor: config.ownPeerDescriptor,
-        randomGraphId: config.streamPartId,
+        streamPartId: config.streamPartId,
         connectionLocker: config.connectionLocker,
         rpcCommunicator,
         nearbyNodeView,

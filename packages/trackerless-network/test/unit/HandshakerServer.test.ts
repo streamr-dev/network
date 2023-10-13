@@ -26,7 +26,7 @@ describe('HandshakerServer', () => {
         handshakeWithInterleaving = jest.fn()
 
         handshakerServer = new HandshakerServer({
-            randomGraphId: STREAM_PART_ID,
+            streamPartId: STREAM_PART_ID,
             ownPeerDescriptor,
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,

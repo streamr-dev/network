@@ -8,9 +8,10 @@ import { RemoteHandshaker } from './RemoteHandshaker'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { binaryToHex } from '@streamr/utils'
+import { StreamPartID } from '@streamr/protocol'
 
 interface HandshakerServerConfig {
-    randomGraphId: string
+    streamPartId: StreamPartID
     ownPeerDescriptor: PeerDescriptor
     targetNeighbors: NodeList
     connectionLocker: ConnectionLocker
@@ -55,7 +56,7 @@ export class HandshakerServer implements IHandshakeRpc {
             accepted: true
         }
         this.config.targetNeighbors.add(this.config.createRemoteNode(requester))
-        this.config.connectionLocker.lockConnection(requester, this.config.randomGraphId)
+        this.config.connectionLocker.lockConnection(requester, this.config.streamPartId)
         return res
     }
 
@@ -80,10 +81,10 @@ export class HandshakerServer implements IHandshakeRpc {
             const remote = this.config.createRemoteHandshaker(furthest.getPeerDescriptor())
             remote.interleaveNotice(requester)
             this.config.targetNeighbors.remove(furthest.getPeerDescriptor())
-            this.config.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.config.randomGraphId)
+            this.config.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.config.streamPartId)
         }
         this.config.targetNeighbors.add(this.config.createRemoteNode(requester))
-        this.config.connectionLocker.lockConnection(requester, this.config.randomGraphId)
+        this.config.connectionLocker.lockConnection(requester, this.config.streamPartId)
         return {
             requestId: request.requestId,
             accepted: true,
@@ -92,11 +93,11 @@ export class HandshakerServer implements IHandshakeRpc {
     }
 
     async interleaveNotice(message: InterleaveNotice, context: ServerCallContext): Promise<Empty> {
-        if (message.streamPartId === this.config.randomGraphId) {
+        if (message.streamPartId === this.config.streamPartId) {
             const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
             const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
             if (this.config.targetNeighbors.hasNodeById(senderId)) {
-                this.config.connectionLocker.unlockConnection(senderPeerDescriptor, this.config.randomGraphId)
+                this.config.connectionLocker.unlockConnection(senderPeerDescriptor, this.config.streamPartId)
                 this.config.targetNeighbors.remove(senderPeerDescriptor)
             }
             this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, senderId).catch((_e) => {})
