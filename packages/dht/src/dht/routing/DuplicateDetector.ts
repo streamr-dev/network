@@ -1,6 +1,6 @@
 import { Message } from '../../proto/packages/dht/protos/DhtRpc'
 
-type QueueEntry = [timeStamp: number, value: string, senderId: string, message?: Message]
+type QueueEntry = [timestamp: number, value: string, senderId: string, message?: Message]
 
 export class DuplicateDetector {
 
