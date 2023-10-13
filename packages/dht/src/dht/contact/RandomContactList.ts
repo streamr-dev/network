@@ -1,8 +1,7 @@
 import { PeerID } from '../../helpers/PeerID'
-import { ContactState, IContact } from './Contact'
-import { ContactList } from './ContactList'
+import { ContactList, ContactState } from './ContactList'
 
-export class RandomContactList<C extends IContact> extends ContactList<C> {
+export class RandomContactList<C extends { getPeerId: () => PeerID }> extends ContactList<C> {
 
     private randomness: number
 
@@ -31,8 +30,8 @@ export class RandomContactList<C extends IContact> extends ContactList<C> {
                 this.contactsById.set(contact.getPeerId().toKey(), new ContactState(contact))
                 this.emit(
                     'newContact',
-                    contact.getPeerDescriptor(),
-                    this.getContacts().map((contact: C) => contact.getPeerDescriptor())
+                    contact,
+                    this.getContacts()
                 )
             }
         }
@@ -44,11 +43,11 @@ export class RandomContactList<C extends IContact> extends ContactList<C> {
 
     removeContact(id: PeerID): boolean {
         if (this.contactsById.has(id.toKey())) {
-            const removedDescriptor = this.contactsById.get(id.toKey())!.contact.getPeerDescriptor()
+            const removed = this.contactsById.get(id.toKey())!.contact
             const index = this.contactIds.findIndex((element) => element.equals(id))
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id.toKey())
-            this.emit('contactRemoved', removedDescriptor, this.getContacts().map((contact: C) => contact.getPeerDescriptor()))
+            this.emit('contactRemoved', removed, this.getContacts())
             return true
         }
         return false

@@ -66,14 +66,6 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         this.removeAllListeners()
     }
 
-    getConnectedNodeIds(): NodeID[] {
-        return Array.from(this.connections.keys())
-    }
-
-    getConnections(): ProxyConnection[] {
-        return Array.from(this.connections.values())
-    }
-
     getPropagationTargets(msg: StreamMessage): NodeID[] {
         if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             try {

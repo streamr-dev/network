@@ -1,7 +1,6 @@
 import { EventEmitter } from 'eventemitter3'
 import {
     PeerDescriptor,
-    DhtPeer,
     ListeningRpcCommunicator,
     ITransport,
     ConnectionLocker
@@ -85,9 +84,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
             onLeaveNotice: (senderId: NodeID) => {
-                const contact = this.config.nearbyNodeView.getNeighborById(senderId)
-                || this.config.randomNodeView.getNeighborById(senderId)
-                || this.config.targetNeighbors.getNeighborById(senderId)
+                const contact = this.config.nearbyNodeView.get(senderId)
+                || this.config.randomNodeView.get(senderId)
+                || this.config.targetNeighbors.get(senderId)
                 || this.config.proxyConnectionServer?.getConnection(senderId )?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
@@ -256,8 +255,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     private getNeighborCandidatesFromLayer1(): PeerDescriptor[] {
         const uniqueNodes = new Set<PeerDescriptor>()
-        this.config.layer1.getNeighborList().getClosestContacts(this.config.nodeViewSize).forEach((contact: DhtPeer) => {
-            uniqueNodes.add(contact.getPeerDescriptor())
+        this.config.layer1.getClosestContacts(this.config.nodeViewSize).forEach((peer: PeerDescriptor) => {
+            uniqueNodes.add(peer)
         })
         this.config.layer1.getKBucketPeers().forEach((peer: PeerDescriptor) => {
             uniqueNodes.add(peer)
@@ -279,7 +278,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.stopped = true
         this.abortController.abort()
         this.config.proxyConnectionServer?.stop()
-        this.config.targetNeighbors.getNodes().map((remote) => remote.leaveStreamPartNotice())
+        this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice())
         this.config.rpcCommunicator.stop()
         this.removeAllListeners()
         this.config.nearbyNodeView.stop()
