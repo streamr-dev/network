@@ -10,7 +10,7 @@ describe('Handshaker', () => {
     let handshaker: Handshaker
     const peerDescriptor = createMockPeerDescriptor()
 
-    const N = 4
+    const maxNeighborCount = 4
     const stream = 'stream#0'
 
     let targetNeighbors: NodeList
@@ -38,7 +38,7 @@ describe('Handshaker', () => {
             nearbyNodeView,
             randomNodeView,
             rpcCommunicator,
-            N
+            maxNeighborCount
         })
     })
 

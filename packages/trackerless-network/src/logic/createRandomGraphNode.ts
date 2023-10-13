@@ -68,7 +68,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         nearbyNodeView,
         randomNodeView,
         targetNeighbors,
-        N: numOfTargetNeighbors
+        maxNeighborCount: numOfTargetNeighbors
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
         targetNeighbors,

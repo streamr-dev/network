@@ -33,7 +33,7 @@ describe('HandshakerServer', () => {
                 return true
             },
             targetNeighbors,
-            N: 4
+            maxNeighborCount: 4
         })
     })
 
