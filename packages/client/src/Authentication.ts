@@ -11,11 +11,13 @@ import { sign } from './utils/signingUtils'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
+export type SignerWithProvider = Signer & { readonly provider: Provider }
+
 export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
     createMessageSignature: (payload: string) => Promise<Uint8Array>
-    getStreamRegistryChainSigner: () => Promise<Signer & { readonly provider: Provider }>
+    getStreamRegistryChainSigner: () => Promise<SignerWithProvider>
 }
 
 export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictStreamrClientConfig, 'contracts'>): Authentication => {

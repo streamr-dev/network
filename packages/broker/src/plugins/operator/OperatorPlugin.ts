@@ -1,7 +1,6 @@
 import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
-import { Signer } from 'ethers'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient, SignerWithProvider } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { maintainOperatorValue } from './maintainOperatorValue'
 import { MaintainTopologyService } from './MaintainTopologyService'
@@ -17,7 +16,6 @@ import { formCoordinationStreamId } from './formCoordinationStreamId'
 import { StreamPartAssignments } from './StreamPartAssignments'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { inspectRandomNode } from './inspectRandomNode'
-import { Provider } from '@ethersproject/providers'
 import { ContractFacade } from './ContractFacade'
 
 export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
@@ -28,7 +26,7 @@ export interface OperatorPluginConfig {
 }
 
 export interface OperatorServiceConfig {
-    signer: Signer & { readonly provider: Provider }
+    signer: SignerWithProvider
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
     maxSponsorshipsInWithdraw?: number
