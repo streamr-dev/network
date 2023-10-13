@@ -46,8 +46,6 @@ interface ProxyStreamConnectionClientConfig {
     ownPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     connectionLocker: ConnectionLocker
-    userId: EthereumAddress
-    nodeName?: string
     minPropagationTargets?: number // TODO could be required option if we apply all defaults somewhere at higher level
 }
 
