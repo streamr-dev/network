@@ -44,8 +44,8 @@ interface ForwardingTableEntry {
 interface IRouterFunc {
     doRouteMessage(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RouteMessageAck
     send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void>
-    isMostLikelyDuplicate(messageId: string): boolean
-    addToDuplicateDetector(messageId: string): void
+    isMostLikelyDuplicate(requestId: string): boolean
+    addToDuplicateDetector(requestId: string): void
     addRoutingSession(session: RoutingSession): void
     removeRoutingSession(sessionId: string): void
     stop(): void
@@ -169,12 +169,12 @@ export class Router implements IRouter {
         )
     }
 
-    public isMostLikelyDuplicate(messageId: string): boolean {
-        return this.routerDuplicateDetector.isMostLikelyDuplicate(messageId)
+    public isMostLikelyDuplicate(requestId: string): boolean {
+        return this.routerDuplicateDetector.isMostLikelyDuplicate(requestId)
     }
 
-    public addToDuplicateDetector(messageId: string): void {
-        this.routerDuplicateDetector.add(messageId)
+    public addToDuplicateDetector(requestId: string): void {
+        this.routerDuplicateDetector.add(requestId)
     }
 
     public addRoutingSession(session: RoutingSession): void {
