@@ -11,7 +11,6 @@ import { binaryToHex } from '@streamr/utils'
 
 interface HandshakerServerConfig {
     randomGraphId: string
-    ownPeerDescriptor: PeerDescriptor
     targetNeighbors: NodeList
     connectionLocker: ConnectionLocker
     ongoingHandshakes: Set<NodeID>

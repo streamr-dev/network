@@ -24,7 +24,6 @@ describe('HandshakerServer', () => {
 
         handshakerServer = new HandshakerServer({
             randomGraphId: 'random-graph',
-            ownPeerDescriptor,
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
             createRemoteHandshaker: (_p) => createMockRemoteHandshaker(),

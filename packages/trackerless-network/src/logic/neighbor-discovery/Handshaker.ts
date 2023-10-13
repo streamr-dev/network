@@ -49,7 +49,6 @@ export class Handshaker implements IHandshaker {
         this.client = toProtoRpcClient(new HandshakeRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
         this.server = new HandshakerServer({
             randomGraphId: this.config.randomGraphId,
-            ownPeerDescriptor: this.config.ownPeerDescriptor,
             targetNeighbors: this.config.targetNeighbors,
             connectionLocker: this.config.connectionLocker,
             ongoingHandshakes: this.ongoingHandshakes,
