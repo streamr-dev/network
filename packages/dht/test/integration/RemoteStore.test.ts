@@ -19,7 +19,7 @@ describe('RemoteStore', () => {
     let serverRpcCommunicator: RpcCommunicator
     const serviceId = 'test'
     const clientPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('dhtPeer'),
+        kademliaId: generateId('client'),
         type: NodeType.NODEJS
     }
     const serverPeerDescriptor: PeerDescriptor = {

@@ -1,4 +1,4 @@
-import { DhtPeer, PeerDescriptor, PeerID, PeerIDKey, SortedContactList } from '@streamr/dht'
+import { PeerDescriptor, PeerID, PeerIDKey, RemoteDhtNode, SortedContactList } from '@streamr/dht'
 import { EventEmitter } from 'eventemitter3'
 import { NodeID } from '../../../src/identifiers'
 import { ILayer1 } from '../../../src/logic/ILayer1'
@@ -7,7 +7,7 @@ import { createMockPeerDescriptor } from '../utils'
 export class MockLayer1 extends EventEmitter implements ILayer1 {
     
     private readonly kbucketPeers: PeerDescriptor[] = []
-    private readonly neighborList: SortedContactList<DhtPeer>
+    private readonly neighborList: SortedContactList<RemoteDhtNode>
 
     constructor(nodeId: NodeID) {
         super()
@@ -19,7 +19,7 @@ export class MockLayer1 extends EventEmitter implements ILayer1 {
 
     }
 
-    getNeighborList(): SortedContactList<DhtPeer> {
+    getNeighborList(): SortedContactList<RemoteDhtNode> {
         return this.neighborList
     }
 

@@ -25,7 +25,7 @@ interface DiscoverySessionConfig {
     rpcCommunicator: RpcCommunicator
     parallelism: number
     noProgressLimit: number
-    newContactListener?: (dhtPeer: RemoteDhtNode) => void
+    newContactListener?: (remoteDhtNode: RemoteDhtNode) => void
     nodeName?: string
 }
 
@@ -50,18 +50,18 @@ export class DiscoverySession {
             return
         }
         contacts.forEach((contact) => {
-            const dhtPeer = new RemoteDhtNode(
+            const remoteDhtNode = new RemoteDhtNode(
                 this.config.ownPeerDescriptor,
                 contact,
                 toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
                 this.config.serviceId
             )
-            if (!dhtPeer.getPeerId().equals(this.ownPeerId)) {
+            if (!remoteDhtNode.getPeerId().equals(this.ownPeerId)) {
                 if (this.config.newContactListener) {
-                    this.config.newContactListener(dhtPeer)
+                    this.config.newContactListener(remoteDhtNode)
                 }
-                if (!this.config.neighborList.getContact(dhtPeer.getPeerId())) {
-                    this.config.neighborList.addContact(dhtPeer)
+                if (!this.config.neighborList.getContact(remoteDhtNode.getPeerId())) {
+                    this.config.neighborList.addContact(remoteDhtNode)
                 }
             }
         })

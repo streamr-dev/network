@@ -42,7 +42,7 @@ describe('Router', () => {
     let connections: Map<PeerIDKey, RemoteDhtNode>
     const mockRpcCommunicator = createMockRoutingRpcCommunicator()
 
-    const createMockDhtPeer = (destination: PeerDescriptor): RemoteDhtNode => {
+    const createMockRemoteDhtNode = (destination: PeerDescriptor): RemoteDhtNode => {
         return new RemoteDhtNode(peerDescriptor1, destination, {} as any, 'router')
     }
 
@@ -75,7 +75,7 @@ describe('Router', () => {
     })
 
     it('doRouteMessage with connections', () => {
-        connections.set(PeerID.fromString('test').toKey(), createMockDhtPeer(peerDescriptor2))
+        connections.set(PeerID.fromString('test').toKey(), createMockRemoteDhtNode(peerDescriptor2))
         const ack = router.doRouteMessage({
             message,
             destinationPeer: peerDescriptor2,
@@ -93,7 +93,7 @@ describe('Router', () => {
     })
 
     it('route server with connections', async () => {
-        connections.set(PeerID.fromString('test').toKey(), createMockDhtPeer(peerDescriptor2))
+        connections.set(PeerID.fromString('test').toKey(), createMockRemoteDhtNode(peerDescriptor2))
         const ack = await router.routeMessage(routedMessage, {} as any)
         expect(ack.error).toEqual('')
     })
@@ -110,7 +110,7 @@ describe('Router', () => {
     })
 
     it('forward server with connections', async () => {
-        connections.set(PeerID.fromString('test').toKey(), createMockDhtPeer(peerDescriptor2))
+        connections.set(PeerID.fromString('test').toKey(), createMockRemoteDhtNode(peerDescriptor2))
         const ack = await router.forwardMessage(routedMessage, {} as any)
         expect(ack.error).toEqual('')
     })
