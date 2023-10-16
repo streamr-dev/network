@@ -212,7 +212,7 @@ export class StreamrNode extends EventEmitter<Events> {
 
     private createRandomGraphNode = (streamPartId: StreamPartID, layer1: ILayer1) => {
         return createRandomGraphNode({
-            randomGraphId: streamPartId,
+            streamPartId,
             P2PTransport: this.P2PTransport!,
             layer1,
             connectionLocker: this.connectionLocker!,
@@ -309,7 +309,7 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     getNodeId(): NodeID {
-        return this.layer0!.getNodeId().toKey() as unknown as NodeID
+        return getNodeIdFromPeerDescriptor(this.layer0!.getPeerDescriptor())
     }
 
     getNeighbors(streamPartId: StreamPartID): NodeID[] {

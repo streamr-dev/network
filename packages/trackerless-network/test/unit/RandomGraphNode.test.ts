@@ -9,6 +9,7 @@ import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
 import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManager'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockPeerDescriptor, createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('RandomGraphNode', () => {
 
@@ -39,7 +40,7 @@ describe('RandomGraphNode', () => {
             handshaker: new MockHandshaker(),
             neighborUpdateManager: new MockNeighborUpdateManager(),
             neighborFinder: new MockNeighborFinder(),
-            randomGraphId: 'random-graph'
+            streamPartId: StreamPartIDUtils.parse('stream#0')
         })
         await randomGraphNode.start()
     })

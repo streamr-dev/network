@@ -8,9 +8,10 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { StreamPartID } from '@streamr/protocol'
 
 interface TemporaryConnectionRpcServerConfig {
-    randomGraphId: string
+    streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
     ownPeerDescriptor: PeerDescriptor
 } 
@@ -41,7 +42,7 @@ export class TemporaryConnectionRpcServer implements ITemporaryConnectionRpc {
         const remote = new RemoteRandomGraphNode(
             this.config.ownPeerDescriptor,
             sender,
-            this.config.randomGraphId,
+            this.config.streamPartId,
             toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
         )
         this.temporaryNodes.add(remote)

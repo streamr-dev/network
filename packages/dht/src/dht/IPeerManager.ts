@@ -1,4 +1,4 @@
-import { PeerIDKey } from '../exports'
+import { PeerIDKey } from '../helpers/PeerID'
 import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { DhtPeer } from './DhtPeer'
 

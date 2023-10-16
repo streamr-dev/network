@@ -1,7 +1,6 @@
 import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
-import { Signer } from 'ethers'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient, SignerWithProvider } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { maintainOperatorValue } from './maintainOperatorValue'
 import { MaintainTopologyService } from './MaintainTopologyService'
@@ -27,7 +26,7 @@ export interface OperatorPluginConfig {
 }
 
 export interface OperatorServiceConfig {
-    signer: Signer
+    signer: SignerWithProvider
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
     maxSponsorshipsInWithdraw?: number

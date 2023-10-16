@@ -1,4 +1,4 @@
-import { DhtNode } from '../exports'
+import { DhtNode } from '../dht/DhtNode'
 import { ExternalStoreDataRequest, ExternalStoreDataResponse, FindDataRequest, FindDataResponse, FindMode } from '../proto/packages/dht/protos/DhtRpc'
 
 export const registerExternalApiRpcMethods = (thisNode: DhtNode): void => {

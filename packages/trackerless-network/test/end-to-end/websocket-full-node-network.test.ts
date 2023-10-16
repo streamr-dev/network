@@ -13,7 +13,7 @@ describe('Full node network with WebSocket connections only', () => {
         nodeName: 'entrypoint',
         websocket: { host: '127.0.0.1', port: 15555, tls: false }
     })
-    const randomGraphId = StreamPartIDUtils.parse('websocket-network#0')
+    const streamPartId = StreamPartIDUtils.parse('websocket-network#0')
 
     let entryPoint: NetworkStack
 
@@ -30,8 +30,8 @@ describe('Full node network with WebSocket connections only', () => {
             }
         })
         await entryPoint.start()
-        entryPoint.getStreamrNode()!.setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
-        entryPoint.getStreamrNode()!.joinStreamPart(randomGraphId)
+        entryPoint.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
+        entryPoint.getStreamrNode()!.joinStreamPart(streamPartId)
 
         await Promise.all(range(NUM_OF_NODES).map(async (i) => {
             const node = new NetworkStack({
@@ -44,8 +44,8 @@ describe('Full node network with WebSocket connections only', () => {
             })
             nodes.push(node)
             await node.start()
-            node.getStreamrNode().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
-            node.getStreamrNode().joinStreamPart(randomGraphId)
+            node.getStreamrNode().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
+            node.getStreamrNode().joinStreamPart(streamPartId)
         }))
 
     }, 120000)
@@ -60,7 +60,7 @@ describe('Full node network with WebSocket connections only', () => {
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
             waitForCondition(() => {
-                return node.getStreamrNode()!.getNeighbors(randomGraphId).length >= 4
+                return node.getStreamrNode()!.getNeighbors(streamPartId).length >= 4
             }
             , 120000)
         ))
@@ -75,7 +75,7 @@ describe('Full node network with WebSocket connections only', () => {
 
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
-            randomGraphId,
+            streamPartId,
             randomEthereumAddress()
         )
         entryPoint.getStreamrNode()!.broadcast(msg)
