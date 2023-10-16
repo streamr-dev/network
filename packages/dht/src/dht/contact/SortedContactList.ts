@@ -1,9 +1,8 @@
 import KBucket from 'k-bucket'
 import { PeerID } from '../../helpers/PeerID'
-import { ContactState, IContact } from './Contact'
-import { ContactList } from './ContactList'
+import { ContactList, ContactState } from './ContactList'
 
-export class SortedContactList<C extends IContact> extends ContactList<C> {
+export class SortedContactList<C extends { getPeerId: () => PeerID }> extends ContactList<C> {
 
     private allowOwnPeerId: boolean
     private peerIdDistanceLimit?: PeerID
@@ -48,22 +47,22 @@ export class SortedContactList<C extends IContact> extends ContactList<C> {
                 this.contactIds.push(contact.getPeerId())
                 this.contactIds.sort(this.compareIds)
             } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.getPeerId()) > 0) {
-                const removed = this.contactIds.pop()
-                const removedDescriptor = this.contactsById.get(removed!.toKey())!.contact.getPeerDescriptor()
-                this.contactsById.delete(removed!.toKey())
+                const removedId = this.contactIds.pop()
+                const removedContact = this.contactsById.get(removedId!.toKey())!.contact
+                this.contactsById.delete(removedId!.toKey())
                 this.contactsById.set(contact.getPeerId().toKey(), new ContactState(contact))
                 this.contactIds.push(contact.getPeerId())
                 this.contactIds.sort(this.compareIds)
                 this.emit(
                     'contactRemoved',
-                    removedDescriptor,
-                    this.getClosestContacts().map((contact: C) => contact.getPeerDescriptor())
+                    removedContact,
+                    this.getClosestContacts()
                 )
             }
             this.emit(
                 'newContact',
-                contact.getPeerDescriptor(),
-                this.getClosestContacts().map((contact: C) => contact.getPeerDescriptor())
+                contact,
+                this.getClosestContacts()
             )
         }
     }
@@ -136,14 +135,14 @@ export class SortedContactList<C extends IContact> extends ContactList<C> {
 
     public removeContact(id: PeerID): boolean {
         if (this.contactsById.has(id.toKey())) {
-            const removedDescriptor = this.contactsById.get(id.toKey())!.contact.getPeerDescriptor()
+            const removed = this.contactsById.get(id.toKey())!.contact
             const index = this.contactIds.findIndex((element) => element.equals(id))
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id.toKey())
             this.emit(
                 'contactRemoved',
-                removedDescriptor,
-                this.getClosestContacts().map((contact: C) => contact.getPeerDescriptor())
+                removed,
+                this.getClosestContacts()
             )
             return true
         }

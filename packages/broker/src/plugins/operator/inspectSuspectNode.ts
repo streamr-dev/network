@@ -1,10 +1,10 @@
 import { EthereumAddress, Logger } from '@streamr/utils'
-import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
 import { findNodesForTarget, inspectTarget } from './inspectionUtils'
 import { toStreamPartID } from '@streamr/protocol'
 import { StreamrClient } from 'streamr-client'
 import { fetchRedundancyFactor as _fetchRedundancyFactor } from './fetchRedundancyFactor'
 import { CreateOperatorFleetStateFn } from './OperatorFleetState'
+import { ContractFacade } from './ContractFacade'
 
 const logger = new Logger(module)
 
@@ -12,7 +12,7 @@ export async function inspectSuspectNode(
     sponsorship: EthereumAddress,
     targetOperator: EthereumAddress,
     partition: number,
-    voteOnSuspectNodeHelper: VoteOnSuspectNodeHelper,
+    contractFacade: ContractFacade,
     streamrClient: StreamrClient,
     abortSignal: AbortSignal,
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
@@ -20,7 +20,7 @@ export async function inspectSuspectNode(
     heartbeatTimeoutInMs = 60 * 1000,
 ): Promise<void> {
     logger.info('Received inspection request', { targetOperator, sponsorship, partition })
-    const streamId = await voteOnSuspectNodeHelper.getStreamId(sponsorship)
+    const streamId = await contractFacade.getStreamId(sponsorship)
     const target = {
         sponsorshipAddress: sponsorship, 
         operatorAddress: targetOperator,
@@ -41,5 +41,5 @@ export async function inspectSuspectNode(
     })
     const kick = !pass
     logger.info('Vote on inspection request', { sponsorship, targetOperator, partition, kick })
-    await voteOnSuspectNodeHelper.voteOnFlag(sponsorship, targetOperator, kick)
+    await contractFacade.voteOnFlag(sponsorship, targetOperator, kick)
 }

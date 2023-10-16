@@ -60,7 +60,7 @@ describe('Full node network with WebSocket connections only', () => {
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
             waitForCondition(() => {
-                return node.getStreamrNode()!.getNeighbors(randomGraphId).length >= 3
+                return node.getStreamrNode()!.getNeighbors(randomGraphId).length >= 4
             }
             , 120000)
         ))

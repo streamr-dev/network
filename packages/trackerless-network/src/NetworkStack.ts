@@ -122,7 +122,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         await readinessListener.waitUntilReady(timeout)
     }
 
-    async joinLayer0IfRequired(streamPartId: StreamPartID): Promise<void> {
+    private async joinLayer0IfRequired(streamPartId: StreamPartID): Promise<void> {
         if (this.streamrNode!.isProxiedStreamPart(streamPartId)) {
             return
         }

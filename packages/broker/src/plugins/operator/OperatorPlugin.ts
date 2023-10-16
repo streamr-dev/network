@@ -3,7 +3,6 @@ import { Schema } from 'ajv'
 import { Signer } from 'ethers'
 import { StreamrClient } from 'streamr-client'
 import { Plugin } from '../../Plugin'
-import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import { maintainOperatorValue } from './maintainOperatorValue'
 import { MaintainTopologyService } from './MaintainTopologyService'
 import { OperatorFleetState } from './OperatorFleetState'
@@ -13,14 +12,12 @@ import { createIsLeaderFn } from './createIsLeaderFn'
 import { announceNodeToContract } from './announceNodeToContract'
 import { announceNodeToStream } from './announceNodeToStream'
 import { checkOperatorValueBreach } from './checkOperatorValueBreach'
-import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
-import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
 import { StreamPartAssignments } from './StreamPartAssignments'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { inspectRandomNode } from './inspectRandomNode'
-import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
+import { ContractFacade } from './ContractFacade'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -74,15 +71,13 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         }
         logger.info('Fetched redundancy factor', { redundancyFactor })
 
-        const inspectRandomNodeHelper = new InspectRandomNodeHelper(serviceConfig)
-        const voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(serviceConfig)
-        const maintainOperatorValueHelper = new MaintainOperatorValueHelper(
-            serviceConfig,
-            this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
-            this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
-        )
-        const maintainTopologyHelper = new MaintainTopologyHelper(serviceConfig)
-        const announceNodeToContractHelper = new AnnounceNodeToContractHelper(serviceConfig)
+        const extendConfig = {
+            ...serviceConfig,
+            minSponsorshipEarningsInWithdraw: this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
+            maxSponsorshipsInWithdraw: this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
+        }
+        const contractFacade = ContractFacade.createInstance(extendConfig)
+        const maintainTopologyHelper = new MaintainTopologyHelper(extendConfig)
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             streamrClient,
             this.pluginConfig.heartbeatUpdateIntervalInMs,
@@ -126,7 +121,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             }, this.pluginConfig.heartbeatUpdateIntervalInMs, this.abortController.signal)
             await scheduleAtInterval(
                 async () => checkOperatorValueBreach(
-                    maintainOperatorValueHelper
+                    contractFacade
                 ).catch((err) => {
                     logger.warn('Encountered error', { err })
                 }),
@@ -141,7 +136,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     if (isLeader()) {
                         await announceNodeToContract(
                             this.pluginConfig.announceNodeToContract.writeIntervalInMs,
-                            announceNodeToContractHelper,
+                            contractFacade,
                             streamrClient
                         )
                     }
@@ -156,7 +151,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         try {
                             await maintainOperatorValue(
                                 this.pluginConfig.maintainOperatorValue.withdrawLimitSafetyFraction,
-                                maintainOperatorValueHelper
+                                contractFacade
                             )
                         } catch (err) {
                             logger.error('Encountered error while checking earnings', { err })
@@ -172,7 +167,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 try {
                     await inspectRandomNode(
                         operatorContractAddress,
-                        inspectRandomNodeHelper,
+                        contractFacade,
                         streamPartAssignments,
                         streamrClient,
                         this.pluginConfig.inspectRandomNode.heartbeatTimeoutInMs,
@@ -188,13 +183,13 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 }
             }, this.pluginConfig.inspectRandomNode.intervalInMs, false, this.abortController.signal)
 
-            voteOnSuspectNodeHelper.addReviewRequestListener(async (sponsorship, targetOperator, partition) => {
+            contractFacade.addReviewRequestListener(async (sponsorship, targetOperator, partition) => {
                 if (isLeader()) {
                     await inspectSuspectNode(
                         sponsorship,
                         targetOperator,
                         partition,
-                        voteOnSuspectNodeHelper,
+                        contractFacade,
                         streamrClient,
                         this.abortController.signal,
                         (operatorContractAddress) => fetchRedundancyFactor({
