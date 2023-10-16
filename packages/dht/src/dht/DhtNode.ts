@@ -25,7 +25,8 @@ import {
     Logger,
     MetricsContext,
     hexToBinary,
-    binaryToHex
+    binaryToHex,
+    waitForCondition
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RandomContactList } from './contact/RandomContactList'
@@ -719,6 +720,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public getNumberOfWeakLockedConnections(): number {
         return this.connectionManager!.getNumberOfWeakLockedConnections()
+    }
+
+    public async waitForConnectivity(): Promise<void> {
+        await waitForCondition(() => this.connections.size > 0)
     }
 
     public isJoinOngoing(): boolean {
