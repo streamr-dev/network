@@ -84,7 +84,9 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             setImmediate(async () => {
                 if (this.options.layer0?.entryPoints !== undefined) {
                     // TODO should catch possible rejection?
-                    await this.layer0DhtNode!.joinDht(this.options.layer0.entryPoints)
+                    // the question mark is there to avoid problems when stop() is called before start()
+                    // -> TODO change to exlamation mark if we don't support that (and remove NetworkStackStoppedDuringStart.test)
+                    await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
                 }
             })
         }
