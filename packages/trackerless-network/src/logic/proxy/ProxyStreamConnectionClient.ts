@@ -46,8 +46,6 @@ interface ProxyStreamConnectionClientConfig {
     ownPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     connectionLocker: ConnectionLocker
-    userId: EthereumAddress
-    nodeName?: string
     minPropagationTargets?: number // TODO could be required option if we apply all defaults somewhere at higher level
 }
 
@@ -113,13 +111,12 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     }
 
     async setProxies(
-        streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
-        logger.trace('Setting proxies', { streamPartId, peerDescriptors: nodes, direction, userId, connectionCount })
+        logger.trace('Setting proxies', { streamPartId: this.config.streamPartId, peerDescriptors: nodes, direction, userId, connectionCount })
         if (connectionCount !== undefined && connectionCount > nodes.length) {
             throw Error('Cannot set connectionCount above the size of the configured array of nodes')
         }

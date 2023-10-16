@@ -14,14 +14,18 @@ import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     'nearbyNodeView' | 'randomNodeView' | 'targetNeighbors' | 'propagation'
-    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'name' | 'numOfTargetNeighbors'
-    | 'maxNumberOfContacts' | 'minPropagationTargets' | 'rpcCommunicator' | 'nodeViewSize' | 'acceptProxyConnections'
-    | 'neighborUpdateInterval' | 'inspector' | 'temporaryConnectionServer'>
+    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'numOfTargetNeighbors'
+    | 'rpcCommunicator' | 'nodeViewSize'
+    | 'inspector' | 'temporaryConnectionServer'> & {
+        maxNumberOfContacts?: number
+        minPropagationTargets?: number
+        acceptProxyConnections?: boolean
+        neighborUpdateInterval?: number
+    }
 
 const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
     const ownNodeId = getNodeIdFromPeerDescriptor(config.ownPeerDescriptor)
     const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(`layer2-${config.streamPartId}`, config.P2PTransport)
-    const name = config.name ?? ownNodeId
     const numOfTargetNeighbors = config.numOfTargetNeighbors ?? 4
     const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
     const minPropagationTargets = config.minPropagationTargets ?? 2
@@ -63,13 +67,13 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         nearbyNodeView,
         randomNodeView,
         targetNeighbors,
-        N: numOfTargetNeighbors
+        maxNeighborCount: numOfTargetNeighbors
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
         targetNeighbors,
         nearbyNodeView,
         doFindNeighbors: (excludedIds) => handshaker.attemptHandshakesOnContacts(excludedIds),
-        N: numOfTargetNeighbors
+        minCount: numOfTargetNeighbors
     })
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
         targetNeighbors,
@@ -97,13 +101,8 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         neighborUpdateManager,
         propagation,
         numOfTargetNeighbors,
-        minPropagationTargets,
-        maxNumberOfContacts,
-        name,
         nodeViewSize: maxNumberOfContacts,
-        acceptProxyConnections,
         proxyConnectionServer,
-        neighborUpdateInterval,
         inspector,
         temporaryConnectionServer
     }

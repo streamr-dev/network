@@ -60,6 +60,10 @@ export class MockLayer0 extends EventEmitter implements ILayer0 {
     }
 
     // eslint-disable-next-line class-methods-use-this
+    async waitForNetworkConnectivity(): Promise<void> {
+    }
+
+    // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
 
     }

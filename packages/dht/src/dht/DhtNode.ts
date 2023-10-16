@@ -25,7 +25,8 @@ import {
     Logger,
     MetricsContext,
     hexToBinary,
-    binaryToHex
+    binaryToHex,
+    waitForCondition
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RandomContactList } from './contact/RandomContactList'
@@ -67,6 +68,7 @@ export interface DhtNodeOptions {
     metricsContext?: MetricsContext
     storeHighestTtl?: number
     storeMaxTtl?: number
+    networkConnectivityTimeout?: number
 
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
@@ -99,6 +101,7 @@ export class DhtNodeConfig {
     maxConnections = 80
     storeHighestTtl = 60000
     storeMaxTtl = 60000
+    networkConnectivityTimeout = 10000
     storeNumberOfCopies = 5
     metricsContext = new MetricsContext()
     peerId = new UUID().toHex()
@@ -719,6 +722,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public getNumberOfWeakLockedConnections(): number {
         return this.connectionManager!.getNumberOfWeakLockedConnections()
+    }
+
+    public async waitForNetworkConnectivity(): Promise<void> {
+        await waitForCondition(() => this.connections.size > 0, this.config.networkConnectivityTimeout)
     }
 
     public isJoinOngoing(): boolean {

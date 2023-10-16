@@ -196,6 +196,10 @@
                                 "min": 50000,
                                 "max": 64000
                             }
+                        },
+                        "networkConnectivityTimeout": {
+                            "type": "number",
+                            "default": 10000
                         }
                     },
                     "default": {}
@@ -215,10 +219,6 @@
                             "type": "number",
                             "default": 2
                         },
-                        "firstConnectionTimeout": {
-                            "type": "number",
-                            "default": 10000
-                        }, 
                         "acceptProxyConnections": {
                             "type": "boolean",
                             "default": false

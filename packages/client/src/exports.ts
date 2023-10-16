@@ -31,7 +31,7 @@ export {
     PrivateKeyAuthConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     NetworkConfig,
-    ControlLayerConfig as Layer0Config,
+    ControlLayerConfig,
     NetworkNodeConfig,
     NetworkPeerDescriptor,
     ConnectivityMethod,
