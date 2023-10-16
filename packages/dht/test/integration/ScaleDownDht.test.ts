@@ -25,8 +25,7 @@ describe('Scaling down a Dht network', () => {
 
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
-            nodeName: entryPointId
+            type: NodeType.NODEJS
         }
 
         for (let i = 1; i < NUM_NODES; i++) {

@@ -12,8 +12,7 @@ describe('Layer1', () => {
 
     const entryPoint0Descriptor = {
         kademliaId: PeerID.fromString(layer0EntryPointId).value,
-        type: NodeType.NODEJS,
-        nodeName: layer0EntryPointId
+        type: NodeType.NODEJS
     }
 
     let layer0EntryPoint: DhtNode

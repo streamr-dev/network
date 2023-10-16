@@ -6,8 +6,7 @@ describe('Layer1 Scale', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('0').value,
         type: NodeType.NODEJS,
-        websocket: { host: '127.0.0.1', port: 43228, tls: false },
-        nodeName: 'entrypoint'
+        websocket: { host: '127.0.0.1', port: 43228, tls: false }
     }
 
     const STREAM_ID = 'stream'

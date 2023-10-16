@@ -13,8 +13,7 @@ describe('NetworkStack', () => {
     const streamPartId = StreamPartIDUtils.parse('stream1#0')
 
     const epDescriptor = createMockPeerDescriptor({
-        websocket: { host: '127.0.0.1', port: 32222, tls: false },
-        nodeName: 'entrypoint'
+        websocket: { host: '127.0.0.1', port: 32222, tls: false }
     })
 
     beforeEach(async () => {

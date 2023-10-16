@@ -48,8 +48,7 @@ describe('Migrating data from node to node in DHT', () => {
 
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
-            nodeName: entryPointId
+            type: NodeType.NODEJS
         }
 
         nodes.push(entryPoint)

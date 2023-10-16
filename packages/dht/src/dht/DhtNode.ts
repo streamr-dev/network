@@ -25,7 +25,6 @@ import {
     Logger,
     MetricsContext,
     hexToBinary,
-    binaryToHex,
     waitForCondition
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -138,7 +137,7 @@ const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
 
-export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string, nodeName?: string): PeerDescriptor => {
+export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string): PeerDescriptor => {
     let kademliaId: Uint8Array
     if (msg) {
         kademliaId = peerId ? hexToBinary(peerId) : PeerID.fromIp(msg.host).value
@@ -146,7 +145,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
         kademliaId = hexToBinary(peerId!)
     }
     const nodeType = isNodeJS() ? NodeType.NODEJS : NodeType.BROWSER
-    const ret: PeerDescriptor = { kademliaId, nodeName: nodeName ? nodeName : binaryToHex(kademliaId), type: nodeType }
+    const ret: PeerDescriptor = { kademliaId, type: nodeType }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
         ret.openInternet = true
@@ -449,9 +448,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.config.peerDescriptor) {
             this.ownPeerDescriptor = this.config.peerDescriptor
         } else {
-            this.ownPeerDescriptor = createPeerDescriptor(connectivityResponse,
-                this.config.peerId,
-                this.config.nodeName)
+            this.ownPeerDescriptor = createPeerDescriptor(connectivityResponse, this.config.peerId)
         }
         return this.ownPeerDescriptor
     }

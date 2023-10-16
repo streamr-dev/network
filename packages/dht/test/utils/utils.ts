@@ -60,8 +60,7 @@ export const createMockConnectionDhtNode = async (stringId: string,
     const peerDescriptor: PeerDescriptor = {
         kademliaId: id.value,
         type: NodeType.NODEJS,
-        region: getRandomRegion(),
-        nodeName: nodeName ? nodeName : stringId
+        region: getRandomRegion()
     }
 
     const mockConnectionManager = new ConnectionManager({
@@ -87,7 +86,6 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
     const descriptor: PeerDescriptor = {
         kademliaId: id.value,
         type: NodeType.NODEJS,
-        nodeName: stringId
     }
 
     const node = new DhtNode({

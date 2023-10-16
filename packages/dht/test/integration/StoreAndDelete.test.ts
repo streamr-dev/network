@@ -29,8 +29,7 @@ describe('Storing data in DHT', () => {
         nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
-            nodeName: entryPointId
+            type: NodeType.NODEJS
         }
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {

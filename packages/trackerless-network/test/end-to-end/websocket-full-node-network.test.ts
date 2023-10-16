@@ -10,7 +10,6 @@ describe('Full node network with WebSocket connections only', () => {
 
     const NUM_OF_NODES = 48
     const epPeerDescriptor = createMockPeerDescriptor({
-        nodeName: 'entrypoint',
         websocket: { host: '127.0.0.1', port: 15555, tls: false }
     })
     const streamPartId = StreamPartIDUtils.parse('websocket-network#0')
