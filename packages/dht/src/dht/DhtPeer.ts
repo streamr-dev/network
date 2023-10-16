@@ -1,7 +1,6 @@
 import { IDhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     ClosestPeersRequest,
-    LeaveNotice,
     PeerDescriptor,
     PingRequest
 } from '../proto/packages/dht/protos/DhtRpc'
@@ -70,7 +69,7 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
         return false
     }
 
-    leaveNotice(): void {
+    /*TODO maybe some class should use this? leaveNotice(): void {
         logger.trace(`Sending leaveNotice on ${this.getServiceId()} from ${this.getPeerId().toKey()}`)
         const request: LeaveNotice = {
             serviceId: this.getServiceId()
@@ -81,7 +80,7 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
         this.getClient().leaveNotice(request, options).catch((e) => {
             logger.trace('Failed to send leaveNotice' + e)
         })
-    }
+    }*/
 
     getPeerId(): PeerID {
         return peerIdFromPeerDescriptor(this.getPeerDescriptor())

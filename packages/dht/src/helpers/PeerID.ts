@@ -49,12 +49,12 @@ export class PeerID {
         return new PeerID({ stringValue })
     }
 
-    static generateRandom(): PeerID {
+    /*TODO maybe some class should use this? static generateRandom(): PeerID {
         // generate 160 bit random Uint8array
         const value = new Uint8Array(20)
         crypto.randomFillSync(value)
         return new PeerID({ value })
-    }
+    }*/
 
     // TODO convert to static method?
     // eslint-disable-next-line class-methods-use-this
