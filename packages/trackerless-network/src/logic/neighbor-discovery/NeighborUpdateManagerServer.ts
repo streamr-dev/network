@@ -1,6 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DhtCallContext, ListeningRpcCommunicator } from '@streamr/dht'
-import { PeerDescriptor } from '@streamr/dht/src/exports'
+import { DhtCallContext, ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'

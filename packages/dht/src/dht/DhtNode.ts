@@ -41,7 +41,7 @@ import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/WebRTC/WebRtcConnector'
 import { registerExternalApiRpcMethods } from './registerExternalApiRpcMethods'
 import { RemoteExternalApi } from './RemoteExternalApi'
-import { UUID } from '../exports'
+import { UUID } from '../helpers/UUID'
 import { isNodeJS } from '../helpers/browser/isNodeJS'
 import { sample } from 'lodash'
 

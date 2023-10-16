@@ -9,7 +9,8 @@ import { v4 } from 'uuid'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { Remote } from './contact/Remote'
-import { PeerID, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../exports'
+import { PeerID } from '../helpers/PeerID'
+import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 

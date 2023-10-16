@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerID } from '../../src/exports'
+import { PeerID } from '../../src/helpers/PeerID'
 import { keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
