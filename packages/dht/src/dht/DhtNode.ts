@@ -641,7 +641,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
-        if (this.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
+        if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
         }
         return this.dataStore!.storeDataToDht(key, data)
@@ -658,7 +658,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async getDataFromDht(idToFind: Uint8Array): Promise<DataEntry[]> {
-        if (this.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
+        if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
         }
         const result = await this.recursiveFinder!.startRecursiveFind(idToFind, FindMode.DATA)
@@ -723,10 +723,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public getNumberOfWeakLockedConnections(): number {
         return this.connectionManager!.getNumberOfWeakLockedConnections()
-    }
-
-    public isJoinOngoing(): boolean {
-        return this.peerDiscovery!.isJoinOngoing()
     }
 
     public hasJoined(): boolean {
