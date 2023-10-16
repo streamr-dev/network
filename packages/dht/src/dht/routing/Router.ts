@@ -114,7 +114,7 @@ export class Router implements IRouter {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RoutingErrors.STOPPED)
         }
-        logger.trace(`Routing message ${routedMessage.requestId} from ${routedMessage.sourcePeer?.kademliaId} to ${routedMessage.destinationPeer?.kademliaId}`)
+        logger.trace(`Routing message ${routedMessage.requestId} from ${routedMessage.sourcePeer!.kademliaId} to ${routedMessage.destinationPeer!.kademliaId}`)
         routedMessage.routingPath.push(this.ownPeerDescriptor)
         const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         this.addRoutingSession(session)
@@ -247,7 +247,7 @@ export class Router implements IRouter {
             return createRouteMessageAck(forwardMessage, 'forwardMessage() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(forwardMessage.requestId)) {
             logger.trace(`Forwarding message ${forwardMessage.requestId} 
-        from ${forwardMessage.sourcePeer?.kademliaId} to ${forwardMessage.destinationPeer?.kademliaId} is likely a duplicate`)
+        from ${forwardMessage.sourcePeer!.kademliaId} to ${forwardMessage.destinationPeer!.kademliaId} is likely a duplicate`)
             return createRouteMessageAck(forwardMessage, 'message given to forwardMessage() service is likely a duplicate')
         }
         logger.trace(`Processing received forward routeMessage ${forwardMessage.requestId}`)
