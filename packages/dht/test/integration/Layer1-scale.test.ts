@@ -3,7 +3,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
 import { UUID } from '../../src/helpers/UUID'
-import { NodeType } from '../../src/exports'
+import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 
 describe('Layer1', () => {
 
