@@ -116,7 +116,7 @@ export class RecursiveFinder implements IRecursiveFinder {
                 15000
             )
         } catch (err) {
-            logger.debug(`doFindRecursively failed with error ${this.ownPeerDescriptor.nodeName} ${err}`)
+            logger.debug(`doFindRecursively failed with error ${err}`)
         }
         this.findAndReportLocalData(idToFind, findMode, [], this.ownPeerDescriptor, sessionId)
         this.ongoingSessions.delete(sessionId)
@@ -218,7 +218,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         }
         const ack = this.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE_FIND, excludedPeer)
         if (ack.error === RoutingErrors.NO_CANDIDATES_FOUND) {
-            logger.trace(`findRecursively Node ${this.ownPeerDescriptor.nodeName} found no candidates`)
+            logger.trace(`findRecursively Node found no candidates`)
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                 closestPeersToDestination, data, true)
         } else if (ack.error) {

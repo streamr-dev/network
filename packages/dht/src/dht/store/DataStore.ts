@@ -246,7 +246,7 @@ export class DataStore implements IStoreService {
             this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(kademliaId))
         }
 
-        logger.trace(this.ownPeerDescriptor.nodeName + ' storeData()')
+        logger.trace('storeData()')
         return StoreDataResponse.create()
     }
 
@@ -260,7 +260,7 @@ export class DataStore implements IStoreService {
 
     // RPC service implementation
     public async migrateData(request: MigrateDataRequest, context: ServerCallContext): Promise<MigrateDataResponse> {
-        logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData()')
+        logger.trace('server-side migrateData()')
         const dataEntry = request.dataEntry!
 
         const wasStored = this.localDataStore.storeEntry(dataEntry)
@@ -271,7 +271,7 @@ export class DataStore implements IStoreService {
         if (!this.selfIsOneOfClosestPeers(dataEntry.kademliaId)) {
             this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.kademliaId))
         }
-        logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData() at end')
+        logger.trace('server-side migrateData() at end')
         return MigrateDataResponse.create()
     }
 
