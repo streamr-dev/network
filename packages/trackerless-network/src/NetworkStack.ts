@@ -73,7 +73,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         if (this.getStreamrNode().isProxiedStreamPart(streamPartId)) {
             throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
         }
-        await this.connectToLayer0NetworkIfRequired()
+        await this.connectToControlLayerIfRequired()
         this.getStreamrNode().joinStreamPart(streamPartId)
         if (neighborRequirement !== undefined) {
             await waitForCondition(() => {
@@ -89,7 +89,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         }
         // TODO could combine these two calls to isProxiedStreamPart?
         if (!this.streamrNode!.isProxiedStreamPart(streamPartId)) {
-            await this.connectToLayer0NetworkIfRequired()
+            await this.connectToControlLayerIfRequired()
         }
         this.getStreamrNode().broadcast(msg)
     }
@@ -103,20 +103,11 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
         } else {
             if (doJoin) {
-                await this.connectToLayer0Network()
+                // in practice there aren't be existing connections and therefore this always connects
+                await this.connectToControlLayerIfRequired()
             }
         }
         await this.streamrNode?.start(this.layer0DhtNode!, connectionManager, connectionManager)
-    }
-
-    private async connectToLayer0Network(): Promise<void> {
-        setImmediate(async () => {
-            if (this.options.layer0?.entryPoints !== undefined) {
-                // TODO should catch possible rejection?
-                await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
-            }
-        })
-        await this.waitForFirstConnection()
     }
 
     private async waitForFirstConnection(): Promise<void> {
@@ -125,13 +116,17 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         await readinessListener.waitUntilReady(timeout)
     }
 
-    private async connectToLayer0NetworkIfRequired(): Promise<void> {
+    private async connectToControlLayerIfRequired(): Promise<void> {
         // TODO we could wrap joinDht with pOnce and call it here (no else-if needed in that case)
         if (!this.layer0DhtNode!.hasJoined()) {
-            await this.connectToLayer0Network()
-        } else {
-            await this.waitForFirstConnection()
+            setImmediate(async () => {
+                if (this.options.layer0?.entryPoints !== undefined) {
+                    // TODO should catch possible rejection?
+                    await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
+                }
+            })
         }
+        await this.waitForFirstConnection()
     }
 
     getStreamrNode(): StreamrNode {
