@@ -404,7 +404,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return this.locks.isRemoteLocked(hexId)
     }
 
-    public canConnect(peerDescriptor: PeerDescriptor, _ip: string, _port: number): boolean {
+    private canConnect(peerDescriptor: PeerDescriptor, _ip: string, _port: number): boolean {
         // Perhaps the connection's state should be checked here
         return !this.hasConnection(peerDescriptor) // TODO: Add port range check
     }

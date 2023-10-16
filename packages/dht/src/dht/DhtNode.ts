@@ -433,7 +433,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return distance1 < distance2
     }
 
-    public handleMessage(message: Message): void {
+    private handleMessage(message: Message): void {
         if (message.serviceId === this.config.serviceId) {
             logger.trace('callig this.handleMessageFromPeer ' + this.config.nodeName + ', ' +
                 message.sourceDescriptor?.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
@@ -785,7 +785,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     // IDHTRpcService implementation
-    public async leaveNotice(request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
+    private async leaveNotice(request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
         // TODO check signature??
         if (request.serviceId === this.config.serviceId) {
             this.removeContact((context as DhtCallContext).incomingSourceDescriptor!)
