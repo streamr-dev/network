@@ -20,7 +20,7 @@ describe('Scaling down a Dht network', () => {
         nodes = []
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
-            undefined, K, entryPointId, MAX_CONNECTIONS)
+            undefined, K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
 
         entrypointDescriptor = {
@@ -30,7 +30,7 @@ describe('Scaling down a Dht network', () => {
 
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, nodeId, MAX_CONNECTIONS)
+            const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, MAX_CONNECTIONS)
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))

@@ -37,7 +37,6 @@ describe('Layer1', () => {
                 undefined,
                 undefined,
                 undefined,
-                undefined,
                 60000
             )
             nodes.push(node)

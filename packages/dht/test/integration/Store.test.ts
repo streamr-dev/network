@@ -24,7 +24,7 @@ describe('Storing data in DHT', () => {
         nodes = []
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
-            undefined, K, entryPointId, MAX_CONNECTIONS)
+            undefined, K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
@@ -35,7 +35,7 @@ describe('Storing data in DHT', () => {
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
             const node = await createMockConnectionDhtNode(nodeId, simulator, 
-                undefined, K, nodeId, MAX_CONNECTIONS, 60000)
+                undefined, K, MAX_CONNECTIONS, 60000)
             nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }

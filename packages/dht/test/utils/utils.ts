@@ -46,7 +46,6 @@ export const createMockConnectionDhtNode = async (stringId: string,
     simulator: Simulator,
     binaryId?: Uint8Array,
     K?: number,
-    nodeName?: string,
     maxConnections = 80,
     dhtJoinTimeout = 45000
 ): Promise<DhtNode> => {
@@ -71,7 +70,6 @@ export const createMockConnectionDhtNode = async (stringId: string,
     const node = new DhtNode({
         peerDescriptor: peerDescriptor,
         transportLayer: mockConnectionManager,
-        nodeName: nodeName,
         numberOfNodesPerKBucket: K ? K : 8,
         maxConnections: maxConnections,
         dhtJoinTimeout
@@ -90,7 +88,7 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
 
     const node = new DhtNode({
         peerDescriptor: descriptor, transportLayer: layer0Node,
-        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket: 8, nodeName: stringId
+        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket: 8
     })
     await node.start()
     return node

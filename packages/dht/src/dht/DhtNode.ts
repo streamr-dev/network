@@ -76,7 +76,6 @@ export interface DhtNodeOptions {
     websocketPortRange?: PortRange
     peerId?: string
 
-    nodeName?: string
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
     webrtcAllowPrivateAddresses?: boolean
@@ -110,7 +109,6 @@ export class DhtNodeConfig {
     entryPoints?: PeerDescriptor[]
     websocketHost?: string
     websocketPortRange?: PortRange
-    nodeName?: string
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
     webrtcAllowPrivateAddresses?: boolean

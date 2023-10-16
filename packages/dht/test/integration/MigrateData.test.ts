@@ -42,7 +42,7 @@ describe('Migrating data from node to node in DHT', () => {
         nodes = []
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
-            Uint8Array.from(dhtIds[0].data), K, entryPointId, MAX_CONNECTIONS)
+            Uint8Array.from(dhtIds[0].data), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodesById.set(entryPoint.getNodeId().toKey(), entryPoint)
 
@@ -57,7 +57,7 @@ describe('Migrating data from node to node in DHT', () => {
             const nodeId = `${i}`
 
             const node = await createMockConnectionDhtNode(nodeId, simulator,
-                Uint8Array.from(dhtIds[i].data), K, nodeId, MAX_CONNECTIONS)
+                Uint8Array.from(dhtIds[i].data), K, MAX_CONNECTIONS)
             nodesById.set(node.getNodeId().toKey(), node)
             nodes.push(node)
         }

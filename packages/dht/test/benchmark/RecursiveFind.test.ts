@@ -32,7 +32,7 @@ describe('Recursive find correctness', () => {
 
         nodes = []
         const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data), undefined, entryPointId)
+        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data), undefined)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
@@ -43,7 +43,7 @@ describe('Recursive find correctness', () => {
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
 
-            const node = await createMockConnectionDhtNode(nodeId, simulator, Uint8Array.from(dhtIds[i].data), undefined, nodeId)
+            const node = await createMockConnectionDhtNode(nodeId, simulator, Uint8Array.from(dhtIds[i].data), undefined)
             nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }
