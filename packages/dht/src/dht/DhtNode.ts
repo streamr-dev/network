@@ -475,7 +475,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             return
         }
         this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
-        logger.trace(`Removed contact ${contact.getPeerId().value.toString()}`)
+        logger.trace(`Removed contact ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
         this.emit(
             'kbucketContactRemoved',
             contact.getPeerDescriptor()
@@ -502,7 +502,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             // Important to lock here, before the ping result is known
             this.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
             if (this.connections.has(contact.getPeerId().toKey())) {
-                logger.trace(`Added new contact ${contact.getPeerId().value.toString()}`)
+                logger.trace(`Added new contact ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
                 this.emit(
                     'newKbucketContact',
                     contact.getPeerDescriptor(),
@@ -512,7 +512,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 logger.trace('starting ping ' + keyFromPeerDescriptor(contact.getPeerDescriptor()))
                 contact.ping().then((result) => {
                     if (result) {
-                        logger.trace(`Added new contact ${contact.getPeerId().value.toString()}`)
+                        logger.trace(`Added new contact ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
                         this.emit(
                             'newKbucketContact',
                             contact.getPeerDescriptor(),

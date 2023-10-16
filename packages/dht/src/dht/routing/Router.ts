@@ -114,7 +114,7 @@ export class Router implements IRouter {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RoutingErrors.STOPPED)
         }
-        logger.trace(`Peer ${this.ownPeerId.value} routing message ${routedMessage.requestId} 
+        logger.trace(`Peer ${keyFromPeerDescriptor(this.ownPeerDescriptor)} routing message ${routedMessage.requestId} 
             from ${routedMessage.sourcePeer?.kademliaId} to ${routedMessage.destinationPeer?.kademliaId}`)
         routedMessage.routingPath.push(this.ownPeerDescriptor)
         const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
@@ -203,7 +203,7 @@ export class Router implements IRouter {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
-            logger.trace(`Peer ${this.ownPeerId?.value} routing message ${routedMessage.requestId} 
+            logger.trace(`Peer ${keyFromPeerDescriptor(this.ownPeerDescriptor)} routing message ${routedMessage.requestId} 
                 from ${routedMessage.sourcePeer!.kademliaId} to ${routedMessage.destinationPeer!.kademliaId} is likely a duplicate`)
             return createRouteMessageAck(routedMessage, 'message given to routeMessage() service is likely a duplicate')
         }
@@ -247,7 +247,7 @@ export class Router implements IRouter {
         if (this.stopped) {
             return createRouteMessageAck(forwardMessage, 'forwardMessage() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(forwardMessage.requestId)) {
-            logger.trace(`Peer ${this.ownPeerId.value} forwarding message ${forwardMessage.requestId} 
+            logger.trace(`Peer ${keyFromPeerDescriptor(this.ownPeerDescriptor)} forwarding message ${forwardMessage.requestId} 
         from ${forwardMessage.sourcePeer?.kademliaId} to ${forwardMessage.destinationPeer?.kademliaId} is likely a duplicate`)
             return createRouteMessageAck(forwardMessage, 'message given to forwardMessage() service is likely a duplicate')
         }
@@ -262,7 +262,7 @@ export class Router implements IRouter {
     }
 
     private forwardToDestination(routedMessage: RouteMessageWrapper): RouteMessageAck {
-        logger.trace(`Peer ${this.ownPeerId.value} forwarding found message targeted to self ${routedMessage.requestId}`)
+        logger.trace(`Peer ${keyFromPeerDescriptor(this.ownPeerDescriptor)} forwarding found message targeted to self ${routedMessage.requestId}`)
         const forwardedMessage = routedMessage.message!
         if (this.ownPeerId.equals(peerIdFromPeerDescriptor(forwardedMessage.targetDescriptor!))) {
             this.connectionManager?.handleMessage(forwardedMessage)

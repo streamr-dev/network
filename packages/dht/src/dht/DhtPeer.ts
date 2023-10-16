@@ -9,7 +9,7 @@ import { v4 } from 'uuid'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { Remote } from './contact/Remote'
-import { PeerID, peerIdFromPeerDescriptor } from '../exports'
+import { PeerID, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../exports'
 
 const logger = new Logger(module)
 
@@ -37,7 +37,7 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
     }
 
     async getClosestPeers(kademliaId: Uint8Array): Promise<PeerDescriptor[]> {
-        logger.trace(`Requesting getClosestPeers on ${this.getServiceId()} from ${this.getPeerId().toKey()}`)
+        logger.trace(`Requesting getClosestPeers on ${this.getServiceId()} from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: ClosestPeersRequest = {
             kademliaId,
             requestId: v4()
@@ -52,7 +52,7 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
     }
 
     async ping(): Promise<boolean> {
-        logger.trace(`Requesting ping on ${this.getServiceId()} from ${this.getPeerId().toKey()}`)
+        logger.trace(`Requesting ping on ${this.getServiceId()} from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: PingRequest = {
             requestId: v4()
         }
@@ -65,13 +65,13 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
                 return true
             }
         } catch (err) {
-            logger.trace(`ping failed on ${this.getServiceId()} to ${this.getPeerId().toKey()}: ${err}`)
+            logger.trace(`ping failed on ${this.getServiceId()} to ${keyFromPeerDescriptor(this.getPeerDescriptor())}: ${err}`)
         }
         return false
     }
 
     leaveNotice(): void {
-        logger.trace(`Sending leaveNotice on ${this.getServiceId()} from ${this.getPeerId().toKey()}`)
+        logger.trace(`Sending leaveNotice on ${this.getServiceId()} from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: LeaveNotice = {
             serviceId: this.getServiceId()
         }
