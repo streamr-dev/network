@@ -100,13 +100,13 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
         } else {
             if (doJoin) {
-                await this.joinDht()
+                await this.connectToLayer0Network()
             }
         }
         await this.streamrNode?.start(this.layer0DhtNode!, connectionManager, connectionManager)
     }
 
-    private async joinDht(): Promise<void> {
+    private async connectToLayer0Network(): Promise<void> {
         setImmediate(async () => {
             if (this.options.layer0?.entryPoints !== undefined) {
                 // TODO should catch possible rejection?
@@ -128,7 +128,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         }
         // TODO we could wrap joinDht with pOnce and call it here (no else-if needed in that case)
         if (!this.layer0DhtNode!.hasJoined()) {
-            await this.joinDht()
+            await this.connectToLayer0Network()
         } else if (this.layer0DhtNode!.getNumberOfConnections() < 1) {
             await this.waitForFirstConnection()
         }
