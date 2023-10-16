@@ -218,7 +218,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const sortedCandidates = disconnectionCandidates.getAllContacts()
         const targetNum = this.connections.size - maxConnections
         for (let i = 0; i < sortedCandidates.length && i < targetNum; i++) {
-            logger.trace('garbageCollecting ' + sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor().nodeName)
+            logger.trace('garbageCollecting ' + keyFromPeerDescriptor(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()))
             this.gracefullyDisconnectAsync(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor(),
                 DisconnectMode.NORMAL).catch((_e) => { })
         }
@@ -417,7 +417,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             logger.trace('handleMessage filtered duplicate ' + keyFromPeerDescriptor(message.sourceDescriptor!) + ' ' + message.serviceId + ' ' + message.messageId)
             return
         }
-        this.messageDuplicateDetector.add(message.messageId, message.sourceDescriptor!.nodeName!, message)
+        this.messageDuplicateDetector.add(message.messageId, keyFromPeerDescriptor(message.sourceDescriptor!), message)
         if (message.serviceId === this.serviceId) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {

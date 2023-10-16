@@ -92,7 +92,7 @@ describe('Migrating data from node to node in DHT', () => {
 
         logger.info('Nodes sorted according to distance to data are: ')
         closest.forEach((contact) => {
-            logger.info('' + contact.getPeerDescriptor().nodeName)
+            logger.info(keyFromPeerDescriptor(contact.getPeerDescriptor()))
         })
 
         logger.info('node 0 joining to the DHT')

@@ -114,7 +114,7 @@ export class PeerDiscovery {
         if (this.stopped || this.rejoinOngoing) {
             return
         }
-        logger.debug(`Rejoining DHT ${this.config.serviceId} ${this.config.ownPeerDescriptor.nodeName}!`)
+        logger.debug(`Rejoining DHT ${this.config.serviceId} ${keyFromPeerDescriptor(this.config.ownPeerDescriptor)}!`)
         this.rejoinOngoing = true
         try {
             this.config.neighborList.clear()

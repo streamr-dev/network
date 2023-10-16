@@ -5,6 +5,7 @@ import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice, Disconnec
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 
 import * as Err from '../helpers/errors'
+import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -66,7 +67,7 @@ export class RemoteConnectionLocker {
     }
 
     public async gracefulDisconnect(disconnecMode: DisconnectMode): Promise<void> {
-        logger.trace(`Notifying a graceful disconnect to ${this.targetPeerDescriptor.nodeName}`)
+        logger.trace(`Notifying a graceful disconnect to ${keyFromPeerDescriptor(this.targetPeerDescriptor)}`)
         const request: DisconnectNotice = {
             peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,

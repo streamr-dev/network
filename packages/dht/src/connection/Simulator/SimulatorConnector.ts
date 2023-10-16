@@ -34,7 +34,7 @@ export class SimulatorConnector {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        logger.trace('connect() ' + targetPeerDescriptor.nodeName)
+        logger.trace('connect() ' + keyFromPeerDescriptor(targetPeerDescriptor))
         const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(peerKey)
         if (existingConnection) {
