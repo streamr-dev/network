@@ -26,7 +26,7 @@ interface HandshakerConfig {
     nearbyNodeView: NodeList
     randomNodeView: NodeList
     rpcCommunicator: RpcCommunicator
-    N: number
+    maxNeighborCount: number
 }
 
 const logger = new Logger(module)
@@ -50,11 +50,10 @@ export class Handshaker implements IHandshaker {
         this.client = toProtoRpcClient(new HandshakeRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
         this.server = new HandshakerServer({
             streamPartId: this.config.streamPartId,
-            ownPeerDescriptor: this.config.ownPeerDescriptor,
             targetNeighbors: this.config.targetNeighbors,
             connectionLocker: this.config.connectionLocker,
             ongoingHandshakes: this.ongoingHandshakes,
-            N: this.config.N,
+            maxNeighborCount: this.config.maxNeighborCount,
             handshakeWithInterleaving: (target: PeerDescriptor, senderId: NodeID) => this.handshakeWithInterleaving(target, senderId),
             createRemoteHandshaker: (target: PeerDescriptor) => this.createRemoteHandshaker(target),
             createRemoteNode: (target: PeerDescriptor) => this.createRemoteNode(target)
@@ -65,11 +64,11 @@ export class Handshaker implements IHandshaker {
             (req: StreamPartHandshakeRequest, context) => this.server.handshake(req, context))
     }
 
-    public async attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]> {
-        if (this.config.targetNeighbors.size() + this.ongoingHandshakes.size < this.config.N - 2) {
+    async attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]> {
+        if (this.config.targetNeighbors.size() + this.ongoingHandshakes.size < this.config.maxNeighborCount - 2) {
             logger.trace(`Attempting parallel handshakes with ${PARALLEL_HANDSHAKE_COUNT} targets`)
             return this.selectParallelTargetsAndHandshake(excludedIds)
-        } else if (this.config.targetNeighbors.size() + this.ongoingHandshakes.size < this.config.N) {
+        } else if (this.config.targetNeighbors.size() + this.ongoingHandshakes.size < this.config.maxNeighborCount) {
             logger.trace(`Attempting handshake with new target`)
             return this.selectNewTargetAndHandshake(excludedIds)
         }
@@ -175,7 +174,7 @@ export class Handshaker implements IHandshaker {
         )
     }
 
-    public getOngoingHandshakes(): Set<string> {
+    getOngoingHandshakes(): Set<string> {
         return this.ongoingHandshakes
     }
 

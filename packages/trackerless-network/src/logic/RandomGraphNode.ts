@@ -54,11 +54,6 @@ export interface StrictRandomGraphNodeConfig {
     propagation: Propagation
     rpcCommunicator: ListeningRpcCommunicator
     numOfTargetNeighbors: number
-    maxNumberOfContacts: number
-    minPropagationTargets: number
-    name: string
-    acceptProxyConnections: boolean
-    neighborUpdateInterval: number
     inspector: IInspector
     temporaryConnectionServer: TemporaryConnectionRpcServer
     proxyConnectionServer?: ProxyStreamConnectionServer
@@ -259,13 +254,10 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.config.layer1.getClosestContacts().forEach((peer: PeerDescriptor) => {
             uniqueNodes.add(peer)
         })
-        //this.config.layer1.getKBucketPeers().forEach((peer: PeerDescriptor) => {
-        //    uniqueNodes.add(peer)
-        //})
         return Array.from(uniqueNodes)
     }
 
-    public hasProxyConnection(nodeId: NodeID): boolean {
+    hasProxyConnection(nodeId: NodeID): boolean {
         if (this.config.proxyConnectionServer) {
             return this.config.proxyConnectionServer.hasConnection(nodeId)
         }

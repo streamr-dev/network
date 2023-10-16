@@ -14,8 +14,6 @@ export interface ILayer1 {
     removeContact: (peerDescriptor: PeerDescriptor, removeFromOpenInternetPeers?: boolean) => void
     getClosestContacts: (maxCount?: number) => PeerDescriptor[]
     getNumberOfContacts(): number
-    //getKBucketPeers: () => PeerDescriptor[]
-    //getBucketSize: () => number
     joinDht: (entryPoints: PeerDescriptor[], doRandomJoin?: boolean, retry?: boolean) => Promise<void>
     start: () => Promise<void>
     stop: () => Promise<void>

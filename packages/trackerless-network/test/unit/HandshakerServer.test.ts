@@ -27,7 +27,6 @@ describe('HandshakerServer', () => {
 
         handshakerServer = new HandshakerServer({
             streamPartId: STREAM_PART_ID,
-            ownPeerDescriptor,
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
             createRemoteHandshaker: (_p) => createMockRemoteHandshaker(),
@@ -37,7 +36,7 @@ describe('HandshakerServer', () => {
                 return true
             },
             targetNeighbors,
-            N: 4
+            maxNeighborCount: 4
         })
     })
 

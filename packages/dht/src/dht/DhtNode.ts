@@ -27,7 +27,8 @@ import {
     Logger,
     MetricsContext,
     hexToBinary,
-    binaryToHex
+    binaryToHex,
+    waitForCondition
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Empty } from '../proto/google/protobuf/empty'
@@ -70,6 +71,7 @@ export interface DhtNodeOptions {
     metricsContext?: MetricsContext
     storeHighestTtl?: number
     storeMaxTtl?: number
+    networkConnectivityTimeout?: number
 
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
@@ -102,6 +104,7 @@ export class DhtNodeConfig {
     maxConnections = 80
     storeHighestTtl = 60000
     storeMaxTtl = 60000
+    networkConnectivityTimeout = 10000
     storeNumberOfCopies = 5
     metricsContext = new MetricsContext()
     peerId = new UUID().toHex()
@@ -190,7 +193,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         getKBucketPeers: () => { return getTI(this.peerManager!)!.getKBucketPeers() },
         getBucketSize: () => { return getTI(this.peerManager!)!.getKBucketSize() }
     }
-    public testInterfaceType?: IDhtNodeTest 
+    public testInterfaceType?: IDhtNodeTest
 
     constructor(conf: Partial<DhtNodeConfig>) {
         super()
@@ -236,12 +239,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
                 connectionManagerConfig.websocketHost = this.config.peerDescriptor.websocket.host
-                connectionManagerConfig.websocketPortRange = { 
+                connectionManagerConfig.websocketPortRange = {
                     min: this.config.peerDescriptor.websocket.port,
                     max: this.config.peerDescriptor.websocket.port
                 }
-            // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
-            } else if (this.config.websocketPortRange) { 
+                // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
+            } else if (this.config.websocketPortRange) {
                 connectionManagerConfig.websocketHost = this.config.websocketHost
                 connectionManagerConfig.websocketPortRange = this.config.websocketPortRange
             }
@@ -313,7 +316,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
         })
         registerExternalApiRpcMethods(this)
-        if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
+        if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0
             && !isSamePeerDescriptor(this.config.entryPoints[0], this.ownPeerDescriptor!)) {
             this.connectToEntryPoint(this.config.entryPoints[0])
         }
@@ -354,12 +357,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 && this.config.entryPoints.length > 0
             ) {
                 setImmediate(async () => {
-                    await Promise.all(this.config.entryPoints!.map((entryPoint) => 
+                    await Promise.all(this.config.entryPoints!.map((entryPoint) =>
                         this.peerDiscovery!.rejoinDht(entryPoint)
-                    )) 
+                    ))
                 })
             }
-        
+
         })
         this.transportLayer!.on('connected', (peerDescriptor: PeerDescriptor) => {
             this.peerManager!.handleConnected(peerDescriptor)
@@ -444,7 +447,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started) {
             throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
-        await Promise.all(entryPointDescriptors.map((entryPoint) => 
+        await Promise.all(entryPointDescriptors.map((entryPoint) =>
             this.peerDiscovery!.joinDht(entryPoint, doRandomJoin, retry)
         ))
     }
@@ -532,6 +535,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.connectionManager!.getNumberOfWeakLockedConnections()
     }
 
+    public async waitForNetworkConnectivity(): Promise<void> {
+        await waitForCondition(() => {
+            if (!this.peerManager) {
+                return false
+            } else {
+                return (this.peerManager.getNumberOfPeers() > 0)
+            }
+        }, this.config.networkConnectivityTimeout)
+    }
+
     public isJoinOngoing(): boolean {
         return this.peerDiscovery!.isJoinOngoing()
     }
@@ -583,7 +596,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         this.transportLayer = undefined
         this.connectionManager = undefined
-       
+
         this.removeAllListeners()
     }
 

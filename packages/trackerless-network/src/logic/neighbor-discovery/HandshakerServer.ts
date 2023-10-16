@@ -12,11 +12,10 @@ import { StreamPartID } from '@streamr/protocol'
 
 interface HandshakerServerConfig {
     streamPartId: StreamPartID
-    ownPeerDescriptor: PeerDescriptor
     targetNeighbors: NodeList
     connectionLocker: ConnectionLocker
     ongoingHandshakes: Set<NodeID>
-    N: number
+    maxNeighborCount: number
     createRemoteHandshaker: (target: PeerDescriptor) => RemoteHandshaker
     createRemoteNode: (peerDescriptor: PeerDescriptor) => RemoteRandomGraphNode
     handshakeWithInterleaving: (target: PeerDescriptor, senderId: NodeID) => Promise<boolean>
@@ -41,7 +40,7 @@ export class HandshakerServer implements IHandshakeRpc {
             || this.config.ongoingHandshakes.has(getNodeIdFromPeerDescriptor(senderDescriptor))
         ) {
             return this.acceptHandshake(request, senderDescriptor)
-        } else if (this.config.targetNeighbors.size() + this.config.ongoingHandshakes.size < this.config.N) {
+        } else if (this.config.targetNeighbors.size() + this.config.ongoingHandshakes.size < this.config.maxNeighborCount) {
             return this.acceptHandshake(request, senderDescriptor)
         } else if (this.config.targetNeighbors.size(getInterleaveSourceIds()) >= 2) {
             return this.acceptHandshakeWithInterleaving(request, senderDescriptor)

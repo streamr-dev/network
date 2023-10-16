@@ -89,7 +89,7 @@ describe('StreamPartEntryPointDiscovery', () => {
             getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
-            cacheInterval: 2000
+            storeInterval: 2000
         })
         entryPointDiscoveryWithoutData = new StreamPartEntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
@@ -99,7 +99,7 @@ describe('StreamPartEntryPointDiscovery', () => {
             getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
-            cacheInterval: 2000
+            storeInterval: 2000
         })
     })
 
@@ -142,7 +142,7 @@ describe('StreamPartEntryPointDiscovery', () => {
         expect(storeCalled).toEqual(1)
         await wait(4500)
         await entryPointDiscoveryWithData.destroy()
-        // we have configured cacheInterval to 2 seconds, i.e. after 4.5 seconds it should have been called 2 more items 
+        // we have configured storeInterval to 2 seconds, i.e. after 4.5 seconds it should have been called 2 more items 
         expect(storeCalled).toEqual(3)
     })
 
