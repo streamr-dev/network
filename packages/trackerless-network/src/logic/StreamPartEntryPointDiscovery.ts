@@ -114,7 +114,7 @@ export class StreamPartEntryPointDiscovery {
     }
 
     private async queryEntrypoints(key: Uint8Array): Promise<PeerDescriptor[]> {
-        logger.trace(`Finding data from dht node ${this.config.ownPeerDescriptor.nodeName}`)
+        logger.trace(`Finding data from dht node ${getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)}`)
         try {
             const results = await this.config.getEntryPointData(key)
             if (results.dataEntries) {
@@ -129,7 +129,7 @@ export class StreamPartEntryPointDiscovery {
 
     // TODO remove this method in NET-1122
     private async queryEntryPointsViaNode(key: Uint8Array, node: PeerDescriptor): Promise<PeerDescriptor[]> {
-        logger.trace(`Finding data via node ${this.config.ownPeerDescriptor.nodeName}`)
+        logger.trace(`Finding data via node ${getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)}`)
         try {
             const results = await this.config.getEntryPointDataViaNode(key, node)
             if (results) {
