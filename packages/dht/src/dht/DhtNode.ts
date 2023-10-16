@@ -395,7 +395,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private onTransportDisconnected(peerDescriptor: PeerDescriptor, dicsonnectionType: DisconnectionType): void {
-        logger.trace('disconnected: ' + keyFromPeerDescriptor(peerDescriptor) + ' ')
+        logger.trace('disconnected: ' + keyFromPeerDescriptor(peerDescriptor))
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
         // only remove from bucket if we are on layer 0
         if (this.connectionManager) {
@@ -508,7 +508,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                     this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
                 )
             } else {    // open connection by pinging
-                logger.trace('starting ping ' + keyFromPeerDescriptor(contact.getPeerDescriptor()) + ' ')
+                logger.trace('starting ping ' + keyFromPeerDescriptor(contact.getPeerDescriptor()))
                 contact.ping().then((result) => {
                     if (result) {
                         logger.trace(`Added new contact ${contact.getPeerId().value.toString()}`)
@@ -518,7 +518,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                             this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
                         )
                     } else {
-                        logger.trace('ping failed ' + keyFromPeerDescriptor(contact.getPeerDescriptor()) + ' ')
+                        logger.trace('ping failed ' + keyFromPeerDescriptor(contact.getPeerDescriptor()))
                         this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
                         this.removeContact(contact.getPeerDescriptor())
                         this.addClosestContactToBucket()

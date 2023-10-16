@@ -228,7 +228,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const disconnectionCandidates = new SortedContactList<Contact>(peerIdFromPeerDescriptor(this.ownPeerDescriptor!), 100000)
         this.connections.forEach((connection) => {
             if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
-                logger.trace('disconnecting in timeout interval: ' + keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) + ' ')
+                logger.trace('disconnecting in timeout interval: ' + keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
                 disconnectionCandidates.addContact(new Contact(connection.getPeerDescriptor()!))
             }
         })
@@ -525,7 +525,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 logger.trace(keyOrUnknownFromPeerDescriptor(newConnection.getPeerDescriptor()) + ' acceptIncomingConnection() replace current connection')
                 // replace the current connection
                 const oldConnection = this.connections.get(newPeerID.toKey())!
-                logger.trace('replaced: ' + keyOrUnknownFromPeerDescriptor(newConnection.getPeerDescriptor()) + ' ')
+                logger.trace('replaced: ' + keyOrUnknownFromPeerDescriptor(newConnection.getPeerDescriptor()))
                 const buffer = oldConnection.stealOutputBuffer()
                 
                 for (const data of buffer) {
