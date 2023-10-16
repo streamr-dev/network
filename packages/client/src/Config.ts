@@ -113,7 +113,7 @@ export interface ControlLayerConfig {
     externalIp?: string
 
     /**
-     * The maximum time to wait when forming a connection to the control layer. If the connection
+     * The maximum time to wait when establishing connectivity to the control layer. If the connection
      * is not formed within this time, the client's network node will throw an error.
      */
     networkConnectivityTimeout?: number
