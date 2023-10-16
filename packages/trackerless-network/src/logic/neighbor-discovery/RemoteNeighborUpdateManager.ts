@@ -15,7 +15,7 @@ export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient
 
     async updateNeighbors(neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
         const request: NeighborUpdate = {
-            randomGraphId: this.getServiceId(),
+            streamPartId: this.getServiceId(),
             neighborDescriptors: neighbors,
             removeMe: false
         }

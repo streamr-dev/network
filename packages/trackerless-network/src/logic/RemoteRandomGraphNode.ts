@@ -21,7 +21,7 @@ export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
 
     leaveStreamPartNotice(): void {
         const notification: LeaveStreamPartNotice = {
-            randomGraphId: this.getServiceId()
+            streamPartId: this.getServiceId()
         }
         const options = this.formDhtRpcOptions({
             notification: true
