@@ -9,10 +9,11 @@ import {
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { StreamPartID } from '@streamr/protocol'
 
 export interface StreamNodeServerConfig {
     ownPeerDescriptor: PeerDescriptor
-    randomGraphId: string
+    streamPartId: StreamPartID
     markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
     broadcast: (message: StreamMessage, previousNode?: NodeID) => void
     onLeaveNotice(senderId: NodeID): void
@@ -38,7 +39,7 @@ export class StreamNodeServer implements INetworkRpc {
     }
 
     async leaveStreamPartNotice(message: LeaveStreamPartNotice, context: ServerCallContext): Promise<Empty> {
-        if (message.randomGraphId === this.config.randomGraphId) {
+        if (message.streamPartId === this.config.streamPartId) {
             const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
             const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
             this.config.onLeaveNotice(senderId)
