@@ -203,7 +203,7 @@ export class Router implements IRouter {
             return createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
             logger.trace(`Routing message ${routedMessage.requestId} from `
-                + `${routedMessage.sourcePeer!.kademliaId} to ${routedMessage.destinationPeer!.kademliaId} is likely a duplicate`)
+                + `${keyFromPeerDescriptor(routedMessage.sourcePeer!)} to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)} is likely a duplicate`)
             return createRouteMessageAck(routedMessage, 'message given to routeMessage() service is likely a duplicate')
         }
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
