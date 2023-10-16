@@ -73,7 +73,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         if (this.getStreamrNode().isProxiedStreamPart(streamPartId)) {
             throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
         }
-        await this.connectToControlLayerIfRequired()
+        await this.ensureConnectedToControlLayer()
         this.getStreamrNode().joinStreamPart(streamPartId)
         if (neighborRequirement !== undefined) {
             await waitForCondition(() => {
@@ -89,7 +89,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         }
         // TODO could combine these two calls to isProxiedStreamPart?
         if (!this.streamrNode!.isProxiedStreamPart(streamPartId)) {
-            await this.connectToControlLayerIfRequired()
+            await this.ensureConnectedToControlLayer()
         }
         this.getStreamrNode().broadcast(msg)
     }
@@ -104,7 +104,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         } else {
             if (doJoin) {
                 // in practice there aren't be existing connections and therefore this always connects
-                await this.connectToControlLayerIfRequired()
+                await this.ensureConnectedToControlLayer()
             }
         }
         await this.streamrNode?.start(this.layer0DhtNode!, connectionManager, connectionManager)
@@ -116,7 +116,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         await readinessListener.waitUntilReady(timeout)
     }
 
-    private async connectToControlLayerIfRequired(): Promise<void> {
+    private async ensureConnectedToControlLayer(): Promise<void> {
         // TODO we could wrap joinDht with pOnce and call it here (no else-if needed in that case)
         if (!this.layer0DhtNode!.hasJoined()) {
             setImmediate(async () => {
