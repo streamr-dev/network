@@ -270,7 +270,8 @@ export class ManagedConnection extends EventEmitter<Events> {
                         result2 = await raceEvents3<Events>(this,
                             ['bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
                     } catch (ex) {
-                        logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' Exception from raceEvents3 while waiting bufferSentByOtherConnection or closing ' + ex)
+                        logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor)
+                            + ' Exception from raceEvents3 while waiting bufferSentByOtherConnection or closing ' + ex)
                         throw ex
                     }
                     if (result2.winnerName === 'bufferSentByOtherConnection') {

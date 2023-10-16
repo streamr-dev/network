@@ -55,7 +55,8 @@ export class SimulatorConnection extends Connection implements IConnection {
         logger.trace(keyFromPeerDescriptor(this.ownPeerDescriptor) + ', ' + keyFromPeerDescriptor(this.targetPeerDescriptor) + ' close()')
 
         if (!this.stopped) {
-            logger.trace(keyFromPeerDescriptor(this.ownPeerDescriptor) + ', ' + keyFromPeerDescriptor(this.targetPeerDescriptor) + ' close() not stopped')
+            logger.trace(keyFromPeerDescriptor(this.ownPeerDescriptor) + ', '
+                + keyFromPeerDescriptor(this.targetPeerDescriptor) + ' close() not stopped')
             this.stopped = true
 
             try {
@@ -130,7 +131,8 @@ export class SimulatorConnection extends Connection implements IConnection {
         logger.trace(keyFromPeerDescriptor(this.ownPeerDescriptor) + ' doDisconnect()')
         this.stopped = true
 
-        logger.trace(keyFromPeerDescriptor(this.ownPeerDescriptor) + ', ' + keyFromPeerDescriptor(this.targetPeerDescriptor) + ' doDisconnect emitting')
+        logger.trace(keyFromPeerDescriptor(this.ownPeerDescriptor) + ', '
+            + keyFromPeerDescriptor(this.targetPeerDescriptor) + ' doDisconnect emitting')
 
         this.emit('disconnected', disconnectionType)
 

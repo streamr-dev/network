@@ -431,7 +431,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         if (this.messageDuplicateDetector.isMostLikelyDuplicate(message.messageId)) {
-            logger.trace('handleMessage filtered duplicate ' + keyFromPeerDescriptor(message.sourceDescriptor!) + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('handleMessage filtered duplicate ' + keyFromPeerDescriptor(message.sourceDescriptor!) 
+                + ' ' + message.serviceId + ' ' + message.messageId)
             return
         }
         this.messageDuplicateDetector.add(message.messageId, keyFromPeerDescriptor(message.sourceDescriptor!), message)
@@ -480,13 +481,16 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (storedConnection && storedConnection.connectionId.equals(connection.connectionId)) {
             this.locks.clearAllLocks(hexKey)
             this.connections.delete(hexKey)
-            logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) + ' deleted connection in onDisconnected() ' + disconnectionType)
+            logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
+                + ' deleted connection in onDisconnected() ' + disconnectionType)
             this.emit('disconnected', connection.getPeerDescriptor()!, disconnectionType)
             this.onConnectionCountChange()
         } else {
-            logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) + ' onDisconnected() did nothing, no such connection in connectionManager')
+            logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
+                + ' onDisconnected() did nothing, no such connection in connectionManager')
             if (storedConnection) {
-                logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) + ' connectionIds do not match ' + storedConnection.connectionId + ' ' + connection.connectionId)
+                logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
+                + ' connectionIds do not match ' + storedConnection.connectionId + ' ' + connection.connectionId)
             }
         }
 
@@ -522,7 +526,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const hexKey = keyFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         if (this.connections.has(hexKey)) {
             if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.ownPeerDescriptor!))) {
-                logger.trace(keyOrUnknownFromPeerDescriptor(newConnection.getPeerDescriptor()) + ' acceptIncomingConnection() replace current connection')
+                logger.trace(keyOrUnknownFromPeerDescriptor(newConnection.getPeerDescriptor())
+                    + ' acceptIncomingConnection() replace current connection')
                 // replace the current connection
                 const oldConnection = this.connections.get(newPeerID.toKey())!
                 logger.trace('replaced: ' + keyOrUnknownFromPeerDescriptor(newConnection.getPeerDescriptor()))
