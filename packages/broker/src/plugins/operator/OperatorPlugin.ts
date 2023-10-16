@@ -20,26 +20,26 @@ import { ContractFacade } from './ContractFacade'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
-    heartbeatUpdateIntervalInMs: number // 10 secs
+    heartbeatUpdateIntervalInMs: number
     fleetState: {
-        pruneAgeInMs: number // 5 mins
-        pruneIntervalInMs: number // 30 secs
-        latencyExtraInMs: number // 2 secs
+        pruneAgeInMs: number
+        pruneIntervalInMs: number
+        latencyExtraInMs: number
     }
-    checkOperatorValueBreachIntervalInMs: number // 1 hour
+    checkOperatorValueBreachIntervalInMs: number
     announceNodeToContract: {
-        pollIntervalInMs: number // 10 mins
-        writeIntervalInMs: number // 24 hours
+        pollIntervalInMs: number
+        writeIntervalInMs: number
     }
     maintainOperatorValue: {
-        intervalInMs: number // 1 hour
-        withdrawLimitSafetyFraction: number // 0.5
-        minSponsorshipEarningsInWithdraw: number // 1
-        maxSponsorshipsInWithdraw: number // 20
+        intervalInMs: number
+        withdrawLimitSafetyFraction: number
+        minSponsorshipEarningsInWithdraw: number
+        maxSponsorshipsInWithdraw: number
     }
     inspectRandomNode: {
-        intervalInMs: number // 15 mins
-        heartbeatTimeoutInMs: number // 2 mins
+        intervalInMs: number
+        heartbeatTimeoutInMs: number
     }
 }
 
