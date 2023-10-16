@@ -10,7 +10,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IRecursiveFinder } from '../find/RecursiveFinder'
-import { isSamePeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreService } from '../../proto/packages/dht/protos/DhtRpc.server'
@@ -217,7 +217,7 @@ export class DataStore implements IStoreService {
                 if (response.deleted) {
                     logger.trace('remoteStore.deleteData() returned success')
                 } else {
-                    logger.trace('could not delete data from ' + PeerID.fromValue(closestNodes[i].kademliaId))
+                    logger.trace('could not delete data from ' + keyFromPeerDescriptor(closestNodes[i]))
                 }
                 successfulNodes.push(closestNodes[i])
             } catch (e) {

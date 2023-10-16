@@ -339,7 +339,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.isConnectionToSelf(peerDescriptor)) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
         }
-        logger.trace(`Sending message to: ${peerDescriptor.kademliaId.toString()}`)
+        logger.trace(`Sending message to: ${keyFromPeerDescriptor(peerDescriptor)}`)
         message = {
             ...message,
             targetDescriptor: message.targetDescriptor || peerDescriptor,

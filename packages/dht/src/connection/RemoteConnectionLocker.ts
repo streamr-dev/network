@@ -28,7 +28,7 @@ export class RemoteConnectionLocker {
     }
 
     public async lockRequest(serviceId: string): Promise<boolean> {
-        logger.trace(`Requesting locked connection to ${this.targetPeerDescriptor.kademliaId.toString()}`)
+        logger.trace(`Requesting locked connection to ${keyFromPeerDescriptor(this.targetPeerDescriptor)}`)
         const request: LockRequest = {
             peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,
@@ -48,7 +48,7 @@ export class RemoteConnectionLocker {
     }
 
     public unlockRequest(serviceId: string): void {
-        logger.trace(`Requesting connection to be unlocked from ${this.targetPeerDescriptor.kademliaId.toString()}`)
+        logger.trace(`Requesting connection to be unlocked from ${keyFromPeerDescriptor(this.targetPeerDescriptor)}`)
         const request: UnlockRequest = {
             peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,

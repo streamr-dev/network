@@ -571,7 +571,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         const peerId = peerIdFromPeerDescriptor(contact)
         if (!peerId.equals(this.ownPeerId!)) {
-            logger.trace(`Adding new contact ${contact.kademliaId.toString()}`)
+            logger.trace(`Adding new contact ${keyFromPeerDescriptor(contact)}`)
             const dhtPeer = new DhtPeer(
                 this.ownPeerDescriptor!,
                 contact,
@@ -606,7 +606,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started || this.stopped) {
             return
         }
-        logger.trace(`Removing contact ${contact.kademliaId.toString()}`)
+        logger.trace(`Removing contact ${keyFromPeerDescriptor(contact)}`)
         const peerId = peerIdFromPeerDescriptor(contact)
         this.bucket!.remove(peerId.value)
         this.neighborList!.removeContact(peerId)
