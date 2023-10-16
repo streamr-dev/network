@@ -8,7 +8,7 @@ export interface ILayer0 extends ITransport {
     storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]>
     deleteDataFromDht(key: Uint8Array): Promise<void>
     getKnownEntryPoints(): PeerDescriptor[]
-    waitForConnectivity(): Promise<void>
+    waitForNetworkConnectivity(): Promise<void>
     isJoinOngoing(): boolean
     stop(): Promise<void>
 }

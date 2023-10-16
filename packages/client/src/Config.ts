@@ -116,7 +116,7 @@ export interface ControlLayerConfig {
      * The maximum time to wait when forming a connection to the control layer. If the connection
      * is not formed within this time, the client's network node will throw an error.
      */
-    connectionTimeout?: number
+    networkConnectivityTimeout?: number
 }
 
 export interface NetworkNodeConfig {

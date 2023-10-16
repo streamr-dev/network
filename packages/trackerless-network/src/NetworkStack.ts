@@ -1,12 +1,12 @@
 import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor } from '@streamr/dht'
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
-import { MetricsContext, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
 
 export interface NetworkOptions {
-    layer0?: DhtNodeOptions & { connectionTimeout?: number }
+    layer0?: DhtNodeOptions
     networkNode?: StreamrNodeConfig
     metricsContext?: MetricsContext
 }
@@ -88,7 +88,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
                 }
             })
         }
-        await this.layer0DhtNode!.waitForConnectivity()
+        await this.layer0DhtNode!.waitForNetworkConnectivity()
     }
 
     getStreamrNode(): StreamrNode {
