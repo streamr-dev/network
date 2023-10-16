@@ -13,7 +13,7 @@ describe('WebSocket', () => {
     const clientWebSocket = new ClientWebSocket()
 
     beforeAll(async () => {
-        await webSocketServer.start({ min: 9999, max: 9999 })
+        await webSocketServer.start({ min: 9977, max: 9977 }, false)
     })
 
     it('Happy path', (done) => {
@@ -55,7 +55,7 @@ describe('WebSocket', () => {
             })
         })
 
-        clientWebSocket.connect('wss://127.0.0.1:9999')
+        clientWebSocket.connect('ws://127.0.0.1:9977')
     })
 
     afterAll(async () => {

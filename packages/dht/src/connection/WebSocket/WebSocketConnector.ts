@@ -34,8 +34,7 @@ const cert = '-----BEGIN CERTIFICATE----- MIIDlzCCAn+gAwIBAgIBATANBgkqhkiG9w0BAQ
 const logger = new Logger(module)
 
 export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string => {
-    // return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
-    return 'wss://' + ws.host + ':' + ws.port
+    return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
 }
 
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
@@ -54,6 +53,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private host?: string
     private entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
+    private readonly serverTlsEnabled: boolean
     private selectedPort?: number
     private readonly protocolVersion: string
     private ownPeerDescriptor?: PeerDescriptor
@@ -69,6 +69,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         portRange?: PortRange,
         host?: string,
         entrypoints?: PeerDescriptor[],
+        serverTlsEnabled?: boolean,
         tlsCertificate?: TlsCertificate
     ) {
         this.protocolVersion = protocolVersion
@@ -77,6 +78,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         this.portRange = portRange
         this.host = host
         this.entrypoints = entrypoints
+        this.serverTlsEnabled = serverTlsEnabled!
         this.tlsCertificate = tlsCertificate
         this.autocertifierRpcCommunicator = autocertifierRpcCommunicator
         this.canConnectFunction = fnCanConnect.bind(this)
@@ -120,9 +122,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     this.attachHandshaker(connection)
                 }
             })
-            const port = await this.webSocketServer.start(this.portRange!, this.tlsCertificate)
+            const port = await this.webSocketServer.start(this.portRange!, this.serverTlsEnabled, this.tlsCertificate)
             this.selectedPort = port
-            this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.tlsCertificate !== undefined, this.host)
+            this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.serverTlsEnabled, this.host)
         }
     }
 

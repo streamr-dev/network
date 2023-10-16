@@ -72,6 +72,7 @@ export interface DhtNodeOptions {
     entryPoints?: PeerDescriptor[]
     websocketHost?: string
     websocketPortRange?: PortRange
+    websocketServerEnableTls?: boolean
     peerId?: string
 
     nodeName?: string
@@ -101,6 +102,7 @@ export class DhtNodeConfig {
     storeNumberOfCopies = 5
     metricsContext = new MetricsContext()
     peerId = new UUID().toHex()
+    websocketServerEnableTls = true 
 
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
