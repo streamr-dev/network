@@ -86,11 +86,7 @@ describe('MaintainTopologyService', () => {
             2 * 1000
         )
         const operatorFleetState = createOperatorFleetState(formCoordinationStreamId(serviceHelperConfig.operatorContractAddress))
-        const maintainTopologyHelper = new MaintainTopologyHelper({
-            ...serviceHelperConfig,
-            minSponsorshipEarningsInWithdraw: 1,
-            maxSponsorshipsInWithdraw: 20
-        })
+        const maintainTopologyHelper = new MaintainTopologyHelper(serviceHelperConfig)
         const assignments = new StreamPartAssignments(
             await client.getNodeId(),
             3,

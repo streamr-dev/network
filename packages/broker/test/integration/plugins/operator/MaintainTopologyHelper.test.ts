@@ -55,9 +55,7 @@ describe(MaintainTopologyHelper, () => {
         beforeEach(() => {
             topologyHelper = new MaintainTopologyHelper({
                 ...operatorServiceConfig,
-                signer: nodeWallet,
-                minSponsorshipEarningsInWithdraw: 1,
-                maxSponsorshipsInWithdraw: 20
+                signer: nodeWallet
             })
         })
 
@@ -124,9 +122,7 @@ describe(MaintainTopologyHelper, () => {
         beforeEach(() => {
             topologyHelper = new MaintainTopologyHelper({
                 ...operatorServiceConfig,
-                signer: nodeWallet,
-                minSponsorshipEarningsInWithdraw: 1,
-                maxSponsorshipsInWithdraw: 20
+                signer: nodeWallet
             })
         })
 

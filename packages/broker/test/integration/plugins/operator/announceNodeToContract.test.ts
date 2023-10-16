@@ -13,9 +13,7 @@ describe('announceNodeToContract', () => {
         })
         contractFacade = ContractFacade.createInstance({
             ...operatorServiceConfig,
-            signer: nodeWallets[0],
-            minSponsorshipEarningsInWithdraw: 1,
-            maxSponsorshipsInWithdraw: 20
+            signer: nodeWallets[0]
         })
     })
 

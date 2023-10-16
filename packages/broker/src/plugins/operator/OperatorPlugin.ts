@@ -70,13 +70,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         }
         logger.info('Fetched redundancy factor', { redundancyFactor })
 
-        const extendConfig = {
-            ...serviceConfig,
-            minSponsorshipEarningsInWithdraw: this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
-            maxSponsorshipsInWithdraw: this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
-        }
-        const contractFacade = ContractFacade.createInstance(extendConfig)
-        const maintainTopologyHelper = new MaintainTopologyHelper(extendConfig)
+        const contractFacade = ContractFacade.createInstance(serviceConfig)
+        const maintainTopologyHelper = new MaintainTopologyHelper(serviceConfig)
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             streamrClient,
             this.pluginConfig.heartbeatUpdateIntervalInMs,
@@ -120,7 +115,9 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             }, this.pluginConfig.heartbeatUpdateIntervalInMs, this.abortController.signal)
             await scheduleAtInterval(
                 async () => checkOperatorValueBreach(
-                    contractFacade
+                    contractFacade,
+                    this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
+                    this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
                 ).catch((err) => {
                     logger.warn('Encountered error', { err })
                 }),
@@ -150,6 +147,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         try {
                             await maintainOperatorValue(
                                 this.pluginConfig.maintainOperatorValue.withdrawLimitSafetyFraction,
+                                this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
+                                this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw,
                                 contractFacade
                             )
                         } catch (err) {

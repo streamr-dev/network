@@ -27,9 +27,7 @@ describe('ContractFacade', () => {
 
         const contractFacade = ContractFacade.createInstance({
             ...operatorServiceConfig,
-            signer: nodeWallets[0],
-            minSponsorshipEarningsInWithdraw: 1,
-            maxSponsorshipsInWithdraw: 20
+            signer: nodeWallets[0]
         })
         const randomOperatorAddress = await contractFacade.getRandomOperator()
         expect(randomOperatorAddress).toBeDefined()
@@ -49,9 +47,7 @@ describe('ContractFacade', () => {
         const { operatorWallet, operatorContract, operatorServiceConfig } = await setupOperatorContract()
         const contractFacade = ContractFacade.createInstance({
             ...operatorServiceConfig,
-            signer: undefined as any,
-            minSponsorshipEarningsInWithdraw: 1,
-            maxSponsorshipsInWithdraw: 20
+            signer: undefined as any
         })
 
         const client = createClient(await fetchPrivateKeyWithGas())
@@ -105,9 +101,7 @@ describe('ContractFacade', () => {
 
         const contractFacade = ContractFacade.createInstance({
             ...flagger.operatorServiceConfig,
-            signer: flagger.nodeWallets[0],
-            minSponsorshipEarningsInWithdraw: 1,
-            maxSponsorshipsInWithdraw: 20
+            signer: flagger.nodeWallets[0]
         })
         await contractFacade.flag(toEthereumAddress(sponsorship.address), toEthereumAddress(target.operatorContract.address), 2)
 

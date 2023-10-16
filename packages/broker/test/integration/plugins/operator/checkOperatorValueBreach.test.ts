@@ -60,9 +60,7 @@ describe('checkOperatorValueBreach', () => {
         const allowedDifference = valueBeforeWithdraw.mul(await streamrConfig.maxAllowedEarningsFraction()).div(ONE_ETHER).toBigInt()
         const contractFacade = ContractFacade.createInstance({
             ...watcherConfig,
-            signer: watcherWallets[0],
-            minSponsorshipEarningsInWithdraw: 1,
-            maxSponsorshipsInWithdraw: 20
+            signer: watcherWallets[0]
         })
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
         contractFacade.getRandomOperator = async () => {
@@ -71,7 +69,7 @@ describe('checkOperatorValueBreach', () => {
 
         logger.debug('Waiting until above', { allowedDifference })
         await waitForCondition(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
-        await checkOperatorValueBreach(contractFacade)
+        await checkOperatorValueBreach(contractFacade, 1, 20)
 
         const earnings = await getEarnings(operatorContract)
         expect(earnings).toBeLessThan(allowedDifference)

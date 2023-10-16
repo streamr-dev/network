@@ -43,14 +43,12 @@ describe('maintainOperatorValue', () => {
         await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
         const contractFacade = ContractFacade.createInstance({
             ...operatorServiceConfig,
-            signer: nodeWallets[0],
-            minSponsorshipEarningsInWithdraw: 1,
-            maxSponsorshipsInWithdraw: 20
+            signer: nodeWallets[0]
         })
-        const { maxAllowedEarningsDataWei } = await contractFacade.getMyEarnings()
+        const { maxAllowedEarningsDataWei } = await contractFacade.getMyEarnings(1, 20)
         const triggerWithdrawLimitDataWei = multiply(maxAllowedEarningsDataWei, 1 - SAFETY_FRACTION)
         await waitForCondition(async () => {
-            const { sumDataWei } = await contractFacade.getMyEarnings()
+            const { sumDataWei } = await contractFacade.getMyEarnings(1, 20)
             const earnings = sumDataWei
             return earnings > triggerWithdrawLimitDataWei
         }, 10000, 1000)
@@ -58,6 +56,8 @@ describe('maintainOperatorValue', () => {
 
         await maintainOperatorValue(
             SAFETY_FRACTION,
+            1,
+            20,
             contractFacade
         )
         const valueAfterWithdraw = await operatorContract.valueWithoutEarnings()

@@ -1,7 +1,8 @@
 import { StreamID, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { ContractFacade, ExtendedOperatorServiceConfig } from './ContractFacade'
+import { ContractFacade } from './ContractFacade'
+import { OperatorServiceConfig } from './OperatorPlugin'
 
 const logger = new Logger(module)
 
@@ -25,7 +26,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     private onUnstakedListener?: (sponsorship: string) => unknown
     private readonly contractFacade: ContractFacade
 
-    constructor(config: ExtendedOperatorServiceConfig) {
+    constructor(config: OperatorServiceConfig) {
         super()
         this.contractFacade = ContractFacade.createInstance(config)
     }
