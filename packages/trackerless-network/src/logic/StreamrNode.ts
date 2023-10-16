@@ -309,7 +309,7 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     getNodeId(): NodeID {
-        return this.layer0!.getNodeId().toKey() as unknown as NodeID
+        return getNodeIdFromPeerDescriptor(this.layer0!.getPeerDescriptor())
     }
 
     getNeighbors(streamPartId: StreamPartID): NodeID[] {
