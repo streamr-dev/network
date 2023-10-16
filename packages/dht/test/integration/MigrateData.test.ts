@@ -6,7 +6,7 @@ import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/
 import { execSync } from 'child_process'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'
-import { PeerID } from '../../src/exports'
+import { PeerID } from '../../src/helpers/PeerID'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'

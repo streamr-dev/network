@@ -16,10 +16,11 @@ import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/N
 import { RemoteHandshaker } from './RemoteHandshaker'
 import { HandshakerServer } from './HandshakerServer'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { StreamPartID } from '@streamr/protocol'
 
 interface HandshakerConfig {
     ownPeerDescriptor: PeerDescriptor
-    randomGraphId: string
+    streamPartId: StreamPartID
     connectionLocker: ConnectionLocker
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
@@ -48,7 +49,7 @@ export class Handshaker implements IHandshaker {
         this.config = config
         this.client = toProtoRpcClient(new HandshakeRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
         this.server = new HandshakerServer({
-            randomGraphId: this.config.randomGraphId,
+            streamPartId: this.config.streamPartId,
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             targetNeighbors: this.config.targetNeighbors,
             connectionLocker: this.config.connectionLocker,
@@ -130,7 +131,7 @@ export class Handshaker implements IHandshaker {
         )
         if (result.accepted) {
             this.config.targetNeighbors.add(this.createRemoteNode(targetNeighbor.getPeerDescriptor()))
-            this.config.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.config.randomGraphId)
+            this.config.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.config.streamPartId)
         }
         if (result.interleaveTargetDescriptor) {
             await this.handshakeWithInterleaving(result.interleaveTargetDescriptor, targetNodeId)
@@ -143,7 +144,7 @@ export class Handshaker implements IHandshaker {
         const targetNeighbor = new RemoteHandshaker(
             this.config.ownPeerDescriptor,
             target,
-            this.config.randomGraphId,
+            this.config.streamPartId,
             this.client
         )
         const targetNodeId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
@@ -155,21 +156,21 @@ export class Handshaker implements IHandshaker {
         )
         if (result.accepted) {
             this.config.targetNeighbors.add(this.createRemoteNode(targetNeighbor.getPeerDescriptor()))
-            this.config.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.config.randomGraphId)
+            this.config.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.config.streamPartId)
         }
         this.ongoingHandshakes.delete(targetNodeId)
         return result.accepted
     }
 
     private createRemoteHandshaker(targetPeerDescriptor: PeerDescriptor): RemoteHandshaker {
-        return new RemoteHandshaker(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.randomGraphId, this.client)
+        return new RemoteHandshaker(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
     }
 
     private createRemoteNode(targetPeerDescriptor: PeerDescriptor): RemoteRandomGraphNode {
         return new RemoteRandomGraphNode(
             this.config.ownPeerDescriptor,
             targetPeerDescriptor,
-            this.config.randomGraphId,
+            this.config.streamPartId,
             toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
         )
     }
