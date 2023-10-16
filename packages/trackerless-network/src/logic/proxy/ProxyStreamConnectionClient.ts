@@ -1,9 +1,9 @@
 import {
+    ConnectionLocker,
     ITransport,
     ListeningRpcCommunicator,
     PeerDescriptor
 } from '@streamr/dht'
-import { ConnectionLocker } from '@streamr/dht/src/exports'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, Logger, addManagedEventListener, wait } from '@streamr/utils'
@@ -79,7 +79,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         this.targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor), 1000)
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
-            randomGraphId: this.config.streamPartId,
+            streamPartId: this.config.streamPartId,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
             onLeaveNotice: (senderId: NodeID) => {

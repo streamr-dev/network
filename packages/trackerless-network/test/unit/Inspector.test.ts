@@ -4,6 +4,7 @@ import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { Inspector } from '../../src/logic/inspect/Inspector'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockPeerDescriptor, createRandomNodeId, mockConnectionLocker } from '../utils/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Inspector', () => {
     
@@ -28,7 +29,7 @@ describe('Inspector', () => {
         mockConnect = jest.fn(() => {})
         inspector = new Inspector({
             ownPeerDescriptor: inspectorDescriptor,
-            graphId: 'test',
+            streamPartId: StreamPartIDUtils.parse('stream#0'),
             rpcCommunicator: new ListeningRpcCommunicator('inspector', new MockTransport()),
             connectionLocker: mockConnectionLocker,
             openInspectConnection: async (_peerDescriptor: PeerDescriptor, _lockId: string) => mockConnect()

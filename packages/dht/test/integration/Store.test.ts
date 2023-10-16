@@ -2,7 +2,8 @@ import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
-import { isSamePeerDescriptor, PeerID } from '../../src/exports'
+import { PeerID } from '../../src/helpers/PeerID'
+import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
 
 describe('Storing data in DHT', () => {
@@ -55,8 +56,7 @@ describe('Storing data in DHT', () => {
         expect(successfulStorers.length).toBeGreaterThan(4)
     }, 90000)
 
-    // TODO: flaky test, fix in NET-1027
-    it.skip('Storing and getting data works', async () => {
+    it('Storing and getting data works', async () => {
         const storingNode = getRandomNode()
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
