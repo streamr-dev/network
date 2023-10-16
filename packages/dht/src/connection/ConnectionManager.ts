@@ -299,10 +299,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
     }
 
-    public getConnectionTo(id: PeerIDKey): ManagedConnection {
-        return this.connections.get(id)!
-    }
-
     public getNumberOfLocalLockedConnections(): number {
         return this.locks.getNumberOfLocalLockedConnections()
     }
