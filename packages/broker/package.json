@@ -36,7 +36,7 @@
     "ajv-formats": "^2.1.1",
     "cassandra-driver": "^4.7.2",
     "chalk": "^4.0.0",
-    "commander": "^11.0.0",
+    "commander": "^11.1.0",
     "cors": "^2.8.5",
     "ethers": "^5.4.7",
     "express": "^4.17.1",
@@ -65,7 +65,7 @@
     "@types/stream-to-array": "^2.3.1",
     "@types/supertest": "^2.0.14",
     "@types/uuid": "^9.0.5",
-    "@types/ws": "^8.5.6",
+    "@types/ws": "^8.5.7",
     "async-mqtt": "^2.6.1",
     "stream-to-array": "^2.3.0",
     "supertest": "^6.1.3"
