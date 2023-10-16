@@ -1,5 +1,5 @@
 import { RandomContactList } from '../../src/dht/contact/RandomContactList'
-import { PeerID } from '../../src/exports'
+import { PeerID } from '../../src/helpers/PeerID'
 
 const createItem = (kademliaId: Uint8Array): { getPeerId: () => PeerID } => {
     return { getPeerId: () => PeerID.fromValue(kademliaId) }
