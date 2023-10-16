@@ -414,14 +414,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         if (this.messageDuplicateDetector.isMostLikelyDuplicate(message.messageId)) {
-            logger.trace('handleMessage filtered duplicate ' + message.sourceDescriptor!.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('handleMessage filtered duplicate ' + keyFromPeerDescriptor(message.sourceDescriptor!) + ' ' + message.serviceId + ' ' + message.messageId)
             return
         }
         this.messageDuplicateDetector.add(message.messageId, message.sourceDescriptor!.nodeName!, message)
         if (message.serviceId === this.serviceId) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
-            logger.trace('emit "message" ' + message.sourceDescriptor!.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('emit "message" ' + keyFromPeerDescriptor(message.sourceDescriptor!) + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
     }
@@ -451,7 +451,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private onConnected = (connection: ManagedConnection) => {
         const peerDescriptor = connection.getPeerDescriptor()!
         this.emit('connected', peerDescriptor)
-        logger.trace(peerDescriptor.nodeName + ' onConnected() ' + connection.connectionType)
+        logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' onConnected() ' + connection.connectionType)
         this.onConnectionCountChange()
     }
 
@@ -530,7 +530,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private async closeConnection(peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType, reason?: string): Promise<void> {
-        logger.trace(peerDescriptor.nodeName + ' ' + 'closeConnection() ' + reason)
+        logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'closeConnection() ' + reason)
         const id = keyFromPeerDescriptor(peerDescriptor)
         this.locks.clearAllLocks(id)
         if (this.connections.has(id)) {
@@ -538,7 +538,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             await connectionToClose.close(disconnectionType)
 
         } else {
-            logger.trace(peerDescriptor.nodeName + ' ' + 'closeConnection() this.connections did not have the id')
+            logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'closeConnection() this.connections did not have the id')
             this.emit('disconnected', peerDescriptor, 'OTHER')
         }
     }
@@ -629,7 +629,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private async doGracefullyDisconnectAsync(targetDescriptor: PeerDescriptor, disconnectMode: DisconnectMode): Promise<void> {
-        logger.trace(targetDescriptor.nodeName + ' gracefullyDisconnectAsync()')
+        logger.trace(keyFromPeerDescriptor(targetDescriptor) + ' gracefullyDisconnectAsync()')
         const remoteConnectionLocker = new RemoteConnectionLocker(
             this.ownPeerDescriptor!,
             targetDescriptor,
@@ -639,7 +639,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         try {
             await remoteConnectionLocker.gracefulDisconnect(disconnectMode)
         } catch (ex) {
-            logger.trace(targetDescriptor.nodeName + ' remoteConnectionLocker.gracefulDisconnect() failed' + ex)
+            logger.trace(keyFromPeerDescriptor(targetDescriptor) + ' remoteConnectionLocker.gracefulDisconnect() failed' + ex)
         }
     }
 

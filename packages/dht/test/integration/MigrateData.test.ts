@@ -7,6 +7,7 @@ import { execSync } from 'child_process'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'
 import { PeerID } from '../../src/exports'
+import { keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
@@ -114,13 +115,13 @@ describe('Migrating data from node to node in DHT', () => {
                 hasDataMarker = '<-'
             }
 
-            logger.info(contact.getPeerDescriptor().nodeName + ' ' + node.getPeerDescriptor().nodeName + hasDataMarker)
+            logger.info(keyFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + keyFromPeerDescriptor(node.getPeerDescriptor()) + hasDataMarker)
         })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
             nodes.map((node) => {
-                if (node.getPeerDescriptor().nodeName != '0') {
+                if (keyFromPeerDescriptor(node.getPeerDescriptor()) != '0') {
                     node.joinDht([entrypointDescriptor])
                 }
             })
@@ -142,7 +143,7 @@ describe('Migrating data from node to node in DHT', () => {
                 hasDataMarker = '<-'
             }
 
-            logger.info('' + node.getPeerDescriptor().nodeName + hasDataMarker)
+            logger.info(keyFromPeerDescriptor(node.getPeerDescriptor()) + hasDataMarker)
         })
 
         const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().kademliaId).toKey())!

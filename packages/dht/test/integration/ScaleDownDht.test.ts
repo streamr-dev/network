@@ -2,7 +2,7 @@ import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
-import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
@@ -55,7 +55,7 @@ describe('Scaling down a Dht network', () => {
             const nodeIsCleaned = nodes.every((node) =>
                 node.getAllConnectionPeerDescriptors().every((peer) => {
                     if (isSamePeerDescriptor(peer, stoppingPeerDescriptor)) {
-                        logger.error(' ' + node.getPeerDescriptor().nodeName + ', ' + stoppingPeerDescriptor.nodeName + ' cleaning up failed')
+                        logger.error(keyFromPeerDescriptor(node.getPeerDescriptor()) + ', ' + keyFromPeerDescriptor(stoppingPeerDescriptor) + ' cleaning up failed')
                     }
                     return !isSamePeerDescriptor(peer, stoppingPeerDescriptor)
                 })

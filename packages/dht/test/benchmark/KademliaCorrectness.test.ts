@@ -2,6 +2,7 @@
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/exports'
+import { keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
@@ -87,7 +88,7 @@ describe('Kademlia correctness', () => {
                     correctNeighbors++
                 }
             } catch (e) {
-                console.error('Node ' + nodes[i].getPeerDescriptor().nodeName + ' had only ' + kademliaNeighbors.length + ' kademlia neighbors')
+                console.error('Node ' + keyFromPeerDescriptor(nodes[i].getPeerDescriptor()) + ' had only ' + kademliaNeighbors.length + ' kademlia neighbors')
             }
             if (correctNeighbors === 0) {
                 console.log('No correct neighbors found for node ' + i)

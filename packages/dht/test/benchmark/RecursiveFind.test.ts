@@ -6,6 +6,7 @@ import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
 import { PeerID, peerIdFromPeerDescriptor } from '../../src/exports'
+import { keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger, wait } from '@streamr/utils'
 import { debugVars } from '../../src/helpers/debugHelpers'
 
@@ -70,7 +71,7 @@ describe('Recursive find correctness', () => {
         debugVars['waiting'] = false
         logger.info('waiting over')
 
-        nodes.forEach((node) => logger.info(node.getPeerDescriptor().nodeName + ': connections:' +
+        nodes.forEach((node) => logger.info(keyFromPeerDescriptor(node.getPeerDescriptor()) + ': connections:' +
             node.getNumberOfConnections() + ', kbucket: ' + node.getBucketSize()
             + ', localLocked: ' + node.getNumberOfLocalLockedConnections()
             + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()
