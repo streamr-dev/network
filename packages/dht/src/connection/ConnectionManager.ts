@@ -414,14 +414,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         if (this.messageDuplicateDetector.isMostLikelyDuplicate(message.messageId)) {
-            logger.trace('handleMessage filtered duplicate ' + message.sourceDescriptor?.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('handleMessage filtered duplicate ' + message.sourceDescriptor!.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
             return
         }
         this.messageDuplicateDetector.add(message.messageId, message.sourceDescriptor!.nodeName!, message)
         if (message.serviceId === this.serviceId) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
-            logger.trace('emit "message" ' + message.sourceDescriptor?.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('emit "message" ' + message.sourceDescriptor!.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
     }

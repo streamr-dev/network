@@ -434,10 +434,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public handleMessage(message: Message): void {
         if (message.serviceId === this.config.serviceId) {
             logger.trace('callig this.handleMessageFromPeer ' + this.config.nodeName + ', ' +
-                message.sourceDescriptor?.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
+                message.sourceDescriptor!.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
-            logger.trace('emit "message" ' + this.config.nodeName + ', ' + message.sourceDescriptor?.nodeName +
+            logger.trace('emit "message" ' + this.config.nodeName + ', ' + message.sourceDescriptor!.nodeName +
                 ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
@@ -772,7 +772,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     // IDHTRpcService implementation
     private async ping(request: PingRequest, context: ServerCallContext): Promise<PingResponse> {
-        logger.trace('received ping request: ' + this.config.nodeName + ', ' + (context as DhtCallContext).incomingSourceDescriptor?.nodeName)
+        logger.trace('received ping request: ' + this.config.nodeName + ', ' + (context as DhtCallContext).incomingSourceDescriptor!.nodeName)
         setImmediate(() => {
             this.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
         })
