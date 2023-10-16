@@ -542,7 +542,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             } else {
                 return (this.peerManager.getNumberOfPeers() > 0)
             }
-        }, this.config.networkConnectivityTimeout)
+        }, this.config.networkConnectivityTimeout, 100, this.abortController.signal)
     }
 
     public isJoinOngoing(): boolean {
