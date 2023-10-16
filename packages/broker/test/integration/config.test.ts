@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { createBroker } from '../../src/broker'
-import { DEFAULT_ENTRYPOINTS } from '../utils'
+import { CONFIG_TEST } from 'streamr-client'
 
 const PATH = './configs'
 
@@ -12,7 +12,7 @@ describe('Config', () => {
             client: {
                 network: {
                     controlLayer: {
-                        entryPoints: DEFAULT_ENTRYPOINTS
+                        entryPoints: CONFIG_TEST.network!.controlLayer!.entryPoints
                     }
                 }
             }

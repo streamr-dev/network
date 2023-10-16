@@ -4,7 +4,6 @@ import {
     RecursiveFindReport
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { IRecursiveFindSessionServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
 import { Remote } from '../contact/Remote'
 
@@ -14,19 +13,13 @@ export class RemoteRecursiveFindSession extends Remote<IRecursiveFindSessionServ
 
     reportRecursiveFindResult(routingPath: PeerDescriptor[], closestNodes: PeerDescriptor[], 
         dataEntries: DataEntry[], noCloserNodesFound: boolean): void {
-        
         const report: RecursiveFindReport = {
             routingPath,
             nodes: closestNodes,
             dataEntries,
             noCloserNodesFound
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.peerDescriptor
-        }
-
-        this.client.reportRecursiveFindResult(report, options).catch((_e) => {
+        this.getClient().reportRecursiveFindResult(report, this.formDhtRpcOptions()).catch((_e) => {
             logger.trace('Failed to send RecursiveFindResult')
         })
     }

@@ -67,7 +67,6 @@ export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements I
         this.socket = undefined
 
         this.emit('disconnected', disconnectionType, reasonCode, description)
-        this.removeAllListeners()
     }
 
     public send(data: Uint8Array): void {

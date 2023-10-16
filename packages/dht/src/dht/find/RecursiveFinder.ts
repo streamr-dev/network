@@ -76,7 +76,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         this.localDataStore = config.localDataStore
         this.addContact = config.addContact
         this.isPeerCloserToIdThanSelf = config.isPeerCloserToIdThanSelf
-        this.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'findRecursively',
+        this.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'findRecursively',
             (routedMessage: RouteMessageWrapper) => this.findRecursively(routedMessage))
     }
 
@@ -93,15 +93,15 @@ export class RecursiveFinder implements IRecursiveFinder {
             serviceId: sessionId,
             rpcTransport: this.sessionTransport,
             kademliaIdToFind: idToFind,
-            ownPeerID: this.ownPeerId!,
+            ownPeerID: this.ownPeerId,
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
             mode: findMode
         })
         if (this.connections.size === 0) {
             const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
             recursiveFindSession.doReportRecursiveFindResult(
-                [this.ownPeerDescriptor!],
-                [this.ownPeerDescriptor!],
+                [this.ownPeerDescriptor],
+                [this.ownPeerDescriptor],
                 data ? Array.from(data.values()) : [],
                 true
             )
@@ -186,7 +186,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         noCloserNodesFound: boolean = false
     ): void {
         const dataEntries = data ? Array.from(data.values(), DataEntry.create.bind(DataEntry)) : []
-        const isOwnPeerId = this.ownPeerId.equals(PeerID.fromValue(targetPeerDescriptor!.kademliaId))
+        const isOwnPeerId = this.ownPeerId.equals(PeerID.fromValue(targetPeerDescriptor.kademliaId))
         if (isOwnPeerId && this.ongoingSessions.has(serviceId)) {
             this.ongoingSessions.get(serviceId)!
                 .doReportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
@@ -195,8 +195,8 @@ export class RecursiveFinder implements IRecursiveFinder {
             const remoteSession = new RemoteRecursiveFindSession(
                 this.ownPeerDescriptor,
                 targetPeerDescriptor,
-                toProtoRpcClient(new RecursiveFindSessionServiceClient(remoteCommunicator.getRpcClientTransport())),
-                serviceId
+                serviceId,
+                toProtoRpcClient(new RecursiveFindSessionServiceClient(remoteCommunicator.getRpcClientTransport()))
             )
             remoteSession.reportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         }
@@ -211,7 +211,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         const recursiveFindRequest = msg?.body.oneofKind === 'recursiveFindRequest' ? msg.body.recursiveFindRequest : undefined
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.kademliaId, 5)
         const data = this.findLocalData(idToFind.value, recursiveFindRequest!.findMode)
-        if (this.ownPeerId!.equals(idToFind)) {
+        if (this.ownPeerId.equals(idToFind)) {
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                 closestPeersToDestination, data, true)
             return createRouteMessageAck(routedMessage)
@@ -237,7 +237,7 @@ export class RecursiveFinder implements IRecursiveFinder {
 
     private getClosestConnections(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
         const connectedPeers = Array.from(this.connections.values())
-        const closestPeers = new SortedContactList(
+        const closestPeers = new SortedContactList<DhtPeer>(
             PeerID.fromValue(kademliaId),
             limit,
             undefined,
@@ -258,7 +258,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         const senderKey = keyFromPeerDescriptor(routedMessage.previousPeer || routedMessage.sourcePeer!)
         logger.trace(`Node ${this.ownPeerId.toKey()} received findRecursively call from ${senderKey}`)
         this.addContact(routedMessage.sourcePeer!, true)
-        this.router!.addToDuplicateDetector(routedMessage.requestId, keyFromPeerDescriptor(routedMessage.sourcePeer!))
+        this.router.addToDuplicateDetector(routedMessage.requestId, keyFromPeerDescriptor(routedMessage.sourcePeer!))
         return this.doFindRecursevily(routedMessage)
     }
 

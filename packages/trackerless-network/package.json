@@ -1,6 +1,6 @@
 {
   "name": "@streamr/trackerless-network",
-  "version": "0.0.1-tatum.0",
+  "version": "0.0.1-tatum.5",
   "description": "Minimal and extendable implementation of the Streamr Network node.",
   "repository": {
     "type": "git",
@@ -19,35 +19,35 @@
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "test": "jest",
+    "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
     "test-browser": "karma start karma.config.js",
     "test-unit": "jest test/unit",
-    "test-integration": "jest test/integration",
-    "test-e2e": "jest test/end-to-end",
+    "test-integration": "jest --bail test/integration",
+    "test-end-to-end": "jest --bail test/end-to-end",
     "network": "ts-node bin/network",
     "run-joining-benchmark": "node --max-old-space-size=24288 dist/test/benchmark/first-message.js"
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/dht": "0.0.1-tatum.0",
-    "@streamr/proto-rpc": "0.0.1-tatum.0",
-    "@streamr/protocol": "0.0.1-tatum.0",
-    "@streamr/test-utils": "0.0.1-tatum.0",
-    "@streamr/utils": "0.0.1-tatum.0",
+    "@streamr/dht": "0.0.1-tatum.5",
+    "@streamr/proto-rpc": "0.0.1-tatum.5",
+    "@streamr/protocol": "0.0.1-tatum.5",
+    "@streamr/test-utils": "0.0.1-tatum.5",
+    "@streamr/utils": "0.0.1-tatum.5",
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
     "yallist": "^4.0.0"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@types/lodash": "^4.14.197",
+    "@types/lodash": "^4.14.199",
     "@types/yallist": "^4.0.1",
     "commander": "^11.0.0",
     "expect": "^29.6.2",
     "express": "^4.17.1",
-    "ts-essentials": "^9.4.0",
-    "ts-loader": "^9.4.4",
+    "ts-essentials": "^9.4.1",
+    "ts-loader": "^9.5.0",
     "ts-node": "^10.9.1"
   }
 }

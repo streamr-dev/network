@@ -1,30 +1,22 @@
+import { isSamePeerDescriptor } from '@streamr/dht'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
+import { waitForCondition } from '@streamr/utils'
 import { StreamrNode } from '../../src/logic/StreamrNode'
 import { MockLayer0 } from '../utils/mock/MockLayer0'
-import { isSamePeerDescriptor, PeerDescriptor, PeerID } from '@streamr/dht'
-import { createStreamMessage, mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
-import { waitForCondition } from '@streamr/utils'
-import { StreamPartIDUtils } from '@streamr/protocol'
+import { createMockPeerDescriptor, createStreamMessage, mockConnectionLocker } from '../utils/utils'
+import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 
 describe('StreamrNode', () => {
 
     let node: StreamrNode
-    const peerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('streamr-node').value,
-        type: 0
-    }
-    const streamPartId = StreamPartIDUtils.parse('stream#0')
-    const message = createStreamMessage(
-        JSON.stringify({ hello: 'WORLD' }), 
-        streamPartId, 
-        peerDescriptor.kademliaId
-    )
+    const peerDescriptor = createMockPeerDescriptor()
 
     beforeEach(async () => {
         node = new StreamrNode({})
         const mockLayer0 = new MockLayer0(peerDescriptor)
         await node.start(mockLayer0, new MockTransport(), mockConnectionLocker)
-        node.setStreamPartEntryPoints(streamPartId, [peerDescriptor])
     })
 
     afterEach(async () => {
@@ -35,41 +27,70 @@ describe('StreamrNode', () => {
         expect(isSamePeerDescriptor(peerDescriptor, node.getPeerDescriptor()))
     })
 
-    it('can join streams', async () => {
-        await node.joinStream(streamPartId)
-        expect(node.hasStream(streamPartId)).toEqual(true)
+    describe('join and leave', () => {
+
+        const streamPartId = StreamPartIDUtils.parse('stream#0')
+        const message = createStreamMessage(
+            JSON.stringify({ hello: 'WORLD' }),
+            streamPartId,
+            randomEthereumAddress()
+        )
+
+        beforeEach(async () => {
+            node.setStreamPartEntryPoints(streamPartId, [node.getPeerDescriptor()])
+        })
+
+        it('can join streams', async () => {
+            node.joinStreamPart(streamPartId)
+            expect(node.hasStream(streamPartId)).toEqual(true)
+        })
+
+        it('can leave streams', async () => {
+            node.joinStreamPart(streamPartId)
+            expect(node.hasStream(streamPartId)).toEqual(true)
+            node.leaveStreamPart(streamPartId)
+            expect(node.hasStream(streamPartId)).toEqual(false)
+        })
+
+        it('broadcast joins stream', async () => {
+            node.broadcast(message)
+            await waitForCondition(() => node.hasStream(streamPartId))
+        })
     })
 
-    it('can leave streams', async () => {
-        await node.joinStream(streamPartId)
-        expect(node.hasStream(streamPartId)).toEqual(true)
-        node.leaveStream(streamPartId)
-        expect(node.hasStream(streamPartId)).toEqual(false)
-    })
+    describe('proxied stream', () => {
+        it('happy path', async () => {
+            const streamPartId = StreamPartIDUtils.parse('stream#0')
+            const proxy = createMockPeerDescriptor()
+            const userId = randomEthereumAddress()
+            await node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(true)
+            await node.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
+        })
 
-    it('subscribe and wait for join', async () => {
-        await node.waitForJoinAndSubscribe(streamPartId)
-        expect(node.hasStream(streamPartId)).toEqual(true)
-    })
+        it('empty node list', async () => {
+            const streamPartId = StreamPartIDUtils.parse('stream#0')
+            const proxy = createMockPeerDescriptor()
+            const userId = randomEthereumAddress()
+            await node.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
+            await node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(true)
+            await node.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
+        })
 
-    it('publish and wait for join', async () => {
-        await node.waitForJoinAndPublish(streamPartId, message)
-        expect(node.hasStream(streamPartId)).toEqual(true)
+        it('connection count to 0', async () => {
+            const streamPartId = StreamPartIDUtils.parse('stream#0')
+            const proxy = createMockPeerDescriptor()
+            const userId = randomEthereumAddress()
+            await node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
+            await node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(true)
+            await node.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
+            expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
+        })
     })
-
-    it('subscribe joins stream', async () => {
-        node.subscribeToStream(streamPartId)
-        await waitForCondition(() => node.hasStream(streamPartId))
-    })
-
-    it('publish joins stream', async () => {
-        await node.publishToStream(streamPartId, message)
-        await waitForCondition(() => node.hasStream(streamPartId))
-    })
-
-    it('can unsubscribe', async () => {
-        await node.joinStream(streamPartId)
-        await node.unsubscribeFromStream(streamPartId)
-    })
-
 })

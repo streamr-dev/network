@@ -72,6 +72,8 @@ export interface StreamMessage {
      */
     signature: Uint8Array;
     /**
+     * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
+     *
      * @generated from protobuf field: MessageID messageId = 6;
      */
     messageId?: MessageID;
@@ -140,42 +142,34 @@ export interface GroupKey {
     data: Uint8Array;
 }
 /**
- * @generated from protobuf message StreamHandshakeRequest
+ * @generated from protobuf message StreamPartHandshakeRequest
  */
-export interface StreamHandshakeRequest {
+export interface StreamPartHandshakeRequest {
     /**
      * @generated from protobuf field: string randomGraphId = 1;
      */
     randomGraphId: string;
     /**
-     * @generated from protobuf field: string senderId = 2;
-     */
-    senderId: string;
-    /**
-     * @generated from protobuf field: string requestId = 3;
+     * @generated from protobuf field: string requestId = 2;
      */
     requestId: string;
     /**
-     * @generated from protobuf field: optional string concurrentHandshakeTargetId = 4;
+     * @generated from protobuf field: optional bytes concurrentHandshakeTargetId = 3;
      */
-    concurrentHandshakeTargetId?: string;
+    concurrentHandshakeTargetId?: Uint8Array;
     /**
-     * @generated from protobuf field: repeated string neighborIds = 5;
+     * @generated from protobuf field: repeated bytes neighborIds = 4;
      */
-    neighborIds: string[];
+    neighborIds: Uint8Array[];
     /**
-     * @generated from protobuf field: dht.PeerDescriptor senderDescriptor = 6;
+     * @generated from protobuf field: optional bytes interleaveSourceId = 5;
      */
-    senderDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: optional string interleaveSourceId = 7;
-     */
-    interleaveSourceId?: string;
+    interleaveSourceId?: Uint8Array;
 }
 /**
- * @generated from protobuf message StreamHandshakeResponse
+ * @generated from protobuf message StreamPartHandshakeResponse
  */
-export interface StreamHandshakeResponse {
+export interface StreamPartHandshakeResponse {
     /**
      * @generated from protobuf field: bool accepted = 1;
      */
@@ -194,49 +188,39 @@ export interface StreamHandshakeResponse {
  */
 export interface InterleaveNotice {
     /**
-     * @generated from protobuf field: string senderId = 1;
-     */
-    senderId: string;
-    /**
-     * @generated from protobuf field: string randomGraphId = 2;
-     */
-    randomGraphId: string;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor interleaveTargetDescriptor = 3;
-     */
-    interleaveTargetDescriptor?: PeerDescriptor;
-}
-/**
- * @generated from protobuf message LeaveStreamNotice
- */
-export interface LeaveStreamNotice {
-    /**
      * @generated from protobuf field: string randomGraphId = 1;
      */
     randomGraphId: string;
     /**
-     * @generated from protobuf field: string senderId = 2;
+     * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
+     *
+     * @generated from protobuf field: dht.PeerDescriptor interleaveTargetDescriptor = 2;
      */
-    senderId: string;
+    interleaveTargetDescriptor?: PeerDescriptor;
+}
+/**
+ * @generated from protobuf message LeaveStreamPartNotice
+ */
+export interface LeaveStreamPartNotice {
+    /**
+     * @generated from protobuf field: string randomGraphId = 1;
+     */
+    randomGraphId: string;
 }
 /**
  * @generated from protobuf message NeighborUpdate
  */
 export interface NeighborUpdate {
     /**
-     * @generated from protobuf field: string senderId = 1;
-     */
-    senderId: string; // TODO: remove redundant info NET-1028
-    /**
-     * @generated from protobuf field: string randomGraphId = 2;
+     * @generated from protobuf field: string randomGraphId = 1;
      */
     randomGraphId: string;
     /**
-     * @generated from protobuf field: bool removeMe = 3;
+     * @generated from protobuf field: bool removeMe = 2;
      */
     removeMe: boolean;
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor neighborDescriptors = 4;
+     * @generated from protobuf field: repeated dht.PeerDescriptor neighborDescriptors = 3;
      */
     neighborDescriptors: PeerDescriptor[];
 }
@@ -245,52 +229,20 @@ export interface NeighborUpdate {
  */
 export interface ProxyConnectionRequest {
     /**
-     * @generated from protobuf field: string senderId = 1;
-     */
-    senderId: string; // TODO: remove redundant info NET-1028
-    /**
-     * @generated from protobuf field: string streamId = 2;
-     */
-    streamId: string;
-    /**
-     * @generated from protobuf field: uint32 streamPartition = 3;
-     */
-    streamPartition: number;
-    /**
-     * @generated from protobuf field: ProxyDirection direction = 4;
+     * @generated from protobuf field: ProxyDirection direction = 1;
      */
     direction: ProxyDirection;
     /**
-     * @generated from protobuf field: bytes userId = 5;
+     * @generated from protobuf field: bytes userId = 2;
      */
     userId: Uint8Array;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor senderDescriptor = 6;
-     */
-    senderDescriptor?: PeerDescriptor;
 }
 /**
  * @generated from protobuf message ProxyConnectionResponse
  */
 export interface ProxyConnectionResponse {
     /**
-     * @generated from protobuf field: string senderId = 1;
-     */
-    senderId: string; // TODO: remove redundant info NET-1028
-    /**
-     * @generated from protobuf field: string streamId = 2;
-     */
-    streamId: string;
-    /**
-     * @generated from protobuf field: uint32 streamPartition = 3;
-     */
-    streamPartition: number;
-    /**
-     * @generated from protobuf field: ProxyDirection direction = 4;
-     */
-    direction: ProxyDirection;
-    /**
-     * @generated from protobuf field: bool accepted = 5;
+     * @generated from protobuf field: bool accepted = 1;
      */
     accepted: boolean;
 }
@@ -298,10 +250,6 @@ export interface ProxyConnectionResponse {
  * @generated from protobuf message TemporaryConnectionRequest
  */
 export interface TemporaryConnectionRequest {
-    /**
-     * @generated from protobuf field: string senderId = 1;
-     */
-    senderId: string;
 }
 /**
  * @generated from protobuf message TemporaryConnectionResponse
@@ -461,27 +409,25 @@ class GroupKey$Type extends MessageType<GroupKey> {
  */
 export const GroupKey = new GroupKey$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class StreamHandshakeRequest$Type extends MessageType<StreamHandshakeRequest> {
+class StreamPartHandshakeRequest$Type extends MessageType<StreamPartHandshakeRequest> {
     constructor() {
-        super("StreamHandshakeRequest", [
+        super("StreamPartHandshakeRequest", [
             { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "concurrentHandshakeTargetId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "neighborIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "senderDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 7, name: "interleaveSourceId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "concurrentHandshakeTargetId", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ },
+            { no: 4, name: "neighborIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 12 /*ScalarType.BYTES*/ },
+            { no: 5, name: "interleaveSourceId", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message StreamHandshakeRequest
+ * @generated MessageType for protobuf message StreamPartHandshakeRequest
  */
-export const StreamHandshakeRequest = new StreamHandshakeRequest$Type();
+export const StreamPartHandshakeRequest = new StreamPartHandshakeRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class StreamHandshakeResponse$Type extends MessageType<StreamHandshakeResponse> {
+class StreamPartHandshakeResponse$Type extends MessageType<StreamPartHandshakeResponse> {
     constructor() {
-        super("StreamHandshakeResponse", [
+        super("StreamPartHandshakeResponse", [
             { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "interleaveTargetDescriptor", kind: "message", T: () => PeerDescriptor }
@@ -489,16 +435,15 @@ class StreamHandshakeResponse$Type extends MessageType<StreamHandshakeResponse> 
     }
 }
 /**
- * @generated MessageType for protobuf message StreamHandshakeResponse
+ * @generated MessageType for protobuf message StreamPartHandshakeResponse
  */
-export const StreamHandshakeResponse = new StreamHandshakeResponse$Type();
+export const StreamPartHandshakeResponse = new StreamPartHandshakeResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class InterleaveNotice$Type extends MessageType<InterleaveNotice> {
     constructor() {
         super("InterleaveNotice", [
-            { no: 1, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "interleaveTargetDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "interleaveTargetDescriptor", kind: "message", T: () => PeerDescriptor }
         ]);
     }
 }
@@ -507,26 +452,24 @@ class InterleaveNotice$Type extends MessageType<InterleaveNotice> {
  */
 export const InterleaveNotice = new InterleaveNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class LeaveStreamNotice$Type extends MessageType<LeaveStreamNotice> {
+class LeaveStreamPartNotice$Type extends MessageType<LeaveStreamPartNotice> {
     constructor() {
-        super("LeaveStreamNotice", [
-            { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        super("LeaveStreamPartNotice", [
+            { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message LeaveStreamNotice
+ * @generated MessageType for protobuf message LeaveStreamPartNotice
  */
-export const LeaveStreamNotice = new LeaveStreamNotice$Type();
+export const LeaveStreamPartNotice = new LeaveStreamPartNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class NeighborUpdate$Type extends MessageType<NeighborUpdate> {
     constructor() {
         super("NeighborUpdate", [
-            { no: 1, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "removeMe", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 4, name: "neighborDescriptors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+            { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "removeMe", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "neighborDescriptors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }
@@ -538,12 +481,8 @@ export const NeighborUpdate = new NeighborUpdate$Type();
 class ProxyConnectionRequest$Type extends MessageType<ProxyConnectionRequest> {
     constructor() {
         super("ProxyConnectionRequest", [
-            { no: 1, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "streamId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "streamPartition", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 4, name: "direction", kind: "enum", T: () => ["ProxyDirection", ProxyDirection] },
-            { no: 5, name: "userId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 6, name: "senderDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 1, name: "direction", kind: "enum", T: () => ["ProxyDirection", ProxyDirection] },
+            { no: 2, name: "userId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }
@@ -555,11 +494,7 @@ export const ProxyConnectionRequest = new ProxyConnectionRequest$Type();
 class ProxyConnectionResponse$Type extends MessageType<ProxyConnectionResponse> {
     constructor() {
         super("ProxyConnectionResponse", [
-            { no: 1, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "streamId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "streamPartition", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 4, name: "direction", kind: "enum", T: () => ["ProxyDirection", ProxyDirection] },
-            { no: 5, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -570,9 +505,7 @@ export const ProxyConnectionResponse = new ProxyConnectionResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class TemporaryConnectionRequest$Type extends MessageType<TemporaryConnectionRequest> {
     constructor() {
-        super("TemporaryConnectionRequest", [
-            { no: 1, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
+        super("TemporaryConnectionRequest", []);
     }
 }
 /**
@@ -595,8 +528,8 @@ export const TemporaryConnectionResponse = new TemporaryConnectionResponse$Type(
  * @generated ServiceType for protobuf service NetworkRpc
  */
 export const NetworkRpc = new ServiceType("NetworkRpc", [
-    { name: "sendData", options: {}, I: StreamMessage, O: Empty },
-    { name: "leaveStreamNotice", options: {}, I: LeaveStreamNotice, O: Empty }
+    { name: "sendStreamMessage", options: {}, I: StreamMessage, O: Empty },
+    { name: "leaveStreamPartNotice", options: {}, I: LeaveStreamPartNotice, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service ProxyConnectionRpc
@@ -608,7 +541,7 @@ export const ProxyConnectionRpc = new ServiceType("ProxyConnectionRpc", [
  * @generated ServiceType for protobuf service HandshakeRpc
  */
 export const HandshakeRpc = new ServiceType("HandshakeRpc", [
-    { name: "handshake", options: {}, I: StreamHandshakeRequest, O: StreamHandshakeResponse },
+    { name: "handshake", options: {}, I: StreamPartHandshakeRequest, O: StreamPartHandshakeResponse },
     { name: "interleaveNotice", options: {}, I: InterleaveNotice, O: Empty }
 ]);
 /**

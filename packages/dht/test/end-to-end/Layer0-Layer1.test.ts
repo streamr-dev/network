@@ -7,7 +7,7 @@ describe('Layer0-Layer1', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
-        websocket: { ip: '127.0.0.1', port: 10016 }
+        websocket: { host: '127.0.0.1', port: 10016, tls: false }
     }
 
     const STREAM_ID1 = 'stream1'
@@ -30,8 +30,8 @@ describe('Layer0-Layer1', () => {
         await epDhtNode.start()
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ peerIdString: '1', websocketPortRange, entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ peerIdString: '2', websocketPortRange, entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
+        node2 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
 
         await node1.start()
         await node2.start()

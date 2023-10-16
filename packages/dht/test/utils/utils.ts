@@ -35,7 +35,7 @@ import { v4 } from 'uuid'
 import { getRandomRegion } from '../../src/connection/Simulator/pings'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
-import { waitForCondition } from '@streamr/utils'
+import { wait, waitForCondition } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
 
 export const generateId = (stringId: string): Uint8Array => {
@@ -66,8 +66,7 @@ export const createMockConnectionDhtNode = async (stringId: string,
 
     const mockConnectionManager = new ConnectionManager({
         ownPeerDescriptor: peerDescriptor,
-        simulator: simulator,
-        nodeName: nodeName ? nodeName : stringId
+        simulator: simulator
     })
 
     const node = new DhtNode({
@@ -87,7 +86,7 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
     const id = PeerID.fromString(stringId)
     const descriptor: PeerDescriptor = {
         kademliaId: id.value,
-        type: 0,
+        type: NodeType.NODEJS,
         nodeName: stringId
     }
 
@@ -156,13 +155,12 @@ export const MockDhtRpc: IDhtRpcWithError = {
     async throwPingError(_urequest: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
         throw new Error()
     },
-    respondPingWithTimeout(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
-        return new Promise((resolve, _reject) => {
-            const response: PingResponse = {
-                requestId: request.requestId
-            }
-            setTimeout(() => resolve(response), 2000)
-        })
+    async respondPingWithTimeout(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
+        const response: PingResponse = {
+            requestId: request.requestId
+        }
+        await wait(2000)
+        return response
     },
     async throwGetClosestPeersError(_urequest: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
         throw new Error('Closest peers error')
@@ -258,8 +256,8 @@ export const getMockPeers = (): PeerDescriptor[] => {
         type: NodeType.NODEJS,
     }
     const n4: PeerDescriptor = {
-        kademliaId: generateId('Neighbor1'),
-        type: NodeType.BROWSER,
+        kademliaId: generateId('Neighbor4'),
+        type: NodeType.NODEJS,
     }
     return [
         n1, n2, n3, n4

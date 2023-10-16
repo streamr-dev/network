@@ -5,7 +5,7 @@ import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
 import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { toEthereumAddress } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 
 jest.setTimeout(30000)
 
@@ -62,8 +62,8 @@ async function storeMockMessages({
                 toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
                 ''
             ),
-            content: JSON.stringify({}),
-            signature: 'signature'
+            content: utf8ToBinary(JSON.stringify({})),
+            signature: hexToBinary('0x1234')
         })
         storePromises.push(storage.store(msg))
     }

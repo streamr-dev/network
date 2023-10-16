@@ -2,6 +2,7 @@ import { validateIsString } from '../../utils/validations'
 import ValidationError from '../../errors/ValidationError'
 import StreamMessage, { StreamMessageType } from './StreamMessage'
 import { EthereumAddress } from '@streamr/utils'
+import { binaryToUtf8 } from '@streamr/utils'
 
 // TODO refactor deserialization to separate class (Serializer<GroupKeyMessage>)
 //
@@ -34,7 +35,7 @@ export default abstract class GroupKeyMessage {
     }
 
     static fromStreamMessage(streamMessage: StreamMessage): GroupKeyMessage {
-        return GroupKeyMessage.deserialize(streamMessage.getSerializedContent()!, streamMessage.messageType)
+        return GroupKeyMessage.deserialize(binaryToUtf8(streamMessage.getSerializedContent())!, streamMessage.messageType)
     }
 
     abstract toArray(): any[]

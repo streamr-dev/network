@@ -1,39 +1,34 @@
-import { DhtRpcOptions, keyFromPeerDescriptor, PeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, Remote } from '@streamr/dht'
 import { Logger } from '@streamr/utils'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { Remote } from '../Remote'
 import { INeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 
 const logger = new Logger(module)
 
 interface UpdateNeighborsResponse {
-    peers: PeerDescriptor[]
+    peerDescriptors: PeerDescriptor[]
     removeMe: boolean
 }
 
 export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient> {
 
-    async updateNeighbors(ownPeerDescriptor: PeerDescriptor, neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
-        }
+    async updateNeighbors(neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
         const request: NeighborUpdate = {
-            senderId: keyFromPeerDescriptor(ownPeerDescriptor),
-            randomGraphId: this.graphId,
+            randomGraphId: this.getServiceId(),
             neighborDescriptors: neighbors,
             removeMe: false
         }
         try {
-            const response = await this.client.neighborUpdate(request, options)
+            const response = await this.getClient().neighborUpdate(request, this.formDhtRpcOptions())
             return {
-                peers: response.neighborDescriptors!,
+                peerDescriptors: response.neighborDescriptors,
                 removeMe: response.removeMe
             }
         } catch (err: any) {
-            logger.debug(`updateNeighbors to ${keyFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
+            logger.debug(`updateNeighbors to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
             return {
-                peers: [],
+                peerDescriptors: [],
                 removeMe: true
             }
         }

@@ -8,8 +8,8 @@ By default, the **StreamrClient** publishes metrics to the Streamr Network at re
 ```ts
 {
     node: {
-        publishMessagesPerSecond: number
-        publishBytesPerSecond: number
+        broadcastMessagesPerSecond: number
+        broadcastBytesPerSecond: number
         sendMessagesPerSecond: number
         sendBytesPerSecond: number
         receiveMessagesPerSecond: number

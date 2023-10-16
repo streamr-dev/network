@@ -2,12 +2,13 @@ import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFle
 import { mock, MockProxy } from 'jest-mock-extended'
 import { StreamrClient, MessageListener, Subscription } from 'streamr-client'
 import { wait, waitForCondition, waitForEvent } from '@streamr/utils'
-import { toStreamID } from '@streamr/protocol'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
 import { createHeartbeatMessage } from '../../../../src/plugins/operator/heartbeatUtils'
+import { NodeID } from '@streamr/trackerless-network'
+import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 
 const ADDRESS = randomEthereumAddress()
-const coordinationStreamId = toStreamID('/operator/coordination', ADDRESS)
+const coordinationStreamId = formCoordinationStreamId(ADDRESS)
 
 const READY_WAIT_MS = 500
 const JITTER = 100
@@ -153,13 +154,13 @@ describe(OperatorFleetState, () => {
         await state.start()
         await setTimeAndPublishMessage(10, createHeartbeatMsg('a'))
 
-        expect(state.getPeerDescriptor('a')).toEqual({ id: 'a' })
-        expect(state.getPeerDescriptor('unknown')).toBeUndefined()
+        expect(state.getPeerDescriptor('a' as NodeID)).toEqual({ id: 'a' })
+        expect(state.getPeerDescriptor('unknown' as NodeID)).toBeUndefined()
 
         currentTime = 30
         await waitForEvent(state as any, 'removed')
 
-        expect(state.getPeerDescriptor('a')).toBeUndefined()
+        expect(state.getPeerDescriptor('a' as NodeID)).toBeUndefined()
     })
 
     describe('waitUntilReady', () => {

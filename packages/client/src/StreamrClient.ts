@@ -1,6 +1,8 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
+import { StreamID } from '@streamr/protocol'
+import { NodeID, ProxyDirection } from '@streamr/trackerless-network'
 import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -8,18 +10,16 @@ import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata } from '../src/publish/Publisher'
 import { Authentication, AuthenticationInjectionToken, createAuthentication } from './Authentication'
-import { 
+import {
     ConfigInjectionToken,
+    NetworkPeerDescriptor,
     StreamrClientConfig,
     StrictStreamrClientConfig,
     createStrictConfig,
-    redactConfig,
-    NetworkPeerDescriptor
+    redactConfig
 } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
-import { ProxyDirection } from '@streamr/trackerless-network'
-import { StreamID } from '@streamr/protocol'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
@@ -46,6 +46,7 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
+import { Signer } from '@ethersproject/abstract-signer'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -547,6 +548,13 @@ export class StreamrClient {
     // --------------------------------------------------------------------------------------------
 
     /**
+     * Gets the Signer associated with the current {@link StreamrClient} instance.
+     */
+    getSigner(): Promise<Signer> {
+        return this.authentication.getStreamRegistryChainSigner()
+    }
+
+    /**
      * Gets the Ethereum address of the wallet associated with the current {@link StreamrClient} instance.
      */
     getAddress(): Promise<EthereumAddress> {
@@ -571,12 +579,12 @@ export class StreamrClient {
 
     async setProxies(
         streamDefinition: StreamDefinition,
-        proxyNodes: NetworkPeerDescriptor[],
+        nodes: NetworkPeerDescriptor[],
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.setProxies(streamPartId, proxyNodes, direction, connectionCount)
+        await this.node.setProxies(streamPartId, nodes, direction, connectionCount)
     }
 
     /**
@@ -638,7 +646,7 @@ export class StreamrClient {
     /**
      * Get the network-level node id of the client.
      */
-    async getNodeId(): Promise<string> {
+    async getNodeId(): Promise<NodeID> {
         return this.node.getNodeId()
     }
 
@@ -649,6 +657,13 @@ export class StreamrClient {
      */
     async getDiagnosticInfo(): Promise<Record<string, unknown>> {
         return (await this.node.getNode()).getDiagnosticInfo()
+    }
+
+    /**
+     * @deprecated This in an internal method
+     */
+    getConfig(): StrictStreamrClientConfig {
+        return this.config
     }
 
     // --------------------------------------------------------------------------------------------

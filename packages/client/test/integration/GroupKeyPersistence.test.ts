@@ -46,7 +46,7 @@ describe('Group Key Persistence', () => {
             stream = await createTestStream(client, module, {
                 ...streamOpts,
             })
-            await stream.addToStorageNode(storageNode.id)
+            await stream.addToStorageNode(storageNode.getAddress())
             publishTestMessages = getPublishTestStreamMessages(client, stream)
             return client
         }
@@ -158,7 +158,7 @@ describe('Group Key Persistence', () => {
             })
             const node2 = await subscriber2.getNode()
             await until(async () => {
-                return node2.getNeighborsForStreamPart(toStreamPartID(stream.id, DEFAULT_PARTITION)).length >= 1
+                return node2.getNeighbors(toStreamPartID(stream.id, DEFAULT_PARTITION)).length >= 1
             })
 
             await Promise.all([
@@ -319,7 +319,7 @@ describe('Group Key Persistence', () => {
                 for (let i = 0; i < NUM_STREAMS; i++) {
 
                     const s = await createTestStream(publisher, module)
-                    await s.addToStorageNode(storageNode.id)
+                    await s.addToStorageNode(storageNode.getAddress())
                     streams.push(s)
                 }
             })

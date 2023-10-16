@@ -35,7 +35,7 @@ describe('NodeMetrics', () => {
             partitions: NUM_OF_PARTITIONS
         })
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        subscriberClient = createTestClient(await fetchPrivateKeyWithGas(), 'subscriber', 15653)
+        subscriberClient = createTestClient(await fetchPrivateKeyWithGas(), 15653)
     }, 30 * 1000)
 
     afterAll(async () => {
@@ -65,8 +65,8 @@ describe('NodeMetrics', () => {
         await waitForCondition(() => report !== undefined, 10000)
         expect(report!).toMatchObject({
             node: {
-                publishMessagesPerSecond: expect.any(Number),
-                publishBytesPerSecond: expect.any(Number),
+                broadcastMessagesPerSecond: expect.any(Number),
+                broadcastBytesPerSecond: expect.any(Number),
                 sendMessagesPerSecond: expect.any(Number),
                 sendBytesPerSecond: expect.any(Number),
                 receiveMessagesPerSecond: expect.any(Number),

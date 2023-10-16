@@ -3,7 +3,7 @@ import { StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@st
 import { mock, MockProxy } from 'jest-mock-extended'
 import { StreamrClient, Subscription } from 'streamr-client'
 import { wait, waitForCondition } from '@streamr/utils'
-import { StreamAssignmentLoadBalancerEvents } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
+import { StreamPartAssignmentEvents } from '../../../../src/plugins/operator/StreamPartAssignments'
 import EventEmitter3 from 'eventemitter3'
 
 interface MockSubscription {
@@ -48,29 +48,27 @@ const formRawSubscriptionParam = (streamPartId: StreamPartID) => ({
 describe('MaintainTopologyService', () => {
     let streamrClient: MockProxy<StreamrClient>
     let fixtures: Record<StreamPartID, MockSubscription>
-    let streamAssignmentLoadBalancer: EventEmitter3<StreamAssignmentLoadBalancerEvents>
-    let service: MaintainTopologyService
+    let assignments: EventEmitter3<StreamPartAssignmentEvents>
 
     beforeEach(async () => {
         streamrClient = mock<StreamrClient>()
         fixtures = setUpFixturesAndMocks(streamrClient)
-        streamAssignmentLoadBalancer = new EventEmitter3()
-        service = new MaintainTopologyService(streamrClient, streamAssignmentLoadBalancer as any)
-        await service.start()
+        assignments = new EventEmitter3()
+        new MaintainTopologyService(streamrClient, assignments as any)
     })
 
     it('handles "assigned" event (happy path)', async () => {
-        streamAssignmentLoadBalancer.emit('assigned', SP1)
-        streamAssignmentLoadBalancer.emit('assigned', SP2)
+        assignments.emit('assigned', SP1)
+        assignments.emit('assigned', SP2)
 
         await waitForCondition(() => streamrClient.subscribe.mock.calls.length >= 2)
         expect(streamrClient.subscribe).toHaveBeenCalledTimes(2)
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(SP1))
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(SP2))
+        expect(streamrClient.subscribe.mock.calls[0][0]).toEqual(formRawSubscriptionParam(SP1))
+        expect(streamrClient.subscribe.mock.calls[1][0]).toEqual(formRawSubscriptionParam(SP2))
     })
 
     it('handles "assigned" event given non-existing stream (does not crash)', async () => {
-        streamAssignmentLoadBalancer.emit('assigned', STREAM_PART_NOT_EXIST)
+        assignments.emit('assigned', STREAM_PART_NOT_EXIST)
 
         await wait(NOTHING_HAPPENED_DELAY)
         expect(streamrClient.subscribe).toHaveBeenCalledTimes(1)
@@ -81,28 +79,28 @@ describe('MaintainTopologyService', () => {
     }
 
     it('handles "unassigned" event (happy path)', async () => {
-        streamAssignmentLoadBalancer.emit('assigned', SP1)
-        streamAssignmentLoadBalancer.emit('assigned', SP2)
+        assignments.emit('assigned', SP1)
+        assignments.emit('assigned', SP2)
 
-        streamAssignmentLoadBalancer.emit('unassigned', SP1)
+        assignments.emit('unassigned', SP1)
 
         await waitForCondition(() => totalUnsubscribes(SP1) === 1)
         expect(totalUnsubscribes(SP2)).toEqual(0)
     })
 
     it('handles "unassigned" event given non-existing stream', async () => {
-        streamAssignmentLoadBalancer.emit('unassigned', STREAM_PART_NOT_EXIST)
+        assignments.emit('unassigned', STREAM_PART_NOT_EXIST)
 
         await wait(NOTHING_HAPPENED_DELAY)
         expect(totalUnsubscribes(STREAM_PART_NOT_EXIST)).toEqual(0)
     })
 
     it('handles concurrency properly', async () => {
-        streamAssignmentLoadBalancer.emit('assigned', SP3)
+        assignments.emit('assigned', SP3)
 
         for (let i = 1; i < 21; i += 2) {
-            streamAssignmentLoadBalancer.emit('unassigned', SP3)
-            streamAssignmentLoadBalancer.emit('assigned', SP3)
+            assignments.emit('unassigned', SP3)
+            assignments.emit('assigned', SP3)
         }
 
         await waitForCondition(

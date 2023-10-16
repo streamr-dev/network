@@ -1,14 +1,14 @@
 import { StreamMessage, StreamMessageType } from '@streamr/protocol'
-import { createDataQueryEndpoint } from './dataQueryEndpoint'
-import { createDataMetadataEndpoint } from './dataMetadataEndpoint'
-import { createStorageConfigEndpoint } from './storageConfigEndpoint'
+import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
+import { Schema } from 'ajv'
+import { Stream, StreamrClient, formStorageNodeAssignmentStreamId } from 'streamr-client'
 import { ApiPluginConfig, Plugin } from '../../Plugin'
 import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig } from './StorageConfig'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { Schema } from 'ajv'
-import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
-import { formStorageNodeAssignmentStreamId, Stream } from 'streamr-client'
+import { createDataMetadataEndpoint } from './dataMetadataEndpoint'
+import { createDataQueryEndpoint } from './dataQueryEndpoint'
+import { createStorageConfigEndpoint } from './storageConfigEndpoint'
 
 const logger = new Logger(module)
 
@@ -36,11 +36,14 @@ const isStorableMessage = (msg: StreamMessage): boolean => {
 }
 
 export class StoragePlugin extends Plugin<StoragePluginConfig> {
+
+    private streamrClient?: StreamrClient
     private cassandra?: Storage
     private storageConfig?: StorageConfig
     private messageListener?: (msg: StreamMessage) => void
 
-    async start(): Promise<void> {
+    async start(streamrClient: StreamrClient): Promise<void> {
+        this.streamrClient = streamrClient
         const clusterId = this.pluginConfig.cluster.clusterAddress ?? await this.streamrClient.getAddress()
         const assignmentStream = await this.streamrClient.getStream(formStorageNodeAssignmentStreamId(clusterId))
         const metricsContext = (await (this.streamrClient.getNode())).getMetricsContext()
@@ -59,10 +62,10 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     }
 
     async stop(): Promise<void> {
-        const node = await this.streamrClient.getNode()
+        const node = await this.streamrClient!.getNode()
         node.removeMessageListener(this.messageListener!)
         this.storageConfig!.getStreamParts().forEach((streamPart) => {
-            node.unsubscribe(streamPart)
+            node.leave(streamPart)
         })
         await this.cassandra!.close()
         this.storageConfig!.destroy()
@@ -89,17 +92,17 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     }
 
     private async startStorageConfig(clusterId: EthereumAddress, assignmentStream: Stream): Promise<StorageConfig> {
-        const node = await this.streamrClient.getNode()
+        const node = await this.streamrClient!.getNode()
         const storageConfig = new StorageConfig(
             clusterId,
             this.pluginConfig.cluster.clusterSize,
             this.pluginConfig.cluster.myIndexInCluster,
             this.pluginConfig.storageConfig.refreshInterval,
-            this.streamrClient,
+            this.streamrClient!,
             {
                 onStreamPartAdded: async (streamPart) => {
                     try {
-                        await node.subscribeAndWaitForJoin(streamPart) // best-effort, can time out
+                        await node.join(streamPart, { minCount: 1, timeout: 5000 }) // best-effort, can time out
                     } catch (_e) {
                         // no-op
                     }
@@ -118,7 +121,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                     }
                 },
                 onStreamPartRemoved: (streamPart) => {
-                    node.unsubscribe(streamPart)
+                    node.leave(streamPart)
                 }
             }
         )

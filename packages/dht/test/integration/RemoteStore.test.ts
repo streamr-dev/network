@@ -1,5 +1,6 @@
 import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import {
+    NodeType,
     PeerDescriptor,
     StoreDataRequest,
     StoreDataResponse
@@ -19,11 +20,11 @@ describe('RemoteStore', () => {
     const serviceId = 'test'
     const clientPeerDescriptor: PeerDescriptor = {
         kademliaId: generateId('dhtPeer'),
-        type: 0
+        type: NodeType.NODEJS
     }
     const serverPeerDescriptor: PeerDescriptor = {
         kademliaId: generateId('server'),
-        type: 0
+        type: NodeType.NODEJS
     }
     const data = Any.pack(clientPeerDescriptor, PeerDescriptor)
     const request: StoreDataRequest = {
@@ -43,7 +44,7 @@ describe('RemoteStore', () => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new StoreServiceClient(clientRpcCommunicator.getRpcClientTransport()))
-        remoteStore = new RemoteStore(clientPeerDescriptor, serverPeerDescriptor, client, serviceId)
+        remoteStore = new RemoteStore(clientPeerDescriptor, serverPeerDescriptor, serviceId, client)
     })
 
     it('storeData happy path', async () => {

@@ -1,35 +1,36 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { TemporaryConnectionRequest, TemporaryConnectionResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ITemporaryConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { DhtCallContext, ListeningRpcCommunicator, PeerID } from '@streamr/dht'
+import { DhtCallContext, ListeningRpcCommunicator } from '@streamr/dht'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { PeerList } from '../PeerList'
+import { NodeList } from '../NodeList'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 interface TemporaryConnectionRpcServerConfig {
     randomGraphId: string
     rpcCommunicator: ListeningRpcCommunicator
-    ownPeerId: PeerID
+    ownPeerDescriptor: PeerDescriptor
 } 
 
 export class TemporaryConnectionRpcServer implements ITemporaryConnectionRpc {
 
     private readonly config: TemporaryConnectionRpcServerConfig
-    private readonly temporaryPeers: PeerList
+    private readonly temporaryNodes: NodeList
 
     constructor(config: TemporaryConnectionRpcServerConfig) {
         this.config = config
-        this.temporaryPeers = new PeerList(config.ownPeerId, 10)
+        this.temporaryNodes = new NodeList(getNodeIdFromPeerDescriptor(config.ownPeerDescriptor), 10)
     }
 
-    getPeers(): PeerList {
-        return this.temporaryPeers
+    getNodes(): NodeList {
+        return this.temporaryNodes
     }
 
-    removePeer(peer: PeerDescriptor): void {
-        this.temporaryPeers.remove(peer)
+    removeNode(peerDescriptor: PeerDescriptor): void {
+        this.temporaryNodes.remove(peerDescriptor)
     }
 
     async openConnection(
@@ -38,11 +39,12 @@ export class TemporaryConnectionRpcServer implements ITemporaryConnectionRpc {
     ): Promise<TemporaryConnectionResponse> {
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
         const remote = new RemoteRandomGraphNode(
+            this.config.ownPeerDescriptor,
             sender,
             this.config.randomGraphId,
             toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
         )
-        this.temporaryPeers.add(remote)
+        this.temporaryNodes.add(remote)
         return {
             accepted: true
         }

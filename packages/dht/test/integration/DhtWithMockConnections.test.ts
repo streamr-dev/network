@@ -1,7 +1,7 @@
 import { getTI } from '@streamr/test-utils'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 
 describe('Mock IConnection DHT Joining', () => {
@@ -17,7 +17,7 @@ describe('Mock IConnection DHT Joining', () => {
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: 0,
+            type: NodeType.NODEJS,
             nodeName: '0'
         }
         for (let i = 1; i < 100; i++) {

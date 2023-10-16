@@ -1,10 +1,10 @@
-import { NetworkStack } from '../../src/NetworkStack'
-import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
 import {
     StreamPartIDUtils
 } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
-import { createStreamMessage } from '../utils/utils'
+import { NetworkStack } from '../../src/NetworkStack'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('NetworkStack', () => {
 
@@ -12,12 +12,10 @@ describe('NetworkStack', () => {
     let stack2: NetworkStack
     const streamPartId = StreamPartIDUtils.parse('stream1#0')
 
-    const epDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
-        type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 32222 },
+    const epDescriptor = createMockPeerDescriptor({
+        websocket: { host: '127.0.0.1', port: 32222, tls: false },
         nodeName: 'entrypoint'
-    }
+    })
 
     beforeEach(async () => {
         stack1 = new NetworkStack({
@@ -25,17 +23,14 @@ describe('NetworkStack', () => {
                 peerDescriptor: epDescriptor,
                 entryPoints: [epDescriptor],
                 nodeName: 'entrypoint'
-            },
-            networkNode: {}
+            }
         })
         stack2 = new NetworkStack({
             layer0: {
                 websocketPortRange: { min: 32223, max: 32223 },
-                peerIdString: 'network-stack',
                 entryPoints: [epDescriptor],
                 nodeName: 'node2'
-            },
-            networkNode: {}
+            }
         })
 
         await stack1.start()
@@ -53,17 +48,25 @@ describe('NetworkStack', () => {
 
     it('Can use NetworkNode pub/sub via NetworkStack', async () => {
         let receivedMessages = 0
-        await stack1.getStreamrNode().waitForJoinAndSubscribe(streamPartId)
+        stack1.getStreamrNode().joinStreamPart(streamPartId)
         stack1.getStreamrNode().on('newMessage', () => {
             receivedMessages += 1
         })
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId,
-            PeerID.fromString('network-stack').value
+            randomEthereumAddress()
         )
-        await stack2.getStreamrNode().waitForJoinAndPublish(streamPartId, msg)
+        stack2.getStreamrNode().broadcast(msg)
         await waitForCondition(() => receivedMessages === 1)
     })
 
+    it('join and wait for neighbors', async () => {
+        await Promise.all([
+            stack1.joinStreamPart(streamPartId, { minCount: 1, timeout: 5000 }),
+            stack2.joinStreamPart(streamPartId, { minCount: 1, timeout: 5000 }),
+        ])
+        expect(stack1.getStreamrNode().getNeighbors(streamPartId).length).toBe(1)
+        expect(stack2.getStreamrNode().getNeighbors(streamPartId).length).toBe(1)
+    })
 })

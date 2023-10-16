@@ -82,10 +82,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, outgoingConnection)
 
             this.handshaker.once('handshakeFailed', (errorMessage) => {
-                logger.trace('IL handshake failed for outgoing connection ' + errorMessage + ' ' +
-                    this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' objectid: ' + this.objectId
-                    + ' outputBuffer.length: ' + this.outputBuffer.length)
-                logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' emitting handshakeFailed')
+                logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' handshakeFailed: ' + errorMessage)
                 this.emit('handshakeFailed')
             })
 
@@ -94,7 +91,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                     ', ' + this.peerDescriptor?.nodeName + ' objectid: ' + this.objectId
                     + ' outputBuffer.length: ' + this.outputBuffer.length)
 
-                this.attachImplementation(outgoingConnection!)
+                this.attachImplementation(outgoingConnection)
                 this.onHandshakeCompleted(peerDescriptor)
             })
 
@@ -106,7 +103,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         } else {
             if (incomingConnection) {
-                this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, incomingConnection!)
+                this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, incomingConnection)
                 this.handshaker.on('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
                     this.setPeerDescriptor(peerDescriptor)
                     this.emit('handshakeRequest', peerDescriptor)
@@ -272,9 +269,8 @@ export class ManagedConnection extends EventEmitter<Events> {
                         result2 = await raceEvents3<Events>(this,
                             ['bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
                     } catch (ex) {
-                        logger.debug(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName +
+                        logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName +
                             ' Exception from raceEvents3 while waiting bufferSentByOtherConnection or closing ' + ex)
-                        logger.trace(this.connectionId + ' Exception from raceEvents3 while waiting bufferSentByOtherConnection')
                         throw ex
                     }
                     if (result2.winnerName === 'bufferSentByOtherConnection') {
@@ -325,7 +321,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                 this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, this.implementation)
             }
 
-            this.handshaker!.sendHandshakeResponse()
+            this.handshaker.sendHandshakeResponse()
 
         } else {  // This happens to when there is a regular incoming connection
             this.handshaker!.sendHandshakeResponse()

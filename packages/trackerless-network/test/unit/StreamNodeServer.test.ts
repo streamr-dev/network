@@ -1,28 +1,22 @@
-import { ListeningRpcCommunicator, PeerDescriptor, PeerID } from '@streamr/dht'
-import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
-import { LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { MockTransport } from '../utils/mock/Transport'
-import { createStreamMessage } from '../utils/utils'
-import { utf8ToBinary } from '../../src/logic/utils'
+import { ListeningRpcCommunicator } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
+import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
+import { LeaveStreamPartNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { MockTransport } from '../utils/mock/Transport'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('StreamNodeServer', () => {
 
     let streamNodeServer: StreamNodeServer
-    const peerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('random-graph-node').value,
-        type: 0
-    }
+    const peerDescriptor = createMockPeerDescriptor()
 
-    const mockSender: PeerDescriptor = {
-        kademliaId: PeerID.fromString('mock-sender').value,
-        type: 0
-    }
+    const mockSender = createMockPeerDescriptor()
 
     const message = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         StreamPartIDUtils.parse('random-graph#0'),
-        utf8ToBinary('publisher')
+        randomEthereumAddress()
     )
 
     let mockBroadcast: jest.Mock
@@ -47,19 +41,18 @@ describe('StreamNodeServer', () => {
         })
     })
     
-    it('Server sendData()', async () => {
-        await streamNodeServer.sendData(message, { incomingSourceDescriptor: mockSender } as any)
+    it('Server sendStreamMessage()', async () => {
+        await streamNodeServer.sendStreamMessage(message, { incomingSourceDescriptor: mockSender } as any)
         expect(mockDuplicateCheck).toHaveBeenCalledTimes(1)
         expect(mockBroadcast).toHaveBeenCalledTimes(1)
         expect(mockMarkForInspection).toHaveBeenCalledTimes(1)
     })
 
-    it('Server leaveStreamNotice()', async () => {
-        const leaveNotice: LeaveStreamNotice = {
-            senderId: 'sender',
+    it('Server leaveStreamPartNotice()', async () => {
+        const leaveNotice: LeaveStreamPartNotice = {
             randomGraphId: 'random-graph'
         }
-        await streamNodeServer.leaveStreamNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)
+        await streamNodeServer.leaveStreamPartNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)
         expect(mockOnLeaveNotice).toHaveBeenCalledTimes(1)
     })
 

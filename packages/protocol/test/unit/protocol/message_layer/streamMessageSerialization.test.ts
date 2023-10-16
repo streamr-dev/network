@@ -1,4 +1,4 @@
-import { toEthereumAddress } from '@streamr/utils'
+import { toEthereumAddress, hexToBinary, utf8ToBinary, binaryToHex } from '@streamr/utils'
 import assert from 'assert'
 import ValidationError from '../../../../src/errors/ValidationError'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
@@ -9,18 +9,19 @@ import { toStreamID } from '../../../../src/utils/StreamID'
 import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/streamMessageSerialization'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const signature = '111233'
 
 // Message definitions
 const message = new StreamMessage({
     messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
     prevMsgRef: new MessageRef(1564046132168, 5),
-    content: 'encrypted-content',
+    content: utf8ToBinary('encrypted-content'),
     messageType: StreamMessageType.MESSAGE,
     contentType: ContentType.JSON,
     groupKeyId: 'groupKeyId',
     encryptionType: EncryptionType.AES,
-    newGroupKey: new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex', '["groupKeyId","encryptedGroupKeyHex"]'),
-    signature: 'signature',
+    newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('1234'), '["groupKeyId","1234"]'),
+    signature: hexToBinary(signature),
 })
 const serializedMessage = JSON.stringify([
     VERSION,
@@ -30,10 +31,10 @@ const serializedMessage = JSON.stringify([
     ContentType.JSON,
     EncryptionType.AES,
     'groupKeyId',
-    'encrypted-content',
-    '["groupKeyId","encryptedGroupKeyHex"]',
+    binaryToHex(utf8ToBinary('encrypted-content')),
+    '["groupKeyId","1234"]',
     SIGNATURE_TYPE_ETH,
-    'signature'
+    signature
 ])
 
 describe('streamMessageSerialization', () => {
@@ -54,9 +55,9 @@ describe('streamMessageSerialization', () => {
                 EncryptionType.AES,
                 'groupKeyId',
                 'encrypted-content',
-                '["groupKeyId","encryptedGroupKeyHex"]',
+                '["groupKeyId","1234"]',
                 0,
-                'signature'
+                signature
             ])
             assert.throws(() => StreamMessage.deserialize(serializedMessage), ValidationError)
         })

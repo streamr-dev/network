@@ -1,12 +1,12 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
-import { toEthereumAddress } from '@streamr/utils'
 import { fastWallet } from '@streamr/test-utils'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { StreamPermission } from '../../src/permission'
+import { toEthereumAddress } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamPermission } from '../../src/permission'
 import { nextValue } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createMockMessage } from '../test-utils/utils'
@@ -47,8 +47,8 @@ describe('Subscriber', () => {
     
             const sub = await subscriber.subscribe(stream.id)
     
-            const publisherNode = environment.startNode(publisherWallet.address)
-            await publisherNode.publish(await createMockMessage({
+            const publisherNode = environment.startNode()
+            await publisherNode.broadcast(await createMockMessage({
                 stream,
                 publisher: publisherWallet,
                 content: MOCK_CONTENT
@@ -75,7 +75,7 @@ describe('Subscriber', () => {
             const sub = await subscriber.subscribe(stream.id)
     
             const publisherNode = await publisher.getNode()
-            await publisherNode.publish(await createMockMessage({
+            await publisherNode.broadcast(await createMockMessage({
                 stream,
                 publisher: publisherWallet,
                 content: MOCK_CONTENT,
@@ -99,8 +99,8 @@ describe('Subscriber', () => {
     
             const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
     
-            const publisherNode = environment.startNode(publisherWallet.address)
-            await publisherNode.publish(await createMockMessage({
+            const publisherNode = environment.startNode()
+            await publisherNode.broadcast(await createMockMessage({
                 stream,
                 publisher: publisherWallet,
                 content: MOCK_CONTENT
@@ -127,7 +127,7 @@ describe('Subscriber', () => {
             const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
     
             const publisherNode = await publisher.getNode()
-            await publisherNode.publish(await createMockMessage({
+            await publisherNode.broadcast(await createMockMessage({
                 stream,
                 publisher: publisherWallet,
                 content: MOCK_CONTENT,
@@ -135,7 +135,7 @@ describe('Subscriber', () => {
             }))
     
             const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
-            expect(receivedMessage!.content).toBeString()
+            expect(receivedMessage!.content).toBeInstanceOf(Uint8Array)
             expect(receivedMessage!.streamMessage.groupKeyId).toEqual(groupKey.id)
         })
     })

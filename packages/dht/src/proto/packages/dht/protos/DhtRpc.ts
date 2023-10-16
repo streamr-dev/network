@@ -40,6 +40,28 @@ export interface StoreDataResponse {
     error: string;
 }
 /**
+ * @generated from protobuf message dht.ExternalStoreDataRequest
+ */
+export interface ExternalStoreDataRequest {
+    /**
+     * @generated from protobuf field: bytes key = 1;
+     */
+    key: Uint8Array;
+    /**
+     * @generated from protobuf field: google.protobuf.Any data = 2;
+     */
+    data?: Any;
+}
+/**
+ * @generated from protobuf message dht.ExternalStoreDataResponse
+ */
+export interface ExternalStoreDataResponse {
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor storers = 1;
+     */
+    storers: PeerDescriptor[];
+}
+/**
  * @generated from protobuf message dht.MigrateDataRequest
  */
 export interface MigrateDataRequest {
@@ -241,47 +263,17 @@ export interface PeerDescriptor {
  */
 export interface ConnectivityMethod {
     /**
-     * @generated from protobuf field: uint32 port = 2;
-     */
-    port: number;
-    /**
-     * @generated from protobuf field: string ip = 3;
-     */
-    ip: string;
-}
-/**
- * @generated from protobuf message dht.ConnectivityReportRequest
- */
-export interface ConnectivityReportRequest {
-    /**
      * @generated from protobuf field: uint32 port = 1;
      */
     port: number;
     /**
-     * @generated from protobuf field: string requestId = 2;
+     * @generated from protobuf field: string host = 2;
      */
-    requestId: string;
-}
-/**
- * @generated from protobuf message dht.ConnectivityReportResponse
- */
-export interface ConnectivityReportResponse {
+    host: string;
     /**
-     * @generated from protobuf field: string open_internet = 1;
+     * @generated from protobuf field: bool tls = 3;
      */
-    openInternet: string;
-    /**
-     * @generated from protobuf field: string ip = 2;
-     */
-    ip: string;
-    /**
-     * @generated from protobuf field: string natType = 3;
-     */
-    natType: string;
-    /**
-     * @generated from protobuf field: string requestId = 4;
-     */
-    requestId: string;
+    tls: boolean;
 }
 /**
  * @generated from protobuf message dht.RouteMessageWrapper
@@ -347,6 +339,14 @@ export interface ConnectivityRequest {
      * @generated from protobuf field: uint32 port = 1;
      */
     port: number;
+    /**
+     * @generated from protobuf field: bool tls = 2;
+     */
+    tls: boolean;
+    /**
+     * @generated from protobuf field: optional string host = 3;
+     */
+    host?: string;
 }
 /**
  * @generated from protobuf message dht.ConnectivityResponse
@@ -357,9 +357,9 @@ export interface ConnectivityResponse {
      */
     openInternet: boolean;
     /**
-     * @generated from protobuf field: string ip = 2;
+     * @generated from protobuf field: string host = 2;
      */
-    ip: string;
+    host: string;
     /**
      * @generated from protobuf field: string natType = 3;
      */
@@ -828,6 +828,31 @@ class StoreDataResponse$Type extends MessageType$<StoreDataResponse> {
  */
 export const StoreDataResponse = new StoreDataResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class ExternalStoreDataRequest$Type extends MessageType$<ExternalStoreDataRequest> {
+    constructor() {
+        super("dht.ExternalStoreDataRequest", [
+            { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "data", kind: "message", T: () => Any }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.ExternalStoreDataRequest
+ */
+export const ExternalStoreDataRequest = new ExternalStoreDataRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ExternalStoreDataResponse$Type extends MessageType$<ExternalStoreDataResponse> {
+    constructor() {
+        super("dht.ExternalStoreDataResponse", [
+            { no: 1, name: "storers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.ExternalStoreDataResponse
+ */
+export const ExternalStoreDataResponse = new ExternalStoreDataResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class MigrateDataRequest$Type extends MessageType$<MigrateDataRequest> {
     constructor() {
         super("dht.MigrateDataRequest", [
@@ -1007,8 +1032,9 @@ export const PeerDescriptor = new PeerDescriptor$Type();
 class ConnectivityMethod$Type extends MessageType$<ConnectivityMethod> {
     constructor() {
         super("dht.ConnectivityMethod", [
-            { no: 2, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 3, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 2, name: "host", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -1016,34 +1042,6 @@ class ConnectivityMethod$Type extends MessageType$<ConnectivityMethod> {
  * @generated MessageType for protobuf message dht.ConnectivityMethod
  */
 export const ConnectivityMethod = new ConnectivityMethod$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class ConnectivityReportRequest$Type extends MessageType$<ConnectivityReportRequest> {
-    constructor() {
-        super("dht.ConnectivityReportRequest", [
-            { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.ConnectivityReportRequest
- */
-export const ConnectivityReportRequest = new ConnectivityReportRequest$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class ConnectivityReportResponse$Type extends MessageType$<ConnectivityReportResponse> {
-    constructor() {
-        super("dht.ConnectivityReportResponse", [
-            { no: 1, name: "open_internet", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.ConnectivityReportResponse
- */
-export const ConnectivityReportResponse = new ConnectivityReportResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RouteMessageWrapper$Type extends MessageType$<RouteMessageWrapper> {
     constructor() {
@@ -1081,7 +1079,9 @@ export const RouteMessageAck = new RouteMessageAck$Type();
 class ConnectivityRequest$Type extends MessageType$<ConnectivityRequest> {
     constructor() {
         super("dht.ConnectivityRequest", [
-            { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+            { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 2, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "host", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1094,7 +1094,7 @@ class ConnectivityResponse$Type extends MessageType$<ConnectivityResponse> {
     constructor() {
         super("dht.ConnectivityResponse", [
             { no: 1, name: "open_internet", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "host", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "websocket", kind: "message", T: () => ConnectivityMethod }
         ]);
@@ -1395,5 +1395,6 @@ export const ConnectionLocker = new ServiceType("dht.ConnectionLocker", [
  * @generated ServiceType for protobuf service dht.ExternalApiService
  */
 export const ExternalApiService = new ServiceType("dht.ExternalApiService", [
-    { name: "findData", options: {}, I: FindDataRequest, O: FindDataResponse }
+    { name: "findData", options: {}, I: FindDataRequest, O: FindDataResponse },
+    { name: "externalStoreData", options: {}, I: ExternalStoreDataRequest, O: ExternalStoreDataResponse }
 ]);

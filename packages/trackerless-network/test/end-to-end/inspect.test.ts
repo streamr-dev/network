@@ -1,37 +1,34 @@
-import { PeerDescriptor, NodeType, PeerID } from '@streamr/dht'
-import { NetworkNode } from '../../src/NetworkNode'
 import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { EthereumAddress } from 'streamr-client'
-import { waitForCondition } from '@streamr/utils'
+import { randomEthereumAddress } from '@streamr/test-utils'
+import { hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('inspect', () => {
 
-    const publisherDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('publisher').value,
-        type: NodeType.NODEJS,
+    const publisherDescriptor = createMockPeerDescriptor({
         websocket: {
-            ip: 'localhost',
-            port: 15478
+            host: '127.0.0.1',
+            port: 15478,
+            tls: false
         }
-    }
+    })
 
-    const inspectedDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('inspected').value,
-        type: NodeType.NODEJS,
+    const inspectedDescriptor = createMockPeerDescriptor({
         websocket: {
-            ip: 'localhost',
-            port: 15479
+            host: '127.0.0.1',
+            port: 15479,
+            tls: false
         }
-    }
+    })
 
-    const inspectorDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('inspector').value,
-        type: NodeType.NODEJS,
+    const inspectorDescriptor = createMockPeerDescriptor({
         websocket: {
-            ip: 'localhost',
-            port: 15480
+            host: '127.0.0.1',
+            port: 15480,
+            tls: false
         }
-    }
+    })
 
     const streamPartId = toStreamPartID(toStreamID('stream'), 0)
 
@@ -47,56 +44,51 @@ describe('inspect', () => {
             0,
             666,
             0,
-            'peer' as EthereumAddress,
+            randomEthereumAddress(),
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),
-        content: {
+        content: utf8ToBinary(JSON.stringify({
             hello: 'world'
-        },
+        })),
         messageType: StreamMessageType.MESSAGE,
-        signature: 'signature',
+        signature: hexToBinary('0x1234'),
     })
     
     beforeEach(async () => {
-        publisherNode = new NetworkNode({
+        publisherNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: publisherDescriptor
-            },
-            networkNode: {}
+            }
         })
 
-        inspectedNode = new NetworkNode({
+        inspectedNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: inspectedDescriptor
-            },
-            networkNode: {}
+            }
         })
 
-        inspectorNode = new NetworkNode({
+        inspectorNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor: inspectorDescriptor
-            },
-            networkNode: {}
+            }
         })
 
         await publisherNode.start()
         await inspectedNode.start()
-        await inspectorNode.start()    
+        await inspectorNode.start()
 
-        await Promise.all([
-            publisherNode.stack.getStreamrNode()!.joinStream(streamPartId),
-            inspectedNode.stack.getStreamrNode()!.joinStream(streamPartId),
-            inspectorNode.stack.getStreamrNode()!.joinStream(streamPartId)
-        ])
+        publisherNode.stack.getStreamrNode()!.joinStreamPart(streamPartId)
+        inspectedNode.stack.getStreamrNode()!.joinStreamPart(streamPartId)
+        inspectorNode.stack.getStreamrNode()!.joinStreamPart(streamPartId)
 
         await waitForCondition(() => 
-            publisherNode.getNeighbors().length === 2 
-            && inspectedNode.getNeighbors().length === 2 
-            && inspectorNode.getNeighbors().length === 2
+            publisherNode.stack.getStreamrNode().getNeighbors(streamPartId).length === 2 
+            && inspectedNode.stack.getStreamrNode().getNeighbors(streamPartId).length === 2 
+            && inspectorNode.stack.getStreamrNode().getNeighbors(streamPartId).length === 2
         )
     }, 30000)
 
@@ -110,7 +102,7 @@ describe('inspect', () => {
 
     it('should inspect succesfully', async () => {
         setTimeout(async () => {
-            await publisherNode.publish(message)
+            await publisherNode.broadcast(message)
         }, 250)
         const success = await inspectorNode.inspect(inspectedDescriptor, streamPartId)
         expect(success).toBe(true)

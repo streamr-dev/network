@@ -80,30 +80,30 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
             // TODO: Update contact info to the connection manager and reconnect
         })
         this.neighborList = new SortedContactList(selfId, this.config.maxNeighborListSize)
-        this.neighborList.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
+        this.neighborList.on('contactRemoved', (removedContact: DhtPeer, closestContacts: DhtPeer[]) => {
             if (this.stopped) {
                 return
             }
-            this.emit('contactRemoved', peerDescriptor, activeContacts)
-            this.randomPeers!.addContact(this.config.createDhtPeer(peerDescriptor))
+            this.emit('contactRemoved', removedContact.getPeerDescriptor(), closestContacts.map((peer) => peer.getPeerDescriptor()))
+            this.randomPeers!.addContact(removedContact)
         })
-        this.neighborList.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newContact', peerDescriptor, activeContacts)
+        this.neighborList.on('newContact', (newContact: DhtPeer, closestContacts: DhtPeer[]) =>
+            this.emit('newContact', newContact.getPeerDescriptor(), closestContacts.map((peer) => peer.getPeerDescriptor()))
         )
         this.openInternetPeers = new SortedContactList(selfId, this.config.maxNeighborListSize / 2)
-        this.openInternetPeers.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('openInternetContactRemoved', peerDescriptor, activeContacts)
+        this.openInternetPeers.on('contactRemoved', (removedContact: DhtPeer, closestContacts: DhtPeer[]) =>
+            this.emit('openInternetContactRemoved', removedContact.getPeerDescriptor(), closestContacts.map((peer) => peer.getPeerDescriptor()))
         )
-        this.openInternetPeers.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newOpenInternetContact', peerDescriptor, activeContacts)
+        this.openInternetPeers.on('newContact', (newContact: DhtPeer, closestContacts: DhtPeer[]) =>
+            this.emit('newOpenInternetContact', newContact.getPeerDescriptor(), closestContacts.map((peer) => peer.getPeerDescriptor()))
         )
         
         this.randomPeers = new RandomContactList(selfId, this.config.maxNeighborListSize)
-        this.randomPeers.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('randomContactRemoved', peerDescriptor, activeContacts)
+        this.randomPeers.on('contactRemoved', (removedContact: DhtPeer, closestContacts: DhtPeer[]) =>
+            this.emit('randomContactRemoved', removedContact.getPeerDescriptor(), closestContacts.map((peer) => peer.getPeerDescriptor()))
         )
-        this.randomPeers.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newRandomContact', peerDescriptor, activeContacts)
+        this.randomPeers.on('newContact', (newContact: DhtPeer, closestContacts: DhtPeer[]) =>
+            this.emit('newRandomContact', newContact.getPeerDescriptor(), closestContacts.map((peer) => peer.getPeerDescriptor()))
         )
     }
 

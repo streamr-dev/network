@@ -32,21 +32,26 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
     }
 
     private onData = (data: Uint8Array) => {
-        const message = Message.fromBinary(data)
-        if (message.body.oneofKind === 'handshakeRequest') {
-            logger.trace('handshake request received')
-            const handshake = message.body.handshakeRequest
-            this.emit('handshakeRequest', handshake.peerDescriptor!)
-        }
-        if (message.body.oneofKind === 'handshakeResponse') {
-            logger.trace('handshake response received')
-            const handshake = message.body.handshakeResponse
-            if (handshake.responseError) {
-                this.emit('handshakeFailed', handshake.responseError)
-            } else {
-                this.emit('handshakeCompleted', handshake.peerDescriptor!)
+        try {
+            const message = Message.fromBinary(data)
+            if (message.body.oneofKind === 'handshakeRequest') {
+                logger.trace('handshake request received')
+                const handshake = message.body.handshakeRequest
+                this.emit('handshakeRequest', handshake.peerDescriptor!)
             }
+            if (message.body.oneofKind === 'handshakeResponse') {
+                logger.trace('handshake response received')
+                const handshake = message.body.handshakeResponse
+                if (handshake.responseError) {
+                    this.emit('handshakeFailed', handshake.responseError)
+                } else {
+                    this.emit('handshakeCompleted', handshake.peerDescriptor!)
+                }
+            }
+        } catch (err) {
+            logger.error('error while parsing handshake message', err)
         }
+        
     }
 
     public sendHandshakeRequest(): void {

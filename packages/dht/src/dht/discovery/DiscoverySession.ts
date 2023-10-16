@@ -105,7 +105,7 @@ export class DiscoverySession {
             if (this.ongoingClosestPeersRequests.size >= this.config.parallelism) {
                 break
             }
-            this.ongoingClosestPeersRequests.add(nextPeer!.getPeerId().toKey())
+            this.ongoingClosestPeersRequests.add(nextPeer.getPeerId().toKey())
             // eslint-disable-next-line promise/catch-or-return
             this.getClosestPeersFromContact(nextPeer!)
                 .then((contacts) => {

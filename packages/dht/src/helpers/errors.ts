@@ -33,7 +33,7 @@ class Err extends Error {
 
 export class ConnectionFailed extends Err { constructor( message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTION_FAILED, message, originalError) } }
 export class CouldNotRoute extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.COULD_NOT_ROUTE, message, originalError) } }
-export class StartingWebSocketServerFailed extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.STARTING_WEBSOCKET_SERVER_FAILED, message, originalError) } }
+export class WebSocketServerStartError extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.STARTING_WEBSOCKET_SERVER_FAILED, message, originalError) } }
 export class WebSocketConnectionRequestRejected extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.WEBSOCKET_CONNECTION_REQUEST_REJECTED, message, originalError) } }
 export class CouldNotStart extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.COULD_NOT_START, message, originalError) } }
 export class CouldNotStop extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.COULD_NOT_STOP, message, originalError) } }

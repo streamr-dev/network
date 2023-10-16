@@ -1,5 +1,6 @@
 import ConsistentHash from 'consistent-hash'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { NodeID } from 'streamr-client'
 
 /**
  * Slight variations at the very end of a string will not result in the keys
@@ -23,7 +24,7 @@ function formKey(streamPartId: StreamPartID): string {
  * See the corresponding test, ConstHash.test.ts, for details.
  */
 export class ConsistentHashRing {
-    private readonly nodes = new Array<string>()
+    private readonly nodes = new Array<NodeID>()
     private consistentHash?: ConsistentHash
     private readonly redundancyFactor: number
 
@@ -31,14 +32,14 @@ export class ConsistentHashRing {
         this.redundancyFactor = redundancyFactor
     }
 
-    add(nodeId: string): void {
+    add(nodeId: NodeID): void {
         if (!this.nodes.includes(nodeId)) {
             this.nodes.push(nodeId)
             this.consistentHash = undefined
         }
     }
 
-    remove(nodeId: string): void {
+    remove(nodeId: NodeID): void {
         const idx = this.nodes.indexOf(nodeId)
         if (idx !== -1) {
             this.nodes.splice(idx, 1)
@@ -46,7 +47,7 @@ export class ConsistentHashRing {
         }
     }
 
-    get(streamPartId: StreamPartID): string[] {
+    get(streamPartId: StreamPartID): NodeID[] {
         if (this.consistentHash === undefined) {
             this.consistentHash = new ConsistentHash({
                 distribution: 'uniform'
@@ -57,6 +58,6 @@ export class ConsistentHashRing {
             }
         }
         const result = this.consistentHash.get(formKey(streamPartId), this.redundancyFactor)
-        return result as any
+        return result as NodeID[] ?? []
     }
 }

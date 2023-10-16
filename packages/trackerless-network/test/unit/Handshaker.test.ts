@@ -1,24 +1,21 @@
-import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
-import { ListeningRpcCommunicator, PeerDescriptor, PeerID, Simulator, SimulatorTransport } from '@streamr/dht'
-import { mockConnectionLocker, createMockRemotePeer } from '../utils/utils'
-import { PeerList } from '../../src/logic/PeerList'
+import { ListeningRpcCommunicator, Simulator, SimulatorTransport } from '@streamr/dht'
 import { range } from 'lodash'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { NodeList } from '../../src/logic/NodeList'
+import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
+import { createMockPeerDescriptor, createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
 
 describe('Handshaker', () => {
 
     let handshaker: Handshaker
-    const peerId = PeerID.fromString('Handshaker')
-    const peerDescriptor: PeerDescriptor = {
-        kademliaId: peerId.value,
-        type: 0
-    }
+    const peerDescriptor = createMockPeerDescriptor()
 
     const N = 4
     const stream = 'stream#0'
 
-    let targetNeighbors: PeerList
-    let nearbyContactPool: PeerList
-    let randomContactPool: PeerList
+    let targetNeighbors: NodeList
+    let nearbyNodeView: NodeList
+    let randomNodeView: NodeList
 
     let simulator: Simulator
     let simulatorTransport: SimulatorTransport
@@ -28,17 +25,18 @@ describe('Handshaker', () => {
         simulatorTransport = new SimulatorTransport(peerDescriptor, simulator)
         const rpcCommunicator = new ListeningRpcCommunicator(stream, simulatorTransport)
 
-        targetNeighbors = new PeerList(peerId, 10)
-        nearbyContactPool = new PeerList(peerId, 20)
-        randomContactPool = new PeerList(peerId, 20)
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        targetNeighbors = new NodeList(nodeId, 10)
+        nearbyNodeView = new NodeList(nodeId, 20)
+        randomNodeView = new NodeList(nodeId, 20)
 
         handshaker = new Handshaker({
             ownPeerDescriptor: peerDescriptor,
             randomGraphId: stream,
             connectionLocker: mockConnectionLocker,
             targetNeighbors,
-            nearbyContactPool,
-            randomContactPool,
+            nearbyNodeView,
+            randomNodeView,
             rpcCommunicator,
             N
         })
@@ -54,8 +52,8 @@ describe('Handshaker', () => {
         expect(res.length).toEqual(0)
     })
 
-    it('attemptHandshakesOnContact with known peers that cannot be connected to', async () => {
-        range(2).forEach(() => nearbyContactPool.add(createMockRemotePeer()))
+    it('attemptHandshakesOnContact with known nodes that cannot be connected to', async () => {
+        range(2).forEach(() => nearbyNodeView.add(createMockRemoteNode()))
         const res = await handshaker.attemptHandshakesOnContacts([])
         expect(res.length).toEqual(2)
     })

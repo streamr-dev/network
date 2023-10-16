@@ -1,6 +1,5 @@
-import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
-import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import {
     isSamePeerDescriptor,
     keyFromPeerDescriptor,
@@ -24,28 +23,24 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             reachableThrough: params.reachableThrough || [],
             routingPath: params.routingPath
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: params.previousPeer as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+        const options = this.formDhtRpcOptions({
             timeout: 10000
-        }
+        })
         try {
-            logger.trace('calling dhtClient.routeMessage')
-            const ack = await this.client.routeMessage(message, options)
-            logger.trace('dhtClient.routeMessage returned')
+            const ack = await this.getClient().routeMessage(message, options)
             // Success signal if sent to destination and error includes duplicate
             if (
-                isSamePeerDescriptor(params.destinationPeer!, this.peerDescriptor)
+                isSamePeerDescriptor(params.destinationPeer!, this.getPeerDescriptor())
                 && ack.error.includes('duplicate')
             ) {
                 return true
-            } else if (ack.error!.length > 0) {
+            } else if (ack.error.length > 0) {
                 return false
             }
         } catch (err) {
             const fromNode = params.previousPeer ?
                 peerIdFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
-            logger.debug(`Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`)
+            logger.trace(`Failed to send routeMessage from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
             return false
         }
         return true
@@ -61,22 +56,20 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             reachableThrough: params.reachableThrough || [],
             routingPath: params.routingPath
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: params.previousPeer as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+        const options = this.formDhtRpcOptions({
             timeout: 10000
-        }
+        })
         try {
-            const ack = await this.client.forwardMessage(message, options)
-            if (ack.error!.length > 0) {
+            const ack = await this.getClient().forwardMessage(message, options)
+            if (ack.error.length > 0) {
                 return false
             }
         } catch (err) {
             const fromNode = params.previousPeer ?
                 keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
 
-            logger.debug(
-                `Failed to send forwardMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`
+            logger.trace(
+                `Failed to send forwardMessage from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`
             )
             return false
         }
@@ -93,20 +86,18 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             reachableThrough: params.reachableThrough || [],
             routingPath: params.routingPath
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: params.previousPeer as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+        const options = this.formDhtRpcOptions({
             timeout: 10000
-        }
+        })
         try {
-            const ack = await this.client.findRecursively(message, options)
-            if (ack.error!.length > 0) {
+            const ack = await this.getClient().findRecursively(message, options)
+            if (ack.error.length > 0) {
                 logger.debug('Next hop responded with error ' + ack.error)
                 return false
             }
         } catch (err) {
             const fromNode = params.previousPeer ? keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
-            logger.debug(`Failed to send recursiveFind message from ${fromNode} to ${this.peerId.toKey()} with: ${err}`)
+            logger.debug(`Failed to send recursiveFind message from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
             return false
         }
         return true
