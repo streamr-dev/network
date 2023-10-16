@@ -129,7 +129,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         // TODO we could wrap joinDht with pOnce and call it here (no else-if needed in that case)
         if (!this.layer0DhtNode!.hasJoined()) {
             await this.connectToLayer0Network()
-        } else if (this.layer0DhtNode!.getNumberOfConnections() < 1) {
+        } else {
             await this.waitForFirstConnection()
         }
     }
