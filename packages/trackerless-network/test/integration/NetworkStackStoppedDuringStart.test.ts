@@ -31,7 +31,8 @@ describe('NetworkStack can be stopped during start', () => {
 
     it('Can be stopped during start', async () => {
         setImmediate(() => node.stop())
-        await node.start()
+        // we throw as calling stop while start is running is not valid way to use the API
+        await expect(node.start()).rejects.toThrow('aborted')
     })
 
 })
