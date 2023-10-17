@@ -34,7 +34,7 @@ export class ConnectivityChecker {
         this.host = host
     }
 
-    public async sendConnectivityRequest(entryPoint: PeerDescriptor): Promise<ConnectivityResponse> {
+    public async sendConnectivityRequest(entryPoint: PeerDescriptor, selfSigned: boolean): Promise<ConnectivityResponse> {
         if (this.destroyed) {
             throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
         }
@@ -52,7 +52,7 @@ export class ConnectivityChecker {
             throw new Err.ConnectionFailed('Failed to connect to the entrypoints', e)
         }
         // send connectivity request
-        const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort, host: this.host, tls: this.tls }
+        const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort, host: this.host, tls: this.tls, selfSigned }
         const msg: Message = {
             serviceId: ConnectivityChecker.CONNECTIVITY_CHECKER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_REQUEST, messageId: v4(),
@@ -179,7 +179,7 @@ export class ConnectivityChecker {
         let result: RunAndRaceEventsReturnType<ConnectionEvents>
         try {
             result = await runAndRaceEvents3<ConnectionEvents>([
-                () => { socket.connect(url) }],
+                () => { socket.connect(url, selfSigned) }],
             socket, ['connected', 'error'],
             timeoutMs)
         } catch (e) {

@@ -25,7 +25,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from '../Handshaker'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
-import { sample } from 'lodash'
+import { sample, range } from 'lodash'
 import { AutoCertifierClient, AUTOCERTIFIER_SERVICE_ID, SessionIdRequest, SessionIdResponse } from '@streamr/autocertifier-client'
 import { readFileSync } from 'fs'
 import path from 'path'
@@ -128,7 +128,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         }
     }
 
-    public async checkConnectivity(reattempt = 0): Promise<ConnectivityResponse> {
+    public async checkConnectivity(selfSigned: boolean): Promise<ConnectivityResponse> {
         // TODO: this could throw if the server is not running
         const noServerConnectivityResponse: ConnectivityResponse = {
             openInternet: false,
@@ -138,32 +138,33 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         if (this.destroyed) {
             return noServerConnectivityResponse
         }
-        try {
-            if (!this.webSocketServer) {
-                // If no websocket server, return openInternet: false
-                return noServerConnectivityResponse
-            } else {
-                if (!this.entrypoints || this.entrypoints.length < 1) {
-                    // return connectivity info given in config
-                    const preconfiguredConnectivityResponse: ConnectivityResponse = {
-                        openInternet: true,
-                        host: this.host!,
-                        natType: NatType.OPEN_INTERNET,
-                        websocket: { host: this.host!, port: this.selectedPort!, tls: this.tlsCertificate !== undefined }
-                    }
-                    return preconfiguredConnectivityResponse
+        for (const reattempt of range(5)) {
+            try {
+                if (!this.webSocketServer) {
+                    // If no websocket server, return openInternet: false
+                    return noServerConnectivityResponse
                 } else {
-                    // Do real connectivity checking     
-                    return await this.connectivityChecker!.sendConnectivityRequest(sample(this.entrypoints)!)
+                    if (!this.entrypoints || this.entrypoints.length < 1) {
+                        // return connectivity info given in config
+                        const preconfiguredConnectivityResponse: ConnectivityResponse = {
+                            openInternet: true,
+                            host: this.host!,
+                            natType: NatType.OPEN_INTERNET,
+                            websocket: { host: this.host!, port: this.selectedPort!, tls: this.tlsCertificate !== undefined }
+                        }
+                        return preconfiguredConnectivityResponse
+                    } else {
+                        // Do real connectivity checking     
+                        return await this.connectivityChecker!.sendConnectivityRequest(sample(this.entrypoints)!, selfSigned)
+                    }
                 }
-            }
-        } catch (err) {
-            if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
-                logger.error('Failed to connect to the entrypoint', { error: err })
-                await wait(2000)
-                return this.checkConnectivity(reattempt + 1)
-            } else {
-                throw err
+            } catch (err) {
+                if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
+                    logger.error('Failed to connect to the entrypoint', { error: err })
+                    await wait(2000)
+                } else {
+                    throw err
+                }
             }
         }
 

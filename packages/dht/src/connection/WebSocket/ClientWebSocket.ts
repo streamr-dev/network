@@ -20,9 +20,9 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
         this.connectionId = new ConnectionID()
     }
 
-    public connect(address: string): void {
+    public connect(address: string, selfSigned?: boolean): void {
         if (!this.destroyed) {
-            this.socket = new WebSocket(address)
+            this.socket = new WebSocket(address, undefined, undefined, undefined, { rejectUnauthorized: !selfSigned })
             this.socket.binaryType = BINARY_TYPE
             logger.trace('CONNECTING TO ' + address)
             this.socket.onerror = (error: Error) => {

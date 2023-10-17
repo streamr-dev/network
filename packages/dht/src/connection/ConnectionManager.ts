@@ -261,14 +261,15 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }, 5000)
         if (!this.config.simulator) {
             await this.webSocketConnector!.start()
-            const connectivityResponse = await this.webSocketConnector!.checkConnectivity()
+            const selfSigned = (!this.config.tlsCertificate && this.config.websocketServerEnableTls)
+            const connectivityResponse = await this.webSocketConnector!.checkConnectivity(selfSigned)
             let ownPeerDescriptor = peerDescriptorGeneratorCallback!(connectivityResponse)
             console.log(ownPeerDescriptor)
             this.ownPeerDescriptor = ownPeerDescriptor
             this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
             if (ownPeerDescriptor.websocket && !this.config.tlsCertificate && this.config.websocketServerEnableTls) {
                 await this.webSocketConnector!.autoCertify()
-                const autoCertifiedConnectivityResponse = await this.webSocketConnector!.checkConnectivity()
+                const autoCertifiedConnectivityResponse = await this.webSocketConnector!.checkConnectivity(false)
                 const ownPeerDescriptor = peerDescriptorGeneratorCallback!(autoCertifiedConnectivityResponse)
                 this.ownPeerDescriptor = ownPeerDescriptor
                 console.log(ownPeerDescriptor)

@@ -193,6 +193,7 @@ message ConnectivityRequest {
   uint32 port = 1;
   bool tls = 2;
   optional string host = 3;
+  bool selfSigned = 4;
 }
 
 message ConnectivityResponse {
