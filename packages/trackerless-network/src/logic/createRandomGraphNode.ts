@@ -7,7 +7,7 @@ import { NodeList } from './NodeList'
 import { Propagation } from './propagation/Propagation'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { MarkOptional } from 'ts-essentials'
-import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
+import { ProxyServer } from './proxy/ProxyServer'
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 import { StreamPartIDUtils } from '@streamr/protocol'
@@ -37,7 +37,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         rpcCommunicator,
         ownPeerDescriptor: config.ownPeerDescriptor
     })
-    const proxyConnectionServer = acceptProxyConnections ? new ProxyStreamConnectionServer({
+    const proxyConnectionServer = acceptProxyConnections ? new ProxyServer({
         ownPeerDescriptor: config.ownPeerDescriptor,
         streamPartId: StreamPartIDUtils.parse(config.randomGraphId),
         rpcCommunicator

@@ -4,7 +4,7 @@ import { hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { NodeID } from '../../src/identifiers'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { ProxyStreamConnectionClient } from '../../src/logic/proxy/ProxyStreamConnectionClient'
+import { ProxyClient } from '../../src/logic/proxy/ProxyClient'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
@@ -41,7 +41,7 @@ describe('Proxy connections', () => {
     }
     
     const hasConnectionToProxy = (proxyNodeId: NodeID, direction: ProxyDirection): boolean => {
-        const client = (proxiedNode.stack.getStreamrNode()!.getStream(STREAM_PART_ID) as { client: ProxyStreamConnectionClient }).client
+        const client = (proxiedNode.stack.getStreamrNode()!.getStream(STREAM_PART_ID) as { client: ProxyClient }).client
         return client.hasConnection(proxyNodeId, direction)
     }
 

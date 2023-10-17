@@ -25,7 +25,7 @@ import { Propagation } from './propagation/Propagation'
 import { INeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { INeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
 import { StreamNodeServer } from './StreamNodeServer'
-import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
+import { ProxyServer } from './proxy/ProxyServer'
 import { IInspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 import { markAndCheckDuplicate } from './utils'
@@ -60,7 +60,7 @@ export interface StrictRandomGraphNodeConfig {
     neighborUpdateInterval: number
     inspector: IInspector
     temporaryConnectionServer: TemporaryConnectionRpcServer
-    proxyConnectionServer?: ProxyStreamConnectionServer
+    proxyConnectionServer?: ProxyServer
 }
 
 const logger = new Logger(module)

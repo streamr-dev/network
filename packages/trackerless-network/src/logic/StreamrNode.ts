@@ -22,7 +22,7 @@ import { ILayer1 } from './ILayer1'
 import { RandomGraphNode } from './RandomGraphNode'
 import { NETWORK_SPLIT_AVOIDANCE_LIMIT, StreamPartEntryPointDiscovery } from './StreamPartEntryPointDiscovery'
 import { createRandomGraphNode } from './createRandomGraphNode'
-import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
+import { ProxyClient } from './proxy/ProxyClient'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -34,7 +34,7 @@ export type StreamPartDelivery = {
     entryPointDiscovery: StreamPartEntryPointDiscovery
 } | {
     proxied: true
-    client: ProxyStreamConnectionClient
+    client: ProxyClient
 })
 
 export interface Events {
@@ -236,10 +236,10 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         const enable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))
         if (enable) {
-            let proxyClient: ProxyStreamConnectionClient
+            let proxyClient: ProxyClient
             const alreadyProxied = this.isProxiedStreamPart(streamPartId)
             if (alreadyProxied) {
-                proxyClient = (this.streamParts.get(streamPartId)! as { client: ProxyStreamConnectionClient }).client 
+                proxyClient = (this.streamParts.get(streamPartId)! as { client: ProxyClient }).client 
             } else {
                 proxyClient = this.createProxyStream(streamPartId, userId)
                 await proxyClient.start()
@@ -251,8 +251,8 @@ export class StreamrNode extends EventEmitter<Events> {
         }
     }
 
-    private createProxyStream(streamPartId: StreamPartID, userId: EthereumAddress): ProxyStreamConnectionClient {
-        const client = this.createProxyStreamConnectionClient(streamPartId, userId)
+    private createProxyStream(streamPartId: StreamPartID, userId: EthereumAddress): ProxyClient {
+        const client = this.createProxyClient(streamPartId, userId)
         this.streamParts.set(streamPartId, {
             proxied: true,
             client,
@@ -265,8 +265,8 @@ export class StreamrNode extends EventEmitter<Events> {
         return client
     }
 
-    private createProxyStreamConnectionClient(streamPartId: StreamPartID, userId: EthereumAddress): ProxyStreamConnectionClient {
-        return new ProxyStreamConnectionClient({
+    private createProxyClient(streamPartId: StreamPartID, userId: EthereumAddress): ProxyClient {
+        return new ProxyClient({
             P2PTransport: this.P2PTransport!,
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
             streamPartId,

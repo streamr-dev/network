@@ -41,7 +41,7 @@ export const retry = async <T>(task: () => Promise<T>, description: string, abor
     }
 }
 
-interface ProxyStreamConnectionClientConfig {
+interface ProxyClientConfig {
     P2PTransport: ITransport
     ownPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
@@ -60,11 +60,11 @@ interface ProxyDefinition {
 
 const logger = new Logger(module)
 
-export class ProxyStreamConnectionClient extends EventEmitter {
+export class ProxyClient extends EventEmitter {
 
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly server: StreamNodeServer
-    private readonly config: ProxyStreamConnectionClientConfig
+    private readonly config: ProxyClientConfig
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector> = new Map()
     private definition?: ProxyDefinition
     private readonly connections: Map<NodeID, ProxyDirection> = new Map()
@@ -72,7 +72,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     private readonly targetNeighbors: NodeList
     private readonly abortController: AbortController
 
-    constructor(config: ProxyStreamConnectionClientConfig) {
+    constructor(config: ProxyClientConfig) {
         super()
         this.config = config
         this.rpcCommunicator = new ListeningRpcCommunicator(`layer2-${config.streamPartId}`, config.P2PTransport)

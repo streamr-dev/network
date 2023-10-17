@@ -26,7 +26,7 @@ interface ProxyConnection {
     remote: RemoteRandomGraphNode
 }
 
-interface ProxyStreamConnectionServerConfig {
+interface ProxyServerConfig {
     ownPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
@@ -36,12 +36,12 @@ export interface Events {
     newConnection: (nodeId: NodeID) => void
 }
 
-export class ProxyStreamConnectionServer extends EventEmitter<Events> implements IProxyConnectionRpc {
+export class ProxyServer extends EventEmitter<Events> implements IProxyConnectionRpc {
 
-    private readonly config: ProxyStreamConnectionServerConfig
+    private readonly config: ProxyServerConfig
     private readonly connections: Map<NodeID, ProxyConnection> = new Map()
 
-    constructor(config: ProxyStreamConnectionServerConfig) {
+    constructor(config: ProxyServerConfig) {
         super()
         this.config = config
         this.config.rpcCommunicator.registerRpcMethod(ProxyConnectionRequest, ProxyConnectionResponse, 'requestConnection',
