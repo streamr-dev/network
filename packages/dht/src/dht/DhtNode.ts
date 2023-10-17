@@ -389,28 +389,26 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         )
         if (!this.connections.has(PeerID.fromValue(dhtPeer.id).toKey())) {
             this.connections.set(PeerID.fromValue(dhtPeer.id).toKey(), dhtPeer)
-            logger.trace(' ' + this.config.nodeName + ' connectionschange add ' + this.connections.size)
+            logger.trace('connectionschange add ' + this.connections.size)
         } else {
             logger.trace('new connection not set to connections, there is already a connection with the peer ID')
         }
-        if (this.ownPeerDescriptor!.nodeName === 'entrypoint') {
-            logger.trace('connected: ' + this.ownPeerDescriptor!.nodeName + ', ' + peerDescriptor.nodeName + ' ' + this.connections.size)
-        }
+        logger.trace('connected: ' + keyFromPeerDescriptor(peerDescriptor) + ' ' + this.connections.size)
         this.emit('connected', peerDescriptor)
     }
 
     private onTransportDisconnected(peerDescriptor: PeerDescriptor, dicsonnectionType: DisconnectionType): void {
-        logger.trace('disconnected: ' + this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ')
+        logger.trace('disconnected: ' + keyFromPeerDescriptor(peerDescriptor))
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
         // only remove from bucket if we are on layer 0
         if (this.connectionManager) {
             this.bucket!.remove(peerDescriptor.kademliaId)
 
             if (dicsonnectionType === 'OUTGOING_GRACEFUL_LEAVE' || dicsonnectionType === 'INCOMING_GRACEFUL_LEAVE') {
-                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
+                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
                 this.removeContact(peerDescriptor, true)
             } else {
-                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
+                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
             }
         }
 
@@ -438,12 +436,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public handleMessage(message: Message): void {
         if (message.serviceId === this.config.serviceId) {
-            logger.trace('callig this.handleMessageFromPeer ' + this.config.nodeName + ', ' +
-                message.sourceDescriptor?.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('callig this.handleMessageFromPeer ' + keyFromPeerDescriptor(message.sourceDescriptor!)
+                + ' ' + message.serviceId + ' ' + message.messageId)
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
-            logger.trace('emit "message" ' + this.config.nodeName + ', ' + message.sourceDescriptor?.nodeName +
-                ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('emit "message" ' + keyFromPeerDescriptor(message.sourceDescriptor!) + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
     }
@@ -481,7 +478,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             return
         }
         this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
-        logger.trace(`Removed contact ${contact.getPeerId().value.toString()}`)
+        logger.trace(`Removed contact ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
         this.emit(
             'kbucketContactRemoved',
             contact.getPeerDescriptor()
@@ -508,24 +505,24 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             // Important to lock here, before the ping result is known
             this.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
             if (this.connections.has(contact.getPeerId().toKey())) {
-                logger.trace(`Added new contact ${contact.getPeerId().value.toString()}`)
+                logger.trace(`Added new contact ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
                 this.emit(
                     'newKbucketContact',
                     contact.getPeerDescriptor(),
                     this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
                 )
             } else {    // open connection by pinging
-                logger.trace('starting ping ' + this.config.nodeName + ', ' + contact.getPeerDescriptor().nodeName + ' ')
+                logger.trace('starting ping ' + keyFromPeerDescriptor(contact.getPeerDescriptor()))
                 contact.ping().then((result) => {
                     if (result) {
-                        logger.trace(`Added new contact ${contact.getPeerId().value.toString()}`)
+                        logger.trace(`Added new contact ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
                         this.emit(
                             'newKbucketContact',
                             contact.getPeerDescriptor(),
                             this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
                         )
                     } else {
-                        logger.trace('ping failed ' + this.config.nodeName + ', ' + contact.getPeerDescriptor().nodeName + ' ')
+                        logger.trace('ping failed ' + keyFromPeerDescriptor(contact.getPeerDescriptor()))
                         this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
                         this.removeContact(contact.getPeerDescriptor())
                         this.addClosestContactToBucket()
@@ -577,7 +574,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         const peerId = peerIdFromPeerDescriptor(contact)
         if (!peerId.equals(this.ownPeerId!)) {
-            logger.trace(`Adding new contact ${contact.kademliaId.toString()}`)
+            logger.trace(`Adding new contact ${keyFromPeerDescriptor(contact)}`)
             const dhtPeer = new DhtPeer(
                 this.ownPeerDescriptor!,
                 contact,
@@ -612,7 +609,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started || this.stopped) {
             return
         }
-        logger.trace(`Removing contact ${contact.kademliaId.toString()}`)
+        logger.trace(`Removing contact ${keyFromPeerDescriptor(contact)}`)
         const peerId = peerIdFromPeerDescriptor(contact)
         this.bucket!.remove(peerId.value)
         this.neighborList!.removeContact(peerId)
@@ -781,7 +778,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     // IDHTRpcService implementation
     private async ping(request: PingRequest, context: ServerCallContext): Promise<PingResponse> {
-        logger.trace('received ping request: ' + this.config.nodeName + ', ' + (context as DhtCallContext).incomingSourceDescriptor?.nodeName)
+        logger.trace('received ping request: ' + keyFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!))
         setImmediate(() => {
             this.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
         })
