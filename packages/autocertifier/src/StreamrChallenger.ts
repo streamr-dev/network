@@ -33,7 +33,7 @@ export class StreamrChallenger {
 
             const socket = new ClientWebSocket()
 
-            const address = 'ws://' + targetPeerDescriptor.websocket!.host + ':' +
+            const address = 'wss://' + targetPeerDescriptor.websocket!.host + ':' +
                 targetPeerDescriptor.websocket!.port
 
             const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
