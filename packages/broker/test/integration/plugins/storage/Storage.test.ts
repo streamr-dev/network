@@ -1,12 +1,11 @@
 import { randomFillSync } from 'crypto'
-
 import { Client } from 'cassandra-driver'
 import toArray from 'stream-to-array'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { toStreamID, StreamMessage, MessageID, EncryptionType } from '@streamr/protocol'
-import { EthereumAddress, hexToBinary, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -37,7 +36,7 @@ export function buildMsg({
 }): StreamMessage {
     return new StreamMessage({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
-        content: JSON.stringify(content),
+        content: utf8ToBinary(JSON.stringify(content)),
         signature: hexToBinary('0x1234')
     })
 }
@@ -48,8 +47,7 @@ function buildEncryptedMsg({
     timestamp,
     sequenceNumber,
     publisherId = publisherZero,
-    msgChainId = '1',
-    content = 'ab3516983712fa4eb216a898ddd'
+    msgChainId = '1'
 }: {
     streamId: string
     streamPartition: number
@@ -57,11 +55,10 @@ function buildEncryptedMsg({
     sequenceNumber: number
     publisherId?: EthereumAddress
     msgChainId?: string
-    content?: string
 }) {
     return new StreamMessage({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
-        content,
+        content: new Uint8Array([1, 2, 3]),
         encryptionType: EncryptionType.AES,
         signature: hexToBinary('0x1234'),
         groupKeyId: 'groupKeyId'

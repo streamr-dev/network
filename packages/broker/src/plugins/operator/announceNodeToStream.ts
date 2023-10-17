@@ -1,7 +1,7 @@
-import { toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { StreamrClient } from 'streamr-client'
 import { createHeartbeatMessage } from './heartbeatUtils'
+import { formCoordinationStreamId } from './formCoordinationStreamId'
 
 const logger = new Logger(module)
 
@@ -9,7 +9,7 @@ export const announceNodeToStream = async (
     operatorContractAddress: EthereumAddress,
     streamrClient: StreamrClient
 ): Promise<void> => {
-    const coordinationStream = toStreamID('/operator/coordination', operatorContractAddress)
+    const coordinationStream = formCoordinationStreamId(operatorContractAddress)
     try {
         const peerDescriptor = await streamrClient.getPeerDescriptor()
         await streamrClient.publish(coordinationStream, createHeartbeatMessage(peerDescriptor))

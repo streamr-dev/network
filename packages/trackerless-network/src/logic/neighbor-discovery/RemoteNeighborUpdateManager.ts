@@ -1,9 +1,8 @@
-import { DhtRpcOptions, PeerDescriptor } from '@streamr/dht'
-import { Logger, hexToBinary } from '@streamr/utils'
-import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { Remote } from '../Remote'
-import { INeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { PeerDescriptor, Remote } from '@streamr/dht'
+import { Logger } from '@streamr/utils'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { INeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 
 const logger = new Logger(module)
 
@@ -14,19 +13,14 @@ interface UpdateNeighborsResponse {
 
 export class RemoteNeighborUpdateManager extends Remote<INeighborUpdateRpcClient> {
 
-    async updateNeighbors(ownPeerDescriptor: PeerDescriptor, neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor,
-        }
+    async updateNeighbors(neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
         const request: NeighborUpdate = {
-            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
-            randomGraphId: this.graphId,
+            streamPartId: this.getServiceId(),
             neighborDescriptors: neighbors,
             removeMe: false
         }
         try {
-            const response = await this.client.neighborUpdate(request, options)
+            const response = await this.getClient().neighborUpdate(request, this.formDhtRpcOptions())
             return {
                 peerDescriptors: response.neighborDescriptors,
                 removeMe: response.removeMe

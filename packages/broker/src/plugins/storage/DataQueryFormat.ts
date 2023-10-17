@@ -29,7 +29,7 @@ const createPlainTextFormat = (getMessageAsString: (streamMessage: StreamMessage
     }
 }
 
-export const toObject = (msg: StreamMessage<any>): any => {
+export const toObject = (msg: StreamMessage): any => {
     return {
         streamId: msg.getStreamId(),
         streamPartition: msg.getStreamPartition(),

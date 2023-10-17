@@ -1,40 +1,33 @@
-import { INetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { PeerDescriptor, DhtRpcOptions } from '@streamr/dht'
+import { Remote } from '@streamr/dht'
+import { Logger } from '@streamr/utils'
 import {
-    StreamMessage,
-    LeaveStreamNotice
+    LeaveStreamPartNotice,
+    StreamMessage
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { Logger, hexToBinary } from '@streamr/utils'
-import { Remote } from './Remote'
-import { getNodeIdFromPeerDescriptor } from '../identifiers'
+import { INetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 
 const logger = new Logger(module)
 
 export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
 
-    async sendData(ownPeerDescriptor: PeerDescriptor, msg: StreamMessage): Promise<void> {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor,
+    async sendStreamMessage(msg: StreamMessage): Promise<void> {
+        const options = this.formDhtRpcOptions({
             notification: true
-        }
-        this.client.sendData(msg, options).catch(() => {
-            logger.trace('Failed to sendData')
+        })
+        this.getClient().sendStreamMessage(msg, options).catch(() => {
+            logger.trace('Failed to sendStreamMessage')
         })
     }
 
-    leaveStreamNotice(ownPeerDescriptor: PeerDescriptor): void {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor,
+    leaveStreamPartNotice(): void {
+        const notification: LeaveStreamPartNotice = {
+            streamPartId: this.getServiceId()
+        }
+        const options = this.formDhtRpcOptions({
             notification: true
-        }
-        const notification: LeaveStreamNotice = {
-            senderId: hexToBinary(getNodeIdFromPeerDescriptor(ownPeerDescriptor)),
-            randomGraphId: this.graphId
-        }
-        this.client.leaveStreamNotice(notification, options).catch(() => {
-            logger.debug('Failed to send leaveStreamNotice')
+        })
+        this.getClient().leaveStreamPartNotice(notification, options).catch(() => {
+            logger.debug('Failed to send leaveStreamPartNotice')
         })
     }
 }

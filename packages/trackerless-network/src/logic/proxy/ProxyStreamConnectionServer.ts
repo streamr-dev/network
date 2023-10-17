@@ -1,14 +1,21 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { ProxyConnectionRequest, ProxyConnectionResponse, ProxyDirection } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { 
+    GroupKeyRequest,
+    ProxyConnectionRequest,
+    ProxyConnectionResponse,
+    ProxyDirection,
+    StreamMessage,
+    StreamMessageType
+} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
-import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
+import { DhtCallContext, ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { EventEmitter } from 'eventemitter3'
 import { EthereumAddress, Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
-import { NodeID } from '../../identifiers'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -53,47 +60,52 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
     }
 
     stop(): void {
-        this.connections.forEach((connection) => connection.remote.leaveStreamNotice(this.config.ownPeerDescriptor))
+        this.connections.forEach((connection) => connection.remote.leaveStreamPartNotice())
         this.connections.clear()
         this.removeAllListeners()
     }
 
-    getConnectedNodeIds(): NodeID[] {
-        return Array.from(this.connections.keys())
+    getPropagationTargets(msg: StreamMessage): NodeID[] {
+        if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
+            try {
+                const recipientId = GroupKeyRequest.fromBinary(msg.content).recipientId
+                return this.getNodeIdsForUserId(toEthereumAddress(binaryToHex(recipientId, true)))
+            } catch (err) {
+                logger.trace(`Could not parse GroupKeyRequest: ${err}`)
+                return []
+            }
+        } else {
+            return this.getSubscribers()
+        }
     }
 
-    getConnections(): ProxyConnection[] {
-        return Array.from(this.connections.values())
-    }
-
-    getSubscribers(): NodeID[] {
-        return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
-    }
-
-    public getNodeIdsForUserId(userId: EthereumAddress): NodeID[] {
+    private getNodeIdsForUserId(userId: EthereumAddress): NodeID[] {
         return Array.from(this.connections.keys()).filter((nodeId) => this.connections.get(nodeId)!.userId === userId)
     }
 
+    private getSubscribers(): NodeID[] {
+        return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
+    }
+
     // IProxyConnectionRpc server method
-    async requestConnection(request: ProxyConnectionRequest, _context: ServerCallContext): Promise<ProxyConnectionResponse> {
-        this.connections.set(binaryToHex(request.senderId) as NodeID, {
+    async requestConnection(request: ProxyConnectionRequest, context: ServerCallContext): Promise<ProxyConnectionResponse> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+        this.connections.set(senderId, {
             direction: request.direction,
             userId: toEthereumAddress(binaryToHex(request.userId, true)),
             remote: new RemoteRandomGraphNode(
-                request.senderDescriptor!,
+                this.config.ownPeerDescriptor,
+                senderPeerDescriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))    
+                toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         })
         const response: ProxyConnectionResponse = {
-            accepted: true,
-            streamId: request.streamId,
-            streamPartition: request.streamPartition,
-            direction: request.direction,
-            senderId: request.senderId
+            accepted: true
         }
-        logger.trace(`Accepted connection request from ${request.senderId} to ${request.streamId}/${request.streamPartition}`)
-        this.emit('newConnection', binaryToHex(request.senderId) as NodeID)
+        logger.trace(`Accepted connection request from ${senderId} to ${this.config.streamPartId}`)
+        this.emit('newConnection', senderId)
         return response
     }
 }

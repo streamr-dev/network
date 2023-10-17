@@ -14,8 +14,6 @@ const TIMEOUT = 15 * 1000
 
 const PAYLOAD = { hello: 'world' }
 
-const ENCRYPTED_MESSSAGE_FORMAT = /^[0-9A-Fa-f]+$/
-
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
     const entryPoints = CONFIG_TEST.network!.controlLayer!.entryPoints!.map(peerDescriptorTranslator)
     const networkNode = createNetworkNode({
@@ -26,7 +24,7 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
 
     try {
         await networkNode.start()
-        networkNode.subscribe(toStreamPartID(streamId, 0))
+        networkNode.join(toStreamPartID(streamId, 0))
         const messages: unknown[] = []
         networkNode.addMessageListener((msg) => {
             messages.push(msg.getContent())
@@ -94,7 +92,7 @@ describe('publish-subscribe', () => {
             await publisherClient.publish(stream.id, PAYLOAD)
             const messages = await startNetworkNodeAndListenForAtLeastOneMessage(stream.id)
             expect(messages).toHaveLength(1)
-            expect(messages[0]).toMatch(ENCRYPTED_MESSSAGE_FORMAT)
+            expect(messages[0]).toBeInstanceOf(Uint8Array)
         }, TIMEOUT)
 
         it('subscriber is able to receive and decrypt messages', async () => {
