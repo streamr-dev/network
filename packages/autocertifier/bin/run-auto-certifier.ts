@@ -1,4 +1,4 @@
-import { AutoCertifier } from './AutoCertifier'
+import { AutoCertifier } from '../src/AutoCertifier'
 
 const main = async () => {
     const autoCertifier = new AutoCertifier()

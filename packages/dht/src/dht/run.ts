@@ -5,7 +5,7 @@ import { NodeType } from '../proto/packages/dht/protos/DhtRpc'
 const main = async () => {
     const node = new DhtNode({
         websocketPortRange: { min: 30000, max: 30000 },
-        websocketServerEnableTls: true,
+        websocketServerEnableTls: false,
         entryPoints: [{
                 kademliaId: hexToBinary('e1'),
                 type: NodeType.NODEJS,

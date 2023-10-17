@@ -22,7 +22,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
 
     public connect(address: string): void {
         if (!this.destroyed) {
-            this.socket = new WebSocket(address, undefined, undefined, undefined, {rejectUnauthorized: false})
+            this.socket = new WebSocket(address)
             this.socket.binaryType = BINARY_TYPE
             logger.trace('CONNECTING TO ' + address)
             this.socket.onerror = (error: Error) => {

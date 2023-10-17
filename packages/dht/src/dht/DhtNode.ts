@@ -220,6 +220,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 webrtcPortRange: this.config.webrtcPortRange,
                 maxConnections: this.config.maxConnections,
+                websocketServerEnableTls: this.config.websocketServerEnableTls,
                 tlsCertificate: this.config.tlsCertificate,
                 externalIp: this.config.externalIp
             }
