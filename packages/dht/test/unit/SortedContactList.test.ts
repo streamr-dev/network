@@ -1,127 +1,103 @@
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
-import type { ServiceInfo, MethodInfo } from '@protobuf-ts/runtime-rpc'
 import { PeerID } from '../../src/helpers/PeerID'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { IDhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { LeaveNotice, NodeType, PeerDescriptor, RouteMessageAck } from '../../src/proto/packages/dht/protos/DhtRpc'
-import type { FindDataRequest, FindDataResponse, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
-import type { PingRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
-import type { ClosestPeersResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
-import type { ClosestPeersRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { UnaryCall } from '@protobuf-ts/runtime-rpc'
-import type { RpcOptions } from '@protobuf-ts/runtime-rpc'
-import { DhtPeer } from '../../src/dht/DhtPeer'
-import { IMessageType } from '@protobuf-ts/runtime'
-import { Empty } from '../../src/proto/google/protobuf/empty'
 
-/* eslint-disable class-methods-use-this */
-class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
-    typeName = 'MockRpcClient'
-    methods: MethodInfo<any, any> [] = [
-        { name: 'getClosestPeers', O: {} as IMessageType<ClosestPeersResponse> } as MethodInfo<any, any>,
-        { name: 'ping', O: {} as IMessageType<PingResponse> } as MethodInfo<any, any>,
-        { name: 'findData', O: {} as IMessageType<RouteMessageAck> } as MethodInfo<any, any>,
-        { name: 'leaveNotice', O: {} as IMessageType<Empty> } as MethodInfo<any, any>
-    ]
-    options = {}
-    getClosestPeers(_input: ClosestPeersRequest, _options?: RpcOptions): UnaryCall<ClosestPeersRequest, ClosestPeersResponse> {
-        return {} as UnaryCall<ClosestPeersRequest, ClosestPeersResponse>
-    }
-    ping(_input: PingRequest, _options?: RpcOptions): UnaryCall <PingRequest, PingResponse> {
-        return {} as UnaryCall<PingRequest, PingResponse>
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    findData(_input: FindDataRequest, _options?: RpcOptions): UnaryCall<FindDataRequest, FindDataResponse> {
-        return {} as UnaryCall<FindDataRequest, FindDataResponse>
-    }
-
-    leaveNotice(_input: LeaveNotice, _options?: RpcOptions): UnaryCall<LeaveNotice, Empty> {
-        return {} as UnaryCall<LeaveNotice, Empty>
-    }
+const createItem = (kademliaId: Uint8Array): { getPeerId: () => PeerID } => {
+    return { getPeerId: () => PeerID.fromValue(kademliaId) }
 }
 
 describe('SortedContactList', () => {
-    const serviceId = 'sorted'
-    const id0 = PeerID.fromValue(Buffer.from([0, 0, 0, 0]))
-    const id1 = PeerID.fromValue(Buffer.from([0, 0, 0, 1]))
-    const id2 = PeerID.fromValue(Buffer.from([0, 0, 0, 2]))
-    const id3 = PeerID.fromValue(Buffer.from([0, 0, 0, 3]))
-    const id4 = PeerID.fromValue(Buffer.from([0, 0, 0, 4]))
-
-    const descriptor0: PeerDescriptor = { kademliaId: id0.value, type: NodeType.NODEJS }
-    const descriptor1: PeerDescriptor = { kademliaId: id1.value, type: NodeType.NODEJS }
-    const descriptor2: PeerDescriptor = { kademliaId: id2.value, type: NodeType.NODEJS }
-    const descriptor3: PeerDescriptor = { kademliaId: id3.value, type: NodeType.NODEJS }
-    const descriptor4: PeerDescriptor = { kademliaId: id4.value, type: NodeType.NODEJS }
-
-    const peer1 = new DhtPeer(descriptor0, descriptor1, toProtoRpcClient(new MockRpcClient()), serviceId)
-    const peer2 = new DhtPeer(descriptor0, descriptor2, toProtoRpcClient(new MockRpcClient()), serviceId)
-    const peer3 = new DhtPeer(descriptor0, descriptor3, toProtoRpcClient(new MockRpcClient()), serviceId)
-    const peer4 = new DhtPeer(descriptor0, descriptor4, toProtoRpcClient(new MockRpcClient()), serviceId)
+    const item0 = createItem(new Uint8Array([0, 0, 0, 0]))
+    const item1 = createItem(new Uint8Array([0, 0, 0, 1]))
+    const item2 = createItem(new Uint8Array([0, 0, 0, 2]))
+    const item3 = createItem(new Uint8Array([0, 0, 0, 3]))
+    const item4 = createItem(new Uint8Array([0, 0, 0, 4]))
 
     it('compares Ids correctly', async () => {
-        const list = new SortedContactList(id0, 10)
-        expect(list.compareIds(id0, id0)).toBe(0)
-        expect(list.compareIds(id1, id1)).toBe(0)
-        expect(list.compareIds(id0, id1)).toBe(-1)
-        expect(list.compareIds(id0, id2)).toBe(-2)
-        expect(list.compareIds(id1, id0)).toBe(1)
-        expect(list.compareIds(id2, id0)).toBe(2)
-        expect(list.compareIds(id2, id3)).toBe(-1)
-        expect(list.compareIds(id1, id4)).toBe(-3)
+        const list = new SortedContactList(item0.getPeerId(), 10)
+        expect(list.compareIds(item0.getPeerId(), item0.getPeerId())).toBe(0)
+        expect(list.compareIds(item1.getPeerId(), item1.getPeerId())).toBe(0)
+        expect(list.compareIds(item0.getPeerId(), item1.getPeerId())).toBe(-1)
+        expect(list.compareIds(item0.getPeerId(), item2.getPeerId())).toBe(-2)
+        expect(list.compareIds(item1.getPeerId(), item0.getPeerId())).toBe(1)
+        expect(list.compareIds(item2.getPeerId(), item0.getPeerId())).toBe(2)
+        expect(list.compareIds(item2.getPeerId(), item3.getPeerId())).toBe(-1)
+        expect(list.compareIds(item1.getPeerId(), item4.getPeerId())).toBe(-3)
     })
     
     it('orders itself correctly', async () => {
-
-        const list = new SortedContactList(id0, 10)
-
-        list.addContact(peer3)
-        list.addContact(peer2)
-        list.addContact(peer1)
-
+        const list = new SortedContactList(item0.getPeerId(), 10)
+        list.addContact(item3)
+        list.addContact(item2)
+        list.addContact(item1)
         const contacts = list.getUncontactedContacts(3)
         expect(contacts.length).toEqual(3)
-        expect(contacts[0]).toEqual(peer1)
-        expect(contacts[1]).toEqual(peer2)
-        expect(contacts[2]).toEqual(peer3)
+        expect(contacts[0]).toEqual(item1)
+        expect(contacts[1]).toEqual(item2)
+        expect(contacts[2]).toEqual(item3)
     })
     
     it('handles contacted nodes correctly', async () => {
-        const list = new SortedContactList(id0, 10)
-
-        list.addContact(peer3)
-        list.addContact(peer2)
-        list.addContact(peer1)
-
-        list.setContacted(id2)
+        const list = new SortedContactList(item0.getPeerId(), 10)
+        list.addContact(item3)
+        list.addContact(item2)
+        list.addContact(item1)
+        list.setContacted(item2.getPeerId())
         const contacts = list.getUncontactedContacts(3)
         expect(contacts.length).toEqual(2)
-        expect(contacts[0]).toEqual(peer1)
-        expect(contacts[1]).toEqual(peer3)
+        expect(contacts[0]).toEqual(item1)
+        expect(contacts[1]).toEqual(item3)
     })
 
     it('cannot exceed maxSize', async () => {
-        const list = new SortedContactList(id0, 3)
-        list.addContact(peer4)
-        list.addContact(peer3)
-        list.addContact(peer2)
-        list.addContact(peer1)
+        const list = new SortedContactList(item0.getPeerId(), 3)
+        const onContactRemoved = jest.fn()
+        list.on('contactRemoved', onContactRemoved)
+        list.addContact(item1)
+        list.addContact(item4)
+        list.addContact(item3)
+        list.addContact(item2)
         expect(list.getSize()).toEqual(3)
-        expect(list.getContact(id4)).toBeFalsy()
+        expect(onContactRemoved).toBeCalledWith(item4, [item1, item2, item3])
+        expect(list.getContact(item4.getPeerId())).toBeFalsy()
     })
 
     it('removing contacts', async () => {
-        const list = new SortedContactList(id0, 8)
-        list.addContact(peer4)
-        list.addContact(peer3)
-        list.addContact(peer2)
-        list.addContact(peer1)
-        list.removeContact(id2)
+        const list = new SortedContactList(item0.getPeerId(), 8)
+        const onContactRemoved = jest.fn()
+        list.on('contactRemoved', onContactRemoved)
+        list.addContact(item4)
+        list.addContact(item3)
+        list.addContact(item2)
+        list.addContact(item1)
+        list.removeContact(item2.getPeerId())
         expect(list.getSize()).toEqual(3)
-        expect(list.getContact(id2)).toBeFalsy()
+        expect(list.getContact(item2.getPeerId())).toBeFalsy()
         expect(list.getContactIds()).toEqual(list.getContactIds().sort(list.compareIds))
+        expect(list.getAllContacts()).toEqual([item1, item3, item4])
+        expect(onContactRemoved).toBeCalledWith(item2, [item1, item3, item4])
         const ret = list.removeContact(PeerID.fromValue(Buffer.from([0, 0, 0, 6])))
         expect(ret).toEqual(false)
+    })
+
+    it('get closes contacts', () => {
+        const list = new SortedContactList(item0.getPeerId(), 8)
+        list.addContact(item1)
+        list.addContact(item3)
+        list.addContact(item4)
+        list.addContact(item2)
+        expect(list.getClosestContacts(2)).toEqual([item1, item2])
+        expect(list.getClosestContacts()).toEqual([item1, item2, item3, item4])
+    })
+
+    it('get active contacts', () => {
+        const list = new SortedContactList(item0.getPeerId(), 8)
+        list.addContact(item1)
+        list.addContact(item3)
+        list.addContact(item4)
+        list.addContact(item2)
+        list.setActive(item2.getPeerId())
+        list.setActive(item3.getPeerId())
+        list.setActive(item4.getPeerId())
+        expect(list.getActiveContacts()).toEqual([item2, item3, item4])
     })
 })

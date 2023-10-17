@@ -26,7 +26,7 @@ export const mockConnectionLocker: ConnectionLocker = {
 export const createMockRandomGraphNodeAndDhtNode = (
     ownPeerDescriptor: PeerDescriptor,
     entryPointDescriptor: PeerDescriptor,
-    randomGraphId: string,
+    streamPartId: StreamPartID,
     simulator: Simulator
 ): [ DhtNode, RandomGraphNode ] => {
     const mockCm = new SimulatorTransport(ownPeerDescriptor, simulator)
@@ -37,7 +37,7 @@ export const createMockRandomGraphNodeAndDhtNode = (
         entryPoints: [entryPointDescriptor]
     })
     const randomGraphNode = createRandomGraphNode({
-        randomGraphId,
+        streamPartId,
         P2PTransport: mockCm,
         layer1: dhtNode,
         connectionLocker: mockCm,
@@ -76,23 +76,28 @@ export const createRandomNodeId = (): NodeID => {
     return randomBytes(10).toString('hex') as NodeID
 }
 
-export const createMockRemoteNode = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
-    const mockPeerDescriptor: PeerDescriptor = {
+export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'kademliaId' | 'type'>): PeerDescriptor => {
+    return {
+        ...opts,
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS
     }
-    return new RemoteRandomGraphNode(peerDescriptor || mockPeerDescriptor, 'mock', {} as any)
+}
+
+export const createMockRemoteNode = (remotePeerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
+    return new RemoteRandomGraphNode(createMockPeerDescriptor(), remotePeerDescriptor || createMockPeerDescriptor(), 'mock', {} as any)
 }
 
 export const createMockRemoteHandshaker = (): RemoteHandshaker => {
-    const mockPeerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
-    return new RemoteHandshaker(mockPeerDescriptor, 'mock', {
-        handshake: async () => {},
-        interleaveNotice: async () => {}
-    } as any)
+    return new RemoteHandshaker(
+        createMockPeerDescriptor(),
+        createMockPeerDescriptor(), 
+        'mock',
+        {
+            handshake: async () => {},
+            interleaveNotice: async () => {}
+        } as any
+    )
 }
 
 export const createNetworkNodeWithSimulator = (

@@ -4,7 +4,6 @@ import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { createWrappedClosestPeersRequest, createMockRoutingRpcCommunicator } from '../utils/utils'
 import { v4 } from 'uuid'
-import { keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('Router', () => {
     let router: Router
@@ -99,7 +98,7 @@ describe('Router', () => {
     })
 
     it('route server on duplicate message', async () => {
-        router.addToDuplicateDetector(routedMessage.requestId, keyFromPeerDescriptor(peerDescriptor2))
+        router.addToDuplicateDetector(routedMessage.requestId)
         const ack = await router.routeMessage(routedMessage, {} as any)
         expect(ack.error).toEqual('message given to routeMessage() service is likely a duplicate')
     })
@@ -116,7 +115,7 @@ describe('Router', () => {
     })
 
     it('forward server on duplicate message', async () => {
-        router.addToDuplicateDetector(routedMessage.requestId, keyFromPeerDescriptor(peerDescriptor2))
+        router.addToDuplicateDetector(routedMessage.requestId)
         const ack = await router.forwardMessage(routedMessage, {} as any)
         expect(ack.error).toEqual('message given to forwardMessage() service is likely a duplicate')
     })

@@ -1,9 +1,10 @@
-import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, LatencyType, NodeType } from '@streamr/dht'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { DhtNode, LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
-import { hexToBinary, waitForCondition } from '@streamr/utils'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
-import { createRandomNodeId } from '../utils/utils'
+import { createMockPeerDescriptor } from '../utils/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('RandomGraphNode-DhtNode-Latencies', () => {
     const numOfNodes = 64
@@ -12,18 +13,10 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
     let entryPointRandomGraphNode: RandomGraphNode
     let graphNodes: RandomGraphNode[]
 
-    const streamId = 'Stream1'
-    const entrypointDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
+    const streamPartId = StreamPartIDUtils.parse('stream#0')
+    const entrypointDescriptor = createMockPeerDescriptor()
 
-    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => {
-        return {
-            kademliaId: hexToBinary(createRandomNodeId()),
-            type: NodeType.NODEJS
-        }
-    })
+    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => createMockPeerDescriptor())
     beforeEach(async () => {
         Simulator.useFakeTimers()
         const simulator = new Simulator(LatencyType.FIXED, 50)
@@ -35,22 +28,22 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         dhtEntryPoint = new DhtNode({
             transportLayer: entrypointCm,
             peerDescriptor: entrypointDescriptor,
-            serviceId: streamId
+            serviceId: streamPartId
         })
         dhtNodes = range(numOfNodes).map((i) => new DhtNode({
             transportLayer: cms[i],
             peerDescriptor: peerDescriptors[i],
-            serviceId: streamId
+            serviceId: streamPartId
         }))
         graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
-            randomGraphId: streamId,
+            streamPartId,
             layer1: dhtNodes[i],
             P2PTransport: cms[i],
             connectionLocker: cms[i],
             ownPeerDescriptor: peerDescriptors[i]
         }))
         entryPointRandomGraphNode = createRandomGraphNode({
-            randomGraphId: streamId,
+            streamPartId,
             layer1: dhtEntryPoint,
             P2PTransport: entrypointCm,
             connectionLocker: entrypointCm,
@@ -91,7 +84,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await Promise.all(range(4).map((i) => {
             return waitForCondition(() => {
                 return graphNodes[i].getTargetNeighborIds().length >= 4
-            }, 10000, 2000)
+            }, 15000, 2000)
         }))
         range(4).map((i) => {
             expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)

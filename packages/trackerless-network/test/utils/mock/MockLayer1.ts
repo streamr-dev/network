@@ -1,27 +1,24 @@
+import { PeerDescriptor } from '@streamr/dht'
 import { EventEmitter } from 'eventemitter3'
-import { ILayer1 } from '../../../src/logic/ILayer1'
-import { DhtPeer, PeerDescriptor, PeerID, PeerIDKey, SortedContactList, NodeType } from '@streamr/dht'
 import { NodeID } from '../../../src/identifiers'
-import { hexToBinary } from '@streamr/utils'
-import { createRandomNodeId } from '../utils'
+import { ILayer1 } from '../../../src/logic/ILayer1'
+import { createMockPeerDescriptor } from '../utils'
 
 export class MockLayer1 extends EventEmitter implements ILayer1 {
     
     private readonly kbucketPeers: PeerDescriptor[] = []
-    private readonly neighborList: SortedContactList<DhtPeer>
 
-    constructor(nodeId: NodeID) {
+    constructor(_nodeId: NodeID) {
         super()
-        this.neighborList = new SortedContactList(PeerID.fromKey(nodeId as string as PeerIDKey), 10)
     }
 
     // eslint-disable-next-line class-methods-use-this
     removeContact(_peerDescriptor: PeerDescriptor, _removeFromOpenInternetPeers?: boolean): void {
-
     }
 
-    getNeighborList(): SortedContactList<DhtPeer> {
-        return this.neighborList
+    // eslint-disable-next-line class-methods-use-this
+    getClosestContacts(_maxCount?: number): PeerDescriptor[] {
+        return []
     }
 
     getKBucketPeers(): PeerDescriptor[] {
@@ -33,10 +30,7 @@ export class MockLayer1 extends EventEmitter implements ILayer1 {
     }
 
     addNewRandomPeerToKBucket(): void {
-        this.kbucketPeers.push({
-            kademliaId: hexToBinary(createRandomNodeId()),
-            type: NodeType.NODEJS
-        })
+        this.kbucketPeers.push(createMockPeerDescriptor())
     }
 
     // eslint-disable-next-line class-methods-use-this

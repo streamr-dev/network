@@ -66,7 +66,7 @@ export class NodeList extends EventEmitter<Events> {
         return Array.from(this.nodes.keys())
     }
 
-    getNeighborById(id: NodeID): RemoteRandomGraphNode | undefined {
+    get(id: NodeID): RemoteRandomGraphNode | undefined {
         return this.nodes.get(id)
     }
 
@@ -96,7 +96,7 @@ export class NodeList extends EventEmitter<Events> {
         return included[included.length - 1]
     }
 
-    getNodes(): RemoteRandomGraphNode[] {
+    getAll(): RemoteRandomGraphNode[] {
         return Array.from(this.nodes.values())
     }
 

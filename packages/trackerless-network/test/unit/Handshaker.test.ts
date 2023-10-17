@@ -1,21 +1,18 @@
-import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
-import { ListeningRpcCommunicator, NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { mockConnectionLocker, createMockRemoteNode, createRandomNodeId } from '../utils/utils'
-import { NodeList } from '../../src/logic/NodeList'
+import { ListeningRpcCommunicator, Simulator, SimulatorTransport } from '@streamr/dht'
 import { range } from 'lodash'
-import { hexToBinary } from '@streamr/utils'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { NodeList } from '../../src/logic/NodeList'
+import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
+import { createMockPeerDescriptor, createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Handshaker', () => {
 
     let handshaker: Handshaker
-    const nodeId = createRandomNodeId()
-    const peerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(nodeId),
-        type: NodeType.NODEJS
-    }
+    const peerDescriptor = createMockPeerDescriptor()
 
-    const N = 4
-    const stream = 'stream#0'
+    const maxNeighborCount = 4
+    const streamPartId = StreamPartIDUtils.parse('stream#0')
 
     let targetNeighbors: NodeList
     let nearbyNodeView: NodeList
@@ -27,21 +24,22 @@ describe('Handshaker', () => {
     beforeEach(() => {
         simulator = new Simulator()
         simulatorTransport = new SimulatorTransport(peerDescriptor, simulator)
-        const rpcCommunicator = new ListeningRpcCommunicator(stream, simulatorTransport)
+        const rpcCommunicator = new ListeningRpcCommunicator(streamPartId, simulatorTransport)
 
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         targetNeighbors = new NodeList(nodeId, 10)
         nearbyNodeView = new NodeList(nodeId, 20)
         randomNodeView = new NodeList(nodeId, 20)
 
         handshaker = new Handshaker({
             ownPeerDescriptor: peerDescriptor,
-            randomGraphId: stream,
+            streamPartId,
             connectionLocker: mockConnectionLocker,
             targetNeighbors,
             nearbyNodeView,
             randomNodeView,
             rpcCommunicator,
-            N
+            maxNeighborCount
         })
     })
 

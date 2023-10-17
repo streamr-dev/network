@@ -17,14 +17,14 @@ export function toArray(streamMessage: StreamMessage): any[] {
         streamMessage.contentType,
         streamMessage.encryptionType,
         streamMessage.groupKeyId,
-        streamMessage.serializedContent,
+        binaryToHex(streamMessage.serializedContent),
         streamMessage.newGroupKey ? streamMessage.newGroupKey.serialize() : null,
         SIGNATURE_TYPE_ETH,
         binaryToHex(streamMessage.signature),
     ]
 }
 
-export function fromArray(arr: any[]): StreamMessage<any> {
+export function fromArray(arr: any[]): StreamMessage {
     const [
         _version,
         messageIdArr,
@@ -46,7 +46,7 @@ export function fromArray(arr: any[]): StreamMessage<any> {
     return new StreamMessage({
         messageId: MessageID.fromArray(messageIdArr),
         prevMsgRef: prevMsgRefArr ? MessageRef.fromArray(prevMsgRefArr) : null,
-        content: serializedContent,
+        content: new Uint8Array(hexToBinary(serializedContent)),
         messageType,
         contentType,
         encryptionType,

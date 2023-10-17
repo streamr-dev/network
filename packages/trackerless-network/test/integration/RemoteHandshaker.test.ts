@@ -1,6 +1,6 @@
 import {
-    StreamHandshakeRequest,
-    StreamHandshakeResponse
+    StreamPartHandshakeRequest,
+    StreamPartHandshakeResponse
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
@@ -44,11 +44,11 @@ describe('RemoteHandshaker', () => {
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
 
         mockServerRpc.registerRpcMethod(
-            StreamHandshakeRequest,
-            StreamHandshakeResponse,
+            StreamPartHandshakeRequest,
+            StreamPartHandshakeResponse,
             'handshake',
-            async (msg: StreamHandshakeRequest, _context: ServerCallContext): Promise<StreamHandshakeResponse> => {
-                const res: StreamHandshakeResponse = {
+            async (msg: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
+                const res: StreamPartHandshakeResponse = {
                     requestId: msg.requestId,
                     accepted: true
                 }
@@ -57,6 +57,7 @@ describe('RemoteHandshaker', () => {
         )
 
         remoteHandshaker = new RemoteHandshaker(
+            clientNode,
             serverNode,
             'test-stream',
             toProtoRpcClient(new HandshakeRpcClient(clientRpc.getRpcClientTransport()))
@@ -73,7 +74,7 @@ describe('RemoteHandshaker', () => {
     })
 
     it('handshake', async () => {
-        const result = await remoteHandshaker.handshake(clientNode, [])
+        const result = await remoteHandshaker.handshake([])
         expect(result.accepted).toEqual(true)
     })
 })
