@@ -32,7 +32,7 @@ describe('RemoteRouter', () => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new RoutingServiceClient(clientRpcCommunicator.getRpcClientTransport()))
-        remoteRouter = new RemoteRouter(clientPeerDescriptor, serverPeerDescriptor, client, serviceId)
+        remoteRouter = new RemoteRouter(clientPeerDescriptor, serverPeerDescriptor, serviceId, client)
     })
 
     it('routeMessage happy path', async () => {

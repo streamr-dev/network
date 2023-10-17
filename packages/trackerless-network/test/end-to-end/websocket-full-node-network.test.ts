@@ -1,22 +1,19 @@
-import { PeerDescriptor, NodeType } from '@streamr/dht'
-import { range } from 'lodash'
-import { hexToBinary, waitForCondition } from '@streamr/utils'
-import { createRandomNodeId, createStreamMessage } from '../utils/utils'
-import { NetworkStack } from '../../src/NetworkStack'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { waitForCondition } from '@streamr/utils'
+import { range } from 'lodash'
+import { NetworkStack } from '../../src/NetworkStack'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('Full node network with WebSocket connections only', () => {
 
     const NUM_OF_NODES = 48
-    const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
+    const epPeerDescriptor = createMockPeerDescriptor({
         nodeName: 'entrypoint',
         websocket: { host: '127.0.0.1', port: 15555, tls: false }
-    }
-    const randomGraphId = StreamPartIDUtils.parse('websocket-network#0')
+    })
+    const streamPartId = StreamPartIDUtils.parse('websocket-network#0')
 
     let entryPoint: NetworkStack
 
@@ -33,8 +30,8 @@ describe('Full node network with WebSocket connections only', () => {
             }
         })
         await entryPoint.start()
-        entryPoint.getStreamrNode()!.setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
-        await entryPoint.getStreamrNode()!.joinStream(randomGraphId)
+        entryPoint.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
+        entryPoint.getStreamrNode()!.joinStreamPart(streamPartId)
 
         await Promise.all(range(NUM_OF_NODES).map(async (i) => {
             const node = new NetworkStack({
@@ -47,9 +44,8 @@ describe('Full node network with WebSocket connections only', () => {
             })
             nodes.push(node)
             await node.start()
-            node.getStreamrNode().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
-            await node.getStreamrNode().joinStream(randomGraphId)
-            node.getStreamrNode().subscribeToStream(randomGraphId)
+            node.getStreamrNode().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
+            node.getStreamrNode().joinStreamPart(streamPartId)
         }))
 
     }, 120000)
@@ -64,7 +60,7 @@ describe('Full node network with WebSocket connections only', () => {
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
             waitForCondition(() => {
-                return node.getStreamrNode()!.getStream(randomGraphId)!.layer2.getTargetNeighborIds().length >= 3
+                return node.getStreamrNode()!.getNeighbors(streamPartId).length >= 4
             }
             , 120000)
         ))
@@ -79,10 +75,10 @@ describe('Full node network with WebSocket connections only', () => {
 
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
-            randomGraphId,
+            streamPartId,
             randomEthereumAddress()
         )
-        entryPoint.getStreamrNode()!.publishToStream(msg)
+        entryPoint.getStreamrNode()!.broadcast(msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
     }, 220000)
 

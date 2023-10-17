@@ -46,13 +46,13 @@ export class StreamMessageTranslator {
         let content: Uint8Array
         let messageType: StreamMessageType
         if (msg.messageType === OldStreamMessageType.MESSAGE) {
-            content = utf8ToBinary(msg.serializedContent)
+            content = msg.serializedContent
             messageType = StreamMessageType.MESSAGE
         } else if (msg.messageType === OldStreamMessageType.GROUP_KEY_REQUEST) {
             content = GroupKeyRequest.toBinary(
                 GroupKeyRequestTranslator.toProtobuf(
                     OldGroupKeyRequest.deserialize(
-                        msg.serializedContent,
+                        binaryToUtf8(msg.serializedContent),
                         OldStreamMessageType.GROUP_KEY_REQUEST) as OldGroupKeyRequest
                 )
             )
@@ -61,7 +61,7 @@ export class StreamMessageTranslator {
             content = GroupKeyResponse.toBinary(
                 GroupKeyResponseTranslator.toProtobuf(
                     OldGroupKeyResponse.deserialize(
-                        msg.serializedContent,
+                        binaryToUtf8(msg.serializedContent),
                         OldStreamMessageType.GROUP_KEY_RESPONSE) as OldGroupKeyResponse
                 )
             )
@@ -105,18 +105,28 @@ export class StreamMessageTranslator {
         return translated
     }
 
-    static toClientProtocol<T>(msg: StreamMessage): OldStreamMessage<T> {
-        let content: string
+    static toClientProtocol(msg: StreamMessage): OldStreamMessage {
+        let content: Uint8Array
         let messageType: OldStreamMessageType
         if (msg.messageType === StreamMessageType.MESSAGE) {
             messageType = OldStreamMessageType.MESSAGE
-            content = binaryToUtf8(msg.content)
+            content = msg.content
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             messageType = OldStreamMessageType.GROUP_KEY_REQUEST
-            content = GroupKeyRequestTranslator.toClientProtocol(GroupKeyRequest.fromBinary(msg.content)).serialize()
+            try {
+                const parsedRequest = GroupKeyRequest.fromBinary(msg.content)
+                content = utf8ToBinary(GroupKeyRequestTranslator.toClientProtocol(parsedRequest).serialize())
+            } catch (err) {
+                throw new Error(`invalid group key request: ${err}`)
+            }
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_RESPONSE) {
             messageType = OldStreamMessageType.GROUP_KEY_RESPONSE
-            content = GroupKeyResponseTranslator.toClientProtocol(GroupKeyResponse.fromBinary(msg.content)).serialize()
+            try {
+                const parsedResponse = GroupKeyResponse.fromBinary(msg.content)
+                content = utf8ToBinary(GroupKeyResponseTranslator.toClientProtocol(parsedResponse).serialize())
+            } catch (err) {
+                throw new Error(`invalid group key response: ${err}`)
+            }
         } else {
             throw new Error('invalid message type')
         }
@@ -139,7 +149,7 @@ export class StreamMessageTranslator {
                 msg.newGroupKey.data,
             )
         }
-        const translated = new OldStreamMessage<T>({
+        const translated = new OldStreamMessage({
             messageId,
             prevMsgRef,
             content,

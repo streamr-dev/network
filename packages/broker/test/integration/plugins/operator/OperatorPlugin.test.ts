@@ -6,6 +6,7 @@ import { ProxyDirection, StreamPermission } from 'streamr-client'
 import { Broker, createBroker } from '../../../../src/broker'
 import { createClient, createTestStream, formConfig, startBroker } from '../../../utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
+import { wait } from '@streamr/utils'
 
 describe('OperatorPlugin', () => {
 
@@ -53,6 +54,9 @@ describe('OperatorPlugin', () => {
                 }
             }
         })
+        // wait for a while so that MaintainTopologyService has time to handle addStakedStreams
+        // events emitted during Broker start
+        await wait(500)
         const brokerDescriptor = await broker.getStreamrClient().getPeerDescriptor()
         await subscriber.setProxies({ id: stream.id }, [brokerDescriptor], ProxyDirection.SUBSCRIBE)
         const subscription = await subscriber.subscribe(stream.id)

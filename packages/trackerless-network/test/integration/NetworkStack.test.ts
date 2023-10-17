@@ -1,11 +1,10 @@
-import { NetworkStack } from '../../src/NetworkStack'
-import { NodeType, PeerDescriptor } from '@streamr/dht'
 import {
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { hexToBinary, waitForCondition } from '@streamr/utils'
-import { createRandomNodeId, createStreamMessage } from '../utils/utils'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { waitForCondition } from '@streamr/utils'
+import { NetworkStack } from '../../src/NetworkStack'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('NetworkStack', () => {
 
@@ -13,12 +12,10 @@ describe('NetworkStack', () => {
     let stack2: NetworkStack
     const streamPartId = StreamPartIDUtils.parse('stream1#0')
 
-    const epDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
+    const epDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 32222, tls: false },
         nodeName: 'entrypoint'
-    }
+    })
 
     beforeEach(async () => {
         stack1 = new NetworkStack({
@@ -51,7 +48,7 @@ describe('NetworkStack', () => {
 
     it('Can use NetworkNode pub/sub via NetworkStack', async () => {
         let receivedMessages = 0
-        await stack1.getStreamrNode().waitForJoinAndSubscribe(streamPartId)
+        stack1.getStreamrNode().joinStreamPart(streamPartId)
         stack1.getStreamrNode().on('newMessage', () => {
             receivedMessages += 1
         })
@@ -60,8 +57,16 @@ describe('NetworkStack', () => {
             streamPartId,
             randomEthereumAddress()
         )
-        await stack2.getStreamrNode().waitForJoinAndPublish(streamPartId, msg)
+        stack2.getStreamrNode().broadcast(msg)
         await waitForCondition(() => receivedMessages === 1)
     })
 
+    it('join and wait for neighbors', async () => {
+        await Promise.all([
+            stack1.joinStreamPart(streamPartId, { minCount: 1, timeout: 5000 }),
+            stack2.joinStreamPart(streamPartId, { minCount: 1, timeout: 5000 }),
+        ])
+        expect(stack1.getStreamrNode().getNeighbors(streamPartId).length).toBe(1)
+        expect(stack2.getStreamrNode().getNeighbors(streamPartId).length).toBe(1)
+    })
 })

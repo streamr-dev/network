@@ -7,15 +7,15 @@ import { INeighborFinder } from './NeighborFinder'
 import { NodeList } from '../NodeList'
 import { RemoteNeighborUpdateManager } from './RemoteNeighborUpdateManager'
 import { NeighborUpdateManagerServer } from './NeighborUpdateManagerServer'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { StreamPartID } from '@streamr/protocol'
 
 interface NeighborUpdateManagerConfig {
-    ownNodeId: NodeID
     ownPeerDescriptor: PeerDescriptor
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
     neighborFinder: INeighborFinder
-    randomGraphId: string
+    streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
     neighborUpdateInterval: number
 }
@@ -41,19 +41,19 @@ export class NeighborUpdateManager implements INeighborUpdateManager {
             (req: NeighborUpdate, context) => this.server.neighborUpdate(req, context))
     }
 
-    public async start(): Promise<void> {
+    async start(): Promise<void> {
         await scheduleAtInterval(() => this.updateNeighborInfo(), this.config.neighborUpdateInterval, false, this.abortController.signal)
     }
 
-    public stop(): void {
+    stop(): void {
         this.abortController.abort()
     }
 
     private async updateNeighborInfo(): Promise<void> {
         logger.trace(`Updating neighbor info to nodes`)
-        const neighborDescriptors = this.config.targetNeighbors.getNodes().map((neighbor) => neighbor.getPeerDescriptor())
-        await Promise.allSettled(this.config.targetNeighbors.getNodes().map(async (neighbor) => {
-            const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.config.ownPeerDescriptor, neighborDescriptors)
+        const neighborDescriptors = this.config.targetNeighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor())
+        await Promise.allSettled(this.config.targetNeighbors.getAll().map(async (neighbor) => {
+            const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(neighborDescriptors)
             if (res.removeMe) {
                 this.config.targetNeighbors.remove(neighbor.getPeerDescriptor())
                 this.config.neighborFinder.start([getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())])
@@ -62,6 +62,6 @@ export class NeighborUpdateManager implements INeighborUpdateManager {
     }
 
     private createRemote(targetPeerDescriptor: PeerDescriptor): RemoteNeighborUpdateManager {
-        return new RemoteNeighborUpdateManager(targetPeerDescriptor, this.config.randomGraphId, this.client)
+        return new RemoteNeighborUpdateManager(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
     }
 }

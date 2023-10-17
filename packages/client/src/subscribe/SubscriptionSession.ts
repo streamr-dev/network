@@ -101,7 +101,9 @@ export class SubscriptionSession {
     private async subscribe(): Promise<NetworkNodeStub> {
         const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
-        await node.subscribe(this.streamPartId)
+        if (!node.isProxiedStreamPart(this.streamPartId)) {
+            await node.join(this.streamPartId)
+        }
         return node
     }
 
@@ -110,7 +112,7 @@ export class SubscriptionSession {
         this.pipeline.return()
         this.pipeline.onError.end(new Error('done'))
         node.removeMessageListener(this.onMessageInput)
-        node.unsubscribe(this.streamPartId)
+        node.leave(this.streamPartId)
     }
 
     updateNodeSubscriptions = (() => {

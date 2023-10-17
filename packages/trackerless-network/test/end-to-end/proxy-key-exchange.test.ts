@@ -1,40 +1,29 @@
-import { NodeType, PeerDescriptor } from '@streamr/dht'
-import { 
+import {
     EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,
     StreamMessage,
     StreamMessageType,
-    StreamPartIDUtils,
-    toStreamID,
-    toStreamPartID
+    StreamPartIDUtils
 } from '@streamr/protocol'
+import { hexToBinary, toEthereumAddress, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { toEthereumAddress, waitForEvent3, hexToBinary } from '@streamr/utils'
-import { createRandomNodeId } from '../utils/utils'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('proxy group key exchange', () => {
-    const proxyNodeDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
+    const proxyNodeDescriptor = createMockPeerDescriptor({
         nodeName: 'proxyNode',
         websocket: { host: '127.0.0.1', port: 23134, tls: false }
-    }
-    const publisherDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
-    }
-    const subscriberDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
-    }
+    })
+    const publisherDescriptor = createMockPeerDescriptor()
+    const subscriberDescriptor = createMockPeerDescriptor()
 
     const publisherUserId = toEthereumAddress('0x823A026e226EB47980c88616e01E1D3305Ef8Ecb')
     const subscriberUserId = toEthereumAddress('0x73E6183bf9b79D30533bEC7B28e982e9Af649B23')
 
-    const streamPartId = toStreamPartID(toStreamID('proxy-test'), 0)
+    const streamPartId = StreamPartIDUtils.parse('proxy-test#0')
 
     let proxyNode: NetworkNode
     let publisher: NetworkNode
@@ -52,7 +41,7 @@ describe('proxy group key exchange', () => {
         })
         await proxyNode.start()
         proxyNode.setStreamPartEntryPoints(streamPartId, [proxyNodeDescriptor])
-        await proxyNode.stack.getStreamrNode()!.joinStream(streamPartId)
+        proxyNode.stack.getStreamrNode()!.joinStreamPart(streamPartId)
         publisher = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
@@ -80,14 +69,14 @@ describe('proxy group key exchange', () => {
         await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
         await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
 
-        const requestContent = new GroupKeyRequest({
+        const requestContent = utf8ToBinary(new GroupKeyRequest({
             recipient: publisherUserId,
             requestId: 'requestId',
             rsaPublicKey: 'mockKey',
             groupKeyIds: [
                 'mock'
             ],
-        }).toArray()
+        }).serialize())
         const request = new StreamMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
@@ -105,7 +94,7 @@ describe('proxy group key exchange', () => {
 
         await Promise.all([
             waitForEvent3(publisher.stack.getStreamrNode()! as any, 'newMessage'),
-            subscriber.publish(request)
+            subscriber.broadcast(request)
         ])
     })
 
@@ -113,11 +102,11 @@ describe('proxy group key exchange', () => {
         await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
         await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
 
-        const responseContent = new GroupKeyResponse({
+        const responseContent = utf8ToBinary(new GroupKeyResponse({
             recipient: publisherUserId,
             requestId: 'requestId',
             encryptedGroupKeys: []
-        }).toArray()
+        }).serialize())
         const response = new StreamMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
@@ -135,7 +124,7 @@ describe('proxy group key exchange', () => {
 
         await Promise.all([
             waitForEvent3(subscriber.stack.getStreamrNode()! as any, 'newMessage'),
-            publisher.publish(response)
+            publisher.broadcast(response)
         ])
     })
 })

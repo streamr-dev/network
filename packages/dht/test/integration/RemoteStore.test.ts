@@ -44,7 +44,7 @@ describe('RemoteStore', () => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new StoreServiceClient(clientRpcCommunicator.getRpcClientTransport()))
-        remoteStore = new RemoteStore(clientPeerDescriptor, serverPeerDescriptor, client, serviceId)
+        remoteStore = new RemoteStore(clientPeerDescriptor, serverPeerDescriptor, serviceId, client)
     })
 
     it('storeData happy path', async () => {

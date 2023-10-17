@@ -1,7 +1,7 @@
 import { ListeningRpcCommunicator, PeerDescriptor, DhtCallContext } from '@streamr/dht'
 import { Empty } from '../proto/google/protobuf/empty'
 import {
-    LeaveStreamNotice,
+    LeaveStreamPartNotice,
     MessageID,
     MessageRef,
     StreamMessage
@@ -9,13 +9,14 @@ import {
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { StreamPartID } from '@streamr/protocol'
 
 export interface StreamNodeServerConfig {
     ownPeerDescriptor: PeerDescriptor
-    randomGraphId: string
+    streamPartId: StreamPartID
     markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
     broadcast: (message: StreamMessage, previousNode?: NodeID) => void
-    onLeaveNotice(notice: LeaveStreamNotice): void
+    onLeaveNotice(senderId: NodeID): void
     markForInspection(senderId: NodeID, messageId: MessageID): void
     rpcCommunicator: ListeningRpcCommunicator
 }
@@ -28,7 +29,7 @@ export class StreamNodeServer implements INetworkRpc {
         this.config = config
     }
 
-    async sendData(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
+    async sendStreamMessage(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
         const previousNode = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
         this.config.markForInspection(previousNode, message.messageId!)
         if (this.config.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
@@ -37,9 +38,11 @@ export class StreamNodeServer implements INetworkRpc {
         return Empty
     }
 
-    async leaveStreamNotice(message: LeaveStreamNotice, _context: ServerCallContext): Promise<Empty> {
-        if (message.randomGraphId === this.config.randomGraphId) {
-            this.config.onLeaveNotice(message)
+    async leaveStreamPartNotice(message: LeaveStreamPartNotice, context: ServerCallContext): Promise<Empty> {
+        if (message.streamPartId === this.config.streamPartId) {
+            const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+            const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+            this.config.onLeaveNotice(senderId)
         }
         return Empty
     }
