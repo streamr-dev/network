@@ -187,7 +187,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                 this.webSocketServer!.updateCertificate(subdomain.certificate)
             })
             await Promise.all([
-                waitForEvent3(this.autocertifierClient as any, 'updatedSubdomain'),
+                waitForEvent3(this.autocertifierClient as any, 'updatedSubdomain', 60000),
                 this.autocertifierClient.start()
             ])
             
