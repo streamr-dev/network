@@ -12,7 +12,7 @@ import {
     WebSocketConnectionResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { WebSocketConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Logger, wait } from '@streamr/utils'
+import { Logger, wait, waitForEvent3 } from '@streamr/utils'
 import { IWebSocketConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
@@ -172,6 +172,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
     public async autoCertify(): Promise<void> {
         if (this.selectedPort) {
+            logger.trace(`AutoCertifying subdomain...`)
             this.autocertifierClient = new AutoCertifierClient('~/subdomain.json', this.selectedPort!,
                 'https://ns1.fe6a54d8-8d6f-4743-890d-e9ecd680a4c7.xyz:59833', cert, (_, rpcMethodName, method) => {
                     this.autocertifierRpcCommunicator.registerRpcMethod(
@@ -182,9 +183,14 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     )                        
                 })
             this.autocertifierClient.on('updatedSubdomain', (subdomain) => {
+                logger.trace(`Updating certificate for WSS server`)
                 this.webSocketServer!.updateCertificate(subdomain.certificate)
             })
-            await this.autocertifierClient.start()
+            await Promise.all([
+                waitForEvent3(this.autocertifierClient as any, 'updatedSubdomain'),
+                this.autocertifierClient.start()
+            ])
+            
         }
     }
 
