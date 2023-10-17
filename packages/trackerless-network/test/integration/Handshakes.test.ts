@@ -16,6 +16,7 @@ import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../s
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Handshakes', () => {
 
@@ -37,7 +38,7 @@ describe('Handshakes', () => {
     let nodeView: NodeList
     let targetNeighbors: NodeList
     let handshaker: Handshaker
-    const randomGraphId = 'handshaker'
+    const streamPartId = StreamPartIDUtils.parse('stream#0')
 
     const acceptHandshake = async (request: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
         const response: StreamPartHandshakeResponse = {
@@ -76,22 +77,22 @@ describe('Handshakes', () => {
         simulatorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
         simulatorTransport3 = new SimulatorTransport(peerDescriptor3, simulator)
 
-        rpcCommunicator1 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport1)
-        rpcCommunicator2 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport2)
-        rpcCommunicator3 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport3)
+        rpcCommunicator1 = new ListeningRpcCommunicator(streamPartId, simulatorTransport1)
+        rpcCommunicator2 = new ListeningRpcCommunicator(streamPartId, simulatorTransport2)
+        rpcCommunicator3 = new ListeningRpcCommunicator(streamPartId, simulatorTransport3)
 
         const handshakerNodeId = getNodeIdFromPeerDescriptor(peerDescriptor2)
         nodeView = new NodeList(handshakerNodeId, 10)
         targetNeighbors = new NodeList(handshakerNodeId, 4)
         handshaker = new Handshaker({
             ownPeerDescriptor: peerDescriptor2,
-            randomGraphId,
+            streamPartId,
             nearbyNodeView: nodeView,
             randomNodeView: nodeView,
             targetNeighbors,
             connectionLocker: mockConnectionLocker,
             rpcCommunicator: rpcCommunicator2,
-            N: 4
+            maxNeighborCount: 4
         })
 
     })
@@ -114,7 +115,7 @@ describe('Handshakes', () => {
             new RemoteHandshaker(
                 peerDescriptor2,
                 peerDescriptor1,
-                randomGraphId,
+                streamPartId,
                 toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
             )
         )
@@ -129,7 +130,7 @@ describe('Handshakes', () => {
             new RemoteHandshaker(
                 peerDescriptor2,
                 peerDescriptor1,
-                randomGraphId,
+                streamPartId,
                 toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
             )
         )
@@ -144,7 +145,7 @@ describe('Handshakes', () => {
             new RemoteHandshaker(
                 peerDescriptor2,
                 peerDescriptor1,
-                randomGraphId,
+                streamPartId,
                 toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
             )
         )
@@ -160,7 +161,7 @@ describe('Handshakes', () => {
             new RemoteHandshaker(
                 peerDescriptor2,
                 peerDescriptor1,
-                randomGraphId,
+                streamPartId,
                 toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
             )
         )

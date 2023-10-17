@@ -43,7 +43,7 @@
     "ts-node": "^10.9.1"
   },
   "optionalDependencies": {
-    "bufferutil": "^4.0.5",
+    "bufferutil": "^4.0.8",
     "utf-8-validate": "^6.0.3"
   }
 }

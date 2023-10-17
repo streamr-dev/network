@@ -5,6 +5,9 @@ import { NodeList } from '../../src/logic/NodeList'
 import { HandshakerServer } from '../../src/logic/neighbor-discovery/HandshakerServer'
 import { InterleaveNotice, StreamPartHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor, createMockRemoteHandshaker, createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
+
+const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
 describe('HandshakerServer', () => {
 
@@ -23,8 +26,7 @@ describe('HandshakerServer', () => {
         handshakeWithInterleaving = jest.fn()
 
         handshakerServer = new HandshakerServer({
-            randomGraphId: 'random-graph',
-            ownPeerDescriptor,
+            streamPartId: STREAM_PART_ID,
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
             createRemoteHandshaker: (_p) => createMockRemoteHandshaker(),
@@ -34,13 +36,13 @@ describe('HandshakerServer', () => {
                 return true
             },
             targetNeighbors,
-            N: 4
+            maxNeighborCount: 4
         })
     })
 
     it('handshake', async () => {
         const req = StreamPartHandshakeRequest.create({
-            randomGraphId: 'random-graph',
+            streamPartId: STREAM_PART_ID,
             requestId: 'requestId'
         })
         const res = await handshakerServer.handshake(req, {
@@ -57,7 +59,7 @@ describe('HandshakerServer', () => {
         targetNeighbors.add(createMockRemoteNode())
         targetNeighbors.add(createMockRemoteNode())
         const req = StreamPartHandshakeRequest.create({
-            randomGraphId: 'random-graph',
+            streamPartId: STREAM_PART_ID,
             requestId: 'requestId'
         })
         const res = await handshakerServer.handshake(req, {
@@ -73,7 +75,7 @@ describe('HandshakerServer', () => {
         ongoingHandshakes.add('0x4444' as NodeID)
         ongoingHandshakes.add('0x5555' as NodeID)
         const req = StreamPartHandshakeRequest.create({
-            randomGraphId: 'random-graph',
+            streamPartId: STREAM_PART_ID,
             requestId: 'requestId'
         })
         const res = await handshakerServer.handshake(req, {
@@ -84,7 +86,7 @@ describe('HandshakerServer', () => {
 
     it('handshakeWithInterleaving success', async () => {
         const req: InterleaveNotice = {
-            randomGraphId: 'random-graph',
+            streamPartId: STREAM_PART_ID,
             interleaveTargetDescriptor: {
                 kademliaId: hexToBinary('0x2222'),
                 type: NodeType.NODEJS
@@ -99,7 +101,7 @@ describe('HandshakerServer', () => {
 
     it('handshakeWithInterleaving success', async () => {
         const req: InterleaveNotice = {
-            randomGraphId: 'wrong-random-graph',
+            streamPartId: StreamPartIDUtils.parse('other-stream#0'),
             interleaveTargetDescriptor: {
                 kademliaId: hexToBinary('0x2222'),
                 type: NodeType.NODEJS

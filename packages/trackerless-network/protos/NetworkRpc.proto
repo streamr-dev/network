@@ -90,7 +90,7 @@ message GroupKey {
 }
 
 message StreamPartHandshakeRequest {
-  string randomGraphId = 1;
+  string streamPartId = 1;
   string requestId = 2;
   optional bytes concurrentHandshakeTargetId = 3;
   repeated bytes neighborIds = 4;
@@ -104,17 +104,17 @@ message StreamPartHandshakeResponse {
 }
 
 message InterleaveNotice {
-  string randomGraphId = 1;
+  string streamPartId = 1;
   // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
   dht.PeerDescriptor interleaveTargetDescriptor = 2;
 }
 
 message LeaveStreamPartNotice {
-  string randomGraphId = 1;
+  string streamPartId = 1;
 }
 
 message NeighborUpdate {
-  string randomGraphId = 1;
+  string streamPartId = 1;
   bool removeMe = 2;
   repeated dht.PeerDescriptor neighborDescriptors = 3;
 }

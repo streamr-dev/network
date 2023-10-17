@@ -1,4 +1,4 @@
-import { PeerDescriptor, peerIdFromPeerDescriptor, PeerID, RecursiveFindResult, Message, DataEntry } from '@streamr/dht'
+import { PeerDescriptor, RecursiveFindResult, Message, DataEntry } from '@streamr/dht'
 import { ILayer0 } from '../../../src/logic/ILayer0'
 import { Any } from '../../../src/proto/google/protobuf/any'
 import { EventEmitter } from 'eventemitter3'
@@ -14,10 +14,6 @@ export class MockLayer0 extends EventEmitter implements ILayer0 {
 
     getPeerDescriptor(): PeerDescriptor {
         return this.peerDescriptor
-    }
-
-    getNodeId(): PeerID {
-        return peerIdFromPeerDescriptor(this.peerDescriptor)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -61,6 +57,10 @@ export class MockLayer0 extends EventEmitter implements ILayer0 {
     // eslint-disable-next-line class-methods-use-this
     getAllConnectionPeerDescriptors(): PeerDescriptor[] {
         return []
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    async waitForNetworkConnectivity(): Promise<void> {
     }
 
     // eslint-disable-next-line class-methods-use-this

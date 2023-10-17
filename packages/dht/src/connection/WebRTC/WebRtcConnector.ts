@@ -95,7 +95,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
             throw new Err.CannotConnectToSelf('Cannot open WebRTC Connection to self')
         }
 
-        logger.trace(`Opening WebRTC connection to ${targetPeerDescriptor.kademliaId.toString()}`)
+        logger.trace(`Opening WebRTC connection to ${keyFromPeerDescriptor(targetPeerDescriptor)}`)
 
         const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.ongoingConnectAttempts.get(peerKey)
