@@ -42,19 +42,19 @@ describe('StreamrNode', () => {
 
         it('can join streams', async () => {
             node.joinStreamPart(streamPartId)
-            expect(node.hasStream(streamPartId)).toEqual(true)
+            expect(node.hasStreamPart(streamPartId)).toEqual(true)
         })
 
         it('can leave streams', async () => {
             node.joinStreamPart(streamPartId)
-            expect(node.hasStream(streamPartId)).toEqual(true)
+            expect(node.hasStreamPart(streamPartId)).toEqual(true)
             node.leaveStreamPart(streamPartId)
-            expect(node.hasStream(streamPartId)).toEqual(false)
+            expect(node.hasStreamPart(streamPartId)).toEqual(false)
         })
 
         it('broadcast joins stream', async () => {
             node.broadcast(message)
-            await waitForCondition(() => node.hasStream(streamPartId))
+            await waitForCondition(() => node.hasStreamPart(streamPartId))
         })
     })
 

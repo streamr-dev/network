@@ -300,7 +300,7 @@ export class StreamrNode extends EventEmitter<Events> {
         return this.streamParts.get(streamPartId)
     }
 
-    hasStream(streamPartId: StreamPartID): boolean {
+    hasStreamPart(streamPartId: StreamPartID): boolean {
         return this.streamParts.has(streamPartId)
     }
 
