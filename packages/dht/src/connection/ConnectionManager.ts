@@ -56,6 +56,7 @@ export class ConnectionManagerConfig {
     webrtcNewConnectionTimeout?: number
     externalIp?: string
     webrtcPortRange?: PortRange
+    websocketServerEnableTls?: boolean
     tlsCertificate?: TlsCertificate
 
     // the following fields are used in simulation only
@@ -181,7 +182,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 this.config.websocketPortRange,
                 this.config.websocketHost,
                 this.config.entryPoints,
-                false,
+                this.config.websocketServerEnableTls,
                 this.config.tlsCertificate
             )
             logger.trace(`Creating WebRTCConnector`)
@@ -246,13 +247,17 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (!this.config.simulator) {
             await this.webSocketConnector!.start()
             const connectivityResponse = await this.webSocketConnector!.checkConnectivity()
-            const ownPeerDescriptor = peerDescriptorGeneratorCallback!(connectivityResponse)
+            let ownPeerDescriptor = peerDescriptorGeneratorCallback!(connectivityResponse)
             this.ownPeerDescriptor = ownPeerDescriptor
             this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
-            this.webrtcConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
-            if (!this.config.tlsCertificate) {
-                // await this.webSocketConnector!.autoCertify()
+            if (!this.config.tlsCertificate && this.config.websocketServerEnableTls) {
+                await this.webSocketConnector!.autoCertify()
+                const autoCertifiedConnectivityResponse = await this.webSocketConnector!.checkConnectivity()
+                const ownPeerDescriptor = peerDescriptorGeneratorCallback!(autoCertifiedConnectivityResponse)
+                this.ownPeerDescriptor = ownPeerDescriptor
+                this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
             }
+            this.webrtcConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
         }
     }
 

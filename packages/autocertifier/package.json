@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@streamr/autocertifier-client": "1.0.0",
+    "@streamr/dht": "0.0.1-tatum.2",
     "@streamr/utils": "0.0.1-tatum.2",
     "body-parser": "^1.20.2",
     "express": "^4.17.1",
