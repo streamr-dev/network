@@ -24,7 +24,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
         if (!this.destroyed) {
             this.socket = new WebSocket(address, undefined, undefined, undefined, {rejectUnauthorized: false})
             this.socket.binaryType = BINARY_TYPE
-
+            logger.trace('CONNECTING TO ' + address)
             this.socket.onerror = (error: Error) => {
                 if (!this.destroyed) {
                     logger.trace('WebSocket Client error: ' + JSON.stringify(error))
