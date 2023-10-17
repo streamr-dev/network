@@ -296,7 +296,7 @@ export class StreamrNode extends EventEmitter<Events> {
             && ((direction === undefined) || (stream.client.getDirection() === direction))
     }
 
-    getStream(streamPartId: StreamPartID): StreamPartDelivery | undefined {
+    getStreamPartDelivery(streamPartId: StreamPartID): StreamPartDelivery | undefined {
         return this.streamParts.get(streamPartId)
     }
 

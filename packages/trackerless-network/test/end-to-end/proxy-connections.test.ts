@@ -34,14 +34,14 @@ describe('Proxy connections', () => {
     let proxiedNode: NetworkNode
 
     const hasConnectionFromProxy = (proxyNode: NetworkNode): boolean => {
-        const delivery = proxyNode.stack.getStreamrNode()!.getStream(STREAM_PART_ID)
+        const delivery = proxyNode.stack.getStreamrNode()!.getStreamPartDelivery(STREAM_PART_ID)
         return (delivery !== undefined)
             ? ((delivery as { node: RandomGraphNode }).node).hasProxyConnection(proxiedNode.getNodeId())
             : false
     }
     
     const hasConnectionToProxy = (proxyNodeId: NodeID, direction: ProxyDirection): boolean => {
-        const client = (proxiedNode.stack.getStreamrNode()!.getStream(STREAM_PART_ID) as { client: ProxyClient }).client
+        const client = (proxiedNode.stack.getStreamrNode()!.getStreamPartDelivery(STREAM_PART_ID) as { client: ProxyClient }).client
         return client.hasConnection(proxyNodeId, direction)
     }
 

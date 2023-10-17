@@ -88,8 +88,8 @@ describe('proxy and full node', () => {
             proxiedNode.broadcast(createMessage(proxiedStreamPart))
         ])
 
-        expect(proxiedNode.stack.getStreamrNode().getStream(proxiedStreamPart)!.proxied).toBe(true)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamPart1)!.proxied).toBe(false)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(proxiedStreamPart)!.proxied).toBe(true)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(regularStreamPart1)!.proxied).toBe(false)
     })
 
     it('proxied node can act as full node on multiple streams', async () => {
@@ -118,11 +118,11 @@ describe('proxy and full node', () => {
             proxiedNode.broadcast(createMessage(proxiedStreamPart))
         ])
 
-        expect(proxiedNode.stack.getStreamrNode().getStream(proxiedStreamPart)!.proxied).toBe(true)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamPart1)!.proxied).toBe(false)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamPart2)!.proxied).toBe(false)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamPart3)!.proxied).toBe(false)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamPart4)!.proxied).toBe(false)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(proxiedStreamPart)!.proxied).toBe(true)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(regularStreamPart1)!.proxied).toBe(false)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(regularStreamPart2)!.proxied).toBe(false)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(regularStreamPart3)!.proxied).toBe(false)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(regularStreamPart4)!.proxied).toBe(false)
     })
 
 })
