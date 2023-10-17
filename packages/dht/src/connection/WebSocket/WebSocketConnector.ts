@@ -167,7 +167,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                 }
             }
         }
-
+        return noServerConnectivityResponse
     }
 
     public async autoCertify(): Promise<void> {

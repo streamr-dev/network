@@ -46,7 +46,8 @@ export class ConnectivityChecker {
                     port: entryPoint.websocket!.port,
                     tls: entryPoint.websocket!.tls,
                 },
-                mode: ConnectionMode.REQUEST
+                mode: ConnectionMode.REQUEST,
+                selfSigned
             })
         } catch (e) {
             throw new Err.ConnectionFailed('Failed to connect to the entrypoints', e)
@@ -138,7 +139,8 @@ export class ConnectivityChecker {
             logger.trace(`Attempting Connectivity Check to ${connectivityMethodToWebSocketUrl(wsServerInfo)}`)
             outgoingConnection = await this.connectAsync({
                 wsServerInfo,
-                mode: ConnectionMode.PROBE
+                mode: ConnectionMode.PROBE,
+                selfSigned: connectivityRequest.selfSigned
             })
         } catch (err) {
             logger.debug('error', { err })
@@ -171,8 +173,8 @@ export class ConnectivityChecker {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private async connectAsync({ wsServerInfo, mode, timeoutMs = 1000, }:
-        { wsServerInfo: ConnectivityMethod, mode: ConnectionMode, timeoutMs?: number }
+    private async connectAsync({ wsServerInfo, mode, selfSigned, timeoutMs = 1000, }:
+        { wsServerInfo: ConnectivityMethod, mode: ConnectionMode, selfSigned: boolean, timeoutMs?: number }
     ): Promise<IConnection> {
         const socket = new ClientWebSocket()
         const url = `${connectivityMethodToWebSocketUrl(wsServerInfo)}?${mode}=true`
