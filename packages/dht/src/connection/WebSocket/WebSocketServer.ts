@@ -109,7 +109,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     }
 
     public updateCertificate(certificate: Certificate): void {
-        // this.httpServer?.setSecureContext(certificate)
+        (this.httpServer! as HttpsServer).setSecureContext(certificate)
     }
 
     public stop(): Promise<void> {
