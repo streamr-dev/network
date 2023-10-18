@@ -194,7 +194,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         }
     }
 
-    public requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+    private requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         setImmediate(() => {
             const remoteConnector = new RemoteWebSocketConnector(
                 targetPeerDescriptor,

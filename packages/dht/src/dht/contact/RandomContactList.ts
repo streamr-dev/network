@@ -37,10 +37,6 @@ export class RandomContactList<C extends { getPeerId: () => PeerID }> extends Co
         }
     }
 
-    addContacts(contacts: C[]): void {
-        contacts.forEach((contact) => this.addContact(contact))
-    }
-
     removeContact(id: PeerID): boolean {
         if (this.contactsById.has(id.toKey())) {
             const removed = this.contactsById.get(id.toKey())!.contact

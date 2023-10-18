@@ -103,7 +103,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
             return existingConnection
         }
 
-        const connection = new NodeWebRtcConnection({ 
+        const connection = new NodeWebRtcConnection({
             remotePeerDescriptor: targetPeerDescriptor,
             iceServers: this.iceServers,
             bufferThresholdLow: this.config.bufferThresholdLow,
@@ -171,7 +171,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         this.ownPeerDescriptor = peerDescriptor
     }
 
-    isIceCandidateAllowed(candidate: string): boolean {
+    private isIceCandidateAllowed(candidate: string): boolean {
         if (!this.allowPrivateAddresses) {
             const address = getAddressFromIceCandidate(candidate)
             if (address && isPrivateIPv4(address)) {
@@ -197,7 +197,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         if (!managedConnection) {
             connection = new NodeWebRtcConnection({ remotePeerDescriptor: remotePeer })
             managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, undefined, connection)
-            
+
             managedConnection.setPeerDescriptor(remotePeer)
 
             this.ongoingConnectAttempts.set(peerKey, managedConnection)
@@ -223,7 +223,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         // Always use offerers connectionId
         connection!.setConnectionId(connectionId)
         connection!.setRemoteDescription(description, 'offer')
-        
+
         managedConnection.on('handshakeRequest', () => {
             if (this.ongoingConnectAttempts.has(peerKey)) {
                 this.ongoingConnectAttempts.delete(peerKey)
@@ -290,7 +290,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
 
         const attempts = Array.from(this.ongoingConnectAttempts.values())
         await Promise.allSettled(attempts.map((conn) => conn.close('OTHER')))
-       
+
         this.rpcCommunicator.stop()
     }
 

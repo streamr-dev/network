@@ -310,11 +310,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.emit('bufferSentByOtherConnection')
     }
 
-    public reportBufferSendingByOtherConnectionFailed(): void {
-        logger.trace('reportBufferSendingByOtherConnectionFailed')
-        this.doDisconnect('OTHER')
-    }
-
     public acceptHandshake(): void {
         // This happens when connectionRequest has been made and answered
         if (this.implementation) {
