@@ -2,7 +2,7 @@ import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dh
 import { DhtNode } from '../../src/dht/DhtNode'
 import { waitForEvent3 } from '@streamr/utils'
 import { ConnectionManager, Events as ConnectionManagerEvents } from '../../src/connection/ConnectionManager'
-import { getTI } from '@streamr/test-utils'
+import { getTestInterface } from '@streamr/test-utils'
 
 describe('Layer0MixedConnectionTypes', () => {
 
@@ -71,11 +71,11 @@ describe('Layer0MixedConnectionTypes', () => {
             node5.joinDht([epPeerDescriptor])
         ])
 
-        expect(getTI(node1).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTI(node2).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTI(node3).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTI(node4).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTI(node5).getBucketSize()).toBeGreaterThanOrEqual(1)
+        expect(getTestInterface(node1).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(node2).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(node3).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(node4).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(node5).getBucketSize()).toBeGreaterThanOrEqual(1)
 
     }, 15000)
 
@@ -87,10 +87,10 @@ describe('Layer0MixedConnectionTypes', () => {
             node4.joinDht([epPeerDescriptor]),
             node5.joinDht([epPeerDescriptor])
         ])
-        expect(getTI(node1).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTI(node2).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTI(node3).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTI(node4).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTI(node5).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(node1).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(node2).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(node3).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(node4).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(node5).getBucketSize()).toBeGreaterThanOrEqual(2)
     }, 30000)
 })

@@ -1,4 +1,4 @@
-import { getTI } from '@streamr/test-utils'
+import { getTestInterface } from '@streamr/test-utils'
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -43,9 +43,9 @@ describe('multiple entry point joining', () => {
                 node2.joinDht(entryPoints),
                 node3.joinDht(entryPoints)
             ])
-            expect(getTI(node1).getBucketSize()).toEqual(2)
-            expect(getTI(node2).getBucketSize()).toEqual(2)
-            expect(getTI(node3).getBucketSize()).toEqual(2)
+            expect(getTestInterface(node1).getBucketSize()).toEqual(2)
+            expect(getTestInterface(node2).getBucketSize()).toEqual(2)
+            expect(getTestInterface(node3).getBucketSize()).toEqual(2)
         })
 
         it('can join even if a node is offline', async () => {
@@ -54,8 +54,8 @@ describe('multiple entry point joining', () => {
                 node1.joinDht(entryPoints),
                 node2.joinDht(entryPoints)
             ])
-            expect(getTI(node1).getBucketSize()).toEqual(1)
-            expect(getTI(node2).getBucketSize()).toEqual(1)
+            expect(getTestInterface(node1).getBucketSize()).toEqual(1)
+            expect(getTestInterface(node2).getBucketSize()).toEqual(1)
         }, 10000)
     })
 
@@ -97,9 +97,9 @@ describe('multiple entry point joining', () => {
 
         it('non-entry point nodes can join', async () => {
             await node1.joinDht(entryPoints)
-            expect(getTI(node1).getBucketSize()).toEqual(2)
+            expect(getTestInterface(node1).getBucketSize()).toEqual(2)
             await node2.joinDht(entryPoints)
-            expect(getTI(node2).getBucketSize()).toEqual(3)
+            expect(getTestInterface(node2).getBucketSize()).toEqual(3)
         })
 
     })

@@ -11,7 +11,7 @@ import { streamPartIdToDataKey } from '../../src/logic/StreamPartEntryPointDisco
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
 import { ILayer1 } from '../../src/logic/ILayer1'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { getTI } from '@streamr/test-utils'
+import { getTestInterface } from '@streamr/test-utils'
 
 const numNodes = 10000
 
@@ -139,10 +139,10 @@ run().then(() => {
     const streamParts = currentNode.stack.getStreamrNode()!.getStreamParts()
     const foundData = nodes[0].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
-    console.log(getTI(currentNode.stack.getLayer0DhtNode()).getKBucketPeers().length)
+    console.log(getTestInterface(currentNode.stack.getLayer0DhtNode()).getKBucketPeers().length)
     console.log(currentNode.stack.getLayer0DhtNode().getNumberOfConnections())
     const stream = currentNode.stack.getStreamrNode().getStream(streamParts[0])! as { layer1: ILayer1, node: RandomGraphNode }
-    console.log(getTI(stream.layer1 as DhtNode).getKBucketPeers())
+    console.log(getTestInterface(stream.layer1 as DhtNode).getKBucketPeers())
     console.log(stream.node.getTargetNeighborIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {

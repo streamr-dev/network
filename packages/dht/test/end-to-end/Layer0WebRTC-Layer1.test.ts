@@ -1,7 +1,7 @@
 import { binaryToHex } from '@streamr/utils'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { getTI } from '@streamr/test-utils'
+import { getTestInterface } from '@streamr/test-utils'
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
     const entrypointDescriptor: PeerDescriptor = {
@@ -126,9 +126,9 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         await layer1Node3.joinDht([entrypointDescriptor])
         await layer1Node4.joinDht([entrypointDescriptor])
 
-        expect(getTI(layer1Node1).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTI(layer1Node2).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTI(layer1Node3).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTI(layer1Node4).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(layer1Node1).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(layer1Node2).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(layer1Node3).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(layer1Node4).getBucketSize()).toBeGreaterThanOrEqual(2)
     }, 60000)
 })

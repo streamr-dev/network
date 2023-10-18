@@ -440,16 +440,16 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
 
         for (const node of graph.keys()) {
             if (!visited.get(node)) {
-                dfs(node)
+                depthFirstSearch(node)
                 count++
             }
         }
 
-        function dfs(node: PeerIDKey) {
+        function depthFirstSearch(node: PeerIDKey) {
             visited.set(node, true)
             for (const neighbor of graph.get(node)!) {
                 if (!visited.get(neighbor)) {
-                    dfs(neighbor)
+                    depthFirstSearch(neighbor)
                 }
             }
         }

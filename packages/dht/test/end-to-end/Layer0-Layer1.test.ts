@@ -1,7 +1,7 @@
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { getTI } from '@streamr/test-utils'
+import { getTestInterface } from '@streamr/test-utils'
 
 describe('Layer0-Layer1', () => {
     const epPeerDescriptor: PeerDescriptor = {
@@ -72,19 +72,21 @@ describe('Layer0-Layer1', () => {
             stream1Node1.joinDht([epPeerDescriptor]),
             stream1Node2.joinDht([epPeerDescriptor])
         ])
-        
+
         await Promise.all([
             stream2Node1.joinDht([epPeerDescriptor]),
             stream2Node2.joinDht([epPeerDescriptor])
         ])
-        expect(getTI(stream1Node1).getNeighborList().getSize()).toEqual(1)
-        expect(getTI(stream1Node2).getNeighborList().getSize()).toEqual(1)
-        expect(getTI(stream2Node1).getNeighborList().getSize()).toEqual(1)
-        expect(getTI(stream2Node2).getNeighborList().getSize()).toEqual(1)
+        expect(getTestInterface(stream1Node1).getNeighborList().getSize()).toEqual(1)
+        expect(getTestInterface(stream1Node2).getNeighborList().getSize()).toEqual(1)
+        expect(getTestInterface(stream2Node1).getNeighborList().getSize()).toEqual(1)
+        expect(getTestInterface(stream2Node2).getNeighborList().getSize()).toEqual(1)
 
-        expect(getTI(stream1Node1).getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(node1.getPeerDescriptor()))).toEqual(true)
-        expect(getTI(stream1Node2).getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(epPeerDescriptor))).toEqual(true)
-        expect(getTI(stream2Node1).getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(node2.getPeerDescriptor()))).toEqual(true)
-        expect(getTI(stream2Node2).getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(epPeerDescriptor))).toEqual(true)
+        expect(getTestInterface(stream1Node1).getNeighborList()
+            .getContactIds()[0].equals(peerIdFromPeerDescriptor(node1.getPeerDescriptor()))).toEqual(true)
+        expect(getTestInterface(stream1Node2).getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(epPeerDescriptor))).toEqual(true)
+        expect(getTestInterface(stream2Node1).getNeighborList()
+            .getContactIds()[0].equals(peerIdFromPeerDescriptor(node2.getPeerDescriptor()))).toEqual(true)
+        expect(getTestInterface(stream2Node2).getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(epPeerDescriptor))).toEqual(true)
     })
 })

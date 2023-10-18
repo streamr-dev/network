@@ -3,7 +3,7 @@ import { createMockConnectionDhtNode } from '../utils/utils'
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { getRandomRegion } from '../../src/connection/Simulator/pings'
-import { getTI } from '@streamr/test-utils'
+import { getTestInterface } from '@streamr/test-utils'
 
 describe('Mock connection Dht joining with real latencies', () => {
     let entryPoint: DhtNode
@@ -40,9 +40,9 @@ describe('Mock connection Dht joining with real latencies', () => {
         await entryPoint.joinDht([entrypointDescriptor])
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
         nodes.forEach((node) => {
-            expect(getTI(node).getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 3)
-            expect(getTI(node).getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 3)
+            expect(getTestInterface(node).getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 3)
+            expect(getTestInterface(node).getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 3)
         })
-        expect(getTI(entryPoint).getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK())
+        expect(getTestInterface(entryPoint).getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK())
     }, 60 * 1000)
 })

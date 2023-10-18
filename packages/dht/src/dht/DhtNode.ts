@@ -46,7 +46,7 @@ import { RemoteExternalApi } from './RemoteExternalApi'
 import { PeerManager } from './PeerManager'
 import { UUID } from '../helpers/UUID'
 import { isNodeJS } from '../helpers/browser/isNodeJS'
-import { getTI } from '@streamr/test-utils'
+import { getTestInterface } from '@streamr/test-utils'
 import { sample } from 'lodash'
 
 export interface DhtNodeEvents {
@@ -189,9 +189,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private testInterface: IDhtNodeTest = {
         getConnections: () => { return this.peerManager!.connections },
-        getNeighborList: () => { return getTI(this.peerManager!)!.getNeighborList() },
-        getKBucketPeers: () => { return getTI(this.peerManager!)!.getKBucketPeers() },
-        getBucketSize: () => { return getTI(this.peerManager!)!.getKBucketSize() }
+        getNeighborList: () => { return getTestInterface(this.peerManager!)!.getNeighborList() },
+        getKBucketPeers: () => { return getTestInterface(this.peerManager!)!.getKBucketPeers() },
+        getBucketSize: () => { return getTestInterface(this.peerManager!)!.getKBucketSize() }
     }
     public testInterfaceType?: IDhtNodeTest
 
@@ -243,7 +243,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                     min: this.config.peerDescriptor.websocket.port,
                     max: this.config.peerDescriptor.websocket.port
                 }
-                // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
+            // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
             } else if (this.config.websocketPortRange) {
                 connectionManagerConfig.websocketHost = this.config.websocketHost
                 connectionManagerConfig.websocketPortRange = this.config.websocketPortRange
@@ -265,7 +265,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.bindDefaultServerMethods()
         this.ownPeerId = peerIdFromPeerDescriptor(this.ownPeerDescriptor!)
 
-        this.initPeerManager(this.ownPeerId!)
+        this.initPeerManager()
 
         this.peerDiscovery = new PeerDiscovery({
             ownPeerDescriptor: this.ownPeerDescriptor!,
@@ -322,14 +322,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    private initPeerManager = (selfId: PeerID) => {
+    private initPeerManager = () => {
         this.peerManager = new PeerManager({
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
             maxNeighborListSize: this.config.maxNeighborListSize,
-            ownPeerId: selfId,
+            ownPeerId: this.ownPeerId!,
             connectionManager: this.connectionManager!,
             nodeName: this.config.nodeName!,
             getClosestContactsLimit: this.config.getClosestContactsLimit,
+            isLayer0: this.connectionManager ? true : false,
             createDhtPeer: this.createDhtPeer.bind(this)
         })
 
@@ -369,7 +370,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.emit('connected', peerDescriptor)
         })
         this.transportLayer!.on('disconnected', (peerDescriptor: PeerDescriptor, disonnectionType: DisconnectionType) => {
-            this.peerManager?.handleDisconnected(peerDescriptor, disonnectionType, this.connectionManager ? true : false)
+            this.peerManager?.handleDisconnected(peerDescriptor, disonnectionType)
             this.emit('disconnected', peerDescriptor, disonnectionType)
         })
         this.transportLayer!.getAllConnectionPeerDescriptors().map((peerDescriptor) => {
@@ -512,12 +513,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public getK(): number {
         return this.config.numberOfNodesPerKBucket
     }
-
-    /*
-    public getOpenInternetPeerDescriptors(): PeerDescriptor[] {
-        return this.openInternetPeers!.getAllContacts().map((contact) => contact.getPeerDescriptor())
-    }
-    */
 
     public getNumberOfConnections(): number {
         return this.peerManager!.connections.size
