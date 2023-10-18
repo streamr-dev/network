@@ -67,7 +67,7 @@ describe('StreamPartEntryPointDiscovery', () => {
 
     const fakeDeleteEntryPointData = async (_key: Uint8Array): Promise<void> => {}
 
-    const addNodesToStream = (layer1: MockLayer1, count: number) => {
+    const addNodesToStreamPart = (layer1: MockLayer1, count: number) => {
         range(count).forEach(() => {
             layer1.addNewRandomPeerToKBucket()
             layer1.addNewRandomPeerToKBucket()
@@ -132,7 +132,7 @@ describe('StreamPartEntryPointDiscovery', () => {
     })
 
     it('store on stream without saturated entrypoint count', async () => {
-        addNodesToStream(layer1, 4)
+        addNodesToStreamPart(layer1, 4)
         await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(0)
         expect(storeCalled).toEqual(1)
     })
