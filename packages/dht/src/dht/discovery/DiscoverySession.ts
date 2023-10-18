@@ -8,7 +8,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { DhtRpcServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { SortedContactList } from '../contact/SortedContactList'
 import { RemoteDhtNode } from '../RemoteDhtNode'
-import { peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -26,7 +26,6 @@ interface DiscoverySessionConfig {
     parallelism: number
     noProgressLimit: number
     newContactListener?: (remoteDhtNode: RemoteDhtNode) => void
-    nodeName?: string
 }
 
 export class DiscoverySession {
@@ -71,7 +70,7 @@ export class DiscoverySession {
         if (this.stopped) {
             return []
         }
-        logger.trace(`Getting closest peers from contact: ${contact.getPeerId().toKey()}`)
+        logger.trace(`Getting closest peers from contact: ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
         this.outgoingClosestPeersRequestsCounter++
         this.config.neighborList.setContacted(contact.getPeerId())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)

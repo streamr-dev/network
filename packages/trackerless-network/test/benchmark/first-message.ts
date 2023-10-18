@@ -4,7 +4,7 @@ import { LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
 import { MessageID, StreamMessage, StreamMessageType, StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import fs from 'fs'
-import { PeerDescriptor } from '../../../dht/src/exports'
+import { PeerDescriptor } from '@streamr/dht'
 import { NetworkNode } from '../../src/NetworkNode'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { streamPartIdToDataKey } from '../../src/logic/StreamPartEntryPointDiscovery'
@@ -28,8 +28,7 @@ const prepareLayer0 = async () => {
     nodes = []
     simulator = new Simulator(LatencyType.REAL)
     const peerDescriptor = createMockPeerDescriptor({
-        region: getRandomRegion(),
-        nodeName: 'entrypoint'
+        region: getRandomRegion()
     })
     layer0Ep = peerDescriptor
     const entryPoint = createNetworkNodeWithSimulator(peerDescriptor, simulator, [peerDescriptor])
@@ -42,8 +41,7 @@ const prepareLayer0 = async () => {
 const prepareStream = async (streamId: string) => {
     console.log('Preparing stream ')
     const peerDescriptor = createMockPeerDescriptor({
-        region: getRandomRegion(),
-        nodeName: streamId
+        region: getRandomRegion()
     })
     const streamPartId = toStreamPartID(toStreamID(streamId), 0)
     const streamPublisher = createNetworkNodeWithSimulator(peerDescriptor, simulator, [layer0Ep])
@@ -61,10 +59,9 @@ const shutdownNetwork = async () => {
     simulator.stop()
 }
 
-const measureJoiningTime = async (count: number) => {
+const measureJoiningTime = async () => {
     const peerDescriptor = createMockPeerDescriptor({
-        region: getRandomRegion(),
-        nodeName: `${count}`
+        region: getRandomRegion()
     })
     console.log('starting node with id ', getNodeIdFromPeerDescriptor(peerDescriptor))
 
@@ -121,7 +118,7 @@ const run = async () => {
     
     fs.writeSync(logFile, 'Network size' + '\t' + 'Time to receive first message time (ms)' + '\n')
     for (let i = 0; i < numNodes; i++) {
-        const time = await measureJoiningTime(i)
+        const time = await measureJoiningTime()
         console.log(`Time to receive first message for ${i + 1} nodes network: ${time}ms`)
         fs.writeSync(logFile, `${i + 1}` + '\t' + `${Math.round(time)}\n`)
     }

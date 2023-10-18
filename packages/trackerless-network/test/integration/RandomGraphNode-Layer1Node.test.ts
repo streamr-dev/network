@@ -17,13 +17,11 @@ describe('RandomGraphNode-DhtNode', () => {
 
     const streamPartId = StreamPartIDUtils.parse('stream#0')
     const entrypointDescriptor = createMockPeerDescriptor({
-        nodeName: 'entrypoint',
         region: getRandomRegion()
     })
 
-    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
+    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => {
         return createMockPeerDescriptor({
-            nodeName: `node${i}`,
             region: getRandomRegion()
         })
     })
@@ -56,7 +54,7 @@ describe('RandomGraphNode-DhtNode', () => {
         }))
 
         graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
-            randomGraphId: streamPartId,
+            streamPartId,
             layer1: dhtNodes[i],
             P2PTransport: cms[i],
             connectionLocker: cms[i],
@@ -65,7 +63,7 @@ describe('RandomGraphNode-DhtNode', () => {
         }))
 
         entryPointRandomGraphNode = createRandomGraphNode({
-            randomGraphId: streamPartId,
+            streamPartId,
             layer1: dhtEntryPoint,
             P2PTransport: entrypointCm,
             connectionLocker: entrypointCm,

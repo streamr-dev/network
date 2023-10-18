@@ -1,11 +1,11 @@
-import { PeerDescriptor } from '../../exports'
 import { RemoteDhtNode } from '../RemoteDhtNode'
 import { SortedContactList } from '../contact/SortedContactList'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
+import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
-import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { RemoteRouter } from './RemoteRouter'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RoutingServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
@@ -187,7 +187,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         while ((this.ongoingRequests.size) < this.parallelism && (uncontacted.length > 0) && !this.stopped) {
             const nextPeer = uncontacted.shift()
             // eslint-disable-next-line max-len
-            logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${nextPeer!.getPeerId()} (sessionId=${this.sessionId})`)
+            logger.trace(`Sending routeMessage request to contact: ${keyFromPeerDescriptor(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
             this.contactList.setContacted(nextPeer!.getPeerId())
             this.ongoingRequests.add(nextPeer!.getPeerId().toKey())
             setImmediate(async () => {

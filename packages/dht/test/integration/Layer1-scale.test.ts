@@ -3,7 +3,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
 import { UUID } from '../../src/helpers/UUID'
-import { NodeType } from '../../src/exports'
+import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 
 describe('Layer1', () => {
 
@@ -12,8 +12,7 @@ describe('Layer1', () => {
 
     const entryPoint0Descriptor = {
         kademliaId: PeerID.fromString(layer0EntryPointId).value,
-        type: NodeType.NODEJS,
-        nodeName: layer0EntryPointId
+        type: NodeType.NODEJS
     }
 
     let layer0EntryPoint: DhtNode
@@ -35,7 +34,6 @@ describe('Layer1', () => {
             const node = await createMockConnectionDhtNode(
                 new UUID().toString(),
                 simulator,
-                undefined,
                 undefined,
                 undefined,
                 undefined,

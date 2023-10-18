@@ -6,7 +6,6 @@ import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '.
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { v4 } from 'uuid'
-import { UUID } from '../../src/helpers/UUID'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { RoutingMode } from '../../src/dht/routing/RoutingSession'
 
@@ -34,7 +33,6 @@ describe('Route Message With Mock Connections', () => {
 
         entryPointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            nodeName: 'entrypoint',
             type: NodeType.NODEJS
         }
 
@@ -208,7 +206,7 @@ describe('Route Message With Mock Connections', () => {
         const routeMessageWrapper: RouteMessageWrapper = {
             message: closestPeersRequestMessage,
             destinationPeer: destinationNode.getPeerDescriptor(),
-            requestId: new UUID().toString(),
+            requestId: v4(),
             sourcePeer: sourceNode.getPeerDescriptor(),
             reachableThrough: [entryPointDescriptor],
             routingPath: []

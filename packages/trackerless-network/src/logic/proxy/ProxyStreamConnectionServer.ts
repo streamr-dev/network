@@ -9,14 +9,13 @@ import {
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
-import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
+import { DhtCallContext, ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { EventEmitter } from 'eventemitter3'
 import { EthereumAddress, Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { DhtCallContext } from '@streamr/dht/src/exports'
 
 const logger = new Logger(module)
 

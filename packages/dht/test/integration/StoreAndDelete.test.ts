@@ -2,7 +2,8 @@ import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
-import { isSamePeerDescriptor, PeerID } from '../../src/exports'
+import { PeerID } from '../../src/helpers/PeerID'
+import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
 
 describe('Storing data in DHT', () => {
@@ -23,19 +24,18 @@ describe('Storing data in DHT', () => {
         nodes = []
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
-            undefined, K, entryPointId, MAX_CONNECTIONS)
+            undefined, K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
-            nodeName: entryPointId
+            type: NodeType.NODEJS
         }
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
             const node = await createMockConnectionDhtNode(nodeId, simulator, 
-                undefined, K, nodeId, MAX_CONNECTIONS, 60000)
+                undefined, K, MAX_CONNECTIONS, 60000)
             nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }

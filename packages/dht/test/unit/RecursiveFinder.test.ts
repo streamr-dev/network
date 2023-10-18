@@ -28,13 +28,11 @@ describe('RecursiveFinder', () => {
     const peerId1 = PeerID.fromString('peerid')
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: peerId1.value,
-        type: NodeType.NODEJS,
-        nodeName: 'peerid'
+        type: NodeType.NODEJS
     }
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('destination').value,
-        type: NodeType.NODEJS,
-        nodeName: 'destination'
+        type: NodeType.NODEJS
     }
     const recursiveFindRequest = createRecursiveFindRequest(FindMode.NODE)
     const message: Message = {
