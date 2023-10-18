@@ -1,4 +1,3 @@
-import { parseEther } from '@ethersproject/units'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, waitForCondition } from '@streamr/utils'
 import { createClient, createTestStream } from '../../../utils'
