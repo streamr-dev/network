@@ -191,7 +191,7 @@ describe('Proxy connections', () => {
         expect(hasConnectionFromProxy(proxyNode1)).toBe(true)
     }, 30000)
 
-    it('cannot join on proxy publish streams', async () => {
+    it('can\'t join proxied stream part', async () => {
         await proxiedNode.setProxies(
             STREAM_PART_ID,
             [proxyNode1.getPeerDescriptor()],
@@ -201,7 +201,7 @@ describe('Proxy connections', () => {
         await expect(proxiedNode.join(STREAM_PART_ID)).rejects.toThrow('Cannot join')
     })
 
-    it('connect publish on proxy subscribe streams', async () => {
+    it('can\'t broadcast to proxied stream part', async () => {
         await proxiedNode.setProxies(
             STREAM_PART_ID,
             [proxyNode1.getPeerDescriptor()],
