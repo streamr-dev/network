@@ -9,12 +9,10 @@ describe('Connection Locking', () => {
 
     const mockPeerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('mock1').value,
-        nodeName: 'mock1',
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('mock2').value,
-        nodeName: 'mock2',
         type: NodeType.NODEJS
     }
 

@@ -54,7 +54,6 @@ export interface StreamrNodeConfig {
     metricsContext?: MetricsContext
     streamPartitionNumOfNeighbors?: number
     streamPartitionMinPropagationTargets?: number
-    nodeName?: string
     acceptProxyConnections?: boolean
 }
 
@@ -204,8 +203,7 @@ export class StreamrNode extends EventEmitter<Events> {
             entryPoints,
             numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 5000,
-            dhtJoinTimeout: 20000,
-            nodeName: this.config.nodeName + ':layer1'
+            dhtJoinTimeout: 20000
         })
     }
 

@@ -29,7 +29,6 @@ const createMessage = (streamPartId: StreamPartID): StreamMessage => {
 describe('proxy and full node', () => {
 
     const proxyNodeDescriptor = createMockPeerDescriptor({
-        nodeName: 'proxyNode',
         websocket: { host: '127.0.0.1', port: 23135, tls: false }
     })
     const proxiedNodeDescriptor = createMockPeerDescriptor()

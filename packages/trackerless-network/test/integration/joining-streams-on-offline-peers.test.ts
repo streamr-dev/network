@@ -13,31 +13,26 @@ describe('Joining stream parts on offline nodes', () => {
 
     const entryPointPeerDescriptor: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 2, 3]),
-        nodeName: 'entrypoint',
         type: NodeType.NODEJS
     }
 
     const node1PeerDescriptor: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
-        nodeName: 'node1',
         type: NodeType.NODEJS
     }
 
     const node2PeerDescriptor: PeerDescriptor = {
         kademliaId: new Uint8Array([2, 2, 2]),
-        nodeName: 'node2',
         type: NodeType.NODEJS
     }
 
     const offlineDescriptor1: PeerDescriptor = {
         kademliaId: new Uint8Array([3, 3, 3]),
-        nodeName: 'offline',
         type: NodeType.NODEJS
     }
 
     const offlineDescriptor2: PeerDescriptor = {
         kademliaId: new Uint8Array([4, 4, 4]),
-        nodeName: 'offline',
         type: NodeType.NODEJS
     }
 

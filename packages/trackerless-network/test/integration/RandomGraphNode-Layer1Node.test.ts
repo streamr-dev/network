@@ -17,13 +17,11 @@ describe('RandomGraphNode-DhtNode', () => {
 
     const streamPartId = StreamPartIDUtils.parse('stream#0')
     const entrypointDescriptor = createMockPeerDescriptor({
-        nodeName: 'entrypoint',
         region: getRandomRegion()
     })
 
-    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
+    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => {
         return createMockPeerDescriptor({
-            nodeName: `node${i}`,
             region: getRandomRegion()
         })
     })
