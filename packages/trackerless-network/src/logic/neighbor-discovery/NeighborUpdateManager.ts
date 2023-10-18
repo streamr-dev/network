@@ -41,11 +41,11 @@ export class NeighborUpdateManager implements INeighborUpdateManager {
             (req: NeighborUpdate, context) => this.server.neighborUpdate(req, context))
     }
 
-    public async start(): Promise<void> {
+    async start(): Promise<void> {
         await scheduleAtInterval(() => this.updateNeighborInfo(), this.config.neighborUpdateInterval, false, this.abortController.signal)
     }
 
-    public stop(): void {
+    stop(): void {
         this.abortController.abort()
     }
 

@@ -61,19 +61,19 @@ interface StreamPartEntryPointDiscoveryConfig {
     getEntryPointData: (key: Uint8Array) => Promise<DataEntry[]>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
     deleteEntryPointData: (key: Uint8Array) => Promise<void>
-    cacheInterval?: number
+    storeInterval?: number
 }
 
 export class StreamPartEntryPointDiscovery {
     private readonly abortController: AbortController
     private readonly config: StreamPartEntryPointDiscoveryConfig
-    private readonly cacheInterval: number
+    private readonly storeInterval: number
     private readonly networkSplitAvoidedNodes: Set<NodeID> = new Set()
 
     constructor(config: StreamPartEntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
-        this.cacheInterval = this.config.cacheInterval ?? 60000
+        this.storeInterval = this.config.storeInterval ?? 60000
     }
 
     async discoverEntryPointsFromDht(
@@ -109,7 +109,7 @@ export class StreamPartEntryPointDiscovery {
     }
 
     private async queryEntrypoints(key: Uint8Array): Promise<PeerDescriptor[]> {
-        logger.trace(`Finding data from dht node ${this.config.ownPeerDescriptor.nodeName}`)
+        logger.trace(`Finding data from dht node ${getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)}`)
         try {
             const result = await this.config.getEntryPointData(key)
             return parseEntryPointData(result)
@@ -154,7 +154,7 @@ export class StreamPartEntryPointDiscovery {
             } catch (err) {
                 logger.debug(`Failed to keep self as entrypoint for ${this.config.streamPartId}`)
             }
-        }, this.cacheInterval, false, this.abortController.signal)
+        }, this.storeInterval, false, this.abortController.signal)
     }
 
     private async avoidNetworkSplit(): Promise<void> {

@@ -10,7 +10,7 @@ const config = {
     title: "Streamr Docs",
     tagline:
         "Publish and subscribe to your json based real-time data powered by the decentralized Streamr network.",
-    url: "https://streamr.network/",
+    url: "https://docs.streamr.network/",
     baseUrl: "/",
     onBrokenLinks: "throw",
     onBrokenMarkdownLinks: "throw",

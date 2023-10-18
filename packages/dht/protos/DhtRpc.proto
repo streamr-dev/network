@@ -148,7 +148,6 @@ message PeerDescriptor {
   ConnectivityMethod websocket = 5;
   optional bool openInternet = 6;
   optional uint32 region = 7;
-  optional string nodeName = 8;
 }
 
 message ConnectivityMethod {

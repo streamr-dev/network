@@ -54,8 +54,6 @@ export interface StreamrNodeConfig {
     metricsContext?: MetricsContext
     streamPartitionNumOfNeighbors?: number
     streamPartitionMinPropagationTargets?: number
-    nodeName?: string
-    firstConnectionTimeout?: number
     acceptProxyConnections?: boolean
 }
 
@@ -66,7 +64,7 @@ export class StreamrNode extends EventEmitter<Events> {
     private layer0?: ILayer0
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
-    public config: StreamrNodeConfig
+    private readonly config: StreamrNodeConfig
     private readonly streamParts: Map<string, StreamPartDelivery>
     private readonly knownStreamPartEntryPoints: Map<string, PeerDescriptor[]> = new Map()
     private started = false
@@ -202,8 +200,7 @@ export class StreamrNode extends EventEmitter<Events> {
             entryPoints,
             numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 5000,
-            dhtJoinTimeout: 20000,
-            nodeName: this.config.nodeName + ':layer1'
+            dhtJoinTimeout: 20000
         })
     }
 
@@ -216,7 +213,6 @@ export class StreamrNode extends EventEmitter<Events> {
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
             numOfTargetNeighbors: this.config.streamPartitionNumOfNeighbors,
-            name: this.config.nodeName,
             acceptProxyConnections: this.config.acceptProxyConnections
         })
     }
@@ -238,18 +234,18 @@ export class StreamrNode extends EventEmitter<Events> {
             if (alreadyProxied) {
                 proxyClient = (this.streamParts.get(streamPartId)! as { client: ProxyStreamConnectionClient }).client 
             } else {
-                proxyClient = this.createProxyStream(streamPartId, userId)
+                proxyClient = this.createProxyStream(streamPartId)
                 await proxyClient.start()
             }
-            await proxyClient.setProxies(streamPartId, nodes, direction, userId, connectionCount)
+            await proxyClient.setProxies(nodes, direction, userId, connectionCount)
         } else {
             this.streamParts.get(streamPartId)?.stop()
             this.streamParts.delete(streamPartId)
         }
     }
 
-    private createProxyStream(streamPartId: StreamPartID, userId: EthereumAddress): ProxyStreamConnectionClient {
-        const client = this.createProxyStreamConnectionClient(streamPartId, userId)
+    private createProxyStream(streamPartId: StreamPartID): ProxyStreamConnectionClient {
+        const client = this.createProxyStreamConnectionClient(streamPartId)
         this.streamParts.set(streamPartId, {
             proxied: true,
             client,
@@ -262,15 +258,13 @@ export class StreamrNode extends EventEmitter<Events> {
         return client
     }
 
-    private createProxyStreamConnectionClient(streamPartId: StreamPartID, userId: EthereumAddress): ProxyStreamConnectionClient {
+    private createProxyStreamConnectionClient(streamPartId: StreamPartID): ProxyStreamConnectionClient {
         return new ProxyStreamConnectionClient({
             P2PTransport: this.P2PTransport!,
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,
-            minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
-            nodeName: this.config.nodeName,
-            userId
+            minPropagationTargets: this.config.streamPartitionMinPropagationTargets
         })
     }
 

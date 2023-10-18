@@ -13,7 +13,7 @@ describe('NeighborFinder', () => {
     let nearbyNodeView: NodeList
     let neighborFinder: NeighborFinder
 
-    const N = 4
+    const minCount = 4
 
     beforeEach(() => {
         targetNeighbors = new NodeList(nodeId, 15)
@@ -32,7 +32,7 @@ describe('NeighborFinder', () => {
             targetNeighbors,
             nearbyNodeView,
             doFindNeighbors: (excluded) => mockDoFindNeighbors(excluded),
-            N
+            minCount
         })
     })
 
@@ -42,7 +42,7 @@ describe('NeighborFinder', () => {
 
     it('Finds target number of nodes', async () => {
         neighborFinder.start()
-        await waitForCondition(() => targetNeighbors.size() >= N, 10000)
+        await waitForCondition(() => targetNeighbors.size() >= minCount, 10000)
         expect(neighborFinder.isRunning()).toEqual(false)
     })
 })

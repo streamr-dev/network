@@ -43,7 +43,7 @@ export class ConnectionLockHandler {
         }
     }
 
-    public isWeakLocked(id: PeerIDKey): boolean {
+    private isWeakLocked(id: PeerIDKey): boolean {
         return this.weakLocks.has(id)
     }
 
