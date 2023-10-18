@@ -27,7 +27,7 @@ export class StreamrChallenger {
                 websocket: {
                     host: streamrWebSocketIp,
                     port: parseInt(streamrWebSocketPort),
-                    tls: false
+                    tls: true
                 }
             }
 
@@ -69,7 +69,7 @@ export class StreamrChallenger {
                 })
             })
 
-            socket.connect(address)
+            socket.connect(address, true)
         })
     }
 }
