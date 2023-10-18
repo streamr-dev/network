@@ -34,9 +34,9 @@ describe('OperatorPlugin', () => {
 
         const sponsorer = await generateWalletWithGasAndTokens()
         const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
-        await sponsor(sponsorer, sponsorship1.address, 100)
-        await delegate(operatorWallet, operatorContract.address, 100)
-        await stake(operatorContract, sponsorship1.address, 100)
+        await sponsor(sponsorer, sponsorship1.address, 10000)
+        await delegate(operatorWallet, operatorContract.address, 10000)
+        await stake(operatorContract, sponsorship1.address, 10000)
 
         const publisher = createClient(fastPrivateKey())
         await stream.grantPermissions({

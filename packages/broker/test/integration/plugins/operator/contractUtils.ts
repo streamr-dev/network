@@ -155,7 +155,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
             chainConfig.contracts.SponsorshipDefaultLeavePolicy,
             chainConfig.contracts.SponsorshipVoteKickPolicy,
         ], [
-            (opts.earningsPerSecond ?? parseEther('0.01')).toString(),
+            (opts.earningsPerSecond ?? parseEther('1')).toString(),
             '0',
             '0',
         ]

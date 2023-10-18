@@ -9,7 +9,7 @@ import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 const logger = new Logger(module)
 
-const STAKE_AMOUNT = 100
+const STAKE_AMOUNT = 10000
 const SAFETY_FRACTION = 0.5  // 50%
 
 describe('maintainOperatorValue', () => {
@@ -37,8 +37,8 @@ describe('maintainOperatorValue', () => {
             }
         })
         const sponsorer = await generateWalletWithGasAndTokens()
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, sponsorship.address, 250)
+        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, sponsorship.address, 25000)
         await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
         await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
         const contractFacade = ContractFacade.createInstance({ ...operatorServiceConfig, signer: nodeWallets[0] })
