@@ -662,7 +662,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
         }
         const result = await this.recursiveFinder!.startRecursiveFind(idToFind, FindMode.DATA)
-        return result.dataEntries || []
+        return result.dataEntries ?? []
     }
 
     public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {

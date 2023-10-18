@@ -112,11 +112,7 @@ export class StreamPartEntryPointDiscovery {
         logger.trace(`Finding data from dht node ${this.config.ownPeerDescriptor.nodeName}`)
         try {
             const result = await this.config.getEntryPointData(key)
-            if (result) {
-                return parseEntryPointData(result)
-            } else {
-                return []
-            }
+            return parseEntryPointData(result)
         } catch (err) {
             return []
         }
