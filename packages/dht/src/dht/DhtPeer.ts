@@ -70,7 +70,9 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
         return false
     }
 
-    /*TODO maybe some class should use this? leaveNotice(): void {
+    /*
+    TODO remove or start using this method in NET-1131 
+    leaveNotice(): void {
         logger.trace(`Sending leaveNotice on ${this.getServiceId()} from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: LeaveNotice = {
             serviceId: this.getServiceId()
