@@ -27,7 +27,7 @@ export class CertificateCreator {
         }
     }
 
-    public async createCertificate(fqdn: string): Promise<Certificate> {
+    public async createCertificate(fqdn: string, altNames: string[]): Promise<Certificate> {
 
         logger.info(`Creating certificate for ${fqdn}`)
         logger.info('Creating acme client')
@@ -50,7 +50,8 @@ export class CertificateCreator {
 
         logger.info('Creating CSR')
         const [key, csr] = await acme.crypto.createCsr({
-            commonName: fqdn
+            commonName: fqdn,
+            altNames: []
         })
 
         logger.info('Creating certificate using client.auto')
