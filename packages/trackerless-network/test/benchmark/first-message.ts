@@ -140,9 +140,9 @@ run().then(() => {
     console.log(foundData)
     console.log(currentNode.stack.getLayer0DhtNode().getKBucketPeers().length)
     console.log(currentNode.stack.getLayer0DhtNode().getNumberOfConnections())
-    const stream = currentNode.stack.getStreamrNode().getStreamPartDelivery(streamParts[0])! as { layer1: ILayer1, node: RandomGraphNode }
-    console.log(stream.layer1.getKBucketPeers())
-    console.log(stream.node.getTargetNeighborIds())
+    const streamPartDelivery = currentNode.stack.getStreamrNode().getStreamPartDelivery(streamParts[0])! as { layer1: ILayer1, node: RandomGraphNode }
+    console.log(streamPartDelivery.layer1.getKBucketPeers())
+    console.log(streamPartDelivery.node.getTargetNeighborIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {
         clearInterval(publishInterval)
