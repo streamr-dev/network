@@ -26,7 +26,7 @@ import { Handshaker } from '../Handshaker'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
 import { sample, range } from 'lodash'
-import { AutoCertifierClient, AUTOCERTIFIER_SERVICE_ID, SessionIdRequest, SessionIdResponse } from '@streamr/autocertifier-client'
+import { AutoCertifierClient, SessionIdRequest, SessionIdResponse, CertifiedSubdomain } from '@streamr/autocertifier-client'
 import { readFileSync } from 'fs'
 import path from 'path'
 
@@ -182,8 +182,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                         method
                     )                        
                 })
-            this.autocertifierClient.on('updatedSubdomain', (subdomain) => {
+            this.autocertifierClient.on('updatedSubdomain', (subdomain: CertifiedSubdomain) => {
                 logger.trace(`Updating certificate for WSS server`)
+                this.setHost(subdomain.subdomain + '.' + subdomain.fqdn)
                 this.webSocketServer!.updateCertificate(subdomain.certificate)
                 logger.trace(`Updated certificate for WSS server`)
             })
@@ -193,6 +194,12 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             ])
             
         }
+    }
+
+    private setHost(hostName: string): void {
+        logger.trace(`Setting host name to ${hostName}`)
+        this.host = hostName
+        this.connectivityChecker!.setHost(hostName)
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {

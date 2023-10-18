@@ -26,7 +26,7 @@ export class ConnectivityChecker {
     private destroyed = false
     private readonly webSocketPort: number
     private readonly tls: boolean 
-    private readonly host?: string
+    private host?: string
 
     constructor(webSocketPort: number, tls: boolean, host?: string) {
         this.webSocketPort = webSocketPort
@@ -97,6 +97,10 @@ export class ConnectivityChecker {
             logger.error('error getting connectivityresponse')
             throw e
         }
+    }
+
+    public setHost(hostName: string): void {
+        this.host = hostName
     }
 
     public listenToIncomingConnectivityRequests(connectionToListenTo: ServerWebSocket): void {

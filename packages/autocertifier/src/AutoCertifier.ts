@@ -45,6 +45,7 @@ export class AutoCertifier implements RestInterface {
 
         const ret: CertifiedSubdomain = {
             subdomain: subdomain,
+            fqdn: this.domainName!,
             token: token,
             certificate: cert
         }
@@ -65,6 +66,7 @@ export class AutoCertifier implements RestInterface {
 
         const ret: CertifiedSubdomain = {
             subdomain: subdomain,
+            fqdn: this.domainName!,
             token: token,
             certificate: cert
         }
