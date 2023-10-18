@@ -236,33 +236,28 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         const enable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))
         if (enable) {
-            let proxyClient: ProxyClient
+            let client: ProxyClient
             const alreadyProxied = this.isProxiedStreamPart(streamPartId)
             if (alreadyProxied) {
-                proxyClient = (this.streamParts.get(streamPartId)! as { client: ProxyClient }).client 
+                client = (this.streamParts.get(streamPartId)! as { client: ProxyClient }).client 
             } else {
-                proxyClient = this.createProxyStream(streamPartId, userId)
-                await proxyClient.start()
+                client = this.createProxyClient(streamPartId, userId)
+                this.streamParts.set(streamPartId, {
+                    proxied: true,
+                    client,
+                    broadcast: (msg: StreamMessage) => client.broadcast(msg),
+                    stop: () => client.stop()
+                })
+                client.on('message', (message: StreamMessage) => {
+                    this.emit('newMessage', message)
+                })
+                await client.start()
             }
-            await proxyClient.setProxies(streamPartId, nodes, direction, userId, connectionCount)
+            await client.setProxies(streamPartId, nodes, direction, userId, connectionCount)
         } else {
             this.streamParts.get(streamPartId)?.stop()
             this.streamParts.delete(streamPartId)
         }
-    }
-
-    private createProxyStream(streamPartId: StreamPartID, userId: EthereumAddress): ProxyClient {
-        const client = this.createProxyClient(streamPartId, userId)
-        this.streamParts.set(streamPartId, {
-            proxied: true,
-            client,
-            broadcast: (msg: StreamMessage) => client.broadcast(msg),
-            stop: () => client.stop()
-        })
-        client.on('message', (message: StreamMessage) => {
-            this.emit('newMessage', message)
-        })
-        return client
     }
 
     private createProxyClient(streamPartId: StreamPartID, userId: EthereumAddress): ProxyClient {
