@@ -58,6 +58,8 @@ interface ProxyDefinition {
 
 const logger = new Logger(module)
 
+const SERVICE_ID = 'system/proxy-client'
+
 export class ProxyClient extends EventEmitter {
 
     private readonly rpcCommunicator: ListeningRpcCommunicator
@@ -167,7 +169,7 @@ export class ProxyClient extends EventEmitter {
         const proxyNode = new RemoteProxyServer(this.config.ownPeerDescriptor, peerDescriptor, this.config.streamPartId, client)
         const accepted = await proxyNode.requestConnection(direction, userId)
         if (accepted) {
-            this.config.connectionLocker.lockConnection(peerDescriptor, 'proxy-stream-connection-client')
+            this.config.connectionLocker.lockConnection(peerDescriptor, SERVICE_ID)
             this.connections.set(nodeId, direction)
             const remote = new RemoteRandomGraphNode(
                 this.config.ownPeerDescriptor,
@@ -229,7 +231,7 @@ export class ProxyClient extends EventEmitter {
     private async onNodeDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         if (this.connections.has(nodeId)) {
-            this.config.connectionLocker.unlockConnection(peerDescriptor, 'proxy-stream-connection-client')
+            this.config.connectionLocker.unlockConnection(peerDescriptor, SERVICE_ID)
             this.removeConnection(nodeId)
             await retry(() => this.updateConnections(), 'updating proxy connections', this.abortController.signal)
         }
@@ -247,7 +249,7 @@ export class ProxyClient extends EventEmitter {
 
     stop(): void {
         this.targetNeighbors.getAll().map((remote) => {
-            this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), 'proxy-stream-connection-client')
+            this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), SERVICE_ID)
             remote.leaveStreamPartNotice()
         })
         this.targetNeighbors.stop()
