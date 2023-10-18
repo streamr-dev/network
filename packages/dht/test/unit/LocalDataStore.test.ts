@@ -13,13 +13,11 @@ describe('LocalDataStore', () => {
     let localDataStore: LocalDataStore
     const storer1: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS,
-        nodeName: 'storer1'
+        type: NodeType.NODEJS
     }
     const storer2: PeerDescriptor = {
         kademliaId: new Uint8Array([3, 2, 1]),
-        type: NodeType.NODEJS,
-        nodeName: 'storer2'
+        type: NodeType.NODEJS
     }
     const data1 = Any.pack(storer1, PeerDescriptor)
     const data2 = Any.pack(storer2, PeerDescriptor)

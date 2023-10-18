@@ -11,12 +11,11 @@ describe('Router', () => {
     const peerId = PeerID.fromString('router')
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: peerId.value,
-        type: NodeType.NODEJS,
-        nodeName: 'router'
+        type: NodeType.NODEJS
     }
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('destination').value,
-        type: NodeType.NODEJS,
+        type: NodeType.NODEJS
     }
     const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1, peerDescriptor2)
     const message: Message = {

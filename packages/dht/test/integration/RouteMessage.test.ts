@@ -33,7 +33,6 @@ describe('Route Message With Mock Connections', () => {
 
         entryPointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            nodeName: 'entrypoint',
             type: NodeType.NODEJS
         }
 

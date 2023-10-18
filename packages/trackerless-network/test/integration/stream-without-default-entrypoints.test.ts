@@ -22,7 +22,6 @@ describe('stream without default entrypoints', () => {
     let numOfReceivedMessages: number
     const entryPointPeerDescriptor: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 2, 3]),
-        nodeName: 'entrypoint',
         type: NodeType.NODEJS
     }
 
@@ -57,10 +56,8 @@ describe('stream without default entrypoints', () => {
             }
         })
         await entrypoint.start()
-        await Promise.all(range(20).map(async (i) => {
-            const peerDescriptor = createMockPeerDescriptor({
-                nodeName: `${i}`
-            })
+        await Promise.all(range(20).map(async () => {
+            const peerDescriptor = createMockPeerDescriptor()
             const transport = new SimulatorTransport(peerDescriptor, simulator)
             const node = createNetworkNode({
                 layer0: {
