@@ -14,7 +14,6 @@ import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('proxy group key exchange', () => {
     const proxyNodeDescriptor = createMockPeerDescriptor({
-        nodeName: 'proxyNode',
         websocket: { host: '127.0.0.1', port: 23134, tls: false }
     })
     const publisherDescriptor = createMockPeerDescriptor()

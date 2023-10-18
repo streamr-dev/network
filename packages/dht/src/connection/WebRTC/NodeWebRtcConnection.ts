@@ -80,7 +80,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     }
 
     public start(isOffering: boolean): void {
-        logger.trace(`Staring new connection for peer: ${this.remotePeerDescriptor.kademliaId.toString()}`)
+        logger.trace(`Staring new connection for peer: ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
         const hexId = keyFromPeerDescriptor(this.remotePeerDescriptor)
         logger.trace(`Staring new connection for peer: ${hexId} offering: ${isOffering}`)
         this.connection = new PeerConnection(hexId, {
@@ -232,7 +232,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             clearTimeout(this.connectingTimeoutRef)
         }
         this.dataChannel = dataChannel
-        logger.trace(`DataChannel opened for peer ${this.remotePeerDescriptor.kademliaId.toString()}`)
+        logger.trace(`DataChannel opened for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
         this.emit('connected')
     }
 

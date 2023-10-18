@@ -39,10 +39,6 @@ export class ContactList<C extends { getPeerId: () => PeerID }> extends EventEmi
         return this.contactsById.get(id.toKey())!
     }
 
-    public hasContact(id: PeerID): boolean {
-        return this.contactsById.has(id.toKey())
-    }
-
     public getSize(): number {
         return this.contactIds.length
     }

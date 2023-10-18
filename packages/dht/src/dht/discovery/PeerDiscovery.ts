@@ -72,14 +72,12 @@ export class PeerDiscovery {
             rpcCommunicator: this.config.rpcCommunicator,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
-            newContactListener: (newPeer: DhtPeer) => this.config.addContact(newPeer.getPeerDescriptor()),
-            nodeName: this.config.ownPeerDescriptor.nodeName
+            newContactListener: (newPeer: DhtPeer) => this.config.addContact(newPeer.getPeerDescriptor())
         }
         const session = new DiscoverySession(sessionOptions)
         const randomSession = doRandomJoin ? new DiscoverySession({
             ...sessionOptions,
-            targetId: crypto.randomBytes(8),
-            nodeName: this.config.ownPeerDescriptor.nodeName + '-random'
+            targetId: crypto.randomBytes(8)
         }) : null
         this.ongoingDiscoverySessions.set(session.sessionId, session)
         if (randomSession) {
@@ -114,7 +112,7 @@ export class PeerDiscovery {
         if (this.stopped || this.rejoinOngoing) {
             return
         }
-        logger.debug(`Rejoining DHT ${this.config.serviceId} ${this.config.ownPeerDescriptor.nodeName}!`)
+        logger.debug(`Rejoining DHT ${this.config.serviceId}`)
         this.rejoinOngoing = true
         try {
             this.config.neighborList.clear()
