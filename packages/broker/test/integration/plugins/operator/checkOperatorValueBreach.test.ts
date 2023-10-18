@@ -1,5 +1,4 @@
 import { Contract } from '@ethersproject/contracts'
-import { parseEther } from '@ethersproject/units'
 import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'

@@ -7,7 +7,7 @@ import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from 
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
-import { BigNumber, Wallet } from 'ethers'
+import { Wallet } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { range } from 'lodash'
 import fetch from 'node-fetch'
