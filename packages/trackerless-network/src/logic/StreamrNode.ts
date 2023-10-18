@@ -289,8 +289,8 @@ export class StreamrNode extends EventEmitter<Events> {
         this.knownStreamPartEntryPoints.set(streamPartId, entryPoints)
     }
 
-    isProxiedStreamPart(streamId: string, direction?: ProxyDirection): boolean {
-        const stream = this.streamParts.get(streamId)
+    isProxiedStreamPart(streamPartId: StreamPartID, direction?: ProxyDirection): boolean {
+        const stream = this.streamParts.get(streamPartId)
         return (stream !== undefined)
             && stream.proxied
             && ((direction === undefined) || (stream.client.getDirection() === direction))
