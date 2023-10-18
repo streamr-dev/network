@@ -4,8 +4,7 @@ import {
     MessageRef,
     StreamMessage,
     StreamMessageType,
-    StreamPartIDUtils,
-    toStreamID
+    StreamPartIDUtils
 } from '@streamr/protocol'
 import { EthereumAddress, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
@@ -28,8 +27,8 @@ describe('stream without default entrypoints', () => {
 
     const streamMessage = new StreamMessage({
         messageId: new MessageID(
-            toStreamID('test'),
-            0,
+            StreamPartIDUtils.getStreamID(STREAM_PART_ID),
+            StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
             666,
             0,
             '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,

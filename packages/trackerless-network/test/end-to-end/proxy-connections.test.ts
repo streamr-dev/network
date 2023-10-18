@@ -1,4 +1,4 @@
-import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { MessageID, MessageRef, StreamMessage, StreamMessageType, StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
@@ -9,11 +9,11 @@ import { ProxyDirection } from '../../src/proto/packages/trackerless-network/pro
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const PROXIED_NODE_USER_ID = randomEthereumAddress()
-const STREAM_PART_ID = toStreamPartID(toStreamID('proxy-test'), 0)
+const STREAM_PART_ID = StreamPartIDUtils.parse('proxy-test#0')
 const MESSAGE = new StreamMessage({
     messageId: new MessageID(
-        toStreamID('proxy-test'),
-        0,
+        StreamPartIDUtils.getStreamID(STREAM_PART_ID),
+        StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
         666,
         0,
         randomEthereumAddress(),
