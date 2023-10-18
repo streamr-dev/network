@@ -72,7 +72,7 @@ describe('proxy and full node', () => {
         await proxiedNode.stop()
     })
 
-    it('proxied node can act as full node on another stream', async () => {
+    it('proxied node can act as full node on another stream part', async () => {
         await proxiedNode.setProxies(proxiedStreamPart, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
         expect(proxiedNode.stack.getLayer0DhtNode().hasJoined()).toBe(false)
 
