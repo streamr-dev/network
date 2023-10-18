@@ -272,7 +272,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 const autoCertifiedConnectivityResponse = await this.webSocketConnector!.checkConnectivity(false)
                 const ownPeerDescriptor = peerDescriptorGeneratorCallback!(autoCertifiedConnectivityResponse)
                 this.ownPeerDescriptor = ownPeerDescriptor
-                console.log(ownPeerDescriptor)
+                console.log("PEER DESCRIPTOR: ", ownPeerDescriptor)
                 this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
             }
             this.webrtcConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
