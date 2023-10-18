@@ -10,19 +10,22 @@ import { MarkOptional } from 'ts-essentials'
 import { ProxyServer } from './proxy/ProxyServer'
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
-import { StreamPartIDUtils } from '@streamr/protocol'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     'nearbyNodeView' | 'randomNodeView' | 'targetNeighbors' | 'propagation'
-    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'name' | 'numOfTargetNeighbors'
-    | 'maxNumberOfContacts' | 'minPropagationTargets' | 'rpcCommunicator' | 'nodeViewSize' | 'acceptProxyConnections'
-    | 'neighborUpdateInterval' | 'inspector' | 'temporaryConnectionServer'>
+    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'numOfTargetNeighbors'
+    | 'rpcCommunicator' | 'nodeViewSize'
+    | 'inspector' | 'temporaryConnectionServer'> & {
+        maxNumberOfContacts?: number
+        minPropagationTargets?: number
+        acceptProxyConnections?: boolean
+        neighborUpdateInterval?: number
+    }
 
 const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
     const ownNodeId = getNodeIdFromPeerDescriptor(config.ownPeerDescriptor)
-    const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(`layer2-${config.randomGraphId}`, config.P2PTransport)
-    const name = config.name ?? ownNodeId
+    const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(`layer2-${config.streamPartId}`, config.P2PTransport)
     const numOfTargetNeighbors = config.numOfTargetNeighbors ?? 4
     const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
     const minPropagationTargets = config.minPropagationTargets ?? 2
@@ -33,13 +36,13 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const targetNeighbors = config.targetNeighbors ?? new NodeList(ownNodeId, maxNumberOfContacts)
 
     const temporaryConnectionServer = new TemporaryConnectionRpcServer({
-        randomGraphId: config.randomGraphId,
+        streamPartId: config.streamPartId,
         rpcCommunicator,
         ownPeerDescriptor: config.ownPeerDescriptor
     })
     const proxyConnectionServer = acceptProxyConnections ? new ProxyServer({
         ownPeerDescriptor: config.ownPeerDescriptor,
-        streamPartId: StreamPartIDUtils.parse(config.randomGraphId),
+        streamPartId: config.streamPartId,
         rpcCommunicator
     }) : undefined
     const propagation = config.propagation ?? new Propagation({
@@ -58,33 +61,33 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     })
     const handshaker = config.handshaker ?? new Handshaker({
         ownPeerDescriptor: config.ownPeerDescriptor,
-        randomGraphId: config.randomGraphId,
+        streamPartId: config.streamPartId,
         connectionLocker: config.connectionLocker,
         rpcCommunicator,
         nearbyNodeView,
         randomNodeView,
         targetNeighbors,
-        N: numOfTargetNeighbors
+        maxNeighborCount: numOfTargetNeighbors
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
         targetNeighbors,
         nearbyNodeView,
         doFindNeighbors: (excludedIds) => handshaker.attemptHandshakesOnContacts(excludedIds),
-        N: numOfTargetNeighbors
+        minCount: numOfTargetNeighbors
     })
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
         targetNeighbors,
         nearbyNodeView,
         ownPeerDescriptor: config.ownPeerDescriptor,
         neighborFinder,
-        randomGraphId: config.randomGraphId,
+        streamPartId: config.streamPartId,
         rpcCommunicator,
         neighborUpdateInterval
     })
     const inspector = config.inspector ?? new Inspector({
         ownPeerDescriptor: config.ownPeerDescriptor,
         rpcCommunicator,
-        graphId: config.randomGraphId,
+        streamPartId: config.streamPartId,
         connectionLocker: config.connectionLocker
     })
     return {
@@ -98,13 +101,8 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         neighborUpdateManager,
         propagation,
         numOfTargetNeighbors,
-        minPropagationTargets,
-        maxNumberOfContacts,
-        name,
         nodeViewSize: maxNumberOfContacts,
-        acceptProxyConnections,
         proxyConnectionServer,
-        neighborUpdateInterval,
         inspector,
         temporaryConnectionServer
     }

@@ -12,6 +12,7 @@ import { NeighborUpdate } from '../../src/proto/packages/trackerless-network/pro
 import {
     NeighborUpdateRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('RemoteNeighborUpdateManager', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -49,7 +50,7 @@ describe('RemoteNeighborUpdateManager', () => {
                     type: NodeType.NODEJS
                 }
                 const update: NeighborUpdate = {
-                    randomGraphId: 'testStream',
+                    streamPartId: StreamPartIDUtils.parse('stream#0'),
                     neighborDescriptors: [
                         node
                     ],

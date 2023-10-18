@@ -9,7 +9,7 @@ import merge from 'lodash/merge'
 import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata } from '../src/publish/Publisher'
-import { Authentication, AuthenticationInjectionToken, createAuthentication } from './Authentication'
+import { Authentication, AuthenticationInjectionToken, SignerWithProvider, createAuthentication } from './Authentication'
 import {
     ConfigInjectionToken,
     NetworkPeerDescriptor,
@@ -46,7 +46,6 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
-import { Signer } from '@ethersproject/abstract-signer'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -550,7 +549,7 @@ export class StreamrClient {
     /**
      * Gets the Signer associated with the current {@link StreamrClient} instance.
      */
-    getSigner(): Promise<Signer> {
+    getSigner(): Promise<SignerWithProvider> {
         return this.authentication.getStreamRegistryChainSigner()
     }
 

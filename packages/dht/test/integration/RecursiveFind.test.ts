@@ -2,7 +2,8 @@ import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
-import { PeerID, peerIdFromPeerDescriptor } from '../../src/exports'
+import { PeerID } from '../../src/helpers/PeerID'
+import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('Recursive find correctness', () => {
 

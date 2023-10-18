@@ -8,13 +8,14 @@ import { NodeList } from '../NodeList'
 import { RemoteNeighborUpdateManager } from './RemoteNeighborUpdateManager'
 import { NeighborUpdateManagerServer } from './NeighborUpdateManagerServer'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { StreamPartID } from '@streamr/protocol'
 
 interface NeighborUpdateManagerConfig {
     ownPeerDescriptor: PeerDescriptor
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
     neighborFinder: INeighborFinder
-    randomGraphId: string
+    streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
     neighborUpdateInterval: number
 }
@@ -40,11 +41,11 @@ export class NeighborUpdateManager implements INeighborUpdateManager {
             (req: NeighborUpdate, context) => this.server.neighborUpdate(req, context))
     }
 
-    public async start(): Promise<void> {
+    async start(): Promise<void> {
         await scheduleAtInterval(() => this.updateNeighborInfo(), this.config.neighborUpdateInterval, false, this.abortController.signal)
     }
 
-    public stop(): void {
+    stop(): void {
         this.abortController.abort()
     }
 
@@ -61,6 +62,6 @@ export class NeighborUpdateManager implements INeighborUpdateManager {
     }
 
     private createRemote(targetPeerDescriptor: PeerDescriptor): RemoteNeighborUpdateManager {
-        return new RemoteNeighborUpdateManager(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.randomGraphId, this.client)
+        return new RemoteNeighborUpdateManager(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
     }
 }

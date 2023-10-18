@@ -10,7 +10,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IRecursiveFinder } from '../find/RecursiveFinder'
-import { isSamePeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreService } from '../../proto/packages/dht/protos/DhtRpc.server'
@@ -217,7 +217,7 @@ export class DataStore implements IStoreService {
                 if (response.deleted) {
                     logger.trace('remoteStore.deleteData() returned success')
                 } else {
-                    logger.trace('could not delete data from ' + PeerID.fromValue(closestNodes[i].kademliaId))
+                    logger.trace('could not delete data from ' + keyFromPeerDescriptor(closestNodes[i]))
                 }
                 successfulNodes.push(closestNodes[i])
             } catch (e) {
@@ -246,7 +246,7 @@ export class DataStore implements IStoreService {
             this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(kademliaId))
         }
 
-        logger.trace(this.ownPeerDescriptor.nodeName + ' storeData()')
+        logger.trace('storeData()')
         return StoreDataResponse.create()
     }
 
@@ -260,7 +260,7 @@ export class DataStore implements IStoreService {
 
     // RPC service implementation
     public async migrateData(request: MigrateDataRequest, context: ServerCallContext): Promise<MigrateDataResponse> {
-        logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData()')
+        logger.trace('server-side migrateData()')
         const dataEntry = request.dataEntry!
 
         const wasStored = this.localDataStore.storeEntry(dataEntry)
@@ -271,7 +271,7 @@ export class DataStore implements IStoreService {
         if (!this.selfIsOneOfClosestPeers(dataEntry.kademliaId)) {
             this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.kademliaId))
         }
-        logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData() at end')
+        logger.trace('server-side migrateData() at end')
         return MigrateDataResponse.create()
     }
 
