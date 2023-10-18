@@ -289,6 +289,10 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
         return numClosest
     }
 
+    public getNumberOfConnections(): number {
+        return this.connections.size
+    }
+
     public getKBucketSize(): number {
         return this.bucket!.count()
     }
