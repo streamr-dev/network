@@ -51,7 +51,7 @@ export class CertificateCreator {
         logger.info('Creating CSR')
         const [key, csr] = await acme.crypto.createCsr({
             commonName: fqdn,
-            altNames: [fqdn, ...altNames]
+            altNames: [fqdn, ...altNames.map((altName) => 'IP:' + altName)]
         })
 
         logger.info('Creating certificate using client.auto')
