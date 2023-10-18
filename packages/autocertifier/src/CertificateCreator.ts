@@ -51,7 +51,7 @@ export class CertificateCreator {
         logger.info('Creating CSR')
         const [key, csr] = await acme.crypto.createCsr({
             commonName: fqdn,
-            altNames
+            altNames: [fqdn, ...altNames]
         })
 
         logger.info('Creating certificate using client.auto')
@@ -73,7 +73,7 @@ export class CertificateCreator {
             })
         } catch (e) {
             logger.error('Failed to create certificate: ' + e.message)
-            logger.error(e)
+            logger.error(JSON.stringify(e))
             logger.error(e.subproblems)
             throw e
         }
