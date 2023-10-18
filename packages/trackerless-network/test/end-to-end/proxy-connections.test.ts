@@ -199,7 +199,7 @@ describe('Proxy connections', () => {
         await expect(proxiedNode.join(STREAM_PART_ID)).rejects.toThrow('Cannot join')
     })
 
-    it('can\'t broadcast to proxied stream part', async () => {
+    it('can\'t broadcast to subscribe-only proxied stream part', async () => {
         await proxiedNode.setProxies(
             STREAM_PART_ID,
             [proxyNode1.getPeerDescriptor()],
