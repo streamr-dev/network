@@ -127,7 +127,7 @@ export interface DeploySponsorshipContractOpts {
     deployer: Wallet
     metadata?: string
     minOperatorCount?: number
-    earningsPerSecond?: BigNumber
+    earningsPerSecond?: number
     chainConfig?: {
         contracts: {
             SponsorshipFactory: string
@@ -155,7 +155,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
             chainConfig.contracts.SponsorshipDefaultLeavePolicy,
             chainConfig.contracts.SponsorshipVoteKickPolicy,
         ], [
-            (opts.earningsPerSecond ?? parseEther('1')).toString(),
+            parseEther((opts.earningsPerSecond ?? 1).toString()).toString(),
             '0',
             '0',
         ]

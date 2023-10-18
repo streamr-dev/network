@@ -37,7 +37,7 @@ describe('maintainOperatorValue', () => {
             }
         })
         const sponsorer = await generateWalletWithGasAndTokens()
-        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: parseEther('100'), streamId, deployer: operatorWallet })
+        const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 100, streamId, deployer: operatorWallet })
         await sponsor(sponsorer, sponsorship.address, 25000)
         await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
         await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
