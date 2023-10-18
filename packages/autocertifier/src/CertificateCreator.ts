@@ -73,7 +73,8 @@ export class CertificateCreator {
             })
         } catch (e) {
             logger.error('Failed to create certificate: ' + e.message)
-            logger.trace(e)
+            logger.error(e)
+            logger.error(e.subproblems)
             throw e
         }
 
