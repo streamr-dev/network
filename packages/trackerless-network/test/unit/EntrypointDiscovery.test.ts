@@ -3,7 +3,7 @@ import { StreamPartIDUtils } from '@streamr/protocol'
 import { wait } from '@streamr/utils'
 import { range } from 'lodash'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
-import { StreamPartEntryPointDiscovery } from '../../src/logic/StreamPartEntryPointDiscovery'
+import { EntryPointDiscovery } from '../../src/logic/EntryPointDiscovery'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { MockLayer1 } from '../utils/mock/MockLayer1'
@@ -11,10 +11,10 @@ import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
-describe('StreamPartEntryPointDiscovery', () => {
+describe('EntryPointDiscovery', () => {
 
-    let entryPointDiscoveryWithData: StreamPartEntryPointDiscovery
-    let entryPointDiscoveryWithoutData: StreamPartEntryPointDiscovery
+    let entryPointDiscoveryWithData: EntryPointDiscovery
+    let entryPointDiscoveryWithoutData: EntryPointDiscovery
     let storeCalled: number
 
     const peerDescriptor = createMockPeerDescriptor({
@@ -81,7 +81,7 @@ describe('StreamPartEntryPointDiscovery', () => {
     beforeEach(() => {
         storeCalled = 0
         layer1 = new MockLayer1(getNodeIdFromPeerDescriptor(peerDescriptor))
-        entryPointDiscoveryWithData = new StreamPartEntryPointDiscovery({
+        entryPointDiscoveryWithData = new EntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
             streamPartId: STREAM_PART_ID,
             layer1,
@@ -91,7 +91,7 @@ describe('StreamPartEntryPointDiscovery', () => {
             deleteEntryPointData: fakeDeleteEntryPointData,
             storeInterval: 2000
         })
-        entryPointDiscoveryWithoutData = new StreamPartEntryPointDiscovery({
+        entryPointDiscoveryWithoutData = new EntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
             streamPartId: STREAM_PART_ID,
             layer1,

@@ -20,7 +20,7 @@ import { ProxyDirection, StreamMessage } from '../proto/packages/trackerless-net
 import { ILayer0 } from './ILayer0'
 import { ILayer1 } from './ILayer1'
 import { RandomGraphNode } from './RandomGraphNode'
-import { NETWORK_SPLIT_AVOIDANCE_LIMIT, StreamPartEntryPointDiscovery } from './StreamPartEntryPointDiscovery'
+import { NETWORK_SPLIT_AVOIDANCE_LIMIT, EntryPointDiscovery } from './EntryPointDiscovery'
 import { createRandomGraphNode } from './createRandomGraphNode'
 import { ProxyClient } from './proxy/ProxyClient'
 
@@ -31,7 +31,7 @@ export type StreamPartDelivery = {
     proxied: false
     layer1: ILayer1
     node: RandomGraphNode
-    entryPointDiscovery: StreamPartEntryPointDiscovery
+    entryPointDiscovery: EntryPointDiscovery
 } | {
     proxied: true
     client: ProxyClient
@@ -135,7 +135,7 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         const layer1 = this.createLayer1Node(streamPartId, this.knownStreamPartEntryPoints.get(streamPartId) ?? [])
         const node = this.createRandomGraphNode(streamPartId, layer1)
-        const entryPointDiscovery = new StreamPartEntryPointDiscovery({
+        const entryPointDiscovery = new EntryPointDiscovery({
             streamPartId,
             ownPeerDescriptor: this.getPeerDescriptor(),
             layer1,
@@ -174,7 +174,7 @@ export class StreamrNode extends EventEmitter<Events> {
         })
     }
 
-    private async startLayersAndJoinDht(streamPartId: StreamPartID, entryPointDiscovery: StreamPartEntryPointDiscovery): Promise<void> {
+    private async startLayersAndJoinDht(streamPartId: StreamPartID, entryPointDiscovery: EntryPointDiscovery): Promise<void> {
         logger.debug(`Start layers and join DHT for stream part ${streamPartId}`)
         const stream = this.streamParts.get(streamPartId)
         if ((stream === undefined) || stream.proxied) {
