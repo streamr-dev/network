@@ -41,7 +41,7 @@ export class AutoCertifier implements RestInterface {
         const subdomain = v4()
         const token = v4()
         await this.dnsServer!.createSubdomain(subdomain, ipAddress, port, token)
-        const cert = await this.certificateCreator!.createCertificate(subdomain + '.' + this.domainName, [ipAddress])
+        const cert = await this.certificateCreator!.createCertificate(subdomain + '.' + this.domainName)
 
         const ret: CertifiedSubdomain = {
             subdomain: subdomain,
@@ -61,7 +61,7 @@ export class AutoCertifier implements RestInterface {
         // This will throw if the token is incorrect
         await this.updateSubdomainIpAndPort(subdomain, ipAddress, port, streamrWebSocketPort, sessionId, token)
 
-        const cert = await this.certificateCreator!.createCertificate(subdomain + '.' + this.domainName, [ipAddress])
+        const cert = await this.certificateCreator!.createCertificate(subdomain + '.' + this.domainName)
 
         const ret: CertifiedSubdomain = {
             subdomain: subdomain,
