@@ -34,7 +34,7 @@ const PARALLEL_HANDSHAKE_COUNT = 2
 
 export interface IHandshaker {
     attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]>
-    getOngoingHandshakes(): Set<string>
+    getOngoingHandshakes(): Set<NodeID>
 }
 
 export class Handshaker implements IHandshaker {
@@ -174,7 +174,7 @@ export class Handshaker implements IHandshaker {
         )
     }
 
-    public getOngoingHandshakes(): Set<string> {
+    public getOngoingHandshakes(): Set<NodeID> {
         return this.ongoingHandshakes
     }
 
