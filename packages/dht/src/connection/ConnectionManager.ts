@@ -40,20 +40,8 @@ import {
 import { ConnectorFacade } from './ConnectorFacade'
 
 export interface ConnectionManagerConfig {
-    transportLayer: ITransport
-    websocketHost?: string
-    websocketPortRange?: PortRange
-    entryPoints?: PeerDescriptor[]
     maxConnections?: number
-    iceServers?: IceServer[]
     metricsContext: MetricsContext
-    webrtcAllowPrivateAddresses?: boolean
-    webrtcDatachannelBufferThresholdLow?: number
-    webrtcDatachannelBufferThresholdHigh?: number
-    webrtcNewConnectionTimeout?: number
-    externalIp?: string
-    webrtcPortRange?: PortRange
-    tlsCertificate?: TlsCertificate
 
     createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => PeerDescriptor
     createConnectorFacade: (

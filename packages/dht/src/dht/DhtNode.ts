@@ -44,6 +44,8 @@ import { RemoteExternalApi } from './RemoteExternalApi'
 import { UUID } from '../helpers/UUID'
 import { isNodeJS } from '../helpers/browser/isNodeJS'
 import { sample } from 'lodash'
+import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
+import { ManagedConnection } from '../connection/ManagedConnection'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -204,36 +206,42 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 this.connectionManager = this.config.transportLayer
             }
         } else {
-            const connectionManagerConfig: ConnectionManagerConfig = {
-                createConnectorFacade: () => 'TODO',
-                createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
+            const connectorFacadeConfig: DefaultConnectorFacadeConfig = {
                 transportLayer: this,
                 entryPoints: this.config.entryPoints,
                 iceServers: this.config.iceServers,
-                metricsContext: this.config.metricsContext,
                 webrtcAllowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
                 webrtcDatachannelBufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 webrtcPortRange: this.config.webrtcPortRange,
-                maxConnections: this.config.maxConnections,
                 tlsCertificate: this.config.tlsCertificate,
                 externalIp: this.config.externalIp
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
-                connectionManagerConfig.websocketHost = this.config.peerDescriptor.websocket.host
-                connectionManagerConfig.websocketPortRange = { 
+                connectorFacadeConfig.websocketHost = this.config.peerDescriptor.websocket.host
+                connectorFacadeConfig.websocketPortRange = { 
                     min: this.config.peerDescriptor.websocket.port,
                     max: this.config.peerDescriptor.websocket.port
                 }
             // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
             } else if (this.config.websocketPortRange) { 
-                connectionManagerConfig.websocketHost = this.config.websocketHost
-                connectionManagerConfig.websocketPortRange = this.config.websocketPortRange
+                connectorFacadeConfig.websocketHost = this.config.websocketHost
+                connectorFacadeConfig.websocketPortRange = this.config.websocketPortRange
             }
 
-            const connectionManager = new ConnectionManager(connectionManagerConfig)
+            const connectionManager = new ConnectionManager({
+                createConnectorFacade: (
+                    incomingConnectionCallback: (connection: ManagedConnection) => boolean,
+                    canConnect: (peerDescriptor: PeerDescriptor) => boolean
+                ) => {
+                    return new DefaultConnectorFacade(connectorFacadeConfig, incomingConnectionCallback, canConnect)
+                },
+                createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
+                maxConnections: this.config.maxConnections,
+                metricsContext: this.config.metricsContext
+            })
             await connectionManager.start()
             this.connectionManager = connectionManager
             this.transportLayer = connectionManager

@@ -1,10 +1,15 @@
-import { Logger } from '@streamr/utils'
-import { ConnectionManager, ConnectionManagerConfig } from './ConnectionManager'
-import { SimulatorConnector } from './Simulator/SimulatorConnector'
-import { WebSocketConnector } from './WebSocket/WebSocketConnector'
-import { WebRtcConnector } from './WebRTC/WebRtcConnector'
+import { Logger, MetricsContext } from '@streamr/utils'
+import {
+    NodeType,
+    PeerDescriptor
+} from '../proto/packages/dht/protos/DhtRpc'
+import { ITransport } from '../transport/ITransport'
 import { ManagedConnection } from './ManagedConnection'
-import { NodeType, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { IceServer, WebRtcConnector } from './WebRTC/WebRtcConnector'
+import { WebSocketConnector } from './WebSocket/WebSocketConnector'
+import { ConnectionManager, PortRange, TlsCertificate } from './ConnectionManager'
+import { SimulatorConnector } from './Simulator/SimulatorConnector'
+import { Simulator } from './Simulator/Simulator'
 import { isPrivateIPv4 } from '../helpers/AddressTools'
 
 export interface ConnectorFacade {
@@ -16,16 +21,35 @@ export interface ConnectorFacade {
 
 const logger = new Logger(module)
 
+export interface DefaultConnectorFacadeConfig {
+    transportLayer: ITransport
+    websocketHost?: string
+    websocketPortRange?: PortRange
+    entryPoints?: PeerDescriptor[]
+    iceServers?: IceServer[]
+    webrtcAllowPrivateAddresses?: boolean
+    webrtcDatachannelBufferThresholdLow?: number
+    webrtcDatachannelBufferThresholdHigh?: number
+    webrtcNewConnectionTimeout?: number
+    externalIp?: string
+    webrtcPortRange?: PortRange
+    tlsCertificate?: TlsCertificate
+
+    // the following fields are used in simulation only
+    simulator?: Simulator
+    serviceIdPrefix?: string
+}
+
 export class DefaultConnectorFacade {
 
-    private readonly config: ConnectionManagerConfig
+    private readonly config: DefaultConnectorFacadeConfig
     private ownPeerDescriptor?: PeerDescriptor
     private webSocketConnector?: WebSocketConnector
     private webrtcConnector?: WebRtcConnector
     private simulatorConnector?: SimulatorConnector
 
     constructor(
-        config: ConnectionManagerConfig,
+        config: DefaultConnectorFacadeConfig,
         incomingConnectionCallback: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean
     ) {
