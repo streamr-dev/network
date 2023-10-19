@@ -41,13 +41,13 @@ import {
 import { isPrivateIPv4 } from '../helpers/AddressTools'
 
 export interface ConnectionManagerConfig {
-    transportLayer?: ITransport
+    transportLayer: ITransport
     websocketHost?: string
     websocketPortRange?: PortRange
     entryPoints?: PeerDescriptor[]
     maxConnections?: number
     iceServers?: IceServer[]
-    metricsContext?: MetricsContext
+    metricsContext: MetricsContext
     webrtcAllowPrivateAddresses?: boolean
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
@@ -293,7 +293,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         this.state = ConnectionManagerState.STOPPED
         this.rpcCommunicator!.stop()
-        this.config.transportLayer = undefined
         this.duplicateMessageDetector.clear()
         this.locks.clear()
         this.removeAllListeners()
