@@ -20,7 +20,12 @@ describe('Layer0 with WebRTC connections', () => {
 
     beforeEach(async () => {
 
-        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor, nodeName: 'entrypoint', numberOfNodesPerKBucket: 8 })
+        epDhtNode = new DhtNode({
+            peerDescriptor: epPeerDescriptor,
+            nodeName: 'entrypoint',
+            numberOfNodesPerKBucket: 8,
+            websocketServerEnableTls: false
+        })
         await epDhtNode.start()
 
         await epDhtNode.joinDht([epPeerDescriptor])

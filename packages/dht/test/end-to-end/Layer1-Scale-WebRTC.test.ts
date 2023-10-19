@@ -22,7 +22,7 @@ describe('Layer1 Scale', () => {
     let epLayer1Node: DhtNode
 
     beforeEach(async () => {
-        epLayer0Node = new DhtNode({ peerDescriptor: epPeerDescriptor })
+        epLayer0Node = new DhtNode({ peerDescriptor: epPeerDescriptor, websocketServerEnableTls: false })
         await epLayer0Node.start()
         await epLayer0Node.joinDht([epPeerDescriptor])
 

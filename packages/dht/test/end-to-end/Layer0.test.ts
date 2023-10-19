@@ -17,13 +17,32 @@ describe('Layer0', () => {
         epDhtNode = new DhtNode({ websocketHost: '127.0.0.1',  websocketPortRange: { min: 10011, max: 10011 }, websocketServerEnableTls: false })
         await epDhtNode.start()
         epPeerDescriptor = epDhtNode.getPeerDescriptor()
-        console.log(epPeerDescriptor)
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ websocketPortRange, websocketHost: '127.0.0.1', entryPoints: [epPeerDescriptor], websocketServerEnableTls: false })
-        node2 = new DhtNode({ websocketPortRange, websocketHost: '127.0.0.1', entryPoints: [epPeerDescriptor], websocketServerEnableTls: false })
-        node3 = new DhtNode({ websocketPortRange, websocketHost: '127.0.0.1', entryPoints: [epPeerDescriptor], websocketServerEnableTls: false })
-        node4 = new DhtNode({ websocketPortRange, websocketHost: '127.0.0.1', entryPoints: [epPeerDescriptor], websocketServerEnableTls: false })
+        node1 = new DhtNode({ 
+            websocketPortRange,
+            websocketHost: '127.0.0.1',
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
+        node2 = new DhtNode({ 
+            websocketPortRange,
+            websocketHost: '127.0.0.1',
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
+        node3 = new DhtNode({ 
+            websocketPortRange,
+            websocketHost: '127.0.0.1',
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
+        node4 = new DhtNode({ 
+            websocketPortRange, 
+            websocketHost: '127.0.0.1',
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
         
         await Promise.all([
             node1.start(),

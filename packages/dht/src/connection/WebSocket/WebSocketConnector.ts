@@ -29,6 +29,7 @@ import { sample, range } from 'lodash'
 import { AutoCertifierClient, SessionIdRequest, SessionIdResponse, CertifiedSubdomain } from '@streamr/autocertifier-client'
 import { readFileSync } from 'fs'
 import path from 'path'
+import { WebSocketServerStartError } from '../../helpers/errors'
 
 const cert = '-----BEGIN CERTIFICATE----- MIIDlzCCAn+gAwIBAgIBATANBgkqhkiG9w0BAQsFADBvMQ4wDAYDVQQDEwVNeSBDQTELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xEzARBgNVBAoTCk15IENvbXBhbnkxDjAMBgNVBAsTBU15IENBMCAXDTIzMTAwMzExMzQzMFoYDzIxMjMxMDAzMTEzNDMwWjBvMQ4wDAYDVQQDEwVNeSBDQTELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xEzARBgNVBAoTCk15IENvbXBhbnkxDjAMBgNVBAsTBU15IENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAr2+dbqXfXutH20Lfr5y3zvLY+bB8/mni2LDEGoqi0BkJLJwauLUAS4Dsf/UYvsoMRSAA8L1ndn+o/gl95dgzGZDOHNmWrLSFpdSNO0ZbR4WGmgA2h0DhuE3FxX/xTD5qz3RmMx0v4u0tgt5u3pE/OSjXnH6ATccLeYgxITb+7a0rBRkBobrLxYVlrddLeWRV3880kSN4qINBfBZmSQ9SHa112YvC4VZwf/ggpCpeqcUdBzyr2UZl0sUbNe206icQeEaHMSUdW6a0Mdd0zMG6ApJGGwlO7b23DS+dDomne7rjiKrSztaxpsRMsLSTG/WximUELFYH65PtZXyBwlqqIQIDAQABozwwOjAMBgNVHRMEBTADAQH/MAsGA1UdDwQEAwIC9DAdBgNVHQ4EFgQUvBI/BHmUuwo4lCRdm6C17ehoL+4wDQYJKoZIhvcNAQELBQADggEBACFJYwUz42MbjvS+DLS/uGewMeVvlE+IAasU0vCquuhIzDQ3UPYK01pTrL3mD63J90BlaD1V1joZAuDlGZfTVaZSn2mdiO9qN51LMf+Mq/+QfnMnEmrCpzKrWgGe75D8glDsb+6MfTmS8eLwe+S6LE/MN0+jBEDucM5giA+NG3AHQZA/hMsH412T3OaecR8r4R+eEmzA83YB2UE4wbfIa+YafBIIsWdiRYsqS1HzwOA99Aq0Slh6cfFa1PMat4Ryd3u2EEYIH84GpMTNFZSsT+Gk1mPKkjPbdlpUz6ItIM9+bqZ6q0H+GAu9ohkQkHcgsYe26aDM77KBtYRe+ZXBfJM= -----END CERTIFICATE-----'
 const logger = new Logger(module)
@@ -138,7 +139,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         if (this.destroyed) {
             return noServerConnectivityResponse
         }
-        for (const reattempt of range(5)) {
+        for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS + 1)) {
             try {
                 if (!this.webSocketServer) {
                     // If no websocket server, return openInternet: false
@@ -162,12 +163,10 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                 if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
                     logger.error('Failed to connect to the entrypoint', { error: err })
                     await wait(2000)
-                } else {
-                    throw err
                 }
             }
         }
-        return noServerConnectivityResponse
+        throw new WebSocketServerStartError(`Failed to connect to the entrypoints after ${ENTRY_POINT_CONNECTION_ATTEMPTS} attempts`)
     }
 
     public async autoCertify(): Promise<void> {

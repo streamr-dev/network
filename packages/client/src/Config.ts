@@ -117,6 +117,13 @@ export interface ControlLayerConfig {
      * is not formed within this time, the client's network node will throw an error.
      */
     networkConnectivityTimeout?: number
+
+    /**
+     * If the node is running a WS server, this option can be used to disable TLS autocertification to
+     * run the server without TLS. This will speed up the starting time of the network node 
+     * (especially when starting the node for the first time on a new machine).
+     */
+    websocketServerEnableTls?: boolean
 }
 
 export interface NetworkNodeConfig {

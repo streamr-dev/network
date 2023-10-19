@@ -46,6 +46,7 @@ describe('proxy and full node', () => {
             layer0: {
                 entryPoints: [proxyNodeDescriptor],
                 peerDescriptor: proxyNodeDescriptor,
+                websocketServerEnableTls: false
             },
             networkNode: {
                 acceptProxyConnections: true

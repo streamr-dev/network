@@ -22,14 +22,16 @@ describe('NetworkStack', () => {
             layer0: {
                 peerDescriptor: epDescriptor,
                 entryPoints: [epDescriptor],
-                nodeName: 'entrypoint'
+                nodeName: 'entrypoint',
+                websocketServerEnableTls: false
             }
         })
         stack2 = new NetworkStack({
             layer0: {
                 websocketPortRange: { min: 32223, max: 32223 },
                 entryPoints: [epDescriptor],
-                nodeName: 'node2'
+                nodeName: 'node2',
+                websocketServerEnableTls: false
             }
         })
 

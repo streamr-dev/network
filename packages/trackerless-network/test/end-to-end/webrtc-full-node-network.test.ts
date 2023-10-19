@@ -29,7 +29,8 @@ describe('Full node network with WebRTC connections', () => {
         entryPoint = new NetworkStack({
             layer0: {
                 entryPoints: [epPeerDescriptor],
-                peerDescriptor: epPeerDescriptor
+                peerDescriptor: epPeerDescriptor,
+                websocketServerEnableTls: false
             }
         })
         await entryPoint.start()

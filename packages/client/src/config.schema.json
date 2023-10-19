@@ -200,6 +200,10 @@
                         "networkConnectivityTimeout": {
                             "type": "number",
                             "default": 10000
+                        },
+                        "websocketServerEnableTls": {
+                            "type": "boolean",
+                            "default": true
                         }
                     },
                     "default": {}

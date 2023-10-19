@@ -67,6 +67,7 @@ describe('ConnectionManager', () => {
         const connectionManager = new ConnectionManager({
             transportLayer: mockTransport,
             websocketPortRange: { min: 9992, max: 9992 },
+            websocketServerEnableTls: false,
             entryPoints: [
                 { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { host: '127.0.0.1', port: 12345, tls: false } }
             ]
