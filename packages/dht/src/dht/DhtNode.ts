@@ -206,6 +206,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         } else {
             const connectionManagerConfig: ConnectionManagerConfig = {
                 createConnectorFacade: () => 'TODO',
+                createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
                 transportLayer: this,
                 entryPoints: this.config.entryPoints,
                 iceServers: this.config.iceServers,
@@ -233,7 +234,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
 
             const connectionManager = new ConnectionManager(connectionManagerConfig)
-            await connectionManager.start(this.generatePeerDescriptorCallBack)
+            await connectionManager.start()
             this.connectionManager = connectionManager
             this.transportLayer = connectionManager
         }

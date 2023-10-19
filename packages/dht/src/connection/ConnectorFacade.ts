@@ -1,14 +1,16 @@
 import { Logger } from '@streamr/utils'
-import { ConnectionManager, ConnectionManagerConfig, PeerDescriptorGeneratorCallback } from './ConnectionManager'
+import { ConnectionManager, ConnectionManagerConfig } from './ConnectionManager'
 import { SimulatorConnector } from './Simulator/SimulatorConnector'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { ManagedConnection } from './ManagedConnection'
 import { NodeType, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { isPrivateIPv4 } from '../helpers/AddressTools'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
-    start: (peerDescriptorGeneratorCallback?: PeerDescriptorGeneratorCallback) => Promise<void>
+    getOwnPeerDescriptor: () => PeerDescriptor | undefined
+    start: () => Promise<void>
     stop: () => Promise<void>
 }
 
@@ -16,7 +18,8 @@ const logger = new Logger(module)
 
 export class DefaultConnectorFacade {
 
-    private readonly config: ConnectionManagerConfig,
+    private readonly config: ConnectionManagerConfig
+    private ownPeerDescriptor?: PeerDescriptor
     private webSocketConnector?: WebSocketConnector
     private webrtcConnector?: WebRtcConnector
     private simulatorConnector?: SimulatorConnector
@@ -65,6 +68,17 @@ export class DefaultConnectorFacade {
         }
     }
 
+    async start() {
+        if (!this.config.simulator) {
+            await this.webSocketConnector!.start()
+            const connectivityResponse = await this.webSocketConnector!.checkConnectivity()
+            const ownPeerDescriptor = this.config.createOwnPeerDescriptor(connectivityResponse)
+            this.ownPeerDescriptor = ownPeerDescriptor
+            this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
+            this.webrtcConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
+        }
+    }
+
     createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
         if (this.simulatorConnector) {
             return this.simulatorConnector.connect(peerDescriptor)
@@ -88,15 +102,8 @@ export class DefaultConnectorFacade {
             || (peerDescriptor.websocket!.host === 'localhost' || (isPrivateIPv4(peerDescriptor.websocket!.host)))
     }
 
-    async start(peerDescriptorGeneratorCallback?: PeerDescriptorGeneratorCallback) {
-        if (!this.config.simulator) {
-            await this.webSocketConnector!.start()
-            const connectivityResponse = await this.webSocketConnector!.checkConnectivity()
-            const ownPeerDescriptor = peerDescriptorGeneratorCallback!(connectivityResponse)
-            this.ownPeerDescriptor = ownPeerDescriptor
-            this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
-            this.webrtcConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
-        }
+    getOwnPeerDescriptor(): PeerDescriptor | undefined {
+        return this.ownPeerDescriptor
     }
 
     async stop(): Promise<void> {
