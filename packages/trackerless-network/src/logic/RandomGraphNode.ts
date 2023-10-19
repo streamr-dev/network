@@ -27,7 +27,7 @@ import { INeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManag
 import { StreamNodeServer } from './StreamNodeServer'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { IInspector } from './inspect/Inspector'
-import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
+import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { ILayer1 } from './ILayer1'
@@ -55,7 +55,7 @@ export interface StrictRandomGraphNodeConfig {
     rpcCommunicator: ListeningRpcCommunicator
     numOfTargetNeighbors: number
     inspector: IInspector
-    temporaryConnectionServer: TemporaryConnectionRpcServer
+    temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
 }
 
@@ -162,7 +162,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.config.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice',
             (req: LeaveStreamPartNotice, context) => this.server.leaveStreamPartNotice(req, context))
         this.config.rpcCommunicator.registerRpcMethod(TemporaryConnectionRequest, TemporaryConnectionResponse, 'openConnection',
-            (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionServer.openConnection(req, context))
+            (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.openConnection(req, context))
     }
 
     private newContact(_newContact: PeerDescriptor, closestNodes: PeerDescriptor[]): void {
@@ -245,7 +245,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             this.config.targetNeighbors.remove(peerDescriptor)
             this.config.connectionLocker.unlockConnection(peerDescriptor, this.config.streamPartId)
             this.config.neighborFinder.start([getNodeIdFromPeerDescriptor(peerDescriptor)])
-            this.config.temporaryConnectionServer.removeNode(peerDescriptor)
+            this.config.temporaryConnectionRpcLocal.removeNode(peerDescriptor)
         }
     }
 
@@ -303,7 +303,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             propagationTargets = propagationTargets.concat(this.config.proxyConnectionRpcLocal!.getPropagationTargets(msg))
         }
         propagationTargets = propagationTargets.filter((target) => !this.config.inspector.isInspected(target ))
-        propagationTargets = propagationTargets.concat(this.config.temporaryConnectionServer.getNodes().getIds())
+        propagationTargets = propagationTargets.concat(this.config.temporaryConnectionRpcLocal.getNodes().getIds())
         return propagationTargets
     }
 

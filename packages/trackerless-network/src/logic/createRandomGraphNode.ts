@@ -9,14 +9,14 @@ import { StreamMessage } from '../proto/packages/trackerless-network/protos/Netw
 import { MarkOptional } from 'ts-essentials'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'
-import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
+import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     'nearbyNodeView' | 'randomNodeView' | 'targetNeighbors' | 'propagation'
     | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'numOfTargetNeighbors'
     | 'rpcCommunicator' | 'nodeViewSize'
-    | 'inspector' | 'temporaryConnectionServer'> & {
+    | 'inspector' | 'temporaryConnectionRpcLocal'> & {
         maxNumberOfContacts?: number
         minPropagationTargets?: number
         acceptProxyConnections?: boolean
@@ -35,7 +35,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxNumberOfContacts)
     const targetNeighbors = config.targetNeighbors ?? new NodeList(ownNodeId, maxNumberOfContacts)
 
-    const temporaryConnectionServer = new TemporaryConnectionRpcServer({
+    const temporaryConnectionRpcLocal = new TemporaryConnectionRpcLocal({
         streamPartId: config.streamPartId,
         rpcCommunicator,
         ownPeerDescriptor: config.ownPeerDescriptor
@@ -48,7 +48,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const propagation = config.propagation ?? new Propagation({
         minPropagationTargets,
         sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
-            const remote = targetNeighbors.get(neighborId) ?? temporaryConnectionServer.getNodes().get(neighborId)
+            const remote = targetNeighbors.get(neighborId) ?? temporaryConnectionRpcLocal.getNodes().get(neighborId)
             const proxyConnection = proxyConnectionRpcLocal?.getConnection(neighborId)
             if (remote) {
                 await remote.sendStreamMessage(msg)
@@ -104,7 +104,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         nodeViewSize: maxNumberOfContacts,
         proxyConnectionRpcLocal,
         inspector,
-        temporaryConnectionServer
+        temporaryConnectionRpcLocal
     }
 }
 
