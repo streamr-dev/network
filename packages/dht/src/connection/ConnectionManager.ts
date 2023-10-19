@@ -45,7 +45,7 @@ export class ConnectionManagerConfig {
     websocketHost?: string
     websocketPortRange?: PortRange
     entryPoints?: PeerDescriptor[]
-    maxConnections: number = 80
+    maxConnections?: number
     iceServers?: IceServer[]
     metricsContext?: MetricsContext
     webrtcAllowPrivateAddresses?: boolean
@@ -251,7 +251,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.disconnectorIntervalRef = setInterval(() => {
             logger.trace('disconnectorInterval')
             const LAST_USED_LIMIT = 20000
-            this.garbageCollectConnections(this.config.maxConnections, LAST_USED_LIMIT)
+            this.garbageCollectConnections(this.config.maxConnections ?? 80, LAST_USED_LIMIT)
         }, 5000)
         if (!this.config.simulator) {
             await this.webSocketConnector!.start()
