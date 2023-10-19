@@ -40,7 +40,7 @@ import {
 } from '../helpers/peerIdFromPeerDescriptor'
 import { isPrivateIPv4 } from '../helpers/AddressTools'
 
-export class ConnectionManagerConfig {
+export interface ConnectionManagerConfig {
     transportLayer?: ITransport
     websocketHost?: string
     websocketPortRange?: PortRange
@@ -60,17 +60,6 @@ export class ConnectionManagerConfig {
     simulator?: Simulator
     ownPeerDescriptor?: PeerDescriptor
     serviceIdPrefix?: string
-
-    constructor(conf: Partial<ConnectionManagerConfig>) {
-        // assign given non-undefined config vars over defaults
-        let k: keyof typeof conf
-        for (k in conf) {
-            if (conf[k] === undefined) {
-                delete conf[k]
-            }
-        }
-        Object.assign(this, conf)
-    }
 }
 
 export enum NatType {
@@ -157,9 +146,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private serviceId: ServiceId
     private state = ConnectionManagerState.IDLE
 
-    constructor(conf: Partial<ConnectionManagerConfig>) {
+    constructor(config: ConnectionManagerConfig) {
         super()
-        this.config = new ConnectionManagerConfig(conf)
+        this.config = config
         this.onData = this.onData.bind(this)
         this.incomingConnectionCallback = this.incomingConnectionCallback.bind(this)
         this.metricsContext = this.config.metricsContext || new MetricsContext()
