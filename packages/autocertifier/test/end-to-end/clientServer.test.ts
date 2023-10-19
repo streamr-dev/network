@@ -1,6 +1,6 @@
 import { ConnectionManager, ListeningRpcCommunicator, NodeType, PeerDescriptor, PeerID, Simulator } from '@streamr/dht'
 import { createPeerDescriptor } from '@streamr/dht/dist/src/dht/DhtNode'
-import { AutoCertifierClient } from '@streamr/autocertifier-client'
+import { AutoCertifierClient, createSelfSignedCertificate } from '@streamr/autocertifier-client'
 import os from 'os'
 import fs from 'fs'
 import { RestServer } from '../../src/RestServer'
@@ -8,7 +8,6 @@ import { CertifiedSubdomain } from '@streamr/autocertifier-client'
 import { Session } from '@streamr/autocertifier-client'
 import { v4 } from 'uuid'
 import { Logger } from '@streamr/utils'
-import { createSelfSignedCertificate } from '../../src/utlis/createSelfSignedCertificate'
 import { StreamrChallenger } from '../../src/StreamrChallenger'
 import { SessionIdRequest, SessionIdResponse } from '../../src/proto/packages/autocertifier/protos/AutoCertifier'
 
@@ -21,11 +20,11 @@ let certifiedSubdomain: CertifiedSubdomain
 
 const createTestSubdomain = (validityMillis?: number) => {
     if (validityMillis) {
-        const fakeCerts = createSelfSignedCertificate(1200)
-        certifiedSubdomain = { subdomain: 'fwefwafeaw', token: 'token', certificate: { cert: fakeCerts.serverCert, key: fakeCerts.serverKey } }
+        const fakeCerts = createSelfSignedCertificate('localhost', 1200)
+        certifiedSubdomain = { fqdn: 'localhost', subdomain: 'fwefwafeaw', token: 'token', certificate: { cert: fakeCerts.serverCert, key: fakeCerts.serverKey } }
     } else {
-        const fakeCerts = createSelfSignedCertificate(0, validityMillis)
-        certifiedSubdomain = { subdomain: 'fwefwafeaw', token: 'token', certificate: { cert: fakeCerts.serverCert, key: fakeCerts.serverKey } }
+        const fakeCerts = createSelfSignedCertificate('localhost', 0, validityMillis)
+        certifiedSubdomain = { fqdn: 'localhost', subdomain: 'fwefwafeaw', token: 'token', certificate: { cert: fakeCerts.serverCert, key: fakeCerts.serverKey } }
     }
 }
 
@@ -35,7 +34,6 @@ describe('clientServer', () => {
 
     const mockPeerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('tester1').value,
-        nodeName: 'tester1',
         type: NodeType.NODEJS
     }
    
@@ -55,7 +53,7 @@ describe('clientServer', () => {
             fs.unlinkSync(subdomainPath)
         }
         createTestSubdomain()
-        server = new RestServer('127.0.0.1', restServerPort, dir + '/restServerCaCert.pem', dir + '/restServerCaKey.pem',
+        server = new RestServer('localhost', '127.0.0.1', restServerPort, dir + '/restServerCaCert.pem', dir + '/restServerCaKey.pem',
             dir + '/restServerCert.pem', dir + '/restServerKey.pem', {
                 async createSession(): Promise<Session> {
                     return { sessionId: v4() }

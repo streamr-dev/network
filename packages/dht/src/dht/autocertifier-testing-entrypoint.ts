@@ -1,6 +1,4 @@
 import { DhtNode } from './DhtNode'
-import { hexToBinary } from '@streamr/utils'
-import { NodeType } from '../proto/packages/dht/protos/DhtRpc'
 
 const main = async () => {
     const node = new DhtNode({

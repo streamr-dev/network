@@ -31,16 +31,16 @@
     "@streamr/autocertifier-client": "1.0.0",
     "@streamr/dht": "0.0.1-tatum.6",
     "@streamr/utils": "0.0.1-tatum.6",
-    "body-parser": "^1.20.2",
     "acme-client": "^5.0.0",
-    "express": "^4.17.1",
+    "body-parser": "^1.20.2",
     "dns2": "^2.1.0",
-    "sqlite": "^5.0.1",
-    "sqlite3": "^5.1.6",
     "eventemitter3": "^5.0.0",
+    "express": "^4.17.1",
     "heap": "^0.2.6",
     "node-forge": "^1.3.1",
-    "uuid": "^9.0.0"
+    "sqlite": "^5.0.1",
+    "sqlite3": "^5.1.6",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@streamr/test-utils": "0.0.1-tatum.6",

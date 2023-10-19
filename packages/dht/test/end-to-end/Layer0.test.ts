@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 
 describe('Layer0', () => {
@@ -14,7 +14,7 @@ describe('Layer0', () => {
     const websocketPortRange = { min: 10012, max: 10015 } 
     beforeEach(async () => {
         
-        epDhtNode = new DhtNode({ websocketHost: '127.0.0.1',  websocketPortRange: { min: 10011, max: 10011 }, websocketServerEnableTls: false })
+        epDhtNode = new DhtNode({ websocketHost: '127.0.0.1', websocketPortRange: { min: 10011, max: 10011 }, websocketServerEnableTls: false })
         await epDhtNode.start()
         epPeerDescriptor = epDhtNode.getPeerDescriptor()
         await epDhtNode.joinDht([epPeerDescriptor])

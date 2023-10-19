@@ -3,12 +3,9 @@ import { createServer as createHttpsServer, Server as HttpsServer } from 'https'
 import EventEmitter from 'eventemitter3'
 import { server as WsServer } from 'websocket'
 import { ServerWebSocket } from './ServerWebSocket'
-import {
-    ConnectionSourceEvents
-} from '../IConnectionSource'
-
+import { ConnectionSourceEvents } from '../IConnectionSource'
 import { Logger, asAbortable } from '@streamr/utils'
-import { AutoCertifierClient, Certificate, createSelfSignedCertificate } from '@streamr/autocertifier-client' 
+import { Certificate, createSelfSignedCertificate } from '@streamr/autocertifier-client' 
 import { WebSocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
@@ -29,7 +26,6 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     private httpServer?: HttpServer | HttpsServer
     private wsServer?: WsServer
     private readonly abortController = new AbortController()
-    private autoCertified = false
 
     public async start(portRange: PortRange, tls: boolean, tlsCertificate?: TlsCertificate): Promise<number> {
         const ports = range(portRange.min, portRange.max + 1)

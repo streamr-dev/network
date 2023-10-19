@@ -25,7 +25,6 @@ describe('production', () => {
 
     const mockPeerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('tester1').value,
-        nodeName: 'tester1',
         type: NodeType.NODEJS
     }
 

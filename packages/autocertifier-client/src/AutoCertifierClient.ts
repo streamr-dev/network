@@ -43,9 +43,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     public async start(): Promise<void> {
-        logger.trace("START HERE1 " + this.subdomainPath)
         if (!fs.existsSync(this.subdomainPath)) {
-            logger.trace("START HERE2")
             await this.createCertificate()
         } else {
             await this.checkSubdomainValidity()
@@ -107,17 +105,13 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     private createCertificate = async (): Promise<void> => {
-        logger.trace("CREATE CERTIFICATE 0")
         const sessionId = await this.restClient.createSession()
         let certifiedSubdomain: CertifiedSubdomain
 
-        logger.trace("CREATE CERTIFICATE 1")
         this.ongoingSessions.add(sessionId)
 
         try {
-            logger.trace("CREATE CERTIFICATE 2")
             certifiedSubdomain = await this.restClient.createNewSubdomainAndCertificate(this.streamrWebSocketPort, sessionId)
-            logger.trace("CREATE CERTIFICATE 3")
         } finally {
             this.ongoingSessions.delete(sessionId)
         }
