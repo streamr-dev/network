@@ -25,7 +25,7 @@ import { Propagation } from './propagation/Propagation'
 import { INeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { INeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
 import { StreamNodeServer } from './StreamNodeServer'
-import { ProxyServer } from './proxy/ProxyServer'
+import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { IInspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 import { markAndCheckDuplicate } from './utils'
@@ -56,7 +56,7 @@ export interface StrictRandomGraphNodeConfig {
     numOfTargetNeighbors: number
     inspector: IInspector
     temporaryConnectionServer: TemporaryConnectionRpcServer
-    proxyConnectionServer?: ProxyServer
+    proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
 }
 
 const logger = new Logger(module)
@@ -83,7 +83,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 const contact = this.config.nearbyNodeView.get(senderId)
                 || this.config.randomNodeView.get(senderId)
                 || this.config.targetNeighbors.get(senderId)
-                || this.config.proxyConnectionServer?.getConnection(senderId )?.remote
+                || this.config.proxyConnectionRpcLocal?.getConnection(senderId )?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
                     this.config.layer1.removeContact(contact.getPeerDescriptor(), true)
@@ -91,7 +91,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                     this.config.nearbyNodeView.remove(contact.getPeerDescriptor())
                     this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.streamPartId)
                     this.config.neighborFinder.start([senderId])
-                    this.config.proxyConnectionServer?.removeConnection(senderId)
+                    this.config.proxyConnectionRpcLocal?.removeConnection(senderId)
                 }
             },
             markForInspection: (senderId: NodeID, messageId: MessageID) => this.config.inspector.markMessage(senderId, messageId)
@@ -140,9 +140,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
             },
             this.abortController.signal
         )
-        if (this.config.proxyConnectionServer !== undefined) {
+        if (this.config.proxyConnectionRpcLocal !== undefined) {
             addManagedEventListener(
-                this.config.proxyConnectionServer,
+                this.config.proxyConnectionRpcLocal,
                 'newConnection',
                 (id: NodeID) => this.config.propagation.onNeighborJoined(id),
                 this.abortController.signal
@@ -261,8 +261,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
     }
 
     hasProxyConnection(nodeId: NodeID): boolean {
-        if (this.config.proxyConnectionServer) {
-            return this.config.proxyConnectionServer.hasConnection(nodeId)
+        if (this.config.proxyConnectionRpcLocal) {
+            return this.config.proxyConnectionRpcLocal.hasConnection(nodeId)
         }
         return false
     }
@@ -273,7 +273,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
         this.stopped = true
         this.abortController.abort()
-        this.config.proxyConnectionServer?.stop()
+        this.config.proxyConnectionRpcLocal?.stop()
         this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice())
         this.config.rpcCommunicator.stop()
         this.removeAllListeners()
@@ -299,8 +299,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     private getPropagationTargets(msg: StreamMessage): NodeID[] {
         let propagationTargets = this.config.targetNeighbors.getIds()
-        if (this.config.proxyConnectionServer) {
-            propagationTargets = propagationTargets.concat(this.config.proxyConnectionServer!.getPropagationTargets(msg))
+        if (this.config.proxyConnectionRpcLocal) {
+            propagationTargets = propagationTargets.concat(this.config.proxyConnectionRpcLocal!.getPropagationTargets(msg))
         }
         propagationTargets = propagationTargets.filter((target) => !this.config.inspector.isInspected(target ))
         propagationTargets = propagationTargets.concat(this.config.temporaryConnectionServer.getNodes().getIds())

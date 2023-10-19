@@ -7,7 +7,7 @@ import { NodeList } from './NodeList'
 import { Propagation } from './propagation/Propagation'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { MarkOptional } from 'ts-essentials'
-import { ProxyServer } from './proxy/ProxyServer'
+import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
@@ -40,7 +40,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         rpcCommunicator,
         ownPeerDescriptor: config.ownPeerDescriptor
     })
-    const proxyConnectionServer = acceptProxyConnections ? new ProxyServer({
+    const proxyConnectionRpcLocal = acceptProxyConnections ? new ProxyConnectionRpcLocal({
         ownPeerDescriptor: config.ownPeerDescriptor,
         streamPartId: config.streamPartId,
         rpcCommunicator
@@ -49,7 +49,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         minPropagationTargets,
         sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
             const remote = targetNeighbors.get(neighborId) ?? temporaryConnectionServer.getNodes().get(neighborId)
-            const proxyConnection = proxyConnectionServer?.getConnection(neighborId)
+            const proxyConnection = proxyConnectionRpcLocal?.getConnection(neighborId)
             if (remote) {
                 await remote.sendStreamMessage(msg)
             } else if (proxyConnection) {
@@ -102,7 +102,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         propagation,
         numOfTargetNeighbors,
         nodeViewSize: maxNumberOfContacts,
-        proxyConnectionServer,
+        proxyConnectionRpcLocal,
         inspector,
         temporaryConnectionServer
     }
