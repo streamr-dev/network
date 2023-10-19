@@ -176,6 +176,12 @@ export class DnsServer {
         // @ts-ignore private field
         response.header.aa = 1
         const question = request.questions[0]
+        if (question === undefined || question.name === undefined) {
+            logger.warn('invalid question')
+            // @ts-ignore private field
+            response.header.rcode = 3
+            return send(response)
+        }
         const mixedCaseName = question.name
         const name = mixedCaseName.toLowerCase()
 
