@@ -4,7 +4,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { NodeList } from '../NodeList'
 import { ConnectionLocker, DhtCallContext, PeerDescriptor } from '@streamr/dht'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { RemoteHandshaker } from './RemoteHandshaker'
+import { HandshakeRpcRemote } from './HandshakeRpcRemote'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { binaryToHex } from '@streamr/utils'
@@ -16,7 +16,7 @@ interface HandshakerServerConfig {
     connectionLocker: ConnectionLocker
     ongoingHandshakes: Set<NodeID>
     maxNeighborCount: number
-    createRemoteHandshaker: (target: PeerDescriptor) => RemoteHandshaker
+    createRpcRemote: (target: PeerDescriptor) => HandshakeRpcRemote
     createRemoteNode: (peerDescriptor: PeerDescriptor) => RemoteRandomGraphNode
     handshakeWithInterleaving: (target: PeerDescriptor, senderId: NodeID) => Promise<boolean>
 }
@@ -77,7 +77,7 @@ export class HandshakerServer implements IHandshakeRpc {
         const furthest = this.config.targetNeighbors.getFurthest(exclude)
         const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
         if (furthest) {
-            const remote = this.config.createRemoteHandshaker(furthest.getPeerDescriptor())
+            const remote = this.config.createRpcRemote(furthest.getPeerDescriptor())
             remote.interleaveNotice(requester)
             this.config.targetNeighbors.remove(furthest.getPeerDescriptor())
             this.config.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.config.streamPartId)

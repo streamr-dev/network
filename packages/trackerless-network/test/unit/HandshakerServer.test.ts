@@ -4,7 +4,7 @@ import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { NodeList } from '../../src/logic/NodeList'
 import { HandshakerServer } from '../../src/logic/neighbor-discovery/HandshakerServer'
 import { InterleaveNotice, StreamPartHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createMockPeerDescriptor, createMockRemoteHandshaker, createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
+import { createMockPeerDescriptor, createMockHandshakeRpcRemote, createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
@@ -29,7 +29,7 @@ describe('HandshakerServer', () => {
             streamPartId: STREAM_PART_ID,
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
-            createRemoteHandshaker: (_p) => createMockRemoteHandshaker(),
+            createRpcRemote: (_p) => createMockHandshakeRpcRemote(),
             createRemoteNode: (_p) => createMockRemoteNode(),
             handshakeWithInterleaving: async (_p, _t) => {
                 handshakeWithInterleaving()
