@@ -5,7 +5,7 @@ import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-networ
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { INeighborFinder } from './NeighborFinder'
 import { NodeList } from '../NodeList'
-import { RemoteNeighborUpdateManager } from './RemoteNeighborUpdateManager'
+import { NeighborUpdateRpcRemote } from './NeighborUpdateRpcRemote'
 import { NeighborUpdateManagerServer } from './NeighborUpdateManagerServer'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
@@ -61,7 +61,7 @@ export class NeighborUpdateManager implements INeighborUpdateManager {
         }))
     }
 
-    private createRemote(targetPeerDescriptor: PeerDescriptor): RemoteNeighborUpdateManager {
-        return new RemoteNeighborUpdateManager(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
+    private createRemote(targetPeerDescriptor: PeerDescriptor): NeighborUpdateRpcRemote {
+        return new NeighborUpdateRpcRemote(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
     }
 }

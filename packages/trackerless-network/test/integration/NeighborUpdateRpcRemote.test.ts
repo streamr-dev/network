@@ -7,17 +7,17 @@ import {
     SimulatorTransport
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { RemoteNeighborUpdateManager } from '../../src/logic/neighbor-discovery/RemoteNeighborUpdateManager'
+import { NeighborUpdateRpcRemote } from '../../src/logic/neighbor-discovery/NeighborUpdateRpcRemote'
 import { NeighborUpdate } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import {
     NeighborUpdateRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
-describe('RemoteNeighborUpdateManager', () => {
+describe('NeighborUpdateRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
     let clientRpc: ListeningRpcCommunicator
-    let neighborUpdateRpcClient: RemoteNeighborUpdateManager
+    let rpcRemote: NeighborUpdateRpcRemote
 
     const clientNode: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
@@ -59,7 +59,7 @@ describe('RemoteNeighborUpdateManager', () => {
                 return update
             }
         )
-        neighborUpdateRpcClient = new RemoteNeighborUpdateManager(
+        rpcRemote = new NeighborUpdateRpcRemote(
             clientNode,
             serverNode,
             'test-stream-part',
@@ -76,7 +76,7 @@ describe('RemoteNeighborUpdateManager', () => {
     })
 
     it('updateNeighbors', async () => {
-        const res = await neighborUpdateRpcClient.updateNeighbors([])
+        const res = await rpcRemote.updateNeighbors([])
         expect(res.peerDescriptors.length).toEqual(1)
     })
 })
