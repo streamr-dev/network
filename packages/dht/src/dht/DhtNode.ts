@@ -205,6 +205,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
         } else {
             const connectionManagerConfig: ConnectionManagerConfig = {
+                createConnectorFacade: () => 'TODO',
                 transportLayer: this,
                 entryPoints: this.config.entryPoints,
                 iceServers: this.config.iceServers,
