@@ -10,7 +10,7 @@ import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { INeighborFinder } from './NeighborFinder'
 import { StreamPartID } from '@streamr/protocol'
 
-interface NeighborUpdateManagerServerConfig {
+interface NeighborUpdateRpcLocalConfig {
     ownPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     targetNeighbors: NodeList
@@ -19,11 +19,11 @@ interface NeighborUpdateManagerServerConfig {
     rpcCommunicator: ListeningRpcCommunicator
 }
 
-export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
+export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
 
-    private readonly config: NeighborUpdateManagerServerConfig
+    private readonly config: NeighborUpdateRpcLocalConfig
 
-    constructor(config: NeighborUpdateManagerServerConfig) {
+    constructor(config: NeighborUpdateRpcLocalConfig) {
         this.config = config
     }
 
