@@ -57,9 +57,9 @@ describe('ContractFacade', () => {
         const sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
         const sponsorship2 = await deploySponsorshipContract({ streamId: streamId2, deployer: operatorWallet })
 
-        await delegate(operatorWallet, operatorContract.address, 200)
-        await stake(operatorContract, sponsorship1.address, 100)
-        await stake(operatorContract, sponsorship2.address, 100)
+        await delegate(operatorWallet, operatorContract.address, 20000)
+        await stake(operatorContract, sponsorship1.address, 10000)
+        await stake(operatorContract, sponsorship2.address, 10000)
 
         await waitForCondition(async (): Promise<boolean> => {
             const res = await contractFacade.getSponsorshipsOfOperator(toEthereumAddress(operatorContract.address))
@@ -92,12 +92,12 @@ describe('ContractFacade', () => {
         const streamId1 = (await createTestStream(client, module)).id
         await client.destroy()
         const sponsorship = await deploySponsorshipContract({ streamId: streamId1, deployer: await generateWalletWithGasAndTokens() })
-        await sponsor(flagger.operatorWallet, sponsorship.address, 500)
+        await sponsor(flagger.operatorWallet, sponsorship.address, 50000)
 
-        await delegate(flagger.operatorWallet, flagger.operatorContract.address, 200)
-        await delegate(target.operatorWallet, target.operatorContract.address, 300)
-        await stake(flagger.operatorContract, sponsorship.address, 150)
-        await stake(target.operatorContract, sponsorship.address, 250)
+        await delegate(flagger.operatorWallet, flagger.operatorContract.address, 20000)
+        await delegate(target.operatorWallet, target.operatorContract.address, 30000)
+        await stake(flagger.operatorContract, sponsorship.address, 15000)
+        await stake(target.operatorContract, sponsorship.address, 25000)
 
         const contractFacade = ContractFacade.createInstance({
             ...flagger.operatorServiceConfig,

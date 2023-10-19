@@ -69,8 +69,8 @@ describe('MaintainTopologyService', () => {
         const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
         const operatorContract = await deployOperatorContract({ deployer: operatorWallet })
-        await delegate(operatorWallet, operatorContract.address, 200)
-        await stake(operatorContract, sponsorship1.address, 100)
+        await delegate(operatorWallet, operatorContract.address, 20000)
+        await stake(operatorContract, sponsorship1.address, 10000)
 
         const serviceHelperConfig = {
             signer: operatorWallet,
@@ -98,7 +98,7 @@ describe('MaintainTopologyService', () => {
             return containsAll(await getSubscribedStreamPartIds(client), stream1.getStreamParts())
         }, 10000, 1000)
 
-        await stake(operatorContract, sponsorship2.address, 100)
+        await stake(operatorContract, sponsorship2.address, 10000)
         await waitForCondition(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), [
                 ...stream1.getStreamParts(),

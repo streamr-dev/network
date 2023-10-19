@@ -26,7 +26,6 @@ interface DiscoverySessionConfig {
     parallelism: number
     noProgressLimit: number
     newContactListener?: (dhtPeer: DhtPeer) => void
-    nodeName?: string
 }
 
 export class DiscoverySession {
