@@ -8,7 +8,6 @@ import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dh
 describe('Layer0 with WebRTC connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('entrypoint').value,
-        nodeName: 'entrypoint',
         type: NodeType.NODEJS,
         websocket: { host: '127.0.0.1', port: 10029, tls: false }
     }
@@ -22,7 +21,6 @@ describe('Layer0 with WebRTC connections', () => {
 
         epDhtNode = new DhtNode({
             peerDescriptor: epPeerDescriptor,
-            nodeName: 'entrypoint',
             numberOfNodesPerKBucket: 8,
             websocketServerEnableTls: false
         })
@@ -30,10 +28,10 @@ describe('Layer0 with WebRTC connections', () => {
 
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ nodeName: 'Peer0', entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ nodeName: 'Peer1', entryPoints: [epPeerDescriptor] })
-        node3 = new DhtNode({ nodeName: 'Peer2', entryPoints: [epPeerDescriptor] })
-        node4 = new DhtNode({ nodeName: 'Peer3', entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ entryPoints: [epPeerDescriptor] })
+        node2 = new DhtNode({ entryPoints: [epPeerDescriptor] })
+        node3 = new DhtNode({ entryPoints: [epPeerDescriptor] })
+        node4 = new DhtNode({ entryPoints: [epPeerDescriptor] })
 
         await Promise.all([
             node1.start(),

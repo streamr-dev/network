@@ -14,23 +14,19 @@ describe('ConnectionManager', () => {
 
     const mockPeerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('tester1').value,
-        nodeName: 'tester1',
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('tester2').value,
-        nodeName: 'tester2',
         type: NodeType.NODEJS
     }
 
     const mockPeerDescriptor3: PeerDescriptor = {
         kademliaId: PeerID.fromString('tester3').value,
-        nodeName: 'tester3',
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor4: PeerDescriptor = {
         kademliaId: PeerID.fromString('tester4').value,
-        nodeName: 'tester4',
         type: NodeType.NODEJS
     }
     const simulator = new Simulator()

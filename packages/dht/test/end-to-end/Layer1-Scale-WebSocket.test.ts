@@ -6,8 +6,7 @@ describe('Layer1 Scale', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
-        websocket: { host: '127.0.0.1', port: 43225, tls: false },
-        nodeName: 'entrypoint'
+        websocket: { host: '127.0.0.1', port: 43225, tls: false }
     }
 
     const STREAM_ID = 'stream'
@@ -26,13 +25,12 @@ describe('Layer1 Scale', () => {
     beforeEach(async () => {
         epLayer0Node = new DhtNode({
             peerDescriptor: epPeerDescriptor,
-            nodeName: 'entrypoint',
             websocketServerEnableTls: false
         })
         await epLayer0Node.start()
         await epLayer0Node.joinDht([epPeerDescriptor])
 
-        epLayer1Node = new DhtNode({ transportLayer: epLayer0Node, peerDescriptor: epPeerDescriptor, serviceId: STREAM_ID, nodeName: 'entrypoint' })
+        epLayer1Node = new DhtNode({ transportLayer: epLayer0Node, peerDescriptor: epPeerDescriptor, serviceId: STREAM_ID })
         await epLayer1Node.start()
         await epLayer1Node.joinDht([epPeerDescriptor])
 
@@ -40,11 +38,10 @@ describe('Layer1 Scale', () => {
         layer1Nodes = []
 
         for (let i = 0; i < NUM_OF_NODES; i++) {
-            const node = new DhtNode({ nodeName: `${i}`, websocketPortRange, entryPoints: [epPeerDescriptor], websocketServerEnableTls: false })
+            const node = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor], websocketServerEnableTls: false })
             await node.start()
             layer0Nodes.push(node)
             const layer1 = new DhtNode({
-                nodeName: `${i}`,
                 transportLayer: node,
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: node.getPeerDescriptor(),

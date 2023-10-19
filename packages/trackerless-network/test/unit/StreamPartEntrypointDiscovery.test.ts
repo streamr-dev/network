@@ -17,12 +17,8 @@ describe('StreamPartEntryPointDiscovery', () => {
     let entryPointDiscoveryWithoutData: StreamPartEntryPointDiscovery
     let storeCalled: number
 
-    const peerDescriptor = createMockPeerDescriptor({
-        nodeName: 'fake'
-    })
-    const deletedPeerDescriptor = createMockPeerDescriptor({
-        nodeName: 'deleted'
-    })
+    const peerDescriptor = createMockPeerDescriptor()
+    const deletedPeerDescriptor = createMockPeerDescriptor()
 
     const fakeData: DataEntry = {
         data: Any.pack(peerDescriptor, PeerDescriptor),

@@ -17,13 +17,11 @@ describe('WebRTC Connection Management', () => {
 
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('peer1').value,
-        nodeName: 'peer1',
         type: NodeType.NODEJS,
     }
 
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('peer2').value,
-        nodeName: 'peer2',
         type: NodeType.NODEJS,
     }
 

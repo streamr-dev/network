@@ -14,14 +14,12 @@ describe('SimultaneousConnections', () => {
 
     const peerDescriptor1 = {
         kademliaId: PeerID.fromString('mock1').value,
-        type: NodeType.NODEJS,
-        nodeName: 'mock1'
+        type: NodeType.NODEJS
     }
 
     const peerDescriptor2 = {
         kademliaId: PeerID.fromString('mock2').value,
-        type: NodeType.NODEJS,
-        nodeName: 'mock2'
+        type: NodeType.NODEJS
     }
 
     const baseMsg: Message = {
@@ -84,7 +82,6 @@ describe('SimultaneousConnections', () => {
 
         const wsPeer1: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock1').value,
-            nodeName: 'mock1WebSocket',
             type: NodeType.NODEJS,
             websocket: {
                 host: '127.0.0.1',
@@ -95,7 +92,6 @@ describe('SimultaneousConnections', () => {
 
         const wsPeer2: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock2').value,
-            nodeName: 'mock2WebSocket',
             type: NodeType.NODEJS,
             websocket: {
                 host: '127.0.0.1',
@@ -171,7 +167,6 @@ describe('SimultaneousConnections', () => {
 
         const wsPeer1: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock1').value,
-            nodeName: 'mock1WebSocketServer',
             type: NodeType.NODEJS,
             websocket: {
                 host: '127.0.0.1',
@@ -182,7 +177,6 @@ describe('SimultaneousConnections', () => {
 
         const wsPeer2: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock2').value,
-            nodeName: 'mock2WebSocketClient',
             type: NodeType.NODEJS
         }
 
@@ -249,13 +243,11 @@ describe('SimultaneousConnections', () => {
 
         const wrtcPeer1: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock1').value,
-            nodeName: 'mock1WebRTC',
             type: NodeType.NODEJS
         }
 
         const wrtcPeer2: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock2').value,
-            nodeName: 'mock2WebRTC',
             type: NodeType.NODEJS
         }
 

@@ -47,11 +47,9 @@ describe('Proxy connections', () => {
 
     beforeEach(async () => {
         const proxyNodeDescriptor1 = createMockPeerDescriptor({
-            nodeName: 'proxyNode',
             websocket: { host: '127.0.0.1', port: 23132, tls: false }
         })
         const proxyNodeDescriptor2 = createMockPeerDescriptor({
-            nodeName: 'proxyNode',
             websocket: { host: '127.0.0.1', port: 23133, tls: false }
         })
         const proxiedNodeDescriptor = createMockPeerDescriptor()

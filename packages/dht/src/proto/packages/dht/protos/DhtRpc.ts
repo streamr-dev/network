@@ -253,10 +253,6 @@ export interface PeerDescriptor {
      * @generated from protobuf field: optional uint32 region = 7;
      */
     region?: number;
-    /**
-     * @generated from protobuf field: optional string nodeName = 8;
-     */
-    nodeName?: string;
 }
 /**
  * @generated from protobuf message dht.ConnectivityMethod
@@ -1023,8 +1019,7 @@ class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
             { no: 4, name: "tcp", kind: "message", T: () => ConnectivityMethod },
             { no: 5, name: "websocket", kind: "message", T: () => ConnectivityMethod },
             { no: 6, name: "openInternet", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
-            { no: 7, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ },
-            { no: 8, name: "nodeName", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 7, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
 }
