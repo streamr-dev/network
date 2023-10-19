@@ -24,7 +24,7 @@ import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { StreamNodeServer } from '../StreamNodeServer'
 import { Propagation } from '../propagation/Propagation'
 import { markAndCheckDuplicate } from '../utils'
-import { RemoteProxyServer } from './RemoteProxyServer'
+import { ProxyConnectionRpcRemote } from './ProxyConnectionRpcRemote'
 
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
     // eslint-disable-next-line no-constant-condition
@@ -166,8 +166,8 @@ export class ProxyClient extends EventEmitter {
     private async attemptConnection(nodeId: NodeID, direction: ProxyDirection, userId: EthereumAddress): Promise<void> {
         const peerDescriptor = this.definition!.nodes.get(nodeId)!
         const client = toProtoRpcClient(new ProxyConnectionRpcClient(this.rpcCommunicator.getRpcClientTransport()))
-        const proxyNode = new RemoteProxyServer(this.config.ownPeerDescriptor, peerDescriptor, this.config.streamPartId, client)
-        const accepted = await proxyNode.requestConnection(direction, userId)
+        const rpcRemote = new ProxyConnectionRpcRemote(this.config.ownPeerDescriptor, peerDescriptor, this.config.streamPartId, client)
+        const accepted = await rpcRemote.requestConnection(direction, userId)
         if (accepted) {
             this.config.connectionLocker.lockConnection(peerDescriptor, SERVICE_ID)
             this.connections.set(nodeId, direction)
