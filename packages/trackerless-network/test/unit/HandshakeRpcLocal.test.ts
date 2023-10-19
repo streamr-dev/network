@@ -2,16 +2,16 @@ import { NodeType } from '@streamr/dht'
 import { hexToBinary } from '@streamr/utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { NodeList } from '../../src/logic/NodeList'
-import { HandshakerServer } from '../../src/logic/neighbor-discovery/HandshakerServer'
+import { HandshakeRpcLocal } from '../../src/logic/neighbor-discovery/HandshakeRpcLocal'
 import { InterleaveNotice, StreamPartHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor, createMockHandshakeRpcRemote, createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
-describe('HandshakerServer', () => {
+describe('HandshakeRpcLocal', () => {
 
-    let handshakerServer: HandshakerServer
+    let rpcLocal: HandshakeRpcLocal
 
     const ownPeerDescriptor = createMockPeerDescriptor()
 
@@ -25,7 +25,7 @@ describe('HandshakerServer', () => {
 
         handshakeWithInterleaving = jest.fn()
 
-        handshakerServer = new HandshakerServer({
+        rpcLocal = new HandshakeRpcLocal({
             streamPartId: STREAM_PART_ID,
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
@@ -45,7 +45,7 @@ describe('HandshakerServer', () => {
             streamPartId: STREAM_PART_ID,
             requestId: 'requestId'
         })
-        const res = await handshakerServer.handshake(req, {
+        const res = await rpcLocal.handshake(req, {
             incomingSourceDescriptor: createMockPeerDescriptor()
         } as any)
         expect(res.accepted).toEqual(true)
@@ -62,7 +62,7 @@ describe('HandshakerServer', () => {
             streamPartId: STREAM_PART_ID,
             requestId: 'requestId'
         })
-        const res = await handshakerServer.handshake(req, {
+        const res = await rpcLocal.handshake(req, {
             incomingSourceDescriptor: createMockPeerDescriptor()
         } as any)
         expect(res.accepted).toEqual(true)
@@ -78,7 +78,7 @@ describe('HandshakerServer', () => {
             streamPartId: STREAM_PART_ID,
             requestId: 'requestId'
         })
-        const res = await handshakerServer.handshake(req, {
+        const res = await rpcLocal.handshake(req, {
             incomingSourceDescriptor: createMockPeerDescriptor()
         } as any)
         expect(res.accepted).toEqual(false)
@@ -93,7 +93,7 @@ describe('HandshakerServer', () => {
             }
 
         }
-        await handshakerServer.interleaveNotice(req, {
+        await rpcLocal.interleaveNotice(req, {
             incomingSourceDescriptor: createMockPeerDescriptor()
         } as any)
         expect(handshakeWithInterleaving).toHaveBeenCalledTimes(1)
@@ -107,7 +107,7 @@ describe('HandshakerServer', () => {
                 type: NodeType.NODEJS
             }
         }
-        await handshakerServer.interleaveNotice(req, {
+        await rpcLocal.interleaveNotice(req, {
             incomingSourceDescriptor: createMockPeerDescriptor()
         } as any)
         expect(handshakeWithInterleaving).toHaveBeenCalledTimes(0)

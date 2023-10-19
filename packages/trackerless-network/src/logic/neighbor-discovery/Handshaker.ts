@@ -14,7 +14,7 @@ import {
 import { Logger } from '@streamr/utils'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { HandshakeRpcRemote } from './HandshakeRpcRemote'
-import { HandshakerServer } from './HandshakerServer'
+import { HandshakeRpcLocal } from './HandshakeRpcLocal'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
@@ -43,12 +43,12 @@ export class Handshaker implements IHandshaker {
     private readonly ongoingHandshakes: Set<NodeID> = new Set()
     private config: HandshakerConfig
     private readonly client: ProtoRpcClient<IHandshakeRpcClient>
-    private readonly server: IHandshakeRpc
+    private readonly rpcLocal: IHandshakeRpc
 
     constructor(config: HandshakerConfig) {
         this.config = config
         this.client = toProtoRpcClient(new HandshakeRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
-        this.server = new HandshakerServer({
+        this.rpcLocal = new HandshakeRpcLocal({
             streamPartId: this.config.streamPartId,
             targetNeighbors: this.config.targetNeighbors,
             connectionLocker: this.config.connectionLocker,
@@ -59,9 +59,9 @@ export class Handshaker implements IHandshaker {
             createRemoteNode: (target: PeerDescriptor) => this.createRemoteNode(target)
         })
         this.config.rpcCommunicator.registerRpcNotification(InterleaveNotice, 'interleaveNotice',
-            (req: InterleaveNotice, context) => this.server.interleaveNotice(req, context))
+            (req: InterleaveNotice, context) => this.rpcLocal.interleaveNotice(req, context))
         this.config.rpcCommunicator.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake',
-            (req: StreamPartHandshakeRequest, context) => this.server.handshake(req, context))
+            (req: StreamPartHandshakeRequest, context) => this.rpcLocal.handshake(req, context))
     }
 
     async attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]> {

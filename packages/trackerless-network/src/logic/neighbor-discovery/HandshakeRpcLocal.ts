@@ -10,7 +10,7 @@ import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { binaryToHex } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
 
-interface HandshakerServerConfig {
+interface HandshakeRpcLocalConfig {
     streamPartId: StreamPartID
     targetNeighbors: NodeList
     connectionLocker: ConnectionLocker
@@ -21,11 +21,11 @@ interface HandshakerServerConfig {
     handshakeWithInterleaving: (target: PeerDescriptor, senderId: NodeID) => Promise<boolean>
 }
 
-export class HandshakerServer implements IHandshakeRpc {
+export class HandshakeRpcLocal implements IHandshakeRpc {
 
-    private readonly config: HandshakerServerConfig
+    private readonly config: HandshakeRpcLocalConfig
 
-    constructor(config: HandshakerServerConfig) {
+    constructor(config: HandshakeRpcLocalConfig) {
         this.config = config
     }
 
