@@ -27,6 +27,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     private wsServer?: WsServer
     private readonly abortController = new AbortController()
 
+    // TODO: move parameters to constructor?
     public async start(portRange: PortRange, tls: boolean, tlsCertificate?: TlsCertificate): Promise<number> {
         const ports = range(portRange.min, portRange.max + 1)
         for (const port of ports) {
