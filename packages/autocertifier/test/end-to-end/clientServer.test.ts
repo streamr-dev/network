@@ -21,10 +21,26 @@ let certifiedSubdomain: CertifiedSubdomain
 const createTestSubdomain = (validityMillis?: number) => {
     if (validityMillis) {
         const fakeCerts = createSelfSignedCertificate('localhost', 1200)
-        certifiedSubdomain = { fqdn: 'localhost', subdomain: 'fwefwafeaw', token: 'token', certificate: { cert: fakeCerts.serverCert, key: fakeCerts.serverKey } }
+        certifiedSubdomain = { 
+            fqdn: 'localhost',
+            subdomain: 'fwefwafeaw',
+            token: 'token',
+            certificate: {
+                cert: fakeCerts.serverCert,
+                key: fakeCerts.serverKey
+            }
+        }
     } else {
         const fakeCerts = createSelfSignedCertificate('localhost', 0, validityMillis)
-        certifiedSubdomain = { fqdn: 'localhost', subdomain: 'fwefwafeaw', token: 'token', certificate: { cert: fakeCerts.serverCert, key: fakeCerts.serverKey } }
+        certifiedSubdomain = { 
+            fqdn: 'localhost',
+            subdomain: 'fwefwafeaw',
+            token: 'token',
+            certificate: {
+                cert: fakeCerts.serverCert,
+                key: fakeCerts.serverKey
+            }
+        }
     }
 }
 

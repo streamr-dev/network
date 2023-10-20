@@ -12,7 +12,15 @@ describe('RestServer', () => {
     const dir = os.tmpdir()
     let ca: string
 
-    const certifiedSubdomain: CertifiedSubdomain = { fqdn: 'localhost', subdomain: 'fwefwafeaw', token: 'token', certificate: { cert: 'certificate', key: 'key' } }
+    const certifiedSubdomain: CertifiedSubdomain = {
+        fqdn: 'localhost',
+        subdomain: 'fwefwafeaw',
+        token: 'token',
+        certificate: {
+            cert: 'certificate',
+            key: 'key'
+        }
+    }
     const sessionId = v4()
 
     beforeAll(async () => {
