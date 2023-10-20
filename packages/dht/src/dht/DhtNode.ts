@@ -696,10 +696,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.bucket!.toArray().map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
     }
 
-    private getOpenInternetPeerDescriptors(): PeerDescriptor[] {
-        return this.openInternetPeers!.getAllContacts().map((contact) => contact.getPeerDescriptor())
-    }
-
     public getNumberOfConnections(): number {
         return this.connections.size
     }
