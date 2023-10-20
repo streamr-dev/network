@@ -90,7 +90,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         if (routingPath.length >= 1) {
             this.setHopAsReported(routingPath[routingPath.length - 1])
         }
-        nodes.map((descriptor: PeerDescriptor) => {
+        nodes.forEach((descriptor: PeerDescriptor) => {
             this.results.addContact(new Contact(descriptor))
         })
         this.processFoundData(dataEntries)

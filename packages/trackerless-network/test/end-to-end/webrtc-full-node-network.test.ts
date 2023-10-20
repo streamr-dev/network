@@ -68,7 +68,7 @@ describe('Full node network with WebRTC connections', () => {
         ))
         let numOfMessagesReceived = 0
         const successIds: string[] = []
-        nodes.map((node) => {
+        nodes.forEach((node) => {
             node.getStreamrNode()!.on('newMessage', () => {
                 successIds.push(getNodeIdFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
                 numOfMessagesReceived += 1

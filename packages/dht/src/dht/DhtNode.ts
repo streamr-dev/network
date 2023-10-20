@@ -350,7 +350,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.onTransportDisconnected(peerDescriptor, disonnectionType)
         })
 
-        this.transportLayer!.getAllConnectionPeerDescriptors().map((peer) => {
+        this.transportLayer!.getAllConnectionPeerDescriptors().forEach((peer) => {
             const peerId = peerIdFromPeerDescriptor(peer)
             const dhtPeer = new DhtPeer(
                 this.ownPeerDescriptor!,
@@ -742,7 +742,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.entryPointDisconnectTimeout) {
             clearTimeout(this.entryPointDisconnectTimeout)
         }
-        this.bucket!.toArray().map((dhtPeer: DhtPeer) => this.bucket!.remove(dhtPeer.id))
+        this.bucket!.toArray().forEach((dhtPeer: DhtPeer) => this.bucket!.remove(dhtPeer.id))
         this.bucket!.removeAllListeners()
         this.localDataStore.clear()
         this.neighborList!.stop()
