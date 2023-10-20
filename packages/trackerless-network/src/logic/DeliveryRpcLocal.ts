@@ -11,7 +11,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
-export interface StreamNodeServerConfig {
+export interface DeliveryRpcLocalConfig {
     ownPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
@@ -21,11 +21,11 @@ export interface StreamNodeServerConfig {
     rpcCommunicator: ListeningRpcCommunicator
 }
 
-export class StreamNodeServer implements IDeliveryRpc {
+export class DeliveryRpcLocal implements IDeliveryRpc {
     
-    private readonly config: StreamNodeServerConfig
+    private readonly config: DeliveryRpcLocalConfig
 
-    constructor(config: StreamNodeServerConfig) {
+    constructor(config: DeliveryRpcLocalConfig) {
         this.config = config
     }
 

@@ -24,7 +24,7 @@ import { IHandshaker } from './neighbor-discovery/Handshaker'
 import { Propagation } from './propagation/Propagation'
 import { INeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { INeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
-import { StreamNodeServer } from './StreamNodeServer'
+import { DeliveryRpcLocal } from './DeliveryRpcLocal'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { IInspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
@@ -66,14 +66,14 @@ export class RandomGraphNode extends EventEmitter<Events> {
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
     private config: StrictRandomGraphNodeConfig
-    private readonly server: IDeliveryRpc
+    private readonly deliveryRpcLocal: IDeliveryRpc
     private abortController: AbortController = new AbortController()
 
     constructor(config: StrictRandomGraphNodeConfig) {
         super()
         this.config = config
         this.duplicateDetectors = new Map()
-        this.server = new StreamNodeServer({
+        this.deliveryRpcLocal = new DeliveryRpcLocal({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             streamPartId: this.config.streamPartId,
             rpcCommunicator: this.config.rpcCommunicator,
@@ -158,9 +158,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     private registerDefaultServerMethods(): void {
         this.config.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendStreamMessage',
-            (msg: StreamMessage, context) => this.server.sendStreamMessage(msg, context))
+            (msg: StreamMessage, context) => this.deliveryRpcLocal.sendStreamMessage(msg, context))
         this.config.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice',
-            (req: LeaveStreamPartNotice, context) => this.server.leaveStreamPartNotice(req, context))
+            (req: LeaveStreamPartNotice, context) => this.deliveryRpcLocal.leaveStreamPartNotice(req, context))
         this.config.rpcCommunicator.registerRpcMethod(TemporaryConnectionRequest, TemporaryConnectionResponse, 'openConnection',
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.openConnection(req, context))
     }
