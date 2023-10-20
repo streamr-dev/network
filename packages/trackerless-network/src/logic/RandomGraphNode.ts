@@ -14,9 +14,9 @@ import {
     MessageID,
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { NodeList } from './NodeList'
-import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { DeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
-import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { IDeliveryRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
 import { Logger, addManagedEventListener } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -66,7 +66,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
     private config: StrictRandomGraphNodeConfig
-    private readonly server: INetworkRpc
+    private readonly server: IDeliveryRpc
     private abortController: AbortController = new AbortController()
 
     constructor(config: StrictRandomGraphNodeConfig) {
@@ -190,7 +190,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.ownPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
         for (const descriptor of this.config.layer1.getKBucketPeers()) {
@@ -202,7 +202,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                     this.config.ownPeerDescriptor,
                     descriptor,
                     this.config.streamPartId,
-                    toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                    toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
                 )
             )
         }
@@ -217,7 +217,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.ownPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
         if (this.config.targetNeighbors.size() < this.config.numOfTargetNeighbors) {
@@ -235,7 +235,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.ownPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
     }

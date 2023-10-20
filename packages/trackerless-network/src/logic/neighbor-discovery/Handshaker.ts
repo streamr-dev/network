@@ -4,7 +4,7 @@ import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     HandshakeRpcClient,
-    IHandshakeRpcClient, NetworkRpcClient
+    IHandshakeRpcClient, DeliveryRpcClient
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
     InterleaveNotice,
@@ -170,7 +170,7 @@ export class Handshaker implements IHandshaker {
             this.config.ownPeerDescriptor,
             targetPeerDescriptor,
             this.config.streamPartId,
-            toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
         )
     }
 

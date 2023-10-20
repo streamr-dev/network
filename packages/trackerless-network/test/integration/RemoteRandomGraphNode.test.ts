@@ -6,7 +6,7 @@ import {
     NodeType
 } from '@streamr/dht'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
-import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { DeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
     LeaveStreamPartNotice,
     StreamMessage
@@ -72,7 +72,7 @@ describe('RemoteRandomGraphNode', () => {
             clientNode,
             serverNode,
             STREAM_PART_ID,
-            toProtoRpcClient(new NetworkRpcClient(clientRpc.getRpcClientTransport()))
+            toProtoRpcClient(new DeliveryRpcClient(clientRpc.getRpcClientTransport()))
         )
     })
 

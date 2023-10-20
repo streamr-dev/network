@@ -17,7 +17,7 @@ import {
     ProxyDirection,
     StreamMessage
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { NetworkRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { DeliveryRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
 import { NodeList } from '../NodeList'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
@@ -176,7 +176,7 @@ export class ProxyClient extends EventEmitter {
                 this.config.ownPeerDescriptor,
                 peerDescriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new DeliveryRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             this.targetNeighbors.add(remote)
             this.propagation.onNeighborJoined(nodeId)

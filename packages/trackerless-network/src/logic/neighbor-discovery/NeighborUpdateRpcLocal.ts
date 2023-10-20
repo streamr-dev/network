@@ -3,7 +3,7 @@ import { DhtCallContext, ListeningRpcCommunicator, PeerDescriptor } from '@strea
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { NodeList } from '../NodeList'
 import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
@@ -43,7 +43,7 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
                     this.config.ownPeerDescriptor,
                     peerDescriptor,
                     this.config.streamPartId,
-                    toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                    toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
                 ))
             )
             this.config.neighborFinder.start()
