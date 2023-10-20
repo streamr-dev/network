@@ -25,6 +25,7 @@ import { StreamNodeServer } from '../StreamNodeServer'
 import { Propagation } from '../propagation/Propagation'
 import { markAndCheckDuplicate } from '../utils'
 import { ProxyConnectionRpcRemote } from './ProxyConnectionRpcRemote'
+import { formStreamPartDeliveryServiceId } from '../formStreamPartDeliveryServiceId'
 
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
     // eslint-disable-next-line no-constant-condition
@@ -75,7 +76,7 @@ export class ProxyClient extends EventEmitter {
     constructor(config: ProxyClientConfig) {
         super()
         this.config = config
-        this.rpcCommunicator = new ListeningRpcCommunicator(`layer2-${config.streamPartId}`, config.P2PTransport)
+        this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(config.streamPartId), config.P2PTransport)
         this.targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor), 1000)
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
