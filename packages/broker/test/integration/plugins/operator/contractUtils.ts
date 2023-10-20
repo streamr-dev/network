@@ -7,7 +7,7 @@ import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from 
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
-import { BigNumber, Wallet } from 'ethers'
+import { Wallet } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { range } from 'lodash'
 import fetch from 'node-fetch'
@@ -127,7 +127,7 @@ export interface DeploySponsorshipContractOpts {
     deployer: Wallet
     metadata?: string
     minOperatorCount?: number
-    earningsPerSecond?: BigNumber
+    earningsPerSecond?: number
     chainConfig?: {
         contracts: {
             SponsorshipFactory: string
@@ -155,7 +155,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
             chainConfig.contracts.SponsorshipDefaultLeavePolicy,
             chainConfig.contracts.SponsorshipVoteKickPolicy,
         ], [
-            (opts.earningsPerSecond ?? parseEther('0.01')).toString(),
+            parseEther((opts.earningsPerSecond ?? 1).toString()).toString(),
             '0',
             '0',
         ]
