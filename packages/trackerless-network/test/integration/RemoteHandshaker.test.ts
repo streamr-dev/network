@@ -59,7 +59,7 @@ describe('RemoteHandshaker', () => {
         remoteHandshaker = new RemoteHandshaker(
             clientNode,
             serverNode,
-            'test-stream',
+            'test-stream-part',
             toProtoRpcClient(new HandshakeRpcClient(clientRpc.getRpcClientTransport()))
         )
     })

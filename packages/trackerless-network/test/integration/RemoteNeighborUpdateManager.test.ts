@@ -62,7 +62,7 @@ describe('RemoteNeighborUpdateManager', () => {
         neighborUpdateRpcClient = new RemoteNeighborUpdateManager(
             clientNode,
             serverNode,
-            'test-stream',
+            'test-stream-part',
             toProtoRpcClient(new NeighborUpdateRpcClient(clientRpc.getRpcClientTransport()))
         )
     })

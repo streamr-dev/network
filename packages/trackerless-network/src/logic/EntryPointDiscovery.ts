@@ -55,7 +55,7 @@ const logger = new Logger(module)
 const ENTRYPOINT_STORE_LIMIT = 8
 export const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 
-interface StreamPartEntryPointDiscoveryConfig {
+interface EntryPointDiscoveryConfig {
     streamPartId: StreamPartID
     ownPeerDescriptor: PeerDescriptor
     layer1: ILayer1
@@ -66,13 +66,13 @@ interface StreamPartEntryPointDiscoveryConfig {
     storeInterval?: number
 }
 
-export class StreamPartEntryPointDiscovery {
+export class EntryPointDiscovery {
     private readonly abortController: AbortController
-    private readonly config: StreamPartEntryPointDiscoveryConfig
+    private readonly config: EntryPointDiscoveryConfig
     private readonly storeInterval: number
     private readonly networkSplitAvoidedNodes: Set<NodeID> = new Set()
 
-    constructor(config: StreamPartEntryPointDiscoveryConfig) {
+    constructor(config: EntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
         this.storeInterval = this.config.storeInterval ?? 60000

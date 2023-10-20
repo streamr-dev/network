@@ -25,6 +25,7 @@ import { StreamNodeServer } from '../StreamNodeServer'
 import { Propagation } from '../propagation/Propagation'
 import { markAndCheckDuplicate } from '../utils'
 import { RemoteProxyServer } from './RemoteProxyServer'
+import { formStreamPartDeliveryServiceId } from '../formStreamPartDeliveryServiceId'
 
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
     // eslint-disable-next-line no-constant-condition
@@ -41,7 +42,7 @@ export const retry = async <T>(task: () => Promise<T>, description: string, abor
     }
 }
 
-interface ProxyStreamConnectionClientConfig {
+interface ProxyClientConfig {
     P2PTransport: ITransport
     ownPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
@@ -58,11 +59,13 @@ interface ProxyDefinition {
 
 const logger = new Logger(module)
 
-export class ProxyStreamConnectionClient extends EventEmitter {
+const SERVICE_ID = 'system/proxy-client'
+
+export class ProxyClient extends EventEmitter {
 
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly server: StreamNodeServer
-    private readonly config: ProxyStreamConnectionClientConfig
+    private readonly config: ProxyClientConfig
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector> = new Map()
     private definition?: ProxyDefinition
     private readonly connections: Map<NodeID, ProxyDirection> = new Map()
@@ -70,10 +73,10 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     private readonly targetNeighbors: NodeList
     private readonly abortController: AbortController
 
-    constructor(config: ProxyStreamConnectionClientConfig) {
+    constructor(config: ProxyClientConfig) {
         super()
         this.config = config
-        this.rpcCommunicator = new ListeningRpcCommunicator(`layer2-${config.streamPartId}`, config.P2PTransport)
+        this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(config.streamPartId), config.P2PTransport)
         this.targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor), 1000)
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
@@ -167,7 +170,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         const proxyNode = new RemoteProxyServer(this.config.ownPeerDescriptor, peerDescriptor, this.config.streamPartId, client)
         const accepted = await proxyNode.requestConnection(direction, userId)
         if (accepted) {
-            this.config.connectionLocker.lockConnection(peerDescriptor, 'proxy-stream-connection-client')
+            this.config.connectionLocker.lockConnection(peerDescriptor, SERVICE_ID)
             this.connections.set(nodeId, direction)
             const remote = new RemoteRandomGraphNode(
                 this.config.ownPeerDescriptor,
@@ -229,7 +232,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     private async onNodeDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         if (this.connections.has(nodeId)) {
-            this.config.connectionLocker.unlockConnection(peerDescriptor, 'proxy-stream-connection-client')
+            this.config.connectionLocker.unlockConnection(peerDescriptor, SERVICE_ID)
             this.removeConnection(nodeId)
             await retry(() => this.updateConnections(), 'updating proxy connections', this.abortController.signal)
         }
@@ -247,7 +250,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
 
     stop(): void {
         this.targetNeighbors.getAll().map((remote) => {
-            this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), 'proxy-stream-connection-client')
+            this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), SERVICE_ID)
             remote.leaveStreamPartNotice()
         })
         this.targetNeighbors.stop()
