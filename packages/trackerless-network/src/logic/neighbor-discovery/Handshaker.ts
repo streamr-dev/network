@@ -13,8 +13,8 @@ import {
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Logger } from '@streamr/utils'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { RemoteHandshaker } from './RemoteHandshaker'
-import { HandshakerServer } from './HandshakerServer'
+import { HandshakeRpcRemote } from './HandshakeRpcRemote'
+import { HandshakeRpcLocal } from './HandshakeRpcLocal'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
@@ -35,7 +35,7 @@ const PARALLEL_HANDSHAKE_COUNT = 2
 
 export interface IHandshaker {
     attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]>
-    getOngoingHandshakes(): Set<string>
+    getOngoingHandshakes(): Set<NodeID>
 }
 
 export class Handshaker implements IHandshaker {
@@ -43,25 +43,25 @@ export class Handshaker implements IHandshaker {
     private readonly ongoingHandshakes: Set<NodeID> = new Set()
     private config: HandshakerConfig
     private readonly client: ProtoRpcClient<IHandshakeRpcClient>
-    private readonly server: IHandshakeRpc
+    private readonly rpcLocal: IHandshakeRpc
 
     constructor(config: HandshakerConfig) {
         this.config = config
         this.client = toProtoRpcClient(new HandshakeRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
-        this.server = new HandshakerServer({
+        this.rpcLocal = new HandshakeRpcLocal({
             streamPartId: this.config.streamPartId,
             targetNeighbors: this.config.targetNeighbors,
             connectionLocker: this.config.connectionLocker,
             ongoingHandshakes: this.ongoingHandshakes,
             maxNeighborCount: this.config.maxNeighborCount,
             handshakeWithInterleaving: (target: PeerDescriptor, senderId: NodeID) => this.handshakeWithInterleaving(target, senderId),
-            createRemoteHandshaker: (target: PeerDescriptor) => this.createRemoteHandshaker(target),
+            createRpcRemote: (target: PeerDescriptor) => this.createRpcRemote(target),
             createRemoteNode: (target: PeerDescriptor) => this.createRemoteNode(target)
         })
         this.config.rpcCommunicator.registerRpcNotification(InterleaveNotice, 'interleaveNotice',
-            (req: InterleaveNotice, context) => this.server.interleaveNotice(req, context))
+            (req: InterleaveNotice, context) => this.rpcLocal.interleaveNotice(req, context))
         this.config.rpcCommunicator.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake',
-            (req: StreamPartHandshakeRequest, context) => this.server.handshake(req, context))
+            (req: StreamPartHandshakeRequest, context) => this.rpcLocal.handshake(req, context))
     }
 
     async attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]> {
@@ -82,7 +82,7 @@ export class Handshaker implements IHandshaker {
         return this.doParallelHandshakes(targetNeighbors, exclude)
     }
 
-    private selectParallelTargets(excludedIds: NodeID[]): RemoteHandshaker[] {
+    private selectParallelTargets(excludedIds: NodeID[]): HandshakeRpcRemote[] {
         const targetNeighbors = this.config.nearbyNodeView.getClosestAndFurthest(excludedIds)
         while (targetNeighbors.length < PARALLEL_HANDSHAKE_COUNT && this.config.randomNodeView.size(excludedIds) > 0) {
             const random = this.config.randomNodeView.getRandom(excludedIds)
@@ -90,12 +90,12 @@ export class Handshaker implements IHandshaker {
                 targetNeighbors.push(random)
             }
         }
-        return targetNeighbors.map((neighbor) => this.createRemoteHandshaker(neighbor.getPeerDescriptor()))
+        return targetNeighbors.map((neighbor) => this.createRpcRemote(neighbor.getPeerDescriptor()))
     }
 
-    private async doParallelHandshakes(targets: RemoteHandshaker[], excludedIds: NodeID[]): Promise<NodeID[]> {
+    private async doParallelHandshakes(targets: HandshakeRpcRemote[], excludedIds: NodeID[]): Promise<NodeID[]> {
         const results = await Promise.allSettled(
-            Array.from(targets.values()).map(async (target: RemoteHandshaker, i) => {
+            Array.from(targets.values()).map(async (target: HandshakeRpcRemote, i) => {
                 const otherNode = i === 0 ? targets[1] : targets[0]
                 const otherNodeId = otherNode ? getNodeIdFromPeerDescriptor(otherNode.getPeerDescriptor()) : undefined
                 return this.handshakeWithTarget(target, otherNodeId)
@@ -113,7 +113,7 @@ export class Handshaker implements IHandshaker {
         const exclude = excludedIds.concat(this.config.targetNeighbors.getIds())
         const targetNeighbor = this.config.nearbyNodeView.getClosest(exclude) ?? this.config.randomNodeView.getRandom(exclude)
         if (targetNeighbor) {
-            const accepted = await this.handshakeWithTarget(this.createRemoteHandshaker(targetNeighbor.getPeerDescriptor()))
+            const accepted = await this.handshakeWithTarget(this.createRpcRemote(targetNeighbor.getPeerDescriptor()))
             if (!accepted) {
                 excludedIds.push(getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor()))
             }
@@ -121,7 +121,7 @@ export class Handshaker implements IHandshaker {
         return excludedIds
     }
 
-    private async handshakeWithTarget(targetNeighbor: RemoteHandshaker, concurrentNodeId?: NodeID): Promise<boolean> {
+    private async handshakeWithTarget(targetNeighbor: HandshakeRpcRemote, concurrentNodeId?: NodeID): Promise<boolean> {
         const targetNodeId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
         this.ongoingHandshakes.add(targetNodeId)
         const result = await targetNeighbor.handshake(
@@ -140,7 +140,7 @@ export class Handshaker implements IHandshaker {
     }
 
     private async handshakeWithInterleaving(target: PeerDescriptor, interleaveSourceId: NodeID): Promise<boolean> {
-        const targetNeighbor = new RemoteHandshaker(
+        const targetNeighbor = new HandshakeRpcRemote(
             this.config.ownPeerDescriptor,
             target,
             this.config.streamPartId,
@@ -161,8 +161,8 @@ export class Handshaker implements IHandshaker {
         return result.accepted
     }
 
-    private createRemoteHandshaker(targetPeerDescriptor: PeerDescriptor): RemoteHandshaker {
-        return new RemoteHandshaker(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
+    private createRpcRemote(targetPeerDescriptor: PeerDescriptor): HandshakeRpcRemote {
+        return new HandshakeRpcRemote(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
     }
 
     private createRemoteNode(targetPeerDescriptor: PeerDescriptor): RemoteRandomGraphNode {
@@ -174,7 +174,7 @@ export class Handshaker implements IHandshaker {
         )
     }
 
-    getOngoingHandshakes(): Set<string> {
+    getOngoingHandshakes(): Set<NodeID> {
         return this.ongoingHandshakes
     }
 

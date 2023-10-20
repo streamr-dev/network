@@ -5,8 +5,8 @@ import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-networ
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { INeighborFinder } from './NeighborFinder'
 import { NodeList } from '../NodeList'
-import { RemoteNeighborUpdateManager } from './RemoteNeighborUpdateManager'
-import { NeighborUpdateManagerServer } from './NeighborUpdateManagerServer'
+import { NeighborUpdateRpcRemote } from './NeighborUpdateRpcRemote'
+import { NeighborUpdateRpcLocal } from './NeighborUpdateRpcLocal'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
@@ -28,17 +28,19 @@ export interface INeighborUpdateManager {
 }
 
 export class NeighborUpdateManager implements INeighborUpdateManager {
+
     private readonly abortController: AbortController
     private readonly config: NeighborUpdateManagerConfig
     private readonly client: ProtoRpcClient<NeighborUpdateRpcClient>
-    private readonly server: NeighborUpdateManagerServer
+    private readonly rpcLocal: NeighborUpdateRpcLocal
+
     constructor(config: NeighborUpdateManagerConfig) {
         this.abortController = new AbortController()
         this.client = toProtoRpcClient(new NeighborUpdateRpcClient(config.rpcCommunicator.getRpcClientTransport()))
-        this.server = new NeighborUpdateManagerServer(config)
+        this.rpcLocal = new NeighborUpdateRpcLocal(config)
         this.config = config
         this.config.rpcCommunicator.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate',
-            (req: NeighborUpdate, context) => this.server.neighborUpdate(req, context))
+            (req: NeighborUpdate, context) => this.rpcLocal.neighborUpdate(req, context))
     }
 
     async start(): Promise<void> {
@@ -61,7 +63,7 @@ export class NeighborUpdateManager implements INeighborUpdateManager {
         }))
     }
 
-    private createRemote(targetPeerDescriptor: PeerDescriptor): RemoteNeighborUpdateManager {
-        return new RemoteNeighborUpdateManager(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
+    private createRemote(targetPeerDescriptor: PeerDescriptor): NeighborUpdateRpcRemote {
+        return new NeighborUpdateRpcRemote(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
     }
 }

@@ -14,12 +14,12 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     HandshakeRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
+import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 
-describe('RemoteHandshaker', () => {
+describe('HandshakeRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
     let clientRpc: ListeningRpcCommunicator
-    let remoteHandshaker: RemoteHandshaker
+    let rpcRemote: HandshakeRpcRemote
 
     const clientNode: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
@@ -56,10 +56,10 @@ describe('RemoteHandshaker', () => {
             }
         )
 
-        remoteHandshaker = new RemoteHandshaker(
+        rpcRemote = new HandshakeRpcRemote(
             clientNode,
             serverNode,
-            'test-stream',
+            'test-stream-part',
             toProtoRpcClient(new HandshakeRpcClient(clientRpc.getRpcClientTransport()))
         )
     })
@@ -74,7 +74,7 @@ describe('RemoteHandshaker', () => {
     })
 
     it('handshake', async () => {
-        const result = await remoteHandshaker.handshake([])
+        const result = await rpcRemote.handshake([])
         expect(result.accepted).toEqual(true)
     })
 })

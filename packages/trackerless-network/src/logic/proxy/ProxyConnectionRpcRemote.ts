@@ -5,7 +5,7 @@ import { IProxyConnectionRpcClient } from '../../proto/packages/trackerless-netw
 
 const logger = new Logger(module)
 
-export class RemoteProxyServer extends Remote<IProxyConnectionRpcClient> {
+export class ProxyConnectionRpcRemote extends Remote<IProxyConnectionRpcClient> {
 
     async requestConnection(direction: ProxyDirection, userId: EthereumAddress): Promise<boolean> {
         const request: ProxyConnectionRequest = {

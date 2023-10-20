@@ -19,6 +19,8 @@ import { createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 
+const STREAM_PART_ID = StreamPartIDUtils.parse('test-stream#0')
+
 describe('RemoteRandomGraphNode', () => {
     let mockServerRpc: ListeningRpcCommunicator
     let clientRpc: ListeningRpcCommunicator
@@ -69,7 +71,7 @@ describe('RemoteRandomGraphNode', () => {
         remoteRandomGraphNode = new RemoteRandomGraphNode(
             clientNode,
             serverNode,
-            'test-stream',
+            STREAM_PART_ID,
             toProtoRpcClient(new NetworkRpcClient(clientRpc.getRpcClientTransport()))
         )
     })
@@ -85,7 +87,7 @@ describe('RemoteRandomGraphNode', () => {
     it('sendStreamMessage', async () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
-            StreamPartIDUtils.parse('test-stream#0'),
+            STREAM_PART_ID,
             randomEthereumAddress()
         )
 
