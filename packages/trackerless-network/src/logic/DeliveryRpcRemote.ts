@@ -8,7 +8,7 @@ import { IDeliveryRpcClient } from '../proto/packages/trackerless-network/protos
 
 const logger = new Logger(module)
 
-export class RemoteRandomGraphNode extends Remote<IDeliveryRpcClient> {
+export class DeliveryRpcRemote extends Remote<IDeliveryRpcClient> {
 
     async sendStreamMessage(msg: StreamMessage): Promise<void> {
         const options = this.formDhtRpcOptions({

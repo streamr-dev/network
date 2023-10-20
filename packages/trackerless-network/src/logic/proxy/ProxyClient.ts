@@ -20,7 +20,7 @@ import {
 import { DeliveryRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
 import { NodeList } from '../NodeList'
-import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
+import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
 import { StreamNodeServer } from '../StreamNodeServer'
 import { Propagation } from '../propagation/Propagation'
 import { markAndCheckDuplicate } from '../utils'
@@ -172,7 +172,7 @@ export class ProxyClient extends EventEmitter {
         if (accepted) {
             this.config.connectionLocker.lockConnection(peerDescriptor, SERVICE_ID)
             this.connections.set(nodeId, direction)
-            const remote = new RemoteRandomGraphNode(
+            const remote = new DeliveryRpcRemote(
                 this.config.ownPeerDescriptor,
                 peerDescriptor,
                 this.config.streamPartId,

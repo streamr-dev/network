@@ -6,7 +6,7 @@ import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/
 import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { NodeList } from '../NodeList'
-import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
+import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
 import { INeighborFinder } from './NeighborFinder'
 import { StreamPartID } from '@streamr/protocol'
 
@@ -39,7 +39,7 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
                     return nodeId !== ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
                 })
             newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
-                new RemoteRandomGraphNode(
+                new DeliveryRpcRemote(
                     this.config.ownPeerDescriptor,
                     peerDescriptor,
                     this.config.streamPartId,

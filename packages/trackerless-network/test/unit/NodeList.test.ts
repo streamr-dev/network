@@ -1,5 +1,5 @@
 import { NodeList } from '../../src/logic/NodeList'
-import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
+import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
 import {
     PeerDescriptor,
     ListeningRpcCommunicator,
@@ -38,7 +38,7 @@ describe('NodeList', () => {
         const mockClient = mockCommunicator.getRpcClientTransport()
         
         mockTransports.push(mockTransport)
-        return new RemoteRandomGraphNode(
+        return new DeliveryRpcRemote(
             createMockPeerDescriptor(),
             peerDescriptor,
             streamPartId,

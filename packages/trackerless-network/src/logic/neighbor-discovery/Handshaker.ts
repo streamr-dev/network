@@ -1,6 +1,6 @@
 import { ConnectionLocker, PeerDescriptor } from '@streamr/dht'
 import { NodeList } from '../NodeList'
-import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
+import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     HandshakeRpcClient,
@@ -56,7 +56,7 @@ export class Handshaker implements IHandshaker {
             maxNeighborCount: this.config.maxNeighborCount,
             handshakeWithInterleaving: (target: PeerDescriptor, senderId: NodeID) => this.handshakeWithInterleaving(target, senderId),
             createRpcRemote: (target: PeerDescriptor) => this.createRpcRemote(target),
-            createRemoteNode: (target: PeerDescriptor) => this.createRemoteNode(target)
+            createDeliveryRpcRemote: (target: PeerDescriptor) => this.createDeliveryRpcRemote(target)
         })
         this.config.rpcCommunicator.registerRpcNotification(InterleaveNotice, 'interleaveNotice',
             (req: InterleaveNotice, context) => this.rpcLocal.interleaveNotice(req, context))
@@ -129,7 +129,7 @@ export class Handshaker implements IHandshaker {
             concurrentNodeId
         )
         if (result.accepted) {
-            this.config.targetNeighbors.add(this.createRemoteNode(targetNeighbor.getPeerDescriptor()))
+            this.config.targetNeighbors.add(this.createDeliveryRpcRemote(targetNeighbor.getPeerDescriptor()))
             this.config.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.config.streamPartId)
         }
         if (result.interleaveTargetDescriptor) {
@@ -154,7 +154,7 @@ export class Handshaker implements IHandshaker {
             interleaveSourceId
         )
         if (result.accepted) {
-            this.config.targetNeighbors.add(this.createRemoteNode(targetNeighbor.getPeerDescriptor()))
+            this.config.targetNeighbors.add(this.createDeliveryRpcRemote(targetNeighbor.getPeerDescriptor()))
             this.config.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.config.streamPartId)
         }
         this.ongoingHandshakes.delete(targetNodeId)
@@ -165,8 +165,8 @@ export class Handshaker implements IHandshaker {
         return new HandshakeRpcRemote(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
     }
 
-    private createRemoteNode(targetPeerDescriptor: PeerDescriptor): RemoteRandomGraphNode {
-        return new RemoteRandomGraphNode(
+    private createDeliveryRpcRemote(targetPeerDescriptor: PeerDescriptor): DeliveryRpcRemote {
+        return new DeliveryRpcRemote(
             this.config.ownPeerDescriptor,
             targetPeerDescriptor,
             this.config.streamPartId,

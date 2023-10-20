@@ -8,7 +8,7 @@ import {
     StreamMessage,
     StreamMessageType
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
+import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
@@ -84,8 +84,8 @@ export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'k
     }
 }
 
-export const createMockRemoteNode = (remotePeerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
-    return new RemoteRandomGraphNode(createMockPeerDescriptor(), remotePeerDescriptor || createMockPeerDescriptor(), 'mock', {} as any)
+export const createMockDeliveryRpcRemote = (remotePeerDescriptor?: PeerDescriptor): DeliveryRpcRemote => {
+    return new DeliveryRpcRemote(createMockPeerDescriptor(), remotePeerDescriptor || createMockPeerDescriptor(), 'mock', {} as any)
 }
 
 export const createMockHandshakeRpcRemote = (): HandshakeRpcRemote => {

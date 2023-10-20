@@ -15,7 +15,7 @@ import {
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { NodeList } from './NodeList'
 import { DeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
+import { DeliveryRpcRemote } from './DeliveryRpcRemote'
 import { IDeliveryRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
 import { Logger, addManagedEventListener } from '@streamr/utils'
@@ -186,7 +186,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     private updateNearbyNodeView(nodes: PeerDescriptor[]) {
         this.config.nearbyNodeView.replaceAll(Array.from(nodes).map((descriptor) =>
-            new RemoteRandomGraphNode(
+            new DeliveryRpcRemote(
                 this.config.ownPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
@@ -198,7 +198,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 break
             }
             this.config.nearbyNodeView.add(
-                new RemoteRandomGraphNode(
+                new DeliveryRpcRemote(
                     this.config.ownPeerDescriptor,
                     descriptor,
                     this.config.streamPartId,
@@ -213,7 +213,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             return
         }
         this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
-            new RemoteRandomGraphNode(
+            new DeliveryRpcRemote(
                 this.config.ownPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
@@ -231,7 +231,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             return
         }
         this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
-            new RemoteRandomGraphNode(
+            new DeliveryRpcRemote(
                 this.config.ownPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
