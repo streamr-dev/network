@@ -1,11 +1,11 @@
-FROM node:18-bullseye as build
+FROM node:21-bullseye as build
 WORKDIR /usr/src/network
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
 	npm run bootstrap-pkg --package=@streamr/network-tracker && \
 	npm run prune-pkg -- @streamr/network-tracker
 
-FROM node:18-bullseye-slim
+FROM node:21-bullseye-slim
 ARG NODE_ENV
 ENV NODE_ENV=${NODE_ENV:-production}
 RUN apt-get update && apt-get --assume-yes --no-install-recommends install \
