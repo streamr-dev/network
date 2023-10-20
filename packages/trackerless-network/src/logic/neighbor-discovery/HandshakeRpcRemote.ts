@@ -12,7 +12,7 @@ interface HandshakeResponse {
     interleaveTargetDescriptor?: PeerDescriptor
 }
 
-export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
+export class HandshakeRpcRemote extends Remote<IHandshakeRpcClient> {
 
     async handshake(
         neighborIds: NodeID[],
