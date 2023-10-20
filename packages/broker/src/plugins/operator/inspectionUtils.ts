@@ -1,6 +1,6 @@
 import { shuffle } from 'lodash'
 import { NetworkPeerDescriptor, StreamrClient } from 'streamr-client'
-import { OperatorFleetState } from './OperatorFleetState'
+import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { ConsistentHashRing } from './ConsistentHashRing'
@@ -85,8 +85,8 @@ export async function findTarget(
 
 export async function findNodesForTarget(
     target: Target,
-    streamrClient: StreamrClient,
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
+    createOperatorFleetState: CreateOperatorFleetStateFn,
     timeout: number,
     abortSignal: AbortSignal
 ): Promise<NetworkPeerDescriptor[]> {
@@ -94,10 +94,7 @@ export async function findNodesForTarget(
         targetOperator: target.operatorAddress,
         timeout
     })
-    const targetOperatorFleetState = new OperatorFleetState(
-        streamrClient,
-        formCoordinationStreamId(target.operatorAddress)
-    )
+    const targetOperatorFleetState = createOperatorFleetState(formCoordinationStreamId(target.operatorAddress))
     try {
         await targetOperatorFleetState.start()
         await Promise.race([

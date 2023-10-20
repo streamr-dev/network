@@ -4,6 +4,7 @@ import { StreamrClient } from 'streamr-client'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { findNodesForTarget, findTarget, inspectTarget } from './inspectionUtils'
 import { ContractFacade } from './ContractFacade'
+import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 
 const logger = new Logger(module)
 
@@ -18,6 +19,7 @@ export async function inspectRandomNode(
     streamrClient: StreamrClient,
     heartbeatTimeoutInMs: number,
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
+    createOperatorFleetState: CreateOperatorFleetStateFn,
     abortSignal: AbortSignal,
     findTargetFn = findTarget,
     findNodesForTargetFn = findNodesForTarget,
@@ -32,8 +34,8 @@ export async function inspectRandomNode(
 
     const onlineNodeDescriptors = await findNodesForTargetFn(
         target,
-        streamrClient,
         getRedundancyFactor,
+        createOperatorFleetState,
         heartbeatTimeoutInMs,
         abortSignal
     )
