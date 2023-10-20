@@ -27,7 +27,7 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
         this.config = config
     }
 
-    // INetworkRpc server method
+    // INeighborUpdateRpc server method
     async neighborUpdate(message: NeighborUpdate, context: ServerCallContext): Promise<NeighborUpdate> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
