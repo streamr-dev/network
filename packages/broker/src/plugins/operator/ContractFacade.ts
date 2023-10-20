@@ -222,11 +222,14 @@ export class ContractFacade {
      * SUBJECT TO the constraints, set in the OperatorServiceConfig:
      *  - only take at most maxSponsorshipsInWithdraw addresses (those with most earnings), or all if undefined
      *  - only take sponsorships that have more than minSponsorshipEarningsInWithdraw, or all if undefined
-     * @param operatorContractAddress
      */
-    async getEarningsOf(operatorContractAddress: EthereumAddress): Promise<EarningsData> {
+    async getEarningsOf(
+        operatorContractAddress: EthereumAddress,
+        minSponsorshipEarningsInWithdraw: number,
+        maxSponsorshipsInWithdraw: number
+    ): Promise<EarningsData> {
         const operator = new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
-        const minSponsorshipEarningsInWithdrawWei = BigInt(this.config.minSponsorshipEarningsInWithdraw ?? 0)
+        const minSponsorshipEarningsInWithdrawWei = BigInt(minSponsorshipEarningsInWithdraw ?? 0)
         const {
             addresses: allSponsorshipAddresses,
             earnings,
@@ -237,7 +240,7 @@ export class ContractFacade {
             .map((address, i) => ({ address, earnings: earnings[i].toBigInt() }))
             .filter((sponsorship) => sponsorship.earnings >= minSponsorshipEarningsInWithdrawWei)
             .sort((a, b) => Number(b.earnings - a.earnings)) // TODO: after Node 20, use .toSorted() instead
-            .slice(0, this.config.maxSponsorshipsInWithdraw) // take all if maxSponsorshipsInWithdraw is undefined
+            .slice(0, maxSponsorshipsInWithdraw) // take all if maxSponsorshipsInWithdraw is undefined
 
         return {
             sponsorshipAddresses: sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address)),
@@ -246,8 +249,15 @@ export class ContractFacade {
         }
     }
 
-    async getMyEarnings(): Promise<EarningsData> {
-        return this.getEarningsOf(this.getOperatorContractAddress())
+    async getMyEarnings(
+        minSponsorshipEarningsInWithdraw: number,
+        maxSponsorshipsInWithdraw: number
+    ): Promise<EarningsData> {
+        return this.getEarningsOf(
+            this.getOperatorContractAddress(),
+            minSponsorshipEarningsInWithdraw,
+            maxSponsorshipsInWithdraw
+        )
     }
 
     async withdrawMyEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {

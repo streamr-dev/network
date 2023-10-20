@@ -10,7 +10,7 @@ import {
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
-import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
+import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
@@ -88,8 +88,8 @@ export const createMockRemoteNode = (remotePeerDescriptor?: PeerDescriptor): Rem
     return new RemoteRandomGraphNode(createMockPeerDescriptor(), remotePeerDescriptor || createMockPeerDescriptor(), 'mock', {} as any)
 }
 
-export const createMockRemoteHandshaker = (): RemoteHandshaker => {
-    return new RemoteHandshaker(
+export const createMockHandshakeRpcRemote = (): HandshakeRpcRemote => {
+    return new HandshakeRpcRemote(
         createMockPeerDescriptor(),
         createMockPeerDescriptor(), 
         'mock',

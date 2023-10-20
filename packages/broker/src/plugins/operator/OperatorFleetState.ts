@@ -10,14 +10,6 @@ import { HeartbeatMessage, HeartbeatMessageSchema } from './heartbeatUtils'
 
 const logger = new Logger(module)
 
-export const DEFAULT_UPDATE_INTERVAL_IN_MS = 1000 * 10
-
-const DEFAULT_PRUNE_AGE_IN_MS = 5 * 60 * 1000
-
-const DEFAULT_PRUNE_INTERVAL_IN_MS = 30 * 1000
-
-const DEFAULT_LATENCY_EXTRA_MS = 2000
-
 export interface OperatorFleetStateEvents {
     added: (nodeId: NodeID) => void
     removed: (nodeId: NodeID) => void
@@ -27,6 +19,8 @@ interface Heartbeat {
     timestamp: number
     peerDescriptor: NetworkPeerDescriptor
 }
+
+export type CreateOperatorFleetStateFn = (coordinationStreamId: StreamID) => OperatorFleetState
 
 export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly streamrClient: StreamrClient
@@ -41,14 +35,33 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly ready = new Gate(false)
     private subscription?: Subscription
 
-    constructor(
+    static createOperatorFleetStateBuilder(
+        streamrClient: StreamrClient,
+        heartbeatIntervalInMs: number,
+        pruneAgeInMs: number,
+        pruneIntervalInMs: number,
+        latencyExtraInMs: number,
+        timeProvider = Date.now
+    ): CreateOperatorFleetStateFn {
+        return (coordinationStreamId) => new OperatorFleetState(
+            streamrClient,
+            coordinationStreamId,
+            heartbeatIntervalInMs,
+            pruneAgeInMs,
+            pruneIntervalInMs,
+            latencyExtraInMs,
+            timeProvider
+        )
+    }
+
+    private constructor(
         streamrClient: StreamrClient,
         coordinationStreamId: StreamID,
-        timeProvider = Date.now,
-        pruneAgeInMs = DEFAULT_PRUNE_AGE_IN_MS,
-        pruneIntervalInMs = DEFAULT_PRUNE_INTERVAL_IN_MS,
-        heartbeatIntervalInMs = DEFAULT_UPDATE_INTERVAL_IN_MS,
-        latencyExtraInMs = DEFAULT_LATENCY_EXTRA_MS
+        heartbeatIntervalInMs: number,
+        pruneAgeInMs: number,
+        pruneIntervalInMs: number,
+        latencyExtraInMs: number,
+        timeProvider = Date.now
     ) {
         super()
         this.streamrClient = streamrClient
