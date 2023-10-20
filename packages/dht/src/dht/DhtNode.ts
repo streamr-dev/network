@@ -216,7 +216,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 webrtcPortRange: this.config.webrtcPortRange,
                 tlsCertificate: this.config.tlsCertificate,
-                externalIp: this.config.externalIp
+                externalIp: this.config.externalIp,
+                createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
@@ -238,7 +239,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 ) => {
                     return new DefaultConnectorFacade(connectorFacadeConfig, incomingConnectionCallback, canConnect)
                 },
-                createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
                 maxConnections: this.config.maxConnections,
                 metricsContext: this.config.metricsContext
             })

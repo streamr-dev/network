@@ -42,15 +42,11 @@ import { ConnectorFacade } from './ConnectorFacade'
 export interface ConnectionManagerConfig {
     maxConnections?: number
     metricsContext: MetricsContext
-
-    createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => PeerDescriptor
     createConnectorFacade: (
         incomingConnectionCallback: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean
     ) => ConnectorFacade
-
-    // the following fields are used in simulation only
-    simulator?: Simulator
+    // the following field is used in simulation only (TODO remove)
     serviceIdPrefix?: string
 }
 
@@ -236,10 +232,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.duplicateMessageDetector.clear()
         this.locks.clear()
         this.removeAllListeners()
-        if (!this.config.simulator) {
-
-            WEB_RTC_CLEANUP.cleanUp()
-        }
     }
 
     public getNumberOfLocalLockedConnections(): number {
