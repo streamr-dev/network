@@ -11,6 +11,7 @@ import { ProxyServer } from './proxy/ProxyServer'
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { formStreamPartDeliveryServiceId } from './formStreamPartDeliveryServiceId'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     'nearbyNodeView' | 'randomNodeView' | 'targetNeighbors' | 'propagation'
@@ -25,7 +26,10 @@ type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
 
 const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
     const ownNodeId = getNodeIdFromPeerDescriptor(config.ownPeerDescriptor)
-    const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(`layer2-${config.streamPartId}`, config.P2PTransport)
+    const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(
+        formStreamPartDeliveryServiceId(config.streamPartId),
+        config.P2PTransport
+    )
     const numOfTargetNeighbors = config.numOfTargetNeighbors ?? 4
     const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
     const minPropagationTargets = config.minPropagationTargets ?? 2
