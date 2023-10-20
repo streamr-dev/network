@@ -70,11 +70,11 @@ describe(MaintainTopologyHelper, () => {
             await runWhileWaiting(async () => {
                 sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
                 sponsorship2 = await deploySponsorshipContract({ streamId: streamId2, deployer: operatorWallet })
-                await delegate(operatorWallet, operatorContract.address, 200)
+                await delegate(operatorWallet, operatorContract.address, 20000)
             }, WAIT_FOR_EVENT_HANDLERS_TO_REGISTER_IN_MS)
 
-            await stake(operatorContract, sponsorship1.address, 100)
-            await stake(operatorContract, sponsorship2.address, 100)
+            await stake(operatorContract, sponsorship1.address, 10000)
+            await stake(operatorContract, sponsorship2.address, 10000)
 
             await waitForCondition(() => events.length >= 2, WAIT_FOR_EVENTS_IN_MS)
             expect(events.length).toEqual(2)
@@ -137,14 +137,14 @@ describe(MaintainTopologyHelper, () => {
             await runWhileWaiting(async () => {
                 sponsorship1 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
                 sponsorship2 = await deploySponsorshipContract({ streamId: streamId1, deployer: operatorWallet })
-                await delegate(operatorWallet, operatorContract.address, 200)
+                await delegate(operatorWallet, operatorContract.address, 20000)
             }, WAIT_FOR_EVENT_HANDLERS_TO_REGISTER_IN_MS)
 
-            await stake(operatorContract, sponsorship1.address, 100)
+            await stake(operatorContract, sponsorship1.address, 10000)
             await waitForCondition(() => events.length >= 1, WAIT_FOR_EVENTS_IN_MS)
             expect(events.length).toEqual(1)
 
-            await stake(operatorContract, sponsorship2.address, 100)
+            await stake(operatorContract, sponsorship2.address, 10000)
             await wait(NO_EVENTS_FIRED_WAIT_IN_MS)
             expect(events.length).toEqual(1)
         }, TIMEOUT)

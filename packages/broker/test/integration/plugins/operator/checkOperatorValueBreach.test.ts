@@ -1,5 +1,4 @@
 import { Contract } from '@ethersproject/contracts'
-import { parseEther } from '@ethersproject/units'
 import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
@@ -47,13 +46,13 @@ describe('checkOperatorValueBreach', () => {
         const { operatorServiceConfig: watcherConfig, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         const sponsorer = await generateWalletWithGasAndTokens()
-        await delegate(operatorWallet, operatorContract.address, 200)
-        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, sponsorship1.address, 250)
-        await stake(operatorContract, sponsorship1.address, 100)
-        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: parseEther('2'), streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, sponsorship2.address, 250)
-        await stake(operatorContract, sponsorship2.address, 100)
+        await delegate(operatorWallet, operatorContract.address, 20000)
+        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: 100, streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, sponsorship1.address, 25000)
+        await stake(operatorContract, sponsorship1.address, 10000)
+        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: 200, streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, sponsorship2.address, 25000)
+        await stake(operatorContract, sponsorship2.address, 10000)
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
