@@ -43,7 +43,9 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
             requestId: v4()
         }
         try {
-            const peers = await this.getClient().getClosestPeers(request, this.formDhtRpcOptions())
+            const peers = await this.getClient().getClosestPeers(request, this.formDhtRpcOptions({
+                timeout: 10000
+            }))
             return peers.peers
         } catch (err) {
             logger.trace(`getClosestPeers error ${this.getServiceId()}`, { err })
