@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+import { getTestInterface } from '@streamr/test-utils'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -102,7 +103,7 @@ describe('Kademlia correctness', () => {
             }
 
             if (i > 0) {
-                sumKbucketSize += nodes[i].getBucketSize()
+                sumKbucketSize += getTestInterface(nodes[i]).getBucketSize()
                 sumCorrectNeighbors += correctNeighbors
             }
         }

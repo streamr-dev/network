@@ -9,6 +9,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger, wait } from '@streamr/utils'
 import { debugVars } from '../../src/helpers/debugHelpers'
+import { getTestInterface } from '@streamr/test-utils'
 
 const logger = new Logger(module)
 
@@ -71,7 +72,7 @@ describe('Recursive find correctness', () => {
         logger.info('waiting over')
 
         nodes.forEach((node) => logger.info(keyFromPeerDescriptor(node.getPeerDescriptor()) + ': connections:' +
-            node.getNumberOfConnections() + ', kbucket: ' + node.getBucketSize()
+            node.getNumberOfConnections() + ', kbucket: ' + getTestInterface(node).getBucketSize()
             + ', localLocked: ' + node.getNumberOfLocalLockedConnections()
             + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()
             + ', weakLocked: ' + node.getNumberOfWeakLockedConnections()))
