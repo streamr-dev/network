@@ -10,18 +10,18 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
-interface TemporaryConnectionRpcServerConfig {
+interface TemporaryConnectionRpcLocalConfig {
     streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
     ownPeerDescriptor: PeerDescriptor
 } 
 
-export class TemporaryConnectionRpcServer implements ITemporaryConnectionRpc {
+export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
 
-    private readonly config: TemporaryConnectionRpcServerConfig
+    private readonly config: TemporaryConnectionRpcLocalConfig
     private readonly temporaryNodes: NodeList
 
-    constructor(config: TemporaryConnectionRpcServerConfig) {
+    constructor(config: TemporaryConnectionRpcLocalConfig) {
         this.config = config
         this.temporaryNodes = new NodeList(getNodeIdFromPeerDescriptor(config.ownPeerDescriptor), 10)
     }

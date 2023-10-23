@@ -13,6 +13,10 @@ import { expect } from 'expect'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { createMockPeerDescriptor, createRandomNodeId } from '../utils/utils'
 import { binaryToHex } from '@streamr/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { formStreamPartDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
+
+const streamPartId = StreamPartIDUtils.parse('stream#0')
 
 describe('NodeList', () => {
 
@@ -24,18 +28,17 @@ describe('NodeList', () => {
         new Uint8Array([1, 1, 5])
     ]
     const ownId = createRandomNodeId()
-    const graphId = 'test'
     let nodeList: NodeList
     let simulator: Simulator
     let mockTransports: SimulatorTransport[]
 
     const createRemoteGraphNode = (peerDescriptor: PeerDescriptor) => {
         const mockTransport = new SimulatorTransport(peerDescriptor, simulator)
-        const mockCommunicator = new ListeningRpcCommunicator(`layer2-${ graphId }`, mockTransport)
+        const mockCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(streamPartId), mockTransport)
         const mockClient = mockCommunicator.getRpcClientTransport()
         
         mockTransports.push(mockTransport)
-        return new RemoteRandomGraphNode(createMockPeerDescriptor(), peerDescriptor, graphId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
+        return new RemoteRandomGraphNode(createMockPeerDescriptor(), peerDescriptor, streamPartId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
     }
 
     beforeEach(() => {

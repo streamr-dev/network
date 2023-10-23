@@ -3,6 +3,7 @@ import { findNodesForTarget, inspectTarget } from './inspectionUtils'
 import { toStreamPartID } from '@streamr/protocol'
 import { StreamrClient } from 'streamr-client'
 import { fetchRedundancyFactor as _fetchRedundancyFactor } from './fetchRedundancyFactor'
+import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { ContractFacade } from './ContractFacade'
 
 const logger = new Logger(module)
@@ -15,6 +16,7 @@ export async function inspectSuspectNode(
     streamrClient: StreamrClient,
     abortSignal: AbortSignal,
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
+    createOperatorFleetState: CreateOperatorFleetStateFn,
     heartbeatTimeoutInMs = 60 * 1000,
 ): Promise<void> {
     logger.info('Received inspection request', { targetOperator, sponsorship, partition })
@@ -26,8 +28,8 @@ export async function inspectSuspectNode(
     }
     const onlineNodeDescriptors = await findNodesForTarget(
         target,
-        streamrClient,
         getRedundancyFactor,
+        createOperatorFleetState,
         heartbeatTimeoutInMs,
         abortSignal
     )
