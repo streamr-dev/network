@@ -117,7 +117,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         }
     }
 
-public async checkConnectivity(): Promise<ConnectivityResponse> {
+    public async checkConnectivity(): Promise<ConnectivityResponse> {
         // TODO: this could throw if the server is not running
         const noServerConnectivityResponse: ConnectivityResponse = {
             openInternet: false,
@@ -150,7 +150,9 @@ public async checkConnectivity(): Promise<ConnectivityResponse> {
                 }
             } catch (err) {
                 if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
-                    logger.error(`Failed to connect to entrypoint with id ${binaryToHex(entryPoint.kademliaId)} and URL ${connectivityMethodToWebSocketUrl(entryPoint.websocket!)}`, { error: err })
+                    const error = `Failed to connect to entrypoint with id ${binaryToHex(entryPoint.kademliaId)} ` 
+                        + `and URL ${connectivityMethodToWebSocketUrl(entryPoint.websocket!)}`
+                    logger.error(error, { error: err })
                     await wait(2000)
                 }
             }
