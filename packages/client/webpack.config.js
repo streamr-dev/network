@@ -145,7 +145,17 @@ module.exports = (env, argv) => {
                     openAnalyzer: false,
                     generateStatsFile: true,
                 })
-            ] : [])
+            ] : []),
+            new webpack.ProvidePlugin({
+                process: "process/browser",
+                Buffer: ["buffer", "Buffer"],
+            }),
+            new webpack.NormalModuleReplacementPlugin(/node:/, (resource) => {
+                const library = resource.request.replace(/^node:/, '');
+                if (library === "buffer") {
+                        resource.request = 'buffer'
+                }
+            })
         ]
     })
 
