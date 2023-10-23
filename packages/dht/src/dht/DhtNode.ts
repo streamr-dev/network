@@ -636,7 +636,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
-        if (this.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
+        if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
         }
         return this.dataStore!.storeDataToDht(key, data)
@@ -652,8 +652,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return await target.storeData(key, data)
     }
 
-    public async getDataFromDht(idToFind: Uint8Array): Promise<RecursiveFindResult> {
-        return this.recursiveFinder!.startRecursiveFind(idToFind, FindMode.DATA)
+    public async getDataFromDht(idToFind: Uint8Array): Promise<DataEntry[]> {
+        if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
+            return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
+        }
+        const result = await this.recursiveFinder!.startRecursiveFind(idToFind, FindMode.DATA)
+        return result.dataEntries ?? []
     }
 
     public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
@@ -718,10 +722,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public async waitForNetworkConnectivity(): Promise<void> {
         await waitForCondition(() => this.connections.size > 0, this.config.networkConnectivityTimeout)
-    }
-
-    public isJoinOngoing(): boolean {
-        return this.peerDiscovery!.isJoinOngoing()
     }
 
     public hasJoined(): boolean {
