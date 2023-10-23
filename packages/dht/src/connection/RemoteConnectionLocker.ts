@@ -5,6 +5,7 @@ import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice, Disconnec
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 
 import * as Err from '../helpers/errors'
+import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -27,7 +28,7 @@ export class RemoteConnectionLocker {
     }
 
     public async lockRequest(serviceId: string): Promise<boolean> {
-        logger.trace(`Requesting locked connection to ${this.targetPeerDescriptor.kademliaId.toString()}`)
+        logger.trace(`Requesting locked connection to ${keyFromPeerDescriptor(this.targetPeerDescriptor)}`)
         const request: LockRequest = {
             peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,
@@ -47,7 +48,7 @@ export class RemoteConnectionLocker {
     }
 
     public unlockRequest(serviceId: string): void {
-        logger.trace(`Requesting connection to be unlocked from ${this.targetPeerDescriptor.kademliaId.toString()}`)
+        logger.trace(`Requesting connection to be unlocked from ${keyFromPeerDescriptor(this.targetPeerDescriptor)}`)
         const request: UnlockRequest = {
             peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,
@@ -66,7 +67,7 @@ export class RemoteConnectionLocker {
     }
 
     public async gracefulDisconnect(disconnecMode: DisconnectMode): Promise<void> {
-        logger.trace(`Notifying a graceful disconnect to ${this.targetPeerDescriptor.nodeName} from ${this.ownPeerDescriptor.nodeName}`)
+        logger.trace(`Notifying a graceful disconnect to ${keyFromPeerDescriptor(this.targetPeerDescriptor)}`)
         const request: DisconnectNotice = {
             peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,

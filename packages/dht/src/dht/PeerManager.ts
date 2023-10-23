@@ -21,7 +21,6 @@ export interface PeerManagerConfig {
     getClosestContactsLimit: number
     ownPeerId: PeerID
     connectionManager: ConnectionManager
-    nodeName: string
     isLayer0: boolean
     createDhtPeer: (peerDescriptor: PeerDescriptor) => DhtPeer
 }
@@ -150,7 +149,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
                     this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
                 )
             } else {    // open connection by pinging
-                logger.trace('starting ping ' + this.config.nodeName + ', ' + contact.getPeerDescriptor().nodeName + ' ')
+               
                 contact.ping().then((result) => {
                     if (result) {
                         logger.trace(`Added new contact ${contact.getPeerId().value.toString()}`)
@@ -160,7 +159,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
                             this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
                         )
                     } else {
-                        logger.trace('ping failed ' + this.config.nodeName + ', ' + contact.getPeerDescriptor().nodeName + ' ')
                         this.config.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
                         this.removeContact(contact.getPeerDescriptor())
                         this.addClosestContactToBucket()
@@ -203,17 +201,12 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
         const dhtPeer = this.config.createDhtPeer(peerDescriptor)
         if (!this.connections.has(PeerID.fromValue(dhtPeer.id).toKey())) {
             this.connections.set(PeerID.fromValue(dhtPeer.id).toKey(), dhtPeer)
-            logger.trace(' ' + this.config.nodeName + ' connectionschange add ' + this.connections.size)
         } else {
             logger.trace('new connection not set to connections, there is already a connection with the peer ID')
-        }
-        if (this.config.nodeName === 'entrypoint') {
-            logger.trace('connected: ' + this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + this.connections.size)
         }
     }
 
     public handleDisconnected(peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType): void {
-        logger.trace('disconnected: ' + this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ')
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
         
         // only remove from bucket if we are on layer 0
@@ -221,16 +214,12 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
             this.bucket!.remove(peerDescriptor.kademliaId)
 
             if (disconnectionType === 'OUTGOING_GRACEFUL_LEAVE' || disconnectionType === 'INCOMING_GRACEFUL_LEAVE') {
-                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + disconnectionType)
                 this.removeContact(peerDescriptor, true)
-            } else {
-                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + disconnectionType)
-            }
+            } 
         }
     }
 
     public handlePeerLeaving(peerDescriptor: PeerDescriptor, removeFromOpenInternetPeers = false): void {
-        logger.trace('peer leaving: ' + this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ')
         this.removeContact(peerDescriptor, removeFromOpenInternetPeers)
     }
 

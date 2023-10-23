@@ -5,6 +5,7 @@ import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { DhtPeer } from '../DhtPeer'
 import { IPeerManager } from '../IPeerManager'
+import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -47,10 +48,7 @@ export class DiscoverySession {
         if (this.stopped) {
             return []
         }
-
-        this.joiningPath.push('' + contact.getPeerDescriptor().nodeName)
-
-        logger.trace(`Getting closest peers from contact: ${contact.getPeerId().toKey()}`)
+        logger.trace(`Getting closest peers from contact: ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
         this.outgoingClosestPeersRequestsCounter++
 
         this.contactedPeers.add(contact.getPeerId().toKey())

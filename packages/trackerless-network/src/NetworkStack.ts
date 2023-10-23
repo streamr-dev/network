@@ -32,7 +32,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         })
         this.streamrNode = new StreamrNode({
             ...options.networkNode,
-            nodeName: options.networkNode?.nodeName ?? options.layer0?.nodeName,
             metricsContext: this.metricsContext
         })
     }

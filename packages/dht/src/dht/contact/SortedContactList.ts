@@ -129,10 +129,6 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Co
         return distance1 - distance2
     }
 
-    public getStringIds(): string[] {
-        return this.contactIds.map((peerId) => peerId.toKey())
-    }
-
     public removeContact(id: PeerID): boolean {
         if (this.contactsById.has(id.toKey())) {
             const removed = this.contactsById.get(id.toKey())!.contact
@@ -155,13 +151,5 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Co
 
     public getAllContacts(): C[] {
         return this.contactIds.map((peerId) => this.contactsById.get(peerId.toKey())!.contact)
-    }
-
-    public getMaxSize(): number | undefined {
-        return this.maxSize
-    }
-
-    public setAllAsUncontacted(): void {
-        this.contactsById.forEach((contact) => contact.contacted = false)
     }
 }

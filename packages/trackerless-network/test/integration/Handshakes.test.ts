@@ -14,7 +14,7 @@ import { NodeList } from '../../src/logic/NodeList'
 import { mockConnectionLocker } from '../utils/utils'
 import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
+import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
@@ -112,7 +112,7 @@ describe('Handshakes', () => {
         rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteHandshaker(
+            new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
                 streamPartId,
@@ -127,7 +127,7 @@ describe('Handshakes', () => {
         rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteHandshaker(
+            new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
                 streamPartId,
@@ -142,7 +142,7 @@ describe('Handshakes', () => {
         rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', rejectHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteHandshaker(
+            new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
                 streamPartId,
@@ -158,7 +158,7 @@ describe('Handshakes', () => {
         rpcCommunicator3.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteHandshaker(
+            new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
                 streamPartId,

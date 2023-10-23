@@ -1,6 +1,4 @@
-import { Message } from '../../proto/packages/dht/protos/DhtRpc'
-
-type QueueEntry = [timeStamp: number, value: string, senderId: string, message?: Message]
+type QueueEntry = [timestamp: number, value: string]
 
 export class DuplicateDetector {
 
@@ -17,13 +15,9 @@ export class DuplicateDetector {
         this.maxAge = maxAgeInSeconds * 1000
     }
 
-    public add(value: string, senderId: string, message?: Message): void {
+    public add(value: string): void {
         this.values.add(value)
-        if (message) {
-            this.queue.push([Date.now(), value, senderId, message])
-        } else {
-            this.queue.push([Date.now(), value, senderId])
-        }
+        this.queue.push([Date.now(), value])
         this.cleanUp()
     }
 
@@ -49,5 +43,4 @@ export class DuplicateDetector {
         this.values.clear()
         this.queue = []
     }
-
 }

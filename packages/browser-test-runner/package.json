@@ -32,7 +32,7 @@
     "node-module-polyfill": "^1.0.1",
     "node-polyfill-webpack-plugin": "^2.0.1",
     "timers-browserify": "^2.0.12",
-    "webpack": "^5.88.2",
+    "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
   }
 }

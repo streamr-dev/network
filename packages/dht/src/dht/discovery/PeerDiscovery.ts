@@ -55,14 +55,12 @@ export class PeerDiscovery {
             targetId: this.config.ownPeerDescriptor!.kademliaId,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
-            nodeName: this.config.ownPeerDescriptor.nodeName,
             peerManager: this.config.peerManager
         }
         const session = new DiscoverySession(sessionOptions)
         const randomSession = doRandomJoin ? new DiscoverySession({
             ...sessionOptions,
-            targetId: crypto.randomBytes(8),
-            nodeName: this.config.ownPeerDescriptor.nodeName + '-random'
+            targetId: crypto.randomBytes(8)
         }) : null
         this.ongoingDiscoverySessions.set(session.sessionId, session)
         if (randomSession) {
@@ -95,7 +93,7 @@ export class PeerDiscovery {
         if (this.stopped || this.rejoinOngoing) {
             return
         }
-        logger.error(`${this.config.ownPeerDescriptor.nodeName} Rejoining DHT ${this.config.serviceId} ${this.config.ownPeerDescriptor.nodeName}!`)
+        logger.debug(`Rejoining DHT ${this.config.serviceId}`)
         this.rejoinOngoing = true
         try {
             await this.joinDht(entryPoint)

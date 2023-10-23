@@ -55,7 +55,7 @@ const logger = new Logger(module)
 const ENTRYPOINT_STORE_LIMIT = 8
 export const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 
-interface StreamPartEntryPointDiscoveryConfig {
+interface EntryPointDiscoveryConfig {
     streamPartId: StreamPartID
     ownPeerDescriptor: PeerDescriptor
     layer1: ILayer1
@@ -66,13 +66,13 @@ interface StreamPartEntryPointDiscoveryConfig {
     storeInterval?: number
 }
 
-export class StreamPartEntryPointDiscovery {
+export class EntryPointDiscovery {
     private readonly abortController: AbortController
-    private readonly config: StreamPartEntryPointDiscoveryConfig
+    private readonly config: EntryPointDiscoveryConfig
     private readonly storeInterval: number
     private readonly networkSplitAvoidedNodes: Set<NodeID> = new Set()
 
-    constructor(config: StreamPartEntryPointDiscoveryConfig) {
+    constructor(config: EntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
         this.storeInterval = this.config.storeInterval ?? 60000
@@ -114,7 +114,7 @@ export class StreamPartEntryPointDiscovery {
     }
 
     private async queryEntrypoints(key: Uint8Array): Promise<PeerDescriptor[]> {
-        logger.trace(`Finding data from dht node ${this.config.ownPeerDescriptor.nodeName}`)
+        logger.trace(`Finding data from dht node ${getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)}`)
         try {
             const results = await this.config.getEntryPointData(key)
             if (results.dataEntries) {
@@ -129,7 +129,7 @@ export class StreamPartEntryPointDiscovery {
 
     // TODO remove this method in NET-1122
     private async queryEntryPointsViaNode(key: Uint8Array, node: PeerDescriptor): Promise<PeerDescriptor[]> {
-        logger.trace(`Finding data via node ${this.config.ownPeerDescriptor.nodeName}`)
+        logger.trace(`Finding data via node ${getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)}`)
         try {
             const results = await this.config.getEntryPointDataViaNode(key, node)
             if (results) {

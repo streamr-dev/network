@@ -35,7 +35,7 @@ export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
 export class WebSocketConnector implements IWebSocketConnectorService {
-    private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocketconnector'
+    private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     private readonly webSocketServer?: WebSocketServer
@@ -100,10 +100,10 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     serverSocket.resourceURL.query) {
                     const query = serverSocket.resourceURL.query as unknown as ParsedUrlQuery
                     if (query.connectivityRequest) {
-                        logger.trace('Received connectivity request connection')
+                        logger.trace('Received connectivity request connection from ' + serverSocket.getRemoteAddress())
                         this.connectivityChecker!.listenToIncomingConnectivityRequests(serverSocket)
                     } else if (query.connectivityProbe) {
-                        logger.trace('Received connectivity probe connection')
+                        logger.trace('Received connectivity probe connection from ' + serverSocket.getRemoteAddress())
                     } else {
                         this.attachHandshaker(connection)
                     }
@@ -194,7 +194,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         }
     }
 
-    public requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+    private requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         setImmediate(() => {
             const remoteConnector = new RemoteWebSocketConnector(
                 targetPeerDescriptor,
