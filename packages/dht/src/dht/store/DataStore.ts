@@ -20,7 +20,7 @@ import EventEmitter from 'eventemitter3'
 import { Events } from '../DhtNode'
 import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
-import { DhtPeer } from '../DhtPeer'
+import { RemoteDhtNode } from '../RemoteDhtNode'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -32,7 +32,7 @@ interface DataStoreConfig {
     highestTtl: number
     numberOfCopies: number
     dhtNodeEmitter: EventEmitter<Events>
-    getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtPeer[]
+    getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => RemoteDhtNode[]
 }
 
 const logger = new Logger(module)
@@ -48,7 +48,7 @@ export class DataStore implements IStoreService {
     private readonly highestTtl: number
     private readonly numberOfCopies: number
     private readonly dhtNodeEmitter: EventEmitter<Events>
-    private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtPeer[]
+    private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => RemoteDhtNode[]
 
     constructor(config: DataStoreConfig) {
         this.rpcCommunicator = config.rpcCommunicator

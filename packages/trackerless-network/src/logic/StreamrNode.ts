@@ -139,7 +139,6 @@ export class StreamrNode extends EventEmitter<Events> {
             ownPeerDescriptor: this.getPeerDescriptor(),
             layer1,
             getEntryPointData: (key) => this.layer0!.getDataFromDht(key),
-            getEntryPointDataViaNode: (key, node) => this.layer0!.findDataViaPeer(key, node),
             storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data),
             deleteEntryPointData: async (key) => {
                 if (this.destroyed) {
@@ -183,10 +182,8 @@ export class StreamrNode extends EventEmitter<Events> {
         await streamPart.layer1.start()
         await streamPart.node.start()
         let entryPoints = this.knownStreamPartEntryPoints.get(streamPartId) ?? []
-        const forwardingNode = this.layer0!.isJoinOngoing() ? this.layer0!.getKnownEntryPoints()[0] : undefined
         const discoveryResult = await entryPointDiscovery.discoverEntryPointsFromDht(
-            entryPoints.length,
-            forwardingNode
+            entryPoints.length
         )
         entryPoints = entryPoints.concat(discoveryResult.discoveredEntryPoints)
         await streamPart.layer1.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT))
