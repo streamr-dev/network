@@ -15,7 +15,6 @@ const logger = new Logger(module)
 
 let server: RestServer
 const dir = os.tmpdir()
-let restServerCa: string
 let certifiedSubdomain: CertifiedSubdomain
 
 const createTestSubdomain = (validityMillis?: number) => {
@@ -90,7 +89,6 @@ describe('clientServer', () => {
                 }
             })
         await server.start()
-        restServerCa = fs.readFileSync(dir + '/restServerCaCert.pem', 'utf8')
 
         clientConnectionManager = new ConnectionManager({
             transportLayer: mockTransport,
@@ -126,7 +124,7 @@ describe('clientServer', () => {
         const autoCertifierUrl = 'https://localhost:' + restServerPort
 
         client = new AutoCertifierClient(subdomainPath, streamrWebSocketPort,
-            autoCertifierUrl, restServerCa, (serviceId, rpcMethodName, method) => {
+            autoCertifierUrl, (serviceId, rpcMethodName, method) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
                 clientRpcCommunicator.registerRpcMethod(
                     SessionIdRequest,
@@ -150,7 +148,7 @@ describe('clientServer', () => {
         const autoCertifierUrl = 'https://localhost:' + restServerPort
 
         client = new AutoCertifierClient(subdomainPath, streamrWebSocketPort,
-            autoCertifierUrl, restServerCa, (serviceId, rpcMethodName, method) => {
+            autoCertifierUrl, (serviceId, rpcMethodName, method) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
                 clientRpcCommunicator.registerRpcMethod(
                     SessionIdRequest,

@@ -27,13 +27,13 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     private readonly streamrWebSocketPort: number
     private readonly ongoingSessions: Set<string> = new Set()
 
-    constructor(subdomainPath: string, streamrWebSocketPort: number, restApiUrl: string, restApiCaCert: string,
+    constructor(subdomainPath: string, streamrWebSocketPort: number, restApiUrl: string,
         registerRpcMethod: (serviceId: string, rpcMethodName: string,
             method: (request: SessionIdRequest, context: ServerCallContext) => Promise<SessionIdResponse>) => void) {
 
         super()
 
-        this.restClient = new RestClient(restApiUrl, restApiCaCert)
+        this.restClient = new RestClient(restApiUrl)
         this.subdomainPath = filePathToNodeFormat(subdomainPath)
         this.streamrWebSocketPort = streamrWebSocketPort
 

@@ -3,12 +3,10 @@ import { createPeerDescriptor } from '@streamr/dht/dist/src/dht/DhtNode'
 import { AutoCertifierClient } from '@streamr/autocertifier-client'
 import os from 'os'
 import fs from 'fs'
-import { Logger, filePathToNodeFormat } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 import { SessionIdRequest, SessionIdResponse } from '../../src/proto/packages/autocertifier/protos/AutoCertifier'
 
 const logger = new Logger(module)
-
-let restServerCa: string
 
 describe('production', () => {
 
@@ -17,7 +15,6 @@ describe('production', () => {
         throw new Error('REST_SERVER_URL environment variable is not set')
     }
 
-    const restServerCACertPath = process.env['REST_SERVER_CA_CERT_PATH']
     if (!restServerUrl) {
         throw new Error('REST_SERVER_CA_CERT_PATH environment variable is not set')
     }
@@ -41,8 +38,6 @@ describe('production', () => {
         if (fs.existsSync(subdomainPath)) {
             fs.unlinkSync(subdomainPath)
         }
-
-        restServerCa = fs.readFileSync(filePathToNodeFormat(restServerCACertPath!), 'utf8')
 
         clientConnectionManager = new ConnectionManager({
             transportLayer: mockTransport,
@@ -76,7 +71,7 @@ describe('production', () => {
         logger.info(restServerUrl)
         
         client = new AutoCertifierClient(subdomainPath, streamrWebSocketPort,
-            restServerUrl, restServerCa, (serviceId, rpcMethodName, method) => {
+            restServerUrl, (serviceId, rpcMethodName, method) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
                 clientRpcCommunicator.registerRpcMethod(
                     SessionIdRequest,
@@ -104,7 +99,7 @@ describe('production', () => {
         logger.info(restServerUrl)
         
         client = new AutoCertifierClient(subdomainPath, streamrWebSocketPort,
-            restServerUrl, restServerCa, (serviceId, rpcMethodName, method) => {
+            restServerUrl, (serviceId, rpcMethodName, method) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
                 clientRpcCommunicator.registerRpcMethod(
                     SessionIdRequest,

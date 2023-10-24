@@ -11,13 +11,9 @@ const logger = new Logger(module)
 export class RestClient {
 
     private baseUrl: string
-    private caCert: string
 
-    // the caCert MUST be hard-coded into the Streamr node config
-
-    constructor(baseUrl: string, caCert: string) {
+    constructor(baseUrl: string) {
         this.baseUrl = baseUrl
-        this.caCert = caCert
     }
 
     public async createSession(): Promise<string> {
@@ -67,7 +63,7 @@ export class RestClient {
 
     private post<T>(url: string, body: any): Promise<T> {
         return new Promise((resolve, reject) => {
-            request.post(url, { json: body, ca: this.caCert }, (error, response, body) => {
+            request.post(url, { json: body, rejectUnauthorized: false }, (error, response, body) => {
                 if (error) {
                     reject(error)
                 } else if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -81,7 +77,7 @@ export class RestClient {
 
     private put<T>(url: string, body: any): Promise<T> {
         return new Promise((resolve, reject) => {
-            request.put(url, { json: body, ca: this.caCert }, (error, response, body) => {
+            request.put(url, { json: body, rejectUnauthorized: false }, (error, response, body) => {
                 if (error) {
                     reject(error)
                 } else if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -95,7 +91,7 @@ export class RestClient {
 
     private patch<T>(url: string, body: any): Promise<T> {
         return new Promise((resolve, reject) => {
-            request.patch(url, { json: body, ca: this.caCert }, (error, response, body) => {
+            request.patch(url, { json: body, rejectUnauthorized: false }, (error, response, body) => {
                 if (error) {
                     reject(error)
                 } else if (response.statusCode >= 200 && response.statusCode < 300) {
