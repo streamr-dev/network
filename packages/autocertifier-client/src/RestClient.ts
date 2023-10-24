@@ -6,7 +6,8 @@ import { CreateCertifiedSubdomainRequest } from './data/CreateCertifiedSubdomain
 import { ServerError } from './errors'
 import { Logger } from '@streamr/utils'
 
-const logger = new Logger(module) 
+const logger = new Logger(module)
+
 export class RestClient {
 
     private baseUrl: string
@@ -26,7 +27,7 @@ export class RestClient {
             return response.sessionId
 
         } catch (err) {
-            console.error(err)
+            logger.error(err)
             throw err
         }
     }
@@ -53,8 +54,8 @@ export class RestClient {
     }
 
     public async updateSubdomainIpAndPort(subdomain: string, streamrWebSocketPort: number, sessioId: string, token: string): Promise<void> {
-        logger.info('updateSubdomainIpAndPort() subdomain: ' + subdomain + ', streamrWebSocketPort:  ' + streamrWebSocketPort)
-        logger.info('sessioId: ' + sessioId + ', token: ' + token)
+        logger.debug('updateSubdomainIpAndPort() subdomain: ' + subdomain + ', streamrWebSocketPort:  ' + streamrWebSocketPort
+            + ', sessionId: ' + sessioId + ', token: ' + token)
         const url = this.baseUrl + '/certifiedsubdomains/' + encodeURIComponent(subdomain) + '/ip'
         const body: UpdateIpAndPortRequest = {
             token: token,

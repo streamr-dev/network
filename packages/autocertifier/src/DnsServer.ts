@@ -177,7 +177,7 @@ export class DnsServer {
         response.header.aa = 1
         const question = request.questions[0]
         if (question === undefined || question.name === undefined) {
-            logger.warn('invalid question')
+            logger.debug('filtering invalid question')
             // @ts-ignore private field
             response.header.rcode = 3
             return send(response)
@@ -186,7 +186,7 @@ export class DnsServer {
         const name = mixedCaseName.toLowerCase()
 
         if (!name.endsWith(this.domainName)) {
-            logger.warn('invalid domain name in query: ' + name)
+            logger.debug('invalid domain name in query: ' + name)
             // @ts-ignore private field
             response.header.rcode = 3
             return send(response)
