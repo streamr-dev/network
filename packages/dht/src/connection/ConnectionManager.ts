@@ -52,6 +52,7 @@ export class ConnectionManagerConfig {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    webrtcMaxMessageSize?: number
     externalIp?: string
     webrtcPortRange?: PortRange
     tlsCertificate?: TlsCertificate
@@ -203,6 +204,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
                 bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
+                maxMessageSize: this.config.webrtcMaxMessageSize,
                 connectionTimeout: this.config.webrtcNewConnectionTimeout,
                 externalIp: this.config.externalIp,
                 portRange: this.config.webrtcPortRange

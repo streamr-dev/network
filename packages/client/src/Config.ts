@@ -76,6 +76,13 @@ export interface ControlLayerConfig {
     webrtcPortRange?: PortRange
 
     /**
+     * The maximum outgoing message size (in bytes) accepted by WebRTC
+     * connections. Messages exceeding the maximum size are simply
+     * discarded.
+     */
+    webrtcMaxMessageSize?: number
+
+    /**
      * Contains connectivity information to the client's Network Node, used in the network layer.
      * Can be used in cases where the client's public IP address is known before
      * starting the network node. If not specified, the PeerDescriptor will be auto-generated.
