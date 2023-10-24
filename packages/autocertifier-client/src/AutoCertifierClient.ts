@@ -1,5 +1,4 @@
 import { EventEmitter } from 'eventemitter3'
-//import { ITransport, ListeningRpcCommunicator } from '@streamr/dht'
 import { IAutoCertifierService } from './proto/packages/autocertifier/protos/AutoCertifier.server'
 import { SessionIdRequest, SessionIdResponse } from './proto/packages/autocertifier/protos/AutoCertifier'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -22,7 +21,6 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
 
     private readonly ONE_DAY = 1000 * 60 * 60 * 24
     private MAX_INT_32 = 2147483647
-    //private readonly rpcCommunicator: ListeningRpcCommunicator
     private updateTimeout?: NodeJS.Timeout
     private readonly restClient: RestClient
     private readonly subdomainPath: string
@@ -54,11 +52,8 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         const sub = this.loadSubdomainFromDisk()
 
         if (Date.now() >= sub.expiryTime - this.ONE_DAY) {
-            logger.trace(`UPDATING CERTIFICATE`)
             await this.updateCertificate()
-            logger.trace(`CERTIFICATE UPDATED`)
         } else {
-            logger.trace(`UPDATING SUBDOMAIN AND PORT`)
             await this.updateSubdomainIpAndPort()
             this.scheduleCertificateUpdate(sub.expiryTime)
             this.emit('updatedSubdomain', sub.subdomain)
@@ -66,13 +61,9 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     private loadSubdomainFromDisk(): { subdomain: CertifiedSubdomain, expiryTime: number } {
-        logger.trace(`LOADING FROM DISK`)
         const subdomain = JSON.parse(fs.readFileSync(this.subdomainPath, 'utf8')) as CertifiedSubdomain
-        logger.trace(`LOADED FROM DISK`)
         const certObj = forge.pki.certificateFromPem(subdomain.certificate.cert)
-        logger.trace(`FORGED`)
         const expiryTime = certObj.validity.notAfter.getTime()
-        logger.trace(`EXPIRYTIME`)
         return { subdomain, expiryTime }
     }
 
@@ -89,7 +80,6 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             this.updateTimeout = undefined
         }
         // update certificate 1 day before it expires
-
         let updateIn = expiryTime - Date.now()
         if (updateIn > this.ONE_DAY) {
             updateIn = updateIn - this.ONE_DAY
@@ -100,7 +90,6 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         }
 
         logger.info('' + updateIn + ' milliseconds until certificate update')
-
         this.updateTimeout = setTimeout(this.checkSubdomainValidity, updateIn)
     }
 
@@ -144,7 +133,6 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     // This method should be called by Streamr DHT whenever the IP address or port of the node changes
-
     public updateSubdomainIpAndPort = async (): Promise<void> => {
         if (!fs.existsSync(this.subdomainPath)) {
             logger.warn('updateSubdomainIpAndPort() called while subdomain file does not exist')
@@ -159,7 +147,6 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     // IAutoCertifierService implementation
-
     public async getSessionId(request: SessionIdRequest, _context: ServerCallContext): Promise<SessionIdResponse> {
         logger.info('getSessionId() called ' + this.ongoingSessions.size + ' ongoing sessions')
         if (this.ongoingSessions.has(request.sessionId)) {

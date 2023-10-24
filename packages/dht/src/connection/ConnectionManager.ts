@@ -345,14 +345,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public async send(message: Message, doNotConnect = false, doNotMindStopped = false): Promise<void> {
-        logger.trace('CONNECTION MANAGER SEND CALLED')
         if (this.state === ConnectionManagerState.STOPPED && !doNotMindStopped) {
             return
         }
-        logger.trace('CONNECTION MANAGER SEND CALLED 2')
         const peerDescriptor = message.targetDescriptor!
         if (this.isConnectionToSelf(peerDescriptor)) {
-            logger.trace('CONNECTION MANAGER SEND CALLED 3')
             throw new Err.CannotConnectToSelf('Cannot send to self')
         }
         logger.trace(`Sending message to: ${keyFromPeerDescriptor(peerDescriptor)}`)

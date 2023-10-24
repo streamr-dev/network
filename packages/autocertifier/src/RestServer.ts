@@ -188,11 +188,11 @@ export class RestServer {
             this.sendError(res, err)
             return
         }
-        
-        logger.warn('updateSubdomainIpAndPort() ')
-        logger.warn('subdomain: ' + subdomain + ', ip: ' + ipAndPort.ip)
-        logger.warn('port: ' + ipAndPort.port + ' streamrWebSocketPort: ' + streamrWebSocketPort) 
-        logger.warn('sessionId: ' + ' ' + sessionId + ', token: ' + token)
+        const logLine = 'updateSubdomainIpAndPort() '
+            + 'subdomain: ' + subdomain + ', ip: ' + ipAndPort.ip
+            + ', port: ' + ipAndPort.port + ', streamrWebSocketPort: ' + streamrWebSocketPort
+            + ', sessionId: ' + ' ' + sessionId + ', token: ' + token
+        logger.debug(logLine)
         try {
             await this.engine.updateSubdomainIpAndPort(subdomain, ipAndPort.ip,
                 ipAndPort.port, streamrWebSocketPort, sessionId, token)
