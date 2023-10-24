@@ -1,0 +1,23 @@
+{
+    "$schema": "https://schema.streamr.network/config-v2.schema.json",
+    "client": {
+        "auth": {
+            "privateKey": "0xa51ef2b7a1f160e53cc3a17c5a74ea0563a50030644e9f6e1b1f4a7d0afd088e"
+        },
+        "network": {
+            "controlLayer": {
+                "websocketServerEnableTls": true,
+                "entryPoints": [{
+                    "id": "e2",
+                    "websocket": {
+                        "host": "65.108.158.160",
+                        "port": 30000,
+                        "tls": false
+                    }
+                }]
+            }
+        },
+        "metrics": false
+    },
+    "plugins": {}
+}
