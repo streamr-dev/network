@@ -52,7 +52,7 @@ export class ConnectionManagerConfig {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
-    webrtcMaxMessageSize?: number
+    maxMessageSize?: number
     externalIp?: string
     webrtcPortRange?: PortRange
     tlsCertificate?: TlsCertificate
@@ -186,16 +186,16 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.state = ConnectionManagerState.RUNNING
         } else {
             logger.trace(`Creating WebSocketConnector`)
-            this.webSocketConnector = new WebSocketConnector(
-                ConnectionManager.PROTOCOL_VERSION,
-                this.config.transportLayer!,
-                this.canConnect.bind(this),
-                this.incomingConnectionCallback,
-                this.config.websocketPortRange,
-                this.config.websocketHost,
-                this.config.entryPoints,
-                this.config.tlsCertificate
-            )
+            this.webSocketConnector = new WebSocketConnector({
+                protocolVersion: ConnectionManager.PROTOCOL_VERSION,
+                rpcTransport: this.config.transportLayer!,
+                fnCanConnect: this.canConnect.bind(this),
+                incomingConnectionCallback: this.incomingConnectionCallback,
+                portRange: this.config.websocketPortRange,
+                host: this.config.websocketHost,
+                entrypoints: this.config.entryPoints,
+                tlsCertificate: this.config.tlsCertificate
+            })
             logger.trace(`Creating WebRTCConnector`)
             this.webrtcConnector = new WebRtcConnector({
                 rpcTransport: this.config.transportLayer!,
@@ -204,7 +204,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
                 bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
-                maxMessageSize: this.config.webrtcMaxMessageSize,
+                maxMessageSize: this.config.maxMessageSize,
                 connectionTimeout: this.config.webrtcNewConnectionTimeout,
                 externalIp: this.config.externalIp,
                 portRange: this.config.webrtcPortRange

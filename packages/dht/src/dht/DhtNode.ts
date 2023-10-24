@@ -83,7 +83,7 @@ export interface DhtNodeOptions {
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
     webrtcPortRange?: PortRange
-    webrtcMaxMessageSize?: number
+    maxMessageSize?: number
     maxConnections?: number
     tlsCertificate?: TlsCertificate
     externalIp?: string
@@ -116,7 +116,7 @@ export class DhtNodeConfig {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
-    webrtcMaxMessageSize?: number
+    maxMessageSize?: number
     externalIp?: string
     webrtcPortRange?: PortRange
     tlsCertificate?: TlsCertificate
@@ -216,7 +216,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 webrtcPortRange: this.config.webrtcPortRange,
-                webrtcMaxMessageSize: this.config.webrtcMaxMessageSize,
+                maxMessageSize: this.config.maxMessageSize,
                 maxConnections: this.config.maxConnections,
                 tlsCertificate: this.config.tlsCertificate,
                 externalIp: this.config.externalIp

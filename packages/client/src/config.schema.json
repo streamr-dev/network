@@ -186,7 +186,7 @@
                             "type": "number",
                             "default": 131072
                         },
-                        "webrtcMaxMessageSize": {
+                        "maxMessageSize": {
                             "type": "number",
                             "default": 1048576
                         },
