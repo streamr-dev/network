@@ -8,8 +8,7 @@ export class SimulatorTransport extends ConnectionManager {
     constructor(ownPeerDescriptor: PeerDescriptor, simulator: Simulator) {
         super({
             createConnectorFacade: () => new SimulatorConnectorFacade(ownPeerDescriptor, simulator),
-            metricsContext: new MetricsContext(),
-            serviceIdPrefix: 'simulator/'
+            metricsContext: new MetricsContext()
         })
     }
 }

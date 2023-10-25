@@ -43,8 +43,6 @@ export interface ConnectionManagerConfig {
     maxConnections?: number
     metricsContext: MetricsContext
     createConnectorFacade: () => ConnectorFacade
-    // the following field is used in simulation only (TODO remove)
-    serviceIdPrefix?: string
 }
 
 export enum NatType {
@@ -61,6 +59,7 @@ interface ConnectionManagerMetrics extends MetricsDefinition {
     connectionTotalFailureCount: Metric
 }
 
+// TODO move this type identifiers.ts and use also in other classes (and rename to ServiceID)
 type ServiceId = string
 
 const logger = new Logger(module)
@@ -95,6 +94,8 @@ export interface TlsCertificate {
 
 export type Events = TransportEvents & ConnectionManagerEvents
 
+const INTERNAL_SERVICE_ID = 'ConnectionManager'
+
 // Form an string representation from a peer description which can be undefined. This output 
 // should only be used only for log output. TODO remove this method if we no longer use
 // peerDescriptors which can be undefined, e.g.
@@ -123,7 +124,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private readonly connectorFacade: ConnectorFacade
     private rpcCommunicator?: RoutingRpcCommunicator
     private disconnectorIntervalRef?: NodeJS.Timeout
-    private serviceId: ServiceId
     private state = ConnectionManagerState.IDLE
 
     constructor(config: ConnectionManagerConfig) {
@@ -142,9 +142,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         this.metricsContext.addMetrics('node', this.metrics)
         this.connectorFacade = this.config.createConnectorFacade()
-        this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'
         this.send = this.send.bind(this)
-        this.rpcCommunicator = new RoutingRpcCommunicator(this.serviceId, this.send, {
+        this.rpcCommunicator = new RoutingRpcCommunicator(INTERNAL_SERVICE_ID, this.send, {
             rpcRequestTimeout: 10000
         })
         this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest',
@@ -332,7 +331,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         this.duplicateMessageDetector.add(message.messageId)
-        if (message.serviceId === this.serviceId) {
+        if (message.serviceId === INTERNAL_SERVICE_ID) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
             logger.trace('emit "message" ' + keyFromPeerDescriptor(message.sourceDescriptor!) + ' ' + message.serviceId + ' ' + message.messageId)
