@@ -194,7 +194,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 portRange: this.config.websocketPortRange,
                 host: this.config.websocketHost,
                 entrypoints: this.config.entryPoints,
-                tlsCertificate: this.config.tlsCertificate
+                tlsCertificate: this.config.tlsCertificate,
+                maxMessageSize: this.config.maxMessageSize
             })
             logger.trace(`Creating WebRTCConnector`)
             this.webrtcConnector = new WebRtcConnector({
