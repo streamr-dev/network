@@ -249,7 +249,7 @@ describe('SimultaneousConnections', () => {
         }
 
         beforeEach(async () => {
-            connectionManager1 = new ConnectionManager({
+            connectionManager1 = new ConnectionManager(
                 transportLayer: simulatorTransport1,
                 ownPeerDescriptor: wrtcPeer1,
             })
