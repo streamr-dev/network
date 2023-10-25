@@ -29,8 +29,9 @@ describe('NodeList', () => {
     let simulator: Simulator
     let mockTransports: SimulatorTransport[]
 
-    const createRemoteGraphNode = (peerDescriptor: PeerDescriptor) => {
+    const createRemoteGraphNode = async (peerDescriptor: PeerDescriptor) => {
         const mockTransport = new SimulatorTransport(peerDescriptor, simulator)
+        await mockTransport.start()
         const mockCommunicator = new ListeningRpcCommunicator(`layer2-${ graphId }`, mockTransport)
         const mockClient = mockCommunicator.getRpcClientTransport()
         
@@ -38,17 +39,17 @@ describe('NodeList', () => {
         return new RemoteRandomGraphNode(createMockPeerDescriptor(), peerDescriptor, graphId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
     }
 
-    beforeEach(() => {
+    beforeEach(async () => {
         simulator = new Simulator()
         mockTransports = []
         nodeList = new NodeList(ownId, 6)
-        ids.forEach((id) => {
+        for (const id of ids) {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: id,
                 type: NodeType.NODEJS
             }
-            nodeList.add(createRemoteGraphNode(peerDescriptor))
-        })
+            nodeList.add(await createRemoteGraphNode(peerDescriptor))
+        }
     })
 
     afterEach(async ()=> {
@@ -59,12 +60,12 @@ describe('NodeList', () => {
         simulator.stop()
     })
 
-    it('add', () => {
+    it('add', async () => {
         const newDescriptor = {
             kademliaId: new Uint8Array([1, 2, 3]),
             type: NodeType.NODEJS
         }
-        const newNode = createRemoteGraphNode(newDescriptor)
+        const newNode = await createRemoteGraphNode(newDescriptor)
         nodeList.add(newNode)
         expect(nodeList.hasNode(newDescriptor)).toEqual(true)
 
@@ -72,7 +73,7 @@ describe('NodeList', () => {
             kademliaId: new Uint8Array([1, 2, 4]),
             type: NodeType.NODEJS
         }
-        const newNode2 = createRemoteGraphNode(newDescriptor2)
+        const newNode2 = await createRemoteGraphNode(newDescriptor2)
         nodeList.add(newNode2)
         expect(nodeList.hasNode(newDescriptor2)).toEqual(false)
     })

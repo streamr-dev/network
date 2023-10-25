@@ -34,7 +34,9 @@ describe('NetworkNode', () => {
         Simulator.useFakeTimers()
         const simulator = new Simulator()
         transport1 = new SimulatorTransport(pd1, simulator)
+        await transport1.start()
         transport2 = new SimulatorTransport(pd2, simulator)
+        await transport2.start()
 
         node1 = createNetworkNode({
             layer0: {

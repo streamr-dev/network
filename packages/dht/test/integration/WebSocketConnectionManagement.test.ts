@@ -7,8 +7,20 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
-import { waitForCondition } from '@streamr/utils'
+import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { SimulatorTransport } from '../../src/exports'
+import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
+
+const createConfig = (ownPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createOwnPeerDescriptor'>) => {
+    return {
+        createConnectorFacade: () => new DefaultConnectorFacade({
+            createOwnPeerDescriptor: () => ownPeerDescriptor,
+            ...opts
+        }),
+        metricsContext: new MetricsContext()
+    }
+}
 
 describe('WebSocket Connection Management', () => {
 
@@ -33,28 +45,30 @@ describe('WebSocket Connection Management', () => {
         type: NodeType.NODEJS,
     }
 
-    let connectorTransport1: ITransport
-    let connectorTransport2: ITransport
+    let connectorTransport1: SimulatorTransport
+    let connectorTransport2: SimulatorTransport
 
     beforeEach(async () => {
 
-        connectorTransport1 = new ConnectionManager({ ownPeerDescriptor: wsServerConnectorPeerDescriptor, simulator: simulator })
-        connectorTransport2 = new ConnectionManager({ ownPeerDescriptor: noWsServerConnectorPeerDescriptor, simulator: simulator })
+        connectorTransport1 = new SimulatorTransport(wsServerConnectorPeerDescriptor, simulator)
+        await connectorTransport1.start()
+        connectorTransport2 = new SimulatorTransport(noWsServerConnectorPeerDescriptor, simulator)
+        await connectorTransport2.start()
 
-        const config1 = {
+        const config1 = createConfig(wsServerConnectorPeerDescriptor, {
             transportLayer: connectorTransport1,
             websocketHost: '127.0.0.1',
-            websocketPortRange: { min: 12223, max: 12223 },
-        }
-        const config2 = {
+            websocketPortRange: { min: 12223, max: 12223 }
+        })
+        const config2 = createConfig(noWsServerConnectorPeerDescriptor, {
             transportLayer: connectorTransport2
-        }
+        })
 
         wsServerManager = new ConnectionManager(config1)
         noWsServerManager = new ConnectionManager(config2)
 
-        await wsServerManager.start((_response) => wsServerConnectorPeerDescriptor)
-        await noWsServerManager.start((_response) => noWsServerConnectorPeerDescriptor)
+        await wsServerManager.start()
+        await noWsServerManager.start()
     })
 
     afterEach(async () => {
