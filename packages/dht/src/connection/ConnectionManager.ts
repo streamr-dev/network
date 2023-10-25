@@ -58,6 +58,7 @@ export class ConnectionManagerConfig {
     webrtcPortRange?: PortRange
     websocketServerEnableTls?: boolean
     tlsCertificate?: TlsCertificate
+    autocertifierUrl?: string = 'https://ns1.fe6a54d8-8d6f-4743-890d-e9ecd680a4c7.xyz:59833'
 
     // the following fields are used in simulation only
     simulator?: Simulator
@@ -196,6 +197,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 this.canConnect.bind(this),
                 this.incomingConnectionCallback,
                 autocertifierRpcCommunicator,
+                this.config.autocertifierUrl!,
                 this.config.websocketPortRange,
                 this.config.websocketHost,
                 this.config.entryPoints,

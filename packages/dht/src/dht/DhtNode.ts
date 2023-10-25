@@ -87,6 +87,7 @@ export interface DhtNodeOptions {
     maxConnections?: number
     tlsCertificate?: TlsCertificate
     externalIp?: string
+    autocertifierUrl?: string
 }
 
 export class DhtNodeConfig {
@@ -120,6 +121,7 @@ export class DhtNodeConfig {
     externalIp?: string
     webrtcPortRange?: PortRange
     tlsCertificate?: TlsCertificate
+    autocertifierUrl?: string
 
     constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
@@ -219,7 +221,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 maxConnections: this.config.maxConnections,
                 websocketServerEnableTls: this.config.websocketServerEnableTls,
                 tlsCertificate: this.config.tlsCertificate,
-                externalIp: this.config.externalIp
+                externalIp: this.config.externalIp,
+                autocertifierUrl: this.config.autocertifierUrl
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {

@@ -119,6 +119,11 @@ export interface ControlLayerConfig {
     networkConnectivityTimeout?: number
 
     /**
+     * URL of the autocertifier service used to obtain TLS certificates and subdomain names for the WS server.
+     */
+    autocertifierUrl?: string
+
+    /**
      * If the node is running a WS server, this option can be used to disable TLS autocertification to
      * run the server without TLS. This will speed up the starting time of the network node 
      * (especially when starting the node for the first time on a new machine).

@@ -61,6 +61,7 @@ export class RestClient {
         await this.put<any>(url, body)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private post<T>(url: string, body: any): Promise<T> {
         return new Promise((resolve, reject) => {
             request.post(url, { json: body, rejectUnauthorized: false }, (error, response, body) => {
@@ -75,6 +76,7 @@ export class RestClient {
         })
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private put<T>(url: string, body: any): Promise<T> {
         return new Promise((resolve, reject) => {
             request.put(url, { json: body, rejectUnauthorized: false }, (error, response, body) => {
@@ -89,6 +91,7 @@ export class RestClient {
         })
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private patch<T>(url: string, body: any): Promise<T> {
         return new Promise((resolve, reject) => {
             request.patch(url, { json: body, rejectUnauthorized: false }, (error, response, body) => {

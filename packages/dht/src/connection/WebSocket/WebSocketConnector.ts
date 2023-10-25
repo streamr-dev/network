@@ -30,6 +30,8 @@ import { WebSocketServerStartError } from '../../helpers/errors'
 
 const logger = new Logger(module)
 
+const AUTO_CERTIFIED_SUBDOMAIN_FILE_PATH = '~/subdomain.json'
+
 export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string => {
     return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
 }
@@ -45,6 +47,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private incomingConnectionCallback: (connection: ManagedConnection) => boolean
     private readonly autocertifierRpcCommunicator: ListeningRpcCommunicator
+    private readonly autocertifierUrl: string
     private autocertifierClient?: AutoCertifierClient
     private portRange?: PortRange
     private host?: string
@@ -63,11 +66,12 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
         incomingConnectionCallback: (connection: ManagedConnection) => boolean,
         autocertifierRpcCommunicator: ListeningRpcCommunicator,
+        autocertifierUrl: string,
         portRange?: PortRange,
         host?: string,
         entrypoints?: PeerDescriptor[],
         serverTlsEnabled?: boolean,
-        tlsCertificate?: TlsCertificate
+        tlsCertificate?: TlsCertificate,
     ) {
         this.protocolVersion = protocolVersion
         this.webSocketServer = portRange ? new WebSocketServer() : undefined
@@ -78,6 +82,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         this.serverTlsEnabled = serverTlsEnabled!
         this.tlsCertificate = tlsCertificate
         this.autocertifierRpcCommunicator = autocertifierRpcCommunicator
+        this.autocertifierUrl = autocertifierUrl
         this.canConnectFunction = fnCanConnect.bind(this)
 
         this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, rpcTransport, {
@@ -168,8 +173,10 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     public async autoCertify(): Promise<void> {
         if (this.selectedPort) {
             logger.trace(`AutoCertifying subdomain...`)
-            this.autocertifierClient = new AutoCertifierClient('~/subdomain.json', this.selectedPort!,
-                'https://ns1.fe6a54d8-8d6f-4743-890d-e9ecd680a4c7.xyz:59833', (_, rpcMethodName, method) => {
+            this.autocertifierClient = new AutoCertifierClient(
+                AUTO_CERTIFIED_SUBDOMAIN_FILE_PATH,
+                this.selectedPort!,
+                this.autocertifierUrl, (_, rpcMethodName, method) => {
                     this.autocertifierRpcCommunicator.registerRpcMethod(
                         SessionIdRequest,
                         SessionIdResponse,
