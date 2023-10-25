@@ -90,7 +90,7 @@ export class ProxyClient extends EventEmitter {
                 }
             },
             rpcCommunicator: this.rpcCommunicator,
-            markForInspection: (_senderId: NodeID, _messageId: MessageID) => {}
+            markForInspection: () => {}
         })
         this.propagation = new Propagation({
             minPropagationTargets: config.minPropagationTargets ?? 2,

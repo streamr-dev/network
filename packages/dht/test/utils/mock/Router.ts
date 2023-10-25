@@ -1,32 +1,30 @@
 import { IRouter } from '../../../src/dht/routing/Router'
-import { RoutingSession, RoutingMode } from '../../../src/dht/routing/RoutingSession'
-import { PeerDescriptor, Message, RouteMessageAck, RouteMessageWrapper } from '../../../src/proto/packages/dht/protos/DhtRpc'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { PeerDescriptor, Message, RouteMessageAck } from '../../../src/proto/packages/dht/protos/DhtRpc'
 
 export class MockRouter implements IRouter {
 
     // eslint-disable-next-line class-methods-use-this
-    addRoutingSession(_session: RoutingSession): void {
+    addRoutingSession(): void {
         return
     }
 
     // eslint-disable-next-line class-methods-use-this
-    removeRoutingSession(_sessionId: string): void {
+    removeRoutingSession(): void {
         return
     }
 
     // eslint-disable-next-line class-methods-use-this
-    addToDuplicateDetector(_messageId: string): void {
+    addToDuplicateDetector(): void {
         return
     }
 
     // eslint-disable-next-line class-methods-use-this
-    isMostLikelyDuplicate(_messageId: string): boolean {
+    isMostLikelyDuplicate(): boolean {
         return false
     }
 
     // eslint-disable-next-line class-methods-use-this
-    doRouteMessage(_routedMessage: RouteMessageWrapper, _mode: RoutingMode): RouteMessageAck {
+    doRouteMessage(): RouteMessageAck {
         return RouteMessageAck.create()
     }
 
@@ -41,12 +39,12 @@ export class MockRouter implements IRouter {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async routeMessage(_routedMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+    async routeMessage(): Promise<RouteMessageAck> {
         return RouteMessageAck.create()
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async forwardMessage(_forwardMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+    async forwardMessage(): Promise<RouteMessageAck> {
         return RouteMessageAck.create()
     }
 

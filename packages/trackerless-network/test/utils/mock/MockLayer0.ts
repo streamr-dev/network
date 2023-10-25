@@ -1,6 +1,5 @@
-import { PeerDescriptor, Message, DataEntry } from '@streamr/dht'
+import { PeerDescriptor, DataEntry } from '@streamr/dht'
 import { ILayer0 } from '../../../src/logic/ILayer0'
-import { Any } from '../../../src/proto/google/protobuf/any'
 import { EventEmitter } from 'eventemitter3'
 
 export class MockLayer0 extends EventEmitter implements ILayer0 {
@@ -27,12 +26,12 @@ export class MockLayer0 extends EventEmitter implements ILayer0 {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async storeDataToDht(_key: Uint8Array, _data: Any): Promise<PeerDescriptor[]> {
+    async storeDataToDht(_key: Uint8Array): Promise<PeerDescriptor[]> {
         return []
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async send(_message: Message, _doNotConnect?: boolean): Promise<void> {
+    async send(): Promise<void> {
         return
     }
 

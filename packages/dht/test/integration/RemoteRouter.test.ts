@@ -3,7 +3,6 @@ import { RemoteRouter } from '../../src/dht/routing/RemoteRouter'
 import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RoutingServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 import { createWrappedClosestPeersRequest, generateId, MockRoutingService } from '../utils/utils'
 
 describe('RemoteRouter', () => {
@@ -25,10 +24,10 @@ describe('RemoteRouter', () => {
         clientRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockRoutingService.routeMessage)
-        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             serverRpcCommunicator.handleIncomingMessage(message)
         })
-        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new RoutingServiceClient(clientRpcCommunicator.getRpcClientTransport()))

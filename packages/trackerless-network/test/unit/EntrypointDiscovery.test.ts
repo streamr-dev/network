@@ -2,7 +2,6 @@ import { PeerDescriptor, isSamePeerDescriptor } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { wait } from '@streamr/utils'
 import { range } from 'lodash'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { EntryPointDiscovery } from '../../src/logic/EntryPointDiscovery'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -42,7 +41,7 @@ describe('EntryPointDiscovery', () => {
         return [fakeData, fakeDeletedData]
     }
 
-    const fakeStoreEntryPointData = async (_key: Uint8Array, _data: Any): Promise<PeerDescriptor[]> => {
+    const fakeStoreEntryPointData = async (_key: Uint8Array): Promise<PeerDescriptor[]> => {
         storeCalled++
         return [peerDescriptor]
     }
@@ -66,7 +65,7 @@ describe('EntryPointDiscovery', () => {
 
     beforeEach(() => {
         storeCalled = 0
-        layer1 = new MockLayer1(getNodeIdFromPeerDescriptor(peerDescriptor))
+        layer1 = new MockLayer1()
         entryPointDiscoveryWithData = new EntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
             streamPartId: STREAM_PART_ID,

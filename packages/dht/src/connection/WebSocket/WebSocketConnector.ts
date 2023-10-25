@@ -13,7 +13,6 @@ import {
 import { WebSocketConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger, binaryToHex, wait } from '@streamr/utils'
 import { IWebSocketConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebSocketServer } from './WebSocketServer'
 import { ConnectivityChecker } from '../ConnectivityChecker'
@@ -80,7 +79,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             WebSocketConnectionRequest,
             WebSocketConnectionResponse,
             'requestConnection',
-            (req: WebSocketConnectionRequest, context) => this.requestConnection(req, context)
+            (req: WebSocketConnectionRequest) => this.requestConnection(req)
         )
     }
 
@@ -217,7 +216,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
         if (this.ongoingConnectRequests.has(peerId.toKey())) {
             const ongoingConnectReguest = this.ongoingConnectRequests.get(peerId.toKey())!
-            ongoingConnectReguest.attachImplementation(serverWebSocket, peerDescriptor)
+            ongoingConnectReguest.attachImplementation(serverWebSocket)
             ongoingConnectReguest.acceptHandshake()
             this.ongoingConnectRequests.delete(peerId.toKey())
         } else {
@@ -253,7 +252,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     // IWebSocketConnectorService implementation
-    public async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse> {
+    public async requestConnection(request: WebSocketConnectionRequest): Promise<WebSocketConnectionResponse> {
         if (!this.destroyed && this.canConnectFunction(request.requester!, request.ip, request.port)) {
             setImmediate(() => {
                 if (this.destroyed) {

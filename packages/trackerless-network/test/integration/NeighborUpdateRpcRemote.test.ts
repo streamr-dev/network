@@ -1,4 +1,3 @@
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     ListeningRpcCommunicator,
     NodeType,
@@ -44,7 +43,7 @@ describe('NeighborUpdateRpcRemote', () => {
             NeighborUpdate,
             NeighborUpdate,
             'neighborUpdate',
-            async (_msg: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> => {
+            async (): Promise<NeighborUpdate> => {
                 const node: PeerDescriptor = {
                     kademliaId: new Uint8Array([4, 2, 4]),
                     type: NodeType.NODEJS

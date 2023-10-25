@@ -77,7 +77,7 @@ export class SimulatorConnector {
 
         logger.trace('connected, objectId: ' + managedConnection.objectId)
 
-        managedConnection.once('handshakeRequest', (_peerDescriptor: PeerDescriptor) => {
+        managedConnection.once('handshakeRequest', () => {
             logger.trace(keyFromPeerDescriptor(sourceConnection.ownPeerDescriptor) + ' incoming handshake request')
             logger.trace('incoming handshake request objectId: ' + managedConnection.objectId)
 

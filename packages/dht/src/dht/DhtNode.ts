@@ -316,7 +316,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.bucket.on('ping', (oldContacts: RemoteDhtNode[], newContact: RemoteDhtNode) => this.onKBucketPing(oldContacts, newContact))
         this.bucket.on('removed', (contact: RemoteDhtNode) => this.onKBucketRemoved(contact))
         this.bucket.on('added', (contact: RemoteDhtNode) => this.onKBucketAdded(contact))
-        this.bucket.on('updated', (_oldContact: RemoteDhtNode, _newContact: RemoteDhtNode) => {
+        this.bucket.on('updated', () => {
             // TODO: Update contact info to the connection manager and reconnect
         })
         this.neighborList = new SortedContactList(selfId, this.config.maxNeighborListSize)
@@ -614,7 +614,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    public async send(msg: Message, _doNotConnect?: boolean): Promise<void> {
+    public async send(msg: Message): Promise<void> {
         if (!this.started || this.stopped) {
             return
         }

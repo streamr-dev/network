@@ -189,7 +189,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.emit('handshakeCompleted', peerDescriptor)
     }
 
-    public attachImplementation(impl: IConnection, _peerDescriptor?: PeerDescriptor): void {
+    public attachImplementation(impl: IConnection): void {
         logger.trace('attachImplementation() objectId: ' + this.objectId)
         this.implementation = impl
 
@@ -216,7 +216,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         impl.on('disconnected', this.onDisconnected)
     }
 
-    private onDisconnected(disconnectionType: DisconnectionType, _code?: number, _reason?: string): void {
+    private onDisconnected(disconnectionType: DisconnectionType): void {
         logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' onDisconnected() ' + disconnectionType)
         if (this.bufferSentbyOtherConnection) {
             return

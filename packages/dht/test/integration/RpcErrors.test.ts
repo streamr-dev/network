@@ -8,7 +8,6 @@ import { DhtRpcOptions } from '../../src/rpc-protocol/DhtRpcOptions'
 import { ListeningRpcCommunicator } from '../../src/transport/ListeningRpcCommunicator'
 import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { NodeType, PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
 
 describe('RPC errors', () => {
@@ -66,7 +65,7 @@ describe('RPC errors', () => {
     })
 
     it('Can make a RPC call over WebRTC', async () => {
-        const ping = async (request: PingRequest, _context: ServerCallContext):
+        const ping = async (request: PingRequest):
             Promise<PingResponse> => {
             const response: PingResponse = {
                 requestId: request.requestId
@@ -136,7 +135,7 @@ describe('RPC errors', () => {
         }
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
-            manager1.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+            manager1.on('disconnected', () => {
                 //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })

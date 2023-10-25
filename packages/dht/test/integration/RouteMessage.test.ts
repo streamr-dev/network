@@ -94,7 +94,7 @@ describe('Route Message With Mock Connections', () => {
     it('Receives multiple messages', async () => {
         const numOfMessages = 20
         let receivedMessages = 0
-        destinationNode.on('message', (_message: Message) => {
+        destinationNode.on('message', () => {
             receivedMessages += 1
         })
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
