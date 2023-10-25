@@ -1,5 +1,5 @@
 import { IRouter } from '../../../src/dht/routing/Router'
-import { PeerDescriptor, Message, RouteMessageAck } from '../../../src/proto/packages/dht/protos/DhtRpc'
+import { RouteMessageAck } from '../../../src/proto/packages/dht/protos/DhtRpc'
 
 export class MockRouter implements IRouter {
 
@@ -29,7 +29,7 @@ export class MockRouter implements IRouter {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    send(_msg: Message, _reachableThrough: PeerDescriptor[]): Promise<void> {
+    send(): Promise<void> {
         throw Error('Not implemented')
     }
 

@@ -37,20 +37,20 @@ describe('EntryPointDiscovery', () => {
         deleted: true
     }
 
-    const fakeGetEntryPointData = async (_key: Uint8Array): Promise<DataEntry[]> => {
+    const fakeGetEntryPointData = async (): Promise<DataEntry[]> => {
         return [fakeData, fakeDeletedData]
     }
 
-    const fakeStoreEntryPointData = async (_key: Uint8Array): Promise<PeerDescriptor[]> => {
+    const fakeStoreEntryPointData = async (): Promise<PeerDescriptor[]> => {
         storeCalled++
         return [peerDescriptor]
     }
 
-    const fakeEmptyGetEntryPointData = async (_key: Uint8Array): Promise<DataEntry[]> => {
+    const fakeEmptyGetEntryPointData = async (): Promise<DataEntry[]> => {
         return []
     }
 
-    const fakeDeleteEntryPointData = async (_key: Uint8Array): Promise<void> => {}
+    const fakeDeleteEntryPointData = async (): Promise<void> => {}
 
     const addNodesToStreamPart = (layer1: MockLayer1, count: number) => {
         range(count).forEach(() => {

@@ -86,7 +86,7 @@ describe('RecursiveFinder', () => {
     })
 
     it('RecursiveFinder server throws if payload is not recursiveFindRequest', async () => {
-        const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1, peerDescriptor2)
+        const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1)
         const badMessage: Message = {
             serviceId: 'unknown',
             messageId: v4(),

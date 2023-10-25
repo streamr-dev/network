@@ -29,7 +29,7 @@ export class MockLayer1 extends EventEmitter implements ILayer1 {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async joinDht(_entryPoints: PeerDescriptor[]): Promise<void> {}
+    async joinDht(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
     async start(): Promise<void> {}

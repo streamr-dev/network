@@ -91,8 +91,7 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
 }
 
 export const createWrappedClosestPeersRequest = (
-    sourceDescriptor: PeerDescriptor,
-    _udestinationDescriptor: PeerDescriptor
+    sourceDescriptor: PeerDescriptor
 ): RpcMessage => {
 
     const routedMessage: ClosestPeersRequest = {

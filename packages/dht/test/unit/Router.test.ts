@@ -17,7 +17,7 @@ describe('Router', () => {
         kademliaId: PeerID.fromString('destination').value,
         type: NodeType.NODEJS
     }
-    const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1, peerDescriptor2)
+    const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1)
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),

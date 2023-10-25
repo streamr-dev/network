@@ -36,7 +36,7 @@ const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 export class WebSocketConnector implements IWebSocketConnectorService {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
+    private readonly canConnectFunction: (peerDescriptor: PeerDescriptor) => boolean
     private readonly webSocketServer?: WebSocketServer
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
@@ -54,7 +54,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     constructor(
         protocolVersion: string,
         rpcTransport: ITransport,
-        fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
+        fnCanConnect: (peerDescriptor: PeerDescriptor) => boolean,
         incomingConnectionCallback: (connection: ManagedConnection) => boolean,
         portRange?: PortRange,
         host?: string,
@@ -253,7 +253,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
     // IWebSocketConnectorService implementation
     public async requestConnection(request: WebSocketConnectionRequest): Promise<WebSocketConnectionResponse> {
-        if (!this.destroyed && this.canConnectFunction(request.requester!, request.ip, request.port)) {
+        if (!this.destroyed && this.canConnectFunction(request.requester!)) {
             setImmediate(() => {
                 if (this.destroyed) {
                     return

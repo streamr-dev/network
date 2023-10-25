@@ -65,7 +65,7 @@ describe('Route Message With Mock Connections', () => {
     }, 10000)
 
     it('Happy path', async () => {
-        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor())
         const message: Message = {
             serviceId: 'unknown',
             messageId: v4(),
@@ -97,7 +97,7 @@ describe('Route Message With Mock Connections', () => {
         destinationNode.on('message', () => {
             receivedMessages += 1
         })
-        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor())
 
         for (let i = 0; i < numOfMessages; i++) {
             const message: Message = {
@@ -155,7 +155,7 @@ describe('Route Message With Mock Connections', () => {
             routerNodes.map(async (node) =>
                 Promise.all(routerNodes.map(async (receiver) => {
                     if (!node.getNodeId().equals(receiver.getNodeId())) {
-                        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+                        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor())
                         const message: Message = {
                             serviceId: 'nonexisting_service',
                             messageId: v4(),
@@ -190,7 +190,7 @@ describe('Route Message With Mock Connections', () => {
     }, 90000)
 
     it('Destination receives forwarded message', async () => {
-        const closestPeersRequest = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        const closestPeersRequest = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor())
         const closestPeersRequestMessage: Message = {
             serviceId: 'unknown',
             messageId: v4(),
