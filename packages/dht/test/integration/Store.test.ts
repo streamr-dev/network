@@ -64,7 +64,7 @@ describe('Storing data in DHT', () => {
 
         const fetchingNode = getRandomNode()
         const results = await fetchingNode.getDataFromDht(dataKey.value)
-        results.dataEntries!.forEach((entry) => {
+        results.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(isSamePeerDescriptor(fetchedDescriptor, entrypointDescriptor)).toBeTrue()
         })
