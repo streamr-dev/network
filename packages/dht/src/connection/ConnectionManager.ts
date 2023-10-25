@@ -181,16 +181,16 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         this.state = ConnectionManagerState.RUNNING
         logger.trace(`Starting ConnectionManager...`)
+        await this.connectorFacade.start(
+            (connection: ManagedConnection) => this.incomingConnectionCallback(connection),
+            (peerDescriptor: PeerDescriptor) => this.canConnect(peerDescriptor)
+        )
         // Garbage collection of connections
         this.disconnectorIntervalRef = setInterval(() => {
             logger.trace('disconnectorInterval')
             const LAST_USED_LIMIT = 20000
             this.garbageCollectConnections(this.config.maxConnections ?? 80, LAST_USED_LIMIT)
         }, 5000)
-        await this.connectorFacade.start(
-            (connection: ManagedConnection) => this.incomingConnectionCallback(connection),
-            (peerDescriptor: PeerDescriptor) => this.canConnect(peerDescriptor)
-        )
     }
 
     public async stop(): Promise<void> {
