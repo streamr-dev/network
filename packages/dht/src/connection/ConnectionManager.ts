@@ -42,10 +42,7 @@ import { ConnectorFacade } from './ConnectorFacade'
 export interface ConnectionManagerConfig {
     maxConnections?: number
     metricsContext: MetricsContext
-    createConnectorFacade: (
-        incomingConnectionCallback: (connection: ManagedConnection) => boolean,
-        canConnect: (peerDescriptor: PeerDescriptor) => boolean
-    ) => ConnectorFacade
+    createConnectorFacade: () => ConnectorFacade
     // the following field is used in simulation only (TODO remove)
     serviceIdPrefix?: string
 }
@@ -144,10 +141,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             connectionTotalFailureCount: new CountMetric()
         }
         this.metricsContext.addMetrics('node', this.metrics)
-        this.connectorFacade = this.config.createConnectorFacade(
-            this.incomingConnectionCallback,
-            (peerDescriptor: PeerDescriptor) => this.canConnect(peerDescriptor)
-        )
+        this.connectorFacade = this.config.createConnectorFacade()
         this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'
         this.send = this.send.bind(this)
         this.rpcCommunicator = new RoutingRpcCommunicator(this.serviceId, this.send, {
@@ -193,7 +187,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             const LAST_USED_LIMIT = 20000
             this.garbageCollectConnections(this.config.maxConnections ?? 80, LAST_USED_LIMIT)
         }, 5000)
-        await this.connectorFacade.start()
+        await this.connectorFacade.start(
+            (connection: ManagedConnection) => this.incomingConnectionCallback(connection),
+            (peerDescriptor: PeerDescriptor) => this.canConnect(peerDescriptor)
+        )
     }
 
     public async stop(): Promise<void> {

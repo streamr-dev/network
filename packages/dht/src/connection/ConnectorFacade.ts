@@ -17,7 +17,10 @@ import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
     getOwnPeerDescriptor: () => PeerDescriptor | undefined
-    start: () => Promise<void>
+    start: (
+        incomingConnectionCallback: (connection: ManagedConnection) => boolean,
+        canConnect: (peerDescriptor: PeerDescriptor) => boolean
+    ) => Promise<void>
     stop: () => Promise<void>
 }
 
@@ -43,41 +46,40 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     private readonly config: DefaultConnectorFacadeConfig
     private ownPeerDescriptor?: PeerDescriptor
-    private webSocketConnector: WebSocketConnector
-    private webrtcConnector: WebRtcConnector
+    private webSocketConnector?: WebSocketConnector
+    private webrtcConnector?: WebRtcConnector
 
-    constructor(
-        config: DefaultConnectorFacadeConfig,
+    constructor(config: DefaultConnectorFacadeConfig) {
+        this.config = config
+    }
+
+    async start(
         incomingConnectionCallback: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean
     ) {
-        this.config = config
         logger.trace(`Creating WebSocketConnector`)
         this.webSocketConnector = new WebSocketConnector(
             ConnectionManager.PROTOCOL_VERSION,
-            config.transportLayer!,
+            this.config.transportLayer!,
             (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),  // TODO why canConnect is not used WebRtcConnector
             incomingConnectionCallback,
-            config.websocketPortRange,
-            config.websocketHost,
-            config.entryPoints,
-            config.tlsCertificate
+            this.config.websocketPortRange,
+            this.config.websocketHost,
+            this.config.entryPoints,
+            this.config.tlsCertificate
         )
         logger.trace(`Creating WebRTCConnector`)
         this.webrtcConnector = new WebRtcConnector({
-            rpcTransport: config.transportLayer!,
+            rpcTransport: this.config.transportLayer!,
             protocolVersion: ConnectionManager.PROTOCOL_VERSION,
-            iceServers: config.iceServers,
-            allowPrivateAddresses: config.webrtcAllowPrivateAddresses,
-            bufferThresholdLow: config.webrtcDatachannelBufferThresholdLow,
-            bufferThresholdHigh: config.webrtcDatachannelBufferThresholdHigh,
-            connectionTimeout: config.webrtcNewConnectionTimeout,
-            externalIp: config.externalIp,
-            portRange: config.webrtcPortRange
+            iceServers: this.config.iceServers,
+            allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
+            bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
+            bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
+            connectionTimeout: this.config.webrtcNewConnectionTimeout,
+            externalIp: this.config.externalIp,
+            portRange: this.config.webrtcPortRange
         }, incomingConnectionCallback)
-    }
-
-    async start() {
         await this.webSocketConnector.start()
         const connectivityResponse = await this.webSocketConnector.checkConnectivity()
         const ownPeerDescriptor = this.config.createOwnPeerDescriptor(connectivityResponse)
@@ -88,9 +90,9 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
         if (this.canOpenWsConnection(peerDescriptor)) {
-            return this.webSocketConnector.connect(peerDescriptor)
+            return this.webSocketConnector!.connect(peerDescriptor)
         } else {
-            return this.webrtcConnector.connect(peerDescriptor)
+            return this.webrtcConnector!.connect(peerDescriptor)
         }
     }
 
@@ -115,8 +117,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     }
 
     async stop(): Promise<void> {
-        await this.webSocketConnector.destroy()
-        await this.webrtcConnector.stop()
+        await this.webSocketConnector!.destroy()
+        await this.webrtcConnector!.stop()
         // TODO could move this to NodeWebRtcConnection
         WEB_RTC_CLEANUP.cleanUp()
     }
@@ -125,30 +127,27 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 export class SimulatorConnectorFacade implements ConnectorFacade {
 
     private readonly ownPeerDescriptor: PeerDescriptor
-    private simulatorConnector: SimulatorConnector
+    private simulatorConnector?: SimulatorConnector
+    private simulator: Simulator
 
-    constructor(
-        ownPeerDescriptor: PeerDescriptor,
-        incomingConnectionCallback: (connection: ManagedConnection) => boolean,
-        simulator: Simulator
-    ) {
+    constructor(ownPeerDescriptor: PeerDescriptor, simulator: Simulator) {
         this.ownPeerDescriptor = ownPeerDescriptor
+        this.simulator = simulator
+    }
+
+    async start(incomingConnectionCallback: (connection: ManagedConnection) => boolean) {
         logger.trace(`Creating SimulatorConnector`)
         this.simulatorConnector = new SimulatorConnector(
             ConnectionManager.PROTOCOL_VERSION,
-            ownPeerDescriptor,
-            simulator,
+            this.ownPeerDescriptor,
+            this.simulator,
             incomingConnectionCallback
         )
-        simulator.addConnector(this.simulatorConnector)
-        this.ownPeerDescriptor = ownPeerDescriptor
-    }
-
-    async start() {
+        this.simulator.addConnector(this.simulatorConnector)
     }
 
     createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
-        return this.simulatorConnector.connect(peerDescriptor)
+        return this.simulatorConnector!.connect(peerDescriptor)
     }
 
     getOwnPeerDescriptor(): PeerDescriptor {
@@ -156,6 +155,6 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
     }
 
     async stop(): Promise<void> {
-        await this.simulatorConnector.stop()
+        await this.simulatorConnector!.stop()
     }
 }

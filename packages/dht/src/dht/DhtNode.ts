@@ -233,12 +233,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
 
             const connectionManager = new ConnectionManager({
-                createConnectorFacade: (
-                    incomingConnectionCallback: (connection: ManagedConnection) => boolean,
-                    canConnect: (peerDescriptor: PeerDescriptor) => boolean
-                ) => {
-                    return new DefaultConnectorFacade(connectorFacadeConfig, incomingConnectionCallback, canConnect)
-                },
+                createConnectorFacade: () => new DefaultConnectorFacade(connectorFacadeConfig),
                 maxConnections: this.config.maxConnections,
                 metricsContext: this.config.metricsContext
             })
