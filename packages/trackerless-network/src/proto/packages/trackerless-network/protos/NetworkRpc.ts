@@ -525,9 +525,9 @@ class TemporaryConnectionResponse$Type extends MessageType<TemporaryConnectionRe
  */
 export const TemporaryConnectionResponse = new TemporaryConnectionResponse$Type();
 /**
- * @generated ServiceType for protobuf service NetworkRpc
+ * @generated ServiceType for protobuf service DeliveryRpc
  */
-export const NetworkRpc = new ServiceType("NetworkRpc", [
+export const DeliveryRpc = new ServiceType("DeliveryRpc", [
     { name: "sendStreamMessage", options: {}, I: StreamMessage, O: Empty },
     { name: "leaveStreamPartNotice", options: {}, I: LeaveStreamPartNotice, O: Empty }
 ]);

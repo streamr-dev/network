@@ -1,5 +1,5 @@
 import { NodeList } from '../../src/logic/NodeList'
-import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
+import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
 import {
     PeerDescriptor,
     ListeningRpcCommunicator,
@@ -7,7 +7,7 @@ import {
     SimulatorTransport,
     NodeType,
 } from '@streamr/dht'
-import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { DeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { expect } from 'expect'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
@@ -38,7 +38,12 @@ describe('NodeList', () => {
         const mockClient = mockCommunicator.getRpcClientTransport()
         
         mockTransports.push(mockTransport)
-        return new RemoteRandomGraphNode(createMockPeerDescriptor(), peerDescriptor, streamPartId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
+        return new DeliveryRpcRemote(
+            createMockPeerDescriptor(),
+            peerDescriptor,
+            streamPartId,
+            toProtoRpcClient(new DeliveryRpcClient(mockClient))
+        )
     }
 
     beforeEach(() => {
