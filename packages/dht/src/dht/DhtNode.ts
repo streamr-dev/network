@@ -350,7 +350,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.onTransportDisconnected(peerDescriptor, disonnectionType)
         })
 
-        this.transportLayer!.getAllConnectionPeerDescriptors().map((peer) => {
+        this.transportLayer!.getAllConnectionPeerDescriptors().forEach((peer) => {
             const peerId = peerIdFromPeerDescriptor(peer)
             const remoteDhtNode = new RemoteDhtNode(
                 this.ownPeerDescriptor!,
@@ -700,10 +700,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.bucket!.toArray().map((remoteDhtNode: RemoteDhtNode) => remoteDhtNode.getPeerDescriptor())
     }
 
-    private getOpenInternetPeerDescriptors(): PeerDescriptor[] {
-        return this.openInternetPeers!.getAllContacts().map((contact) => contact.getPeerDescriptor())
-    }
-
     public getNumberOfConnections(): number {
         return this.connections.size
     }
@@ -742,7 +738,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.entryPointDisconnectTimeout) {
             clearTimeout(this.entryPointDisconnectTimeout)
         }
-        this.bucket!.toArray().map((remoteDhtNode: RemoteDhtNode) => this.bucket!.remove(remoteDhtNode.id))
+        this.bucket!.toArray().forEach((remoteDhtNode: RemoteDhtNode) => this.bucket!.remove(remoteDhtNode.id))
         this.bucket!.removeAllListeners()
         this.localDataStore.clear()
         this.neighborList!.stop()
