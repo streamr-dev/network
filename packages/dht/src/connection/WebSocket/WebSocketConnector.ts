@@ -54,9 +54,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private incomingConnectionCallback: (connection: ManagedConnection) => boolean
-    private readonly portRange?: PortRange
     private host?: string
-    private entrypoints?: PeerDescriptor[]
+    private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
     private selectedPort?: number
     private readonly protocolVersion: string
@@ -72,7 +71,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             maxMessageSize: config.maxMessageSize
         }) : undefined
         this.incomingConnectionCallback = config.incomingConnectionCallback
-        this.portRange = config.portRange
         this.host = config.host
         this.entrypoints = config.entrypoints
         this.tlsCertificate = config.tlsCertificate
