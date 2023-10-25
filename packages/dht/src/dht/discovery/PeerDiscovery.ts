@@ -1,5 +1,5 @@
 import { DiscoverySession } from './DiscoverySession'
-import { DhtPeer } from '../DhtPeer'
+import { RemoteDhtNode } from '../RemoteDhtNode'
 import crypto from 'crypto'
 import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
@@ -120,7 +120,7 @@ export class PeerDiscovery {
             return
         }
         await Promise.allSettled(this.config.peerManager.getClosestPeersTo(
-            this.config.ownPeerDescriptor.kademliaId, this.config.parallelism).map(async (peer: DhtPeer) => {
+            this.config.ownPeerDescriptor.kademliaId, this.config.parallelism).map(async (peer: RemoteDhtNode) => {
             const contacts = await peer.getClosestPeers(this.config.ownPeerDescriptor.kademliaId!)
             this.config.peerManager.handleNewPeers(contacts)
         }))

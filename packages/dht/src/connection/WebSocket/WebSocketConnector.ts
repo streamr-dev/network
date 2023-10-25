@@ -11,7 +11,7 @@ import {
     WebSocketConnectionResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { WebSocketConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Logger, wait } from '@streamr/utils'
+import { Logger, binaryToHex, wait } from '@streamr/utils'
 import { IWebSocketConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
@@ -24,7 +24,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from '../Handshaker'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
-import { sample } from 'lodash'
+import { range, sample } from 'lodash'
 
 const logger = new Logger(module)
 
@@ -117,7 +117,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         }
     }
 
-    public async checkConnectivity(reattempt = 0): Promise<ConnectivityResponse> {
+    public async checkConnectivity(): Promise<ConnectivityResponse> {
         // TODO: this could throw if the server is not running
         const noServerConnectivityResponse: ConnectivityResponse = {
             openInternet: false,
@@ -127,35 +127,37 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         if (this.destroyed) {
             return noServerConnectivityResponse
         }
-        try {
-            if (!this.webSocketServer) {
-                // If no websocket server, return openInternet: false
-                return noServerConnectivityResponse
-            } else {
-                if (!this.entrypoints || this.entrypoints.length < 1) {
-                    // return connectivity info given in config
-                    const preconfiguredConnectivityResponse: ConnectivityResponse = {
-                        openInternet: true,
-                        host: this.host!,
-                        natType: NatType.OPEN_INTERNET,
-                        websocket: { host: this.host!, port: this.selectedPort!, tls: this.tlsCertificate !== undefined }
-                    }
-                    return preconfiguredConnectivityResponse
+        for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS)) {
+            const entryPoint = sample(this.entrypoints)!
+            try {
+                if (!this.webSocketServer) {
+                    // If no websocket server, return openInternet: false
+                    return noServerConnectivityResponse
                 } else {
-                    // Do real connectivity checking     
-                    return await this.connectivityChecker!.sendConnectivityRequest(sample(this.entrypoints)!)
+                    if (!this.entrypoints || this.entrypoints.length < 1) {
+                        // return connectivity info given in config
+                        const preconfiguredConnectivityResponse: ConnectivityResponse = {
+                            openInternet: true,
+                            host: this.host!,
+                            natType: NatType.OPEN_INTERNET,
+                            websocket: { host: this.host!, port: this.selectedPort!, tls: this.tlsCertificate !== undefined }
+                        }
+                        return preconfiguredConnectivityResponse
+                    } else {
+                        // Do real connectivity checking     
+                        return await this.connectivityChecker!.sendConnectivityRequest(entryPoint)
+                    }
+                }
+            } catch (err) {
+                if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
+                    const error = `Failed to connect to entrypoint with id ${binaryToHex(entryPoint.kademliaId)} ` 
+                        + `and URL ${connectivityMethodToWebSocketUrl(entryPoint.websocket!)}`
+                    logger.error(error, { error: err })
+                    await wait(2000)
                 }
             }
-        } catch (err) {
-            if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
-                logger.error('Failed to connect to the entrypoint', { error: err })
-                await wait(2000)
-                return this.checkConnectivity(reattempt + 1)
-            } else {
-                throw err
-            }
         }
-
+        throw Error(`Failed to connect to the entrypoints after ${ENTRY_POINT_CONNECTION_ATTEMPTS} attempts`)
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import { DhtPeer } from './DhtPeer'
+import { RemoteDhtNode } from './RemoteDhtNode'
 import KBucket from 'k-bucket'
 import { EventEmitter } from 'eventemitter3'
 import { SortedContactList } from './contact/SortedContactList'
@@ -155,9 +155,9 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
 }
 
 interface IDhtNodeTest {
-    getNeighborList: () => SortedContactList<DhtPeer>
+    getNeighborList: () => SortedContactList<RemoteDhtNode>
     getKBucketPeers: () => PeerDescriptor[]
-    getConnections: () => Map<PeerIDKey, DhtPeer>
+    getConnections: () => Map<PeerIDKey, RemoteDhtNode>
     getBucketSize: () => number
 }
 
@@ -327,7 +327,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connectionManager: this.connectionManager!,
             getClosestContactsLimit: this.config.getClosestContactsLimit,
             isLayer0: this.connectionManager ? true : false,
-            createDhtPeer: this.createDhtPeer.bind(this)
+            createRemoteDhtNode: this.createRemoteDhtNode.bind(this)
         })
 
         this.peerManager.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
@@ -415,7 +415,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private getClosestPeerDescriptors(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
         const closestPeers = this.peerManager!.getClosestPeersTo(kademliaId, limit)
-        return closestPeers.map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
+        return closestPeers.map((dhtPeer: RemoteDhtNode) => dhtPeer.getPeerDescriptor())
     }
 
     public getNodeId(): PeerID {
@@ -451,7 +451,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
-        if (this.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
+        if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
         }
         return this.dataStore!.storeDataToDht(key, data)
@@ -467,8 +467,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return await target.storeData(key, data)
     }
 
-    public async getDataFromDht(idToFind: Uint8Array): Promise<RecursiveFindResult> {
-        return this.recursiveFinder!.startRecursiveFind(idToFind, FindMode.DATA)
+    public async getDataFromDht(idToFind: Uint8Array): Promise<DataEntry[]> {
+        if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
+            return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
+        }
+        const result = await this.recursiveFinder!.startRecursiveFind(idToFind, FindMode.DATA)
+        return result.dataEntries ?? []
     }
 
     public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
@@ -533,10 +537,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }, this.config.networkConnectivityTimeout, 100, this.abortController.signal)
     }
 
-    public isJoinOngoing(): boolean {
-        return this.peerDiscovery!.isJoinOngoing()
-    }
-
     public hasJoined(): boolean {
         return this.peerDiscovery!.isJoinCalled()
     }
@@ -545,8 +545,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.config.entryPoints || []
     }
 
-    private createDhtPeer(peerDescriptor: PeerDescriptor): DhtPeer {
-        return new DhtPeer(
+    private createRemoteDhtNode(peerDescriptor: PeerDescriptor): RemoteDhtNode {
+        return new RemoteDhtNode(
             this.ownPeerDescriptor!,
             peerDescriptor,
             toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),

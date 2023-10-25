@@ -54,8 +54,8 @@ describe('Storing data in DHT with two peers', () => {
 
         const foundData1 = await otherNode.getDataFromDht(dataKey1.value)
         const foundData2 = await entryPoint.getDataFromDht(dataKey2.value)
-        expect(isSamePeerDescriptor(otherNode.getPeerDescriptor(), Any.unpack(foundData1.dataEntries![0]!.data!, PeerDescriptor))).toBeTrue()
-        expect(isSamePeerDescriptor(entryPoint.getPeerDescriptor(), Any.unpack(foundData2.dataEntries![0]!.data!, PeerDescriptor))).toBeTrue()
+        expect(isSamePeerDescriptor(otherNode.getPeerDescriptor(), Any.unpack(foundData1[0]!.data!, PeerDescriptor))).toBeTrue()
+        expect(isSamePeerDescriptor(entryPoint.getPeerDescriptor(), Any.unpack(foundData2[0]!.data!, PeerDescriptor))).toBeTrue()
     })
 
     it('Can store on one peer DHT', async () => {
@@ -67,6 +67,6 @@ describe('Storing data in DHT with two peers', () => {
         expect(successfulStorers[0].kademliaId).toStrictEqual(entryPoint.getPeerDescriptor().kademliaId)
 
         const foundData = await entryPoint.getDataFromDht(dataKey.value)
-        expect(isSamePeerDescriptor(entryPoint.getPeerDescriptor(), Any.unpack(foundData.dataEntries![0]!.data!, PeerDescriptor))).toBeTrue()
+        expect(isSamePeerDescriptor(entryPoint.getPeerDescriptor(), Any.unpack(foundData[0]!.data!, PeerDescriptor))).toBeTrue()
     }, 60000)
 })

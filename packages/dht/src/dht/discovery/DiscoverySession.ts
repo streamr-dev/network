@@ -3,8 +3,8 @@ import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { DhtPeer } from '../DhtPeer'
 import { IPeerManager } from '../IPeerManager'
+import { RemoteDhtNode } from '../RemoteDhtNode'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
@@ -44,7 +44,7 @@ export class DiscoverySession {
         this.config.peerManager.handleNewPeers(contacts)
     }
 
-    private async getClosestPeersFromContact(contact: DhtPeer): Promise<PeerDescriptor[]> {
+    private async getClosestPeersFromContact(contact: RemoteDhtNode): Promise<PeerDescriptor[]> {
         if (this.stopped) {
             return []
         }
@@ -78,7 +78,7 @@ export class DiscoverySession {
         }
     }
 
-    private onClosestPeersRequestFailed(peer: DhtPeer, _exception: Error) {
+    private onClosestPeersRequestFailed(peer: RemoteDhtNode, _exception: Error) {
         if (!this.ongoingClosestPeersRequests.has(peer.getPeerId().toKey())) {
             return
         }
