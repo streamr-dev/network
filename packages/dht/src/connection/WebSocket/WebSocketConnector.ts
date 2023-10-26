@@ -36,8 +36,9 @@ export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string
 
 const canOpenConnectionFromBrowser = (websocketServer: ConnectivityMethod) => {
     const hasPrivateAddress = ((websocketServer.host === 'localhost') || isPrivateIPv4(websocketServer.host))
-    return websocketServer.tls && hasPrivateAddress
+    return websocketServer.tls || hasPrivateAddress
 }
+
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
 interface WebSocketConnectorConfig {
@@ -172,15 +173,10 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     public isPossibleToFormConnection(targetPeerDescriptor: PeerDescriptor): boolean {
-        if ((targetPeerDescriptor.websocket !== undefined) || (this.ownPeerDescriptor!.websocket !== undefined)) {
-            if ((this.ownPeerDescriptor!.type !== NodeType.BROWSER) && (targetPeerDescriptor.type !== NodeType.BROWSER)) {
-                return true
-            }
-            if (this.ownPeerDescriptor!.websocket !== undefined) {
-                return (targetPeerDescriptor.type === NodeType.BROWSER) && canOpenConnectionFromBrowser(this.ownPeerDescriptor!.websocket)
-            } else {  // targetPeerDescriptor.websocket !== undefined
-                return (this.ownPeerDescriptor!.type === NodeType.BROWSER) && canOpenConnectionFromBrowser(targetPeerDescriptor.websocket!)
-            } 
+        if (this.ownPeerDescriptor!.websocket !== undefined) {
+            return (targetPeerDescriptor.type !== NodeType.BROWSER) || canOpenConnectionFromBrowser(this.ownPeerDescriptor!.websocket)
+        } else if (targetPeerDescriptor.websocket !== undefined) {
+            return (this.ownPeerDescriptor!.type !== NodeType.BROWSER) || canOpenConnectionFromBrowser(targetPeerDescriptor.websocket)
         } else {
             return false
         }

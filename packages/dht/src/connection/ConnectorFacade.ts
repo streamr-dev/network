@@ -90,15 +90,11 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     }
 
     createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
-        if (this.canOpenWsConnection(peerDescriptor)) {
+        if (this.webSocketConnector!.isPossibleToFormConnection(peerDescriptor)) {
             return this.webSocketConnector!.connect(peerDescriptor)
         } else {
             return this.webrtcConnector!.connect(peerDescriptor)
         }
-    }
-
-    private canOpenWsConnection(peerDescriptor: PeerDescriptor): boolean {
-        return this.webSocketConnector!.isPossibleToFormConnection(peerDescriptor)
     }
 
     getOwnPeerDescriptor(): PeerDescriptor | undefined {
