@@ -97,19 +97,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     }
 
     private canOpenWsConnection(peerDescriptor: PeerDescriptor): boolean {
-        if ((peerDescriptor.websocket || this.ownPeerDescriptor!.websocket)) {
-            if (!(this.ownPeerDescriptor!.type === NodeType.BROWSER || peerDescriptor.type === NodeType.BROWSER)) {
-                return true
-            }
-            if (this.ownPeerDescriptor!.websocket) {
-                return (peerDescriptor.type === NodeType.BROWSER && this.ownPeerDescriptor!.websocket!.tls) 
-                    || (this.ownPeerDescriptor!.websocket!.host === 'localhost' || (isPrivateIPv4(this.ownPeerDescriptor!.websocket!.host)))
-            }
-            return (this.ownPeerDescriptor!.type === NodeType.BROWSER && peerDescriptor.websocket!.tls)
-                || (peerDescriptor.websocket!.host === 'localhost' || (isPrivateIPv4(peerDescriptor.websocket!.host)))
-        } else {
-            return false
-        }
+        return this.webSocketConnector!.isPossibleToFormConnection(peerDescriptor)
     }
 
     getOwnPeerDescriptor(): PeerDescriptor | undefined {

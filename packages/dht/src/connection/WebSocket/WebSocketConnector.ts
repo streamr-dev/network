@@ -6,6 +6,7 @@ import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
     ConnectivityMethod,
     ConnectivityResponse,
+    NodeType,
     PeerDescriptor,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
@@ -25,6 +26,7 @@ import { Handshaker } from '../Handshaker'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
 import { range, sample } from 'lodash'
+import { isPrivateIPv4 } from '../../helpers/AddressTools'
 
 const logger = new Logger(module)
 
@@ -32,6 +34,10 @@ export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string
     return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
 }
 
+const canOpenConnectionFormBrowser = (websocketServer: ConnectivityMethod) => {
+    const hasPrivateAddress = (websocketServer.host === 'localhost' || (isPrivateIPv4(websocketServer.host)))
+    return websocketServer.tls && hasPrivateAddress
+}
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
 export class WebSocketConnector implements IWebSocketConnectorService {
@@ -158,6 +164,21 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             }
         }
         throw Error(`Failed to connect to the entrypoints after ${ENTRY_POINT_CONNECTION_ATTEMPTS} attempts`)
+    }
+
+    public isPossibleToFormConnection(targetPeerDescriptor: PeerDescriptor): boolean {
+        if ((targetPeerDescriptor.websocket !== undefined) || (this.ownPeerDescriptor!.websocket !== undefined)) {
+            if ((this.ownPeerDescriptor!.type !== NodeType.BROWSER) && (targetPeerDescriptor.type !== NodeType.BROWSER)) {
+                return true
+            }
+            if (this.ownPeerDescriptor!.websocket !== undefined) {
+                return (targetPeerDescriptor.type === NodeType.BROWSER) && canOpenConnectionFormBrowser(this.ownPeerDescriptor!.websocket)
+            } else {  // targetPeerDescriptor.websocket !== undefined
+                return (this.ownPeerDescriptor!.type === NodeType.BROWSER) && canOpenConnectionFormBrowser(targetPeerDescriptor.websocket!)
+            } 
+        } else {
+            return false
+        }
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
