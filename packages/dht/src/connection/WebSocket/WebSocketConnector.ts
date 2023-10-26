@@ -40,6 +40,18 @@ const canOpenConnectionFormBrowser = (websocketServer: ConnectivityMethod) => {
 }
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
+interface WebSocketConnectorConfig {
+    protocolVersion: string
+    rpcTransport: ITransport
+    canConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
+    onIncomingConnection: (connection: ManagedConnection) => boolean
+    portRange?: PortRange
+    maxMessageSize?: number
+    host?: string
+    entrypoints?: PeerDescriptor[]
+    tlsCertificate?: TlsCertificate
+}
+
 export class WebSocketConnector implements IWebSocketConnectorService {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
@@ -48,9 +60,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private onIncomingConnection: (connection: ManagedConnection) => boolean
-    private portRange?: PortRange
     private host?: string
-    private entrypoints?: PeerDescriptor[]
+    private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
     private selectedPort?: number
     private readonly protocolVersion: string
@@ -58,27 +69,21 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private destroyed = false
 
-    constructor(
-        protocolVersion: string,
-        rpcTransport: ITransport,
-        fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
-        onIncomingConnection: (connection: ManagedConnection) => boolean,
-        portRange?: PortRange,
-        host?: string,
-        entrypoints?: PeerDescriptor[],
-        tlsCertificate?: TlsCertificate
-    ) {
-        this.protocolVersion = protocolVersion
-        this.webSocketServer = portRange ? new WebSocketServer() : undefined
-        this.onIncomingConnection = onIncomingConnection
-        this.portRange = portRange
-        this.host = host
-        this.entrypoints = entrypoints
-        this.tlsCertificate = tlsCertificate
+    constructor(config: WebSocketConnectorConfig) {
+        this.protocolVersion = config.protocolVersion
+        this.webSocketServer = config.portRange ? new WebSocketServer({
+            portRange: config.portRange!,
+            tlsCertificate: config.tlsCertificate,
+            maxMessageSize: config.maxMessageSize
+        }) : undefined
+        this.onIncomingConnection = config.onIncomingConnection
+        this.host = config.host
+        this.entrypoints = config.entrypoints
+        this.tlsCertificate = config.tlsCertificate
 
-        this.canConnectFunction = fnCanConnect.bind(this)
+        this.canConnectFunction = config.canConnect.bind(this)
 
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, rpcTransport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.rpcTransport, {
             rpcRequestTimeout: 15000
         })
 
@@ -117,7 +122,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     this.attachHandshaker(connection)
                 }
             })
-            const port = await this.webSocketServer.start(this.portRange!, this.tlsCertificate)
+            const port = await this.webSocketServer.start()
             this.selectedPort = port
             this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.tlsCertificate !== undefined, this.host)
         }

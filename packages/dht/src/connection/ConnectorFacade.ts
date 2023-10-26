@@ -35,6 +35,7 @@ export interface DefaultConnectorFacadeConfig {
     webrtcNewConnectionTimeout?: number
     externalIp?: string
     webrtcPortRange?: PortRange
+    maxMessageSize?: number
     tlsCertificate?: TlsCertificate
     createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => PeerDescriptor
 }
@@ -55,16 +56,18 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         canConnect: (peerDescriptor: PeerDescriptor) => boolean
     ): Promise<void> {
         logger.trace(`Creating WebSocketConnector`)
-        this.webSocketConnector = new WebSocketConnector(
-            ConnectionManager.PROTOCOL_VERSION,
-            this.config.transportLayer!,
-            (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),  // TODO shoulw we use canConnect also for WebRtcConnector? (NET-1142)
+        this.webSocketConnector = new WebSocketConnector({
+            protocolVersion: ConnectionManager.PROTOCOL_VERSION,
+            rpcTransport: this.config.transportLayer!,
+            // TODO should we use canConnect also for WebRtcConnector? (NET-1142)
+            canConnect: (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),
             onIncomingConnection,
-            this.config.websocketPortRange,
-            this.config.websocketHost,
-            this.config.entryPoints,
-            this.config.tlsCertificate
-        )
+            portRange: this.config.websocketPortRange,
+            host: this.config.websocketHost,
+            entrypoints: this.config.entryPoints,
+            tlsCertificate: this.config.tlsCertificate,
+            maxMessageSize: this.config.maxMessageSize
+        })
         logger.trace(`Creating WebRTCConnector`)
         this.webrtcConnector = new WebRtcConnector({
             rpcTransport: this.config.transportLayer!,
@@ -75,7 +78,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
             connectionTimeout: this.config.webrtcNewConnectionTimeout,
             externalIp: this.config.externalIp,
-            portRange: this.config.webrtcPortRange
+            portRange: this.config.webrtcPortRange,
+            maxMessageSize: this.config.maxMessageSize
         }, onIncomingConnection)
         await this.webSocketConnector.start()
         const connectivityResponse = await this.webSocketConnector.checkConnectivity()

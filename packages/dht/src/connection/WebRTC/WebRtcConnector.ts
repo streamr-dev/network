@@ -44,6 +44,7 @@ export interface WebRtcConnectorConfig {
     allowPrivateAddresses?: boolean
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
+    maxMessageSize?: number
     connectionTimeout?: number
     externalIp?: string
     portRange?: PortRange
