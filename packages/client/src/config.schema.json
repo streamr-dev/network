@@ -186,6 +186,10 @@
                             "type": "number",
                             "default": 131072
                         },
+                        "maxMessageSize": {
+                            "type": "number",
+                            "default": 1048576
+                        },
                         "externalIp": {
                             "type": "string",
                             "format": "ipv4"
