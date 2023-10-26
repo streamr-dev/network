@@ -76,9 +76,8 @@ export interface ControlLayerConfig {
     webrtcPortRange?: PortRange
 
     /**
-     * The maximum outgoing message size (in bytes) accepted by WebRTC and WebSocket
-     * connections. Messages exceeding the maximum size are simply
-     * discarded.
+     * The maximum outgoing message size (in bytes) accepted by connections.
+     * Messages exceeding the maximum size are simply discarded.
      */
     maxMessageSize?: number
 

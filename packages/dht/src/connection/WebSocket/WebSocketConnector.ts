@@ -37,7 +37,7 @@ const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 interface WebSocketConnectorConfig {
     protocolVersion: string
     rpcTransport: ITransport
-    fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
+    canConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     incomingConnectionCallback: (connection: ManagedConnection) => boolean
     portRange?: PortRange
     maxMessageSize?: number
@@ -75,7 +75,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         this.entrypoints = config.entrypoints
         this.tlsCertificate = config.tlsCertificate
 
-        this.canConnectFunction = config.fnCanConnect.bind(this)
+        this.canConnectFunction = config.canConnect.bind(this)
 
         this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.rpcTransport, {
             rpcRequestTimeout: 15000

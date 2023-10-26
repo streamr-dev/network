@@ -189,7 +189,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.webSocketConnector = new WebSocketConnector({
                 protocolVersion: ConnectionManager.PROTOCOL_VERSION,
                 rpcTransport: this.config.transportLayer!,
-                fnCanConnect: this.canConnect.bind(this),
+                canConnect: this.canConnect.bind(this),
                 incomingConnectionCallback: this.incomingConnectionCallback,
                 portRange: this.config.websocketPortRange,
                 host: this.config.websocketHost,
