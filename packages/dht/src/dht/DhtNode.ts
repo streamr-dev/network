@@ -42,7 +42,7 @@ import { IceServer } from '../connection/WebRTC/WebRtcConnector'
 import { registerExternalApiRpcMethods } from './registerExternalApiRpcMethods'
 import { RemoteExternalApi } from './RemoteExternalApi'
 import { UUID } from '../helpers/UUID'
-import { isNodeJS } from '../helpers/browser/isNodeJS'
+import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { sample } from 'lodash'
 
 export interface DhtNodeEvents {
@@ -142,7 +142,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
     } else {
         kademliaId = hexToBinary(peerId!)
     }
-    const nodeType = isNodeJS() ? NodeType.NODEJS : NodeType.BROWSER
+    const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS 
     const ret: PeerDescriptor = { kademliaId, type: nodeType }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
@@ -190,7 +190,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         logger.trace(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
         this.started = true
 
-        if (!isNodeJS()) {
+        if (isBrowserEnvironment()) {
             this.config.websocketPortRange = undefined
             if (this.config.peerDescriptor) {
                 this.config.peerDescriptor.websocket = undefined
