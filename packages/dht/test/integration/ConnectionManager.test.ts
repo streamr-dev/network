@@ -122,14 +122,12 @@ describe('ConnectionManager', () => {
         await connectionManager2.stop()
     })
 
-    it.only('Can send data to other connectionmanager over websocket', async () => {
+    it('Can send data to other connectionmanager over websocket', async () => {
         const connectionManager1 = createConnectionManager({
             transportLayer: mockConnectorTransport1,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 9995, max: 9995 }
         })
-
-        let peerDescriptor: PeerDescriptor | undefined
 
         await connectionManager1.start()
         expect(createOwnPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
@@ -139,11 +137,10 @@ describe('ConnectionManager', () => {
             transportLayer: mockConnectorTransport2,
             websocketPortRange: { min: 9996, max: 9996 },
             entryPoints: [
-                peerDescriptor!
+                connectionManager1.getPeerDescriptor()
             ]
         })
 
-        let peerDescriptor2: PeerDescriptor | undefined
         await connectionManager2.start()
         expect(createOwnPeerDescriptor.mock.calls[1][0].host).toEqual('127.0.0.1')
         expect(createOwnPeerDescriptor.mock.calls[1][0].openInternet).toEqual(true)
@@ -177,7 +174,7 @@ describe('ConnectionManager', () => {
             })
         })
 
-        msg.targetDescriptor = peerDescriptor2
+        msg.targetDescriptor = connectionManager2.getPeerDescriptor()
         connectionManager1.send(msg)
 
         await Promise.all([promise, connectedPromise1, connectedPromise2])
@@ -193,20 +190,18 @@ describe('ConnectionManager', () => {
             websocketPortRange: { min: 9997, max: 9997 }
         })
 
-        let peerDescriptor: PeerDescriptor | undefined
         await connectionManager1.start()
-        expect(createOwnPeerDescriptor.mock.calls[1][0].host).toEqual('127.0.0.1')
-        expect(createOwnPeerDescriptor.mock.calls[1][0].openInternet).toEqual(true)
+        expect(createOwnPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
+        expect(createOwnPeerDescriptor.mock.calls[0][0].openInternet).toEqual(true)
 
         const connectionManager2 = createConnectionManager({
             transportLayer: mockConnectorTransport2,
             websocketPortRange: { min: 9999, max: 9999 },
             entryPoints: [
-                peerDescriptor!
+                connectionManager1.getPeerDescriptor()
             ]
         })
 
-        let peerDescriptor2: PeerDescriptor | undefined
         await connectionManager2.start()
 
         const msg: Message = {
@@ -239,13 +234,13 @@ describe('ConnectionManager', () => {
                 resolve()
             })
         })
-        msg.targetDescriptor = peerDescriptor2
+        msg.targetDescriptor = connectionManager2.getPeerDescriptor()
         connectionManager1.send(msg)
 
         await promise
 
         // @ts-expect-error private field
-        connectionManager1.closeConnection(peerDescriptor2)
+        connectionManager1.closeConnection(connectionManager2.getPeerDescriptor())
 
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
 
@@ -320,8 +315,8 @@ describe('ConnectionManager', () => {
         })
 
         await connectionManager1.start()
-        expect(createOwnPeerDescriptor.mock.calls[1][0].host).toEqual('127.0.0.1')
-        expect(createOwnPeerDescriptor.mock.calls[1][0].openInternet).toEqual(true)
+        expect(createOwnPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
+        expect(createOwnPeerDescriptor.mock.calls[0][0].openInternet).toEqual(true)
         
         const peerDescriptor = connectionManager1.getPeerDescriptor()
         peerDescriptor.kademliaId = new Uint8Array([12, 12, 12, 12])

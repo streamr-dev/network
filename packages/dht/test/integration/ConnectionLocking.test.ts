@@ -1,9 +1,21 @@
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { waitForCondition } from '@streamr/utils'
+import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
+import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
+import { ITransport } from '../../src/exports'
+
+const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, transportLayer: ITransport) => {
+    return new ConnectionManager({
+        createConnectorFacade: () => new DefaultConnectorFacade({
+            transportLayer,
+            createOwnPeerDescriptor: () => ownPeerDescriptor
+        }),
+        metricsContext: new MetricsContext()
+    })
+}
 
 describe('Connection Locking', () => {
 
@@ -27,17 +39,13 @@ describe('Connection Locking', () => {
     beforeEach(async () => {
         simulator = new Simulator()
         mockConnectorTransport1 = new SimulatorTransport(mockPeerDescriptor1, simulator)
+        await mockConnectorTransport1.start()
         mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
-
-        connectionManager1 = new ConnectionManager({
-            transportLayer: mockConnectorTransport1
-        })
-
-        connectionManager2 = new ConnectionManager({
-            transportLayer: mockConnectorTransport2
-        })
-        await connectionManager1.start(() => mockPeerDescriptor1)
-        await connectionManager2.start(() => mockPeerDescriptor2)
+        await mockConnectorTransport2.start()
+        connectionManager1 = createConnectionManager(mockPeerDescriptor1, mockConnectorTransport1)
+        connectionManager2 = createConnectionManager(mockPeerDescriptor2, mockConnectorTransport2)
+        await connectionManager1.start()
+        await connectionManager2.start()
     })
 
     afterEach(async () => {

@@ -64,6 +64,7 @@ export const createMockConnectionDhtNode = async (stringId: string,
     }
 
     const mockConnectionManager = new SimulatorTransport(peerDescriptor, simulator)
+    await mockConnectionManager.start()
 
     const node = new DhtNode({
         peerDescriptor: peerDescriptor,

@@ -10,6 +10,18 @@ import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { NodeType, PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
+import { MetricsContext } from '@streamr/utils'
+
+const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, transportLayer: ITransport) => {
+    return new ConnectionManager({
+        createConnectorFacade: () => new DefaultConnectorFacade({
+            transportLayer,
+            createOwnPeerDescriptor: () => ownPeerDescriptor
+        }),
+        metricsContext: new MetricsContext()
+    })
+}
 
 describe('RPC errors', () => {
 
@@ -34,8 +46,8 @@ describe('RPC errors', () => {
         type: NodeType.NODEJS,
     }
 
-    let connectorTransport1: ITransport
-    let connectorTransport2: ITransport
+    let connectorTransport1: SimulatorTransport
+    let connectorTransport2: SimulatorTransport
 
     const serviceId = 'test'
 
@@ -43,17 +55,19 @@ describe('RPC errors', () => {
 
         simulator = new Simulator(LatencyType.FIXED, 50)
         connectorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
-        manager1 = new ConnectionManager({ transportLayer: connectorTransport1 })
+        await connectorTransport1.start()
+        manager1 = createConnectionManager(peerDescriptor1, connectorTransport1)
         rpcCommunicator1 = new ListeningRpcCommunicator(serviceId, manager1)
         client1 = toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator1.getRpcClientTransport()))
 
         connectorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
-        manager2 = new ConnectionManager({ transportLayer: connectorTransport2 })
+        await connectorTransport2.start()
+        manager2 = createConnectionManager(peerDescriptor2, connectorTransport2)
         rpcCommunicator2 = new ListeningRpcCommunicator(serviceId, manager2)
         //client2 = toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator2.getRpcClientTransport()))
 
-        await manager1.start((_msg) => peerDescriptor1)
-        await manager2.start((_msg) => peerDescriptor2)
+        await manager1.start()
+        await manager2.start()
 
     })
 
