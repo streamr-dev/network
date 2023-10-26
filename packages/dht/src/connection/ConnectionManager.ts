@@ -32,6 +32,7 @@ import { ConnectionLockHandler } from './ConnectionLockHandler'
 import { ConnectorFacade } from './ConnectorFacade'
 import { ManagedConnection, Events as ManagedConnectionEvents } from './ManagedConnection'
 import { RemoteConnectionLocker } from './RemoteConnectionLocker'
+import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number
@@ -223,6 +224,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.duplicateMessageDetector.clear()
         this.locks.clear()
         this.removeAllListeners()
+        // TODO would it make sense to move this call to WebRtcConnector#stop()?
+        // - but note that we should call this only after connections have been closed
+        //   (i.e the this.gracefullyDisconnectAsync() calls above)
+        WEB_RTC_CLEANUP.cleanUp()
     }
 
     public getNumberOfLocalLockedConnections(): number {

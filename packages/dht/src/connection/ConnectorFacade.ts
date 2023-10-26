@@ -10,7 +10,6 @@ import { ConnectionManager, PortRange, TlsCertificate } from './ConnectionManage
 import { ManagedConnection } from './ManagedConnection'
 import { Simulator } from './Simulator/Simulator'
 import { SimulatorConnector } from './Simulator/SimulatorConnector'
-import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 import { IceServer, WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 
@@ -107,8 +106,6 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     async stop(): Promise<void> {
         await this.webSocketConnector!.destroy()
         await this.webrtcConnector!.stop()
-        // TODO could move this to NodeWebRtcConnection
-        WEB_RTC_CLEANUP.cleanUp()
     }
 }
 
