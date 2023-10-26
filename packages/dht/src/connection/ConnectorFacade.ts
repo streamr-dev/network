@@ -1,8 +1,6 @@
 import { Logger } from '@streamr/utils'
-import { isPrivateIPv4 } from '../helpers/AddressTools'
 import {
     ConnectivityResponse,
-    NodeType,
     PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../transport/ITransport'
