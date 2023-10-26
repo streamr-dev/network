@@ -8,7 +8,7 @@ describe('Authentication', () => {
     describe('createMessageSignature', () => {
 
         it('happy path', async () => {
-            const payload = 'data-to-sign'
+            const payload = Buffer.from('data-to-sign', 'utf8')
             const authentication = createPrivateKeyAuthentication(PRIVATE_KEY, undefined as any)
             const signature = await authentication.createMessageSignature(payload)
             expect(signature).toStrictEqual(hexToBinary('0x084b3ac0f2ad17d387ca5bbf5d72d8f1dfd1b372e399ce6b0bfc60793e'
