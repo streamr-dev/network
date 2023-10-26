@@ -257,8 +257,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             targetDescriptor: message.targetDescriptor || peerDescriptor,
             sourceDescriptor: message.sourceDescriptor || this.getOwnPeerDescriptor(),
         }
-        const hexId = keyFromPeerDescriptor(peerDescriptor)
-        let connection = this.connections.get(hexId)
+        const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
+        let connection = this.connections.get(peerIdKey)
         if (!connection && !doNotConnect) {
             connection = this.connectorFacade.createConnection(peerDescriptor)
             this.onIncomingConnection(connection)
@@ -286,8 +286,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public getConnection(peerDescriptor: PeerDescriptor): ManagedConnection | undefined {
-        const hexId = keyFromPeerDescriptor(peerDescriptor)
-        return this.connections.get(hexId)
+        const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
+        return this.connections.get(peerIdKey)
     }
 
     // TODO remove this method or getOwnPeerDescriptor
@@ -300,18 +300,18 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public hasConnection(peerDescriptor: PeerDescriptor): boolean {
-        const hexId = keyFromPeerDescriptor(peerDescriptor)
-        return this.connections.has(hexId)
+        const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
+        return this.connections.has(peerIdKey)
     }
 
     public hasLocalLockedConnection(peerDescriptor: PeerDescriptor, _serviceId?: ServiceId): boolean {
-        const hexId = keyFromPeerDescriptor(peerDescriptor)
-        return this.locks.isLocalLocked(hexId)
+        const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
+        return this.locks.isLocalLocked(peerIdKey)
     }
 
     public hasRemoteLockedConnection(peerDescriptor: PeerDescriptor, _serviceId?: ServiceId): boolean {
-        const hexId = keyFromPeerDescriptor(peerDescriptor)
-        return this.locks.isRemoteLocked(hexId)
+        const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
+        return this.locks.isRemoteLocked(peerIdKey)
     }
 
     private canConnect(peerDescriptor: PeerDescriptor): boolean {
@@ -371,11 +371,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private onDisconnected = (connection: ManagedConnection, disconnectionType: DisconnectionType) => {
         logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) + ' onDisconnected() ' + disconnectionType)
 
-        const hexKey = keyFromPeerDescriptor(connection.getPeerDescriptor()!)
-        const storedConnection = this.connections.get(hexKey)
+        const peerIdKey = keyFromPeerDescriptor(connection.getPeerDescriptor()!)
+        const storedConnection = this.connections.get(peerIdKey)
         if (storedConnection && storedConnection.connectionId.equals(connection.connectionId)) {
-            this.locks.clearAllLocks(hexKey)
-            this.connections.delete(hexKey)
+            this.locks.clearAllLocks(peerIdKey)
+            this.connections.delete(peerIdKey)
             logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
                 + ' deleted connection in onDisconnected() ' + disconnectionType)
             this.emit('disconnected', connection.getPeerDescriptor()!, disconnectionType)
@@ -418,8 +418,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private acceptIncomingConnection(newConnection: ManagedConnection): boolean {
         logger.trace(keyFromPeerDescriptor(newConnection.getPeerDescriptor()!) + ' acceptIncomingConnection()')
         const newPeerID = peerIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
-        const hexKey = keyFromPeerDescriptor(newConnection.getPeerDescriptor()!)
-        if (this.connections.has(hexKey)) {
+        const peerIdKey = keyFromPeerDescriptor(newConnection.getPeerDescriptor()!)
+        if (this.connections.has(peerIdKey)) {
             if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.getOwnPeerDescriptor()))) {
                 logger.trace(keyOrUnknownFromPeerDescriptor(newConnection.getPeerDescriptor())
                     + ' acceptIncomingConnection() replace current connection')
@@ -441,7 +441,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
 
         logger.trace(keyFromPeerDescriptor(newConnection.getPeerDescriptor()!) + ' added to connections at acceptIncomingConnection')
-        this.connections.set(hexKey, newConnection)
+        this.connections.set(peerIdKey, newConnection)
 
         return true
     }
@@ -464,14 +464,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.state === ConnectionManagerState.STOPPED || isSamePeerDescriptor(targetDescriptor, this.getOwnPeerDescriptor())) {
             return
         }
-        const hexKey = keyFromPeerDescriptor(targetDescriptor)
+        const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
         const remoteConnectionLocker = new RemoteConnectionLocker(
             this.getOwnPeerDescriptor(),
             targetDescriptor,
             ConnectionManager.PROTOCOL_VERSION,
             toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        this.locks.addLocalLocked(hexKey, serviceId)
+        this.locks.addLocalLocked(peerIdKey, serviceId)
         remoteConnectionLocker.lockRequest(serviceId)
             .then((_accepted) => logger.trace('LockRequest successful'))
             .catch((err) => { logger.debug(err) })
@@ -481,15 +481,15 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.state === ConnectionManagerState.STOPPED || isSamePeerDescriptor(targetDescriptor, this.getOwnPeerDescriptor())) {
             return
         }
-        const hexKey = keyFromPeerDescriptor(targetDescriptor)
-        this.locks.removeLocalLocked(hexKey, serviceId)
+        const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
+        this.locks.removeLocalLocked(peerIdKey, serviceId)
         const remoteConnectionLocker = new RemoteConnectionLocker(
             this.getOwnPeerDescriptor(),
             targetDescriptor,
             ConnectionManager.PROTOCOL_VERSION,
             toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        if (this.connections.has(hexKey)) {
+        if (this.connections.has(peerIdKey)) {
             remoteConnectionLocker.unlockRequest(serviceId)
         }
     }
@@ -498,16 +498,16 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.state === ConnectionManagerState.STOPPED || isSamePeerDescriptor(targetDescriptor, this.getOwnPeerDescriptor())) {
             return
         }
-        const hexKey = keyFromPeerDescriptor(targetDescriptor)
-        this.locks.addWeakLocked(hexKey)
+        const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
+        this.locks.addWeakLocked(peerIdKey)
     }
 
     public weakUnlockConnection(targetDescriptor: PeerDescriptor): void {
         if (this.state === ConnectionManagerState.STOPPED || isSamePeerDescriptor(targetDescriptor, this.getOwnPeerDescriptor())) {
             return
         }
-        const hexKey = keyFromPeerDescriptor(targetDescriptor)
-        this.locks.removeWeakLocked(hexKey)
+        const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
+        this.locks.removeWeakLocked(peerIdKey)
 
     }
 
@@ -584,8 +584,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     // IConnectionLocker server implementation
     private async unlockRequest(unlockRequest: UnlockRequest, _context: ServerCallContext): Promise<Empty> {
-        const hexKey = keyFromPeerDescriptor(unlockRequest.peerDescriptor!)
-        this.locks.removeRemoteLocked(hexKey, unlockRequest.serviceId)
+        const peerIdKey = keyFromPeerDescriptor(unlockRequest.peerDescriptor!)
+        this.locks.removeRemoteLocked(peerIdKey, unlockRequest.serviceId)
         return {}
     }
 
