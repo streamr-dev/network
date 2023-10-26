@@ -18,7 +18,7 @@ export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
     getOwnPeerDescriptor: () => PeerDescriptor | undefined
     start: (
-        incomingConnectionCallback: (connection: ManagedConnection) => boolean,
+        onIncomingConnection: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean
     ) => Promise<void>
     stop: () => Promise<void>
@@ -54,7 +54,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     }
 
     async start(
-        incomingConnectionCallback: (connection: ManagedConnection) => boolean,
+        onIncomingConnection: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean
     ) {
         logger.trace(`Creating WebSocketConnector`)
@@ -62,7 +62,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             ConnectionManager.PROTOCOL_VERSION,
             this.config.transportLayer!,
             (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),  // TODO why canConnect is not used WebRtcConnector
-            incomingConnectionCallback,
+            onIncomingConnection,
             this.config.websocketPortRange,
             this.config.websocketHost,
             this.config.entryPoints,
@@ -79,7 +79,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             connectionTimeout: this.config.webrtcNewConnectionTimeout,
             externalIp: this.config.externalIp,
             portRange: this.config.webrtcPortRange
-        }, incomingConnectionCallback)
+        }, onIncomingConnection)
         await this.webSocketConnector.start()
         const connectivityResponse = await this.webSocketConnector.checkConnectivity()
         const ownPeerDescriptor = this.config.createOwnPeerDescriptor(connectivityResponse)
@@ -98,15 +98,15 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     private canOpenWsConnection(peerDescriptor: PeerDescriptor): boolean {
         if ((peerDescriptor.websocket || this.ownPeerDescriptor!.websocket)) {
-        if (!(this.ownPeerDescriptor!.type === NodeType.BROWSER || peerDescriptor.type === NodeType.BROWSER)) {
-            return true
-        }
-        if (this.ownPeerDescriptor!.websocket) {
-            return (peerDescriptor.type === NodeType.BROWSER && this.ownPeerDescriptor!.websocket!.tls) 
-                || (this.ownPeerDescriptor!.websocket!.host === 'localhost' || (isPrivateIPv4(this.ownPeerDescriptor!.websocket!.host)))
-        }
-        return (this.ownPeerDescriptor!.type === NodeType.BROWSER && peerDescriptor.websocket!.tls)
-            || (peerDescriptor.websocket!.host === 'localhost' || (isPrivateIPv4(peerDescriptor.websocket!.host)))
+            if (!(this.ownPeerDescriptor!.type === NodeType.BROWSER || peerDescriptor.type === NodeType.BROWSER)) {
+                return true
+            }
+            if (this.ownPeerDescriptor!.websocket) {
+                return (peerDescriptor.type === NodeType.BROWSER && this.ownPeerDescriptor!.websocket!.tls) 
+                    || (this.ownPeerDescriptor!.websocket!.host === 'localhost' || (isPrivateIPv4(this.ownPeerDescriptor!.websocket!.host)))
+            }
+            return (this.ownPeerDescriptor!.type === NodeType.BROWSER && peerDescriptor.websocket!.tls)
+                || (peerDescriptor.websocket!.host === 'localhost' || (isPrivateIPv4(peerDescriptor.websocket!.host)))
         } else {
             return false
         }
@@ -135,13 +135,13 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
         this.simulator = simulator
     }
 
-    async start(incomingConnectionCallback: (connection: ManagedConnection) => boolean) {
+    async start(onIncomingConnection: (connection: ManagedConnection) => boolean) {
         logger.trace(`Creating SimulatorConnector`)
         this.simulatorConnector = new SimulatorConnector(
             ConnectionManager.PROTOCOL_VERSION,
             this.ownPeerDescriptor,
             this.simulator,
-            incomingConnectionCallback
+            onIncomingConnection
         )
         this.simulator.addConnector(this.simulatorConnector)
     }

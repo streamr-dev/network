@@ -130,7 +130,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         super()
         this.config = config
         this.onData = this.onData.bind(this)
-        this.incomingConnectionCallback = this.incomingConnectionCallback.bind(this)
+        this.onIncomingConnection = this.onIncomingConnection.bind(this)
         this.metricsContext = this.config.metricsContext || new MetricsContext()
         this.metrics = {
             sendMessagesPerSecond: new RateMetric(),
@@ -181,7 +181,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.state = ConnectionManagerState.RUNNING
         logger.trace(`Starting ConnectionManager...`)
         await this.connectorFacade.start(
-            (connection: ManagedConnection) => this.incomingConnectionCallback(connection),
+            (connection: ManagedConnection) => this.onIncomingConnection(connection),
             (peerDescriptor: PeerDescriptor) => this.canConnect(peerDescriptor)
         )
         // Garbage collection of connections
@@ -261,7 +261,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         let connection = this.connections.get(hexId)
         if (!connection && !doNotConnect) {
             connection = this.connectorFacade.createConnection(peerDescriptor)
-            this.incomingConnectionCallback(connection)
+            this.onIncomingConnection(connection)
         } else if (!connection) {
             throw new Err.SendFailed('No connection to target, doNotConnect flag is true')
         }
@@ -391,11 +391,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     }
 
-    private incomingConnectionCallback(connection: ManagedConnection): boolean {
+    private onIncomingConnection(connection: ManagedConnection): boolean {
         if (this.state === ConnectionManagerState.STOPPED) {
             return false
         }
-        logger.trace('incomingConnectionCallback() objectId ' + connection.objectId)
+        logger.trace('onIncomingConnection() objectId ' + connection.objectId)
         connection.offeredAsIncoming = true
         if (!this.acceptIncomingConnection(connection)) {
             return false

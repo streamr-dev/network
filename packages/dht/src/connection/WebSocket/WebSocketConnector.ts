@@ -41,7 +41,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private readonly webSocketServer?: WebSocketServer
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
-    private incomingConnectionCallback: (connection: ManagedConnection) => boolean
+    private onIncomingConnection: (connection: ManagedConnection) => boolean
     private portRange?: PortRange
     private host?: string
     private entrypoints?: PeerDescriptor[]
@@ -56,7 +56,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         protocolVersion: string,
         rpcTransport: ITransport,
         fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
-        incomingConnectionCallback: (connection: ManagedConnection) => boolean,
+        onIncomingConnection: (connection: ManagedConnection) => boolean,
         portRange?: PortRange,
         host?: string,
         entrypoints?: PeerDescriptor[],
@@ -64,7 +64,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     ) {
         this.protocolVersion = protocolVersion
         this.webSocketServer = portRange ? new WebSocketServer() : undefined
-        this.incomingConnectionCallback = incomingConnectionCallback
+        this.onIncomingConnection = onIncomingConnection
         this.portRange = portRange
         this.host = host
         this.entrypoints = entrypoints
@@ -224,7 +224,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
             managedConnection.setPeerDescriptor(peerDescriptor)
 
-            if (this.incomingConnectionCallback(managedConnection)) {
+            if (this.onIncomingConnection(managedConnection)) {
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake('Duplicate connection')
@@ -258,7 +258,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     return
                 }
                 const connection = this.connect(request.requester!)
-                this.incomingConnectionCallback(connection)
+                this.onIncomingConnection(connection)
             })
             const res: WebSocketConnectionResponse = {
                 accepted: true
