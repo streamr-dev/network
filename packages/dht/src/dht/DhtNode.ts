@@ -238,6 +238,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
 
             const connectionManager = new ConnectionManager(connectionManagerConfig)
+            // TODO: the passed function should only generate the PeerDescriptor, no set it for the DhtNode,
+            // use connectionManager.getPeerDescriptor() after start instead
             await connectionManager.start(this.generatePeerDescriptorCallBack)
             this.connectionManager = connectionManager
             this.transportLayer = connectionManager

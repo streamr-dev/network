@@ -249,7 +249,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
     }
 
-    public async start(peerDescriptorGeneratorCallback?: PeerDescriptorGeneratorCallback): Promise<void> {
+    public async start(peerDescriptorGeneratorCallback: PeerDescriptorGeneratorCallback): Promise<void> {
         if (this.state === ConnectionManagerState.RUNNING || this.state === ConnectionManagerState.STOPPED) {
             throw new Err.CouldNotStart(`Cannot start already ${this.state} module`)
         }
@@ -265,21 +265,36 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             await this.webSocketConnector!.start()
             const selfSigned = (!this.config.tlsCertificate && this.config.websocketServerEnableTls === true)
             const connectivityResponse = await this.webSocketConnector!.checkConnectivity(selfSigned)
-            let ownPeerDescriptor = peerDescriptorGeneratorCallback!(connectivityResponse)
+            let ownPeerDescriptor = peerDescriptorGeneratorCallback(connectivityResponse)
             this.ownPeerDescriptor = ownPeerDescriptor
             this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
             if (ownPeerDescriptor.websocket && !this.config.tlsCertificate && this.config.websocketServerEnableTls) {
-                await this.webSocketConnector!.autoCertify()
-                const autoCertifiedConnectivityResponse = await this.webSocketConnector!.checkConnectivity(false)
-                if (autoCertifiedConnectivityResponse.websocket) {
-                    ownPeerDescriptor = peerDescriptorGeneratorCallback!(autoCertifiedConnectivityResponse)
+                try {
+                    ownPeerDescriptor = await this.autoCertify(peerDescriptorGeneratorCallback)
+                } catch (err) {
+                    connectivityResponse.websocket = undefined
+                    ownPeerDescriptor = peerDescriptorGeneratorCallback(connectivityResponse)
                     this.ownPeerDescriptor = ownPeerDescriptor
-                    this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
-                } else {
-                    // TODO: use self-signed PeerDescriptor or remove WS info from PeerDescriptor
+                    logger.warn('Failed to autocertify, disabling websocket server connectivity')
                 }
             }
             this.webrtcConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
+        }
+    }
+
+    private async autoCertify(peerDescriptorGeneratorCallback: PeerDescriptorGeneratorCallback): Promise<PeerDescriptor> {
+        await this.webSocketConnector!.autoCertify()
+        const autoCertifiedConnectivityResponse = await this.webSocketConnector!.checkConnectivity(false)
+        if (autoCertifiedConnectivityResponse.websocket) {
+            const ownPeerDescriptor = peerDescriptorGeneratorCallback(autoCertifiedConnectivityResponse)
+            this.ownPeerDescriptor = ownPeerDescriptor
+            this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
+            return ownPeerDescriptor
+        } else {
+            logger.warn('ConnectivityCheck failed after autocertification, disabling websocket server connectivity')
+            const ownPeerDescriptor = peerDescriptorGeneratorCallback(autoCertifiedConnectivityResponse)
+            this.ownPeerDescriptor = ownPeerDescriptor
+            return ownPeerDescriptor
         }
     }
 

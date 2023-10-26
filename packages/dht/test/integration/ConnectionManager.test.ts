@@ -344,4 +344,20 @@ describe('ConnectionManager', () => {
         
         await connectionManager1.stop()
     })
+
+    it('Failed autocertification', async () => {
+        const connectionManager1 = new ConnectionManager({
+            transportLayer: mockTransport,
+            websocketHost: '127.0.0.1',
+            websocketServerEnableTls: true,
+            autocertifierUrl: 'https://localhost:9998',
+            websocketPortRange: { min: 10001, max: 10001 }
+        })
+
+        await connectionManager1.start((report) => {
+            return createPeerDescriptor(report)
+        })
+
+        expect(connectionManager1.getPeerDescriptor().websocket).toEqual(undefined)
+    })
 })
