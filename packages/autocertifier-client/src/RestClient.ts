@@ -23,7 +23,7 @@ export class RestClient {
             return response.sessionId
 
         } catch (err) {
-            logger.error(err)
+            logger.debug(err)
             throw err
         }
     }
