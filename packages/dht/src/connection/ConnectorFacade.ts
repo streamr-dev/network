@@ -61,7 +61,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         this.webSocketConnector = new WebSocketConnector(
             ConnectionManager.PROTOCOL_VERSION,
             this.config.transportLayer!,
-            (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),  // TODO why canConnect is not used WebRtcConnector
+            (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),  // TODO shoulw we use canConnect also for WebRtcConnector? (NET-1142)
             onIncomingConnection,
             this.config.websocketPortRange,
             this.config.websocketHost,
