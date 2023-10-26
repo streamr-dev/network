@@ -54,6 +54,7 @@ export class ConnectionManagerConfig {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    maxMessageSize?: number
     externalIp?: string
     webrtcPortRange?: PortRange
     websocketServerEnableTls?: boolean
@@ -191,19 +192,20 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         } else {
             logger.trace(`Creating WebSocketConnector`)
             const autocertifierRpcCommunicator = new ListeningRpcCommunicator(AUTOCERTIFIER_SERVICE_ID, this)
-            this.webSocketConnector = new WebSocketConnector(
-                ConnectionManager.PROTOCOL_VERSION,
-                this.config.transportLayer!,
-                this.canConnect.bind(this),
-                this.incomingConnectionCallback,
+            this.webSocketConnector = new WebSocketConnector({
+                protocolVersion: ConnectionManager.PROTOCOL_VERSION,
+                rpcTransport: this.config.transportLayer!,
+                canConnect: this.canConnect.bind(this),
                 autocertifierRpcCommunicator,
-                this.config.autocertifierUrl!,
-                this.config.websocketPortRange,
-                this.config.websocketHost,
-                this.config.entryPoints,
-                this.config.websocketServerEnableTls,
-                this.config.tlsCertificate
-            )
+                autocertifierUrl: this.config.autocertifierUrl!,
+                serverEnableTls: this.config.websocketServerEnableTls!,
+                incomingConnectionCallback: this.incomingConnectionCallback,
+                portRange: this.config.websocketPortRange,
+                host: this.config.websocketHost,
+                entrypoints: this.config.entryPoints,
+                tlsCertificate: this.config.tlsCertificate,
+                maxMessageSize: this.config.maxMessageSize,
+            })
             logger.trace(`Creating WebRTCConnector`)
             this.webrtcConnector = new WebRtcConnector({
                 rpcTransport: this.config.transportLayer!,
@@ -212,6 +214,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
                 bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
+                maxMessageSize: this.config.maxMessageSize,
                 connectionTimeout: this.config.webrtcNewConnectionTimeout,
                 externalIp: this.config.externalIp,
                 portRange: this.config.webrtcPortRange

@@ -50,7 +50,7 @@ export class ConnectivityChecker {
                 selfSigned
             })
         } catch (e) {
-            throw new Err.ConnectionFailed('Failed to connect to the entrypoints', e)
+            throw new Err.ConnectionFailed(`Failed to connect to the entrypoint ${connectivityMethodToWebSocketUrl(entryPoint.websocket!)}`, e)
         }
         // send connectivity request
         const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort, host: this.host, tls: this.tls, selfSigned }

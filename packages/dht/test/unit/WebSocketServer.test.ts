@@ -3,19 +3,28 @@ import { WebSocketServer } from '../../src/connection/WebSocket/WebSocketServer'
 describe('WebSocketServer', () => {
 
     it('starts and stops', async () => {
-        const server = new WebSocketServer()
-        const port = await server.start({ min: 19792, max: 19792 }, false)
+        const server = new WebSocketServer({
+            portRange: { min: 19792, max: 19792 },
+            enableTls: false
+        })
+        const port = await server.start()
         expect(port).toEqual(19792)
         await server.stop()
     })
 
     it('throws if server is already in use', async () => {
-        const server1 = new WebSocketServer()
-        const port = await server1.start({ min: 19792, max: 19792 }, false)
+        const server1 = new WebSocketServer({
+            portRange: { min: 19792, max: 19792 },
+            enableTls: false
+        })
+        const port = await server1.start()
         expect(port).toEqual(19792)
 
-        const server2 = new WebSocketServer()
-        await expect(server2.start({ min: 19792, max: 19792 }, false))
+        const server2 = new WebSocketServer({
+            portRange: { min: 19792, max: 19792 },
+            enableTls: false
+        })
+        await expect(server2.start())
             .rejects
             .toThrow()
 
@@ -24,12 +33,18 @@ describe('WebSocketServer', () => {
     })
 
     it('Starts server in next port if first one is already in use', async () => {
-        const server1 = new WebSocketServer()
-        const port1 = await server1.start({ min: 19792, max: 19793 }, false)
+        const server1 = new WebSocketServer({
+            portRange: { min: 19792, max: 19793 },
+            enableTls: false
+        })
+        const port1 = await server1.start()
         expect(port1).toEqual(19792)
 
-        const server2 = new WebSocketServer()
-        const port2 = await server2.start({ min: 19792, max: 19793 }, false)
+        const server2 = new WebSocketServer({
+            portRange: { min: 19792, max: 19793 },
+            enableTls: false
+        })
+        const port2 = await server2.start()
         expect(port2).toEqual(19793)
 
         await server1.stop()
@@ -37,9 +52,12 @@ describe('WebSocketServer', () => {
     })
 
     it('throws if too big a port number is given', async () => {
-        const server = new WebSocketServer()
+        const server = new WebSocketServer({
+            portRange: { min: 197923233, max: 197923233 },
+            enableTls: false
+        })
 
-        await expect(server.start({ min: 197923233, max: 197923233 }, false))
+        await expect(server.start())
             .rejects
             .toThrow()
 

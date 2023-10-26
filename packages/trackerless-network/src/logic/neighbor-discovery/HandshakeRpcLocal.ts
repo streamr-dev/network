@@ -5,7 +5,7 @@ import { NodeList } from '../NodeList'
 import { ConnectionLocker, DhtCallContext, PeerDescriptor } from '@streamr/dht'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { HandshakeRpcRemote } from './HandshakeRpcRemote'
-import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
+import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { binaryToHex } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
@@ -17,7 +17,7 @@ interface HandshakeRpcLocalConfig {
     ongoingHandshakes: Set<NodeID>
     maxNeighborCount: number
     createRpcRemote: (target: PeerDescriptor) => HandshakeRpcRemote
-    createRemoteNode: (peerDescriptor: PeerDescriptor) => RemoteRandomGraphNode
+    createDeliveryRpcRemote: (peerDescriptor: PeerDescriptor) => DeliveryRpcRemote
     handshakeWithInterleaving: (target: PeerDescriptor, senderId: NodeID) => Promise<boolean>
 }
 
@@ -54,7 +54,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
             requestId: request.requestId,
             accepted: true
         }
-        this.config.targetNeighbors.add(this.config.createRemoteNode(requester))
+        this.config.targetNeighbors.add(this.config.createDeliveryRpcRemote(requester))
         this.config.connectionLocker.lockConnection(requester, this.config.streamPartId)
         return res
     }
@@ -82,7 +82,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
             this.config.targetNeighbors.remove(furthest.getPeerDescriptor())
             this.config.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.config.streamPartId)
         }
-        this.config.targetNeighbors.add(this.config.createRemoteNode(requester))
+        this.config.targetNeighbors.add(this.config.createDeliveryRpcRemote(requester))
         this.config.connectionLocker.lockConnection(requester, this.config.streamPartId)
         return {
             requestId: request.requestId,

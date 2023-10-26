@@ -11,7 +11,7 @@ import {
     WebSocketConnectionResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { WebSocketConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Logger, wait, waitForEvent3 } from '@streamr/utils'
+import { Logger, wait, waitForEvent3, binaryToHex } from '@streamr/utils'
 import { IWebSocketConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
@@ -38,6 +38,21 @@ export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string
 
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
+interface WebSocketConnectorConfig {
+    protocolVersion: string
+    rpcTransport: ITransport
+    canConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
+    incomingConnectionCallback: (connection: ManagedConnection) => boolean
+    autocertifierRpcCommunicator: ListeningRpcCommunicator
+    autocertifierUrl: string
+    serverEnableTls: boolean
+    portRange?: PortRange
+    maxMessageSize?: number
+    host?: string
+    entrypoints?: PeerDescriptor[]
+    tlsCertificate?: TlsCertificate
+}
+
 export class WebSocketConnector implements IWebSocketConnectorService {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
@@ -49,43 +64,35 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private readonly autocertifierRpcCommunicator: ListeningRpcCommunicator
     private readonly autocertifierUrl: string
     private autocertifierClient?: AutoCertifierClient
-    private portRange?: PortRange
     private host?: string
-    private entrypoints?: PeerDescriptor[]
+    private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
-    private readonly serverTlsEnabled: boolean
+    private readonly serverEnableTls: boolean
     private selectedPort?: number
     private readonly protocolVersion: string
     private ownPeerDescriptor?: PeerDescriptor
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private destroyed = false
 
-    constructor(
-        protocolVersion: string,
-        rpcTransport: ITransport,
-        fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
-        incomingConnectionCallback: (connection: ManagedConnection) => boolean,
-        autocertifierRpcCommunicator: ListeningRpcCommunicator,
-        autocertifierUrl: string,
-        portRange?: PortRange,
-        host?: string,
-        entrypoints?: PeerDescriptor[],
-        serverTlsEnabled?: boolean,
-        tlsCertificate?: TlsCertificate,
-    ) {
-        this.protocolVersion = protocolVersion
-        this.webSocketServer = portRange ? new WebSocketServer() : undefined
-        this.incomingConnectionCallback = incomingConnectionCallback
-        this.portRange = portRange
-        this.host = host
-        this.entrypoints = entrypoints
-        this.serverTlsEnabled = serverTlsEnabled!
-        this.tlsCertificate = tlsCertificate
-        this.autocertifierRpcCommunicator = autocertifierRpcCommunicator
-        this.autocertifierUrl = autocertifierUrl
-        this.canConnectFunction = fnCanConnect.bind(this)
+    constructor(config: WebSocketConnectorConfig) {
+        this.protocolVersion = config.protocolVersion
+        this.webSocketServer = config.portRange ? new WebSocketServer({
+            portRange: config.portRange!,
+            enableTls: config.serverEnableTls,
+            tlsCertificate: config.tlsCertificate,
+            maxMessageSize: config.maxMessageSize
+        }) : undefined
+        this.incomingConnectionCallback = config.incomingConnectionCallback
+        this.host = config.host
+        this.entrypoints = config.entrypoints
+        this.tlsCertificate = config.tlsCertificate
+        this.autocertifierRpcCommunicator = config.autocertifierRpcCommunicator
+        this.autocertifierUrl = config.autocertifierUrl
+        this.serverEnableTls = config.serverEnableTls
 
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, rpcTransport, {
+        this.canConnectFunction = config.canConnect.bind(this)
+
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.rpcTransport, {
             rpcRequestTimeout: 15000
         })
 
@@ -124,9 +131,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     this.attachHandshaker(connection)
                 }
             })
-            const port = await this.webSocketServer.start(this.portRange!, this.serverTlsEnabled, this.tlsCertificate)
+            const port = await this.webSocketServer.start()
             this.selectedPort = port
-            this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.serverTlsEnabled, this.host)
+            this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.serverEnableTls, this.host)
         }
     }
 
@@ -140,7 +147,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         if (this.destroyed) {
             return noServerConnectivityResponse
         }
-        for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS + 1)) {
+        for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS)) {
+            const entryPoint = sample(this.entrypoints)!
             try {
                 if (!this.webSocketServer) {
                     // If no websocket server, return openInternet: false
@@ -157,12 +165,14 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                         return preconfiguredConnectivityResponse
                     } else {
                         // Do real connectivity checking     
-                        return await this.connectivityChecker!.sendConnectivityRequest(sample(this.entrypoints)!, selfSigned)
+                        return await this.connectivityChecker!.sendConnectivityRequest(entryPoint, selfSigned)
                     }
                 }
             } catch (err) {
                 if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
-                    logger.error('Failed to connect to the entrypoint', { error: err })
+                    const error = `Failed to connect to entrypoint with id ${binaryToHex(entryPoint.kademliaId)} ` 
+                        + `and URL ${connectivityMethodToWebSocketUrl(entryPoint.websocket!)}`
+                    logger.error(error, { error: err })
                     await wait(2000)
                 }
             }

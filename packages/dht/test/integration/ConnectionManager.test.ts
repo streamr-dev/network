@@ -200,7 +200,7 @@ describe('ConnectionManager', () => {
         const connectionManager2 = new ConnectionManager({
             transportLayer: mockConnectorTransport2,
             websocketServerEnableTls: false,
-            websocketPortRange: { min: 9999, max: 9999 },
+            websocketPortRange: { min: 9998, max: 9998 },
             entryPoints: [
                 peerDescriptor!
             ]
@@ -350,8 +350,8 @@ describe('ConnectionManager', () => {
             transportLayer: mockTransport,
             websocketHost: '127.0.0.1',
             websocketServerEnableTls: true,
-            autocertifierUrl: 'https://localhost:9998',
-            websocketPortRange: { min: 10001, max: 10001 }
+            autocertifierUrl: 'https://localhost:12333',
+            websocketPortRange: { min: 10003, max: 10003 }
         })
 
         await connectionManager1.start((report) => {
@@ -359,5 +359,6 @@ describe('ConnectionManager', () => {
         })
 
         expect(connectionManager1.getPeerDescriptor().websocket).toEqual(undefined)
+        await connectionManager1.stop()
     })
 })

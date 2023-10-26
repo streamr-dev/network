@@ -84,6 +84,7 @@ export interface DhtNodeOptions {
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
     webrtcPortRange?: PortRange
+    maxMessageSize?: number
     maxConnections?: number
     tlsCertificate?: TlsCertificate
     externalIp?: string
@@ -118,6 +119,7 @@ export class DhtNodeConfig {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    maxMessageSize?: number
     externalIp?: string
     webrtcPortRange?: PortRange
     tlsCertificate?: TlsCertificate
@@ -218,6 +220,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 webrtcPortRange: this.config.webrtcPortRange,
+                maxMessageSize: this.config.maxMessageSize,
                 maxConnections: this.config.maxConnections,
                 websocketServerEnableTls: this.config.websocketServerEnableTls,
                 tlsCertificate: this.config.tlsCertificate,
@@ -358,7 +361,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.onTransportDisconnected(peerDescriptor, disonnectionType)
         })
 
-        this.transportLayer!.getAllConnectionPeerDescriptors().map((peer) => {
+        this.transportLayer!.getAllConnectionPeerDescriptors().forEach((peer) => {
             const peerId = peerIdFromPeerDescriptor(peer)
             const remoteDhtNode = new RemoteDhtNode(
                 this.ownPeerDescriptor!,
@@ -708,10 +711,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.bucket!.toArray().map((remoteDhtNode: RemoteDhtNode) => remoteDhtNode.getPeerDescriptor())
     }
 
-    private getOpenInternetPeerDescriptors(): PeerDescriptor[] {
-        return this.openInternetPeers!.getAllContacts().map((contact) => contact.getPeerDescriptor())
-    }
-
     public getNumberOfConnections(): number {
         return this.connections.size
     }
@@ -750,7 +749,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.entryPointDisconnectTimeout) {
             clearTimeout(this.entryPointDisconnectTimeout)
         }
-        this.bucket!.toArray().map((remoteDhtNode: RemoteDhtNode) => this.bucket!.remove(remoteDhtNode.id))
+        this.bucket!.toArray().forEach((remoteDhtNode: RemoteDhtNode) => this.bucket!.remove(remoteDhtNode.id))
         this.bucket!.removeAllListeners()
         this.localDataStore.clear()
         this.neighborList!.stop()
