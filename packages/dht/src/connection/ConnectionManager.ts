@@ -108,6 +108,7 @@ export const keyOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescriptor | 
 }
 
 export class ConnectionManager extends EventEmitter<Events> implements ITransport, ConnectionLocker {
+
     public static PROTOCOL_VERSION = '1.0'
     private config: ConnectionManagerConfig
     private readonly metricsContext: MetricsContext
