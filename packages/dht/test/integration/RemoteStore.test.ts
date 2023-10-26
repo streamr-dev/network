@@ -19,7 +19,7 @@ describe('RemoteStore', () => {
     let serverRpcCommunicator: RpcCommunicator
     const serviceId = 'test'
     const clientPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('dhtPeer'),
+        kademliaId: generateId('client'),
         type: NodeType.NODEJS
     }
     const serverPeerDescriptor: PeerDescriptor = {
@@ -55,7 +55,7 @@ describe('RemoteStore', () => {
     it('storeData rejects', async () => {
         serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', MockStoreService.throwStoreDataError)
         await expect(remoteStore.storeData(request))
-            .rejects.toThrowError('Could not store data to 736572766572 from 64687450656572 Error: Mock')
+            .rejects.toThrowError('Could not store data to 736572766572 from 636c69656e74 Error: Mock')
     })
 
     it('storeData response error', async () => {

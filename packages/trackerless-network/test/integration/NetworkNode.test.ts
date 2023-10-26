@@ -1,14 +1,13 @@
-import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import {
     MessageID,
     MessageRef,
     StreamMessage,
     StreamMessageType,
-    StreamPartIDUtils,
-    toStreamID
+    StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, waitForCondition, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { EthereumAddress, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 
@@ -70,8 +69,8 @@ describe('NetworkNode', () => {
     it('wait for join + broadcast and subscribe', async () => {
         const streamMessage = new StreamMessage({
             messageId: new MessageID(
-                toStreamID('test'),
-                0,
+                StreamPartIDUtils.getStreamID(STREAM_PART_ID),
+                StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
                 666,
                 0,
                 '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,

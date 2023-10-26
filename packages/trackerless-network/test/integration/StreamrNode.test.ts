@@ -128,7 +128,7 @@ describe('StreamrNode', () => {
         ])
     })
 
-    it('leaving streams', async () => {
+    it('leaving stream parts', async () => {
         node1.joinStreamPart(STREAM_PART_ID)
         node2.joinStreamPart(STREAM_PART_ID)
         await Promise.all([

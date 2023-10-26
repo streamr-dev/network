@@ -1,7 +1,3 @@
-import {
-    StreamPartHandshakeRequest,
-    StreamPartHandshakeResponse
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     ListeningRpcCommunicator,
@@ -11,15 +7,17 @@ import {
     SimulatorTransport
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { NeighborUpdateRpcRemote } from '../../src/logic/neighbor-discovery/NeighborUpdateRpcRemote'
+import { NeighborUpdate } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import {
-    HandshakeRpcClient,
+    NeighborUpdateRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
-describe('RemoteHandshaker', () => {
+describe('NeighborUpdateRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
     let clientRpc: ListeningRpcCommunicator
-    let remoteHandshaker: RemoteHandshaker
+    let rpcRemote: NeighborUpdateRpcRemote
 
     const clientNode: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
@@ -35,7 +33,6 @@ describe('RemoteHandshaker', () => {
     let mockConnectionManager2: SimulatorTransport
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
         simulator = new Simulator()
         mockConnectionManager1 = new SimulatorTransport(serverNode, simulator)
         await mockConnectionManager1.start()
@@ -46,23 +43,29 @@ describe('RemoteHandshaker', () => {
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
 
         mockServerRpc.registerRpcMethod(
-            StreamPartHandshakeRequest,
-            StreamPartHandshakeResponse,
-            'handshake',
-            async (msg: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
-                const res: StreamPartHandshakeResponse = {
-                    requestId: msg.requestId,
-                    accepted: true
+            NeighborUpdate,
+            NeighborUpdate,
+            'neighborUpdate',
+            async (_msg: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> => {
+                const node: PeerDescriptor = {
+                    kademliaId: new Uint8Array([4, 2, 4]),
+                    type: NodeType.NODEJS
                 }
-                return res
+                const update: NeighborUpdate = {
+                    streamPartId: StreamPartIDUtils.parse('stream#0'),
+                    neighborDescriptors: [
+                        node
+                    ],
+                    removeMe: false
+                }
+                return update
             }
         )
-
-        remoteHandshaker = new RemoteHandshaker(
+        rpcRemote = new NeighborUpdateRpcRemote(
             clientNode,
             serverNode,
-            'test-stream',
-            toProtoRpcClient(new HandshakeRpcClient(clientRpc.getRpcClientTransport()))
+            'test-stream-part',
+            toProtoRpcClient(new NeighborUpdateRpcClient(clientRpc.getRpcClientTransport()))
         )
     })
 
@@ -72,11 +75,10 @@ describe('RemoteHandshaker', () => {
         await mockConnectionManager1.stop()
         await mockConnectionManager2.stop()
         simulator.stop()
-        Simulator.useFakeTimers(false)
     })
 
-    it('handshake', async () => {
-        const result = await remoteHandshaker.handshake([])
-        expect(result.accepted).toEqual(true)
+    it('updateNeighbors', async () => {
+        const res = await rpcRemote.updateNeighbors([])
+        expect(res.peerDescriptors.length).toEqual(1)
     })
 })

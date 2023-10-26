@@ -99,13 +99,13 @@ describe('RandomGraphNode-DhtNode', () => {
 
     it('happy path 4 nodes', async () => {
         entryPointRandomGraphNode.start()
-        range(4).map((i) => graphNodes[i].start())
+        range(4).forEach((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
             await dhtNodes[i].joinDht([entrypointDescriptor])
         }))
 
         await waitForCondition(() => range(4).every((i) => graphNodes[i].getTargetNeighborIds().length === 4))
-        range(4).map((i) => {
+        range(4).forEach((i) => {
             expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
@@ -113,7 +113,7 @@ describe('RandomGraphNode-DhtNode', () => {
         // Check bidirectionality
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
-        range(5).map((i) => {
+        range(5).forEach((i) => {
             allNodes[i].getNearbyNodeView().getIds().forEach((nodeId) => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === nodeId

@@ -4,7 +4,9 @@ import { ContractFacade } from './ContractFacade'
 const logger = new Logger(module)
 
 export const checkOperatorValueBreach = async (
-    contractFacade: ContractFacade
+    contractFacade: ContractFacade,
+    minSponsorshipEarningsInWithdraw: number,
+    maxSponsorshipsInWithdraw: number
 ): Promise<void> => {
     const targetOperatorAddress = await contractFacade.getRandomOperator()
     if (targetOperatorAddress === undefined) {
@@ -12,7 +14,11 @@ export const checkOperatorValueBreach = async (
         return
     }
     logger.info('Check earnings', { targetOperatorAddress })
-    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await contractFacade.getEarningsOf(targetOperatorAddress)
+    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await contractFacade.getEarningsOf(
+        targetOperatorAddress,
+        minSponsorshipEarningsInWithdraw,
+        maxSponsorshipsInWithdraw
+    )
     logger.trace(` -> is ${sumDataWei} > ${maxAllowedEarningsDataWei}?`)
     if (sumDataWei > maxAllowedEarningsDataWei) {
         logger.info('Withdraw earnings from sponsorships (target operator value in breach)',

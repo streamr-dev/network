@@ -4,7 +4,7 @@ import { InspectSession, Events as InspectSessionEvents } from './InspectSession
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger, waitForEvent3 } from '@streamr/utils'
-import { RemoteTemporaryConnectionRpcServer } from '../temporary-connection/RemoteTemporaryConnectionRpcServer'
+import { TemporaryConnectionRpcRemote } from '../temporary-connection/TemporaryConnectionRpcRemote'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
@@ -47,8 +47,8 @@ export class Inspector implements IInspector {
     }
 
     async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: string): Promise<void> {
-        const remoteRandomGraphNode = new RemoteTemporaryConnectionRpcServer(this.ownPeerDescriptor, peerDescriptor, this.streamPartId, this.client)
-        await remoteRandomGraphNode.openConnection()
+        const rpcRemote = new TemporaryConnectionRpcRemote(this.ownPeerDescriptor, peerDescriptor, this.streamPartId, this.client)
+        await rpcRemote.openConnection()
         this.connectionLocker.lockConnection(peerDescriptor, lockId)
     }
 

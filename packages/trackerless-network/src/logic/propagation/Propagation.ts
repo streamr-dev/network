@@ -57,8 +57,8 @@ export class Propagation {
      * Node should invoke this when it learns about a new node stream assignment
      */
     onNeighborJoined(neighborId: NodeID): void {
-        const tasksOfStream = this.activeTaskStore.get()
-        for (const task of tasksOfStream) {
+        const tasks = this.activeTaskStore.get()
+        for (const task of tasks) {
             this.sendAndAwaitThenMark(task, neighborId)
         }
     }

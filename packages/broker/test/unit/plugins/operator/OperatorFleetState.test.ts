@@ -38,7 +38,15 @@ describe(OperatorFleetState, () => {
             return subscription
         })
         currentTime = 0
-        state = new OperatorFleetState(streamrClient, coordinationStreamId, () => currentTime, 10, 100, READY_WAIT_MS, 0)
+        const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
+            streamrClient,
+            READY_WAIT_MS,
+            10,
+            100,
+            0,
+            () => currentTime
+        )
+        state = createOperatorFleetState(coordinationStreamId)
     })
 
     afterEach(() => {

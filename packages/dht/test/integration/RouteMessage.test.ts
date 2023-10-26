@@ -135,7 +135,7 @@ describe('Route Message With Mock Connections', () => {
         }
 
         const numsOfReceivedMessages: Record<string, number> = {}
-        routerNodes.map((node) => {
+        routerNodes.forEach((node) => {
             numsOfReceivedMessages[node.getNodeId().toKey()] = 0
             node.on('message', (msg: Message) => {
                 numsOfReceivedMessages[node.getNodeId().toKey()] = numsOfReceivedMessages[node.getNodeId().toKey()] + 1

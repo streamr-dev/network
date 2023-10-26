@@ -1,14 +1,15 @@
 import { NodeType, PeerDescriptor, Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
-import { streamPartIdToDataKey } from '../../src/logic/StreamPartEntryPointDiscovery'
+import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { createStreamMessage } from '../utils/utils'
 import { waitForCondition } from '@streamr/utils'
 import { randomEthereumAddress } from '@streamr/test-utils'
 
-describe('Joining streams on offline nodes', () => {
-    const streamPartId = StreamPartIDUtils.parse('stream#0')
+const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
+
+describe('Joining stream parts on offline nodes', () => {
 
     const entryPointPeerDescriptor: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 2, 3]),
@@ -85,12 +86,12 @@ describe('Joining streams on offline nodes', () => {
         let messageReceived = false
 
         // store offline peer descriptors to DHT
-        await entryPoint.getLayer0DhtNode().storeDataToDht(streamPartIdToDataKey(streamPartId), Any.pack(offlineDescriptor1, PeerDescriptor))
-        await entryPoint.getLayer0DhtNode().storeDataToDht(streamPartIdToDataKey(streamPartId), Any.pack(offlineDescriptor2, PeerDescriptor))
+        await entryPoint.getLayer0DhtNode().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor1, PeerDescriptor))
+        await entryPoint.getLayer0DhtNode().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor2, PeerDescriptor))
         
-        node1.getStreamrNode().joinStreamPart(streamPartId)
+        node1.getStreamrNode().joinStreamPart(STREAM_PART_ID)
         node1.getStreamrNode().on('newMessage', () => { messageReceived = true })
-        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), streamPartId, randomEthereumAddress())
+        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, randomEthereumAddress())
         node2.getStreamrNode().broadcast(msg)
         await waitForCondition(() => messageReceived, 40000)
     }, 60000)

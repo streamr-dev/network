@@ -1,4 +1,4 @@
-import { PeerDescriptor, RecursiveFindResult, Message, DataEntry } from '@streamr/dht'
+import { PeerDescriptor, Message, DataEntry } from '@streamr/dht'
 import { ILayer0 } from '../../../src/logic/ILayer0'
 import { Any } from '../../../src/proto/google/protobuf/any'
 import { EventEmitter } from 'eventemitter3'
@@ -17,15 +17,7 @@ export class MockLayer0 extends EventEmitter implements ILayer0 {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async getDataFromDht(_key: Uint8Array): Promise<RecursiveFindResult> {
-        return {
-            closestNodes: [],
-            dataEntries: []
-        }
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async findDataViaPeer(_key: Uint8Array): Promise<DataEntry[]> {
+    async getDataFromDht(_key: Uint8Array): Promise<DataEntry[]> {
         return []
     }
 
@@ -47,11 +39,6 @@ export class MockLayer0 extends EventEmitter implements ILayer0 {
     // eslint-disable-next-line class-methods-use-this
     getKnownEntryPoints(): PeerDescriptor[] {
         return []
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    isJoinOngoing(): boolean {
-        return false
     }
 
     // eslint-disable-next-line class-methods-use-this

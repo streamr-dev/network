@@ -58,7 +58,7 @@ export interface IceServer {
 }
 
 export class WebRtcConnector implements IWebRtcConnectorService {
-    private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc_connector'
+    private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
     private ownPeerDescriptor?: PeerDescriptor
