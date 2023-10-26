@@ -34,8 +34,8 @@ export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string
     return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
 }
 
-const canOpenConnectionFormBrowser = (websocketServer: ConnectivityMethod) => {
-    const hasPrivateAddress = (websocketServer.host === 'localhost' || (isPrivateIPv4(websocketServer.host)))
+const canOpenConnectionFromBrowser = (websocketServer: ConnectivityMethod) => {
+    const hasPrivateAddress = ((websocketServer.host === 'localhost') || isPrivateIPv4(websocketServer.host))
     return websocketServer.tls && hasPrivateAddress
 }
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
@@ -177,9 +177,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                 return true
             }
             if (this.ownPeerDescriptor!.websocket !== undefined) {
-                return (targetPeerDescriptor.type === NodeType.BROWSER) && canOpenConnectionFormBrowser(this.ownPeerDescriptor!.websocket)
+                return (targetPeerDescriptor.type === NodeType.BROWSER) && canOpenConnectionFromBrowser(this.ownPeerDescriptor!.websocket)
             } else {  // targetPeerDescriptor.websocket !== undefined
-                return (this.ownPeerDescriptor!.type === NodeType.BROWSER) && canOpenConnectionFormBrowser(targetPeerDescriptor.websocket!)
+                return (this.ownPeerDescriptor!.type === NodeType.BROWSER) && canOpenConnectionFromBrowser(targetPeerDescriptor.websocket!)
             } 
         } else {
             return false
