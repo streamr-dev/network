@@ -88,7 +88,7 @@ export interface TlsCertificate {
 
 export type Events = TransportEvents & ConnectionManagerEvents
 
-const INTERNAL_SERVICE_ID = 'ConnectionManager'
+const INTERNAL_SERVICE_ID = 'system/connection-manager'
 
 // Form an string representation from a peer description which can be undefined. This output 
 // should only be used only for log output. TODO remove this method if we no longer use
