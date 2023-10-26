@@ -1,16 +1,15 @@
 /* eslint-disable promise/no-nesting */
 
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { Simulator } from '../../src/connection/Simulator/Simulator'
-import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { PeerID } from '../../src/helpers/PeerID'
-import { ConnectionType } from '../../src/connection/IConnection'
-import { ITransport } from '../../src/transport/ITransport'
-import * as Err from '../../src/helpers/errors'
 import { MetricsContext, waitForCondition } from '@streamr/utils'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { SimulatorTransport } from '../../src/exports'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
+import { ConnectionType } from '../../src/connection/IConnection'
+import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { SimulatorTransport } from '../../src/exports'
+import { PeerID } from '../../src/helpers/PeerID'
+import * as Err from '../../src/helpers/errors'
+import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 const createConfig = (ownPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createOwnPeerDescriptor'>) => {
     return {

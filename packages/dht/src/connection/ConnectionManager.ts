@@ -1,6 +1,20 @@
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
+import { Contact } from '../dht/contact/Contact'
+import { SortedContactList } from '../dht/contact/SortedContactList'
+import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
+import { PeerIDKey } from '../helpers/PeerID'
+import * as Err from '../helpers/errors'
 import {
-    ConnectivityResponse,
+    isSamePeerDescriptor,
+    keyFromPeerDescriptor,
+    peerIdFromPeerDescriptor
+} from '../helpers/peerIdFromPeerDescriptor'
+import { protoToString } from '../helpers/protoToString'
+import { Empty } from '../proto/google/protobuf/empty'
+import {
     DisconnectMode,
     DisconnectNotice,
     DisconnectNoticeResponse,
@@ -8,36 +22,16 @@ import {
     LockResponse,
     Message,
     MessageType,
-    NodeType,
     PeerDescriptor,
     UnlockRequest
 } from '../proto/packages/dht/protos/DhtRpc'
-import { WebSocketConnector } from './WebSocket/WebSocketConnector'
-import { PeerIDKey } from '../helpers/PeerID'
-import { protoToString } from '../helpers/protoToString'
-import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
-import { IceServer, WebRtcConnector } from './WebRTC/WebRtcConnector'
-import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric, waitForEvent3 } from '@streamr/utils'
-import * as Err from '../helpers/errors'
-import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
-import { ManagedConnection, Events as ManagedConnectionEvents } from './ManagedConnection'
-import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { ConnectionLockerClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { RemoteConnectionLocker } from './RemoteConnectionLocker'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { Empty } from '../proto/google/protobuf/empty'
-import { Simulator } from './Simulator/Simulator'
+import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
+import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ConnectionLockHandler } from './ConnectionLockHandler'
-import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
-import { SortedContactList } from '../dht/contact/SortedContactList'
-import { Contact } from '../dht/contact/Contact'
-import {
-    isSamePeerDescriptor,
-    keyFromPeerDescriptor,
-    peerIdFromPeerDescriptor
-} from '../helpers/peerIdFromPeerDescriptor'
 import { ConnectorFacade } from './ConnectorFacade'
+import { ManagedConnection, Events as ManagedConnectionEvents } from './ManagedConnection'
+import { RemoteConnectionLocker } from './RemoteConnectionLocker'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number

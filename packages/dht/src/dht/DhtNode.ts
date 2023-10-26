@@ -19,7 +19,7 @@ import {
     DataEntry,
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
-import { ConnectionManager, ConnectionManagerConfig, PortRange, TlsCertificate } from '../connection/ConnectionManager'
+import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
@@ -45,7 +45,6 @@ import { UUID } from '../helpers/UUID'
 import { isNodeJS } from '../helpers/browser/isNodeJS'
 import { sample } from 'lodash'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
-import { ManagedConnection } from '../connection/ManagedConnection'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void

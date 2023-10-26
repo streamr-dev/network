@@ -1,11 +1,11 @@
-import { Simulator } from '../../src/connection/Simulator/Simulator'
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { MetricsContext, waitForCondition } from '@streamr/utils'
-import { PeerID } from '../../src/helpers/PeerID'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
+import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
-import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 import { ITransport } from '../../src/exports'
+import { PeerID } from '../../src/helpers/PeerID'
+import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 
 const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, transportLayer: ITransport) => {
     return new ConnectionManager({

@@ -1,12 +1,11 @@
+import { MetricsContext, waitForCondition } from '@streamr/utils'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { MetricsContext, waitForCondition } from '@streamr/utils'
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { ITransport } from '../../src/transport/ITransport'
-import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 
 const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createOwnPeerDescriptor'>) => {
     return new ConnectionManager({

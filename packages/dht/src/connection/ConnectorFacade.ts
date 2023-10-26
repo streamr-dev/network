@@ -1,18 +1,18 @@
-import { Logger, MetricsContext } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
+import { isPrivateIPv4 } from '../helpers/AddressTools'
 import {
     ConnectivityResponse,
     NodeType,
     PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../transport/ITransport'
+import { ConnectionManager, PortRange, TlsCertificate } from './ConnectionManager'
 import { ManagedConnection } from './ManagedConnection'
+import { Simulator } from './Simulator/Simulator'
+import { SimulatorConnector } from './Simulator/SimulatorConnector'
+import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 import { IceServer, WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
-import { ConnectionManager, PortRange, TlsCertificate } from './ConnectionManager'
-import { SimulatorConnector } from './Simulator/SimulatorConnector'
-import { Simulator } from './Simulator/Simulator'
-import { isPrivateIPv4 } from '../helpers/AddressTools'
-import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
@@ -56,7 +56,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     async start(
         onIncomingConnection: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean
-    ) {
+    ): Promise<void> {
         logger.trace(`Creating WebSocketConnector`)
         this.webSocketConnector = new WebSocketConnector(
             ConnectionManager.PROTOCOL_VERSION,
@@ -135,7 +135,7 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
         this.simulator = simulator
     }
 
-    async start(onIncomingConnection: (connection: ManagedConnection) => boolean) {
+    async start(onIncomingConnection: (connection: ManagedConnection) => boolean): Promise<void> {
         logger.trace(`Creating SimulatorConnector`)
         this.simulatorConnector = new SimulatorConnector(
             ConnectionManager.PROTOCOL_VERSION,
