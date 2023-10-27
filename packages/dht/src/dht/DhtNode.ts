@@ -167,7 +167,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private ownPeerDescriptor?: PeerDescriptor
     private ownPeerId?: PeerID
     public router?: Router
-    public storeRpcLocal?: StoreRpcLocal
+    private storeRpcLocal?: StoreRpcLocal
     private localDataStore = new LocalDataStore()
     private recursiveFinder?: RecursiveFinder
     private peerDiscovery?: PeerDiscovery
