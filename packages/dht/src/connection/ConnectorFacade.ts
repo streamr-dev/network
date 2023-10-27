@@ -8,7 +8,7 @@ import { ConnectionManager, PortRange, TlsCertificate } from './ConnectionManage
 import { ManagedConnection } from './ManagedConnection'
 import { Simulator } from './Simulator/Simulator'
 import { SimulatorConnector } from './Simulator/SimulatorConnector'
-import { IceServer, WebRtcConnector } from './WebRTC/WebRtcConnector'
+import { IceServer, WebRtcConnectorRpcLocal } from './WebRTC/WebRtcConnectorRpcLocal'
 import { WebSocketConnectorRpcLocal } from './WebSocket/WebSocketConnectorRpcLocal'
 
 export interface ConnectorFacade {
@@ -45,7 +45,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     private readonly config: DefaultConnectorFacadeConfig
     private ownPeerDescriptor?: PeerDescriptor
     private webSocketConnector?: WebSocketConnectorRpcLocal
-    private webrtcConnector?: WebRtcConnector
+    private webrtcConnector?: WebRtcConnectorRpcLocal
 
     constructor(config: DefaultConnectorFacadeConfig) {
         this.config = config
@@ -69,7 +69,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             maxMessageSize: this.config.maxMessageSize
         })
         logger.trace(`Creating WebRTCConnector`)
-        this.webrtcConnector = new WebRtcConnector({
+        this.webrtcConnector = new WebRtcConnectorRpcLocal({
             rpcTransport: this.config.transportLayer!,
             protocolVersion: ConnectionManager.PROTOCOL_VERSION,
             iceServers: this.config.iceServers,

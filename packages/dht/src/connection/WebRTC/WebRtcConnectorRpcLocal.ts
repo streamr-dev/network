@@ -57,7 +57,8 @@ export interface IceServer {
     tcp?: boolean
 }
 
-export class WebRtcConnector implements IWebRtcConnectorRpc {
+export class WebRtcConnectorRpcLocal implements IWebRtcConnectorRpc {
+
     private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
@@ -77,7 +78,7 @@ export class WebRtcConnector implements IWebRtcConnectorRpc {
         this.allowPrivateAddresses = config.allowPrivateAddresses || true
         this.onIncomingConnection = onIncomingConnection
 
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.rpcTransport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnectorRpcLocal.WEBRTC_CONNECTOR_SERVICE_ID, config.rpcTransport, {
             rpcRequestTimeout: 15000
         })
         this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer',
