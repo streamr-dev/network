@@ -5,7 +5,7 @@ import {
     RtcOffer,
     WebRtcConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { IWebRtcConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { IWebRtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
@@ -15,9 +15,9 @@ const logger = new Logger(module)
 export class RemoteWebrtcConnector {
 
     private peerDescriptor: PeerDescriptor
-    private client: ProtoRpcClient<IWebRtcConnectorServiceClient>
+    private client: ProtoRpcClient<IWebRtcConnectorRpcClient>
 
-    constructor(peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IWebRtcConnectorServiceClient>) {
+    constructor(peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IWebRtcConnectorRpcClient>) {
         this.peerDescriptor = peerDescriptor
         this.client = client
     }

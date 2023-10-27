@@ -102,9 +102,9 @@ export interface IWebSocketConnectorRpc<T = ServerCallContext> {
     requestConnection(request: WebSocketConnectionRequest, context: T): Promise<WebSocketConnectionResponse>;
 }
 /**
- * @generated from protobuf service dht.WebRtcConnectorService
+ * @generated from protobuf service dht.WebRtcConnectorRpc
  */
-export interface IWebRtcConnectorService<T = ServerCallContext> {
+export interface IWebRtcConnectorRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: requestConnection(dht.WebRtcConnectionRequest) returns (google.protobuf.Empty);
      */

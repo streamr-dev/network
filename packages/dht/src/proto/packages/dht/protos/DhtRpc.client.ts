@@ -12,7 +12,7 @@ import type { DisconnectNotice } from "./DhtRpc";
 import type { UnlockRequest } from "./DhtRpc";
 import type { LockResponse } from "./DhtRpc";
 import type { LockRequest } from "./DhtRpc";
-import { WebRtcConnectorService } from "./DhtRpc";
+import { WebRtcConnectorRpc } from "./DhtRpc";
 import type { IceCandidate } from "./DhtRpc";
 import type { RtcAnswer } from "./DhtRpc";
 import type { RtcOffer } from "./DhtRpc";
@@ -241,9 +241,9 @@ export class WebSocketConnectorRpcClient implements IWebSocketConnectorRpcClient
     }
 }
 /**
- * @generated from protobuf service dht.WebRtcConnectorService
+ * @generated from protobuf service dht.WebRtcConnectorRpc
  */
-export interface IWebRtcConnectorServiceClient {
+export interface IWebRtcConnectorRpcClient {
     /**
      * @generated from protobuf rpc: requestConnection(dht.WebRtcConnectionRequest) returns (google.protobuf.Empty);
      */
@@ -262,12 +262,12 @@ export interface IWebRtcConnectorServiceClient {
     iceCandidate(input: IceCandidate, options?: RpcOptions): UnaryCall<IceCandidate, Empty>;
 }
 /**
- * @generated from protobuf service dht.WebRtcConnectorService
+ * @generated from protobuf service dht.WebRtcConnectorRpc
  */
-export class WebRtcConnectorServiceClient implements IWebRtcConnectorServiceClient, ServiceInfo {
-    typeName = WebRtcConnectorService.typeName;
-    methods = WebRtcConnectorService.methods;
-    options = WebRtcConnectorService.options;
+export class WebRtcConnectorRpcClient implements IWebRtcConnectorRpcClient, ServiceInfo {
+    typeName = WebRtcConnectorRpc.typeName;
+    methods = WebRtcConnectorRpc.methods;
+    options = WebRtcConnectorRpc.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**

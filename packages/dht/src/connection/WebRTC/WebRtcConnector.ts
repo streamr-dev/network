@@ -9,12 +9,12 @@ import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection'
 import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
-import { WebRtcConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { WebRtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { ManagedWebRtcConnection } from '../ManagedWebRtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
-import { IWebRtcConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { IWebRtcConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
@@ -57,7 +57,7 @@ export interface IceServer {
     tcp?: boolean
 }
 
-export class WebRtcConnector implements IWebRtcConnectorService {
+export class WebRtcConnector implements IWebRtcConnectorRpc {
     private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
@@ -137,7 +137,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
 
         const remoteConnector = new RemoteWebrtcConnector(
             targetPeerDescriptor,
-            toProtoRpcClient(new WebRtcConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new WebRtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
         )
 
         connection.on('localCandidate', (candidate: string, mid: string) => {
@@ -205,7 +205,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
 
             const remoteConnector = new RemoteWebrtcConnector(
                 remotePeer,
-                toProtoRpcClient(new WebRtcConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new WebRtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
 
             connection.on('localCandidate', (candidate: string, mid: string) => {

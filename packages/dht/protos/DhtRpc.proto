@@ -34,7 +34,7 @@ service WebSocketConnectorRpc {
   rpc requestConnection (WebSocketConnectionRequest) returns (WebSocketConnectionResponse);
 }
 
-service WebRtcConnectorService {
+service WebRtcConnectorRpc {
   rpc requestConnection (WebRtcConnectionRequest) returns (google.protobuf.Empty);
   rpc rtcOffer (RtcOffer) returns (google.protobuf.Empty);
   rpc rtcAnswer (RtcAnswer) returns (google.protobuf.Empty);

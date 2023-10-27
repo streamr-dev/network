@@ -1370,9 +1370,9 @@ export const WebSocketConnectorRpc = new ServiceType("dht.WebSocketConnectorRpc"
     { name: "requestConnection", options: {}, I: WebSocketConnectionRequest, O: WebSocketConnectionResponse }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.WebRtcConnectorService
+ * @generated ServiceType for protobuf service dht.WebRtcConnectorRpc
  */
-export const WebRtcConnectorService = new ServiceType("dht.WebRtcConnectorService", [
+export const WebRtcConnectorRpc = new ServiceType("dht.WebRtcConnectorRpc", [
     { name: "requestConnection", options: {}, I: WebRtcConnectionRequest, O: Empty },
     { name: "rtcOffer", options: {}, I: RtcOffer, O: Empty },
     { name: "rtcAnswer", options: {}, I: RtcAnswer, O: Empty },
