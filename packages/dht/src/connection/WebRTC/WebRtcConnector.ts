@@ -136,6 +136,7 @@ export class WebRtcConnector implements IWebRtcConnectorRpc {
         managedConnection.on('handshakeCompleted', delFunc)
 
         const remoteConnector = new RemoteWebrtcConnector(
+            this.ownPeerDescriptor!,
             targetPeerDescriptor,
             toProtoRpcClient(new WebRtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
         )
@@ -145,23 +146,23 @@ export class WebRtcConnector implements IWebRtcConnectorRpc {
                 candidate = replaceInternalIpWithExternalIp(candidate, this.config.externalIp)
                 logger.debug(`onLocalCandidate injected external ip ${candidate} ${mid}`)
             }
-            remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
+            remoteConnector.sendIceCandidate(candidate, mid, connection.connectionId.toString())
         })
 
         if (offering) {
             connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcOffer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
+                remoteConnector.sendRtcOffer(description, connection.connectionId.toString())
             })
         } else {
             connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcAnswer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
+                remoteConnector.sendRtcAnswer(description, connection.connectionId.toString())
             })
         }
 
         connection.start(offering)
 
         if (!offering) {
-            remoteConnector.requestConnection(this.ownPeerDescriptor!, connection.connectionId.toString())
+            remoteConnector.requestConnection(connection.connectionId.toString())
         }
 
         return managedConnection
@@ -204,16 +205,17 @@ export class WebRtcConnector implements IWebRtcConnectorRpc {
             this.onIncomingConnection(managedConnection)
 
             const remoteConnector = new RemoteWebrtcConnector(
+                this.ownPeerDescriptor!,
                 remotePeer,
                 toProtoRpcClient(new WebRtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
 
             connection.on('localCandidate', (candidate: string, mid: string) => {
-                remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection!.connectionId.toString())
+                remoteConnector.sendIceCandidate(candidate, mid, connection!.connectionId.toString())
             })
 
             connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcAnswer(this.ownPeerDescriptor!, description, connection!.connectionId.toString())
+                remoteConnector.sendRtcAnswer(description, connection!.connectionId.toString())
             })
 
             connection.start(false)

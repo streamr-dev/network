@@ -1,3 +1,4 @@
+import { Remote } from '../../dht/contact/Remote'
 import {
     IceCandidate,
     PeerDescriptor,
@@ -6,86 +7,71 @@ import {
     WebRtcConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { IWebRtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-export class RemoteWebrtcConnector {
+export class RemoteWebrtcConnector extends Remote<IWebRtcConnectorRpcClient> {
 
-    private peerDescriptor: PeerDescriptor
-    private client: ProtoRpcClient<IWebRtcConnectorRpcClient>
-
-    constructor(peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IWebRtcConnectorRpcClient>) {
-        this.peerDescriptor = peerDescriptor
-        this.client = client
+    constructor(
+        localPeerDescriptor: PeerDescriptor,
+        remotePeerDescriptor: PeerDescriptor,
+        client: ProtoRpcClient<IWebRtcConnectorRpcClient>
+    ) {
+        super(localPeerDescriptor, remotePeerDescriptor, 'DUMMY', client)
     }
 
-    requestConnection(sourceDescriptor: PeerDescriptor, connectionId: string): void {
+    requestConnection(connectionId: string): void {
         const request: WebRtcConnectionRequest = {
-            target: this.peerDescriptor,
-            requester: sourceDescriptor,
+            target: this.getPeerDescriptor(),
+            requester: this.getLocalPeerDescriptor(),
             connectionId
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor,
-            targetDescriptor: this.peerDescriptor,
+        const options = this.formDhtRpcOptions({
             notification: true
-        }
-
-        this.client.requestConnection(request, options).catch((_e) => {
+        })
+        this.getClient().requestConnection(request, options).catch((_e) => {
             logger.trace('Failed to send requestConnection')
         })
     }
 
-    sendRtcOffer(sourceDescriptor: PeerDescriptor, description: string, connectionId: string): void {
+    sendRtcOffer(description: string, connectionId: string): void {
         const request: RtcOffer = {
-            target: this.peerDescriptor,
-            requester: sourceDescriptor,
+            target: this.getPeerDescriptor(),
+            requester: this.getLocalPeerDescriptor(),
             connectionId,
             description
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor,
-            targetDescriptor: this.peerDescriptor,
-        }
-
-        this.client.rtcOffer(request, options).catch((_e) => {
+        const options = this.formDhtRpcOptions()
+        this.getClient().rtcOffer(request, options).catch((_e) => {
             logger.trace('Failed to send rtcOffer')
         })
     }
 
-    sendRtcAnswer(sourceDescriptor: PeerDescriptor, description: string, connectionId: string): void {
+    sendRtcAnswer(description: string, connectionId: string): void {
         const request: RtcAnswer = {
-            target: this.peerDescriptor,
-            requester: sourceDescriptor,
+            target: this.getPeerDescriptor(),
+            requester: this.getLocalPeerDescriptor(),
             connectionId,
             description
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor,
-            targetDescriptor: this.peerDescriptor,
-        }
-
-        this.client.rtcAnswer(request, options).catch((_e) => {
+        const options = this.formDhtRpcOptions()
+        this.getClient().rtcAnswer(request, options).catch((_e) => {
             logger.trace('Failed to send rtcAnswer')
         })
     }
 
-    sendIceCandidate(sourceDescriptor: PeerDescriptor, candidate: string, mid: string, connectionId: string): void {
+    sendIceCandidate(candidate: string, mid: string, connectionId: string): void {
         const request: IceCandidate = {
-            target: this.peerDescriptor,
-            requester: sourceDescriptor,
+            target: this.getPeerDescriptor(),
+            requester: this.getLocalPeerDescriptor(),
             connectionId,
             mid,
             candidate
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor,
-            targetDescriptor: this.peerDescriptor,
-        }
-        this.client.iceCandidate(request, options).catch((_e) => {
+        const options = this.formDhtRpcOptions()
+        this.getClient().iceCandidate(request, options).catch((_e) => {
             logger.trace('Failed to send iceCandidate')
         })
     }
