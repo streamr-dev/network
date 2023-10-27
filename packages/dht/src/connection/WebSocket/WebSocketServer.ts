@@ -45,7 +45,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
         this.tlsCertificate = config.tlsCertificate
         this.maxMessageSize = config.maxMessageSize ?? 1048576
     }
-    // TODO: move parameters to constructor?
+
     public async start(): Promise<number> {
         const ports = range(this.portRange.min, this.portRange.max + 1)
         for (const port of ports) {
