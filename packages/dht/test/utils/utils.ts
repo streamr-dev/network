@@ -23,7 +23,7 @@ import {
     IDhtRpcService,
     IRoutingService,
     IStoreRpc,
-    IWebSocketConnectorService
+    IWebSocketConnectorRpc
 } from '../../src/proto/packages/dht/protos/DhtRpc.server'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
@@ -221,7 +221,7 @@ export const mockStoreRpc: IStoreRpcWithError = {
     }
 }
 
-export const mockWebSocketConnectorRpc: IWebSocketConnectorService = {
+export const mockWebSocketConnectorRpc: IWebSocketConnectorRpc = {
     async requestConnection(request: WebSocketConnectionRequest): Promise<WebSocketConnectionResponse> {
         const responseConnection: WebSocketConnectionResponse = {
             target: request.target,

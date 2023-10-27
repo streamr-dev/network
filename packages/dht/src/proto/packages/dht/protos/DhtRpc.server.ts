@@ -93,9 +93,9 @@ export interface IRecursiveFindSessionService<T = ServerCallContext> {
     reportRecursiveFindResult(request: RecursiveFindReport, context: T): Promise<Empty>;
 }
 /**
- * @generated from protobuf service dht.WebSocketConnectorService
+ * @generated from protobuf service dht.WebSocketConnectorRpc
  */
-export interface IWebSocketConnectorService<T = ServerCallContext> {
+export interface IWebSocketConnectorRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: requestConnection(dht.WebSocketConnectionRequest) returns (dht.WebSocketConnectionResponse);
      */

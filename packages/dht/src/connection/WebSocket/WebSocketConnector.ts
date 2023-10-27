@@ -11,9 +11,9 @@ import {
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { WebSocketConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { WebSocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger, binaryToHex, wait } from '@streamr/utils'
-import { IWebSocketConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { IWebSocketConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebSocketServer } from './WebSocketServer'
 import { ConnectivityChecker } from '../ConnectivityChecker'
@@ -52,7 +52,7 @@ interface WebSocketConnectorConfig {
     tlsCertificate?: TlsCertificate
 }
 
-export class WebSocketConnector implements IWebSocketConnectorService {
+export class WebSocketConnector implements IWebSocketConnectorRpc {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
@@ -221,7 +221,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         setImmediate(() => {
             const remoteConnector = new RemoteWebSocketConnector(
                 targetPeerDescriptor,
-                toProtoRpcClient(new WebSocketConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new WebSocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.host, ownPeerDescriptor.websocket!.port)
         })
@@ -273,7 +273,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         await this.webSocketServer?.stop()
     }
 
-    // IWebSocketConnectorService implementation
+    // IWebSocketConnectorRpc implementation
     public async requestConnection(request: WebSocketConnectionRequest): Promise<WebSocketConnectionResponse> {
         if (!this.destroyed && this.canConnectFunction(request.requester!, request.ip, request.port)) {
             setImmediate(() => {

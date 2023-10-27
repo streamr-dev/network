@@ -17,7 +17,7 @@ import type { IceCandidate } from "./DhtRpc";
 import type { RtcAnswer } from "./DhtRpc";
 import type { RtcOffer } from "./DhtRpc";
 import type { WebRtcConnectionRequest } from "./DhtRpc";
-import { WebSocketConnectorService } from "./DhtRpc";
+import { WebSocketConnectorRpc } from "./DhtRpc";
 import type { WebSocketConnectionResponse } from "./DhtRpc";
 import type { WebSocketConnectionRequest } from "./DhtRpc";
 import { RecursiveFindSessionService } from "./DhtRpc";
@@ -215,21 +215,21 @@ export class RecursiveFindSessionServiceClient implements IRecursiveFindSessionS
     }
 }
 /**
- * @generated from protobuf service dht.WebSocketConnectorService
+ * @generated from protobuf service dht.WebSocketConnectorRpc
  */
-export interface IWebSocketConnectorServiceClient {
+export interface IWebSocketConnectorRpcClient {
     /**
      * @generated from protobuf rpc: requestConnection(dht.WebSocketConnectionRequest) returns (dht.WebSocketConnectionResponse);
      */
     requestConnection(input: WebSocketConnectionRequest, options?: RpcOptions): UnaryCall<WebSocketConnectionRequest, WebSocketConnectionResponse>;
 }
 /**
- * @generated from protobuf service dht.WebSocketConnectorService
+ * @generated from protobuf service dht.WebSocketConnectorRpc
  */
-export class WebSocketConnectorServiceClient implements IWebSocketConnectorServiceClient, ServiceInfo {
-    typeName = WebSocketConnectorService.typeName;
-    methods = WebSocketConnectorService.methods;
-    options = WebSocketConnectorService.options;
+export class WebSocketConnectorRpcClient implements IWebSocketConnectorRpcClient, ServiceInfo {
+    typeName = WebSocketConnectorRpc.typeName;
+    methods = WebSocketConnectorRpc.methods;
+    options = WebSocketConnectorRpc.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**

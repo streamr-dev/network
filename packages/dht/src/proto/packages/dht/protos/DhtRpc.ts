@@ -1364,9 +1364,9 @@ export const RecursiveFindSessionService = new ServiceType("dht.RecursiveFindSes
     { name: "reportRecursiveFindResult", options: {}, I: RecursiveFindReport, O: Empty }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.WebSocketConnectorService
+ * @generated ServiceType for protobuf service dht.WebSocketConnectorRpc
  */
-export const WebSocketConnectorService = new ServiceType("dht.WebSocketConnectorService", [
+export const WebSocketConnectorRpc = new ServiceType("dht.WebSocketConnectorRpc", [
     { name: "requestConnection", options: {}, I: WebSocketConnectionRequest, O: WebSocketConnectionResponse }
 ]);
 /**

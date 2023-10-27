@@ -30,7 +30,7 @@ service RecursiveFindSessionService {
   rpc reportRecursiveFindResult(RecursiveFindReport) returns (google.protobuf.Empty);
 }
 
-service WebSocketConnectorService {
+service WebSocketConnectorRpc {
   rpc requestConnection (WebSocketConnectionRequest) returns (WebSocketConnectionResponse);
 }
 
