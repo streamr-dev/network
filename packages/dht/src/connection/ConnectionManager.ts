@@ -24,7 +24,7 @@ import {
     PeerDescriptor,
     UnlockRequest
 } from '../proto/packages/dht/protos/DhtRpc'
-import { ConnectionLockerClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ConnectionLockHandler } from './ConnectionLockHandler'
@@ -468,7 +468,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.getOwnPeerDescriptor(),
             targetDescriptor,
             ConnectionManager.PROTOCOL_VERSION,
-            toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
+            toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         this.locks.addLocalLocked(peerIdKey, serviceId)
         remoteConnectionLocker.lockRequest(serviceId)
@@ -486,7 +486,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.getOwnPeerDescriptor(),
             targetDescriptor,
             ConnectionManager.PROTOCOL_VERSION,
-            toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
+            toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         if (this.connections.has(peerIdKey)) {
             remoteConnectionLocker.unlockRequest(serviceId)
@@ -550,7 +550,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.getOwnPeerDescriptor(),
             targetDescriptor,
             ConnectionManager.PROTOCOL_VERSION,
-            toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
+            toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         try {
             await remoteConnectionLocker.gracefulDisconnect(disconnectMode)
@@ -565,7 +565,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor()!)
     }
 
-    // IConnectionLocker server implementation
+    // ConnectionLockRpc local RPC method
     private async lockRequest(lockRequest: LockRequest): Promise<LockResponse> {
         const remotePeerId = peerIdFromPeerDescriptor(lockRequest.peerDescriptor!)
         if (isSamePeerDescriptor(lockRequest.peerDescriptor!, this.getOwnPeerDescriptor())) {
@@ -581,14 +581,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return response
     }
 
-    // IConnectionLocker server implementation
+    // ConnectionLockRpc local RPC method
     private async unlockRequest(unlockRequest: UnlockRequest): Promise<Empty> {
         const peerIdKey = keyFromPeerDescriptor(unlockRequest.peerDescriptor!)
         this.locks.removeRemoteLocked(peerIdKey, unlockRequest.serviceId)
         return {}
     }
 
-    // IConnectionLocker server implementation
+    // ConnectionLockRpc local RPC method
     private async gracefulDisconnect(disconnectNotice: DisconnectNotice): Promise<Empty> {
         logger.trace(keyOrUnknownFromPeerDescriptor(disconnectNotice.peerDescriptor) + ' received gracefulDisconnect notice')
 

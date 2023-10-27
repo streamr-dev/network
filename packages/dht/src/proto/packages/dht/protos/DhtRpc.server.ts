@@ -123,9 +123,9 @@ export interface IWebRtcConnectorService<T = ServerCallContext> {
     iceCandidate(request: IceCandidate, context: T): Promise<Empty>;
 }
 /**
- * @generated from protobuf service dht.ConnectionLocker
+ * @generated from protobuf service dht.ConnectionLockRpc
  */
-export interface IConnectionLocker<T = ServerCallContext> {
+export interface IConnectionLockRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: lockRequest(dht.LockRequest) returns (dht.LockResponse);
      */

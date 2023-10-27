@@ -1,6 +1,6 @@
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { IConnectionLockerClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { IConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice, DisconnectMode } from '../proto/packages/dht/protos/DhtRpc'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 
@@ -13,13 +13,13 @@ export class RemoteConnectionLocker {
     private ownPeerDescriptor: PeerDescriptor
     private targetPeerDescriptor: PeerDescriptor
     private protocolVersion: string
-    private client: ProtoRpcClient<IConnectionLockerClient>
+    private client: ProtoRpcClient<IConnectionLockRpcClient>
 
     constructor(
         ownPeerDescriptor: PeerDescriptor,
         targetPeerDescriptor: PeerDescriptor,
         protocolVersion: string,
-        client: ProtoRpcClient<IConnectionLockerClient>
+        client: ProtoRpcClient<IConnectionLockRpcClient>
     ) {
         this.ownPeerDescriptor = ownPeerDescriptor
         this.targetPeerDescriptor = targetPeerDescriptor

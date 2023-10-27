@@ -1379,9 +1379,9 @@ export const WebRtcConnectorService = new ServiceType("dht.WebRtcConnectorServic
     { name: "iceCandidate", options: {}, I: IceCandidate, O: Empty }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.ConnectionLocker
+ * @generated ServiceType for protobuf service dht.ConnectionLockRpc
  */
-export const ConnectionLocker = new ServiceType("dht.ConnectionLocker", [
+export const ConnectionLockRpc = new ServiceType("dht.ConnectionLockRpc", [
     { name: "lockRequest", options: {}, I: LockRequest, O: LockResponse },
     { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty },
     { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: DisconnectNoticeResponse }

@@ -41,7 +41,7 @@ service WebRtcConnectorService {
   rpc iceCandidate (IceCandidate) returns (google.protobuf.Empty);
 }
 
-service ConnectionLocker {
+service ConnectionLockRpc {
   rpc lockRequest (LockRequest) returns (LockResponse);
   rpc unlockRequest (UnlockRequest) returns (google.protobuf.Empty);
   rpc gracefulDisconnect (DisconnectNotice) returns (DisconnectNoticeResponse);

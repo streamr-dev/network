@@ -6,7 +6,7 @@ import type { ExternalStoreDataResponse } from "./DhtRpc";
 import type { ExternalStoreDataRequest } from "./DhtRpc";
 import type { FindDataResponse } from "./DhtRpc";
 import type { FindDataRequest } from "./DhtRpc";
-import { ConnectionLocker } from "./DhtRpc";
+import { ConnectionLockRpc } from "./DhtRpc";
 import type { DisconnectNoticeResponse } from "./DhtRpc";
 import type { DisconnectNotice } from "./DhtRpc";
 import type { UnlockRequest } from "./DhtRpc";
@@ -300,9 +300,9 @@ export class WebRtcConnectorServiceClient implements IWebRtcConnectorServiceClie
     }
 }
 /**
- * @generated from protobuf service dht.ConnectionLocker
+ * @generated from protobuf service dht.ConnectionLockRpc
  */
-export interface IConnectionLockerClient {
+export interface IConnectionLockRpcClient {
     /**
      * @generated from protobuf rpc: lockRequest(dht.LockRequest) returns (dht.LockResponse);
      */
@@ -317,12 +317,12 @@ export interface IConnectionLockerClient {
     gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, DisconnectNoticeResponse>;
 }
 /**
- * @generated from protobuf service dht.ConnectionLocker
+ * @generated from protobuf service dht.ConnectionLockRpc
  */
-export class ConnectionLockerClient implements IConnectionLockerClient, ServiceInfo {
-    typeName = ConnectionLocker.typeName;
-    methods = ConnectionLocker.methods;
-    options = ConnectionLocker.options;
+export class ConnectionLockRpcClient implements IConnectionLockRpcClient, ServiceInfo {
+    typeName = ConnectionLockRpc.typeName;
+    methods = ConnectionLockRpc.methods;
+    options = ConnectionLockRpc.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
