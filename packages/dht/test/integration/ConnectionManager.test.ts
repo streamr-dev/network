@@ -163,13 +163,13 @@ describe('ConnectionManager', () => {
         })
 
         const connectedPromise1 = new Promise<void>((resolve, _reject) => {
-            connectionManager1.on('connected', (_peerDescriptor: PeerDescriptor) => {
+            connectionManager1.on('connected', () => {
                 resolve()
             })
         })
 
         const connectedPromise2 = new Promise<void>((resolve, _reject) => {
-            connectionManager2.on('connected', (_peerDescriptor: PeerDescriptor) => {
+            connectionManager2.on('connected', () => {
                 resolve()
             })
         })
@@ -215,14 +215,14 @@ describe('ConnectionManager', () => {
         }
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
-            connectionManager1.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+            connectionManager1.on('disconnected', () => {
                 logger.info('disconnectedPromise1')
                 resolve()
             })
         })
 
         const disconnectedPromise2 = new Promise<void>((resolve, _reject) => {
-            connectionManager2.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+            connectionManager2.on('disconnected', () => {
                 logger.info('disconnectedPromise2')
                 resolve()
             })
@@ -273,25 +273,25 @@ describe('ConnectionManager', () => {
         })
 
         const connectedPromise1 = new Promise<void>((resolve, _reject) => {
-            connectionManager4.on('connected', (_peerDescriptor: PeerDescriptor) => {
+            connectionManager4.on('connected', () => {
                 resolve()
             })
         })
 
         const connectedPromise2 = new Promise<void>((resolve, _reject) => {
-            connectionManager3.on('connected', (_peerDescriptor: PeerDescriptor) => {
+            connectionManager3.on('connected', () => {
                 resolve()
             })
         })
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
-            connectionManager4.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+            connectionManager4.on('disconnected', () => {
                 resolve()
             })
         })
 
         const disconnectedPromise2 = new Promise<void>((resolve, _reject) => {
-            connectionManager3.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+            connectionManager3.on('disconnected', () => {
                 resolve()
             })
         })

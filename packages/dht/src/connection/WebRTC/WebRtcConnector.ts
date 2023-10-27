@@ -15,7 +15,6 @@ import { ManagedWebRtcConnection } from '../ManagedWebRtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { IWebRtcConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
@@ -82,13 +81,13 @@ export class WebRtcConnector implements IWebRtcConnectorService {
             rpcRequestTimeout: 15000
         })
         this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer',
-            (req: RtcOffer, context) => this.rtcOffer(req, context))
+            (req: RtcOffer) => this.rtcOffer(req))
         this.rpcCommunicator.registerRpcNotification(RtcAnswer, 'rtcAnswer',
-            (req: RtcAnswer, context) => this.rtcAnswer(req, context))
+            (req: RtcAnswer) => this.rtcAnswer(req))
         this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate',
-            (req: IceCandidate, context) => this.iceCandidate(req, context))
+            (req: IceCandidate) => this.iceCandidate(req))
         this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection',
-            (req: WebRtcConnectionRequest, context) => this.requestConnection(req, context))
+            (req: WebRtcConnectionRequest) => this.requestConnection(req))
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
@@ -150,11 +149,11 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         })
 
         if (offering) {
-            connection.once('localDescription', (description: string, _type: string) => {
+            connection.once('localDescription', (description: string) => {
                 remoteConnector.sendRtcOffer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
             })
         } else {
-            connection.once('localDescription', (description: string, _type: string) => {
+            connection.once('localDescription', (description: string) => {
                 remoteConnector.sendRtcAnswer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
             })
         }
@@ -213,7 +212,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
                 remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection!.connectionId.toString())
             })
 
-            connection.once('localDescription', (description: string, _type: string) => {
+            connection.once('localDescription', (description: string) => {
                 remoteConnector.sendRtcAnswer(this.ownPeerDescriptor!, description, connection!.connectionId.toString())
             })
 
@@ -302,22 +301,22 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     }
 
     // IWebRTCConnector implementation
-    async requestConnection(request: WebRtcConnectionRequest, _context: ServerCallContext): Promise<Empty> {
+    async requestConnection(request: WebRtcConnectionRequest): Promise<Empty> {
         this.onConnectionRequest(request.requester!)
         return {}
     }
 
-    async rtcOffer(request: RtcOffer, _context: ServerCallContext): Promise<Empty> {
+    async rtcOffer(request: RtcOffer): Promise<Empty> {
         this.onRtcOffer(request.requester!, request.target!, request.description, request.connectionId)
         return {}
     }
 
-    async rtcAnswer(request: RtcAnswer, _context: ServerCallContext): Promise<Empty> {
+    async rtcAnswer(request: RtcAnswer): Promise<Empty> {
         this.onRtcAnswer(request.requester!, request.target!, request.description, request.connectionId)
         return {}
     }
 
-    async iceCandidate(request: IceCandidate, _context: ServerCallContext): Promise<Empty> {
+    async iceCandidate(request: IceCandidate): Promise<Empty> {
         this.onRemoteCandidate(request.requester!, request.target!, request.candidate, request.mid, request.connectionId)
         return {}
     }

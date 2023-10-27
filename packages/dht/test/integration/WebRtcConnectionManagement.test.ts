@@ -145,26 +145,26 @@ describe('WebRTC Connection Management', () => {
         })
 
         const connectedPromise1 = new Promise<void>((resolve, _reject) => {
-            manager1.on('connected', (_peerDescriptor: PeerDescriptor) => {
+            manager1.on('connected', () => {
                 //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
 
         const connectedPromise2 = new Promise<void>((resolve, _reject) => {
-            manager2.on('connected', (_peerDescriptor: PeerDescriptor) => {
+            manager2.on('connected', () => {
                 resolve()
             })
         })
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
-            manager1.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+            manager1.on('disconnected', () => {
                 resolve()
             })
         })
 
         const disconnectedPromise2 = new Promise<void>((resolve, _reject) => {
-            manager2.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+            manager2.on('disconnected', () => {
                 resolve()
             })
         })
@@ -193,7 +193,7 @@ describe('WebRTC Connection Management', () => {
         }
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
-            manager1.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+            manager1.on('disconnected', () => {
                 resolve()
             })
         })

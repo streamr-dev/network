@@ -1,4 +1,3 @@
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -143,11 +142,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             rpcRequestTimeout: 10000
         })
         this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest',
-            (req: LockRequest, context) => this.lockRequest(req, context))
+            (req: LockRequest) => this.lockRequest(req))
         this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest',
-            (req: UnlockRequest, context) => this.unlockRequest(req, context))
+            (req: UnlockRequest) => this.unlockRequest(req))
         this.rpcCommunicator.registerRpcMethod(DisconnectNotice, DisconnectNoticeResponse, 'gracefulDisconnect',
-            (req: DisconnectNotice, context) => this.gracefulDisconnect(req, context))
+            (req: DisconnectNotice) => this.gracefulDisconnect(req))
     }
 
     public garbageCollectConnections(maxConnections: number, lastUsedLimit: number): void {
@@ -304,12 +303,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return this.connections.has(peerIdKey)
     }
 
-    public hasLocalLockedConnection(peerDescriptor: PeerDescriptor, _serviceId?: ServiceId): boolean {
+    public hasLocalLockedConnection(peerDescriptor: PeerDescriptor): boolean {
         const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
         return this.locks.isLocalLocked(peerIdKey)
     }
 
-    public hasRemoteLockedConnection(peerDescriptor: PeerDescriptor, _serviceId?: ServiceId): boolean {
+    public hasRemoteLockedConnection(peerDescriptor: PeerDescriptor): boolean {
         const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
         return this.locks.isRemoteLocked(peerIdKey)
     }
@@ -401,14 +400,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return false
         }
         connection.on('managedData', this.onData)
-        connection.on('disconnected', (disconnectionType: DisconnectionType, _code?: number, _reason?: string) => {
+        connection.on('disconnected', (disconnectionType: DisconnectionType) => {
             this.onDisconnected(connection, disconnectionType)
         })
         this.emit('newConnection', connection)
         if (connection.isHandshakeCompleted()) {
             this.onConnected(connection)
         } else {
-            connection.once('handshakeCompleted', (_peerDescriptor: PeerDescriptor) => {
+            connection.once('handshakeCompleted', ()=> {
                 this.onConnected(connection)
             })
         }
@@ -567,7 +566,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     // IConnectionLocker server implementation
-    private async lockRequest(lockRequest: LockRequest, _context: ServerCallContext): Promise<LockResponse> {
+    private async lockRequest(lockRequest: LockRequest): Promise<LockResponse> {
         const remotePeerId = peerIdFromPeerDescriptor(lockRequest.peerDescriptor!)
         if (isSamePeerDescriptor(lockRequest.peerDescriptor!, this.getOwnPeerDescriptor())) {
             const response: LockResponse = {
@@ -583,14 +582,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     // IConnectionLocker server implementation
-    private async unlockRequest(unlockRequest: UnlockRequest, _context: ServerCallContext): Promise<Empty> {
+    private async unlockRequest(unlockRequest: UnlockRequest): Promise<Empty> {
         const peerIdKey = keyFromPeerDescriptor(unlockRequest.peerDescriptor!)
         this.locks.removeRemoteLocked(peerIdKey, unlockRequest.serviceId)
         return {}
     }
 
     // IConnectionLocker server implementation
-    private async gracefulDisconnect(disconnectNotice: DisconnectNotice, _context: ServerCallContext): Promise<Empty> {
+    private async gracefulDisconnect(disconnectNotice: DisconnectNotice): Promise<Empty> {
         logger.trace(keyOrUnknownFromPeerDescriptor(disconnectNotice.peerDescriptor) + ' received gracefulDisconnect notice')
 
         if (disconnectNotice.disconnecMode === DisconnectMode.LEAVING) {

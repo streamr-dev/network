@@ -1,4 +1,3 @@
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
@@ -56,7 +55,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
             rpcRequestTimeout: 15000
         })
         this.rpcCommunicator.registerRpcNotification(RecursiveFindReport, 'reportRecursiveFindResult',
-            (req: RecursiveFindReport, context) => this.reportRecursiveFindResult(req, context))
+            (req: RecursiveFindReport) => this.reportRecursiveFindResult(req))
     }
 
     private isFindCompleted(): boolean {
@@ -157,7 +156,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         }
     }
 
-    public async reportRecursiveFindResult(report: RecursiveFindReport, _context: ServerCallContext): Promise<Empty> {
+    public async reportRecursiveFindResult(report: RecursiveFindReport): Promise<Empty> {
         logger.trace('recursiveFindReport arrived: ' + JSON.stringify(report))
         this.doReportRecursiveFindResult(report.routingPath, report.nodes, report.dataEntries, report.noCloserNodesFound)
         return {}

@@ -12,7 +12,6 @@ import {
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { waitForCondition } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { createStreamMessage } from '../utils/utils'
@@ -55,7 +54,7 @@ describe('DeliveryRpcRemote', () => {
         mockServerRpc.registerRpcNotification(
             StreamMessage,
             'sendStreamMessage',
-            async (_msg: StreamMessage, _context: ServerCallContext): Promise<Empty> => {
+            async (): Promise<Empty> => {
                 recvCounter += 1
                 return Empty
             }
@@ -64,7 +63,7 @@ describe('DeliveryRpcRemote', () => {
         mockServerRpc.registerRpcNotification(
             LeaveStreamPartNotice,
             'leaveStreamPartNotice',
-            async (_msg: LeaveStreamPartNotice, _context: ServerCallContext): Promise<Empty> => {
+            async (): Promise<Empty> => {
                 recvCounter += 1
                 return Empty
             }

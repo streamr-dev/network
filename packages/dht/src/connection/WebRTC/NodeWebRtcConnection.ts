@@ -97,7 +97,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         }, this.connectingTimeout)
 
         this.connection.onStateChange((state: string) => this.onStateChange(state))
-        this.connection.onGatheringStateChange((_state: string) => {})
+        this.connection.onGatheringStateChange(() => {})
 
         this.connection.onLocalDescription((description: string, type: DescriptionType) => {
             this.emit('localDescription', description, type.toString())

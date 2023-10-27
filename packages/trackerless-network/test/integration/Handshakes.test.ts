@@ -13,7 +13,6 @@ import {
 import { NodeList } from '../../src/logic/NodeList'
 import { mockConnectionLocker } from '../utils/utils'
 import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { StreamPartIDUtils } from '@streamr/protocol'
@@ -40,7 +39,7 @@ describe('Handshakes', () => {
     let handshaker: Handshaker
     const streamPartId = StreamPartIDUtils.parse('stream#0')
 
-    const acceptHandshake = async (request: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
+    const acceptHandshake = async (request: StreamPartHandshakeRequest): Promise<StreamPartHandshakeResponse> => {
         const response: StreamPartHandshakeResponse = {
             requestId: request.requestId,
             accepted: true
@@ -48,7 +47,7 @@ describe('Handshakes', () => {
         return response
     }
 
-    const rejectHandshake = async (request: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
+    const rejectHandshake = async (request: StreamPartHandshakeRequest): Promise<StreamPartHandshakeResponse> => {
         const response: StreamPartHandshakeResponse = {
             requestId: request.requestId,
             accepted: false
@@ -56,7 +55,7 @@ describe('Handshakes', () => {
         return response
     }
 
-    const interleavingHandshake = async (request: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
+    const interleavingHandshake = async (request: StreamPartHandshakeRequest): Promise<StreamPartHandshakeResponse> => {
         const response: StreamPartHandshakeResponse = {
             requestId: request.requestId,
             accepted: true,
