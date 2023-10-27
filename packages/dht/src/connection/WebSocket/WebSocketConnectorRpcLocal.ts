@@ -52,7 +52,8 @@ interface WebSocketConnectorConfig {
     tlsCertificate?: TlsCertificate
 }
 
-export class WebSocketConnector implements IWebSocketConnectorRpc {
+export class WebSocketConnectorRpcLocal implements IWebSocketConnectorRpc {
+
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
@@ -83,7 +84,7 @@ export class WebSocketConnector implements IWebSocketConnectorRpc {
 
         this.canConnectFunction = config.canConnect.bind(this)
 
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.rpcTransport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnectorRpcLocal.WEBSOCKET_CONNECTOR_SERVICE_ID, config.rpcTransport, {
             rpcRequestTimeout: 15000
         })
 

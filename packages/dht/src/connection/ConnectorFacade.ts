@@ -9,7 +9,7 @@ import { ManagedConnection } from './ManagedConnection'
 import { Simulator } from './Simulator/Simulator'
 import { SimulatorConnector } from './Simulator/SimulatorConnector'
 import { IceServer, WebRtcConnector } from './WebRTC/WebRtcConnector'
-import { WebSocketConnector } from './WebSocket/WebSocketConnector'
+import { WebSocketConnectorRpcLocal } from './WebSocket/WebSocketConnectorRpcLocal'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
@@ -44,7 +44,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     private readonly config: DefaultConnectorFacadeConfig
     private ownPeerDescriptor?: PeerDescriptor
-    private webSocketConnector?: WebSocketConnector
+    private webSocketConnector?: WebSocketConnectorRpcLocal
     private webrtcConnector?: WebRtcConnector
 
     constructor(config: DefaultConnectorFacadeConfig) {
@@ -56,7 +56,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         canConnect: (peerDescriptor: PeerDescriptor) => boolean
     ): Promise<void> {
         logger.trace(`Creating WebSocketConnector`)
-        this.webSocketConnector = new WebSocketConnector({
+        this.webSocketConnector = new WebSocketConnectorRpcLocal({
             protocolVersion: ConnectionManager.PROTOCOL_VERSION,
             rpcTransport: this.config.transportLayer!,
             // TODO should we use canConnect also for WebRtcConnector? (NET-1142)
