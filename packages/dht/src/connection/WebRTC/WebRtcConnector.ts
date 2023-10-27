@@ -8,7 +8,7 @@ import { Empty } from '../../proto/google/protobuf/empty'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection'
-import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
+import { WebRtcConnectorRpcRemote } from './WebRtcConnectorRpcRemote'
 import { WebRtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { ManagedWebRtcConnection } from '../ManagedWebRtcConnection'
@@ -135,7 +135,7 @@ export class WebRtcConnector implements IWebRtcConnectorRpc {
         connection.on('disconnected', delFunc)
         managedConnection.on('handshakeCompleted', delFunc)
 
-        const remoteConnector = new RemoteWebrtcConnector(
+        const remoteConnector = new WebRtcConnectorRpcRemote(
             this.ownPeerDescriptor!,
             targetPeerDescriptor,
             toProtoRpcClient(new WebRtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
@@ -204,7 +204,7 @@ export class WebRtcConnector implements IWebRtcConnectorRpc {
             this.ongoingConnectAttempts.set(peerKey, managedConnection)
             this.onIncomingConnection(managedConnection)
 
-            const remoteConnector = new RemoteWebrtcConnector(
+            const remoteConnector = new WebRtcConnectorRpcRemote(
                 this.ownPeerDescriptor!,
                 remotePeer,
                 toProtoRpcClient(new WebRtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))

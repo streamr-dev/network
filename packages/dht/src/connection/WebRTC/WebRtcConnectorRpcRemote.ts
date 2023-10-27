@@ -12,7 +12,7 @@ import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-export class RemoteWebrtcConnector extends Remote<IWebRtcConnectorRpcClient> {
+export class WebRtcConnectorRpcRemote extends Remote<IWebRtcConnectorRpcClient> {
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
