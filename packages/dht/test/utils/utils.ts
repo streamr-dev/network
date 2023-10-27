@@ -21,7 +21,7 @@ import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import {
     IDhtRpcService,
-    IRoutingService,
+    IRouterRpc,
     IStoreRpc,
     IWebSocketConnectorRpc
 } from '../../src/proto/packages/dht/protos/DhtRpc.server'
@@ -157,11 +157,11 @@ export const MockDhtRpc: IDhtRpcWithError = {
     }
 }
 
-interface IRouterServiceWithError extends IRoutingService {
+interface IRouterRpcWithError extends IRouterRpc {
     throwRouteMessageError: (request: RouteMessageWrapper) => Promise<RouteMessageAck>
 }
 
-export const MockRoutingService: IRouterServiceWithError = {
+export const mockRouterRpc: IRouterRpcWithError = {
     async routeMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,

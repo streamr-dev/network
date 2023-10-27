@@ -29,7 +29,7 @@ import type { MigrateDataResponse } from "./DhtRpc";
 import type { MigrateDataRequest } from "./DhtRpc";
 import type { StoreDataResponse } from "./DhtRpc";
 import type { StoreDataRequest } from "./DhtRpc";
-import { RoutingService } from "./DhtRpc";
+import { RouterRpc } from "./DhtRpc";
 import type { RouteMessageAck } from "./DhtRpc";
 import type { RouteMessageWrapper } from "./DhtRpc";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
@@ -93,9 +93,9 @@ export class DhtRpcServiceClient implements IDhtRpcServiceClient, ServiceInfo {
     }
 }
 /**
- * @generated from protobuf service dht.RoutingService
+ * @generated from protobuf service dht.RouterRpc
  */
-export interface IRoutingServiceClient {
+export interface IRouterRpcClient {
     /**
      * @generated from protobuf rpc: routeMessage(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
@@ -110,12 +110,12 @@ export interface IRoutingServiceClient {
     findRecursively(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
 }
 /**
- * @generated from protobuf service dht.RoutingService
+ * @generated from protobuf service dht.RouterRpc
  */
-export class RoutingServiceClient implements IRoutingServiceClient, ServiceInfo {
-    typeName = RoutingService.typeName;
-    methods = RoutingService.methods;
-    options = RoutingService.options;
+export class RouterRpcClient implements IRouterRpcClient, ServiceInfo {
+    typeName = RouterRpc.typeName;
+    methods = RouterRpc.methods;
+    options = RouterRpc.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**

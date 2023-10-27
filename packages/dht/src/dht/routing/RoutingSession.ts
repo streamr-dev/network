@@ -8,7 +8,7 @@ import { v4 } from 'uuid'
 import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { RemoteRouter } from './RemoteRouter'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { RoutingServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Contact } from '../contact/Contact'
 
@@ -26,7 +26,7 @@ class RemoteContact extends Contact {
             ownPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
-            toProtoRpcClient(new RoutingServiceClient(rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport()))
         )
     }
 

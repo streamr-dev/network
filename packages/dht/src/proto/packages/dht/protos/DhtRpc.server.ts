@@ -50,9 +50,9 @@ export interface IDhtRpcService<T = ServerCallContext> {
     leaveNotice(request: LeaveNotice, context: T): Promise<Empty>;
 }
 /**
- * @generated from protobuf service dht.RoutingService
+ * @generated from protobuf service dht.RouterRpc
  */
-export interface IRoutingService<T = ServerCallContext> {
+export interface IRouterRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: routeMessage(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */

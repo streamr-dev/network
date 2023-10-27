@@ -14,7 +14,7 @@ service DhtRpcService {
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
 }
 
-service RoutingService {
+service RouterRpc {
   rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
   rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
   rpc findRecursively (RouteMessageWrapper) returns (RouteMessageAck);

@@ -1342,9 +1342,9 @@ export const DhtRpcService = new ServiceType("dht.DhtRpcService", [
     { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.RoutingService
+ * @generated ServiceType for protobuf service dht.RouterRpc
  */
-export const RoutingService = new ServiceType("dht.RoutingService", [
+export const RouterRpc = new ServiceType("dht.RouterRpc", [
     { name: "routeMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
     { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
     { name: "findRecursively", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
