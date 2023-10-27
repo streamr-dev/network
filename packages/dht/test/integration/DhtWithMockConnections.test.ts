@@ -1,4 +1,5 @@
 import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { getRandomRegion } from '../../src/connection/Simulator/pings'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
@@ -16,7 +17,8 @@ describe('Mock IConnection DHT Joining', () => {
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS
+            type: NodeType.NODEJS,
+            region: getRandomRegion()
         }
         for (let i = 1; i < 100; i++) {
             const nodeId = `${i}`
