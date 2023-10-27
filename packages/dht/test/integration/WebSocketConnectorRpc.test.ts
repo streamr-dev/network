@@ -7,7 +7,7 @@ import {
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { MockWebSocketConnectorRpc } from '../utils/utils'
+import { mockWebSocketConnectorRpc } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 describe('WebSocketConnectorRpc', () => {
@@ -32,7 +32,7 @@ describe('WebSocketConnectorRpc', () => {
             WebSocketConnectionRequest,
             WebSocketConnectionResponse,
             'requestConnection',
-            MockWebSocketConnectorRpc.requestConnection
+            mockWebSocketConnectorRpc.requestConnection
         )
 
         rpcCommunicator2 = new RpcCommunicator()
@@ -40,7 +40,7 @@ describe('WebSocketConnectorRpc', () => {
             WebSocketConnectionRequest,
             WebSocketConnectionResponse,
             'requestConnection',
-            MockWebSocketConnectorRpc.requestConnection
+            mockWebSocketConnectorRpc.requestConnection
         )
 
         rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {

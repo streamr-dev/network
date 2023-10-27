@@ -7,13 +7,13 @@ import { Any } from '../../proto/google/protobuf/any'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { StoreServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IRecursiveFinder } from '../find/RecursiveFinder'
 import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
-import { IStoreService } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { RemoteStore } from './RemoteStore'
 import { Timestamp } from '../../proto/google/protobuf/timestamp'
 import EventEmitter from 'eventemitter3'
@@ -37,7 +37,7 @@ interface DataStoreConfig {
 
 const logger = new Logger(module)
 
-export class DataStore implements IStoreService {
+export class DataStore implements IStoreRpc {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly recursiveFinder: IRecursiveFinder
@@ -131,7 +131,7 @@ export class DataStore implements IStoreService {
             this.ownPeerDescriptor,
             contact,
             this.serviceId,
-            toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport()))
         )
         try {
             const response = await remoteStore.migrateData({ dataEntry }, doNotConnect)
@@ -169,7 +169,7 @@ export class DataStore implements IStoreService {
                 this.ownPeerDescriptor,
                 closestNodes[i],
                 this.serviceId,
-                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             try {
                 const response = await remoteStore.storeData({ kademliaId: key, data, ttl, storerTime })
@@ -210,7 +210,7 @@ export class DataStore implements IStoreService {
                 this.ownPeerDescriptor,
                 closestNodes[i],
                 this.serviceId,
-                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             try {
                 const response = await remoteStore.deleteData({ kademliaId: key })

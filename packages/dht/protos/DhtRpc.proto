@@ -20,7 +20,7 @@ service RoutingService {
   rpc findRecursively (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
-service StoreService {
+service StoreRpc {
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
   rpc migrateData (MigrateDataRequest) returns (MigrateDataResponse);
   rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);

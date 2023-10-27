@@ -22,7 +22,7 @@ import type { WebSocketConnectionResponse } from "./DhtRpc";
 import type { WebSocketConnectionRequest } from "./DhtRpc";
 import { RecursiveFindSessionService } from "./DhtRpc";
 import type { RecursiveFindReport } from "./DhtRpc";
-import { StoreService } from "./DhtRpc";
+import { StoreRpc } from "./DhtRpc";
 import type { DeleteDataResponse } from "./DhtRpc";
 import type { DeleteDataRequest } from "./DhtRpc";
 import type { MigrateDataResponse } from "./DhtRpc";
@@ -141,9 +141,9 @@ export class RoutingServiceClient implements IRoutingServiceClient, ServiceInfo 
     }
 }
 /**
- * @generated from protobuf service dht.StoreService
+ * @generated from protobuf service dht.StoreRpc
  */
-export interface IStoreServiceClient {
+export interface IStoreRpcClient {
     /**
      * @generated from protobuf rpc: storeData(dht.StoreDataRequest) returns (dht.StoreDataResponse);
      */
@@ -158,12 +158,12 @@ export interface IStoreServiceClient {
     deleteData(input: DeleteDataRequest, options?: RpcOptions): UnaryCall<DeleteDataRequest, DeleteDataResponse>;
 }
 /**
- * @generated from protobuf service dht.StoreService
+ * @generated from protobuf service dht.StoreRpc
  */
-export class StoreServiceClient implements IStoreServiceClient, ServiceInfo {
-    typeName = StoreService.typeName;
-    methods = StoreService.methods;
-    options = StoreService.options;
+export class StoreRpcClient implements IStoreRpcClient, ServiceInfo {
+    typeName = StoreRpc.typeName;
+    methods = StoreRpc.methods;
+    options = StoreRpc.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**

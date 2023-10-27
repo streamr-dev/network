@@ -22,7 +22,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import {
     IDhtRpcService,
     IRoutingService,
-    IStoreService,
+    IStoreRpc,
     IWebSocketConnectorService
 } from '../../src/proto/packages/dht/protos/DhtRpc.server'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
@@ -194,12 +194,12 @@ export const MockRoutingService: IRouterServiceWithError = {
     }
 }
 
-interface IStoreServiceWithError extends IStoreService {
+interface IStoreRpcWithError extends IStoreRpc {
     throwStoreDataError: (request: StoreDataRequest) => Promise<StoreDataResponse>
     storeDataErrorString: (request: StoreDataRequest) => Promise<StoreDataResponse>
 }
 
-export const MockStoreService: IStoreServiceWithError = {
+export const mockStoreRpc: IStoreRpcWithError = {
     async storeData(): Promise<StoreDataResponse> {
         return {
             error: ''
@@ -221,7 +221,7 @@ export const MockStoreService: IStoreServiceWithError = {
     }
 }
 
-export const MockWebSocketConnectorRpc: IWebSocketConnectorService = {
+export const mockWebSocketConnectorRpc: IWebSocketConnectorService = {
     async requestConnection(request: WebSocketConnectionRequest): Promise<WebSocketConnectionResponse> {
         const responseConnection: WebSocketConnectionResponse = {
             target: request.target,

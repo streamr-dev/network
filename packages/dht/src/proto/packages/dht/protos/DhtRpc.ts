@@ -1350,9 +1350,9 @@ export const RoutingService = new ServiceType("dht.RoutingService", [
     { name: "findRecursively", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.StoreService
+ * @generated ServiceType for protobuf service dht.StoreRpc
  */
-export const StoreService = new ServiceType("dht.StoreService", [
+export const StoreRpc = new ServiceType("dht.StoreRpc", [
     { name: "storeData", options: {}, I: StoreDataRequest, O: StoreDataResponse },
     { name: "migrateData", options: {}, I: MigrateDataRequest, O: MigrateDataResponse },
     { name: "deleteData", options: {}, I: DeleteDataRequest, O: DeleteDataResponse }

@@ -67,9 +67,9 @@ export interface IRoutingService<T = ServerCallContext> {
     findRecursively(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
 }
 /**
- * @generated from protobuf service dht.StoreService
+ * @generated from protobuf service dht.StoreRpc
  */
-export interface IStoreService<T = ServerCallContext> {
+export interface IStoreRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: storeData(dht.StoreDataRequest) returns (dht.StoreDataResponse);
      */
