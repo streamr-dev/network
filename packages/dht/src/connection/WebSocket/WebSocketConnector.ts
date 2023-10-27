@@ -6,6 +6,7 @@ import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
     ConnectivityMethod,
     ConnectivityResponse,
+    NodeType,
     PeerDescriptor,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
@@ -13,7 +14,6 @@ import {
 import { WebSocketConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger, binaryToHex, wait } from '@streamr/utils'
 import { IWebSocketConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebSocketServer } from './WebSocketServer'
 import { ConnectivityChecker } from '../ConnectivityChecker'
@@ -25,11 +25,17 @@ import { Handshaker } from '../Handshaker'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
 import { range, sample } from 'lodash'
+import { isPrivateIPv4 } from '../../helpers/AddressTools'
 
 const logger = new Logger(module)
 
 export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string => {
     return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
+}
+
+const canOpenConnectionFromBrowser = (websocketServer: ConnectivityMethod) => {
+    const hasPrivateAddress = ((websocketServer.host === 'localhost') || isPrivateIPv4(websocketServer.host))
+    return websocketServer.tls || hasPrivateAddress
 }
 
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
@@ -38,7 +44,7 @@ interface WebSocketConnectorConfig {
     protocolVersion: string
     rpcTransport: ITransport
     canConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
-    incomingConnectionCallback: (connection: ManagedConnection) => boolean
+    onIncomingConnection: (connection: ManagedConnection) => boolean
     portRange?: PortRange
     maxMessageSize?: number
     host?: string
@@ -53,7 +59,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private readonly webSocketServer?: WebSocketServer
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
-    private incomingConnectionCallback: (connection: ManagedConnection) => boolean
+    private onIncomingConnection: (connection: ManagedConnection) => boolean
     private host?: string
     private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
@@ -70,7 +76,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             tlsCertificate: config.tlsCertificate,
             maxMessageSize: config.maxMessageSize
         }) : undefined
-        this.incomingConnectionCallback = config.incomingConnectionCallback
+        this.onIncomingConnection = config.onIncomingConnection
         this.host = config.host
         this.entrypoints = config.entrypoints
         this.tlsCertificate = config.tlsCertificate
@@ -85,7 +91,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             WebSocketConnectionRequest,
             WebSocketConnectionResponse,
             'requestConnection',
-            (req: WebSocketConnectionRequest, context) => this.requestConnection(req, context)
+            (req: WebSocketConnectionRequest) => this.requestConnection(req)
         )
     }
 
@@ -165,6 +171,16 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         throw Error(`Failed to connect to the entrypoints after ${ENTRY_POINT_CONNECTION_ATTEMPTS} attempts`)
     }
 
+    public isPossibleToFormConnection(targetPeerDescriptor: PeerDescriptor): boolean {
+        if (this.ownPeerDescriptor!.websocket !== undefined) {
+            return (targetPeerDescriptor.type !== NodeType.BROWSER) || canOpenConnectionFromBrowser(this.ownPeerDescriptor!.websocket)
+        } else if (targetPeerDescriptor.websocket !== undefined) {
+            return (this.ownPeerDescriptor!.type !== NodeType.BROWSER) || canOpenConnectionFromBrowser(targetPeerDescriptor.websocket)
+        } else {
+            return false
+        }
+    }
+
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(peerKey)
@@ -222,7 +238,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
         if (this.ongoingConnectRequests.has(peerId.toKey())) {
             const ongoingConnectReguest = this.ongoingConnectRequests.get(peerId.toKey())!
-            ongoingConnectReguest.attachImplementation(serverWebSocket, peerDescriptor)
+            ongoingConnectReguest.attachImplementation(serverWebSocket)
             ongoingConnectReguest.acceptHandshake()
             this.ongoingConnectRequests.delete(peerId.toKey())
         } else {
@@ -231,7 +247,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
             managedConnection.setPeerDescriptor(peerDescriptor)
 
-            if (this.incomingConnectionCallback(managedConnection)) {
+            if (this.onIncomingConnection(managedConnection)) {
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake('Duplicate connection')
@@ -258,14 +274,14 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     // IWebSocketConnectorService implementation
-    public async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse> {
+    public async requestConnection(request: WebSocketConnectionRequest): Promise<WebSocketConnectionResponse> {
         if (!this.destroyed && this.canConnectFunction(request.requester!, request.ip, request.port)) {
             setImmediate(() => {
                 if (this.destroyed) {
                     return
                 }
                 const connection = this.connect(request.requester!)
-                this.incomingConnectionCallback(connection)
+                this.onIncomingConnection(connection)
             })
             const res: WebSocketConnectionResponse = {
                 accepted: true

@@ -92,7 +92,7 @@ export class DiscoverySession {
         }
     }
 
-    private onClosestPeersRequestFailed(peer: RemoteDhtNode, _exception: Error) {
+    private onClosestPeersRequestFailed(peer: RemoteDhtNode) {
         if (!this.ongoingClosestPeersRequests.has(peer.getPeerId().toKey())) {
             return
         }
@@ -119,7 +119,7 @@ export class DiscoverySession {
             // eslint-disable-next-line promise/catch-or-return
             this.getClosestPeersFromContact(nextPeer)
                 .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer.getPeerId(), contacts))
-                .catch((err) => this.onClosestPeersRequestFailed(nextPeer, err))
+                .catch(() => this.onClosestPeersRequestFailed(nextPeer))
                 .finally(() => {
                     this.outgoingClosestPeersRequestsCounter--
                     this.findMoreContacts()

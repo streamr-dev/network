@@ -1,4 +1,4 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, getRandomRegion } from '@streamr/dht'
+import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, getRandomRegion } from '@streamr/dht'
 import { Logger, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
@@ -29,17 +29,19 @@ describe('RandomGraphNode-DhtNode', () => {
 
         Simulator.useFakeTimers()
         const simulator = new Simulator()
-        const entrypointCm = new ConnectionManager({
-            ownPeerDescriptor: entrypointDescriptor,
+        const entrypointCm = new SimulatorTransport(
+            entrypointDescriptor,
             simulator
-        })
+        )
+        await entrypointCm.start()
 
         const cms: ConnectionManager[] = range(numOfNodes).map((i) =>
-            new ConnectionManager({
-                ownPeerDescriptor: peerDescriptors[i],
+            new SimulatorTransport(
+                peerDescriptors[i],
                 simulator
-            })
+            )
         )
+        await Promise.all(cms.map((cm) => cm.start()))
 
         dhtEntryPoint = new DhtNode({
             transportLayer: entrypointCm,

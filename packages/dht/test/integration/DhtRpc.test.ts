@@ -4,8 +4,6 @@ import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.
 import { generateId } from '../utils/utils'
 import { ClosestPeersRequest, ClosestPeersResponse, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { wait } from '@streamr/utils'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 describe('DhtRpc', () => {
@@ -24,7 +22,7 @@ describe('DhtRpc', () => {
         type: NodeType.NODEJS
     }
 
-    const outgoingListener2 = (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+    const outgoingListener2 = (message: RpcMessage) => {
         rpcCommunicator1.handleIncomingMessage(message)
     }
 
@@ -35,7 +33,7 @@ describe('DhtRpc', () => {
         rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.getClosestPeers)
 
-        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
@@ -74,7 +72,7 @@ describe('DhtRpc', () => {
 
     it('Default RPC timeout, client side', async () => {
         rpcCommunicator2.off('outgoingMessage', outgoingListener2)
-        rpcCommunicator2.on('outgoingMessage', async (_message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator2.on('outgoingMessage', async () => {
             await wait(3000)
         })
         const response2 = client2.getClosestPeers(
@@ -92,7 +90,7 @@ describe('DhtRpc', () => {
     it('Server side timeout', async () => {
         let timeout: NodeJS.Timeout
 
-        async function respondGetClosestPeersWithTimeout(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
+        async function respondGetClosestPeersWithTimeout(): Promise<ClosestPeersResponse> {
             const neighbors = getMockPeers()
             const response: ClosestPeersResponse = {
                 peers: neighbors,

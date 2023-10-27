@@ -27,7 +27,7 @@ describe('RandomGraphNode', () => {
         targetNeighbors = new NodeList(nodeId, 10)
         randomNodeView = new NodeList(nodeId, 10)
         nearbyNodeView = new NodeList(nodeId, 10)
-        layer1 = new MockLayer1(nodeId)
+        layer1 = new MockLayer1()
 
         randomGraphNode = createRandomGraphNode({
             targetNeighbors,

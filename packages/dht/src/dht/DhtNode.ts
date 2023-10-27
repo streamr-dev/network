@@ -19,7 +19,7 @@ import {
     DataEntry,
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
-import { ConnectionManager, ConnectionManagerConfig, PortRange, TlsCertificate } from '../connection/ConnectionManager'
+import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
@@ -42,8 +42,9 @@ import { IceServer } from '../connection/WebRTC/WebRtcConnector'
 import { registerExternalApiRpcMethods } from './registerExternalApiRpcMethods'
 import { RemoteExternalApi } from './RemoteExternalApi'
 import { UUID } from '../helpers/UUID'
-import { isNodeJS } from '../helpers/browser/isNodeJS'
+import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { sample } from 'lodash'
+import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -144,7 +145,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
     } else {
         kademliaId = hexToBinary(peerId!)
     }
-    const nodeType = isNodeJS() ? NodeType.NODEJS : NodeType.BROWSER
+    const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS 
     const ret: PeerDescriptor = { kademliaId, type: nodeType }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
@@ -192,7 +193,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         logger.trace(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
         this.started = true
 
-        if (!isNodeJS()) {
+        if (isBrowserEnvironment()) {
             this.config.websocketPortRange = undefined
             if (this.config.peerDescriptor) {
                 this.config.peerDescriptor.websocket = undefined
@@ -206,36 +207,39 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 this.connectionManager = this.config.transportLayer
             }
         } else {
-            const connectionManagerConfig: ConnectionManagerConfig = {
+            const connectorFacadeConfig: DefaultConnectorFacadeConfig = {
                 transportLayer: this,
                 entryPoints: this.config.entryPoints,
                 iceServers: this.config.iceServers,
-                metricsContext: this.config.metricsContext,
                 webrtcAllowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
                 webrtcDatachannelBufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 webrtcPortRange: this.config.webrtcPortRange,
                 maxMessageSize: this.config.maxMessageSize,
-                maxConnections: this.config.maxConnections,
                 tlsCertificate: this.config.tlsCertificate,
-                externalIp: this.config.externalIp
+                externalIp: this.config.externalIp,
+                createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
-                connectionManagerConfig.websocketHost = this.config.peerDescriptor.websocket.host
-                connectionManagerConfig.websocketPortRange = { 
+                connectorFacadeConfig.websocketHost = this.config.peerDescriptor.websocket.host
+                connectorFacadeConfig.websocketPortRange = { 
                     min: this.config.peerDescriptor.websocket.port,
                     max: this.config.peerDescriptor.websocket.port
                 }
             // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
             } else if (this.config.websocketPortRange) { 
-                connectionManagerConfig.websocketHost = this.config.websocketHost
-                connectionManagerConfig.websocketPortRange = this.config.websocketPortRange
+                connectorFacadeConfig.websocketHost = this.config.websocketHost
+                connectorFacadeConfig.websocketPortRange = this.config.websocketPortRange
             }
 
-            const connectionManager = new ConnectionManager(connectionManagerConfig)
-            await connectionManager.start(this.generatePeerDescriptorCallBack)
+            const connectionManager = new ConnectionManager({
+                createConnectorFacade: () => new DefaultConnectorFacade(connectorFacadeConfig),
+                maxConnections: this.config.maxConnections,
+                metricsContext: this.config.metricsContext
+            })
+            await connectionManager.start()
             this.connectionManager = connectionManager
             this.transportLayer = connectionManager
         }
@@ -319,7 +323,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.bucket.on('ping', (oldContacts: RemoteDhtNode[], newContact: RemoteDhtNode) => this.onKBucketPing(oldContacts, newContact))
         this.bucket.on('removed', (contact: RemoteDhtNode) => this.onKBucketRemoved(contact))
         this.bucket.on('added', (contact: RemoteDhtNode) => this.onKBucketAdded(contact))
-        this.bucket.on('updated', (_oldContact: RemoteDhtNode, _newContact: RemoteDhtNode) => {
+        this.bucket.on('updated', () => {
             // TODO: Update contact info to the connection manager and reconnect
         })
         this.neighborList = new SortedContactList(selfId, this.config.maxNeighborListSize)
@@ -617,7 +621,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    public async send(msg: Message, _doNotConnect?: boolean): Promise<void> {
+    public async send(msg: Message): Promise<void> {
         if (!this.started || this.stopped) {
             return
         }
