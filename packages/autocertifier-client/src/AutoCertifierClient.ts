@@ -36,7 +36,6 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         this.restClient = new RestClient(restApiUrl)
         this.subdomainPath = filePathToNodeFormat(subdomainPath)
         this.streamrWebSocketPort = streamrWebSocketPort
-
         registerRpcMethod(AUTOCERTIFIER_SERVICE_ID, 'getSessionId', this.getSessionId.bind(this))
     }
 
@@ -89,7 +88,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             updateIn = this.MAX_INT_32
         }
 
-        logger.info('' + updateIn + ' milliseconds until certificate update')
+        logger.info(updateIn + ' milliseconds until certificate update')
         this.updateTimeout = setTimeout(this.checkSubdomainValidity, updateIn)
     }
 

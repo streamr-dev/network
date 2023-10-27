@@ -22,7 +22,6 @@ export class AutoCertifier implements RestInterface {
     private streamrChallenger = new StreamrChallenger()
 
     // RestInterface implementation
-
     public async createSession(): Promise<Session> {
         logger.info('creating new session')
 
@@ -86,16 +85,13 @@ export class AutoCertifier implements RestInterface {
     }
 
     // ChallengeInterface implementation
-
     public async createChallenge(fqdn: string, value: string): Promise<void> {
         logger.info('creating challenge for ' + fqdn + ' with value ' + value)
         this.dnsServer!.updateSubdomainAcmeChallenge(fqdn, value)
     }
 
-    public async deleteChallenge(_name: string): Promise<void> {
-    }
-
     public async start(): Promise<void> {
+        // TODO: load env variables from .env
         this.domainName = process.env['AUTOICERTIFIER_DOMAIN_NAME']
         if (!this.domainName) {
             throw new Error('AUTOICERTIFIER_DOMAIN_NAME environment variable is not set')
