@@ -35,7 +35,7 @@ import { Any } from '../proto/google/protobuf/any'
 import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
 import { RecursiveFinder, RecursiveFindResult } from './find/RecursiveFinder'
-import { DataStore } from './store/DataStore'
+import { StoreRpcLocal } from './store/StoreRpcLocal'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/WebRTC/WebRtcConnector'
@@ -167,7 +167,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private ownPeerDescriptor?: PeerDescriptor
     private ownPeerId?: PeerID
     public router?: Router
-    public dataStore?: DataStore
+    public storeRpcLocal?: StoreRpcLocal
     private localDataStore = new LocalDataStore()
     private recursiveFinder?: RecursiveFinder
     private peerDiscovery?: PeerDiscovery
@@ -293,7 +293,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
             localDataStore: this.localDataStore
         })
-        this.dataStore = new DataStore({
+        this.storeRpcLocal = new StoreRpcLocal({
             rpcCommunicator: this.rpcCommunicator,
             recursiveFinder: this.recursiveFinder,
             ownPeerDescriptor: this.ownPeerDescriptor!,
@@ -646,7 +646,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
         }
-        return this.dataStore!.storeDataToDht(key, data)
+        return this.storeRpcLocal!.storeDataToDht(key, data)
     }
 
     public async storeDataViaPeer(key: Uint8Array, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
@@ -669,7 +669,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
         if (!this.stopped) {
-            return this.dataStore!.deleteDataFromDht(idToDelete)
+            return this.storeRpcLocal!.deleteDataFromDht(idToDelete)
         }
     }
 

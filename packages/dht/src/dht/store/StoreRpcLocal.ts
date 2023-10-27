@@ -37,7 +37,7 @@ interface DataStoreConfig {
 
 const logger = new Logger(module)
 
-export class DataStore implements IStoreRpc {
+export class StoreRpcLocal implements IStoreRpc {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly recursiveFinder: IRecursiveFinder
