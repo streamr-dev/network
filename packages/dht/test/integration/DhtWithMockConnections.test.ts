@@ -7,8 +7,8 @@ import { createMockConnectionDhtNode } from '../utils/utils'
 describe('Mock IConnection DHT Joining', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-    let entrypointDescriptor: PeerDescriptor
     let simulator: Simulator
+    let entrypointDescriptor: PeerDescriptor
 
     beforeEach(async () => {
         nodes = []
@@ -30,7 +30,7 @@ describe('Mock IConnection DHT Joining', () => {
     afterEach(async () => {
         await Promise.all([
             entryPoint.stop(),
-            ...nodes.map(async (node) => node.stop())
+            ...nodes.map((node) => node.stop())
         ])
         simulator.stop()
     })
@@ -43,5 +43,5 @@ describe('Mock IConnection DHT Joining', () => {
             expect(node.getClosestContacts().length).toBeGreaterThanOrEqual(node.getK() / 2)
         })
         expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() / 2)
-    }, 60000)
+    }, 60 * 1000)
 })
