@@ -40,7 +40,7 @@ import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/WebRTC/WebRtcConnector'
 import { registerExternalApiRpcMethods } from './registerExternalApiRpcMethods'
-import { RemoteExternalApi } from './RemoteExternalApi'
+import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
 import { UUID } from '../helpers/UUID'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { sample } from 'lodash'
@@ -650,13 +650,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async storeDataViaPeer(key: Uint8Array, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
-        const target = new RemoteExternalApi(
+        const rpcRemote = new ExternalApiRpcRemote(
             this.ownPeerDescriptor!,
             peer,
             this.config.serviceId,
             toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        return await target.storeData(key, data)
+        return await rpcRemote.storeData(key, data)
     }
 
     public async getDataFromDht(idToFind: Uint8Array): Promise<DataEntry[]> {
@@ -674,13 +674,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async findDataViaPeer(idToFind: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
-        const target = new RemoteExternalApi(
+        const rpcRemote = new ExternalApiRpcRemote(
             this.ownPeerDescriptor!,
             peer,
             this.config.serviceId,
             toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        return await target.findData(idToFind)
+        return await rpcRemote.findData(idToFind)
     }
 
     public getRpcCommunicator(): RoutingRpcCommunicator {

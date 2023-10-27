@@ -3,7 +3,7 @@ import { DataEntry, ExternalStoreDataRequest, FindDataRequest, PeerDescriptor } 
 import { IExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { Remote } from './contact/Remote'
 
-export class RemoteExternalApi extends Remote<IExternalApiRpcClient> {
+export class ExternalApiRpcRemote extends Remote<IExternalApiRpcClient> {
 
     async findData(idToFind: Uint8Array): Promise<DataEntry[]> {
         const request: FindDataRequest = {
