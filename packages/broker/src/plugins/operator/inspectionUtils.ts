@@ -1,6 +1,6 @@
 import { shuffle } from 'lodash'
 import { NetworkPeerDescriptor, StreamrClient } from 'streamr-client'
-import { CreateOperatorFleetStateFn } from './OperatorFleetState'
+import { CreateOperatorFleetStateFn, OperatorFleetState } from './OperatorFleetState'
 import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { ConsistentHashRing } from './ConsistentHashRing'
@@ -105,22 +105,29 @@ export async function findNodesForTarget(
             targetOperator: target.operatorAddress,
             onlineNodes: targetOperatorFleetState.getNodeIds().length,
         })
-
-        const replicationFactor = await getRedundancyFactor(target.operatorAddress)
-        if (replicationFactor === undefined) {
-            logger.debug('Encountered misconfigured replication factor')
-            return []
-        }
-
-        const consistentHashRing = new ConsistentHashRing(replicationFactor)
-        for (const nodeId of targetOperatorFleetState.getNodeIds()) {
-            consistentHashRing.add(nodeId)
-        }
-        const targetNodes = consistentHashRing.get(target.streamPart)
-        return targetNodes.map((nodeId) => targetOperatorFleetState.getPeerDescriptor(nodeId)!)
+        return await findNodesForTargetGivenFleetState(target, targetOperatorFleetState, getRedundancyFactor)
     } finally {
         await targetOperatorFleetState.destroy()
     }
+}
+
+export async function findNodesForTargetGivenFleetState(
+    target: Target,
+    targetOperatorFleetState: OperatorFleetState,
+    getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
+): Promise<NetworkPeerDescriptor[]> {
+    const replicationFactor = await getRedundancyFactor(target.operatorAddress)
+    if (replicationFactor === undefined) {
+        logger.debug('Encountered misconfigured replication factor')
+        return []
+    }
+
+    const consistentHashRing = new ConsistentHashRing(replicationFactor)
+    for (const nodeId of targetOperatorFleetState.getNodeIds()) {
+        consistentHashRing.add(nodeId)
+    }
+    const targetNodes = consistentHashRing.get(target.streamPart)
+    return targetNodes.map((nodeId) => targetOperatorFleetState.getPeerDescriptor(nodeId)!)
 }
 
 export async function inspectTarget({
