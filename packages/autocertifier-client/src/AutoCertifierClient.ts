@@ -67,7 +67,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         return { subdomain, expiryTime }
     }
 
-    public async stop(): Promise<void> {
+    public stop(): void {
         if (this.updateTimeout) {
             clearTimeout(this.updateTimeout)
             this.updateTimeout = undefined

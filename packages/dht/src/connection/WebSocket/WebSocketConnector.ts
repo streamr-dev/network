@@ -11,9 +11,8 @@ import {
     WebSocketConnectionResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { WebSocketConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Logger, wait, waitForEvent3, binaryToHex } from '@streamr/utils'
+import { Logger, wait, binaryToHex } from '@streamr/utils'
 import { IWebSocketConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebSocketServer } from './WebSocketServer'
 import { ConnectivityChecker } from '../ConnectivityChecker'
@@ -25,12 +24,11 @@ import { Handshaker } from '../Handshaker'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
 import { sample, range } from 'lodash'
-import { AutoCertifierClient, SessionIdRequest, SessionIdResponse, CertifiedSubdomain } from '@streamr/autocertifier-client'
 import { WebSocketServerStartError } from '../../helpers/errors'
+import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 const logger = new Logger(module)
-
-const AUTO_CERTIFIED_SUBDOMAIN_FILE_PATH = '~/subdomain.json'
 
 export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string => {
     return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
@@ -63,10 +61,10 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private incomingConnectionCallback: (connection: ManagedConnection) => boolean
     private readonly autocertifierRpcCommunicator: ListeningRpcCommunicator
     private readonly autocertifierUrl: string
-    private autocertifierClient?: AutoCertifierClient
     private host?: string
     private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
+    private autoCertifierClient?: AutoCertifierClientFacade
     private readonly serverEnableTls: boolean
     private selectedPort?: number
     private readonly protocolVersion: string
@@ -181,31 +179,15 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     public async autoCertify(): Promise<void> {
-        if (this.selectedPort) {
-            logger.trace(`AutoCertifying subdomain...`)
-            this.autocertifierClient = new AutoCertifierClient(
-                AUTO_CERTIFIED_SUBDOMAIN_FILE_PATH,
-                this.selectedPort!,
-                this.autocertifierUrl, (_, rpcMethodName, method) => {
-                    this.autocertifierRpcCommunicator.registerRpcMethod(
-                        SessionIdRequest,
-                        SessionIdResponse,
-                        rpcMethodName,
-                        method
-                    )                        
-                })
-            this.autocertifierClient.on('updatedSubdomain', (subdomain: CertifiedSubdomain) => {
-                logger.trace(`Updating certificate for WSS server`)
-                this.setHost(subdomain.subdomain + '.' + subdomain.fqdn)
-                this.webSocketServer!.updateCertificate(subdomain.certificate)
-                logger.trace(`Updated certificate for WSS server`)
-            })
-            await Promise.all([
-                waitForEvent3(this.autocertifierClient as any, 'updatedSubdomain', 60000),
-                this.autocertifierClient.start()
-            ])
-            
-        }
+        this.autoCertifierClient = new AutoCertifierClientFacade({
+            autocertifierRpcCommunicator: this.autocertifierRpcCommunicator,
+            autocertifierUrl: this.autocertifierUrl,
+            wsServerPort: this.selectedPort!,
+            setHost: this.setHost.bind(this),
+            updateCertificate: this.webSocketServer!.updateCertificate.bind(this.webSocketServer)
+        })
+        logger.trace(`AutoCertifying subdomain...`)
+        await this.autoCertifierClient!.start()
     }
 
     private setHost(hostName: string): void {
@@ -297,7 +279,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         this.destroyed = true
         this.rpcCommunicator.stop()
         this.autocertifierRpcCommunicator.stop()
-        this.autocertifierClient?.stop()
+        this.autoCertifierClient?.stop()
         const requests = Array.from(this.ongoingConnectRequests.values())
         await Promise.allSettled(requests.map((conn) => conn.close('OTHER')))
 
