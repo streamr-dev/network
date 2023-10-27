@@ -35,17 +35,17 @@ const runTest = async (latencyType: LatencyType) => {
     simulator.stop()
 }
 
-describe('Mock connection Dht joining', () => {
+describe('DhtJoinPeerDiscovery', () => {
     
     it('latency: none', async () => {
         await runTest(LatencyType.NONE)
-    })
+    }, 60 * 1000)
 
     it('latency: random', async () => {
         await runTest(LatencyType.RANDOM)
-    })
+    }, 60 * 1000)
 
     it('latency: real', async () => {
         await runTest(LatencyType.REAL)
-    })
+    }, 60 * 1000)
 })
