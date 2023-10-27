@@ -33,6 +33,7 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { wait, waitForCondition } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
+import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
@@ -58,10 +59,8 @@ export const createMockConnectionDhtNode = async (stringId: string,
         region: getRandomRegion()
     }
 
-    const mockConnectionManager = new ConnectionManager({
-        ownPeerDescriptor: peerDescriptor,
-        simulator: simulator
-    })
+    const mockConnectionManager = new SimulatorTransport(peerDescriptor, simulator)
+    await mockConnectionManager.start()
 
     const node = new DhtNode({
         peerDescriptor: peerDescriptor,

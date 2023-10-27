@@ -22,17 +22,33 @@ const logger = new Logger(module)
 
 declare class NodeJsWsServer extends WsServer { }
 
+interface WebSocketServerConfig {
+    portRange: PortRange
+    tlsCertificate?: TlsCertificate
+    maxMessageSize?: number
+}
+
 export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
 
     private httpServer?: HttpServer | HttpsServer
     private wsServer?: WsServer
     private readonly abortController = new AbortController()
+    private readonly portRange: PortRange
+    private readonly tlsCertificate?: TlsCertificate
+    private readonly maxMessageSize: number
 
-    public async start(portRange: PortRange, tlsCertificate?: TlsCertificate): Promise<number> {
-        const ports = range(portRange.min, portRange.max + 1)
+    constructor(config: WebSocketServerConfig) {
+        super()
+        this.portRange = config.portRange
+        this.tlsCertificate = config.tlsCertificate
+        this.maxMessageSize = config.maxMessageSize ?? 1048576
+    }
+
+    public async start(): Promise<number> {
+        const ports = range(this.portRange.min, this.portRange.max + 1)
         for (const port of ports) {
             try {
-                await asAbortable(this.startServer(port, tlsCertificate), this.abortController.signal)
+                await asAbortable(this.startServer(port, this.tlsCertificate), this.abortController.signal)
                 return port
             } catch (err) {
                 if (err.originalError?.code === 'EADDRINUSE') {
@@ -42,7 +58,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
                 }
             }
         }
-        throw new WebSocketServerStartError(`Failed to start WebSocket server on any port in range: ${portRange.min}-${portRange.min}`)
+        throw new WebSocketServerStartError(`Failed to start WebSocket server on any port in range: ${this.portRange.min}-${this.portRange.min}`)
     }
 
     private startServer(port: number, tlsCertificate?: TlsCertificate): Promise<void> {
@@ -115,12 +131,14 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
         if (typeof NodeJsWsServer !== 'undefined') {
             return new NodeJsWsServer({
                 httpServer,
-                autoAcceptConnections: false
+                autoAcceptConnections: false,
+                maxReceivedMessageSize: this.maxMessageSize
             })
         } else {
             return this.wsServer = new WsServer({
                 httpServer,
-                autoAcceptConnections: false
+                autoAcceptConnections: false,
+                maxReceivedMessageSize: this.maxMessageSize
             })
         }
     }

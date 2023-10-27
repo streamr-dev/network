@@ -19,7 +19,7 @@ describe('Propagation', () => {
         const simulator = new Simulator()
         dhtNodes = []
         randomGraphNodes = []
-        const [entryPoint, node1] = createMockRandomGraphNodeAndDhtNode(entryPointDescriptor, entryPointDescriptor, STREAM_PART_ID, simulator)
+        const [entryPoint, node1] = await createMockRandomGraphNodeAndDhtNode(entryPointDescriptor, entryPointDescriptor, STREAM_PART_ID, simulator)
         await entryPoint.start()
         await entryPoint.joinDht([entryPointDescriptor])
         await node1.start()
@@ -29,7 +29,7 @@ describe('Propagation', () => {
 
         await Promise.all(range(NUM_OF_NODES).map(async (_i) => {
             const descriptor = createMockPeerDescriptor()
-            const [dht, graph] = createMockRandomGraphNodeAndDhtNode(
+            const [dht, graph] = await createMockRandomGraphNodeAndDhtNode(
                 descriptor,
                 entryPointDescriptor,
                 STREAM_PART_ID,

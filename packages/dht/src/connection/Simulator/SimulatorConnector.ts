@@ -19,18 +19,18 @@ export class SimulatorConnector {
     private protocolVersion: string
     private ownPeerDescriptor: PeerDescriptor
     private simulator: Simulator
-    private incomingConnectionCallback: (connection: ManagedConnection) => boolean
+    private onIncomingConnection: (connection: ManagedConnection) => boolean
 
     constructor(
         protocolVersion: string,
         ownPeerDescriptor: PeerDescriptor,
         simulator: Simulator,
-        incomingConnectionCallback: (connection: ManagedConnection) => boolean
+        onIncomingConnection: (connection: ManagedConnection) => boolean
     ) {
         this.protocolVersion = protocolVersion
         this.ownPeerDescriptor = ownPeerDescriptor
         this.simulator = simulator
-        this.incomingConnectionCallback = incomingConnectionCallback
+        this.onIncomingConnection = onIncomingConnection
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
@@ -81,7 +81,7 @@ export class SimulatorConnector {
             logger.trace(keyFromPeerDescriptor(sourceConnection.ownPeerDescriptor) + ' incoming handshake request')
             logger.trace('incoming handshake request objectId: ' + managedConnection.objectId)
 
-            if (this.incomingConnectionCallback(managedConnection)) {
+            if (this.onIncomingConnection(managedConnection)) {
                 logger.trace(keyFromPeerDescriptor(sourceConnection.ownPeerDescriptor) + ' calling acceptHandshake')
                 managedConnection.acceptHandshake()
             } else {

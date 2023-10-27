@@ -13,8 +13,6 @@ import { PortRange } from '../ConnectionManager'
 
 const logger = new Logger(module)
 
-const MAX_MESSAGE_SIZE = 1048576
-
 export const WEB_RTC_CLEANUP = new class {
     // eslint-disable-next-line class-methods-use-this
     cleanUp(): void {
@@ -27,6 +25,7 @@ export interface Params {
     bufferThresholdHigh?: number
     bufferThresholdLow?: number
     connectingTimeout?: number
+    maxMessageSize?: number
     iceServers?: IceServer[]
     portRange?: PortRange
 }
@@ -65,27 +64,29 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     private readonly connectingTimeout: number
     private readonly remotePeerDescriptor: PeerDescriptor
     private readonly portRange?: PortRange
+    private readonly maxMessageSize?: number
     private closed = false
 
     constructor(params: Params) {
         super()
         this.connectionId = new ConnectionID()
-        this.iceServers = params.iceServers || []
+        this.iceServers = params.iceServers ?? []
         // eslint-disable-next-line no-underscore-dangle
-        this._bufferThresholdHigh = params.bufferThresholdHigh || 2 ** 17
-        this.bufferThresholdLow = params.bufferThresholdLow || 2 ** 15
-        this.connectingTimeout = params.connectingTimeout || 20000
+        this._bufferThresholdHigh = params.bufferThresholdHigh ?? 2 ** 17
+        this.bufferThresholdLow = params.bufferThresholdLow ?? 2 ** 15
+        this.connectingTimeout = params.connectingTimeout ?? 20000
         this.remotePeerDescriptor = params.remotePeerDescriptor
+        this.maxMessageSize = params.maxMessageSize ?? 1048576
         this.portRange = params.portRange
     }
 
     public start(isOffering: boolean): void {
         logger.trace(`Staring new connection for peer: ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
-        const hexId = keyFromPeerDescriptor(this.remotePeerDescriptor)
-        logger.trace(`Staring new connection for peer: ${hexId} offering: ${isOffering}`)
-        this.connection = new PeerConnection(hexId, {
+        const peerIdKey = keyFromPeerDescriptor(this.remotePeerDescriptor)
+        logger.trace(`Staring new connection for peer: ${peerIdKey} offering: ${isOffering}`)
+        this.connection = new PeerConnection(peerIdKey, {
             iceServers: this.iceServers.map(iceServerAsString),
-            maxMessageSize: MAX_MESSAGE_SIZE,
+            maxMessageSize: this.maxMessageSize,
             portRangeBegin: this.portRange?.min,
             portRangeEnd: this.portRange?.max,
         })

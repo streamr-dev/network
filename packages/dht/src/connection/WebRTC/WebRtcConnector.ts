@@ -43,6 +43,7 @@ export interface WebRtcConnectorConfig {
     allowPrivateAddresses?: boolean
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
+    maxMessageSize?: number
     connectionTimeout?: number
     externalIp?: string
     portRange?: PortRange
@@ -65,16 +66,16 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     private iceServers: IceServer[]
     private allowPrivateAddresses: boolean
     private config: WebRtcConnectorConfig
-    private incomingConnectionCallback: (connection: ManagedConnection) => boolean
+    private onIncomingConnection: (connection: ManagedConnection) => boolean
 
     constructor(
         config: WebRtcConnectorConfig,
-        incomingConnectionCallback: (connection: ManagedConnection) => boolean
+        onIncomingConnection: (connection: ManagedConnection) => boolean
     ) {
         this.config = config
         this.iceServers = config.iceServers || []
         this.allowPrivateAddresses = config.allowPrivateAddresses || true
-        this.incomingConnectionCallback = incomingConnectionCallback
+        this.onIncomingConnection = onIncomingConnection
 
         this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.rpcTransport, {
             rpcRequestTimeout: 15000
@@ -200,7 +201,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
             managedConnection.setPeerDescriptor(remotePeer)
 
             this.ongoingConnectAttempts.set(peerKey, managedConnection)
-            this.incomingConnectionCallback(managedConnection)
+            this.onIncomingConnection(managedConnection)
 
             const remoteConnector = new RemoteWebrtcConnector(
                 remotePeer,
@@ -258,7 +259,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         const managedConnection = this.connect(targetPeerDescriptor)
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
 
-        this.incomingConnectionCallback(managedConnection)
+        this.onIncomingConnection(managedConnection)
     }
     private onRemoteCandidate(
         remotePeerDescriptor: PeerDescriptor,

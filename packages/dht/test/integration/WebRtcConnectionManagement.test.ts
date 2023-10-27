@@ -7,6 +7,18 @@ import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
 import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
+import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
+import { MetricsContext } from '@streamr/utils'
+
+const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, transportLayer: ITransport) => {
+    return new ConnectionManager({
+        createConnectorFacade: () => new DefaultConnectorFacade({
+            transportLayer,
+            createOwnPeerDescriptor: () => ownPeerDescriptor
+        }),
+        metricsContext: new MetricsContext()
+    })
+}
 
 describe('WebRTC Connection Management', () => {
 
@@ -25,22 +37,19 @@ describe('WebRTC Connection Management', () => {
         type: NodeType.NODEJS,
     }
 
-    let connectorTransport1: ITransport
-    let connectorTransport2: ITransport
+    let connectorTransport1: SimulatorTransport
+    let connectorTransport2: SimulatorTransport
 
     beforeEach(async () => {
-
         simulator = new Simulator(LatencyType.FIXED, 500)
-
         connectorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
-        manager1 = new ConnectionManager({ transportLayer: connectorTransport1 })
-
+        await connectorTransport1.start()
+        manager1 = createConnectionManager(peerDescriptor1, connectorTransport1)
         connectorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
-        manager2 = new ConnectionManager({ transportLayer: connectorTransport2 })
-
-        await manager1.start((_msg) => peerDescriptor1)
-        await manager2.start((_msg) => peerDescriptor2)
-
+        await connectorTransport2.start()
+        manager2 = createConnectionManager(peerDescriptor2, connectorTransport2)
+        await manager1.start()
+        await manager2.start()
     })
 
     afterEach(async () => {
