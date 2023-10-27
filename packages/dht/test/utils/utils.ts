@@ -70,7 +70,7 @@ export const createMockConnectionDhtNode = async (stringId: string,
     const node = new DhtNode({
         peerDescriptor: peerDescriptor,
         transportLayer: mockConnectionManager,
-        numberOfNodesPerKBucket: K ? K : 8,
+        numberOfNodesPerKBucket: K,
         maxConnections: maxConnections,
         dhtJoinTimeout
     })
