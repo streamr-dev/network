@@ -1,47 +1,51 @@
-import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { getRandomRegion } from '../../src/connection/Simulator/pings'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 
-describe('Mock IConnection DHT Joining', () => {
-    let entryPoint: DhtNode
-    let nodes: DhtNode[]
-    let simulator: Simulator
-    let entrypointDescriptor: PeerDescriptor
+const runTest = async (latencyType: LatencyType) => {
+    const simulator = new Simulator(latencyType)
+    const entryPointId = '0'
+    const entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
+    const entrypointDescriptor = {
+        kademliaId: entryPoint.getNodeId().value,
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
+    }
+    const nodes: DhtNode[] = []
+    for (let i = 1; i < 100; i++) {
+        const nodeId = `${i}`
+        const node = await createMockConnectionDhtNode(nodeId, simulator)
+        nodes.push(node)
+    }
 
-    beforeEach(async () => {
-        nodes = []
-        simulator = new Simulator()
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
-        entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
-            region: getRandomRegion()
-        }
-        for (let i = 1; i < 100; i++) {
-            const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId, simulator)
-            nodes.push(node)
-        }
+    await entryPoint.joinDht([entrypointDescriptor])
+    await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
+    nodes.forEach((node) => {
+        expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() / 2)
+        expect(node.getClosestContacts().length).toBeGreaterThanOrEqual(node.getK() / 2)
+    })
+    expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() / 2)
+
+    await Promise.all([
+        entryPoint.stop(),
+        ...nodes.map((node) => node.stop())
+    ])
+    simulator.stop()
+}
+
+describe('Mock connection Dht joining', () => {
+    
+    it('latency: none', async () => {
+        await runTest(LatencyType.NONE)
     })
 
-    afterEach(async () => {
-        await Promise.all([
-            entryPoint.stop(),
-            ...nodes.map((node) => node.stop())
-        ])
-        simulator.stop()
+    it('latency: random', async () => {
+        await runTest(LatencyType.RANDOM)
     })
 
-    it('Happy path', async () => {
-        await entryPoint.joinDht([entrypointDescriptor])
-        await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
-        nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() / 2)
-            expect(node.getClosestContacts().length).toBeGreaterThanOrEqual(node.getK() / 2)
-        })
-        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() / 2)
-    }, 60 * 1000)
+    it('latency: real', async () => {
+        await runTest(LatencyType.REAL)
+    })
 })
