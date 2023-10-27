@@ -1,13 +1,11 @@
-import EventEmitter from "eventemitter3"
-import { AutoCertifierClientFacade, IAutoCertifierClient } from "../../src/connection/WebSocket/AutoCertifierClientFacade"
+import EventEmitter from 'eventemitter3'
+import { AutoCertifierClientFacade, IAutoCertifierClient } from '../../src/connection/WebSocket/AutoCertifierClientFacade'
 
 class mockAutoCertifierClient extends EventEmitter {
-    constructor() {
-        super()
-    }
     start = async () => {
         this.emit('updatedSubdomain', {})
     }
+    // eslint-disable-next-line class-methods-use-this
     stop = () => {}
     emitUpdateSubdomain = () => {
         this.emit('updatedSubdomain', {})
@@ -28,6 +26,7 @@ describe('AutoCertifierClientFacade', () => {
         updateCertificate = jest.fn()
         client = new AutoCertifierClientFacade({
             autocertifierUrl: '',
+            autocertifiedSubdomainFilePath: '',
             autocertifierRpcCommunicator: {} as any,
             wsServerPort: 0,
             setHost,

@@ -2,25 +2,24 @@ import { AutoCertifierClient, SessionIdRequest, SessionIdResponse, CertifiedSubd
 import { ListeningRpcCommunicator } from '../../exports'
 import { Logger, waitForEvent3 } from '@streamr/utils'
 
-// TODO make configurable, default ~/.streamr/subdomain.json ?
-const AUTO_CERTIFIED_SUBDOMAIN_FILE_PATH = '~/subdomain.json'
 const START_TIMEOUT = 60 * 1000
 
 const defaultAutoCertifierClientFactory = (
+    filePath: string,
     autocertifierUrl: string,
     autocertifierRpcCommunicator: ListeningRpcCommunicator,
     wsServerPort: number
-    ) => new AutoCertifierClient(
-        AUTO_CERTIFIED_SUBDOMAIN_FILE_PATH,
-        wsServerPort,
-        autocertifierUrl, (_, rpcMethodName, method) => {
-            autocertifierRpcCommunicator.registerRpcMethod(
-                SessionIdRequest,
-                SessionIdResponse,
-                rpcMethodName,
-                method
-            )                        
-        })
+) => new AutoCertifierClient(
+    filePath,
+    wsServerPort,
+    autocertifierUrl, (_, rpcMethodName, method) => {
+        autocertifierRpcCommunicator.registerRpcMethod(
+            SessionIdRequest,
+            SessionIdResponse,
+            rpcMethodName,
+            method
+        )                        
+    })
 
 export interface IAutoCertifierClient {
     start(): Promise<void>
@@ -30,6 +29,7 @@ export interface IAutoCertifierClient {
 
 interface AutoCertifierClientFacadeConfig {
     autocertifierUrl: string
+    autocertifiedSubdomainFilePath: string
     autocertifierRpcCommunicator: ListeningRpcCommunicator
     wsServerPort: number
     setHost: (host: string) => void
@@ -49,7 +49,12 @@ export class AutoCertifierClientFacade {
         this.setHost = config.setHost
         this.updateCertificate = config.updateCertificate
         this.autocertifierClient = config.createClientFactory ? config.createClientFactory() 
-            : defaultAutoCertifierClientFactory(config.autocertifierUrl, config.autocertifierRpcCommunicator, config.wsServerPort)
+            : defaultAutoCertifierClientFactory(
+                config.autocertifiedSubdomainFilePath,
+                config.autocertifierUrl,
+                config.autocertifierRpcCommunicator,
+                config.wsServerPort
+            )
     }
 
     async start(): Promise<void> {

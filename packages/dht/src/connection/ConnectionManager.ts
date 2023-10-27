@@ -60,6 +60,7 @@ export class ConnectionManagerConfig {
     websocketServerEnableTls?: boolean
     tlsCertificate?: TlsCertificate
     autocertifierUrl?: string = 'https://ns1.fe6a54d8-8d6f-4743-890d-e9ecd680a4c7.xyz:59833'
+    autocertifiedSubdomainFilePath?: string = '~/.streamr/subdomain.json'
 
     // the following fields are used in simulation only
     simulator?: Simulator
@@ -198,6 +199,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 canConnect: this.canConnect.bind(this),
                 autocertifierRpcCommunicator,
                 autocertifierUrl: this.config.autocertifierUrl!,
+                autocertifiedSubdomainFilePath: this.config.autocertifiedSubdomainFilePath!,
                 serverEnableTls: this.config.websocketServerEnableTls!,
                 incomingConnectionCallback: this.incomingConnectionCallback,
                 portRange: this.config.websocketPortRange,

@@ -44,6 +44,7 @@ interface WebSocketConnectorConfig {
     autocertifierRpcCommunicator: ListeningRpcCommunicator
     autocertifierUrl: string
     serverEnableTls: boolean
+    autocertifiedSubdomainFilePath: string
     portRange?: PortRange
     maxMessageSize?: number
     host?: string
@@ -61,6 +62,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private incomingConnectionCallback: (connection: ManagedConnection) => boolean
     private readonly autocertifierRpcCommunicator: ListeningRpcCommunicator
     private readonly autocertifierUrl: string
+    private readonly autocertifiedSubdomainFilePath: string
     private host?: string
     private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
@@ -86,6 +88,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         this.tlsCertificate = config.tlsCertificate
         this.autocertifierRpcCommunicator = config.autocertifierRpcCommunicator
         this.autocertifierUrl = config.autocertifierUrl
+        this.autocertifiedSubdomainFilePath = config.autocertifiedSubdomainFilePath
         this.serverEnableTls = config.serverEnableTls
 
         this.canConnectFunction = config.canConnect.bind(this)
@@ -180,6 +183,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
     public async autoCertify(): Promise<void> {
         this.autoCertifierClient = new AutoCertifierClientFacade({
+            autocertifiedSubdomainFilePath: this.autocertifiedSubdomainFilePath,
             autocertifierRpcCommunicator: this.autocertifierRpcCommunicator,
             autocertifierUrl: this.autocertifierUrl,
             wsServerPort: this.selectedPort!,

@@ -124,6 +124,7 @@ export class DhtNodeConfig {
     webrtcPortRange?: PortRange
     tlsCertificate?: TlsCertificate
     autocertifierUrl?: string
+    autocertifiedSubdomainFilePath?: string
 
     constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
@@ -225,7 +226,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 websocketServerEnableTls: this.config.websocketServerEnableTls,
                 tlsCertificate: this.config.tlsCertificate,
                 externalIp: this.config.externalIp,
-                autocertifierUrl: this.config.autocertifierUrl
+                autocertifierUrl: this.config.autocertifierUrl,
+                autocertifiedSubdomainFilePath: this.config.autocertifiedSubdomainFilePath
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
