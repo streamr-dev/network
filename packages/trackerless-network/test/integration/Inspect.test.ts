@@ -25,6 +25,7 @@ describe('inspect', () => {
 
     const initiateNode = async (peerDescriptor: PeerDescriptor, simulator: Simulator): Promise<NetworkStack> => {
         const transportLayer = new SimulatorTransport(peerDescriptor, simulator)
+        await transportLayer.start()
         const node = new NetworkStack({
             layer0: {
                 entryPoints: [publisherDescriptor],

@@ -8,7 +8,6 @@ import {
     WebSocketConnectionResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { MockWebSocketConnectorRpc } from '../utils/utils'
-import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 describe('WebSocketConnectorRpc', () => {
@@ -44,11 +43,11 @@ describe('WebSocketConnectorRpc', () => {
             MockWebSocketConnectorRpc.requestConnection
         )
 
-        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator2.on('outgoingMessage', (message: RpcMessage) => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 

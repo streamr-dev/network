@@ -24,6 +24,8 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         const cms: SimulatorTransport[] = range(numOfNodes).map((i) =>
             new SimulatorTransport(peerDescriptors[i], simulator)
         )
+        await entrypointCm.start()
+        await Promise.all(cms.map((cm) => cm.start()))
 
         dhtEntryPoint = new DhtNode({
             transportLayer: entrypointCm,

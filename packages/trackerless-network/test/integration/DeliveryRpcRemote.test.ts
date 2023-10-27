@@ -12,7 +12,6 @@ import {
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { waitForCondition } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { createStreamMessage } from '../utils/utils'
@@ -41,11 +40,13 @@ describe('DeliveryRpcRemote', () => {
     let mockConnectionManager1: SimulatorTransport
     let mockConnectionManager2: SimulatorTransport
 
-    beforeEach(() => {
+    beforeEach(async () => {
         recvCounter = 0
         simulator = new Simulator()
         mockConnectionManager1 = new SimulatorTransport(serverNode, simulator)
+        await mockConnectionManager1.start()
         mockConnectionManager2 = new SimulatorTransport(clientNode, simulator)
+        await mockConnectionManager2.start()
         
         mockServerRpc = new ListeningRpcCommunicator('test', mockConnectionManager1)
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
@@ -53,7 +54,7 @@ describe('DeliveryRpcRemote', () => {
         mockServerRpc.registerRpcNotification(
             StreamMessage,
             'sendStreamMessage',
-            async (_msg: StreamMessage, _context: ServerCallContext): Promise<Empty> => {
+            async (): Promise<Empty> => {
                 recvCounter += 1
                 return Empty
             }
@@ -62,7 +63,7 @@ describe('DeliveryRpcRemote', () => {
         mockServerRpc.registerRpcNotification(
             LeaveStreamPartNotice,
             'leaveStreamPartNotice',
-            async (_msg: LeaveStreamPartNotice, _context: ServerCallContext): Promise<Empty> => {
+            async (): Promise<Empty> => {
                 recvCounter += 1
                 return Empty
             }
