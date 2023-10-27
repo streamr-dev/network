@@ -47,7 +47,7 @@ service ConnectionLocker {
   rpc gracefulDisconnect (DisconnectNotice) returns (DisconnectNoticeResponse);
 }
 
-service ExternalApiService {
+service ExternalApiRpc {
   rpc findData (FindDataRequest) returns (FindDataResponse);
   rpc externalStoreData (ExternalStoreDataRequest) returns (ExternalStoreDataResponse);
 }

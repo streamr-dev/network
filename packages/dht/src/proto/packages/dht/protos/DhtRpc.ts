@@ -1387,9 +1387,9 @@ export const ConnectionLocker = new ServiceType("dht.ConnectionLocker", [
     { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: DisconnectNoticeResponse }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.ExternalApiService
+ * @generated ServiceType for protobuf service dht.ExternalApiRpc
  */
-export const ExternalApiService = new ServiceType("dht.ExternalApiService", [
+export const ExternalApiRpc = new ServiceType("dht.ExternalApiRpc", [
     { name: "findData", options: {}, I: FindDataRequest, O: FindDataResponse },
     { name: "externalStoreData", options: {}, I: ExternalStoreDataRequest, O: ExternalStoreDataResponse }
 ]);

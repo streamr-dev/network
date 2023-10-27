@@ -20,7 +20,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
-import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { DhtRpcServiceClient, ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
     MetricsContext,
@@ -654,7 +654,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.ownPeerDescriptor!,
             peer,
             this.config.serviceId,
-            toProtoRpcClient(new ExternalApiServiceClient(this.rpcCommunicator!.getRpcClientTransport()))
+            toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         return await target.storeData(key, data)
     }
@@ -678,7 +678,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.ownPeerDescriptor!,
             peer,
             this.config.serviceId,
-            toProtoRpcClient(new ExternalApiServiceClient(this.rpcCommunicator!.getRpcClientTransport()))
+            toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         return await target.findData(idToFind)
     }

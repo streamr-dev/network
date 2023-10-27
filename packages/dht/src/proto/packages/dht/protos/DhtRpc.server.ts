@@ -140,9 +140,9 @@ export interface IConnectionLocker<T = ServerCallContext> {
     gracefulDisconnect(request: DisconnectNotice, context: T): Promise<DisconnectNoticeResponse>;
 }
 /**
- * @generated from protobuf service dht.ExternalApiService
+ * @generated from protobuf service dht.ExternalApiRpc
  */
-export interface IExternalApiService<T = ServerCallContext> {
+export interface IExternalApiRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: findData(dht.FindDataRequest) returns (dht.FindDataResponse);
      */
