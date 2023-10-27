@@ -11,7 +11,7 @@ import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-export class RemoteRouter extends Remote<IRouterRpcClient> {
+export class RouterRpcRemote extends Remote<IRouterRpcClient> {
 
     async routeMessage(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {

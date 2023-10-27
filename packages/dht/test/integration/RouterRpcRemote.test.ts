@@ -1,5 +1,5 @@
 import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { RemoteRouter } from '../../src/dht/routing/RemoteRouter'
+import { RouterRpcRemote } from '../../src/dht/routing/RouterRpcRemote'
 import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RouterRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
@@ -7,7 +7,7 @@ import { createWrappedClosestPeersRequest, generateId, mockRouterRpc } from '../
 
 describe('RemoteRouter', () => {
 
-    let remoteRouter: RemoteRouter
+    let remoteRouter: RouterRpcRemote
     let clientRpcCommunicator: RpcCommunicator
     let serverRpcCommunicator: RpcCommunicator
     const serviceId = 'test'
@@ -31,7 +31,7 @@ describe('RemoteRouter', () => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new RouterRpcClient(clientRpcCommunicator.getRpcClientTransport()))
-        remoteRouter = new RemoteRouter(clientPeerDescriptor, serverPeerDescriptor, serviceId, client)
+        remoteRouter = new RouterRpcRemote(clientPeerDescriptor, serverPeerDescriptor, serviceId, client)
     })
 
     it('routeMessage happy path', async () => {
