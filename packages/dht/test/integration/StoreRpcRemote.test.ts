@@ -8,12 +8,12 @@ import {
 import { generateId, mockStoreRpc } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { StoreRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { RemoteStore } from '../../src/dht/store/RemoteStore'
+import { StoreRpcRemote } from '../../src/dht/store/StoreRpcRemote'
 import { Any } from '../../src/proto/google/protobuf/any'
 
-describe('RemoteStore', () => {
+describe('StoreRpcRemote', () => {
 
-    let remoteStore: RemoteStore
+    let rpcRemote: StoreRpcRemote
     let clientRpcCommunicator: RpcCommunicator
     let serverRpcCommunicator: RpcCommunicator
     const serviceId = 'test'
@@ -43,23 +43,23 @@ describe('RemoteStore', () => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new StoreRpcClient(clientRpcCommunicator.getRpcClientTransport()))
-        remoteStore = new RemoteStore(clientPeerDescriptor, serverPeerDescriptor, serviceId, client)
+        rpcRemote = new StoreRpcRemote(clientPeerDescriptor, serverPeerDescriptor, serviceId, client)
     })
 
     it('storeData happy path', async () => {
-        const response = await remoteStore.storeData(request)
+        const response = await rpcRemote.storeData(request)
         expect(response.error).toBeEmpty()
     })
 
     it('storeData rejects', async () => {
         serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', mockStoreRpc.throwStoreDataError)
-        await expect(remoteStore.storeData(request))
+        await expect(rpcRemote.storeData(request))
             .rejects.toThrowError('Could not store data to 736572766572 from 636c69656e74 Error: Mock')
     })
 
     it('storeData response error', async () => {
         serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', mockStoreRpc.storeDataErrorString)
-        const response = await remoteStore.storeData(request)
+        const response = await rpcRemote.storeData(request)
         expect(response.error).toEqual('Mock')
     })
 

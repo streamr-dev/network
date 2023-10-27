@@ -10,7 +10,7 @@ import {
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
-export class RemoteStore extends Remote<IStoreRpcClient> {
+export class StoreRpcRemote extends Remote<IStoreRpcClient> {
 
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         const options = this.formDhtRpcOptions({

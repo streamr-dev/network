@@ -14,7 +14,7 @@ import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor }
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
-import { RemoteStore } from './RemoteStore'
+import { StoreRpcRemote } from './StoreRpcRemote'
 import { Timestamp } from '../../proto/google/protobuf/timestamp'
 import EventEmitter from 'eventemitter3'
 import { Events } from '../DhtNode'
@@ -127,19 +127,19 @@ export class DataStore implements IStoreRpc {
     }
 
     private async migrateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor, doNotConnect: boolean = false): Promise<void> {
-        const remoteStore = new RemoteStore(
+        const rpcRemote = new StoreRpcRemote(
             this.ownPeerDescriptor,
             contact,
             this.serviceId,
             toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport()))
         )
         try {
-            const response = await remoteStore.migrateData({ dataEntry }, doNotConnect)
+            const response = await rpcRemote.migrateData({ dataEntry }, doNotConnect)
             if (response.error) {
-                logger.trace('RemoteStore::migrateData() returned error: ' + response.error)
+                logger.trace('migrateData() returned error: ' + response.error)
             }
         } catch (e) {
-            logger.trace('RemoteStore::migrateData() threw an exception ' + e)
+            logger.trace('migrateData() threw an exception ' + e)
         }
     }
 
@@ -165,22 +165,22 @@ export class DataStore implements IStoreRpc {
                 successfulNodes.push(closestNodes[i])
                 continue
             }
-            const remoteStore = new RemoteStore(
+            const rpcRemote = new StoreRpcRemote(
                 this.ownPeerDescriptor,
                 closestNodes[i],
                 this.serviceId,
                 toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             try {
-                const response = await remoteStore.storeData({ kademliaId: key, data, ttl, storerTime })
+                const response = await rpcRemote.storeData({ kademliaId: key, data, ttl, storerTime })
                 if (!response.error) {
                     successfulNodes.push(closestNodes[i])
-                    logger.trace('remoteStore.storeData() returned success')
+                    logger.trace('remote.storeData() returned success')
                 } else {
-                    logger.trace('remoteStore.storeData() returned error: ' + response.error)
+                    logger.trace('remote.storeData() returned error: ' + response.error)
                 }
             } catch (e) {
-                logger.trace('remoteStore.storeData() threw an exception ' + e)
+                logger.trace('remote.storeData() threw an exception ' + e)
             }
         }
         return successfulNodes
@@ -206,22 +206,22 @@ export class DataStore implements IStoreRpc {
                 successfulNodes.push(closestNodes[i])
                 continue
             }
-            const remoteStore = new RemoteStore(
+            const rpcRemote = new StoreRpcRemote(
                 this.ownPeerDescriptor,
                 closestNodes[i],
                 this.serviceId,
                 toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             try {
-                const response = await remoteStore.deleteData({ kademliaId: key })
+                const response = await rpcRemote.deleteData({ kademliaId: key })
                 if (response.deleted) {
-                    logger.trace('remoteStore.deleteData() returned success')
+                    logger.trace('remote.deleteData() returned success')
                 } else {
                     logger.trace('could not delete data from ' + keyFromPeerDescriptor(closestNodes[i]))
                 }
                 successfulNodes.push(closestNodes[i])
             } catch (e) {
-                logger.trace('remoteStore.deleteData() threw an exception ' + e)
+                logger.trace('remote.deleteData() threw an exception ' + e)
             }
         }
     }
