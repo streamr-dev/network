@@ -6,7 +6,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
-import { SimulatorTransport } from '../../src/exports'
+import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
 
 describe('WebRTC Connection Management', () => {
 
@@ -17,13 +17,11 @@ describe('WebRTC Connection Management', () => {
 
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('peer1').value,
-        nodeName: 'peer1',
         type: NodeType.NODEJS,
     }
 
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('peer2').value,
-        nodeName: 'peer2',
         type: NodeType.NODEJS,
     }
 

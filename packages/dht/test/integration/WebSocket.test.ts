@@ -9,11 +9,13 @@ const logger = new Logger(module)
 
 describe('WebSocket', () => {
 
-    const webSocketServer = new WebSocketServer()
+    const webSocketServer = new WebSocketServer({
+        portRange: { min: 9999, max: 9999 }
+    })
     const clientWebSocket = new ClientWebSocket()
 
     beforeAll(async () => {
-        await webSocketServer.start({ min: 9999, max: 9999 })
+        await webSocketServer.start()
     })
 
     it('Happy path', (done) => {

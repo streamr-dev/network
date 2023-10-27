@@ -93,7 +93,7 @@ export class NetworkNode {
     }
 
     hasStreamPart(streamPartId: StreamPartID): boolean {
-        return this.stack.getStreamrNode().hasStream(streamPartId)
+        return this.stack.getStreamrNode().hasStreamPart(streamPartId)
     }
 
     async stop(): Promise<void> {

@@ -76,6 +76,12 @@ export interface ControlLayerConfig {
     webrtcPortRange?: PortRange
 
     /**
+     * The maximum outgoing message size (in bytes) accepted by connections.
+     * Messages exceeding the maximum size are simply discarded.
+     */
+    maxMessageSize?: number
+
+    /**
      * Contains connectivity information to the client's Network Node, used in the network layer.
      * Can be used in cases where the client's public IP address is known before
      * starting the network node. If not specified, the PeerDescriptor will be auto-generated.
@@ -111,6 +117,12 @@ export interface ControlLayerConfig {
      * port mappings on the public side.
     */
     externalIp?: string
+
+    /**
+     * The maximum time to wait when establishing connectivity to the control layer. If the connection
+     * is not formed within this time, the client's network node will throw an error.
+     */
+    networkConnectivityTimeout?: number
 }
 
 export interface NetworkNodeConfig {
@@ -129,13 +141,6 @@ export interface NetworkNodeConfig {
      * will attempt to propagate messages to
      */
     streamPartitionMinPropagationTargets?: number
-
-    /**
-     * The waited time for the first connection to be formed when first connecting
-     * to the network. If the connection is not formed within this time, the client's
-     * network node will throw an error.
-     */
-    firstConnectionTimeout?: number
 
     /**
      * Whether to accept proxy connections. Enabling this option allows

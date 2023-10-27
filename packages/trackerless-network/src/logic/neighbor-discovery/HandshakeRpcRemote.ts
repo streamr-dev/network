@@ -1,5 +1,6 @@
-import { PeerDescriptor, Remote, UUID } from '@streamr/dht'
+import { PeerDescriptor, Remote } from '@streamr/dht'
 import { Logger, hexToBinary } from '@streamr/utils'
+import { v4 } from 'uuid'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { InterleaveNotice, StreamPartHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IHandshakeRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -11,7 +12,7 @@ interface HandshakeResponse {
     interleaveTargetDescriptor?: PeerDescriptor
 }
 
-export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
+export class HandshakeRpcRemote extends Remote<IHandshakeRpcClient> {
 
     async handshake(
         neighborIds: NodeID[],
@@ -19,8 +20,8 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
         interleaveSourceId?: NodeID
     ): Promise<HandshakeResponse> {
         const request: StreamPartHandshakeRequest = {
-            randomGraphId: this.getServiceId(),
-            requestId: new UUID().toString(),
+            streamPartId: this.getServiceId(),
+            requestId: v4(),
             neighborIds: neighborIds.map((id) => hexToBinary(id)),
             concurrentHandshakeTargetId: (concurrentHandshakeTargetId !== undefined) ? hexToBinary(concurrentHandshakeTargetId) : undefined,
             interleaveSourceId: (interleaveSourceId !== undefined) ? hexToBinary(interleaveSourceId) : undefined
@@ -41,7 +42,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
 
     interleaveNotice(originatorDescriptor: PeerDescriptor): void {
         const notification: InterleaveNotice = {
-            randomGraphId: this.getServiceId(),
+            streamPartId: this.getServiceId(),
             interleaveTargetDescriptor: originatorDescriptor
         }
         const options = this.formDhtRpcOptions({

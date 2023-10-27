@@ -3,7 +3,7 @@ import { NodeList } from '../../src/logic/NodeList'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
-import { createMockRemoteNode, createRandomNodeId } from '../utils/utils'
+import { createMockDeliveryRpcRemote, createRandomNodeId } from '../utils/utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('NeighborFinder', () => {
@@ -13,12 +13,12 @@ describe('NeighborFinder', () => {
     let nearbyNodeView: NodeList
     let neighborFinder: NeighborFinder
 
-    const N = 4
+    const minCount = 4
 
     beforeEach(() => {
         targetNeighbors = new NodeList(nodeId, 15)
         nearbyNodeView = new NodeList(nodeId, 30)
-        range(30).forEach(() => nearbyNodeView.add(createMockRemoteNode()))
+        range(30).forEach(() => nearbyNodeView.add(createMockDeliveryRpcRemote()))
         const mockDoFindNeighbors = async (excluded: NodeID[]) => {
             const target = nearbyNodeView.getRandom(excluded)
             if (Math.random() < 0.5) {
@@ -32,7 +32,7 @@ describe('NeighborFinder', () => {
             targetNeighbors,
             nearbyNodeView,
             doFindNeighbors: (excluded) => mockDoFindNeighbors(excluded),
-            N
+            minCount
         })
     })
 
@@ -42,7 +42,7 @@ describe('NeighborFinder', () => {
 
     it('Finds target number of nodes', async () => {
         neighborFinder.start()
-        await waitForCondition(() => targetNeighbors.size() >= N, 10000)
+        await waitForCondition(() => targetNeighbors.size() >= minCount, 10000)
         expect(neighborFinder.isRunning()).toEqual(false)
     })
 })

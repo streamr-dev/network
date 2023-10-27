@@ -1,14 +1,14 @@
 import { ListeningRpcCommunicator } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { StreamNodeServer } from '../../src/logic/StreamNodeServer'
+import { DeliveryRpcLocal } from '../../src/logic/DeliveryRpcLocal'
 import { LeaveStreamPartNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
-describe('StreamNodeServer', () => {
+describe('DeliveryRpcLocal', () => {
 
-    let streamNodeServer: StreamNodeServer
+    let rpcLocal: DeliveryRpcLocal
     const peerDescriptor = createMockPeerDescriptor()
 
     const mockSender = createMockPeerDescriptor()
@@ -30,19 +30,19 @@ describe('StreamNodeServer', () => {
         mockOnLeaveNotice = jest.fn((_m) => {})
         mockMarkForInspection = jest.fn((_m) => {})
 
-        streamNodeServer = new StreamNodeServer({
+        rpcLocal = new DeliveryRpcLocal({
             markAndCheckDuplicate: mockDuplicateCheck,
             broadcast: mockBroadcast,
             onLeaveNotice: mockOnLeaveNotice,
             markForInspection: mockMarkForInspection,
             ownPeerDescriptor: peerDescriptor,
-            randomGraphId: 'random-graph',
+            streamPartId: StreamPartIDUtils.parse('stream#0'),
             rpcCommunicator: new ListeningRpcCommunicator('random-graph-node', new MockTransport())
         })
     })
     
     it('Server sendStreamMessage()', async () => {
-        await streamNodeServer.sendStreamMessage(message, { incomingSourceDescriptor: mockSender } as any)
+        await rpcLocal.sendStreamMessage(message, { incomingSourceDescriptor: mockSender } as any)
         expect(mockDuplicateCheck).toHaveBeenCalledTimes(1)
         expect(mockBroadcast).toHaveBeenCalledTimes(1)
         expect(mockMarkForInspection).toHaveBeenCalledTimes(1)
@@ -50,9 +50,9 @@ describe('StreamNodeServer', () => {
 
     it('Server leaveStreamPartNotice()', async () => {
         const leaveNotice: LeaveStreamPartNotice = {
-            randomGraphId: 'random-graph'
+            streamPartId: StreamPartIDUtils.parse('stream#0')
         }
-        await streamNodeServer.leaveStreamPartNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)
+        await rpcLocal.leaveStreamPartNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)
         expect(mockOnLeaveNotice).toHaveBeenCalledTimes(1)
     })
 
