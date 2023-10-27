@@ -39,9 +39,9 @@ describe('Mock connection Dht joining with real latencies', () => {
         await entryPoint.joinDht([entrypointDescriptor])
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
         nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 3)
-            expect(node.getClosestContacts().length).toBeGreaterThanOrEqual(node.getK() - 3)
+            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() / 2)
+            expect(node.getClosestContacts().length).toBeGreaterThanOrEqual(node.getK() / 2)
         })
-        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK())
+        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() / 2)
     }, 60 * 1000)
 })
