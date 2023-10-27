@@ -9,7 +9,7 @@ import { Remote } from '../dht/contact/Remote'
 
 const logger = new Logger(module)
 
-export class RemoteConnectionLocker extends Remote<IConnectionLockRpcClient> {
+export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
 
     private protocolVersion: string
 
