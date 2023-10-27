@@ -727,10 +727,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.peerDiscovery!.isJoinCalled()
     }
 
-    public getKnownEntryPoints(): PeerDescriptor[] {
-        return this.config.entryPoints || []
-    }
-
     public async stop(): Promise<void> {
         if (this.stopped || !this.started) {
             return
