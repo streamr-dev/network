@@ -2,7 +2,7 @@ import { ClientWebSocket } from './ClientWebSocket'
 import { IConnection, ConnectionType } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
+import { WebSocketConnectorRpcRemote } from './WebSocketConnectorRpcRemote'
 import {
     ConnectivityMethod,
     ConnectivityResponse,
@@ -219,7 +219,7 @@ export class WebSocketConnector implements IWebSocketConnectorRpc {
 
     private requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         setImmediate(() => {
-            const remoteConnector = new RemoteWebSocketConnector(
+            const remoteConnector = new WebSocketConnectorRpcRemote(
                 ownPeerDescriptor, 
                 targetPeerDescriptor,
                 toProtoRpcClient(new WebSocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
