@@ -220,10 +220,11 @@ export class WebSocketConnector implements IWebSocketConnectorRpc {
     private requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         setImmediate(() => {
             const remoteConnector = new RemoteWebSocketConnector(
+                ownPeerDescriptor, 
                 targetPeerDescriptor,
                 toProtoRpcClient(new WebSocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
-            remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.host, ownPeerDescriptor.websocket!.port)
+            remoteConnector.requestConnection(ownPeerDescriptor.websocket!.host, ownPeerDescriptor.websocket!.port)
         })
         const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion, ConnectionType.WEBSOCKET_SERVER)
         managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor)))

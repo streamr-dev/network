@@ -3,38 +3,35 @@ import {
     WebSocketConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { IWebSocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { Remote } from '../../dht/contact/Remote'
 
 const logger = new Logger(module)
 
-export class RemoteWebSocketConnector {
+export class RemoteWebSocketConnector extends Remote<IWebSocketConnectorRpcClient> {
 
-    private peerDescriptor: PeerDescriptor
-    private client: ProtoRpcClient<IWebSocketConnectorRpcClient>
-
-    constructor(peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IWebSocketConnectorRpcClient>) {
-        this.peerDescriptor = peerDescriptor
-        this.client = client
+    constructor(
+        localPeerDescriptor: PeerDescriptor,
+        remotePeerDescriptor: PeerDescriptor,
+        client: ProtoRpcClient<IWebSocketConnectorRpcClient>
+    ) {
+        super(localPeerDescriptor, remotePeerDescriptor, 'DUMMY', client)
     }
 
-    async requestConnection(sourceDescriptor: PeerDescriptor, ip: string, port: number): Promise<boolean> {
-        logger.trace(`Requesting WebSocket connection from ${keyFromPeerDescriptor(this.peerDescriptor)}`)
+    async requestConnection(ip: string, port: number): Promise<boolean> {
+        logger.trace(`Requesting WebSocket connection from ${keyFromPeerDescriptor(this.getLocalPeerDescriptor())}`)
         const request: WebSocketConnectionRequest = {
-            target: this.peerDescriptor,
-            requester: sourceDescriptor,
+            target: this.getPeerDescriptor(),
+            requester: this.getLocalPeerDescriptor(),
             ip,
             port
         }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor,
-            targetDescriptor: this.peerDescriptor 
-        }
+        const options = this.formDhtRpcOptions()
         try {
-            const res = await this.client.requestConnection(request, options)
+            const res = await this.getClient().requestConnection(request, options)
             
             if (res.reason) {
                 logger.debug('WebSocketConnectionRequest Rejected', {
