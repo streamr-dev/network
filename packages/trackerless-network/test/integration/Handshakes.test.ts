@@ -70,12 +70,15 @@ describe('Handshakes', () => {
     let simulatorTransport2: SimulatorTransport
     let simulatorTransport3: SimulatorTransport
 
-    beforeEach(() => {
+    beforeEach(async () => {
         Simulator.useFakeTimers()
         simulator = new Simulator()
         simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
+        await simulatorTransport1.start()
         simulatorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
+        await simulatorTransport2.start()
         simulatorTransport3 = new SimulatorTransport(peerDescriptor3, simulator)
+        await simulatorTransport3.start()
 
         rpcCommunicator1 = new ListeningRpcCommunicator(streamPartId, simulatorTransport1)
         rpcCommunicator2 = new ListeningRpcCommunicator(streamPartId, simulatorTransport2)
