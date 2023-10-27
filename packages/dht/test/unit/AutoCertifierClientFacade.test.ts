@@ -9,7 +9,7 @@ class mockAutoCertifierClient extends EventEmitter {
         this.emit('updatedSubdomain', {})
     }
     stop = () => {}
-    updateSubdomain = () => {
+    emitUpdateSubdomain = () => {
         this.emit('updatedSubdomain', {})
     }
 }
@@ -50,7 +50,7 @@ describe('AutoCertifierClientFacade', () => {
         await client.start()
         expect(setHost).toBeCalledTimes(1)
         expect(updateCertificate).toBeCalledTimes(1);
-        (mockClient as mockAutoCertifierClient).updateSubdomain()
+        (mockClient as mockAutoCertifierClient).emitUpdateSubdomain()
         expect(setHost).toBeCalledTimes(2)
         expect(updateCertificate).toBeCalledTimes(2)
     })
