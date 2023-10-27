@@ -1,4 +1,11 @@
-import { composeAbortSignals, EthereumAddress, Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
+import {
+    composeAbortSignals,
+    EthereumAddress,
+    Logger,
+    randomString,
+    scheduleAtInterval,
+    setAbortableTimeout
+} from '@streamr/utils'
 import { ContractFacade } from './ContractFacade'
 import { StreamrClient } from 'streamr-client'
 import { CreateOperatorFleetStateFn } from './OperatorFleetState'
@@ -13,14 +20,11 @@ export interface ReviewProcessOpts {
     contractFacade: ContractFacade
     streamrClient: StreamrClient
     createOperatorFleetState: CreateOperatorFleetStateFn
-    redundancyFactor: number
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>
     timeUntilVoteInMs: number
     inspectionIntervalInMs: number
     abortSignal: AbortSignal
 }
-
-let NEXT_ID = 0
 
 export const startReviewProcess = async ({
     sponsorshipAddress,
@@ -34,7 +38,7 @@ export const startReviewProcess = async ({
     inspectionIntervalInMs,
     abortSignal: userAbortSignal
 }: ReviewProcessOpts): Promise<void> => {
-    const logger = new Logger(module, { id: NEXT_ID++ })
+    const logger = new Logger(module, { id: randomString(6) })
     const inspectionResults = new Array<boolean>()
 
     logger.info('Start handling of inspection request')
