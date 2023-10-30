@@ -102,7 +102,4 @@ export class CertificateCreator {
         return false
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    public async start(): Promise<void> {
-    }
 }

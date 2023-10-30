@@ -173,7 +173,6 @@ export class AutoCertifier implements RestInterface {
 
         this.certificateCreator = new CertificateCreator(acmeDirectoryUrl, hmacKid, hmacKey,
             accountPrivateKeyPath, this)
-        await this.certificateCreator.start()
         logger.info('certificate creator is running')
 
         this.restServer = new RestServer(ownHostName + '.' + this.domainName, ownIpAddress, restServerPort, restServerCaCertPath, restServerCaKeyPath,
