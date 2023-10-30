@@ -245,17 +245,13 @@ message Message {
 
 // WebSocket
 message WebSocketConnectionRequest {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string ip = 3;
-  uint32 port = 4;
+  string ip = 1;
+  uint32 port = 2;
 }
 
 message WebSocketConnectionResponse {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  bool accepted = 3;
-  optional string reason = 4;
+  bool accepted = 1;
+  optional string reason = 2;
 }
 
 // WebRTC

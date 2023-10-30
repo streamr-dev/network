@@ -26,6 +26,8 @@ import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/p
 import { ParsedUrlQuery } from 'querystring'
 import { range, sample } from 'lodash'
 import { isPrivateIPv4 } from '../../helpers/AddressTools'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 
 const logger = new Logger(module)
 
@@ -91,7 +93,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             WebSocketConnectionRequest,
             WebSocketConnectionResponse,
             'requestConnection',
-            (req: WebSocketConnectionRequest) => this.requestConnection(req)
+            (req: WebSocketConnectionRequest, context: ServerCallContext) => this.requestConnection(req, context)
         )
     }
 
@@ -274,13 +276,14 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     // IWebSocketConnectorService implementation
-    public async requestConnection(request: WebSocketConnectionRequest): Promise<WebSocketConnectionResponse> {
-        if (!this.destroyed && this.canConnectFunction(request.requester!, request.ip, request.port)) {
+    public async requestConnection(request: WebSocketConnectionRequest, context: ServerCallContext): Promise<WebSocketConnectionResponse> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        if (!this.destroyed && this.canConnectFunction(senderPeerDescriptor, request.ip, request.port)) {
             setImmediate(() => {
                 if (this.destroyed) {
                     return
                 }
-                const connection = this.connect(request.requester!)
+                const connection = this.connect(senderPeerDescriptor)
                 this.onIncomingConnection(connection)
             })
             const res: WebSocketConnectionResponse = {

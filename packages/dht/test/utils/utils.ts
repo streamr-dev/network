@@ -11,7 +11,6 @@ import {
     RouteMessageWrapper,
     StoreDataRequest,
     StoreDataResponse,
-    WebSocketConnectionRequest,
     WebSocketConnectionResponse,
     RecursiveFindRequest, 
     FindMode,
@@ -223,10 +222,8 @@ export const MockStoreService: IStoreServiceWithError = {
 }
 
 export const MockWebSocketConnectorRpc: IWebSocketConnectorService = {
-    async requestConnection(request: WebSocketConnectionRequest): Promise<WebSocketConnectionResponse> {
+    async requestConnection(): Promise<WebSocketConnectionResponse> {
         const responseConnection: WebSocketConnectionResponse = {
-            target: request.target,
-            requester: request.requester,
             accepted: true
         }
         return responseConnection

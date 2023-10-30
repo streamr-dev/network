@@ -479,19 +479,11 @@ export interface Message {
  */
 export interface WebSocketConnectionRequest {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor requester = 1;
-     */
-    requester?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor target = 2;
-     */
-    target?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string ip = 3;
+     * @generated from protobuf field: string ip = 1;
      */
     ip: string;
     /**
-     * @generated from protobuf field: uint32 port = 4;
+     * @generated from protobuf field: uint32 port = 2;
      */
     port: number;
 }
@@ -500,19 +492,11 @@ export interface WebSocketConnectionRequest {
  */
 export interface WebSocketConnectionResponse {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor requester = 1;
-     */
-    requester?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor target = 2;
-     */
-    target?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: bool accepted = 3;
+     * @generated from protobuf field: bool accepted = 1;
      */
     accepted: boolean;
     /**
-     * @generated from protobuf field: optional string reason = 4;
+     * @generated from protobuf field: optional string reason = 2;
      */
     reason?: string;
 }
@@ -1146,10 +1130,8 @@ export const Message = new Message$Type();
 class WebSocketConnectionRequest$Type extends MessageType$<WebSocketConnectionRequest> {
     constructor() {
         super("dht.WebSocketConnectionRequest", [
-            { no: 1, name: "requester", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "target", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+            { no: 1, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
 }
@@ -1161,10 +1143,8 @@ export const WebSocketConnectionRequest = new WebSocketConnectionRequest$Type();
 class WebSocketConnectionResponse$Type extends MessageType$<WebSocketConnectionResponse> {
     constructor() {
         super("dht.WebSocketConnectionResponse", [
-            { no: 1, name: "requester", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "target", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 4, name: "reason", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "reason", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
