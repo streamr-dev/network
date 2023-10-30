@@ -34,7 +34,7 @@ npm install @streamr/autocertifier
 sudo iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 59832  
 ```
 
-* set the following environment variables in a .env file in the packages root:
+* set the following environment variables in a .env file in the packages root (values below are non-working examples):
 
 ```bash
 AUTOICERTIFIER_DOMAIN_NAME="example.com"
