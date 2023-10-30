@@ -177,9 +177,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private stopped = false
     private entryPointDisconnectTimeout?: NodeJS.Timeout
 
-    public contactAddCounter = 0
-    public contactOnAddedCounter = 0
-
     constructor(conf: Partial<DhtNodeConfig>) {
         super()
         this.config = new DhtNodeConfig(conf)
@@ -502,7 +499,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.stopped) {
             return
         }
-        this.contactOnAddedCounter++
         if (!this.stopped && !contact.getPeerId().equals(this.ownPeerId!)) {
             // Important to lock here, before the ping result is known
             this.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
@@ -592,7 +588,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                     this.neighborList!.setActive(peerId)
                     this.openInternetPeers!.setActive(peerId)
                 }
-                this.contactAddCounter++
                 this.bucket!.add(remoteDhtNode)
             } else {
                 this.randomPeers!.addContact(remoteDhtNode)
