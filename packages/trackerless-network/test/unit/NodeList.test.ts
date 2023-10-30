@@ -1,5 +1,5 @@
 import { NodeList } from '../../src/logic/NodeList'
-import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
+import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
 import {
     PeerDescriptor,
     ListeningRpcCommunicator,
@@ -7,12 +7,16 @@ import {
     SimulatorTransport,
     NodeType,
 } from '@streamr/dht'
-import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { DeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { expect } from 'expect'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { createMockPeerDescriptor, createRandomNodeId } from '../utils/utils'
 import { binaryToHex } from '@streamr/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { formStreamPartDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
+
+const streamPartId = StreamPartIDUtils.parse('stream#0')
 
 describe('NodeList', () => {
 
@@ -24,18 +28,22 @@ describe('NodeList', () => {
         new Uint8Array([1, 1, 5])
     ]
     const ownId = createRandomNodeId()
-    const graphId = 'test'
     let nodeList: NodeList
     let simulator: Simulator
     let mockTransports: SimulatorTransport[]
 
     const createRemoteGraphNode = (peerDescriptor: PeerDescriptor) => {
         const mockTransport = new SimulatorTransport(peerDescriptor, simulator)
-        const mockCommunicator = new ListeningRpcCommunicator(`layer2-${ graphId }`, mockTransport)
+        const mockCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(streamPartId), mockTransport)
         const mockClient = mockCommunicator.getRpcClientTransport()
         
         mockTransports.push(mockTransport)
-        return new RemoteRandomGraphNode(createMockPeerDescriptor(), peerDescriptor, graphId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
+        return new DeliveryRpcRemote(
+            createMockPeerDescriptor(),
+            peerDescriptor,
+            streamPartId,
+            toProtoRpcClient(new DeliveryRpcClient(mockClient))
+        )
     }
 
     beforeEach(() => {

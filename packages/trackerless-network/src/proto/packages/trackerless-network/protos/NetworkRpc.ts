@@ -150,9 +150,9 @@ export interface GroupKey {
  */
 export interface StreamPartHandshakeRequest {
     /**
-     * @generated from protobuf field: string randomGraphId = 1;
+     * @generated from protobuf field: string streamPartId = 1;
      */
-    randomGraphId: string;
+    streamPartId: string;
     /**
      * @generated from protobuf field: string requestId = 2;
      */
@@ -192,9 +192,9 @@ export interface StreamPartHandshakeResponse {
  */
 export interface InterleaveNotice {
     /**
-     * @generated from protobuf field: string randomGraphId = 1;
+     * @generated from protobuf field: string streamPartId = 1;
      */
-    randomGraphId: string;
+    streamPartId: string;
     /**
      * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
      *
@@ -207,18 +207,18 @@ export interface InterleaveNotice {
  */
 export interface LeaveStreamPartNotice {
     /**
-     * @generated from protobuf field: string randomGraphId = 1;
+     * @generated from protobuf field: string streamPartId = 1;
      */
-    randomGraphId: string;
+    streamPartId: string;
 }
 /**
  * @generated from protobuf message NeighborUpdate
  */
 export interface NeighborUpdate {
     /**
-     * @generated from protobuf field: string randomGraphId = 1;
+     * @generated from protobuf field: string streamPartId = 1;
      */
-    randomGraphId: string;
+    streamPartId: string;
     /**
      * @generated from protobuf field: bool removeMe = 2;
      */
@@ -430,7 +430,7 @@ export const GroupKey = new GroupKey$Type();
 class StreamPartHandshakeRequest$Type extends MessageType<StreamPartHandshakeRequest> {
     constructor() {
         super("StreamPartHandshakeRequest", [
-            { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "concurrentHandshakeTargetId", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ },
             { no: 4, name: "neighborIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 12 /*ScalarType.BYTES*/ },
@@ -460,7 +460,7 @@ export const StreamPartHandshakeResponse = new StreamPartHandshakeResponse$Type(
 class InterleaveNotice$Type extends MessageType<InterleaveNotice> {
     constructor() {
         super("InterleaveNotice", [
-            { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "interleaveTargetDescriptor", kind: "message", T: () => PeerDescriptor }
         ]);
     }
@@ -473,7 +473,7 @@ export const InterleaveNotice = new InterleaveNotice$Type();
 class LeaveStreamPartNotice$Type extends MessageType<LeaveStreamPartNotice> {
     constructor() {
         super("LeaveStreamPartNotice", [
-            { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -485,7 +485,7 @@ export const LeaveStreamPartNotice = new LeaveStreamPartNotice$Type();
 class NeighborUpdate$Type extends MessageType<NeighborUpdate> {
     constructor() {
         super("NeighborUpdate", [
-            { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "removeMe", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 3, name: "neighborDescriptors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
@@ -543,9 +543,9 @@ class TemporaryConnectionResponse$Type extends MessageType<TemporaryConnectionRe
  */
 export const TemporaryConnectionResponse = new TemporaryConnectionResponse$Type();
 /**
- * @generated ServiceType for protobuf service NetworkRpc
+ * @generated ServiceType for protobuf service DeliveryRpc
  */
-export const NetworkRpc = new ServiceType("NetworkRpc", [
+export const DeliveryRpc = new ServiceType("DeliveryRpc", [
     { name: "sendStreamMessage", options: {}, I: StreamMessage, O: Empty },
     { name: "leaveStreamPartNotice", options: {}, I: LeaveStreamPartNotice, O: Empty }
 ]);

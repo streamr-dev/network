@@ -186,6 +186,10 @@
                             "type": "number",
                             "default": 131072
                         },
+                        "maxMessageSize": {
+                            "type": "number",
+                            "default": 1048576
+                        },
                         "externalIp": {
                             "type": "string",
                             "format": "ipv4"
@@ -196,6 +200,10 @@
                                 "min": 50000,
                                 "max": 64000
                             }
+                        },
+                        "networkConnectivityTimeout": {
+                            "type": "number",
+                            "default": 10000
                         }
                     },
                     "default": {}
@@ -215,10 +223,6 @@
                             "type": "number",
                             "default": 2
                         },
-                        "firstConnectionTimeout": {
-                            "type": "number",
-                            "default": 10000
-                        }, 
                         "acceptProxyConnections": {
                             "type": "boolean",
                             "default": false

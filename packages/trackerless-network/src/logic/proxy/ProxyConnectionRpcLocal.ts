@@ -8,25 +8,24 @@ import {
     StreamMessageType
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
-import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
+import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
+import { DhtCallContext, ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { EventEmitter } from 'eventemitter3'
 import { EthereumAddress, Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { DhtCallContext } from '@streamr/dht/src/exports'
 
 const logger = new Logger(module)
 
 interface ProxyConnection {
     direction: ProxyDirection // Direction is from the client's point of view
     userId: EthereumAddress
-    remote: RemoteRandomGraphNode
+    remote: DeliveryRpcRemote
 }
 
-interface ProxyStreamConnectionServerConfig {
+interface ProxyConnectionRpcLocalConfig {
     ownPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
@@ -36,12 +35,12 @@ export interface Events {
     newConnection: (nodeId: NodeID) => void
 }
 
-export class ProxyStreamConnectionServer extends EventEmitter<Events> implements IProxyConnectionRpc {
+export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IProxyConnectionRpc {
 
-    private readonly config: ProxyStreamConnectionServerConfig
+    private readonly config: ProxyConnectionRpcLocalConfig
     private readonly connections: Map<NodeID, ProxyConnection> = new Map()
 
-    constructor(config: ProxyStreamConnectionServerConfig) {
+    constructor(config: ProxyConnectionRpcLocalConfig) {
         super()
         this.config = config
         this.config.rpcCommunicator.registerRpcMethod(ProxyConnectionRequest, ProxyConnectionResponse, 'requestConnection',
@@ -64,14 +63,6 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         this.connections.forEach((connection) => connection.remote.leaveStreamPartNotice())
         this.connections.clear()
         this.removeAllListeners()
-    }
-
-    getConnectedNodeIds(): NodeID[] {
-        return Array.from(this.connections.keys())
-    }
-
-    getConnections(): ProxyConnection[] {
-        return Array.from(this.connections.values())
     }
 
     getPropagationTargets(msg: StreamMessage): NodeID[] {
@@ -103,11 +94,11 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         this.connections.set(senderId, {
             direction: request.direction,
             userId: toEthereumAddress(binaryToHex(request.userId, true)),
-            remote: new RemoteRandomGraphNode(
+            remote: new DeliveryRpcRemote(
                 this.config.ownPeerDescriptor,
                 senderPeerDescriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         })
         const response: ProxyConnectionResponse = {

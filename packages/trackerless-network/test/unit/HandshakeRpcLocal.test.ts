@@ -2,13 +2,16 @@ import { NodeType } from '@streamr/dht'
 import { hexToBinary } from '@streamr/utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { NodeList } from '../../src/logic/NodeList'
-import { HandshakerServer } from '../../src/logic/neighbor-discovery/HandshakerServer'
+import { HandshakeRpcLocal } from '../../src/logic/neighbor-discovery/HandshakeRpcLocal'
 import { InterleaveNotice, StreamPartHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createMockPeerDescriptor, createMockRemoteHandshaker, createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
+import { createMockPeerDescriptor, createMockHandshakeRpcRemote, createMockDeliveryRpcRemote, mockConnectionLocker } from '../utils/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
-describe('HandshakerServer', () => {
+const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
-    let handshakerServer: HandshakerServer
+describe('HandshakeRpcLocal', () => {
+
+    let rpcLocal: HandshakeRpcLocal
 
     const ownPeerDescriptor = createMockPeerDescriptor()
 
@@ -22,28 +25,27 @@ describe('HandshakerServer', () => {
 
         handshakeWithInterleaving = jest.fn()
 
-        handshakerServer = new HandshakerServer({
-            randomGraphId: 'random-graph',
-            ownPeerDescriptor,
+        rpcLocal = new HandshakeRpcLocal({
+            streamPartId: STREAM_PART_ID,
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
-            createRemoteHandshaker: (_p) => createMockRemoteHandshaker(),
-            createRemoteNode: (_p) => createMockRemoteNode(),
+            createRpcRemote: (_p) => createMockHandshakeRpcRemote(),
+            createDeliveryRpcRemote: (_p) => createMockDeliveryRpcRemote(),
             handshakeWithInterleaving: async (_p, _t) => {
                 handshakeWithInterleaving()
                 return true
             },
             targetNeighbors,
-            N: 4
+            maxNeighborCount: 4
         })
     })
 
     it('handshake', async () => {
         const req = StreamPartHandshakeRequest.create({
-            randomGraphId: 'random-graph',
+            streamPartId: STREAM_PART_ID,
             requestId: 'requestId'
         })
-        const res = await handshakerServer.handshake(req, {
+        const res = await rpcLocal.handshake(req, {
             incomingSourceDescriptor: createMockPeerDescriptor()
         } as any)
         expect(res.accepted).toEqual(true)
@@ -52,15 +54,15 @@ describe('HandshakerServer', () => {
     })
 
     it('handshake interleave', async () => {
-        targetNeighbors.add(createMockRemoteNode())
-        targetNeighbors.add(createMockRemoteNode())
-        targetNeighbors.add(createMockRemoteNode())
-        targetNeighbors.add(createMockRemoteNode())
+        targetNeighbors.add(createMockDeliveryRpcRemote())
+        targetNeighbors.add(createMockDeliveryRpcRemote())
+        targetNeighbors.add(createMockDeliveryRpcRemote())
+        targetNeighbors.add(createMockDeliveryRpcRemote())
         const req = StreamPartHandshakeRequest.create({
-            randomGraphId: 'random-graph',
+            streamPartId: STREAM_PART_ID,
             requestId: 'requestId'
         })
-        const res = await handshakerServer.handshake(req, {
+        const res = await rpcLocal.handshake(req, {
             incomingSourceDescriptor: createMockPeerDescriptor()
         } as any)
         expect(res.accepted).toEqual(true)
@@ -73,10 +75,10 @@ describe('HandshakerServer', () => {
         ongoingHandshakes.add('0x4444' as NodeID)
         ongoingHandshakes.add('0x5555' as NodeID)
         const req = StreamPartHandshakeRequest.create({
-            randomGraphId: 'random-graph',
+            streamPartId: STREAM_PART_ID,
             requestId: 'requestId'
         })
-        const res = await handshakerServer.handshake(req, {
+        const res = await rpcLocal.handshake(req, {
             incomingSourceDescriptor: createMockPeerDescriptor()
         } as any)
         expect(res.accepted).toEqual(false)
@@ -84,14 +86,14 @@ describe('HandshakerServer', () => {
 
     it('handshakeWithInterleaving success', async () => {
         const req: InterleaveNotice = {
-            randomGraphId: 'random-graph',
+            streamPartId: STREAM_PART_ID,
             interleaveTargetDescriptor: {
                 kademliaId: hexToBinary('0x2222'),
                 type: NodeType.NODEJS
             }
 
         }
-        await handshakerServer.interleaveNotice(req, {
+        await rpcLocal.interleaveNotice(req, {
             incomingSourceDescriptor: createMockPeerDescriptor()
         } as any)
         expect(handshakeWithInterleaving).toHaveBeenCalledTimes(1)
@@ -99,13 +101,13 @@ describe('HandshakerServer', () => {
 
     it('handshakeWithInterleaving success', async () => {
         const req: InterleaveNotice = {
-            randomGraphId: 'wrong-random-graph',
+            streamPartId: StreamPartIDUtils.parse('other-stream#0'),
             interleaveTargetDescriptor: {
                 kademliaId: hexToBinary('0x2222'),
                 type: NodeType.NODEJS
             }
         }
-        await handshakerServer.interleaveNotice(req, {
+        await rpcLocal.interleaveNotice(req, {
             incomingSourceDescriptor: createMockPeerDescriptor()
         } as any)
         expect(handshakeWithInterleaving).toHaveBeenCalledTimes(0)

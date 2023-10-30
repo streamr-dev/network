@@ -16,8 +16,7 @@ describe('Mock IConnection DHT Joining', () => {
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
-            nodeName: '0'
+            type: NodeType.NODEJS
         }
         for (let i = 1; i < 100; i++) {
             const nodeId = `${i}`
@@ -39,7 +38,7 @@ describe('Mock IConnection DHT Joining', () => {
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
         nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 2)
-            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 2)
+            expect(node.getClosestContacts().length).toBeGreaterThanOrEqual(node.getK() - 2)
         })
         expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() - 2)
     }, 60000)

@@ -5,13 +5,12 @@ import {
     MessageRef,
     StreamMessage,
     StreamMessageType,
-    StreamPartIDUtils,
-    toStreamID
+    StreamPartIDUtils
 } from '@streamr/protocol'
 import { EthereumAddress, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { streamPartIdToDataKey } from '../../src/logic/StreamPartEntryPointDiscovery'
+import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
@@ -23,14 +22,13 @@ describe('stream without default entrypoints', () => {
     let numOfReceivedMessages: number
     const entryPointPeerDescriptor: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 2, 3]),
-        nodeName: 'entrypoint',
         type: NodeType.NODEJS
     }
 
     const streamMessage = new StreamMessage({
         messageId: new MessageID(
-            toStreamID('test'),
-            0,
+            StreamPartIDUtils.getStreamID(STREAM_PART_ID),
+            StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
             666,
             0,
             '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
@@ -59,10 +57,8 @@ describe('stream without default entrypoints', () => {
             }
         })
         await entrypoint.start()
-        await Promise.all(range(20).map(async (i) => {
-            const peerDescriptor = createMockPeerDescriptor({
-                nodeName: `${i}`
-            })
+        await Promise.all(range(20).map(async () => {
+            const peerDescriptor = createMockPeerDescriptor()
             const transport = new SimulatorTransport(peerDescriptor, simulator)
             const node = createNetworkNode({
                 layer0: {
@@ -124,7 +120,7 @@ describe('stream without default entrypoints', () => {
         }
         await waitForCondition(async () => {
             const entryPointData = await nodes[15].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(STREAM_PART_ID))
-            return entryPointData.dataEntries!.length >= 7
+            return entryPointData.length >= 7
         }, 15000)
         
     }, 90000)

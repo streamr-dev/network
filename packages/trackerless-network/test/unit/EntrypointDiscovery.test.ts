@@ -1,28 +1,24 @@
-import { PeerDescriptor, RecursiveFindResult, isSamePeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, isSamePeerDescriptor } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { wait } from '@streamr/utils'
 import { range } from 'lodash'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
-import { StreamPartEntryPointDiscovery } from '../../src/logic/StreamPartEntryPointDiscovery'
-import { StreamPartDelivery } from '../../src/logic/StreamrNode'
+import { EntryPointDiscovery } from '../../src/logic/EntryPointDiscovery'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { MockLayer1 } from '../utils/mock/MockLayer1'
 import { createMockPeerDescriptor } from '../utils/utils'
 
-describe('StreamPartEntryPointDiscovery', () => {
+const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
-    let entryPointDiscoveryWithData: StreamPartEntryPointDiscovery
-    let entryPointDiscoveryWithoutData: StreamPartEntryPointDiscovery
+describe('EntryPointDiscovery', () => {
+
+    let entryPointDiscoveryWithData: EntryPointDiscovery
+    let entryPointDiscoveryWithoutData: EntryPointDiscovery
     let storeCalled: number
-    let streamParts = new Map<string, StreamPartDelivery>()
 
-    const peerDescriptor = createMockPeerDescriptor({
-        nodeName: 'fake'
-    })
-    const deletedPeerDescriptor = createMockPeerDescriptor({
-        nodeName: 'deleted'
-    })
+    const peerDescriptor = createMockPeerDescriptor()
+    const deletedPeerDescriptor = createMockPeerDescriptor()
 
     const fakeData: DataEntry = {
         data: Any.pack(peerDescriptor, PeerDescriptor),
@@ -42,17 +38,8 @@ describe('StreamPartEntryPointDiscovery', () => {
         deleted: true
     }
 
-    const streamPartId = StreamPartIDUtils.parse('stream#0')
-
-    const fakeGetEntryPointData = async (_key: Uint8Array): Promise<RecursiveFindResult> => {
-        return {
-            closestNodes: [peerDescriptor],
-            dataEntries: [fakeData, fakeDeletedData]
-        }
-    }
-
-    const fakegetEntryPointDataViaNode = async (_key: Uint8Array, _node: PeerDescriptor): Promise<DataEntry[]> => {
-        return [fakeData]
+    const fakeGetEntryPointData = async (_key: Uint8Array): Promise<DataEntry[]> => {
+        return [fakeData, fakeDeletedData]
     }
 
     const fakeStoreEntryPointData = async (_key: Uint8Array, _data: Any): Promise<PeerDescriptor[]> => {
@@ -60,16 +47,13 @@ describe('StreamPartEntryPointDiscovery', () => {
         return [peerDescriptor]
     }
 
-    const fakeEmptyGetEntryPointData = async (_key: Uint8Array): Promise<RecursiveFindResult> => {
-        return {
-            closestNodes: [],
-            dataEntries: []
-        }
+    const fakeEmptyGetEntryPointData = async (_key: Uint8Array): Promise<DataEntry[]> => {
+        return []
     }
 
     const fakeDeleteEntryPointData = async (_key: Uint8Array): Promise<void> => {}
 
-    const addNodesToStream = (layer1: MockLayer1, count: number) => {
+    const addNodesToStreamPart = (layer1: MockLayer1, count: number) => {
         range(count).forEach(() => {
             layer1.addNewRandomPeerToKBucket()
             layer1.addNewRandomPeerToKBucket()
@@ -82,26 +66,24 @@ describe('StreamPartEntryPointDiscovery', () => {
 
     beforeEach(() => {
         storeCalled = 0
-        streamParts = new Map()
         layer1 = new MockLayer1(getNodeIdFromPeerDescriptor(peerDescriptor))
-        streamParts.set(streamPartId, { layer1 } as any)
-        entryPointDiscoveryWithData = new StreamPartEntryPointDiscovery({
+        entryPointDiscoveryWithData = new EntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
-            streamParts: streamParts,
+            streamPartId: STREAM_PART_ID,
+            layer1,
             getEntryPointData: fakeGetEntryPointData,
-            getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
-            cacheInterval: 2000
+            storeInterval: 2000
         })
-        entryPointDiscoveryWithoutData = new StreamPartEntryPointDiscovery({
+        entryPointDiscoveryWithoutData = new EntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
-            streamParts: new Map<string, StreamPartDelivery>(),
+            streamPartId: STREAM_PART_ID,
+            layer1,
             getEntryPointData: fakeEmptyGetEntryPointData,
-            getEntryPointDataViaNode: fakegetEntryPointDataViaNode,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
-            cacheInterval: 2000
+            storeInterval: 2000
         })
     })
 
@@ -110,55 +92,42 @@ describe('StreamPartEntryPointDiscovery', () => {
     })
 
     it('discoverEntryPointsFromDht has known entrypoints', async () => {
-        const res = await entryPointDiscoveryWithData.discoverEntryPointsFromDht(streamPartId, 1)
+        const res = await entryPointDiscoveryWithData.discoverEntryPointsFromDht(1)
         expect(res.entryPointsFromDht).toEqual(false)
         expect(res.discoveredEntryPoints).toEqual([])
     })
 
     it('discoverEntryPointsFromDht does not have known entrypoints', async () => {
-        const res = await entryPointDiscoveryWithData.discoverEntryPointsFromDht(streamPartId, 0)
+        const res = await entryPointDiscoveryWithData.discoverEntryPointsFromDht(0)
         expect(res.discoveredEntryPoints.length).toBe(1)
         expect(isSamePeerDescriptor(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)
     })
 
     it('discoverEntryPointsfromDht on an empty stream', async () => {
-        const res = await entryPointDiscoveryWithoutData.discoverEntryPointsFromDht(streamPartId, 0)
+        const res = await entryPointDiscoveryWithoutData.discoverEntryPointsFromDht(0)
         expect(res.entryPointsFromDht).toEqual(true)
         expect(res.discoveredEntryPoints.length).toBe(1)
         expect(isSamePeerDescriptor(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)  // ownPeerDescriptor
     })
 
     it('store on empty stream', async () => {
-        await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, 0)
+        await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(0)
         expect(storeCalled).toEqual(1)
-    })
-
-    it('store on non-empty stream without known entry points', async () => {
-        addNodesToStream(layer1, 4)
-        await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, false, 0)
-        expect(storeCalled).toEqual(0)
     })
 
     it('store on stream without saturated entrypoint count', async () => {
-        addNodesToStream(layer1, 4)
-        await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, 0)
+        addNodesToStreamPart(layer1, 4)
+        await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(0)
         expect(storeCalled).toEqual(1)
     })
 
-    it('will keep recaching until stream stopped', async () => {
-        await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, 0)
+    it('will keep stored until destroyed', async () => {
+        await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(0)
         expect(storeCalled).toEqual(1)
         await wait(4500)
-        entryPointDiscoveryWithData.removeSelfAsEntryPoint(streamPartId)
+        await entryPointDiscoveryWithData.destroy()
+        // we have configured storeInterval to 2 seconds, i.e. after 4.5 seconds it should have been called 2 more items 
         expect(storeCalled).toEqual(3)
-    })
-
-    it('will stop recaching is stream is left', async () => {
-        await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(streamPartId, true, 0)
-        expect(storeCalled).toEqual(1)
-        streamParts.delete(streamPartId)
-        await wait(4500)
-        expect(storeCalled).toEqual(1)
     })
 
 })

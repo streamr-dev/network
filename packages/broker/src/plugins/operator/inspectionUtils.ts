@@ -1,15 +1,15 @@
 import { shuffle } from 'lodash'
 import { NetworkPeerDescriptor, StreamrClient } from 'streamr-client'
-import { OperatorFleetState } from './OperatorFleetState'
+import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { ConsistentHashRing } from './ConsistentHashRing'
 import { StreamPartAssignments } from './StreamPartAssignments'
-import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
 import { weightedSample } from '../../helpers/weightedSample'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
+import { ContractFacade } from './ContractFacade'
 
 const logger = new Logger(module)
 
@@ -41,11 +41,11 @@ function getPartitionsOfStreamAssignedToMe(
 
 export async function findTarget(
     myOperatorContractAddress: EthereumAddress,
-    helper: InspectRandomNodeHelper,
+    contractFacade: ContractFacade,
     assignments: StreamPartAssignments
 ): Promise<Target | undefined> {
     // choose sponsorship
-    const sponsorships = await helper.getSponsorshipsOfOperator(myOperatorContractAddress)
+    const sponsorships = await contractFacade.getSponsorshipsOfOperator(myOperatorContractAddress)
     const suitableSponsorships = sponsorships
         .filter(({ operatorCount }) => operatorCount >= 2)  // exclude sponsorships with only self
         .filter(({ streamId }) => isAnyPartitionOfStreamAssignedToMe(assignments, streamId))
@@ -59,7 +59,7 @@ export async function findTarget(
     )!
 
     // choose operator
-    const operators = await helper.getOperatorsInSponsorship(targetSponsorship.sponsorshipAddress)
+    const operators = await contractFacade.getOperatorsInSponsorship(targetSponsorship.sponsorshipAddress)
     const targetOperatorAddress = sample(without(operators, myOperatorContractAddress))
     if (targetOperatorAddress === undefined) {
         // Only happens if during the async awaits the other operator(s) were removed from the sponsorship.
@@ -85,8 +85,8 @@ export async function findTarget(
 
 export async function findNodesForTarget(
     target: Target,
-    streamrClient: StreamrClient,
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
+    createOperatorFleetState: CreateOperatorFleetStateFn,
     timeout: number,
     abortSignal: AbortSignal
 ): Promise<NetworkPeerDescriptor[]> {
@@ -94,10 +94,7 @@ export async function findNodesForTarget(
         targetOperator: target.operatorAddress,
         timeout
     })
-    const targetOperatorFleetState = new OperatorFleetState(
-        streamrClient,
-        formCoordinationStreamId(target.operatorAddress)
-    )
+    const targetOperatorFleetState = createOperatorFleetState(formCoordinationStreamId(target.operatorAddress))
     try {
         await targetOperatorFleetState.start()
         await Promise.race([

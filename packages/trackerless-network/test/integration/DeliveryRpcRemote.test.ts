@@ -5,8 +5,8 @@ import {
     SimulatorTransport,
     NodeType
 } from '@streamr/dht'
-import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
-import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
+import { DeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
     LeaveStreamPartNotice,
     StreamMessage
@@ -19,10 +19,12 @@ import { createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 
-describe('RemoteRandomGraphNode', () => {
+const STREAM_PART_ID = StreamPartIDUtils.parse('test-stream#0')
+
+describe('DeliveryRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
     let clientRpc: ListeningRpcCommunicator
-    let remoteRandomGraphNode: RemoteRandomGraphNode
+    let rpcRemote: DeliveryRpcRemote
 
     const clientNode: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
@@ -66,11 +68,11 @@ describe('RemoteRandomGraphNode', () => {
             }
         )
 
-        remoteRandomGraphNode = new RemoteRandomGraphNode(
+        rpcRemote = new DeliveryRpcRemote(
             clientNode,
             serverNode,
-            'test-stream',
-            toProtoRpcClient(new NetworkRpcClient(clientRpc.getRpcClientTransport()))
+            STREAM_PART_ID,
+            toProtoRpcClient(new DeliveryRpcClient(clientRpc.getRpcClientTransport()))
         )
     })
 
@@ -85,16 +87,16 @@ describe('RemoteRandomGraphNode', () => {
     it('sendStreamMessage', async () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
-            StreamPartIDUtils.parse('test-stream#0'),
+            STREAM_PART_ID,
             randomEthereumAddress()
         )
 
-        await remoteRandomGraphNode.sendStreamMessage(msg)
+        await rpcRemote.sendStreamMessage(msg)
         await waitForCondition(() => recvCounter === 1)
     })
 
     it('leaveNotice', async () => {
-        remoteRandomGraphNode.leaveStreamPartNotice()
+        rpcRemote.leaveStreamPartNotice()
         await waitForCondition(() => recvCounter === 1)
     })
 

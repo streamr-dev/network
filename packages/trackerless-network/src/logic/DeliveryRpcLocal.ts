@@ -6,13 +6,14 @@ import {
     MessageRef,
     StreamMessage
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { IDeliveryRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { StreamPartID } from '@streamr/protocol'
 
-export interface StreamNodeServerConfig {
+export interface DeliveryRpcLocalConfig {
     ownPeerDescriptor: PeerDescriptor
-    randomGraphId: string
+    streamPartId: StreamPartID
     markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
     broadcast: (message: StreamMessage, previousNode?: NodeID) => void
     onLeaveNotice(senderId: NodeID): void
@@ -20,11 +21,11 @@ export interface StreamNodeServerConfig {
     rpcCommunicator: ListeningRpcCommunicator
 }
 
-export class StreamNodeServer implements INetworkRpc {
+export class DeliveryRpcLocal implements IDeliveryRpc {
     
-    private readonly config: StreamNodeServerConfig
+    private readonly config: DeliveryRpcLocalConfig
 
-    constructor(config: StreamNodeServerConfig) {
+    constructor(config: DeliveryRpcLocalConfig) {
         this.config = config
     }
 
@@ -38,7 +39,7 @@ export class StreamNodeServer implements INetworkRpc {
     }
 
     async leaveStreamPartNotice(message: LeaveStreamPartNotice, context: ServerCallContext): Promise<Empty> {
-        if (message.randomGraphId === this.config.randomGraphId) {
+        if (message.streamPartId === this.config.streamPartId) {
             const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
             const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
             this.config.onLeaveNotice(senderId)
