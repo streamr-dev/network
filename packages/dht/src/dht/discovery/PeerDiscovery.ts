@@ -76,6 +76,7 @@ export class PeerDiscovery {
         const session = new DiscoverySession(sessionOptions)
         const randomSession = doRandomJoin ? new DiscoverySession({
             ...sessionOptions,
+            // TODO why 8 bytes? (are we generating a random "kademliaId" here?)
             targetId: crypto.randomBytes(8)
         }) : null
         this.ongoingDiscoverySessions.set(session.sessionId, session)
