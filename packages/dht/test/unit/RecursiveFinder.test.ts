@@ -25,9 +25,8 @@ describe('RecursiveFinder', () => {
     let recursiveFinder: RecursiveFinder
     let connections: Map<PeerIDKey, RemoteDhtNode>
 
-    const peerId1 = PeerID.fromString('peerid')
     const peerDescriptor1: PeerDescriptor = {
-        kademliaId: peerId1.value,
+        kademliaId: PeerID.fromString('peerid').value,
         type: NodeType.NODEJS
     }
     const peerDescriptor2: PeerDescriptor = {
@@ -59,7 +58,6 @@ describe('RecursiveFinder', () => {
         connections = new Map()
         recursiveFinder = new RecursiveFinder({
             ownPeerDescriptor: peerDescriptor1,
-            ownPeerId: peerId1,
             router: new MockRouter(),
             connections,
             serviceId: 'RecursiveFinder',
