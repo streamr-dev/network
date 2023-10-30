@@ -9,7 +9,7 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
-import { ILayer1 } from '../../src/logic/ILayer1'
+import { Layer1Node } from '../../src/logic/Layer1Node'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 
 const numNodes = 10000
@@ -138,8 +138,8 @@ run().then(() => {
     const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
     console.log(layer0Node.getKBucketPeers().length)
     console.log(layer0Node.getNumberOfConnections())
-    const streamPartDelivery = currentNode.stack.getStreamrNode().getStreamPartDelivery(streamParts[0])! as { layer1: ILayer1, node: RandomGraphNode }
-    console.log(streamPartDelivery.layer1.getKBucketPeers())
+    const streamPartDelivery = currentNode.stack.getStreamrNode().getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: RandomGraphNode }
+    console.log(streamPartDelivery.layer1Node.getKBucketPeers())
     console.log(streamPartDelivery.node.getTargetNeighborIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {

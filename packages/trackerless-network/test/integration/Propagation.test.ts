@@ -5,11 +5,11 @@ import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockPeerDescriptor, createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils/utils'
-import { ILayer1 } from '../../src/logic/ILayer1'
+import { Layer1Node } from '../../src/logic/Layer1Node'
 
 describe('Propagation', () => {
     const entryPointDescriptor = createMockPeerDescriptor()
-    let layer1Nodes: ILayer1[]
+    let layer1Nodes: Layer1Node[]
     let randomGraphNodes: RandomGraphNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number

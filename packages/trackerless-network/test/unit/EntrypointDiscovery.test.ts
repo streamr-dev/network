@@ -5,7 +5,7 @@ import { range } from 'lodash'
 import { EntryPointDiscovery } from '../../src/logic/EntryPointDiscovery'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { MockLayer1 } from '../utils/mock/MockLayer1'
+import { MockLayer1Node } from '../utils/mock/MockLayer1Node'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
@@ -52,7 +52,7 @@ describe('EntryPointDiscovery', () => {
 
     const fakeDeleteEntryPointData = async (): Promise<void> => {}
 
-    const addNodesToStreamPart = (layer1: MockLayer1, count: number) => {
+    const addNodesToStreamPart = (layer1: MockLayer1Node, count: number) => {
         range(count).forEach(() => {
             layer1.addNewRandomPeerToKBucket()
             layer1.addNewRandomPeerToKBucket()
@@ -61,15 +61,15 @@ describe('EntryPointDiscovery', () => {
         })
     } 
 
-    let layer1: MockLayer1
+    let layer1Node: MockLayer1Node
 
     beforeEach(() => {
         storeCalled = 0
-        layer1 = new MockLayer1()
+        layer1Node = new MockLayer1Node()
         entryPointDiscoveryWithData = new EntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
             streamPartId: STREAM_PART_ID,
-            layer1,
+            layer1Node,
             getEntryPointData: fakeGetEntryPointData,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
@@ -78,7 +78,7 @@ describe('EntryPointDiscovery', () => {
         entryPointDiscoveryWithoutData = new EntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
             streamPartId: STREAM_PART_ID,
-            layer1,
+            layer1Node,
             getEntryPointData: fakeEmptyGetEntryPointData,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
@@ -115,7 +115,7 @@ describe('EntryPointDiscovery', () => {
     })
 
     it('store on stream without saturated entrypoint count', async () => {
-        addNodesToStreamPart(layer1, 4)
+        addNodesToStreamPart(layer1Node, 4)
         await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(0)
         expect(storeCalled).toEqual(1)
     })

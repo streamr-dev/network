@@ -5,11 +5,11 @@ import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { ILayer1 } from '../../src/logic/ILayer1'
+import { Layer1Node } from '../../src/logic/Layer1Node'
 
 describe('RandomGraphNode-DhtNode-Latencies', () => {
     const numOfNodes = 64
-    let layer1Nodes: ILayer1[]
+    let layer1Nodes: Layer1Node[]
     let dhtEntryPoint: DhtNode  // TODO is this Layer0 or Layer1?
     let entryPointRandomGraphNode: RandomGraphNode
     let graphNodes: RandomGraphNode[]
@@ -40,14 +40,14 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         }))
         graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
             streamPartId,
-            layer1: layer1Nodes[i],
+            layer1Node: layer1Nodes[i],
             P2PTransport: cms[i],
             connectionLocker: cms[i],
             ownPeerDescriptor: peerDescriptors[i]
         }))
         entryPointRandomGraphNode = createRandomGraphNode({
             streamPartId,
-            layer1: dhtEntryPoint,
+            layer1Node: dhtEntryPoint,
             P2PTransport: entrypointCm,
             connectionLocker: entrypointCm,
             ownPeerDescriptor: entrypointDescriptor
