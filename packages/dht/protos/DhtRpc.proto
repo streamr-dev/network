@@ -306,7 +306,6 @@ message DisconnectNoticeResponse {
 
 message FindDataRequest {
   bytes kademliaId = 1;
-  PeerDescriptor requestor = 2;
 }
 
 message FindDataResponse {

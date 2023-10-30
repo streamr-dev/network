@@ -623,10 +623,6 @@ export interface FindDataRequest {
      * @generated from protobuf field: bytes kademliaId = 1;
      */
     kademliaId: Uint8Array;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor requestor = 2;
-     */
-    requestor?: PeerDescriptor;
 }
 /**
  * @generated from protobuf message dht.FindDataResponse
@@ -1236,8 +1232,7 @@ export const DisconnectNoticeResponse = new DisconnectNoticeResponse$Type();
 class FindDataRequest$Type extends MessageType$<FindDataRequest> {
     constructor() {
         super("dht.FindDataRequest", [
-            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "requestor", kind: "message", T: () => PeerDescriptor }
+            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }
