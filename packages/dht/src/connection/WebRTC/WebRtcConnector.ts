@@ -83,11 +83,11 @@ export class WebRtcConnector implements IWebRtcConnectorService {
             rpcRequestTimeout: 15000
         })
         this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer',
-            (req: RtcOffer) => this.rtcOffer(req))
+            (req: RtcOffer, context: ServerCallContext) => this.rtcOffer(req, context))
         this.rpcCommunicator.registerRpcNotification(RtcAnswer, 'rtcAnswer',
-            (req: RtcAnswer) => this.rtcAnswer(req))
+            (req: RtcAnswer, context: ServerCallContext) => this.rtcAnswer(req, context))
         this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate',
-            (req: IceCandidate) => this.iceCandidate(req))
+            (req: IceCandidate, context: ServerCallContext) => this.iceCandidate(req, context))
         this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection',
             (req: WebRtcConnectionRequest, context: ServerCallContext) => this.requestConnection(req, context))
     }
@@ -310,18 +310,24 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         return {}
     }
 
-    async rtcOffer(request: RtcOffer): Promise<Empty> {
-        this.onRtcOffer(request.requester!, request.target!, request.description, request.connectionId)
+    async rtcOffer(request: RtcOffer, context: ServerCallContext): Promise<Empty> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const receiverPeerDescriptor = (context as DhtCallContext).incomingTargetDescriptor!
+        this.onRtcOffer(senderPeerDescriptor, receiverPeerDescriptor, request.description, request.connectionId)
         return {}
     }
 
-    async rtcAnswer(request: RtcAnswer): Promise<Empty> {
-        this.onRtcAnswer(request.requester!, request.target!, request.description, request.connectionId)
+    async rtcAnswer(request: RtcAnswer, context: ServerCallContext): Promise<Empty> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const receiverPeerDescriptor = (context as DhtCallContext).incomingTargetDescriptor!
+        this.onRtcAnswer(senderPeerDescriptor, receiverPeerDescriptor, request.description, request.connectionId)
         return {}
     }
 
-    async iceCandidate(request: IceCandidate): Promise<Empty> {
-        this.onRemoteCandidate(request.requester!, request.target!, request.candidate, request.mid, request.connectionId)
+    async iceCandidate(request: IceCandidate, context: ServerCallContext): Promise<Empty> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const receiverPeerDescriptor = (context as DhtCallContext).incomingTargetDescriptor!
+        this.onRemoteCandidate(senderPeerDescriptor, receiverPeerDescriptor, request.candidate, request.mid, request.connectionId)
         return {}
     }
 }

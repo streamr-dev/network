@@ -260,25 +260,19 @@ message WebRtcConnectionRequest {
 }
 
 message RtcOffer {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string description = 3;
-  string connectionId = 4;
+  string description = 1;
+  string connectionId = 2;
 }
 
 message RtcAnswer {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string description = 3;
-  string connectionId = 4;
+  string description = 1;
+  string connectionId = 2;
 }
 
 message IceCandidate {
   string candidate = 1;
   string mid = 2;
   string connectionId = 3;
-  PeerDescriptor requester = 4;
-  PeerDescriptor target = 5;
 }
 
 message LockRequest {
