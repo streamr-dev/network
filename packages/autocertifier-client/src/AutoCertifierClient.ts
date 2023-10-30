@@ -6,6 +6,7 @@ import { filePathToNodeFormat } from '@streamr/utils'
 import { RestClient } from './RestClient'
 import { CertifiedSubdomain } from './data/CertifiedSubdomain'
 import fs from 'fs'
+import path from 'path'
 import * as forge from 'node-forge'
 import { Logger } from '@streamr/utils'
 
@@ -102,6 +103,10 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             certifiedSubdomain = await this.restClient.createNewSubdomainAndCertificate(this.streamrWebSocketPort, sessionId)
         } finally {
             this.ongoingSessions.delete(sessionId)
+        }
+        const dir = path.dirname(this.subdomainPath)
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
         }
         fs.writeFileSync(this.subdomainPath, JSON.stringify(certifiedSubdomain))
         const certObj = forge.pki.certificateFromPem(certifiedSubdomain.certificate.cert)
