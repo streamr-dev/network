@@ -111,7 +111,6 @@ export const keyOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescriptor | 
 
 export class ConnectionManager extends EventEmitter<Events> implements ITransport, ConnectionLocker {
 
-    public static PROTOCOL_VERSION = '1.0'
     private config: ConnectionManagerConfig
     private readonly metricsContext: MetricsContext
     private readonly duplicateMessageDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
@@ -469,7 +468,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const remoteConnectionLocker = new RemoteConnectionLocker(
             this.getOwnPeerDescriptor(),
             targetDescriptor,
-            ConnectionManager.PROTOCOL_VERSION,
             toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         this.locks.addLocalLocked(peerIdKey, serviceId)
@@ -487,7 +485,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const remoteConnectionLocker = new RemoteConnectionLocker(
             this.getOwnPeerDescriptor(),
             targetDescriptor,
-            ConnectionManager.PROTOCOL_VERSION,
             toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         if (this.connections.has(peerIdKey)) {
@@ -551,7 +548,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const remoteConnectionLocker = new RemoteConnectionLocker(
             this.getOwnPeerDescriptor(),
             targetDescriptor,
-            ConnectionManager.PROTOCOL_VERSION,
             toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         try {

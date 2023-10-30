@@ -12,25 +12,21 @@ const logger = new Logger(module)
 export class RemoteConnectionLocker {
     private ownPeerDescriptor: PeerDescriptor
     private targetPeerDescriptor: PeerDescriptor
-    private protocolVersion: string
     private client: ProtoRpcClient<IConnectionLockerClient>
 
     constructor(
         ownPeerDescriptor: PeerDescriptor,
         targetPeerDescriptor: PeerDescriptor,
-        protocolVersion: string,
         client: ProtoRpcClient<IConnectionLockerClient>
     ) {
         this.ownPeerDescriptor = ownPeerDescriptor
         this.targetPeerDescriptor = targetPeerDescriptor
-        this.protocolVersion = protocolVersion
         this.client = client
     }
 
     public async lockRequest(serviceId: string): Promise<boolean> {
         logger.trace(`Requesting locked connection to ${keyFromPeerDescriptor(this.targetPeerDescriptor)}`)
         const request: LockRequest = {
-            protocolVersion: this.protocolVersion,
             serviceId
         }
         const options: DhtRpcOptions = {
@@ -49,7 +45,6 @@ export class RemoteConnectionLocker {
     public unlockRequest(serviceId: string): void {
         logger.trace(`Requesting connection to be unlocked from ${keyFromPeerDescriptor(this.targetPeerDescriptor)}`)
         const request: UnlockRequest = {
-            protocolVersion: this.protocolVersion,
             serviceId
         }
         const options: DhtRpcOptions = {
@@ -67,7 +62,6 @@ export class RemoteConnectionLocker {
     public async gracefulDisconnect(disconnecMode: DisconnectMode): Promise<void> {
         logger.trace(`Notifying a graceful disconnect to ${keyFromPeerDescriptor(this.targetPeerDescriptor)}`)
         const request: DisconnectNotice = {
-            protocolVersion: this.protocolVersion,
             disconnecMode
         }
         const options = {

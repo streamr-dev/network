@@ -366,11 +366,7 @@ export interface HandshakeRequest {
      */
     sourceId: Uint8Array;
     /**
-     * @generated from protobuf field: string protocolVersion = 2;
-     */
-    protocolVersion: string;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 3;
+     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
      */
     peerDescriptor?: PeerDescriptor;
 }
@@ -383,15 +379,11 @@ export interface HandshakeResponse {
      */
     sourceId: Uint8Array;
     /**
-     * @generated from protobuf field: string protocolVersion = 2;
-     */
-    protocolVersion: string;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 3;
+     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
      */
     peerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: optional string responseError = 4;
+     * @generated from protobuf field: optional string responseError = 3;
      */
     responseError?: string;
 }
@@ -551,11 +543,7 @@ export interface IceCandidate {
  */
 export interface LockRequest {
     /**
-     * @generated from protobuf field: string protocolVersion = 1;
-     */
-    protocolVersion: string;
-    /**
-     * @generated from protobuf field: string serviceId = 2;
+     * @generated from protobuf field: string serviceId = 1;
      */
     serviceId: string;
 }
@@ -564,11 +552,7 @@ export interface LockRequest {
  */
 export interface UnlockRequest {
     /**
-     * @generated from protobuf field: string protocolVersion = 1;
-     */
-    protocolVersion: string;
-    /**
-     * @generated from protobuf field: string serviceId = 2;
+     * @generated from protobuf field: string serviceId = 1;
      */
     serviceId: string;
 }
@@ -590,11 +574,7 @@ export interface LockResponse {
  */
 export interface DisconnectNotice {
     /**
-     * @generated from protobuf field: string protocolVersion = 1;
-     */
-    protocolVersion: string;
-    /**
-     * @generated from protobuf field: dht.DisconnectMode disconnecMode = 2;
+     * @generated from protobuf field: dht.DisconnectMode disconnecMode = 1;
      */
     disconnecMode: DisconnectMode;
 }
@@ -602,10 +582,6 @@ export interface DisconnectNotice {
  * @generated from protobuf message dht.DisconnectNoticeResponse
  */
 export interface DisconnectNoticeResponse {
-    /**
-     * @generated from protobuf field: string protocolVersion = 1;
-     */
-    protocolVersion: string;
 }
 /**
  * @generated from protobuf message dht.FindDataRequest
@@ -1030,8 +1006,7 @@ class HandshakeRequest$Type extends MessageType$<HandshakeRequest> {
     constructor() {
         super("dht.HandshakeRequest", [
             { no: 1, name: "sourceId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor }
         ]);
     }
 }
@@ -1044,9 +1019,8 @@ class HandshakeResponse$Type extends MessageType$<HandshakeResponse> {
     constructor() {
         super("dht.HandshakeResponse", [
             { no: 1, name: "sourceId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 4, name: "responseError", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "responseError", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1158,8 +1132,7 @@ export const IceCandidate = new IceCandidate$Type();
 class LockRequest$Type extends MessageType$<LockRequest> {
     constructor() {
         super("dht.LockRequest", [
-            { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1171,8 +1144,7 @@ export const LockRequest = new LockRequest$Type();
 class UnlockRequest$Type extends MessageType$<UnlockRequest> {
     constructor() {
         super("dht.UnlockRequest", [
-            { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1197,8 +1169,7 @@ export const LockResponse = new LockResponse$Type();
 class DisconnectNotice$Type extends MessageType$<DisconnectNotice> {
     constructor() {
         super("dht.DisconnectNotice", [
-            { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "disconnecMode", kind: "enum", T: () => ["dht.DisconnectMode", DisconnectMode] }
+            { no: 1, name: "disconnecMode", kind: "enum", T: () => ["dht.DisconnectMode", DisconnectMode] }
         ]);
     }
 }
@@ -1209,9 +1180,7 @@ export const DisconnectNotice = new DisconnectNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class DisconnectNoticeResponse$Type extends MessageType$<DisconnectNoticeResponse> {
     constructor() {
-        super("dht.DisconnectNoticeResponse", [
-            { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
+        super("dht.DisconnectNoticeResponse", []);
     }
 }
 /**
