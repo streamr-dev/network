@@ -289,14 +289,12 @@ message IceCandidate {
 
 message LockRequest {
   string protocolVersion = 1;
-  PeerDescriptor peerDescriptor = 2;
-  string serviceId = 3;
+  string serviceId = 2;
 }
 
 message UnlockRequest {
   string protocolVersion = 1;
-  PeerDescriptor peerDescriptor = 2;
-  string serviceId = 3;
+  string serviceId = 2;
 }
 
 message LockResponse {

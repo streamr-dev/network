@@ -611,11 +611,7 @@ export interface LockRequest {
      */
     protocolVersion: string;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
-     */
-    peerDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string serviceId = 3;
+     * @generated from protobuf field: string serviceId = 2;
      */
     serviceId: string;
 }
@@ -628,11 +624,7 @@ export interface UnlockRequest {
      */
     protocolVersion: string;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
-     */
-    peerDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string serviceId = 3;
+     * @generated from protobuf field: string serviceId = 2;
      */
     serviceId: string;
 }
@@ -1245,8 +1237,7 @@ class LockRequest$Type extends MessageType$<LockRequest> {
     constructor() {
         super("dht.LockRequest", [
             { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1259,8 +1250,7 @@ class UnlockRequest$Type extends MessageType$<UnlockRequest> {
     constructor() {
         super("dht.UnlockRequest", [
             { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
