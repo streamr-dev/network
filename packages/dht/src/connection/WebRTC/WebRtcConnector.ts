@@ -18,7 +18,7 @@ import { IWebRtcConnectorService } from '../../proto/packages/dht/protos/DhtRpc.
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
-    isSamePeerDescriptor,
+    areEqualPeerDescriptors,
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
@@ -91,7 +91,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        if (isSamePeerDescriptor(targetPeerDescriptor, this.ownPeerDescriptor!)) {
+        if (areEqualPeerDescriptors(targetPeerDescriptor, this.ownPeerDescriptor!)) {
             throw new Err.CannotConnectToSelf('Cannot open WebRTC Connection to self')
         }
 
@@ -187,7 +187,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         description: string,
         connectionId: string
     ): void {
-        if (this.stopped || !isSamePeerDescriptor(targetPeer, this.ownPeerDescriptor!)) {
+        if (this.stopped || !areEqualPeerDescriptors(targetPeer, this.ownPeerDescriptor!)) {
             return
         }
         const peerKey = keyFromPeerDescriptor(remotePeer)
@@ -238,7 +238,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         description: string,
         connectionId: string
     ): void {
-        if (this.stopped || !isSamePeerDescriptor(targetPeerDescriptor, this.ownPeerDescriptor!)) {
+        if (this.stopped || !areEqualPeerDescriptors(targetPeerDescriptor, this.ownPeerDescriptor!)) {
             return
         }
         const peerKey = keyFromPeerDescriptor(remotePeerDescriptor)
@@ -268,7 +268,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         mid: string,
         connectionId: string
     ): void {
-        if (this.stopped || !isSamePeerDescriptor(targetPeerDescriptor, this.ownPeerDescriptor!)) {
+        if (this.stopped || !areEqualPeerDescriptors(targetPeerDescriptor, this.ownPeerDescriptor!)) {
             return
         }
         const peerKey = keyFromPeerDescriptor(remotePeerDescriptor)
