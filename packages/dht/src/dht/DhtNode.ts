@@ -623,12 +623,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         await this.router!.send(msg, reachableThrough)
     }
 
-    public async joinDht(entryPointDescriptors: PeerDescriptor[], doRandomJoin?: boolean, retry?: boolean): Promise<void> {
+    public async joinDht(entryPointDescriptors: PeerDescriptor[], doAdditionalRandomPeerDiscovery?: boolean, retry?: boolean): Promise<void> {
         if (!this.started) {
             throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
         await Promise.all(entryPointDescriptors.map((entryPoint) => 
-            this.peerDiscovery!.joinDht(entryPoint, doRandomJoin, retry)
+            this.peerDiscovery!.joinDht(entryPoint, doAdditionalRandomPeerDiscovery, retry)
         ))
     }
 
@@ -693,10 +693,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return Array.from(this.connections.values()).map((peer) => peer.getPeerDescriptor())
     }
 
-    public getK(): number {
-        return this.config.numberOfNodesPerKBucket
-    }
-
     public getKBucketPeers(): PeerDescriptor[] {
         return this.bucket!.toArray().map((remoteDhtNode: RemoteDhtNode) => remoteDhtNode.getPeerDescriptor())
     }
@@ -723,10 +719,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public hasJoined(): boolean {
         return this.peerDiscovery!.isJoinCalled()
-    }
-
-    public getKnownEntryPoints(): PeerDescriptor[] {
-        return this.config.entryPoints || []
     }
 
     public async stop(): Promise<void> {
