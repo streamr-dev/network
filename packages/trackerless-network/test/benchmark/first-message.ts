@@ -132,13 +132,14 @@ run().then(() => {
     console.log('done')
 }).catch((err) => {
     console.error(err)
-    const streamParts = currentNode.stack.getStreamrNode()!.getStreamParts()
+    const streamrNode = currentNode.stack.getStreamrNode()
+    const streamParts = streamrNode.getStreamParts()
     const foundData = nodes[0].stack.getLayer0Node().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
     const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
     console.log(layer0Node.getKBucketPeers().length)
     console.log(layer0Node.getNumberOfConnections())
-    const streamPartDelivery = currentNode.stack.getStreamrNode().getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: RandomGraphNode }
+    const streamPartDelivery = streamrNode.getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: RandomGraphNode }
     console.log(streamPartDelivery.layer1Node.getKBucketPeers())
     console.log(streamPartDelivery.node.getTargetNeighborIds())
     console.log(nodes[nodes.length - 1])
