@@ -19,7 +19,6 @@ interface DiscoverySessionEvents {
 interface DiscoverySessionConfig {
     bucket: KBucket<RemoteDhtNode>
     neighborList: SortedContactList<RemoteDhtNode>
-    // TODO what this is? always peerIdFromPeerDescriptor(ownPeerDescriptor).value
     targetId: Uint8Array
     ownPeerDescriptor: PeerDescriptor
     serviceId: string
