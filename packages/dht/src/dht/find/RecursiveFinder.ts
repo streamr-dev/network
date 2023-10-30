@@ -12,7 +12,7 @@ import {
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { createRouteMessageAck, RoutingErrors, IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
-import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RemoteRecursiveFindSession } from './RemoteRecursiveFindSession'
@@ -33,7 +33,6 @@ interface RecursiveFinderConfig {
     connections: Map<PeerIDKey, RemoteDhtNode>
     router: IRouter
     ownPeerDescriptor: PeerDescriptor
-    ownPeerId: PeerID
     serviceId: string
     localDataStore: LocalDataStore
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
@@ -57,7 +56,6 @@ export class RecursiveFinder implements IRecursiveFinder {
     private readonly connections: Map<PeerIDKey, RemoteDhtNode>
     private readonly router: IRouter
     private readonly ownPeerDescriptor: PeerDescriptor
-    private readonly ownPeerId: PeerID
     private readonly serviceId: string
     private readonly localDataStore: LocalDataStore
     private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
@@ -71,7 +69,6 @@ export class RecursiveFinder implements IRecursiveFinder {
         this.connections = config.connections
         this.router = config.router
         this.ownPeerDescriptor = config.ownPeerDescriptor
-        this.ownPeerId = config.ownPeerId
         this.serviceId = config.serviceId
         this.localDataStore = config.localDataStore
         this.addContact = config.addContact
@@ -93,7 +90,7 @@ export class RecursiveFinder implements IRecursiveFinder {
             serviceId: sessionId,
             rpcTransport: this.sessionTransport,
             kademliaIdToFind: idToFind,
-            ownPeerID: this.ownPeerId,
+            ownPeerID: peerIdFromPeerDescriptor(this.ownPeerDescriptor),
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
             mode: findMode
         })
@@ -186,8 +183,8 @@ export class RecursiveFinder implements IRecursiveFinder {
         noCloserNodesFound: boolean = false
     ): void {
         const dataEntries = data ? Array.from(data.values(), DataEntry.create.bind(DataEntry)) : []
-        const isOwnPeerId = this.ownPeerId.equals(PeerID.fromValue(targetPeerDescriptor.kademliaId))
-        if (isOwnPeerId && this.ongoingSessions.has(serviceId)) {
+        const isOwnNode = isSamePeerDescriptor(this.ownPeerDescriptor, targetPeerDescriptor)
+        if (isOwnNode && this.ongoingSessions.has(serviceId)) {
             this.ongoingSessions.get(serviceId)!
                 .doReportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         } else {
@@ -206,12 +203,12 @@ export class RecursiveFinder implements IRecursiveFinder {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, 'DhtNode Stopped')
         }
-        const idToFind = PeerID.fromValue(routedMessage.destinationPeer!.kademliaId)
+        const idToFind = peerIdFromPeerDescriptor(routedMessage.destinationPeer!)
         const msg = routedMessage.message
         const recursiveFindRequest = msg?.body.oneofKind === 'recursiveFindRequest' ? msg.body.recursiveFindRequest : undefined
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.kademliaId, 5)
         const data = this.findLocalData(idToFind.value, recursiveFindRequest!.findMode)
-        if (this.ownPeerId.equals(idToFind)) {
+        if (isSamePeerDescriptor(this.ownPeerDescriptor, routedMessage.destinationPeer!)) {
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                 closestPeersToDestination, data, true)
             return createRouteMessageAck(routedMessage)
