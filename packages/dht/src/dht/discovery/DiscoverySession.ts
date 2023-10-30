@@ -8,7 +8,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { DhtRpcServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { SortedContactList } from '../contact/SortedContactList'
 import { RemoteDhtNode } from '../RemoteDhtNode'
-import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -47,7 +47,7 @@ export class DiscoverySession {
             return
         }
         contacts.forEach((contact) => {
-            if (!isSamePeerDescriptor(contact, this.config.ownPeerDescriptor)) {
+            if (!areEqualPeerDescriptors(contact, this.config.ownPeerDescriptor)) {
                 const remoteDhtNode = new RemoteDhtNode(
                     this.config.ownPeerDescriptor,
                     contact,

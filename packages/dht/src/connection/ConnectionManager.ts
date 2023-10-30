@@ -7,7 +7,7 @@ import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
 import { PeerIDKey } from '../helpers/PeerID'
 import * as Err from '../helpers/errors'
 import {
-    isSamePeerDescriptor,
+    areEqualPeerDescriptors,
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
@@ -271,7 +271,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private isConnectionToSelf(peerDescriptor: PeerDescriptor): boolean { 
-        return isSamePeerDescriptor(peerDescriptor, this.getOwnPeerDescriptor()) || this.isOwnWebSocketServer(peerDescriptor)
+        return areEqualPeerDescriptors(peerDescriptor, this.getOwnPeerDescriptor()) || this.isOwnWebSocketServer(peerDescriptor)
     }
 
     private isOwnWebSocketServer(peerDescriptor: PeerDescriptor): boolean {
@@ -460,7 +460,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
-        if (this.state === ConnectionManagerState.STOPPED || isSamePeerDescriptor(targetDescriptor, this.getOwnPeerDescriptor())) {
+        if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getOwnPeerDescriptor())) {
             return
         }
         const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
@@ -477,7 +477,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
-        if (this.state === ConnectionManagerState.STOPPED || isSamePeerDescriptor(targetDescriptor, this.getOwnPeerDescriptor())) {
+        if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getOwnPeerDescriptor())) {
             return
         }
         const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
@@ -494,7 +494,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public weakLockConnection(targetDescriptor: PeerDescriptor): void {
-        if (this.state === ConnectionManagerState.STOPPED || isSamePeerDescriptor(targetDescriptor, this.getOwnPeerDescriptor())) {
+        if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getOwnPeerDescriptor())) {
             return
         }
         const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
@@ -502,7 +502,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public weakUnlockConnection(targetDescriptor: PeerDescriptor): void {
-        if (this.state === ConnectionManagerState.STOPPED || isSamePeerDescriptor(targetDescriptor, this.getOwnPeerDescriptor())) {
+        if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getOwnPeerDescriptor())) {
             return
         }
         const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
@@ -568,7 +568,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     // IConnectionLocker server implementation
     private async lockRequest(lockRequest: LockRequest): Promise<LockResponse> {
         const remotePeerId = peerIdFromPeerDescriptor(lockRequest.peerDescriptor!)
-        if (isSamePeerDescriptor(lockRequest.peerDescriptor!, this.getOwnPeerDescriptor())) {
+        if (areEqualPeerDescriptors(lockRequest.peerDescriptor!, this.getOwnPeerDescriptor())) {
             const response: LockResponse = {
                 accepted: false
             }

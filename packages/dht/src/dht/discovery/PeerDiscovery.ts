@@ -1,7 +1,7 @@
 import { DiscoverySession } from './DiscoverySession'
 import { RemoteDhtNode } from '../RemoteDhtNode'
 import crypto from 'crypto'
-import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import KBucket from 'k-bucket'
@@ -55,7 +55,7 @@ export class PeerDiscovery {
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
         )
-        if (isSamePeerDescriptor(entryPointDescriptor, this.config.ownPeerDescriptor)) {
+        if (areEqualPeerDescriptors(entryPointDescriptor, this.config.ownPeerDescriptor)) {
             return
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)

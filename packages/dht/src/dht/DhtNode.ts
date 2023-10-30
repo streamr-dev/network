@@ -32,7 +32,7 @@ import { RandomContactList } from './contact/RandomContactList'
 import { Empty } from '../proto/google/protobuf/empty'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { Any } from '../proto/google/protobuf/any'
-import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
 import { RecursiveFinder, RecursiveFindResult } from './find/RecursiveFinder'
 import { DataStore } from './store/DataStore'
@@ -304,7 +304,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         })
         registerExternalApiRpcMethods(this)
         if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
-            && !isSamePeerDescriptor(this.config.entryPoints[0], this.ownPeerDescriptor!)) {
+            && !areEqualPeerDescriptors(this.config.entryPoints[0], this.ownPeerDescriptor!)) {
             this.connectToEntryPoint(this.config.entryPoints[0])
         }
     }
@@ -359,7 +359,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
                 this.config.serviceId
             )
-            if (isSamePeerDescriptor(peer, this.ownPeerDescriptor!)) {
+            if (areEqualPeerDescriptors(peer, this.ownPeerDescriptor!)) {
                 logger.error('own peerdescriptor added to connections in initKBucket')
             }
             this.connections.set(keyFromPeerDescriptor(peer), remoteDhtNode)
@@ -375,7 +375,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private onTransportConnected(peerDescriptor: PeerDescriptor): void {
 
-        if (isSamePeerDescriptor(this.ownPeerDescriptor!, peerDescriptor)) {
+        if (areEqualPeerDescriptors(this.ownPeerDescriptor!, peerDescriptor)) {
             logger.error('onTransportConnected() to self')
         }
 
@@ -568,7 +568,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started || this.stopped) {
             return
         }
-        if (!isSamePeerDescriptor(contact, this.ownPeerDescriptor!)) {
+        if (!areEqualPeerDescriptors(contact, this.ownPeerDescriptor!)) {
             logger.trace(`Adding new contact ${keyFromPeerDescriptor(contact)}`)
             const remoteDhtNode = new RemoteDhtNode(
                 this.ownPeerDescriptor!,

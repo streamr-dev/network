@@ -1,7 +1,7 @@
 import { Any } from '../../src/proto/google/protobuf/any'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import {
-    isSamePeerDescriptor,
+    areEqualPeerDescriptors,
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../../src/helpers/peerIdFromPeerDescriptor'
@@ -37,7 +37,7 @@ describe('LocalDataStore', () => {
         const fetchedData = localDataStore.getEntry(dataKey)
         fetchedData.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(isSamePeerDescriptor(fetchedDescriptor, storer1)).toBeTrue()
+            expect(areEqualPeerDescriptors(fetchedDescriptor, storer1)).toBeTrue()
         })
     })
 
@@ -50,7 +50,7 @@ describe('LocalDataStore', () => {
         const fetchedData = localDataStore.getEntry(dataKey)
         fetchedData.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(isSamePeerDescriptor(fetchedDescriptor, storer1)).toBeTrue()
+            expect(areEqualPeerDescriptors(fetchedDescriptor, storer1)).toBeTrue()
         })
     })
 
@@ -64,7 +64,7 @@ describe('LocalDataStore', () => {
         const fetchedData = localDataStore.getEntry(dataKey)
         fetchedData.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(isSamePeerDescriptor(fetchedDescriptor, storer2)).toBeTrue()
+            expect(areEqualPeerDescriptors(fetchedDescriptor, storer2)).toBeTrue()
         })
     })
 

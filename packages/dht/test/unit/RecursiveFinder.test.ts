@@ -18,7 +18,7 @@ import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import { v4 } from 'uuid'
 import { MockRouter } from '../utils/mock/Router'
 import { MockTransport } from '../utils/mock/Transport'
-import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('RecursiveFinder', () => {
 
@@ -80,7 +80,7 @@ describe('RecursiveFinder', () => {
 
     it('startRecursiveFind with mode Node returns self if no peers', async () => {
         const res = await recursiveFinder.startRecursiveFind(PeerID.fromString('find').value)
-        expect(isSamePeerDescriptor(res.closestNodes[0], peerDescriptor1)).toEqual(true)
+        expect(areEqualPeerDescriptors(res.closestNodes[0], peerDescriptor1)).toEqual(true)
     })
 
     it('RecursiveFinder server throws if payload is not recursiveFindRequest', async () => {
