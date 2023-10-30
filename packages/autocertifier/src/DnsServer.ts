@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/parameter-properties, no-empty, 
-    class-methods-use-this */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 
 import { DnsHandler, DnsResponse, Packet, createServer } from 'dns2'
 import { Database, Subdomain } from './Database'
@@ -10,10 +9,18 @@ const logger = new Logger(module)
 export class DnsServer {
 
     private server?: any
+    private readonly domainName: string
+    private readonly ownHostName: string
+    private readonly dnsServerPort: string
+    private readonly ownIpAddress: string
+    private readonly db: Database
 
-    constructor(private domainName: string, private ownHostName: string,
-        private dnsServerPort: string, private ownIpAddress: string,
-        private db: Database) {
+    constructor(domainName: string, ownHostName: string, dnsServerPort: string, ownIpAddress: string, db: Database) {
+        this.domainName = domainName
+        this.ownHostName = ownHostName
+        this.dnsServerPort = dnsServerPort
+        this.ownIpAddress = ownIpAddress
+        this.db = db
     }
 
     public async createSubdomain(subdomain: string, ipAddress: string, port: string, token: string): Promise<void> {
@@ -104,18 +111,21 @@ export class DnsServer {
         await send(response)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private handleAAAAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
         logger.info('handleAAAAQuery() ' + mixedCaseName)
         await send(response)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private handleCNAMEQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
         logger.info('handleCNAMEQuery() ' + mixedCaseName)
         await send(response)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private handleCAAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
         logger.info('handleCAAQuery() ' + mixedCaseName)

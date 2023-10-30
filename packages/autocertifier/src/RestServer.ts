@@ -216,7 +216,7 @@ export class RestServer {
         const token = body.token
         const sessionId = body.sessionId
         
-        const ipAndPort = this.extractIpAndPort(req)
+        const ipAndPort = extractIpAndPort(req)
         if (!ipAndPort) {
             const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
             sendError(res, err)

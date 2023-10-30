@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/parameter-properties */
 import { Logger } from '@streamr/utils'
 import * as acme from 'acme-client'
 import fs from 'fs'
@@ -13,12 +12,21 @@ export class CertificateCreator {
 
     private accountPrivateKey?: Buffer
     private accountPrivateKeyPath: string
+    private readonly acmeDirectoryUrl: string
+    private readonly hmacKid: string
+    private readonly hmacKey: string
+    private readonly challengeInterface: ChallengeInterface
 
-    constructor(private acmeDirectoryUrl: string,
-        private hmacKid: string,
-        private hmacKey: string,
+    constructor(acmeDirectoryUrl: string,
+        hmacKid: string,
+        hmacKey: string,
         privateKeyPath: string,
-        private challengeInterface: ChallengeInterface) {
+        challengeInterface: ChallengeInterface
+    ) {
+        this.acmeDirectoryUrl = acmeDirectoryUrl
+        this.hmacKid = hmacKid
+        this.hmacKey = hmacKey
+        this.challengeInterface = challengeInterface
 
         if (privateKeyPath.startsWith('~/')) {
             this.accountPrivateKeyPath = privateKeyPath.replace('~', os.homedir())

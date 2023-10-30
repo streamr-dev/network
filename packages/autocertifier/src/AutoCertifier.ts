@@ -1,5 +1,3 @@
-/* eslint-disable class-methods-use-this */
-
 import { Database } from './Database'
 import { DnsServer } from './DnsServer'
 import { RestInterface } from './RestInterface'
@@ -22,7 +20,7 @@ export class AutoCertifier implements RestInterface {
     private certificateCreator?: CertificateCreator
     private streamrChallenger = new StreamrChallenger()
 
-    // RestInterface implementation
+    // eslint-disable-next-line class-methods-use-this
     public async createSession(): Promise<Session> {
         logger.info('creating new session')
         const sessionId = v4()
@@ -84,8 +82,9 @@ export class AutoCertifier implements RestInterface {
     }
 
     // ChallengeInterface implementation
+    // eslint-disable-next-line class-methods-use-this
     public async deleteChallenge(_name: string): Promise<void> {
-        // Should this function do something?
+        // TODO: Should this function do something?
     }
 
     public async start(): Promise<void> {

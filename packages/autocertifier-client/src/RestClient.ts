@@ -8,7 +8,7 @@ import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-// TODO: a non-deprecated REST client that support async/await instead of request
+// TODO: use a non-deprecated HTTP client that support async/await instead of request
 export class RestClient {
 
     private baseUrl: string
