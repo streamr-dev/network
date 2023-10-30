@@ -5,7 +5,7 @@ import { ITemporaryConnectionRpcClient } from '../../proto/packages/trackerless-
 
 const logger = new Logger(module)
 
-export class RemoteTemporaryConnectionRpcServer extends Remote<ITemporaryConnectionRpcClient> {
+export class TemporaryConnectionRpcRemote extends Remote<ITemporaryConnectionRpcClient> {
 
     async openConnection(): Promise<boolean> {
         try {

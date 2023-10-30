@@ -16,7 +16,7 @@ describe('Full node network with WebRTC connections', () => {
         region: getRandomRegion()
     })
 
-    const randomGraphId = StreamPartIDUtils.parse('webrtc-network#0')
+    const streamPartId = StreamPartIDUtils.parse('webrtc-network#0')
 
     let entryPoint: NetworkStack
 
@@ -33,8 +33,8 @@ describe('Full node network with WebRTC connections', () => {
             }
         })
         await entryPoint.start()
-        entryPoint.getStreamrNode()!.setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
-        entryPoint.getStreamrNode()!.joinStreamPart(randomGraphId)
+        entryPoint.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
+        entryPoint.getStreamrNode()!.joinStreamPart(streamPartId)
 
         await Promise.all(range(NUM_OF_NODES).map(async () => {
             const peerDescriptor = createMockPeerDescriptor()
@@ -46,8 +46,8 @@ describe('Full node network with WebRTC connections', () => {
             })
             nodes.push(node)
             await node.start()
-            node.getStreamrNode().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
-            node.getStreamrNode().joinStreamPart(randomGraphId)
+            node.getStreamrNode().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
+            node.getStreamrNode().joinStreamPart(streamPartId)
         }))
 
     }, 90000)
@@ -62,13 +62,13 @@ describe('Full node network with WebRTC connections', () => {
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
             waitForCondition(() => {
-                return node.getStreamrNode()!.getNeighbors(randomGraphId).length >= 3
+                return node.getStreamrNode()!.getNeighbors(streamPartId).length >= 3
             }
             , 120000)
         ))
         let numOfMessagesReceived = 0
         const successIds: string[] = []
-        nodes.map((node) => {
+        nodes.forEach((node) => {
             node.getStreamrNode()!.on('newMessage', () => {
                 successIds.push(getNodeIdFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
                 numOfMessagesReceived += 1
@@ -76,7 +76,7 @@ describe('Full node network with WebRTC connections', () => {
         })
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
-            randomGraphId,
+            streamPartId,
             randomEthereumAddress()
         )
         entryPoint.getStreamrNode()!.broadcast(msg)

@@ -3,7 +3,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
 import { UUID } from '../../src/helpers/UUID'
-import { NodeType } from '../../src/exports'
+import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 
 describe('Layer1', () => {
 
@@ -12,8 +12,7 @@ describe('Layer1', () => {
 
     const entryPoint0Descriptor = {
         kademliaId: PeerID.fromString(layer0EntryPointId).value,
-        type: NodeType.NODEJS,
-        nodeName: layer0EntryPointId
+        type: NodeType.NODEJS
     }
 
     let layer0EntryPoint: DhtNode
@@ -35,7 +34,6 @@ describe('Layer1', () => {
             const node = await createMockConnectionDhtNode(
                 new UUID().toString(),
                 simulator,
-                undefined,
                 undefined,
                 undefined,
                 undefined,
@@ -163,8 +161,8 @@ describe('Layer1', () => {
     //
     //     await Promise.all(layer1Nodes.map((node) => node.joinDht(entryPoint0Descriptor)))
     //
-    //     layer1Nodes.map((sender) => {
-    //         layer1Nodes.map(async (receiver) => {
+    //     layer1Nodes.forEach((sender) => {
+    //         layer1Nodes.forEach(async (receiver) => {
     //             if (!sender.getNodeId().equals(receiver.getNodeId())) {
     //                 const rpcWrapper = createWrappedClosestPeersRequest(sender.getPeerDescriptor(), receiver.getPeerDescriptor())
     //                 const message: Message = {

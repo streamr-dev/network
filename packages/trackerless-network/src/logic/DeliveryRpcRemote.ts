@@ -4,11 +4,11 @@ import {
     LeaveStreamPartNotice,
     StreamMessage
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { INetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { IDeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 
 const logger = new Logger(module)
 
-export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
+export class DeliveryRpcRemote extends Remote<IDeliveryRpcClient> {
 
     async sendStreamMessage(msg: StreamMessage): Promise<void> {
         const options = this.formDhtRpcOptions({
@@ -21,7 +21,7 @@ export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
 
     leaveStreamPartNotice(): void {
         const notification: LeaveStreamPartNotice = {
-            randomGraphId: this.getServiceId()
+            streamPartId: this.getServiceId()
         }
         const options = this.formDhtRpcOptions({
             notification: true

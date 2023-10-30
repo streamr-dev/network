@@ -1,8 +1,6 @@
 import { Contract } from '@ethersproject/contracts'
-import { parseEther } from '@ethersproject/units'
 import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { MaintainOperatorValueHelper } from '../../../../src/plugins/operator/MaintainOperatorValueHelper'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
 import { createClient, createTestStream } from '../../../utils'
 import {
@@ -15,6 +13,7 @@ import {
     sponsor,
     stake
 } from './contractUtils'
+import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 const logger = new Logger(module)
 
@@ -47,31 +46,29 @@ describe('checkOperatorValueBreach', () => {
         const { operatorServiceConfig: watcherConfig, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         const sponsorer = await generateWalletWithGasAndTokens()
-        await delegate(operatorWallet, operatorContract.address, 200)
-        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: parseEther('1'), streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, sponsorship1.address, 250)
-        await stake(operatorContract, sponsorship1.address, 100)
-        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: parseEther('2'), streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, sponsorship2.address, 250)
-        await stake(operatorContract, sponsorship2.address, 100)
+        await delegate(operatorWallet, operatorContract.address, 20000)
+        const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: 100, streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, sponsorship1.address, 25000)
+        await stake(operatorContract, sponsorship1.address, 10000)
+        const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: 200, streamId, deployer: operatorWallet })
+        await sponsor(sponsorer, sponsorship2.address, 25000)
+        await stake(operatorContract, sponsorship2.address, 10000)
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
         const allowedDifference = valueBeforeWithdraw.mul(await streamrConfig.maxAllowedEarningsFraction()).div(ONE_ETHER).toBigInt()
-        const helper = new MaintainOperatorValueHelper({
+        const contractFacade = ContractFacade.createInstance({
             ...watcherConfig,
             signer: watcherWallets[0]
         })
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
-        helper.getRandomOperator = async () => {
+        contractFacade.getRandomOperator = async () => {
             return toEthereumAddress(operatorContract.address)
         }
 
         logger.debug('Waiting until above', { allowedDifference })
         await waitForCondition(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
-        await checkOperatorValueBreach(
-            helper
-        )
+        await checkOperatorValueBreach(contractFacade, 1, 20)
 
         const earnings = await getEarnings(operatorContract)
         expect(earnings).toBeLessThan(allowedDifference)

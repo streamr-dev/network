@@ -11,7 +11,7 @@ import {
     WebSocketConnectionResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { WebSocketConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Logger, wait } from '@streamr/utils'
+import { Logger, binaryToHex, wait } from '@streamr/utils'
 import { IWebSocketConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
@@ -24,7 +24,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from '../Handshaker'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
-import { sample } from 'lodash'
+import { range, sample } from 'lodash'
 
 const logger = new Logger(module)
 
@@ -34,17 +34,28 @@ export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string
 
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
+interface WebSocketConnectorConfig {
+    protocolVersion: string
+    rpcTransport: ITransport
+    canConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
+    incomingConnectionCallback: (connection: ManagedConnection) => boolean
+    portRange?: PortRange
+    maxMessageSize?: number
+    host?: string
+    entrypoints?: PeerDescriptor[]
+    tlsCertificate?: TlsCertificate
+}
+
 export class WebSocketConnector implements IWebSocketConnectorService {
-    private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocketconnector'
+    private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     private readonly webSocketServer?: WebSocketServer
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private incomingConnectionCallback: (connection: ManagedConnection) => boolean
-    private portRange?: PortRange
     private host?: string
-    private entrypoints?: PeerDescriptor[]
+    private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
     private selectedPort?: number
     private readonly protocolVersion: string
@@ -52,27 +63,21 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private destroyed = false
 
-    constructor(
-        protocolVersion: string,
-        rpcTransport: ITransport,
-        fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
-        incomingConnectionCallback: (connection: ManagedConnection) => boolean,
-        portRange?: PortRange,
-        host?: string,
-        entrypoints?: PeerDescriptor[],
-        tlsCertificate?: TlsCertificate
-    ) {
-        this.protocolVersion = protocolVersion
-        this.webSocketServer = portRange ? new WebSocketServer() : undefined
-        this.incomingConnectionCallback = incomingConnectionCallback
-        this.portRange = portRange
-        this.host = host
-        this.entrypoints = entrypoints
-        this.tlsCertificate = tlsCertificate
+    constructor(config: WebSocketConnectorConfig) {
+        this.protocolVersion = config.protocolVersion
+        this.webSocketServer = config.portRange ? new WebSocketServer({
+            portRange: config.portRange!,
+            tlsCertificate: config.tlsCertificate,
+            maxMessageSize: config.maxMessageSize
+        }) : undefined
+        this.incomingConnectionCallback = config.incomingConnectionCallback
+        this.host = config.host
+        this.entrypoints = config.entrypoints
+        this.tlsCertificate = config.tlsCertificate
 
-        this.canConnectFunction = fnCanConnect.bind(this)
+        this.canConnectFunction = config.canConnect.bind(this)
 
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, rpcTransport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.rpcTransport, {
             rpcRequestTimeout: 15000
         })
 
@@ -100,10 +105,10 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     serverSocket.resourceURL.query) {
                     const query = serverSocket.resourceURL.query as unknown as ParsedUrlQuery
                     if (query.connectivityRequest) {
-                        logger.trace('Received connectivity request connection')
+                        logger.trace('Received connectivity request connection from ' + serverSocket.getRemoteAddress())
                         this.connectivityChecker!.listenToIncomingConnectivityRequests(serverSocket)
                     } else if (query.connectivityProbe) {
-                        logger.trace('Received connectivity probe connection')
+                        logger.trace('Received connectivity probe connection from ' + serverSocket.getRemoteAddress())
                     } else {
                         this.attachHandshaker(connection)
                     }
@@ -111,13 +116,13 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                     this.attachHandshaker(connection)
                 }
             })
-            const port = await this.webSocketServer.start(this.portRange!, this.tlsCertificate)
+            const port = await this.webSocketServer.start()
             this.selectedPort = port
             this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.tlsCertificate !== undefined, this.host)
         }
     }
 
-    public async checkConnectivity(reattempt = 0): Promise<ConnectivityResponse> {
+    public async checkConnectivity(): Promise<ConnectivityResponse> {
         // TODO: this could throw if the server is not running
         const noServerConnectivityResponse: ConnectivityResponse = {
             openInternet: false,
@@ -127,35 +132,37 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         if (this.destroyed) {
             return noServerConnectivityResponse
         }
-        try {
-            if (!this.webSocketServer) {
-                // If no websocket server, return openInternet: false
-                return noServerConnectivityResponse
-            } else {
-                if (!this.entrypoints || this.entrypoints.length < 1) {
-                    // return connectivity info given in config
-                    const preconfiguredConnectivityResponse: ConnectivityResponse = {
-                        openInternet: true,
-                        host: this.host!,
-                        natType: NatType.OPEN_INTERNET,
-                        websocket: { host: this.host!, port: this.selectedPort!, tls: this.tlsCertificate !== undefined }
-                    }
-                    return preconfiguredConnectivityResponse
+        for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS)) {
+            const entryPoint = sample(this.entrypoints)!
+            try {
+                if (!this.webSocketServer) {
+                    // If no websocket server, return openInternet: false
+                    return noServerConnectivityResponse
                 } else {
-                    // Do real connectivity checking     
-                    return await this.connectivityChecker!.sendConnectivityRequest(sample(this.entrypoints)!)
+                    if (!this.entrypoints || this.entrypoints.length < 1) {
+                        // return connectivity info given in config
+                        const preconfiguredConnectivityResponse: ConnectivityResponse = {
+                            openInternet: true,
+                            host: this.host!,
+                            natType: NatType.OPEN_INTERNET,
+                            websocket: { host: this.host!, port: this.selectedPort!, tls: this.tlsCertificate !== undefined }
+                        }
+                        return preconfiguredConnectivityResponse
+                    } else {
+                        // Do real connectivity checking     
+                        return await this.connectivityChecker!.sendConnectivityRequest(entryPoint)
+                    }
+                }
+            } catch (err) {
+                if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
+                    const error = `Failed to connect to entrypoint with id ${binaryToHex(entryPoint.kademliaId)} ` 
+                        + `and URL ${connectivityMethodToWebSocketUrl(entryPoint.websocket!)}`
+                    logger.error(error, { error: err })
+                    await wait(2000)
                 }
             }
-        } catch (err) {
-            if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
-                logger.error('Failed to connect to the entrypoint', { error: err })
-                await wait(2000)
-                return this.checkConnectivity(reattempt + 1)
-            } else {
-                throw err
-            }
         }
-
+        throw Error(`Failed to connect to the entrypoints after ${ENTRY_POINT_CONNECTION_ATTEMPTS} attempts`)
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
@@ -194,7 +201,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         }
     }
 
-    public requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+    private requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         setImmediate(() => {
             const remoteConnector = new RemoteWebSocketConnector(
                 targetPeerDescriptor,
