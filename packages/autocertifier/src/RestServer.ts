@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/parameter-properties, class-methods-use-this */
-
 import express from 'express'
 import { RestInterface } from './RestInterface'
 import { Logger } from '@streamr/utils'
@@ -15,6 +13,51 @@ const logger = new Logger(module)
 
 type ExpressType = ReturnType<typeof express>
 type ServerType = ReturnType<ExpressType['listen']>
+
+const sendError = (res: express.Response, err: any) => {
+    if (err instanceof Err) {
+        logger.error('Error ' + JSON.stringify(err))
+        res.status(err.httpStatus).send(err.toApiError())
+    } else {
+        logger.error('Unspecified error ' + JSON.stringify(err))
+        const unspecifiedError = new UnspecifiedError('Unspecified error')
+        res.status(unspecifiedError.httpStatus).send(unspecifiedError.toApiError())
+    }
+}
+
+const sendResponse = (res: express.Response, data?: object) => {
+    if (!data) {
+        res.json({})
+    } else {
+        res.json(data)
+    }
+}
+
+const extractIpAndPort = (req: express.Request): { ip: string, port: string } | undefined => {
+    // take x-forwarded for into account
+    const remoteIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+    const remotePort = req.headers['x-forwarded-port'] || req.socket.remotePort
+    let ip = remoteIp
+    let port = remotePort
+    if (typeof remoteIp !== 'string' && typeof remoteIp !== 'number') {
+        if (Array.isArray(remoteIp) && remoteIp.length > 0) {
+            ip = remoteIp[0]
+        } else {
+            logger.error('invalid remote ip: ' + remoteIp)
+            return undefined
+        }
+    }
+    if (typeof remotePort !== 'string' && typeof remotePort !== 'number') {
+        if (Array.isArray(remotePort) && remotePort.length > 0) {
+            port = remotePort[0]
+        } else {
+            logger.error('invalid remote port: ' + remotePort)
+            return undefined
+        }
+    }
+    logger.info('extracted ip: ' + ip + ' port: ' + port + ' from request')
+    return { ip: '' + ip, port: '' + port }
+}
 
 export class RestServer {
 
@@ -85,9 +128,9 @@ export class RestServer {
     private createSession = async (_req: express.Request, res: express.Response): Promise<void> => {
         try {
             const session = await this.engine.createSession()
-            this.sendResponse(res, session)
+            sendResponse(res, session)
         } catch (err) {
-            this.sendError(res, err)
+            sendError(res, err)
             return
         }
     }
@@ -97,15 +140,15 @@ export class RestServer {
         const body = req.body as CreateCertifiedSubdomainRequest
         if (!body || !body.streamrWebSocketPort) {
             const err = new SteamrWebSocketPortMissing('Streamr websocket port not given')
-            this.sendError(res, err)
+            sendError(res, err)
             return
         }
         const streamrWebSocketPort = body.streamrWebSocketPort + ''
         const streamrWebSocketCaCert: string | undefined = body.streamrWebSocketCaCert
-        const ipAndPort = this.extractIpAndPort(req)
+        const ipAndPort = extractIpAndPort(req)
         if (!ipAndPort) {
             const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
-            this.sendError(res, err)
+            sendError(res, err)
             return
         }
         const sessionId = body.sessionId
@@ -113,9 +156,9 @@ export class RestServer {
             const certifiedSubdomain = await this.engine.createNewSubdomainAndCertificate(
                 ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId, streamrWebSocketCaCert
             )
-            this.sendResponse(res, certifiedSubdomain)
+            sendResponse(res, certifiedSubdomain)
         } catch (err) {
-            this.sendError(res, err)
+            sendError(res, err)
             return
         }
     }
@@ -126,30 +169,30 @@ export class RestServer {
 
         if (!body || !body.streamrWebSocketPort) {
             const err = new SteamrWebSocketPortMissing('Streamr websocket port not given')
-            this.sendError(res, err)
+            sendError(res, err)
             return
         }
         const streamrWebSocketPort = body.streamrWebSocketPort + ''
         if (!body || !body.token) {
             const err = new TokenMissing('Token not given')
-            this.sendError(res, err)
+            sendError(res, err)
             return
         }
         const token = body.token
         const sessionId = body.sessionId
-        const ipAndPort = this.extractIpAndPort(req)
+        const ipAndPort = extractIpAndPort(req)
         if (!ipAndPort) {
             const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
-            this.sendError(res, err)
+            sendError(res, err)
             return
         }
         try {
             const certifiedSubdomain = await this.engine.createNewCertificateForSubdomain(subdomain,
                 ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId, token)
 
-            this.sendResponse(res, certifiedSubdomain)
+            sendResponse(res, certifiedSubdomain)
         } catch (err) {
-            this.sendError(res, err)
+            sendError(res, err)
             return
         }
     }
@@ -160,14 +203,14 @@ export class RestServer {
 
         if (!body || !body.streamrWebSocketPort) {
             const err = new SteamrWebSocketPortMissing('Streamr websocket port not given')
-            this.sendError(res, err)
+            sendError(res, err)
             return
         }
         const streamrWebSocketPort = req.body.streamrWebSocketPort + ''
 
         if (!body || !body.token) {
             const err = new TokenMissing('Token not given')
-            this.sendError(res, err)
+            sendError(res, err)
             return
         }
         const token = body.token
@@ -176,7 +219,7 @@ export class RestServer {
         const ipAndPort = this.extractIpAndPort(req)
         if (!ipAndPort) {
             const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
-            this.sendError(res, err)
+            sendError(res, err)
             return
         }
         logger.debug('updateSubdomainIpAndPort() '
@@ -187,9 +230,9 @@ export class RestServer {
             await this.engine.updateSubdomainIpAndPort(subdomain, ipAndPort.ip,
                 ipAndPort.port, streamrWebSocketPort, sessionId, token)
 
-            this.sendResponse(res)
+            sendResponse(res)
         } catch (err) {
-            this.sendError(res, err)
+            sendError(res, err)
         }
     }
 
@@ -214,51 +257,6 @@ export class RestServer {
             fs.writeFileSync(this.certPath, certs.serverCert, { flag: 'w' })
             fs.writeFileSync(this.keyPath, certs.serverKey, { flag: 'w' })
         }
-    }
-
-    private sendError(res: express.Response, err: any): void {
-        if (err instanceof Err) {
-            logger.error('Error ' + JSON.stringify(err))
-            res.status(err.httpStatus).send(err.toApiError())
-        } else {
-            logger.error('Unspecified error ' + JSON.stringify(err))
-            const unspecifiedError = new UnspecifiedError('Unspecified error')
-            res.status(unspecifiedError.httpStatus).send(unspecifiedError.toApiError())
-        }
-    }
-
-    private sendResponse(res: express.Response, data?: object): void {
-        if (!data) {
-            res.json({})
-        } else {
-            res.json(data)
-        }
-    }
-
-    private extractIpAndPort = (req: express.Request): { ip: string, port: string } | undefined => {
-        // take x-forwarded for into account
-        const remoteIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-        const remotePort = req.headers['x-forwarded-port'] || req.socket.remotePort
-        let ip = remoteIp
-        let port = remotePort
-        if (typeof remoteIp !== 'string' && typeof remoteIp !== 'number') {
-            if (Array.isArray(remoteIp) && remoteIp.length > 0) {
-                ip = remoteIp[0]
-            } else {
-                logger.error('invalid remote ip: ' + remoteIp)
-                return undefined
-            }
-        }
-        if (typeof remotePort !== 'string' && typeof remotePort !== 'number') {
-            if (Array.isArray(remotePort) && remotePort.length > 0) {
-                port = remotePort[0]
-            } else {
-                logger.error('invalid remote port: ' + remotePort)
-                return undefined
-            }
-        }
-        logger.info('extracted ip: ' + ip + ' port: ' + port + ' from request')
-        return { ip: '' + ip, port: '' + port }
     }
 
     public async stop(): Promise<void> {
