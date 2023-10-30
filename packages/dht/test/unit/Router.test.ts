@@ -1,7 +1,7 @@
 import { Router } from '../../src/dht/routing/Router'
 import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
-import { DhtPeer } from '../../src/dht/DhtPeer'
+import { RemoteDhtNode } from '../../src/dht/RemoteDhtNode'
 import { createWrappedClosestPeersRequest, createMockRoutingRpcCommunicator } from '../utils/utils'
 import { v4 } from 'uuid'
 
@@ -17,7 +17,7 @@ describe('Router', () => {
         kademliaId: PeerID.fromString('destination').value,
         type: NodeType.NODEJS
     }
-    const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1, peerDescriptor2)
+    const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1)
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),
@@ -37,11 +37,11 @@ describe('Router', () => {
         destinationPeer: peerDescriptor1,
         sourcePeer: peerDescriptor2
     }
-    let connections: Map<PeerIDKey, DhtPeer>
+    let connections: Map<PeerIDKey, RemoteDhtNode>
     const mockRpcCommunicator = createMockRoutingRpcCommunicator()
 
-    const createMockDhtPeer = (destination: PeerDescriptor): DhtPeer => {
-        return new DhtPeer(peerDescriptor1, destination, {} as any, 'router')
+    const createMockRemoteDhtNode = (destination: PeerDescriptor): RemoteDhtNode => {
+        return new RemoteDhtNode(peerDescriptor1, destination, {} as any, 'router')
     }
 
     beforeEach(() => {
@@ -73,7 +73,7 @@ describe('Router', () => {
     })
 
     it('doRouteMessage with connections', () => {
-        connections.set(PeerID.fromString('test').toKey(), createMockDhtPeer(peerDescriptor2))
+        connections.set(PeerID.fromString('test').toKey(), createMockRemoteDhtNode(peerDescriptor2))
         const ack = router.doRouteMessage({
             message,
             destinationPeer: peerDescriptor2,
@@ -86,36 +86,36 @@ describe('Router', () => {
     })
 
     it('route server is destination without connections', async () => {
-        const ack = await router.routeMessage(routedMessage, {} as any)
+        const ack = await router.routeMessage(routedMessage)
         expect(ack.error).toEqual('')
     })
 
     it('route server with connections', async () => {
-        connections.set(PeerID.fromString('test').toKey(), createMockDhtPeer(peerDescriptor2))
-        const ack = await router.routeMessage(routedMessage, {} as any)
+        connections.set(PeerID.fromString('test').toKey(), createMockRemoteDhtNode(peerDescriptor2))
+        const ack = await router.routeMessage(routedMessage)
         expect(ack.error).toEqual('')
     })
 
     it('route server on duplicate message', async () => {
         router.addToDuplicateDetector(routedMessage.requestId)
-        const ack = await router.routeMessage(routedMessage, {} as any)
+        const ack = await router.routeMessage(routedMessage)
         expect(ack.error).toEqual('message given to routeMessage() service is likely a duplicate')
     })
 
     it('forward server no connections', async () => {
-        const ack = await router.forwardMessage(routedMessage, {} as any)
+        const ack = await router.forwardMessage(routedMessage)
         expect(ack.error).toEqual('No routing candidates found')
     })
 
     it('forward server with connections', async () => {
-        connections.set(PeerID.fromString('test').toKey(), createMockDhtPeer(peerDescriptor2))
-        const ack = await router.forwardMessage(routedMessage, {} as any)
+        connections.set(PeerID.fromString('test').toKey(), createMockRemoteDhtNode(peerDescriptor2))
+        const ack = await router.forwardMessage(routedMessage)
         expect(ack.error).toEqual('')
     })
 
     it('forward server on duplicate message', async () => {
         router.addToDuplicateDetector(routedMessage.requestId)
-        const ack = await router.forwardMessage(routedMessage, {} as any)
+        const ack = await router.forwardMessage(routedMessage)
         expect(ack.error).toEqual('message given to forwardMessage() service is likely a duplicate')
     })
 

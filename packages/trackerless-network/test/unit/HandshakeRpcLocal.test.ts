@@ -4,7 +4,7 @@ import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { NodeList } from '../../src/logic/NodeList'
 import { HandshakeRpcLocal } from '../../src/logic/neighbor-discovery/HandshakeRpcLocal'
 import { InterleaveNotice, StreamPartHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createMockPeerDescriptor, createMockHandshakeRpcRemote, createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
+import { createMockPeerDescriptor, createMockHandshakeRpcRemote, createMockDeliveryRpcRemote, mockConnectionLocker } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
@@ -30,7 +30,7 @@ describe('HandshakeRpcLocal', () => {
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
             createRpcRemote: (_p) => createMockHandshakeRpcRemote(),
-            createRemoteNode: (_p) => createMockRemoteNode(),
+            createDeliveryRpcRemote: (_p) => createMockDeliveryRpcRemote(),
             handshakeWithInterleaving: async (_p, _t) => {
                 handshakeWithInterleaving()
                 return true
@@ -54,10 +54,10 @@ describe('HandshakeRpcLocal', () => {
     })
 
     it('handshake interleave', async () => {
-        targetNeighbors.add(createMockRemoteNode())
-        targetNeighbors.add(createMockRemoteNode())
-        targetNeighbors.add(createMockRemoteNode())
-        targetNeighbors.add(createMockRemoteNode())
+        targetNeighbors.add(createMockDeliveryRpcRemote())
+        targetNeighbors.add(createMockDeliveryRpcRemote())
+        targetNeighbors.add(createMockDeliveryRpcRemote())
+        targetNeighbors.add(createMockDeliveryRpcRemote())
         const req = StreamPartHandshakeRequest.create({
             streamPartId: STREAM_PART_ID,
             requestId: 'requestId'

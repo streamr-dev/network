@@ -13,7 +13,7 @@ import {
     createRecursiveFindRequest
 } from '../utils/utils'
 import { RecursiveFinder } from '../../src/dht/find/RecursiveFinder'
-import { DhtPeer } from '../../src/dht/DhtPeer'
+import { RemoteDhtNode } from '../../src/dht/RemoteDhtNode'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import { v4 } from 'uuid'
 import { MockRouter } from '../utils/mock/Router'
@@ -23,7 +23,7 @@ import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor
 describe('RecursiveFinder', () => {
 
     let recursiveFinder: RecursiveFinder
-    let connections: Map<PeerIDKey, DhtPeer>
+    let connections: Map<PeerIDKey, RemoteDhtNode>
 
     const peerId1 = PeerID.fromString('peerid')
     const peerDescriptor1: PeerDescriptor = {
@@ -86,7 +86,7 @@ describe('RecursiveFinder', () => {
     })
 
     it('RecursiveFinder server throws if payload is not recursiveFindRequest', async () => {
-        const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1, peerDescriptor2)
+        const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1)
         const badMessage: Message = {
             serviceId: 'unknown',
             messageId: v4(),

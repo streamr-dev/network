@@ -1,4 +1,4 @@
-import { DhtPeer } from '../DhtPeer'
+import { RemoteDhtNode } from '../RemoteDhtNode'
 import { SortedContactList } from '../contact/SortedContactList'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
@@ -20,7 +20,7 @@ class RemoteContact extends Contact {
 
     private router: RemoteRouter
 
-    constructor(peer: DhtPeer, ownPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
+    constructor(peer: RemoteDhtNode, ownPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
         super(peer.getPeerDescriptor())
         this.router = new RemoteRouter(
             ownPeerDescriptor,
@@ -58,7 +58,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     private contactList: SortedContactList<RemoteContact>
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly messageToRoute: RouteMessageWrapper
-    private connections: Map<PeerIDKey, DhtPeer>
+    private connections: Map<PeerIDKey, RemoteDhtNode>
     private readonly parallelism: number
     private failedHopCounter = 0
     private successfulHopCounter = 0
@@ -69,7 +69,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         rpcCommunicator: RoutingRpcCommunicator,
         ownPeerDescriptor: PeerDescriptor,
         messageToRoute: RouteMessageWrapper,
-        connections: Map<PeerIDKey, DhtPeer>,
+        connections: Map<PeerIDKey, RemoteDhtNode>,
         parallelism: number,
         mode: RoutingMode = RoutingMode.ROUTE,
         destinationId?: Uint8Array,
@@ -122,7 +122,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    private onRequestSucceeded = (_peerId: PeerID) => {
+    private onRequestSucceeded = () => {
         logger.trace('onRequestSucceeded() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
@@ -194,7 +194,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 try {
                     const succeeded = await this.sendRouteMessageRequest(nextPeer!)
                     if (succeeded) {
-                        this.onRequestSucceeded(nextPeer!.getPeerId())
+                        this.onRequestSucceeded()
                     } else {
                         this.onRequestFailed(nextPeer!.getPeerId())
                     }

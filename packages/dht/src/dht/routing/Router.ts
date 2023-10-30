@@ -1,5 +1,4 @@
 import { Message, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
@@ -7,7 +6,7 @@ import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DuplicateDetector } from './DuplicateDetector'
 import { ConnectionManager } from '../../connection/ConnectionManager'
-import { DhtPeer } from '../DhtPeer'
+import { RemoteDhtNode } from '../RemoteDhtNode'
 import { v4 } from 'uuid'
 import { IRoutingService } from '../../proto/packages/dht/protos/DhtRpc.server'
 
@@ -30,7 +29,7 @@ export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
     ownPeerDescriptor: PeerDescriptor
     ownPeerId: PeerID
-    connections: Map<PeerIDKey, DhtPeer>
+    connections: Map<PeerIDKey, RemoteDhtNode>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     serviceId: string
     connectionManager?: ConnectionManager
@@ -59,7 +58,7 @@ export class Router implements IRouter {
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly ownPeerId: PeerID
-    private readonly connections: Map<PeerIDKey, DhtPeer>
+    private readonly connections: Map<PeerIDKey, RemoteDhtNode>
     private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     private readonly serviceId: string
     private readonly connectionManager?: ConnectionManager
@@ -77,9 +76,9 @@ export class Router implements IRouter {
         this.serviceId = config.serviceId
         this.connectionManager = config.connectionManager
         this.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'forwardMessage',
-            (forwardMessage: RouteMessageWrapper, context) => this.forwardMessage(forwardMessage, context))
+            (forwardMessage: RouteMessageWrapper) => this.forwardMessage(forwardMessage))
         this.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage',
-            (routedMessage: RouteMessageWrapper, context) => this.routeMessage(routedMessage, context))
+            (routedMessage: RouteMessageWrapper) => this.routeMessage(routedMessage))
     }
 
     public async send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void> {
@@ -199,7 +198,7 @@ export class Router implements IRouter {
     }
     
     // IRoutingService method
-    async routeMessage(routedMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+    async routeMessage(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
         } else if (this.duplicateRequestDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
@@ -243,7 +242,7 @@ export class Router implements IRouter {
     }
 
     // IRoutingService method
-    async forwardMessage(forwardMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+    async forwardMessage(forwardMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.stopped) {
             return createRouteMessageAck(forwardMessage, 'forwardMessage() service is not running')
         } else if (this.duplicateRequestDetector.isMostLikelyDuplicate(forwardMessage.requestId)) {
