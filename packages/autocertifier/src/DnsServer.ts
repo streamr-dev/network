@@ -45,7 +45,6 @@ export class DnsServer {
             expiration: 3600000,
             minimum: 172800,
         } as unknown)
-
         await send(response)
     }
 
@@ -59,7 +58,6 @@ export class DnsServer {
             ttl: 86400,
             ns: this.ownHostName + '.' + this.domainName
         } as unknown)
-
         await send(response)
     }
 

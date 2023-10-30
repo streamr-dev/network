@@ -63,11 +63,9 @@ export class RestServer {
             app.patch('/certifiedsubdomains', async (req, res) => {await this.createSubdomainAndCertificate(req, res)})
 
             // get new certificate for existing subdomain
-
             app.patch('/certifiedsubdomains/:subdomain', this.createNewCertificateForExistingSubdomain)
 
             // update subdomain ip and port
-
             app.put('/certifiedsubdomains/:subdomain/ip', this.updateSubdomainIpAndPort)
 
             const options = {
@@ -87,7 +85,6 @@ export class RestServer {
     private createSession = async (_req: express.Request, res: express.Response): Promise<void> => {
         try {
             const session = await this.engine.createSession()
-
             this.sendResponse(res, session)
         } catch (err) {
             this.sendError(res, err)
@@ -105,21 +102,17 @@ export class RestServer {
         }
         const streamrWebSocketPort = body.streamrWebSocketPort + ''
         const streamrWebSocketCaCert: string | undefined = body.streamrWebSocketCaCert
-
         const ipAndPort = this.extractIpAndPort(req)
         if (!ipAndPort) {
             const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
             this.sendError(res, err)
             return
         }
-
         const sessionId = body.sessionId
-
         try {
             const certifiedSubdomain = await this.engine.createNewSubdomainAndCertificate(
                 ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId, streamrWebSocketCaCert
             )
-
             this.sendResponse(res, certifiedSubdomain)
         } catch (err) {
             this.sendError(res, err)
@@ -137,7 +130,6 @@ export class RestServer {
             return
         }
         const streamrWebSocketPort = body.streamrWebSocketPort + ''
-
         if (!body || !body.token) {
             const err = new TokenMissing('Token not given')
             this.sendError(res, err)
@@ -145,7 +137,6 @@ export class RestServer {
         }
         const token = body.token
         const sessionId = body.sessionId
-
         const ipAndPort = this.extractIpAndPort(req)
         if (!ipAndPort) {
             const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
@@ -203,27 +194,21 @@ export class RestServer {
     }
 
     private createSelfSignedCertsIfTheyDontExist(): void {
-
         if (!fs.existsSync(this.caCertPath) || !fs.existsSync(this.caKeyPath) ||
             !fs.existsSync(this.certPath) || !fs.existsSync(this.keyPath)) {
             const certs = createSelfSignedCertificate(this.ownFqdn, 1200)
-
             if (!fs.existsSync(path.dirname(this.caCertPath))) {
                 fs.mkdirSync(path.dirname(this.caCertPath), { recursive: true })
             }
-
             if (!fs.existsSync(path.dirname(this.caKeyPath))) {
                 fs.mkdirSync(path.dirname(this.caKeyPath), { recursive: true })
             }
-
             if (!fs.existsSync(path.dirname(this.certPath))) {
                 fs.mkdirSync(path.dirname(this.certPath), { recursive: true })
             }
-
             if (!fs.existsSync(path.dirname(this.keyPath))) {
                 fs.mkdirSync(path.dirname(this.keyPath), { recursive: true })
             }
-
             fs.writeFileSync(this.caCertPath, certs.caCert, { flag: 'w' })
             fs.writeFileSync(this.caKeyPath, certs.caKey, { flag: 'w' })
             fs.writeFileSync(this.certPath, certs.serverCert, { flag: 'w' })
@@ -256,7 +241,6 @@ export class RestServer {
         const remotePort = req.headers['x-forwarded-port'] || req.socket.remotePort
         let ip = remoteIp
         let port = remotePort
-
         if (typeof remoteIp !== 'string' && typeof remoteIp !== 'number') {
             if (Array.isArray(remoteIp) && remoteIp.length > 0) {
                 ip = remoteIp[0]
@@ -265,7 +249,6 @@ export class RestServer {
                 return undefined
             }
         }
-
         if (typeof remotePort !== 'string' && typeof remotePort !== 'number') {
             if (Array.isArray(remotePort) && remotePort.length > 0) {
                 port = remotePort[0]
@@ -274,9 +257,7 @@ export class RestServer {
                 return undefined
             }
         }
-
         logger.info('extracted ip: ' + ip + ' port: ' + port + ' from request')
-
         return { ip: '' + ip, port: '' + port }
     }
 

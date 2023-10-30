@@ -24,9 +24,7 @@ export class AutoCertifier implements RestInterface {
     // RestInterface implementation
     public async createSession(): Promise<Session> {
         logger.info('creating new session')
-
         const sessionId = v4()
-
         return { sessionId: sessionId }
     }
 
@@ -42,15 +40,12 @@ export class AutoCertifier implements RestInterface {
         await this.dnsServer!.createSubdomain(subdomain, ipAddress, port, token)
         const cert = await this.certificateCreator!.createCertificate(subdomain + '.' + this.domainName)
 
-        const ret: CertifiedSubdomain = {
+        return { 
             subdomain: subdomain,
             fqdn: this.domainName!,
             token: token,
             certificate: cert
         }
-
-        return ret
-        
     }
 
     public async createNewCertificateForSubdomain(subdomain: string, ipAddress: string,
@@ -63,14 +58,12 @@ export class AutoCertifier implements RestInterface {
 
         const cert = await this.certificateCreator!.createCertificate(subdomain + '.' + this.domainName)
 
-        const ret: CertifiedSubdomain = {
+        return {
             subdomain: subdomain,
             fqdn: this.domainName!,
             token: token,
             certificate: cert
         }
-
-        return ret
     }
 
     public async updateSubdomainIpAndPort(subdomain: string, ipAddress: string, port: string,
@@ -80,7 +73,6 @@ export class AutoCertifier implements RestInterface {
 
         // this will throw if the client cannot answer the challenge of getting sessionId 
         await this.streamrChallenger.testStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
-
         await this.dnsServer!.updateSubdomainIpAndPort(subdomain, ipAddress, port, token)
     }
 
@@ -90,8 +82,13 @@ export class AutoCertifier implements RestInterface {
         this.dnsServer!.updateSubdomainAcmeChallenge(fqdn, value)
     }
 
+    // ChallengeInterface implementation
+    public async deleteChallenge(_name: string): Promise<void> {
+        // Should this function do something?
+    }
+
     public async start(): Promise<void> {
-        // TODO: load env variables from .env
+        // TODO: load env variables from .env file
         this.domainName = process.env['AUTOICERTIFIER_DOMAIN_NAME']
         if (!this.domainName) {
             throw new Error('AUTOICERTIFIER_DOMAIN_NAME environment variable is not set')
