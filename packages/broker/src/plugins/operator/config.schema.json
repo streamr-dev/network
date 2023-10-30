@@ -42,6 +42,12 @@
           "description": "Account for extra latency (milliseconds) due to networking",
           "minimum": 0,
           "default": 2000
+        },
+        "warmupPeriodInMs": {
+          "type": "integer",
+          "description": "The time (in milliseconds) to wait before starting to count heartbeats",
+          "minimum": 0,
+          "default": 10000
         }
       }
     },

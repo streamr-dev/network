@@ -25,6 +25,7 @@ export interface OperatorPluginConfig {
         pruneAgeInMs: number
         pruneIntervalInMs: number
         latencyExtraInMs: number
+        warmupPeriodInMs: number
     }
     checkOperatorValueBreachIntervalInMs: number
     announceNodeToContract: {
@@ -77,7 +78,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             this.pluginConfig.heartbeatUpdateIntervalInMs,
             this.pluginConfig.fleetState.pruneAgeInMs,
             this.pluginConfig.fleetState.pruneIntervalInMs,
-            this.pluginConfig.fleetState.latencyExtraInMs
+            this.pluginConfig.fleetState.latencyExtraInMs,
+            this.pluginConfig.fleetState.warmupPeriodInMs
         )
 
         const fleetState = createOperatorFleetState(formCoordinationStreamId(operatorContractAddress))
