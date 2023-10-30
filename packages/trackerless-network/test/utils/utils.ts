@@ -111,7 +111,7 @@ export const createNetworkNodeWithSimulator = (
         layer0: {
             peerDescriptor,
             entryPoints,
-            transport: transport,
+            transport,
             maxConnections: 25,
             storeHighestTtl: 120000,
             storeMaxTtl: 120000

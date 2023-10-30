@@ -63,7 +63,7 @@ describe('stream without default entrypoints', () => {
             const node = createNetworkNode({
                 layer0: {
                     peerDescriptor,
-                    transport: transport,
+                    transport,
                     entryPoints: [entryPointPeerDescriptor]
                 }
             })
