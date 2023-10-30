@@ -9,6 +9,7 @@ import { CertifiedSubdomain, Session } from '@streamr/autocertifier-client'
 import { Logger } from '@streamr/utils'
 import { CertificateCreator } from './CertificateCreator'
 import { StreamrChallenger } from './StreamrChallenger'
+import 'dotenv/config'
 
 const logger = new Logger(module)
 

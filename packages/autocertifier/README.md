@@ -34,29 +34,29 @@ npm install @streamr/autocertifier
 sudo iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 59832  
 ```
 
-* set the following env variables, __Note: place the srcipt that sets these variables in a safe place, never commit it to GitHub__:
+* set the following environment variables in a .env file in the packages root:
 
 ```bash
-export AUTOICERTIFIER_DOMAIN_NAME="example.com"
-export AUTOICERTIFIER_OWN_HOSTNAME="ns1"
-export AUTOICERTIFIER_OWN_IP_ADDRESS="234.134.54.1"
-export AUTOICERTIFIER_DNS_SERVER_PORT="59832"
-export AUTOICERTIFIER_REST_SERVER_PORT="59833"
+AUTOICERTIFIER_DOMAIN_NAME="example.com"
+AUTOICERTIFIER_OWN_HOSTNAME="ns1"
+AUTOICERTIFIER_OWN_IP_ADDRESS="234.134.54.1"
+AUTOICERTIFIER_DNS_SERVER_PORT="59832"
+AUTOICERTIFIER_REST_SERVER_PORT="59833"
 
 # The directory and the file will be created by AutoCertifier if they do not exist
-export AUTOICERTIFIER_DATABASE_FILE_PATH="~/private/autocertifier.sqlite"
+AUTOICERTIFIER_DATABASE_FILE_PATH="~/private/autocertifier.sqlite"
 
 # The directory and the file will be created by AutoCertifier if they do not exist
-export AUTOICERTIFIER_ACCOUNT_PRIVATE_KEY_PATH="~/private/autocertifier-acme-account-private-key.pem"
+AUTOICERTIFIER_ACCOUNT_PRIVATE_KEY_PATH="~/private/autocertifier-acme-account-private-key.pem"
 
 # This is the ACME directory URL of the ACME provider.
 # The production directory for Google Public CA is https://dv.acme-v02.api.pki.goog/directory
 
-export AUTOCERTIFIER_ACME_DIRECTORY_URL=https://dv.acme-v02.test-api.pki.goog/directory
+AUTOCERTIFIER_ACME_DIRECTORY_URL=https://dv.acme-v02.test-api.pki.goog/directory
 
 # These are the private EAB keys obtained from the ACME provider, keep them safe!
-export AUTOICERTIFIER_HMAC_KID="example-kid"
-export AUTOICERTIFIER_HMAC_KEY="example-key"
+AUTOICERTIFIER_HMAC_KID="example-kid"
+AUTOICERTIFIER_HMAC_KEY="example-key"
 ```
 
 * run the autocertifier server

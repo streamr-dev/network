@@ -15,7 +15,7 @@ export enum ErrorCode {
 }
 
 export class Err extends Error {
-    
+
     public code: ErrorCode
     public httpStatus: HttpStatus
     public originalError?: Error | string
