@@ -507,15 +507,7 @@ export interface WebSocketConnectionResponse {
  */
 export interface WebRtcConnectionRequest {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor requester = 1;
-     */
-    requester?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor target = 2;
-     */
-    target?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string connectionId = 3;
+     * @generated from protobuf field: string connectionId = 1;
      */
     connectionId: string;
 }

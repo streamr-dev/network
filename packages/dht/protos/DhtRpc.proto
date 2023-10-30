@@ -256,9 +256,7 @@ message WebSocketConnectionResponse {
 
 // WebRTC
 message WebRtcConnectionRequest {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string connectionId = 3;
+  string connectionId = 1;
 }
 
 message RtcOffer {

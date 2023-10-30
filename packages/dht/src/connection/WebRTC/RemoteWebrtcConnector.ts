@@ -24,8 +24,6 @@ export class RemoteWebrtcConnector {
 
     requestConnection(sourceDescriptor: PeerDescriptor, connectionId: string): void {
         const request: WebRtcConnectionRequest = {
-            target: this.peerDescriptor,
-            requester: sourceDescriptor,
             connectionId
         }
         const options: DhtRpcOptions = {

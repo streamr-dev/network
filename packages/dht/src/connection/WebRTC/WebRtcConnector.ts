@@ -24,6 +24,8 @@ import {
 } from '../../helpers/peerIdFromPeerDescriptor'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
 import { PortRange } from '../ConnectionManager'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 
 const logger = new Logger(module)
 
@@ -87,7 +89,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate',
             (req: IceCandidate) => this.iceCandidate(req))
         this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection',
-            (req: WebRtcConnectionRequest) => this.requestConnection(req))
+            (req: WebRtcConnectionRequest, context: ServerCallContext) => this.requestConnection(req, context))
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
@@ -301,8 +303,10 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     }
 
     // IWebRTCConnector implementation
-    async requestConnection(request: WebRtcConnectionRequest): Promise<Empty> {
-        this.onConnectionRequest(request.requester!)
+    // TODO should we read connectionId from WebRtcConnectionRequest (or remove the field)?
+    async requestConnection(_request: WebRtcConnectionRequest, context: ServerCallContext): Promise<Empty> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        this.onConnectionRequest(senderPeerDescriptor)
         return {}
     }
 

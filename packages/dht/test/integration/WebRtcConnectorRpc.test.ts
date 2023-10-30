@@ -92,8 +92,6 @@ describe('WebRTC rpc messages', () => {
 
     it('send connectionRequest', async () => {
         client.requestConnection({
-            requester: peerDescriptor1,
-            target: peerDescriptor2,
             connectionId: 'connectionRequest'
         },
         { targetDescriptor: peerDescriptor2, notification: true }
