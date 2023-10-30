@@ -6,7 +6,6 @@ export interface ILayer0 extends ITransport {
     getDataFromDht(key: Uint8Array): Promise<DataEntry[]>
     storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]>
     deleteDataFromDht(key: Uint8Array): Promise<void>
-    getKnownEntryPoints(): PeerDescriptor[]
     waitForNetworkConnectivity(): Promise<void>
     stop(): Promise<void>
 }
