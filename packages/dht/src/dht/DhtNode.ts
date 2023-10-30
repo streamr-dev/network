@@ -45,6 +45,7 @@ import { UUID } from '../helpers/UUID'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { sample } from 'lodash'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
+import { MarkRequired } from 'ts-essentials'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -64,11 +65,13 @@ export interface DhtNodeOptions {
     maxNeighborListSize?: number
     numberOfNodesPerKBucket?: number
     joinNoProgressLimit?: number
+    getClosestContactsLimit?: number  // TODO better name?
     dhtJoinTimeout?: number
     metricsContext?: MetricsContext
     storeHighestTtl?: number
     storeMaxTtl?: number
     networkConnectivityTimeout?: number
+    storeNumberOfCopies?: number  // TODO better name?
 
     transport?: ITransport
     peerDescriptor?: PeerDescriptor
@@ -90,49 +93,21 @@ export interface DhtNodeOptions {
     externalIp?: string
 }
 
-export class DhtNodeConfig {
-    serviceId = 'layer0'
-    joinParallelism = 3
-    maxNeighborListSize = 200
-    numberOfNodesPerKBucket = 8
-    joinNoProgressLimit = 4
-    dhtJoinTimeout = 60000
-    getClosestContactsLimit = 5
-    maxConnections = 80
-    storeHighestTtl = 60000
-    storeMaxTtl = 60000
-    networkConnectivityTimeout = 10000
-    storeNumberOfCopies = 5
-    metricsContext = new MetricsContext()
-    peerId = new UUID().toHex()
-
-    transport?: ITransport
-    peerDescriptor?: PeerDescriptor
-    entryPoints?: PeerDescriptor[]
-    websocketHost?: string
-    websocketPortRange?: PortRange
-    rpcRequestTimeout?: number
-    iceServers?: IceServer[]
-    webrtcAllowPrivateAddresses?: boolean
-    webrtcDatachannelBufferThresholdLow?: number
-    webrtcDatachannelBufferThresholdHigh?: number
-    webrtcNewConnectionTimeout?: number
-    maxMessageSize?: number
-    externalIp?: string
-    webrtcPortRange?: PortRange
-    tlsCertificate?: TlsCertificate
-
-    constructor(conf: Partial<DhtNodeOptions>) {
-        // assign given non-undefined config vars over defaults
-        let k: keyof typeof conf
-        for (k in conf) {
-            if (conf[k] === undefined) {
-                delete conf[k]
-            }
-        }
-        Object.assign(this, conf)
-    }
-}
+type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions, 
+    'serviceId' |
+    'joinParallelism' |
+    'maxNeighborListSize' |
+    'numberOfNodesPerKBucket' |
+    'joinNoProgressLimit' |
+    'dhtJoinTimeout' |
+    'getClosestContactsLimit' |
+    'maxConnections' |
+    'storeHighestTtl' |
+    'storeMaxTtl' |
+    'networkConnectivityTimeout' |
+    'storeNumberOfCopies' |
+    'metricsContext' |
+    'peerId'>
 
 const logger = new Logger(module)
 
@@ -155,8 +130,8 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
 }
 
 export class DhtNode extends EventEmitter<Events> implements ITransport {
-    private readonly config: DhtNodeConfig
 
+    private readonly config: StrictDhtNodeOptions
     private bucket?: KBucket<RemoteDhtNode>
     private connections: Map<PeerIDKey, RemoteDhtNode> = new Map()
     private neighborList?: SortedContactList<RemoteDhtNode>
@@ -176,12 +151,25 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private stopped = false
     private entryPointDisconnectTimeout?: NodeJS.Timeout
 
-    public contactAddCounter = 0
-    public contactOnAddedCounter = 0
-
-    constructor(conf: Partial<DhtNodeConfig>) {
+    constructor(conf: DhtNodeOptions) {
         super()
-        this.config = new DhtNodeConfig(conf)
+        this.config = {
+            serviceId: 'layer0',
+            joinParallelism: 3,
+            maxNeighborListSize: 200,
+            numberOfNodesPerKBucket: 8,
+            joinNoProgressLimit: 4,
+            dhtJoinTimeout: 60000,
+            getClosestContactsLimit: 5,
+            maxConnections: 80,
+            storeHighestTtl: 60000,
+            storeMaxTtl: 60000,
+            networkConnectivityTimeout: 10000,
+            storeNumberOfCopies: 5,
+            metricsContext: new MetricsContext(),
+            peerId: new UUID().toHex(),
+            ...conf  // TODO use merge() if we don't want that explicit undefined values override defaults?
+        }
         this.send = this.send.bind(this)
     }
 
@@ -496,7 +484,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.stopped) {
             return
         }
-        this.contactOnAddedCounter++
         if (!this.stopped && !contact.getPeerId().equals(this.getNodeId())) {
             // Important to lock here, before the ping result is known
             this.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
@@ -586,7 +573,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                     this.neighborList!.setActive(peerId)
                     this.openInternetPeers!.setActive(peerId)
                 }
-                this.contactAddCounter++
                 this.bucket!.add(remoteDhtNode)
             } else {
                 this.randomPeers!.addContact(remoteDhtNode)
@@ -623,12 +609,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         await this.router!.send(msg, reachableThrough)
     }
 
-    public async joinDht(entryPointDescriptors: PeerDescriptor[], doRandomJoin?: boolean, retry?: boolean): Promise<void> {
+    public async joinDht(entryPointDescriptors: PeerDescriptor[], doAdditionalRandomPeerDiscovery?: boolean, retry?: boolean): Promise<void> {
         if (!this.started) {
             throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
         await Promise.all(entryPointDescriptors.map((entryPoint) => 
-            this.peerDiscovery!.joinDht(entryPoint, doRandomJoin, retry)
+            this.peerDiscovery!.joinDht(entryPoint, doAdditionalRandomPeerDiscovery, retry)
         ))
     }
 
@@ -693,10 +679,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return Array.from(this.connections.values()).map((peer) => peer.getPeerDescriptor())
     }
 
-    public getK(): number {
-        return this.config.numberOfNodesPerKBucket
-    }
-
     public getKBucketPeers(): PeerDescriptor[] {
         return this.bucket!.toArray().map((remoteDhtNode: RemoteDhtNode) => remoteDhtNode.getPeerDescriptor())
     }
@@ -723,10 +705,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public hasJoined(): boolean {
         return this.peerDiscovery!.isJoinCalled()
-    }
-
-    public getKnownEntryPoints(): PeerDescriptor[] {
-        return this.config.entryPoints || []
     }
 
     public async stop(): Promise<void> {
