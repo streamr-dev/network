@@ -47,7 +47,13 @@ export const reviewSuspectNode = async ({
     const logger = new Logger(module, { id: randomString(6) })
     const inspectionResults = new Array<boolean>()
 
-    logger.info('Start handling of inspection request')
+    logger.info('Start handling of inspection request', {
+        sponsorshipAddress,
+        targetOperator,
+        partition,
+        votingPeriod,
+        inspectionIntervalInMs
+    })
     const streamId = await contractFacade.getStreamId(sponsorshipAddress)
     const target = {
         sponsorshipAddress: sponsorshipAddress,

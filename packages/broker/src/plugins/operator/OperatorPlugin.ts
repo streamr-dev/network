@@ -5,7 +5,6 @@ import { Plugin } from '../../Plugin'
 import { maintainOperatorValue } from './maintainOperatorValue'
 import { MaintainTopologyService } from './MaintainTopologyService'
 import { OperatorFleetState } from './OperatorFleetState'
-import { inspectSuspectNode } from './inspectSuspectNode'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { createIsLeaderFn } from './createIsLeaderFn'
 import { announceNodeToContract } from './announceNodeToContract'
@@ -17,6 +16,7 @@ import { StreamPartAssignments } from './StreamPartAssignments'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { inspectRandomNode } from './inspectRandomNode'
 import { ContractFacade } from './ContractFacade'
+import { reviewSuspectNode } from './reviewSuspectNode'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -183,21 +183,37 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 }
             }, this.pluginConfig.inspectRandomNode.intervalInMs, false, this.abortController.signal)
 
-            contractFacade.addReviewRequestListener(async (sponsorship, targetOperator, partition) => {
-                if (isLeader()) {
-                    await inspectSuspectNode(
-                        sponsorship,
-                        targetOperator,
-                        partition,
-                        contractFacade,
-                        streamrClient,
-                        this.abortController.signal,
-                        (operatorContractAddress) => fetchRedundancyFactor({
-                            operatorContractAddress,
-                            signer
-                        }),
-                        createOperatorFleetState
-                    )
+            contractFacade.addReviewRequestListener(async (
+                sponsorshipAddress,
+                targetOperator,
+                partition,
+                votingPeriodStartTimestamp,
+                votingPeriodEndTimestamp
+            ) => {
+                try {
+                    if (isLeader()) {
+                        await reviewSuspectNode({
+                            sponsorshipAddress,
+                            targetOperator,
+                            partition,
+                            contractFacade,
+                            streamrClient,
+                            createOperatorFleetState,
+                            getRedundancyFactor: (operatorContractAddress) => fetchRedundancyFactor({
+                                operatorContractAddress,
+                                signer
+                            }),
+                            maxSleepTime: 5 * 60 * 1000,
+                            votingPeriod: {
+                                startTime: votingPeriodStartTimestamp,
+                                endTime: votingPeriodEndTimestamp
+                            },
+                            inspectionIntervalInMs: 8 * 60 * 1000,
+                            abortSignal: this.abortController.signal
+                        })
+                    }
+                } catch (err) {
+                    logger.error('Encountered error while processing review request', { err })
                 }
             }, this.abortController.signal)
         })
