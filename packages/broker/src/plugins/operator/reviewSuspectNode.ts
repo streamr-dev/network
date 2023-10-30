@@ -4,7 +4,7 @@ import {
     Logger,
     randomString,
     scheduleAtInterval,
-    setAbortableTimeout
+    setAbortableTimeout, wait
 } from '@streamr/utils'
 import { ContractFacade } from './ContractFacade'
 import { StreamrClient } from 'streamr-client'
@@ -12,6 +12,7 @@ import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { toStreamPartID } from '@streamr/protocol'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
 import { findNodesForTargetGivenFleetState, inspectTarget } from './inspectionUtils'
+import random from 'lodash/random'
 
 export interface ReviewProcessOpts {
     sponsorshipAddress: EthereumAddress
@@ -21,12 +22,16 @@ export interface ReviewProcessOpts {
     streamrClient: StreamrClient
     createOperatorFleetState: CreateOperatorFleetStateFn
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>
-    timeUntilVoteInMs: number
+    maxSleepTime: number
+    votingPeriod: {
+        startTime: number
+        endTime: number
+    }
     inspectionIntervalInMs: number
     abortSignal: AbortSignal
 }
 
-export const startReviewProcess = async ({
+export const reviewSuspectNode = async ({
     sponsorshipAddress,
     targetOperator,
     partition,
@@ -34,7 +39,8 @@ export const startReviewProcess = async ({
     streamrClient,
     createOperatorFleetState,
     getRedundancyFactor,
-    timeUntilVoteInMs,
+    maxSleepTime,
+    votingPeriod,
     inspectionIntervalInMs,
     abortSignal: userAbortSignal
 }: ReviewProcessOpts): Promise<void> => {
@@ -49,6 +55,7 @@ export const startReviewProcess = async ({
         streamPart: toStreamPartID(streamId, partition),
     }
     logger.info('Establish target', { target })
+
     const fleetState = createOperatorFleetState(formCoordinationStreamId(targetOperator))
     await fleetState.start()
     logger.info('Waiting for fleet state')
@@ -60,6 +67,11 @@ export const startReviewProcess = async ({
     abortSignal.addEventListener('abort', async () => {
         await fleetState.destroy()
     })
+
+    // random sleep time to make sure multiple instances of voters don't all inspect at the same time
+    const sleepTimeInMs = random(maxSleepTime)
+    logger.info('Sleep', { sleepTimeInMs })
+    await wait(sleepTimeInMs, abortSignal)
 
     // inspection
     await scheduleAtInterval(async () => {
@@ -88,6 +100,7 @@ export const startReviewProcess = async ({
     }, inspectionIntervalInMs, true, abortSignal)
 
     // voting
+    const timeUntilVoteInMs = ((votingPeriod.startTime + votingPeriod.endTime) / 2) - Date.now()
     setAbortableTimeout(async () => {
         try {
             const passCount = inspectionResults.filter((pass) => pass).length
