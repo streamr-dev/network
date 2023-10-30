@@ -26,6 +26,7 @@ import { ParsedUrlQuery } from 'querystring'
 import { sample, range } from 'lodash'
 import { WebSocketServerStartError } from '../../helpers/errors'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
+import { Certificate } from '@streamr/autocertifier-client'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 const logger = new Logger(module)
@@ -187,8 +188,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             autocertifierRpcCommunicator: this.autocertifierRpcCommunicator,
             autocertifierUrl: this.autocertifierUrl,
             wsServerPort: this.selectedPort!,
-            setHost: this.setHost.bind(this),
-            updateCertificate: this.webSocketServer!.updateCertificate.bind(this.webSocketServer)
+            setHost: (hostName: string) => this.setHost(hostName),
+            updateCertificate: (certificate: Certificate) => this.webSocketServer!.updateCertificate(certificate)
         })
         logger.trace(`AutoCertifying subdomain...`)
         await this.autoCertifierClient!.start()

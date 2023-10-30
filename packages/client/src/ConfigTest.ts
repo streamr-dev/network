@@ -15,7 +15,16 @@ function toNumber(value: any): number | undefined {
 export const CONFIG_TEST: StreamrClientConfig = {
     network: {
         controlLayer: {
-            entryPoints: CHAIN_CONFIG.dev2.entryPoints,
+            entryPoints: [
+                {
+                    id: 'aaaa',
+                    websocket: {
+                        host: "65.21.234.31",
+                        port: 32200,
+                        tls: true
+                    }
+                }
+            ],
             websocketPortRange: {
                 min: 32400,
                 max: 32800
