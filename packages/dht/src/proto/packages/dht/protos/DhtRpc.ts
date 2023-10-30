@@ -602,11 +602,7 @@ export interface DisconnectNotice {
      */
     protocolVersion: string;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
-     */
-    peerDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: dht.DisconnectMode disconnecMode = 3;
+     * @generated from protobuf field: dht.DisconnectMode disconnecMode = 2;
      */
     disconnecMode: DisconnectMode;
 }
@@ -1216,8 +1212,7 @@ class DisconnectNotice$Type extends MessageType$<DisconnectNotice> {
     constructor() {
         super("dht.DisconnectNotice", [
             { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "disconnecMode", kind: "enum", T: () => ["dht.DisconnectMode", DisconnectMode] }
+            { no: 2, name: "disconnecMode", kind: "enum", T: () => ["dht.DisconnectMode", DisconnectMode] }
         ]);
     }
 }

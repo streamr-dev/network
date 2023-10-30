@@ -67,7 +67,6 @@ export class RemoteConnectionLocker {
     public async gracefulDisconnect(disconnecMode: DisconnectMode): Promise<void> {
         logger.trace(`Notifying a graceful disconnect to ${keyFromPeerDescriptor(this.targetPeerDescriptor)}`)
         const request: DisconnectNotice = {
-            peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,
             disconnecMode
         }

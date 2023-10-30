@@ -297,8 +297,7 @@ enum DisconnectMode {
 
 message DisconnectNotice {
   string protocolVersion = 1;
-  PeerDescriptor peerDescriptor = 2;
-  DisconnectMode disconnecMode = 3;
+  DisconnectMode disconnecMode = 2;
 }
 
 message DisconnectNoticeResponse {
