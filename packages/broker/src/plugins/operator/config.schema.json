@@ -29,7 +29,7 @@
           "type": "integer",
           "description": "The maximum time (in milliseconds) of a heartbeat to count towards a node being online",
           "minimum": 0,
-          "default": 300000
+          "default": 180000
         },
         "pruneIntervalInMs": {
           "type": "integer",
