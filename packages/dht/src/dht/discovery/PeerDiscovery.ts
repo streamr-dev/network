@@ -31,12 +31,11 @@ interface PeerDiscoveryConfig {
 const logger = new Logger(module)
 
 export class PeerDiscovery {
+
     private readonly config: PeerDiscoveryConfig
     private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
-    private stopped = false
     private rejoinOngoing = false
     private joinCalled = false
-
     private rejoinTimeoutRef?: NodeJS.Timeout
     private readonly abortController: AbortController
     private recoveryIntervalStarted = false
@@ -47,7 +46,7 @@ export class PeerDiscovery {
     }
 
     async joinDht(entryPointDescriptor: PeerDescriptor, doAdditionalRandomPeerDiscovery = true, retry = true): Promise<void> {
-        if (this.stopped) {
+        if (this.isStopped()) {
             return
         }
         this.joinCalled = true
@@ -95,7 +94,7 @@ export class PeerDiscovery {
         } catch (_e) {
             logger.debug(`DHT join on ${this.config.serviceId} timed out`)
         } finally {
-            if (!this.stopped) {
+            if (!this.isStopped()) {
                 if (this.config.bucket.count() === 0) {
                     if (retry) {
                         setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.abortController.signal)
@@ -109,7 +108,7 @@ export class PeerDiscovery {
     }
 
     public async rejoinDht(entryPoint: PeerDescriptor): Promise<void> {
-        if (this.stopped || this.rejoinOngoing) {
+        if (this.isStopped() || this.rejoinOngoing) {
             return
         }
         logger.debug(`Rejoining DHT ${this.config.serviceId}`)
@@ -120,7 +119,7 @@ export class PeerDiscovery {
             logger.debug(`Rejoined DHT successfully ${this.config.serviceId}!`)
         } catch (err) {
             logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)
-            if (!this.stopped) {
+            if (!this.isStopped()) {
                 setAbortableTimeout(() => this.rejoinDht(entryPoint), 5000, this.abortController.signal)
             }
         } finally {
@@ -136,7 +135,7 @@ export class PeerDiscovery {
     }
 
     private async fetchClosestPeersFromBucket(): Promise<void> {
-        if (this.stopped) {
+        if (this.isStopped()) {
             return
         }
         const nodes = this.config.bucket.closest(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value, this.config.parallelism)
@@ -156,8 +155,11 @@ export class PeerDiscovery {
         return this.joinCalled
     }
 
+    private isStopped() {
+        return this.abortController.signal.aborted
+    }
+
     public stop(): void {
-        this.stopped = true
         this.abortController.abort()
         if (this.rejoinTimeoutRef) {
             clearTimeout(this.rejoinTimeoutRef)
