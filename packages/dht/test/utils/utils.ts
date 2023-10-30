@@ -165,8 +165,6 @@ export const MockRoutingService: IRouterServiceWithError = {
     async routeMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
             error: ''
         }
         return response
@@ -174,8 +172,6 @@ export const MockRoutingService: IRouterServiceWithError = {
     async findRecursively(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
             error: ''
         }
         return response
@@ -183,8 +179,6 @@ export const MockRoutingService: IRouterServiceWithError = {
     async forwardMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
             error: ''
         }
         return response

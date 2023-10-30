@@ -180,10 +180,8 @@ message RouteMessageWrapper {
 }
 
 message RouteMessageAck {
-  PeerDescriptor sourcePeer = 1;
-  string requestId = 2;
-  PeerDescriptor destinationPeer = 3;
-  string error = 4;
+  string requestId = 1;
+  string error = 2;
 }
 
 // Correspond to the MessageType Enum
