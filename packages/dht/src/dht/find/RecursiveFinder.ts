@@ -90,7 +90,7 @@ export class RecursiveFinder implements IRecursiveFinder {
             serviceId: sessionId,
             rpcTransport: this.sessionTransport,
             kademliaIdToFind: idToFind,
-            ownPeerID: peerIdFromPeerDescriptor(this.ownPeerDescriptor),
+            ownPeerId: peerIdFromPeerDescriptor(this.ownPeerDescriptor),
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
             mode: findMode
         })
