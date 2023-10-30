@@ -24,6 +24,8 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         const cms: SimulatorTransport[] = range(numOfNodes).map((i) =>
             new SimulatorTransport(peerDescriptors[i], simulator)
         )
+        await entrypointCm.start()
+        await Promise.all(cms.map((cm) => cm.start()))
 
         dhtEntryPoint = new DhtNode({
             transportLayer: entrypointCm,
@@ -77,7 +79,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
 
     it('happy path 5 nodes', async () => {
         entryPointRandomGraphNode.start()
-        range(4).map((i) => graphNodes[i].start())
+        range(4).forEach((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
             await dhtNodes[i].joinDht([entrypointDescriptor])
         }))
@@ -86,14 +88,14 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
                 return graphNodes[i].getTargetNeighborIds().length >= 4
             }, 15000, 2000)
         }))
-        range(4).map((i) => {
+        range(4).forEach((i) => {
             expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
         // Check bidirectionality
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
-        range(5).map((i) => {
+        range(5).forEach((i) => {
             const ownNodeId = allNodes[i].getOwnNodeId()
             allNodes[i].getNearbyNodeView().getIds().forEach((nodeId) => {
                 const neighbor = allNodes.find((node) => {

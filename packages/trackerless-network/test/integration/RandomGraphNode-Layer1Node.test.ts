@@ -1,4 +1,4 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, getRandomRegion } from '@streamr/dht'
+import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, getRandomRegion } from '@streamr/dht'
 import { Logger, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
@@ -29,17 +29,19 @@ describe('RandomGraphNode-DhtNode', () => {
 
         Simulator.useFakeTimers()
         const simulator = new Simulator()
-        const entrypointCm = new ConnectionManager({
-            ownPeerDescriptor: entrypointDescriptor,
+        const entrypointCm = new SimulatorTransport(
+            entrypointDescriptor,
             simulator
-        })
+        )
+        await entrypointCm.start()
 
         const cms: ConnectionManager[] = range(numOfNodes).map((i) =>
-            new ConnectionManager({
-                ownPeerDescriptor: peerDescriptors[i],
+            new SimulatorTransport(
+                peerDescriptors[i],
                 simulator
-            })
+            )
         )
+        await Promise.all(cms.map((cm) => cm.start()))
 
         dhtEntryPoint = new DhtNode({
             transportLayer: entrypointCm,
@@ -97,13 +99,13 @@ describe('RandomGraphNode-DhtNode', () => {
 
     it('happy path 4 nodes', async () => {
         entryPointRandomGraphNode.start()
-        range(4).map((i) => graphNodes[i].start())
+        range(4).forEach((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
             await dhtNodes[i].joinDht([entrypointDescriptor])
         }))
 
         await waitForCondition(() => range(4).every((i) => graphNodes[i].getTargetNeighborIds().length === 4))
-        range(4).map((i) => {
+        range(4).forEach((i) => {
             expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
@@ -111,7 +113,7 @@ describe('RandomGraphNode-DhtNode', () => {
         // Check bidirectionality
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
-        range(5).map((i) => {
+        range(5).forEach((i) => {
             allNodes[i].getNearbyNodeView().getIds().forEach((nodeId) => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === nodeId

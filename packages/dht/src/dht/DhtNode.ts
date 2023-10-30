@@ -21,7 +21,7 @@ import {
     DataEntry,
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
-import { ConnectionManager, ConnectionManagerConfig, PortRange, TlsCertificate } from '../connection/ConnectionManager'
+import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
@@ -44,9 +44,10 @@ import { registerExternalApiRpcMethods } from './registerExternalApiRpcMethods'
 import { RemoteExternalApi } from './RemoteExternalApi'
 import { PeerManager } from './PeerManager'
 import { UUID } from '../helpers/UUID'
-import { isNodeJS } from '../helpers/browser/isNodeJS'
 import { getTestInterface } from '@streamr/test-utils'
+import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { sample } from 'lodash'
+import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -86,6 +87,7 @@ export interface DhtNodeOptions {
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
     webrtcPortRange?: PortRange
+    maxMessageSize?: number
     maxConnections?: number
     tlsCertificate?: TlsCertificate
     externalIp?: string
@@ -118,6 +120,7 @@ export class DhtNodeConfig {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    maxMessageSize?: number
     externalIp?: string
     webrtcPortRange?: PortRange
     tlsCertificate?: TlsCertificate
@@ -145,7 +148,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
     } else {
         kademliaId = hexToBinary(peerId!)
     }
-    const nodeType = isNodeJS() ? NodeType.NODEJS : NodeType.BROWSER
+    const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS 
     const ret: PeerDescriptor = { kademliaId, type: nodeType }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
@@ -205,7 +208,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         logger.trace(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
         this.started = true
 
-        if (!isNodeJS()) {
+        if (isBrowserEnvironment()) {
             this.config.websocketPortRange = undefined
             if (this.config.peerDescriptor) {
                 this.config.peerDescriptor.websocket = undefined
@@ -219,36 +222,41 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 this.connectionManager = this.config.transportLayer
             }
         } else {
-            const connectionManagerConfig: ConnectionManagerConfig = {
+            const connectorFacadeConfig: DefaultConnectorFacadeConfig = {
                 transportLayer: this,
                 entryPoints: this.config.entryPoints,
                 iceServers: this.config.iceServers,
-                metricsContext: this.config.metricsContext,
                 webrtcAllowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
                 webrtcDatachannelBufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 webrtcPortRange: this.config.webrtcPortRange,
-                maxConnections: this.config.maxConnections,
+                maxMessageSize: this.config.maxMessageSize,
                 tlsCertificate: this.config.tlsCertificate,
-                externalIp: this.config.externalIp
+                externalIp: this.config.externalIp,
+                createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
-                connectionManagerConfig.websocketHost = this.config.peerDescriptor.websocket.host
-                connectionManagerConfig.websocketPortRange = {
+                connectorFacadeConfig.websocketHost = this.config.peerDescriptor.websocket.host
+                connectorFacadeConfig.websocketPortRange = { 
                     min: this.config.peerDescriptor.websocket.port,
                     max: this.config.peerDescriptor.websocket.port
                 }
             // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
-            } else if (this.config.websocketPortRange) {
-                connectionManagerConfig.websocketHost = this.config.websocketHost
-                connectionManagerConfig.websocketPortRange = this.config.websocketPortRange
+            } else if (this.config.websocketPortRange) { 
+                connectorFacadeConfig.websocketHost = this.config.websocketHost
+                connectorFacadeConfig.websocketPortRange = this.config.websocketPortRange
             }
 
-            this.connectionManager = new ConnectionManager(connectionManagerConfig)
-            await this.connectionManager.start(this.generatePeerDescriptorCallBack)
-            this.transportLayer = this.connectionManager
+            const connectionManager = new ConnectionManager({
+                createConnectorFacade: () => new DefaultConnectorFacade(connectorFacadeConfig),
+                maxConnections: this.config.maxConnections,
+                metricsContext: this.config.metricsContext
+            })
+            await connectionManager.start()
+            this.connectionManager = connectionManager
+            this.transportLayer = connectionManager
         }
 
         this.rpcCommunicator = new RoutingRpcCommunicator(

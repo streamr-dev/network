@@ -17,11 +17,11 @@ import {
     ProxyDirection,
     StreamMessage
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { NetworkRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { DeliveryRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
 import { NodeList } from '../NodeList'
-import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
-import { StreamNodeServer } from '../StreamNodeServer'
+import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
+import { DeliveryRpcLocal } from '../DeliveryRpcLocal'
 import { Propagation } from '../propagation/Propagation'
 import { markAndCheckDuplicate } from '../utils'
 import { ProxyConnectionRpcRemote } from './ProxyConnectionRpcRemote'
@@ -64,7 +64,7 @@ const SERVICE_ID = 'system/proxy-client'
 export class ProxyClient extends EventEmitter {
 
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly server: StreamNodeServer
+    private readonly deliveryRpcLocal: DeliveryRpcLocal
     private readonly config: ProxyClientConfig
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector> = new Map()
     private definition?: ProxyDefinition
@@ -78,7 +78,7 @@ export class ProxyClient extends EventEmitter {
         this.config = config
         this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(config.streamPartId), config.P2PTransport)
         this.targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor), 1000)
-        this.server = new StreamNodeServer({
+        this.deliveryRpcLocal = new DeliveryRpcLocal({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             streamPartId: this.config.streamPartId,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
@@ -90,7 +90,7 @@ export class ProxyClient extends EventEmitter {
                 }
             },
             rpcCommunicator: this.rpcCommunicator,
-            markForInspection: (_senderId: NodeID, _messageId: MessageID) => {}
+            markForInspection: () => {}
         })
         this.propagation = new Propagation({
             minPropagationTargets: config.minPropagationTargets ?? 2,
@@ -108,9 +108,9 @@ export class ProxyClient extends EventEmitter {
 
     private registerDefaultServerMethods(): void {
         this.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendStreamMessage',
-            (msg: StreamMessage, context) => this.server.sendStreamMessage(msg, context))
+            (msg: StreamMessage, context) => this.deliveryRpcLocal.sendStreamMessage(msg, context))
         this.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice',
-            (req: LeaveStreamPartNotice, context) => this.server.leaveStreamPartNotice(req, context))
+            (req: LeaveStreamPartNotice, context) => this.deliveryRpcLocal.leaveStreamPartNotice(req, context))
     }
 
     async setProxies(
@@ -172,11 +172,11 @@ export class ProxyClient extends EventEmitter {
         if (accepted) {
             this.config.connectionLocker.lockConnection(peerDescriptor, SERVICE_ID)
             this.connections.set(nodeId, direction)
-            const remote = new RemoteRandomGraphNode(
+            const remote = new DeliveryRpcRemote(
                 this.config.ownPeerDescriptor,
                 peerDescriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new DeliveryRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             this.targetNeighbors.add(remote)
             this.propagation.onNeighborJoined(nodeId)

@@ -56,7 +56,7 @@ describe('multiple entry point joining', () => {
             ])
             expect(getTestInterface(node1).getBucketSize()).toEqual(1)
             expect(getTestInterface(node2).getBucketSize()).toEqual(1)
-        }, 10000)
+        }, 20000)
     })
 
     describe('non entry point nodes can join via multiple entry points', () => {

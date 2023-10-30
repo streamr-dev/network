@@ -7,7 +7,6 @@ import {
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { generateId, MockStoreService } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 import { StoreServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RemoteStore } from '../../src/dht/store/RemoteStore'
 import { Any } from '../../src/proto/google/protobuf/any'
@@ -37,10 +36,10 @@ describe('RemoteStore', () => {
         clientRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', MockStoreService.storeData)
-        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             serverRpcCommunicator.handleIncomingMessage(message)
         })
-        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new StoreServiceClient(clientRpcCommunicator.getRpcClientTransport()))
