@@ -1,20 +1,19 @@
 import { DiscoverySession } from './DiscoverySession'
 import { RemoteDhtNode } from '../RemoteDhtNode'
 import crypto from 'crypto'
-import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import KBucket from 'k-bucket'
 import { SortedContactList } from '../contact/SortedContactList'
 import { ConnectionManager } from '../../connection/ConnectionManager'
-import { PeerID, PeerIDKey } from '../../helpers/PeerID'
+import { PeerIDKey } from '../../helpers/PeerID'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RandomContactList } from '../contact/RandomContactList'
 
 interface PeerDiscoveryConfig {
     rpcCommunicator: RoutingRpcCommunicator
     ownPeerDescriptor: PeerDescriptor
-    ownPeerId: PeerID
     bucket: KBucket<RemoteDhtNode>
     connections: Map<PeerIDKey, RemoteDhtNode>
     neighborList: SortedContactList<RemoteDhtNode>
@@ -61,12 +60,12 @@ export class PeerDiscovery {
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         this.config.addContact(entryPointDescriptor)
-        const closest = this.config.bucket.closest(this.config.ownPeerId.value, this.config.getClosestContactsLimit)
+        const closest = this.config.bucket.closest(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value, this.config.getClosestContactsLimit)
         this.config.neighborList.addContacts(closest)
         const sessionOptions = {
             bucket: this.config.bucket,
             neighborList: this.config.neighborList,
-            targetId: this.config.ownPeerId.value,
+            targetId: peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value,
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             serviceId: this.config.serviceId,
             rpcCommunicator: this.config.rpcCommunicator,
@@ -77,6 +76,7 @@ export class PeerDiscovery {
         const session = new DiscoverySession(sessionOptions)
         const randomSession = doRandomJoin ? new DiscoverySession({
             ...sessionOptions,
+            // TODO why 8 bytes? (are we generating a random "kademliaId" here?)
             targetId: crypto.randomBytes(8)
         }) : null
         this.ongoingDiscoverySessions.set(session.sessionId, session)
@@ -139,7 +139,8 @@ export class PeerDiscovery {
         if (this.stopped) {
             return
         }
-        await Promise.allSettled(this.config.bucket.closest(this.config.ownPeerId.value, this.config.parallelism).map(async (peer: RemoteDhtNode) => {
+        const nodes = this.config.bucket.closest(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value, this.config.parallelism)
+        await Promise.allSettled(nodes.map(async (peer: RemoteDhtNode) => {
             const contacts = await peer.getClosestPeers(this.config.ownPeerDescriptor.kademliaId)
             contacts.forEach((contact) => {
                 this.config.addContact(contact)
