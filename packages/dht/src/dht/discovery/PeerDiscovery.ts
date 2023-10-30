@@ -46,7 +46,7 @@ export class PeerDiscovery {
         this.abortController = new AbortController()
     }
 
-    async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin = true, retry = true): Promise<void> {
+    async joinDht(entryPointDescriptor: PeerDescriptor, doAdditionalRandomPeerDiscovery = true, retry = true): Promise<void> {
         if (this.stopped) {
             return
         }
@@ -63,7 +63,7 @@ export class PeerDiscovery {
         const closest = this.config.bucket.closest(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value, this.config.getClosestContactsLimit)
         this.config.neighborList.addContacts(closest)
         const sessions = [this.createSession(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value)]
-        if (doRandomJoin) {
+        if (doAdditionalRandomPeerDiscovery) {
             // TODO why 8 bytes? (are we generating a random "kademliaId" here?)
             sessions.push(this.createSession(crypto.randomBytes(8)))
         }
