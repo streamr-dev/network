@@ -1,6 +1,5 @@
 import { DiscoverySession } from './DiscoverySession'
 import { RemoteDhtNode } from '../RemoteDhtNode'
-import crypto from 'crypto'
 import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
@@ -10,6 +9,7 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RandomContactList } from '../contact/RandomContactList'
+import { createRandomKademliaId } from '../../helpers/kademliaId'
 
 interface PeerDiscoveryConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -64,8 +64,7 @@ export class PeerDiscovery {
         this.config.neighborList.addContacts(closest)
         const sessions = [this.createSession(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value)]
         if (doAdditionalRandomPeerDiscovery) {
-            // TODO why 8 bytes? (are we generating a random "kademliaId" here?)
-            sessions.push(this.createSession(crypto.randomBytes(8)))
+            sessions.push(this.createSession(createRandomKademliaId()))
         }
         await this.runSessions(sessions, entryPointDescriptor, retry)
         this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
