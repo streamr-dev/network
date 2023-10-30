@@ -394,7 +394,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.state === ConnectionManagerState.STOPPED) {
             return false
         }
-        logger.trace('onIncomingConnection() objectId ' + connection.objectId)
+        logger.trace('onIncomingConnection()')
         connection.offeredAsIncoming = true
         if (!this.acceptIncomingConnection(connection)) {
             return false
