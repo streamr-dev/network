@@ -62,7 +62,7 @@ export const createMockConnectionDhtNode = async (
     await mockConnectionManager.start()
     const node = new DhtNode({
         peerDescriptor: peerDescriptor,
-        transportLayer: mockConnectionManager,
+        transport: mockConnectionManager,
         numberOfNodesPerKBucket,
         maxConnections: maxConnections,
         dhtJoinTimeout
@@ -83,7 +83,7 @@ export const createMockConnectionLayer1Node = async (
         type: NodeType.NODEJS,
     }
     const node = new DhtNode({
-        peerDescriptor: descriptor, transportLayer: layer0Node,
+        peerDescriptor: descriptor, transport: layer0Node,
         serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket
     })
     await node.start()

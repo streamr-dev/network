@@ -73,7 +73,7 @@ export interface DhtNodeOptions {
     networkConnectivityTimeout?: number
     storeNumberOfCopies?: number  // TODO better name?
 
-    transportLayer?: ITransport
+    transport?: ITransport
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
     websocketHost?: string
@@ -138,7 +138,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private openInternetPeers?: SortedContactList<RemoteDhtNode>
     private randomPeers?: RandomContactList<RemoteDhtNode>
     private rpcCommunicator?: RoutingRpcCommunicator
-    private transportLayer?: ITransport
+    private transport?: ITransport
     private ownPeerDescriptor?: PeerDescriptor
     public router?: Router
     public dataStore?: DataStore
@@ -186,16 +186,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 this.config.peerDescriptor.websocket = undefined
             }
         }
-        // If transportLayer is given, do not create a ConnectionManager
-        if (this.config.transportLayer) {
-            this.transportLayer = this.config.transportLayer
-            this.ownPeerDescriptor = this.transportLayer.getPeerDescriptor()
-            if (this.config.transportLayer instanceof ConnectionManager) {
-                this.connectionManager = this.config.transportLayer
+        // If transport is given, do not create a ConnectionManager
+        if (this.config.transport) {
+            this.transport = this.config.transport
+            this.ownPeerDescriptor = this.transport.getPeerDescriptor()
+            if (this.config.transport instanceof ConnectionManager) {
+                this.connectionManager = this.config.transport
             }
         } else {
             const connectorFacadeConfig: DefaultConnectorFacadeConfig = {
-                transportLayer: this,
+                transport: this,
                 entryPoints: this.config.entryPoints,
                 iceServers: this.config.iceServers,
                 webrtcAllowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
@@ -228,16 +228,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             })
             await connectionManager.start()
             this.connectionManager = connectionManager
-            this.transportLayer = connectionManager
+            this.transport = connectionManager
         }
 
         this.rpcCommunicator = new RoutingRpcCommunicator(
             this.config.serviceId,
-            this.transportLayer.send,
+            this.transport.send,
             { rpcRequestTimeout: this.config.rpcRequestTimeout }
         )
 
-        this.transportLayer.on('message', (message: Message) => this.handleMessage(message))
+        this.transport.on('message', (message: Message) => this.handleMessage(message))
 
         this.bindDefaultServerMethods()
         this.initKBuckets(peerIdFromPeerDescriptor(this.ownPeerDescriptor!))
@@ -334,13 +334,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.openInternetPeers.on('newContact', (newContact: RemoteDhtNode, activeContacts: RemoteDhtNode[]) =>
             this.emit('newOpenInternetContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
-        this.transportLayer!.on('connected', (peerDescriptor: PeerDescriptor) => this.onTransportConnected(peerDescriptor))
+        this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => this.onTransportConnected(peerDescriptor))
 
-        this.transportLayer!.on('disconnected', (peerDescriptor: PeerDescriptor, disonnectionType: DisconnectionType) => {
+        this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, disonnectionType: DisconnectionType) => {
             this.onTransportDisconnected(peerDescriptor, disonnectionType)
         })
 
-        this.transportLayer!.getAllConnectionPeerDescriptors().forEach((peer) => {
+        this.transport!.getAllConnectionPeerDescriptors().forEach((peer) => {
             const remoteDhtNode = new RemoteDhtNode(
                 this.ownPeerDescriptor!,
                 peer,
@@ -668,7 +668,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getTransport(): ITransport {
-        return this.transportLayer!
+        return this.transport!
     }
 
     public getPeerDescriptor(): PeerDescriptor {
@@ -730,7 +730,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.connectionManager) {
             await this.connectionManager.stop()
         }
-        this.transportLayer = undefined
+        this.transport = undefined
         this.connectionManager = undefined
         this.connections.clear()
         this.removeAllListeners()

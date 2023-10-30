@@ -35,11 +35,11 @@ describe('Layer0-Layer1', () => {
         await node1.start()
         await node2.start()
 
-        stream1Node1 = new DhtNode({ transportLayer: epDhtNode, serviceId: STREAM_ID1 })
-        stream1Node2 = new DhtNode({ transportLayer: node1, serviceId: STREAM_ID1 })
+        stream1Node1 = new DhtNode({ transport: epDhtNode, serviceId: STREAM_ID1 })
+        stream1Node2 = new DhtNode({ transport: node1, serviceId: STREAM_ID1 })
 
-        stream2Node1 = new DhtNode({ transportLayer: epDhtNode, serviceId: STREAM_ID2 })
-        stream2Node2 = new DhtNode({ transportLayer: node2, serviceId: STREAM_ID2 })
+        stream2Node1 = new DhtNode({ transport: epDhtNode, serviceId: STREAM_ID2 })
+        stream2Node2 = new DhtNode({ transport: node2, serviceId: STREAM_ID2 })
 
         await Promise.all([
             stream1Node1.start(),

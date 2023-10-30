@@ -88,7 +88,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         const sessionId = v4()
         const recursiveFindSession = new RecursiveFindSession({
             serviceId: sessionId,
-            rpcTransport: this.sessionTransport,
+            transport: this.sessionTransport,
             kademliaIdToFind: idToFind,
             ownPeerId: peerIdFromPeerDescriptor(this.ownPeerDescriptor),
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,

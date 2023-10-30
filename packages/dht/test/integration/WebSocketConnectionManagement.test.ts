@@ -55,12 +55,12 @@ describe('WebSocket Connection Management', () => {
         await connectorTransport2.start()
 
         const config1 = createConfig(wsServerConnectorPeerDescriptor, {
-            transportLayer: connectorTransport1,
+            transport: connectorTransport1,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 12223, max: 12223 }
         })
         const config2 = createConfig(noWsServerConnectorPeerDescriptor, {
-            transportLayer: connectorTransport2
+            transport: connectorTransport2
         })
 
         wsServerManager = new ConnectionManager(config1)
