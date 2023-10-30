@@ -106,7 +106,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         }
         const dir = path.dirname(this.subdomainPath)
         if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
+            fs.mkdirSync(dir, { recursive: true })
         }
         fs.writeFileSync(this.subdomainPath, JSON.stringify(certifiedSubdomain))
         const certObj = forge.pki.certificateFromPem(certifiedSubdomain.certificate.cert)

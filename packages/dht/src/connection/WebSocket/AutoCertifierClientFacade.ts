@@ -46,7 +46,6 @@ export class AutoCertifierClientFacade {
     private readonly updateCertificate: (certificate: Certificate) => void
 
     constructor(config: AutoCertifierClientFacadeConfig) {
-        console.log(config.autocertifiedSubdomainFilePath)
         this.setHost = config.setHost
         this.updateCertificate = config.updateCertificate
         this.autocertifierClient = config.createClientFactory ? config.createClientFactory() 
