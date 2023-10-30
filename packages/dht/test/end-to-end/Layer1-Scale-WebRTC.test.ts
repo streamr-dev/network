@@ -25,7 +25,7 @@ describe('Layer1 Scale', () => {
         await epLayer0Node.start()
         await epLayer0Node.joinDht([epPeerDescriptor])
 
-        epLayer1Node = new DhtNode({ transportLayer: epLayer0Node, peerDescriptor: epPeerDescriptor, serviceId: STREAM_ID })
+        epLayer1Node = new DhtNode({ transport: epLayer0Node, peerDescriptor: epPeerDescriptor, serviceId: STREAM_ID })
         await epLayer1Node.start()
         await epLayer1Node.joinDht([epPeerDescriptor])
 
@@ -37,7 +37,7 @@ describe('Layer1 Scale', () => {
             await node.start()
             layer0Nodes.push(node)
             const layer1 = new DhtNode({
-                transportLayer: node,
+                transport: node,
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: node.getPeerDescriptor(),
                 serviceId: STREAM_ID,

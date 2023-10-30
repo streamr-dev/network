@@ -32,7 +32,7 @@ export const createMockRandomGraphNodeAndDhtNode = async (
     const mockCm = new SimulatorTransport(ownPeerDescriptor, simulator)
     await mockCm.start()
     const dhtNode = new DhtNode({
-        transportLayer: mockCm,
+        transport: mockCm,
         peerDescriptor: ownPeerDescriptor,
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor]
@@ -111,7 +111,7 @@ export const createNetworkNodeWithSimulator = (
         layer0: {
             peerDescriptor,
             entryPoints,
-            transportLayer: transport,
+            transport: transport,
             maxConnections: 25,
             storeHighestTtl: 120000,
             storeMaxTtl: 120000

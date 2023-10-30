@@ -50,7 +50,7 @@ describe('stream without default entrypoints', () => {
         await entryPointTransport.start()
         entrypoint = createNetworkNode({
             layer0: {
-                transportLayer: entryPointTransport,
+                transport: entryPointTransport,
                 peerDescriptor: entryPointPeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -63,7 +63,7 @@ describe('stream without default entrypoints', () => {
             const node = createNetworkNode({
                 layer0: {
                     peerDescriptor,
-                    transportLayer: transport,
+                    transport: transport,
                     entryPoints: [entryPointPeerDescriptor]
                 }
             })
