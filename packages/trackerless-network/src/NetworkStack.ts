@@ -4,7 +4,7 @@ import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
-import { ILayer0 } from './logic/ILayer0'
+import { Layer0Node } from './logic/Layer0Node'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
@@ -18,7 +18,7 @@ export interface NetworkStackEvents {
 
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
-    private layer0DhtNode?: ILayer0
+    private layer0Node?: Layer0Node
     private streamrNode?: StreamrNode
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
@@ -27,7 +27,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         super()
         this.options = options
         this.metricsContext = options.metricsContext ?? new MetricsContext()
-        this.layer0DhtNode = new DhtNode({
+        this.layer0Node = new DhtNode({
             ...options.layer0,
             metricsContext: this.metricsContext
         })
@@ -63,42 +63,42 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     async start(doJoin = true): Promise<void> {
-        await this.layer0DhtNode!.start()
-        const connectionManager = this.layer0DhtNode!.getTransport() as ConnectionManager
+        await this.layer0Node!.start()
+        const connectionManager = this.layer0Node!.getTransport() as ConnectionManager
         if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
-            isSamePeerDescriptor(entryPoint, this.layer0DhtNode!.getPeerDescriptor())
+            isSamePeerDescriptor(entryPoint, this.layer0Node!.getPeerDescriptor())
         ))) {
-            await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
+            await this.layer0Node?.joinDht(this.options.layer0.entryPoints)
         } else {
             if (doJoin) {
                 // in practice there aren't be existing connections and therefore this always connects
                 await this.ensureConnectedToControlLayer()
             }
         }
-        await this.streamrNode?.start(this.layer0DhtNode!, connectionManager, connectionManager)
+        await this.streamrNode?.start(this.layer0Node!, connectionManager, connectionManager)
     }
 
     private async ensureConnectedToControlLayer(): Promise<void> {
         // TODO we could wrap joinDht with pOnce and call it here (no else-if needed in that case)
-        if (!this.layer0DhtNode!.hasJoined()) {
+        if (!this.layer0Node!.hasJoined()) {
             setImmediate(async () => {
                 if (this.options.layer0?.entryPoints !== undefined) {
                     // TODO should catch possible rejection?
                     // the question mark is there to avoid problems when stop() is called before start()
                     // -> TODO change to exlamation mark if we don't support that (and remove NetworkStackStoppedDuringStart.test)
-                    await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
+                    await this.layer0Node?.joinDht(this.options.layer0.entryPoints)
                 }
             })
         }
-        await this.layer0DhtNode!.waitForNetworkConnectivity()
+        await this.layer0Node!.waitForNetworkConnectivity()
     }
 
     getStreamrNode(): StreamrNode {
         return this.streamrNode!
     }
 
-    getLayer0DhtNode(): ILayer0 {
-        return this.layer0DhtNode!
+    getLayer0Node(): Layer0Node {
+        return this.layer0Node!
     }
 
     getMetricsContext(): MetricsContext {
@@ -108,7 +108,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     async stop(): Promise<void> {
         await this.streamrNode!.destroy()
         this.streamrNode = undefined
-        this.layer0DhtNode = undefined
+        this.layer0Node = undefined
         this.emit('stopped')
     }
 

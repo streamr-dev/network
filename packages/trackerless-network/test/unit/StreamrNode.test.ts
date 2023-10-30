@@ -3,7 +3,7 @@ import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 import { StreamrNode } from '../../src/logic/StreamrNode'
-import { MockLayer0 } from '../utils/mock/MockLayer0'
+import { MockLayer0Node } from '../utils/mock/MockLayer0Node'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockPeerDescriptor, createStreamMessage, mockConnectionLocker } from '../utils/utils'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -15,7 +15,7 @@ describe('StreamrNode', () => {
 
     beforeEach(async () => {
         node = new StreamrNode({})
-        const mockLayer0 = new MockLayer0(peerDescriptor)
+        const mockLayer0 = new MockLayer0Node(peerDescriptor)
         await node.start(mockLayer0, new MockTransport(), mockConnectionLocker)
     })
 

@@ -10,12 +10,12 @@ import { waitForEvent3, waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { ILayer0 } from '../../src/logic/ILayer0'
+import { Layer0Node } from '../../src/logic/Layer0Node'
 
 describe('StreamrNode', () => {
 
-    let layer01: ILayer0
-    let layer02: ILayer0
+    let layer0Node1: Layer0Node
+    let layer0Node2: Layer0Node
     let transport1: SimulatorTransport
     let transport2: SimulatorTransport
     let node1: StreamrNode
@@ -50,30 +50,30 @@ describe('StreamrNode', () => {
         await transport1.start()
         transport2 = new SimulatorTransport(peerDescriptor2, simulator)
         await transport2.start()
-        layer01 = new DhtNode({
+        layer0Node1 = new DhtNode({
             transportLayer: transport1,
             peerDescriptor: peerDescriptor1,
             entryPoints: [peerDescriptor1]
         })
-        layer02 = new DhtNode({
+        layer0Node2 = new DhtNode({
             transportLayer: transport2,
             peerDescriptor: peerDescriptor2,
             entryPoints: [peerDescriptor1]
         })
         await Promise.all([
-            layer01.start(),
-            layer02.start()
+            layer0Node1.start(),
+            layer0Node2.start()
         ])
         await Promise.all([
-            layer01.joinDht([peerDescriptor1]),
-            layer02.joinDht([peerDescriptor1])
+            layer0Node1.joinDht([peerDescriptor1]),
+            layer0Node2.joinDht([peerDescriptor1])
         ])
 
         node1 = new StreamrNode({})
         node2 = new StreamrNode({})
-        await node1.start(layer01, transport1, transport1)
+        await node1.start(layer0Node1, transport1, transport1)
         node1.setStreamPartEntryPoints(STREAM_PART_ID, [peerDescriptor1])
-        await node2.start(layer02, transport2, transport2)
+        await node2.start(layer0Node2, transport2, transport2)
         node2.setStreamPartEntryPoints(STREAM_PART_ID, [peerDescriptor1])
     })
 

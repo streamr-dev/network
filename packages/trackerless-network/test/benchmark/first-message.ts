@@ -90,7 +90,7 @@ const measureJoiningTime = async () => {
     }, 1000)
     // get random node from network to use as entrypoint
     const randomNode = nodes[Math.floor(Math.random() * nodes.length)]
-    const streamSubscriber = createNetworkNodeWithSimulator(peerDescriptor, simulator, [randomNode.stack.getLayer0DhtNode().getPeerDescriptor()])
+    const streamSubscriber = createNetworkNodeWithSimulator(peerDescriptor, simulator, [randomNode.stack.getLayer0Node().getPeerDescriptor()])
     currentNode = streamSubscriber
     const start = performance.now()
     await streamSubscriber.start()
@@ -133,9 +133,9 @@ run().then(() => {
 }).catch((err) => {
     console.error(err)
     const streamParts = currentNode.stack.getStreamrNode()!.getStreamParts()
-    const foundData = nodes[0].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
+    const foundData = nodes[0].stack.getLayer0Node().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
-    const layer0Node = currentNode.stack.getLayer0DhtNode() as DhtNode
+    const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
     console.log(layer0Node.getKBucketPeers().length)
     console.log(layer0Node.getNumberOfConnections())
     const streamPartDelivery = currentNode.stack.getStreamrNode().getStreamPartDelivery(streamParts[0])! as { layer1: ILayer1, node: RandomGraphNode }

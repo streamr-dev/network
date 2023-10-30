@@ -17,7 +17,7 @@ import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { ProxyDirection, StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ILayer0 } from './ILayer0'
+import { Layer0Node } from './Layer0Node'
 import { ILayer1 } from './ILayer1'
 import { RandomGraphNode } from './RandomGraphNode'
 import { NETWORK_SPLIT_AVOIDANCE_LIMIT, EntryPointDiscovery } from './EntryPointDiscovery'
@@ -61,7 +61,7 @@ export interface StreamrNodeConfig {
 export class StreamrNode extends EventEmitter<Events> {
     private P2PTransport?: ITransport
     private connectionLocker?: ConnectionLocker
-    private layer0?: ILayer0
+    private layer0Node?: Layer0Node
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
     private readonly config: StreamrNodeConfig
@@ -82,13 +82,13 @@ export class StreamrNode extends EventEmitter<Events> {
         this.metricsContext.addMetrics('node', this.metrics)
     }
 
-    async start(startedAndJoinedLayer0: ILayer0, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
+    async start(startedAndJoinedLayer0Node: Layer0Node, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
         if (this.started || this.destroyed) {
             return
         }
-        logger.info(`Starting new StreamrNode with id ${getNodeIdFromPeerDescriptor(startedAndJoinedLayer0.getPeerDescriptor())}`)
+        logger.info(`Starting new StreamrNode with id ${getNodeIdFromPeerDescriptor(startedAndJoinedLayer0Node.getPeerDescriptor())}`)
         this.started = true
-        this.layer0 = startedAndJoinedLayer0
+        this.layer0Node = startedAndJoinedLayer0Node
         this.P2PTransport = transport
         this.connectionLocker = connectionLocker
         cleanUp = () => this.destroy()
@@ -104,9 +104,9 @@ export class StreamrNode extends EventEmitter<Events> {
         this.streamParts.clear()
         this.removeAllListeners()
         // TODO stopping should be in NetworkStack#stop?
-        await this.layer0!.stop()
+        await this.layer0Node!.stop()
         await this.P2PTransport!.stop()
-        this.layer0 = undefined
+        this.layer0Node = undefined
         this.P2PTransport = undefined
         this.connectionLocker = undefined
     }
@@ -139,13 +139,13 @@ export class StreamrNode extends EventEmitter<Events> {
             streamPartId,
             ownPeerDescriptor: this.getPeerDescriptor(),
             layer1,
-            getEntryPointData: (key) => this.layer0!.getDataFromDht(key),
-            storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data),
+            getEntryPointData: (key) => this.layer0Node!.getDataFromDht(key),
+            storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
             deleteEntryPointData: async (key) => {
                 if (this.destroyed) {
                     return 
                 }
-                return this.layer0!.deleteDataFromDht(key)
+                return this.layer0Node!.deleteDataFromDht(key)
             }
         })
         streamPart = {
@@ -195,9 +195,9 @@ export class StreamrNode extends EventEmitter<Events> {
 
     private createLayer1Node = (streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): ILayer1 => {
         return new DhtNode({
-            transportLayer: this.layer0!,
+            transportLayer: this.layer0Node!,
             serviceId: 'layer1::' + streamPartId,
-            peerDescriptor: this.layer0!.getPeerDescriptor(),
+            peerDescriptor: this.layer0Node!.getPeerDescriptor(),
             entryPoints,
             numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 5000,
@@ -211,7 +211,7 @@ export class StreamrNode extends EventEmitter<Events> {
             P2PTransport: this.P2PTransport!,
             layer1,
             connectionLocker: this.connectionLocker!,
-            ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
+            ownPeerDescriptor: this.layer0Node!.getPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
             numOfTargetNeighbors: this.config.streamPartitionNumOfNeighbors,
             acceptProxyConnections: this.config.acceptProxyConnections
@@ -257,7 +257,7 @@ export class StreamrNode extends EventEmitter<Events> {
     private createProxyClient(streamPartId: StreamPartID): ProxyClient {
         return new ProxyClient({
             P2PTransport: this.P2PTransport!,
-            ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
+            ownPeerDescriptor: this.layer0Node!.getPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets
@@ -292,11 +292,11 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     getPeerDescriptor(): PeerDescriptor {
-        return this.layer0!.getPeerDescriptor()
+        return this.layer0Node!.getPeerDescriptor()
     }
 
     getNodeId(): NodeID {
-        return getNodeIdFromPeerDescriptor(this.layer0!.getPeerDescriptor())
+        return getNodeIdFromPeerDescriptor(this.layer0Node!.getPeerDescriptor())
     }
 
     getNeighbors(streamPartId: StreamPartID): NodeID[] {
