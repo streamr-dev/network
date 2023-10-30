@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import { LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
+import { DhtNode, LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
 import { MessageID, StreamMessage, StreamMessageType, StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import fs from 'fs'
@@ -135,8 +135,9 @@ run().then(() => {
     const streamParts = currentNode.stack.getStreamrNode()!.getStreamParts()
     const foundData = nodes[0].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
-    console.log(currentNode.stack.getLayer0DhtNode().getKBucketPeers().length)
-    console.log(currentNode.stack.getLayer0DhtNode().getNumberOfConnections())
+    const layer0Node = currentNode.stack.getLayer0DhtNode() as DhtNode
+    console.log(layer0Node.getKBucketPeers().length)
+    console.log(layer0Node.getNumberOfConnections())
     const streamPartDelivery = currentNode.stack.getStreamrNode().getStreamPartDelivery(streamParts[0])! as { layer1: ILayer1, node: RandomGraphNode }
     console.log(streamPartDelivery.layer1.getKBucketPeers())
     console.log(streamPartDelivery.node.getTargetNeighborIds())

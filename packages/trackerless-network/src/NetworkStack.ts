@@ -4,6 +4,7 @@ import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { ILayer0 } from './logic/ILayer0'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
@@ -17,7 +18,7 @@ export interface NetworkStackEvents {
 
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
-    private layer0DhtNode?: DhtNode
+    private layer0DhtNode?: ILayer0
     private streamrNode?: StreamrNode
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
@@ -96,7 +97,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         return this.streamrNode!
     }
 
-    getLayer0DhtNode(): DhtNode {
+    getLayer0DhtNode(): ILayer0 {
         return this.layer0DhtNode!
     }
 

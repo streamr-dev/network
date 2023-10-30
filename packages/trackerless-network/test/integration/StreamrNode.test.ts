@@ -10,11 +10,12 @@ import { waitForEvent3, waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { ILayer0 } from '../../src/logic/ILayer0'
 
 describe('StreamrNode', () => {
 
-    let layer01: DhtNode
-    let layer02: DhtNode
+    let layer01: ILayer0
+    let layer02: ILayer0
     let transport1: SimulatorTransport
     let transport2: SimulatorTransport
     let node1: StreamrNode

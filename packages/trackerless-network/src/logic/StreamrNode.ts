@@ -103,6 +103,7 @@ export class StreamrNode extends EventEmitter<Events> {
         this.streamParts.forEach((streamPart) => streamPart.stop())
         this.streamParts.clear()
         this.removeAllListeners()
+        // TODO stopping should be in NetworkStack#stop?
         await this.layer0!.stop()
         await this.P2PTransport!.stop()
         this.layer0 = undefined

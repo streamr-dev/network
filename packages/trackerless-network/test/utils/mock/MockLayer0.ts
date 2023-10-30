@@ -1,4 +1,4 @@
-import { PeerDescriptor, DataEntry } from '@streamr/dht'
+import { PeerDescriptor, DataEntry, ITransport } from '@streamr/dht'
 import { ILayer0 } from '../../../src/logic/ILayer0'
 import { EventEmitter } from 'eventemitter3'
 
@@ -9,6 +9,16 @@ export class MockLayer0 extends EventEmitter implements ILayer0 {
     constructor(peerDescriptor: PeerDescriptor) {
         super()
         this.peerDescriptor = peerDescriptor
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    joinDht(): Promise<void> {
+        throw new Error('not implemented')
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    hasJoined(): boolean {
+        throw new Error('not implemented')
     }
 
     getPeerDescriptor(): PeerDescriptor {
@@ -22,7 +32,6 @@ export class MockLayer0 extends EventEmitter implements ILayer0 {
 
     // eslint-disable-next-line class-methods-use-this
     async deleteDataFromDht(): Promise<void> {
-        
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -50,8 +59,15 @@ export class MockLayer0 extends EventEmitter implements ILayer0 {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async stop(): Promise<void> {
-
+    getTransport(): ITransport {
+        throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    async start(): Promise<void> {
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    async stop(): Promise<void> {
+    }
 }

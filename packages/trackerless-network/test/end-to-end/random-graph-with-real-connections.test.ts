@@ -15,11 +15,11 @@ describe('random graph with real connections', () => {
     }
 
     const streamPartId = StreamPartIDUtils.parse('random-graph#0')
-    let epDhtNode: DhtNode
-    let dhtNode1: DhtNode
-    let dhtNode2: DhtNode
-    let dhtNode3: DhtNode
-    let dhtNode4: DhtNode
+    let epDhtNode: DhtNode  // TODO is this Layer0 or Layer1?
+    let dhtNode1: DhtNode  // TODO is this Layer0 or Layer1?
+    let dhtNode2: DhtNode  // TODO is this Layer0 or Layer1?
+    let dhtNode3: DhtNode  // TODO is this Layer0 or Layer1?
+    let dhtNode4: DhtNode  // TODO is this Layer0 or Layer1?
     let randomGraphNode1: RandomGraphNode
     let randomGraphNode2: RandomGraphNode
     let randomGraphNode3: RandomGraphNode

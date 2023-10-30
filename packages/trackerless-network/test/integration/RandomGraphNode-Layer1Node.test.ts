@@ -5,13 +5,14 @@ import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { ILayer1 } from '../../src/logic/ILayer1'
 
 const logger = new Logger(module)
 
 describe('RandomGraphNode-DhtNode', () => {
     const numOfNodes = 64
-    let dhtNodes: DhtNode[]
-    let dhtEntryPoint: DhtNode
+    let layer1Nodes: ILayer1[]
+    let dhtEntryPoint: DhtNode  // TODO is this Layer0 or Layer1?
     let entryPointRandomGraphNode: RandomGraphNode
     let graphNodes: RandomGraphNode[]
 
@@ -49,7 +50,7 @@ describe('RandomGraphNode-DhtNode', () => {
             serviceId: streamPartId
         })
 
-        dhtNodes = range(numOfNodes).map((i) => new DhtNode({
+        layer1Nodes = range(numOfNodes).map((i) => new DhtNode({
             transportLayer: cms[i],
             peerDescriptor: peerDescriptors[i],
             serviceId: streamPartId
@@ -57,7 +58,7 @@ describe('RandomGraphNode-DhtNode', () => {
 
         graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
             streamPartId,
-            layer1: dhtNodes[i],
+            layer1: layer1Nodes[i],
             P2PTransport: cms[i],
             connectionLocker: cms[i],
             ownPeerDescriptor: peerDescriptors[i],
@@ -75,20 +76,20 @@ describe('RandomGraphNode-DhtNode', () => {
 
         await dhtEntryPoint.start()
         await dhtEntryPoint.joinDht([entrypointDescriptor])
-        await Promise.all(dhtNodes.map((node) => node.start()))
+        await Promise.all(layer1Nodes.map((node) => node.start()))
     })
 
     afterEach(async () => {
         await dhtEntryPoint.stop()
         entryPointRandomGraphNode.stop()
-        await Promise.all(dhtNodes.map((node) => node.stop()))
+        await Promise.all(layer1Nodes.map((node) => node.stop()))
         await Promise.all(graphNodes.map((node) => node.stop()))
         Simulator.useFakeTimers(false)
     })
 
     it('happy path single node ', async () => {
         await entryPointRandomGraphNode.start()
-        await dhtNodes[0].joinDht([entrypointDescriptor])
+        await layer1Nodes[0].joinDht([entrypointDescriptor])
 
         await graphNodes[0].start()
 
@@ -101,7 +102,7 @@ describe('RandomGraphNode-DhtNode', () => {
         entryPointRandomGraphNode.start()
         range(4).forEach((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
-            await dhtNodes[i].joinDht([entrypointDescriptor])
+            await layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
 
         await waitForCondition(() => range(4).every((i) => graphNodes[i].getTargetNeighborIds().length === 4))
@@ -126,7 +127,7 @@ describe('RandomGraphNode-DhtNode', () => {
     it('happy path 64 nodes', async () => {
         await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
         await Promise.all(range(numOfNodes).map((i) => {
-            dhtNodes[i].joinDht([entrypointDescriptor])
+            layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(graphNodes.map((node) =>
             waitForCondition(() => node.getTargetNeighborIds().length >= 4, 10000)
