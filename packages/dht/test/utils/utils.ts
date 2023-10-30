@@ -39,14 +39,14 @@ export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
 }
 
-export const createMockConnectionDhtNode = async (stringId: string,
+export const createMockConnectionDhtNode = async (
+    stringId: string,
     simulator: Simulator,
     binaryId?: Uint8Array,
     numberOfNodesPerKBucket?: number,
     maxConnections = 80,
     dhtJoinTimeout = 45000
 ): Promise<DhtNode> => {
-
     let id: PeerID
     if (binaryId) {
         id = PeerID.fromValue(binaryId)
@@ -58,10 +58,8 @@ export const createMockConnectionDhtNode = async (stringId: string,
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
-
     const mockConnectionManager = new SimulatorTransport(peerDescriptor, simulator)
     await mockConnectionManager.start()
-
     const node = new DhtNode({
         peerDescriptor: peerDescriptor,
         transportLayer: mockConnectionManager,
@@ -70,17 +68,20 @@ export const createMockConnectionDhtNode = async (stringId: string,
         dhtJoinTimeout
     })
     await node.start()
-
     return node
 }
 
-export const createMockConnectionLayer1Node = async (stringId: string, layer0Node: DhtNode, serviceId?: string, numberOfNodesPerKBucket = 8): Promise<DhtNode> => {
+export const createMockConnectionLayer1Node = async (
+    stringId: string,
+    layer0Node: DhtNode,
+    serviceId?: string,
+    numberOfNodesPerKBucket = 8
+): Promise<DhtNode> => {
     const id = PeerID.fromString(stringId)
     const descriptor: PeerDescriptor = {
         kademliaId: id.value,
         type: NodeType.NODEJS,
     }
-
     const node = new DhtNode({
         peerDescriptor: descriptor, transportLayer: layer0Node,
         serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket
