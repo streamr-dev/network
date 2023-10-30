@@ -4,10 +4,12 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 
+const NUM_OF_NODES_PER_K_BUCKET = 8
+
 const runTest = async (latencyType: LatencyType) => {
     const simulator = new Simulator(latencyType)
     const entryPointId = '0'
-    const entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
+    const entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, undefined, NUM_OF_NODES_PER_K_BUCKET)
     const entrypointDescriptor = {
         kademliaId: entryPoint.getNodeId().value,
         type: NodeType.NODEJS,
@@ -16,7 +18,7 @@ const runTest = async (latencyType: LatencyType) => {
     const nodes: DhtNode[] = []
     for (let i = 1; i < 100; i++) {
         const nodeId = `${i}`
-        const node = await createMockConnectionDhtNode(nodeId, simulator)
+        const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, NUM_OF_NODES_PER_K_BUCKET)
         nodes.push(node)
     }
 

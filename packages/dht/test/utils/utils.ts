@@ -74,7 +74,7 @@ export const createMockConnectionDhtNode = async (stringId: string,
     return node
 }
 
-export const createMockConnectionLayer1Node = async (stringId: string, layer0Node: DhtNode, serviceId?: string): Promise<DhtNode> => {
+export const createMockConnectionLayer1Node = async (stringId: string, layer0Node: DhtNode, serviceId?: string, numberOfNodesPerKBucket = 8): Promise<DhtNode> => {
     const id = PeerID.fromString(stringId)
     const descriptor: PeerDescriptor = {
         kademliaId: id.value,
@@ -83,7 +83,7 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
 
     const node = new DhtNode({
         peerDescriptor: descriptor, transportLayer: layer0Node,
-        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket: 8
+        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket
     })
     await node.start()
     return node

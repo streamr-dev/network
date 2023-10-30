@@ -2,6 +2,8 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 
+const NUM_OF_NODES_PER_K_BUCKET = 8
+
 describe('Layer1 Scale', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('entrypoint').value,
@@ -35,14 +37,19 @@ describe('Layer1 Scale', () => {
         layer1Nodes = []
 
         for (let i = 0; i < NUM_OF_NODES; i++) {
-            const node = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
+            const node = new DhtNode({ 
+                websocketPortRange, 
+                entryPoints: [epPeerDescriptor],
+                numberOfNodesPerKBucket: NUM_OF_NODES_PER_K_BUCKET
+            })
             await node.start()
             layer0Nodes.push(node)
             const layer1 = new DhtNode({
                 transportLayer: node,
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: node.getPeerDescriptor(),
-                serviceId: STREAM_ID
+                serviceId: STREAM_ID,
+                numberOfNodesPerKBucket: NUM_OF_NODES_PER_K_BUCKET
             })
             await layer1.start()
             layer1Nodes.push(layer1)
