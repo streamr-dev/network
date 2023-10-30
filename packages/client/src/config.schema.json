@@ -215,7 +215,7 @@
                         },
                         "autocertifiedSubdomainFilePath": {
                             "type": "string",
-                            "default": "/tmp/autocertified-subdomain.txt"
+                            "default": "~/.streamr/subdomain.json"
                         }
                     },
                     "default": {}
