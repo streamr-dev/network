@@ -699,10 +699,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return Array.from(this.connections.values()).map((peer) => peer.getPeerDescriptor())
     }
 
-    public getK(): number {
-        return this.config.numberOfNodesPerKBucket
-    }
-
     public getKBucketPeers(): PeerDescriptor[] {
         return this.bucket!.toArray().map((remoteDhtNode: RemoteDhtNode) => remoteDhtNode.getPeerDescriptor())
     }
