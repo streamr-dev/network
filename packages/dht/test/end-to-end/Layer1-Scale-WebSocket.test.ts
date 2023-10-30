@@ -2,7 +2,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 
-const NUM_OF_NODES_PER_K_BUCKET = 8
+const NUM_OF_NODES_PER_KBUCKET = 8
 
 describe('Layer1 Scale', () => {
     const epPeerDescriptor: PeerDescriptor = {
@@ -40,7 +40,7 @@ describe('Layer1 Scale', () => {
             const node = new DhtNode({ 
                 websocketPortRange, 
                 entryPoints: [epPeerDescriptor],
-                numberOfNodesPerKBucket: NUM_OF_NODES_PER_K_BUCKET
+                numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
             })
             await node.start()
             layer0Nodes.push(node)
@@ -49,7 +49,7 @@ describe('Layer1 Scale', () => {
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: node.getPeerDescriptor(),
                 serviceId: STREAM_ID,
-                numberOfNodesPerKBucket: NUM_OF_NODES_PER_K_BUCKET
+                numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
             })
             await layer1.start()
             layer1Nodes.push(layer1)
@@ -71,10 +71,10 @@ describe('Layer1 Scale', () => {
     // TODO: fix flaky test in NET-1021
     it('bucket sizes', async () => {
         layer0Nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_K_BUCKET - 1)
+            expect(node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
         })
         layer1Nodes.forEach((node ) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_K_BUCKET / 2)
+            expect(node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
         })
     })
 })
