@@ -62,10 +62,21 @@ export class PeerDiscovery {
         this.config.addContact(entryPointDescriptor)
         const closest = this.config.bucket.closest(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value, this.config.getClosestContactsLimit)
         this.config.neighborList.addContacts(closest)
+        const sessions = [this.createSession(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value)]
+        if (doRandomJoin) {
+            // TODO why 8 bytes? (are we generating a random "kademliaId" here?)
+            sessions.push(this.createSession(crypto.randomBytes(8)))
+        }
+        await this.runSessions(sessions, entryPointDescriptor, retry)
+        this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
+
+    }
+
+    private createSession(targetId: Uint8Array): DiscoverySession {
         const sessionOptions = {
             bucket: this.config.bucket,
             neighborList: this.config.neighborList,
-            targetId: peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value,
+            targetId,
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             serviceId: this.config.serviceId,
             rpcCommunicator: this.config.rpcCommunicator,
@@ -73,20 +84,14 @@ export class PeerDiscovery {
             noProgressLimit: this.config.joinNoProgressLimit,
             newContactListener: (newPeer: RemoteDhtNode) => this.config.addContact(newPeer.getPeerDescriptor())
         }
-        const session = new DiscoverySession(sessionOptions)
-        const randomSession = doRandomJoin ? new DiscoverySession({
-            ...sessionOptions,
-            // TODO why 8 bytes? (are we generating a random "kademliaId" here?)
-            targetId: crypto.randomBytes(8)
-        }) : null
-        this.ongoingDiscoverySessions.set(session.sessionId, session)
-        if (randomSession) {
-            this.ongoingDiscoverySessions.set(randomSession.sessionId, randomSession)
-        }
+        return new DiscoverySession(sessionOptions)
+    }
+
+    private async runSessions(sessions: DiscoverySession[], entryPointDescriptor: PeerDescriptor, retry: boolean): Promise<void> {
         try {
-            await session.findClosestNodes(this.config.joinTimeout)
-            if (randomSession) {
-                await randomSession.findClosestNodes(this.config.joinTimeout)
+            for (const session of sessions) {
+                this.ongoingDiscoverySessions.set(session.sessionId, session)
+                await session.findClosestNodes(this.config.joinTimeout)
             }
         } catch (_e) {
             logger.debug(`DHT join on ${this.config.serviceId} timed out`)
@@ -100,11 +105,7 @@ export class PeerDiscovery {
                     await this.ensureRecoveryIntervalIsRunning()
                 }
             }
-            this.ongoingDiscoverySessions.delete(session.sessionId)
-            if (randomSession) {
-                this.ongoingDiscoverySessions.delete(randomSession.sessionId)
-            }
-            this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
+            sessions.forEach((session) => this.ongoingDiscoverySessions.delete(session.sessionId))
         }
     }
 
