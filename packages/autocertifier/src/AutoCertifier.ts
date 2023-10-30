@@ -89,7 +89,6 @@ export class AutoCertifier implements RestInterface {
     }
 
     public async start(): Promise<void> {
-        // TODO: load env variables from .env file
         this.domainName = process.env['AUTOICERTIFIER_DOMAIN_NAME']
         if (!this.domainName) {
             throw new Error('AUTOICERTIFIER_DOMAIN_NAME environment variable is not set')
