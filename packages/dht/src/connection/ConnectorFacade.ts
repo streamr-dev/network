@@ -58,7 +58,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         logger.trace(`Creating WebSocketConnector`)
         this.webSocketConnector = new WebSocketConnector({
             protocolVersion: ConnectionManager.PROTOCOL_VERSION,
-            rpcTransport: this.config.transport!,
+            transport: this.config.transport!,
             // TODO should we use canConnect also for WebRtcConnector? (NET-1142)
             canConnect: (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),
             onIncomingConnection,
@@ -70,7 +70,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         })
         logger.trace(`Creating WebRTCConnector`)
         this.webrtcConnector = new WebRtcConnector({
-            rpcTransport: this.config.transport!,
+            transport: this.config.transport!,
             protocolVersion: ConnectionManager.PROTOCOL_VERSION,
             iceServers: this.config.iceServers,
             allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,

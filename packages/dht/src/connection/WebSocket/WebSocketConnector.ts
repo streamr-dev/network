@@ -42,7 +42,7 @@ const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
 interface WebSocketConnectorConfig {
     protocolVersion: string
-    rpcTransport: ITransport
+    transport: ITransport
     canConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     onIncomingConnection: (connection: ManagedConnection) => boolean
     portRange?: PortRange
@@ -83,7 +83,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
         this.canConnectFunction = config.canConnect.bind(this)
 
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.rpcTransport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000
         })
 

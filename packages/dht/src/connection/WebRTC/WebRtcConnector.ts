@@ -37,7 +37,7 @@ export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): 
 }
 
 export interface WebRtcConnectorConfig {
-    rpcTransport: ITransport
+    transport: ITransport
     protocolVersion: string
     iceServers?: IceServer[]
     allowPrivateAddresses?: boolean
@@ -77,7 +77,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         this.allowPrivateAddresses = config.allowPrivateAddresses || true
         this.onIncomingConnection = onIncomingConnection
 
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.rpcTransport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000
         })
         this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer',
