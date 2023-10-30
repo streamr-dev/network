@@ -17,7 +17,7 @@ describe('WebSocketConnector', () => {
     describe('isPossibleToFormConnection', () => {
 
         const connector = new WebSocketConnector({
-            rpcTransport: new MockTransport(),
+            transport: new MockTransport(),
             canConnect: () => {}
         } as any)
 

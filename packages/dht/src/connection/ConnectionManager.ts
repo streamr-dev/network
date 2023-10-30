@@ -7,7 +7,7 @@ import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
 import { PeerIDKey } from '../helpers/PeerID'
 import * as Err from '../helpers/errors'
 import {
-    isSamePeerDescriptor,
+    areEqualPeerDescriptors,
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
@@ -273,7 +273,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private isConnectionToSelf(peerDescriptor: PeerDescriptor): boolean { 
-        return isSamePeerDescriptor(peerDescriptor, this.getOwnPeerDescriptor()) || this.isOwnWebSocketServer(peerDescriptor)
+        return areEqualPeerDescriptors(peerDescriptor, this.getOwnPeerDescriptor()) || this.isOwnWebSocketServer(peerDescriptor)
     }
 
     private isOwnWebSocketServer(peerDescriptor: PeerDescriptor): boolean {
@@ -396,7 +396,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.state === ConnectionManagerState.STOPPED) {
             return false
         }
-        logger.trace('onIncomingConnection() objectId ' + connection.objectId)
+        logger.trace('onIncomingConnection()')
         connection.offeredAsIncoming = true
         if (!this.acceptIncomingConnection(connection)) {
             return false
@@ -462,7 +462,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
-        if (this.state === ConnectionManagerState.STOPPED || isSamePeerDescriptor(targetDescriptor, this.getOwnPeerDescriptor())) {
+        if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getOwnPeerDescriptor())) {
             return
         }
         const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
@@ -479,7 +479,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
-        if (this.state === ConnectionManagerState.STOPPED || isSamePeerDescriptor(targetDescriptor, this.getOwnPeerDescriptor())) {
+        if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getOwnPeerDescriptor())) {
             return
         }
         const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
@@ -496,7 +496,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public weakLockConnection(targetDescriptor: PeerDescriptor): void {
-        if (this.state === ConnectionManagerState.STOPPED || isSamePeerDescriptor(targetDescriptor, this.getOwnPeerDescriptor())) {
+        if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getOwnPeerDescriptor())) {
             return
         }
         const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
@@ -504,7 +504,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public weakUnlockConnection(targetDescriptor: PeerDescriptor): void {
-        if (this.state === ConnectionManagerState.STOPPED || isSamePeerDescriptor(targetDescriptor, this.getOwnPeerDescriptor())) {
+        if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getOwnPeerDescriptor())) {
             return
         }
         const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
@@ -571,7 +571,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private async lockRequest(lockRequest: LockRequest, context: ServerCallContext): Promise<LockResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const remotePeerId = peerIdFromPeerDescriptor(senderPeerDescriptor)
-        if (isSamePeerDescriptor(senderPeerDescriptor, this.getOwnPeerDescriptor())) {
+        if (areEqualPeerDescriptors(senderPeerDescriptor, this.getOwnPeerDescriptor())) {
             const response: LockResponse = {
                 accepted: false
             }

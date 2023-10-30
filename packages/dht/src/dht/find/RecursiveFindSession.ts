@@ -19,7 +19,7 @@ const logger = new Logger(module)
 
 export interface RecursiveFindSessionConfig {
     serviceId: string
-    rpcTransport: ITransport
+    transport: ITransport
     kademliaIdToFind: Uint8Array
     ownPeerId: PeerID
     waitedRoutingPathCompletions: number
@@ -28,7 +28,7 @@ export interface RecursiveFindSessionConfig {
 
 export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IRecursiveFindSessionService {
     private readonly serviceId: string
-    private readonly rpcTransport: ITransport
+    private readonly transport: ITransport
     private readonly kademliaIdToFind: Uint8Array
     private readonly ownPeerId: PeerID
     private readonly waitedRoutingPathCompletions: number
@@ -45,13 +45,13 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     constructor(config: RecursiveFindSessionConfig) {
         super()
         this.serviceId = config.serviceId
-        this.rpcTransport = config.rpcTransport
+        this.transport = config.transport
         this.kademliaIdToFind = config.kademliaIdToFind
         this.ownPeerId = config.ownPeerId
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
         this.results = new SortedContactList(PeerID.fromValue(this.kademliaIdToFind), 10, undefined, true)
         this.mode = config.mode
-        this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.rpcTransport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
             rpcRequestTimeout: 15000
         })
         this.rpcCommunicator.registerRpcNotification(RecursiveFindReport, 'reportRecursiveFindResult',

@@ -12,7 +12,7 @@ import {
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { createRouteMessageAck, RoutingErrors, IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
-import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RemoteRecursiveFindSession } from './RemoteRecursiveFindSession'
@@ -88,7 +88,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         const sessionId = v4()
         const recursiveFindSession = new RecursiveFindSession({
             serviceId: sessionId,
-            rpcTransport: this.sessionTransport,
+            transport: this.sessionTransport,
             kademliaIdToFind: idToFind,
             ownPeerId: peerIdFromPeerDescriptor(this.ownPeerDescriptor),
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
@@ -183,7 +183,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         noCloserNodesFound: boolean = false
     ): void {
         const dataEntries = data ? Array.from(data.values(), DataEntry.create.bind(DataEntry)) : []
-        const isOwnNode = isSamePeerDescriptor(this.ownPeerDescriptor, targetPeerDescriptor)
+        const isOwnNode = areEqualPeerDescriptors(this.ownPeerDescriptor, targetPeerDescriptor)
         if (isOwnNode && this.ongoingSessions.has(serviceId)) {
             this.ongoingSessions.get(serviceId)!
                 .doReportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
@@ -208,7 +208,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         const recursiveFindRequest = msg?.body.oneofKind === 'recursiveFindRequest' ? msg.body.recursiveFindRequest : undefined
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.kademliaId, 5)
         const data = this.findLocalData(idToFind.value, recursiveFindRequest!.findMode)
-        if (isSamePeerDescriptor(this.ownPeerDescriptor, routedMessage.destinationPeer!)) {
+        if (areEqualPeerDescriptors(this.ownPeerDescriptor, routedMessage.destinationPeer!)) {
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                 closestPeersToDestination, data, true)
             return createRouteMessageAck(routedMessage)
