@@ -5,6 +5,7 @@ import {
     EncryptionType,
     MessageID,
     MessageRef,
+    SignatureType,
     StreamID,
     StreamMessage,
     StreamMessageOptions,
@@ -35,6 +36,8 @@ export const createSignedMessage = async (
     const signature = await opts.authentication.createMessageSignature(createSignaturePayload({
         messageId: opts.messageId,
         serializedContent: opts.serializedContent,
+        signatureType: opts.signatureType,
+        encryptionType: opts.encryptionType || EncryptionType.NONE,
         prevMsgRef: opts.prevMsgRef ?? undefined,
         newGroupKey: opts.newGroupKey ?? undefined
     }))
@@ -130,7 +133,8 @@ export class MessageFactory {
             groupKeyId,
             newGroupKey,
             authentication: this.authentication,
-            contentType
+            contentType,
+            signatureType: SignatureType.NEW_SECP256K1,
         })
     }
 

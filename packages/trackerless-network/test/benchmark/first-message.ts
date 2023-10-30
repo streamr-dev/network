@@ -4,6 +4,7 @@ import { LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
 import { 
     ContentType,
     MessageID,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
@@ -98,6 +99,8 @@ const measureJoiningTime = async (count: number) => {
             messageType: StreamMessageType.MESSAGE,
             contentType: ContentType.JSON,
             signature: hexToBinary('0x1234'),
+            signatureType: SignatureType.NEW_SECP256K1,
+
         })
         streamParts.get(stream)!.broadcast(streamMessage)
     }, 1000)

@@ -5,6 +5,7 @@ import {
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
@@ -123,6 +124,7 @@ export class PublisherKeyExchange {
             encryptionType: EncryptionType.RSA,
             authentication: this.authentication,
             contentType: ContentType.JSON,
+            signatureType: SignatureType.NEW_SECP256K1,
         })
         return response
     }

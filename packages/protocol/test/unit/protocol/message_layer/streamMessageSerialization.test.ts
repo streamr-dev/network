@@ -6,7 +6,7 @@ import MessageID from '../../../../src/protocol/message_layer/MessageID'
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 import StreamMessage, { ContentType, EncryptionType, StreamMessageType, VERSION } from '../../../../src/protocol/message_layer/StreamMessage'
 import { toStreamID } from '../../../../src/utils/StreamID'
-import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/streamMessageSerialization'
+import { LEGACY_SIGNATURE_TYPE_IN_BRUBECK_PROTOCOL } from '../../../../src/protocol/message_layer/streamMessageSerialization'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 const signature = '111233'
@@ -33,7 +33,7 @@ const serializedMessage = JSON.stringify([
     'groupKeyId',
     binaryToHex(utf8ToBinary('encrypted-content')),
     '["groupKeyId","1234"]',
-    SIGNATURE_TYPE_ETH,
+    LEGACY_SIGNATURE_TYPE_IN_BRUBECK_PROTOCOL,
     signature
 ])
 

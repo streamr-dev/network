@@ -30,6 +30,11 @@ export enum EncryptionType {
     AES = 2
 }
 
+export enum SignatureType {
+    LEGACY_SECP256K1,   // Brubeck payload signed with secp256k1 curve
+    NEW_SECP256K1,      // Streamr 1.0 payload signed with secp256k1 curve
+}
+
 export interface StreamMessageOptions {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
@@ -40,6 +45,7 @@ export interface StreamMessageOptions {
     groupKeyId?: string | null
     newGroupKey?: EncryptedGroupKey | null
     signature: Uint8Array
+    signatureType: SignatureType
 }
 
 /**
@@ -54,6 +60,7 @@ export default class StreamMessage {
     private static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessageType))
     private static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
     private static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
+    private static VALID_SIGNATURE_TYPES = new Set(Object.values(SignatureType))
 
     messageId: MessageID
     prevMsgRef: MessageRef | null
@@ -63,6 +70,7 @@ export default class StreamMessage {
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
     signature: Uint8Array
+    signatureType: SignatureType
     private parsedContent?: unknown
     serializedContent: Uint8Array
 
@@ -81,6 +89,7 @@ export default class StreamMessage {
             groupKeyId: this.groupKeyId,
             newGroupKey: this.newGroupKey,
             signature: this.signature,
+            signatureType: this.signatureType,
         })
     }
 
@@ -94,6 +103,7 @@ export default class StreamMessage {
         groupKeyId = null,
         newGroupKey = null,
         signature,
+        signatureType,
     }: StreamMessageOptions) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
         this.messageId = messageId
@@ -118,6 +128,9 @@ export default class StreamMessage {
 
         validateIsType('signature', signature, 'Uint8Array', Uint8Array)
         this.signature = signature
+
+        StreamMessage.validateSignatureType(signatureType)
+        this.signatureType = signatureType
 
         this.serializedContent = content
 
@@ -238,6 +251,12 @@ export default class StreamMessage {
     static validateEncryptionType(encryptionType: EncryptionType): void {
         if (!StreamMessage.VALID_ENCRYPTIONS.has(encryptionType)) {
             throw new ValidationError(`Unsupported encryption type: ${encryptionType}`)
+        }
+    }
+
+    static validateSignatureType(signatureType: SignatureType): void {
+        if (!StreamMessage.VALID_SIGNATURE_TYPES.has(signatureType)) {
+            throw new ValidationError(`Unsupported signature type: ${signatureType}`)
         }
     }
 

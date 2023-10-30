@@ -58,17 +58,23 @@ enum EncryptionType {
   AES = 1;
 }
 
+enum SignatureType {
+  LEGACY_SECP256K1 = 0;
+  NEW_SECP256K1 = 1;
+}
+
 message StreamMessage {
   StreamMessageType messageType = 1;
   ContentType contentType = 2;
   EncryptionType encryptionType = 3;
   bytes content = 4;
-  bytes signature = 5;
+  SignatureType signatureType = 5;
+  bytes signature = 6;
   // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  MessageID messageId = 6;
-  optional MessageRef previousMessageRef = 7;
-  optional string groupKeyId = 8;
-  optional GroupKey newGroupKey = 9;
+  MessageID messageId = 7;
+  optional MessageRef previousMessageRef = 8;
+  optional string groupKeyId = 9;
+  optional GroupKey newGroupKey = 10;
 }
 
 message GroupKeyRequest {

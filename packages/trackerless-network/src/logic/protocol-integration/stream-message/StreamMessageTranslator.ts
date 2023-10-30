@@ -8,6 +8,7 @@ import {
     GroupKeyResponse as OldGroupKeyResponse,
     StreamID,
     EncryptionType as OldEncryptionType,
+    SignatureType as OldSignatureType,
     ContentType as OldContentType
 } from '@streamr/protocol'
 import {
@@ -17,6 +18,7 @@ import {
     GroupKeyRequest,
     GroupKeyResponse,
     MessageRef,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
     MessageID
@@ -37,6 +39,21 @@ const newToOldEncryptionType = (type: EncryptionType): OldEncryptionType => {
         return OldEncryptionType.AES
     }
     return OldEncryptionType.NONE
+}
+
+const newToOldSignatureType = (type: SignatureType): OldSignatureType => {
+    if (type === SignatureType.LEGACY_SECP256K1) {
+        return OldSignatureType.LEGACY_SECP256K1
+    }
+    return OldSignatureType.NEW_SECP256K1
+    
+}
+
+const oldToNewSignatureType = (type: OldSignatureType): SignatureType => {
+    if (type === OldSignatureType.LEGACY_SECP256K1) {
+        return SignatureType.LEGACY_SECP256K1
+    }
+    return SignatureType.NEW_SECP256K1
 }
 
 const oldToNewContentType = (type: OldContentType): ContentType => {
@@ -114,7 +131,8 @@ export class StreamMessageTranslator {
             encryptionType: oldToNewEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId ?? undefined,
             newGroupKey,
-            signature: msg.signature
+            signature: msg.signature,
+            signatureType: oldToNewSignatureType(msg.signatureType),
         }
         return translated
     }
@@ -172,7 +190,8 @@ export class StreamMessageTranslator {
             encryptionType: newToOldEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId,
             newGroupKey,
-            signature: msg.signature
+            signature: msg.signature,
+            signatureType: newToOldSignatureType(msg.signatureType)
         })
         return translated
     }
