@@ -112,7 +112,7 @@ message ClosestPeersResponse {
 }
 
 message FindRequest {
-  string recursiveFindSessionId = 1;
+  string sessionId = 1;
   bool fetchData = 2;
 }
 

@@ -165,9 +165,9 @@ export interface ClosestPeersResponse {
  */
 export interface FindRequest {
     /**
-     * @generated from protobuf field: string recursiveFindSessionId = 1;
+     * @generated from protobuf field: string sessionId = 1;
      */
-    recursiveFindSessionId: string;
+    sessionId: string;
     /**
      * @generated from protobuf field: bool fetchData = 2;
      */
@@ -932,7 +932,7 @@ export const ClosestPeersResponse = new ClosestPeersResponse$Type();
 class FindRequest$Type extends MessageType$<FindRequest> {
     constructor() {
         super("dht.FindRequest", [
-            { no: 1, name: "recursiveFindSessionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "sessionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "fetchData", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }

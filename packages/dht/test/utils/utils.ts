@@ -113,7 +113,7 @@ export const createFindRequest = (
 ): FindRequest => {
     const request: FindRequest = {
         fetchData,
-        recursiveFindSessionId: v4()
+        sessionId: v4()
     }
     return request
 }
