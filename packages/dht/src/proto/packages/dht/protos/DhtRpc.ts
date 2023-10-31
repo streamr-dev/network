@@ -161,9 +161,9 @@ export interface ClosestPeersResponse {
     requestId: string;
 }
 /**
- * @generated from protobuf message dht.RecursiveFindRequest
+ * @generated from protobuf message dht.FindRequest
  */
-export interface RecursiveFindRequest {
+export interface FindRequest {
     /**
      * @generated from protobuf field: string recursiveFindSessionId = 1;
      */
@@ -461,11 +461,11 @@ export interface Message {
          */
         rpcMessage: RpcMessage;
     } | {
-        oneofKind: "recursiveFindRequest";
+        oneofKind: "findRequest";
         /**
-         * @generated from protobuf field: dht.RecursiveFindRequest RecursiveFindRequest = 11 [json_name = "RecursiveFindRequest"];
+         * @generated from protobuf field: dht.FindRequest findRequest = 11;
          */
-        recursiveFindRequest: RecursiveFindRequest;
+        findRequest: FindRequest;
     } | {
         oneofKind: undefined;
     };
@@ -942,18 +942,18 @@ class ClosestPeersResponse$Type extends MessageType$<ClosestPeersResponse> {
  */
 export const ClosestPeersResponse = new ClosestPeersResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class RecursiveFindRequest$Type extends MessageType$<RecursiveFindRequest> {
+class FindRequest$Type extends MessageType$<FindRequest> {
     constructor() {
-        super("dht.RecursiveFindRequest", [
+        super("dht.FindRequest", [
             { no: 1, name: "recursiveFindSessionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "findMode", kind: "enum", T: () => ["dht.FindMode", FindMode] }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.RecursiveFindRequest
+ * @generated MessageType for protobuf message dht.FindRequest
  */
-export const RecursiveFindRequest = new RecursiveFindRequest$Type();
+export const FindRequest = new FindRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RecursiveFindReport$Type extends MessageType$<RecursiveFindReport> {
     constructor() {
@@ -1142,7 +1142,7 @@ class Message$Type extends MessageType$<Message> {
             { no: 8, name: "handshakeRequest", kind: "message", oneof: "body", T: () => HandshakeRequest },
             { no: 9, name: "handshakeResponse", kind: "message", oneof: "body", T: () => HandshakeResponse },
             { no: 10, name: "rpcMessage", kind: "message", oneof: "body", T: () => RpcMessage },
-            { no: 11, name: "RecursiveFindRequest", kind: "message", jsonName: "RecursiveFindRequest", oneof: "body", T: () => RecursiveFindRequest }
+            { no: 11, name: "findRequest", kind: "message", oneof: "body", T: () => FindRequest }
         ]);
     }
 }

@@ -13,7 +13,7 @@ import {
     StoreDataResponse,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse,
-    RecursiveFindRequest, 
+    FindRequest, 
     FindMode,
     DeleteDataResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -109,10 +109,10 @@ export const createWrappedClosestPeersRequest = (
     return rpcWrapper
 }
 
-export const createRecursiveFindRequest = (
+export const createFindRequest = (
     findMode: FindMode
-): RecursiveFindRequest => {
-    const request: RecursiveFindRequest = {
+): FindRequest => {
+    const request: FindRequest = {
         findMode,
         recursiveFindSessionId: v4()
     }

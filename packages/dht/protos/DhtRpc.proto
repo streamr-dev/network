@@ -116,7 +116,7 @@ enum FindMode {
   DATA = 1;
 }
 
-message RecursiveFindRequest {
+message FindRequest {
   string recursiveFindSessionId = 1;
   FindMode findMode = 2;
 }
@@ -237,7 +237,7 @@ message Message {
     HandshakeRequest handshakeRequest = 8;
     HandshakeResponse handshakeResponse = 9;
     protorpc.RpcMessage rpcMessage = 10;
-    RecursiveFindRequest RecursiveFindRequest = 11;
+    FindRequest findRequest = 11;
   };
 }
 

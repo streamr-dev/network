@@ -14,7 +14,7 @@ import {
     PingRequest, 
     PingResponse, 
     RecursiveFindReport, 
-    RecursiveFindRequest, 
+    FindRequest, 
     RouteMessageAck, 
     RouteMessageWrapper,
     WebSocketConnectionRequest,
@@ -32,7 +32,7 @@ import {
 export const protoClasses: Array<IMessageType<any>> = [
     ClosestPeersRequest,
     ClosestPeersResponse,
-    RecursiveFindRequest,
+    FindRequest,
     RecursiveFindReport,
     PingRequest,
     PingResponse,
