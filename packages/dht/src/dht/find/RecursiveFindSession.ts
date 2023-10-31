@@ -1,7 +1,7 @@
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { DataEntry, FindMode, PeerDescriptor, FindResponse } from '../../proto/packages/dht/protos/DhtRpc'
+import { DataEntry, PeerDescriptor, FindResponse } from '../../proto/packages/dht/protos/DhtRpc'
 import { IRecursiveFindSessionService } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { ITransport } from '../../transport/ITransport'
@@ -23,7 +23,7 @@ export interface RecursiveFindSessionConfig {
     kademliaIdToFind: Uint8Array
     ownPeerId: PeerID
     waitedRoutingPathCompletions: number
-    mode: FindMode
+    fetchData: boolean
 }
 
 export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IRecursiveFindSessionService {
@@ -33,7 +33,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     private readonly ownPeerId: PeerID
     private readonly waitedRoutingPathCompletions: number
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly mode: FindMode
+    private readonly fetchData: boolean
     private results: SortedContactList<Contact>
     private foundData: Map<string, DataEntry> = new Map()
     private allKnownHops: Set<PeerIDKey> = new Set()
@@ -50,7 +50,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.ownPeerId = config.ownPeerId
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
         this.results = new SortedContactList(PeerID.fromValue(this.kademliaIdToFind), 10, undefined, true)
-        this.mode = config.mode
+        this.fetchData = config.fetchData
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
             rpcRequestTimeout: 15000
         })
@@ -64,10 +64,10 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
             unreportedHops.delete(id)
         })
         if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size === 0) {
-            if (this.mode === FindMode.DATA 
+            if (this.fetchData
                 && (this.hasNonStaleData() || this.noCloserNodesReceivedCounter >= this.waitedRoutingPathCompletions)) {
                 return true
-            } else if (this.mode === FindMode.DATA) {
+            } else if (this.fetchData) {
                 return false
             }
             return true

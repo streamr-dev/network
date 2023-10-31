@@ -1,6 +1,5 @@
 import {
     DataEntry,
-    FindMode,
     Message,
     MessageType,
     NodeType,
@@ -40,7 +39,7 @@ interface RecursiveFinderConfig {
 }
 
 interface RecursiveFinderFunc {
-    startRecursiveFind(idToFind: Uint8Array, findMode?: FindMode): Promise<RecursiveFindResult>
+    startRecursiveFind(idToFind: Uint8Array, fetchData?: boolean): Promise<RecursiveFindResult>
 }
 
 export interface IRecursiveFinder extends Pick<IRoutingService, 'findRecursively'>, RecursiveFinderFunc {}
@@ -79,7 +78,7 @@ export class RecursiveFinder implements IRecursiveFinder {
 
     public async startRecursiveFind(
         idToFind: Uint8Array,
-        findMode: FindMode = FindMode.NODE,
+        fetchData: boolean = false,
         excludedPeer?: PeerDescriptor
     ): Promise<RecursiveFindResult> {
         if (this.stopped) {
@@ -92,7 +91,7 @@ export class RecursiveFinder implements IRecursiveFinder {
             kademliaIdToFind: idToFind,
             ownPeerId: peerIdFromPeerDescriptor(this.ownPeerDescriptor),
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
-            mode: findMode
+            fetchData
         })
         if (this.connections.size === 0) {
             const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
@@ -104,7 +103,7 @@ export class RecursiveFinder implements IRecursiveFinder {
             )
             return recursiveFindSession.getResults()
         }
-        const routeMessage = this.wrapFindRequest(idToFind, sessionId, findMode)
+        const routeMessage = this.wrapFindRequest(idToFind, sessionId, fetchData)
         this.ongoingSessions.set(sessionId, recursiveFindSession)
         try {
             await runAndWaitForEvents3<RecursiveFindSessionEvents>(
@@ -115,20 +114,20 @@ export class RecursiveFinder implements IRecursiveFinder {
         } catch (err) {
             logger.debug(`doFindRecursively failed with error ${err}`)
         }
-        this.findAndReportLocalData(idToFind, findMode, [], this.ownPeerDescriptor, sessionId)
+        this.findAndReportLocalData(idToFind, fetchData, [], this.ownPeerDescriptor, sessionId)
         this.ongoingSessions.delete(sessionId)
         recursiveFindSession.stop()
         return recursiveFindSession.getResults()
     }
 
-    private wrapFindRequest(idToFind: Uint8Array, sessionId: string, findMode: FindMode): RouteMessageWrapper {
+    private wrapFindRequest(idToFind: Uint8Array, sessionId: string, fetchData: boolean): RouteMessageWrapper {
         const targetDescriptor: PeerDescriptor = {
             kademliaId: idToFind,
             type: NodeType.VIRTUAL
         }
         const request: FindRequest = {
             recursiveFindSessionId: sessionId,
-            findMode
+            fetchData
         }
         const msg: Message = {
             messageType: MessageType.RECURSIVE_FIND_REQUEST,
@@ -152,12 +151,12 @@ export class RecursiveFinder implements IRecursiveFinder {
 
     private findAndReportLocalData(
         idToFind: Uint8Array,
-        findMode: FindMode,
+        fetchData: boolean,
         routingPath: PeerDescriptor[],
         sourcePeer: PeerDescriptor,
         sessionId: string
     ): boolean {
-        if (findMode === FindMode.DATA) {
+        if (fetchData) {
             const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
             if (data.size > 0) {
                 this.sendFindResponse(routingPath, sourcePeer, sessionId, [], data, true)
@@ -167,8 +166,8 @@ export class RecursiveFinder implements IRecursiveFinder {
         return false
     }
 
-    private findLocalData(idToFind: Uint8Array, findMode: FindMode): Map<PeerIDKey, DataEntry> | undefined {
-        if (findMode === FindMode.DATA) {
+    private findLocalData(idToFind: Uint8Array, fetchData: boolean): Map<PeerIDKey, DataEntry> | undefined {
+        if (fetchData) {
             return this.localDataStore.getEntry(PeerID.fromValue(idToFind))
         }
         return undefined
@@ -207,7 +206,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         const msg = routedMessage.message
         const FindRequest = msg?.body.oneofKind === 'findRequest' ? msg.body.findRequest : undefined
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.kademliaId, 5)
-        const data = this.findLocalData(idToFind.value, FindRequest!.findMode)
+        const data = this.findLocalData(idToFind.value, FindRequest!.fetchData)
         if (areEqualPeerDescriptors(this.ownPeerDescriptor, routedMessage.destinationPeer!)) {
             this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, FindRequest!.recursiveFindSessionId,
                 closestPeersToDestination, data, true)

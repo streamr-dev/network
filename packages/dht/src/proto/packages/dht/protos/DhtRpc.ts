@@ -169,9 +169,9 @@ export interface FindRequest {
      */
     recursiveFindSessionId: string;
     /**
-     * @generated from protobuf field: dht.FindMode findMode = 2;
+     * @generated from protobuf field: bool fetchData = 2;
      */
-    findMode: FindMode;
+    fetchData: boolean;
 }
 /**
  * @generated from protobuf message dht.FindResponse
@@ -702,19 +702,6 @@ export interface FindDataResponse {
     error?: string;
 }
 /**
- * @generated from protobuf enum dht.FindMode
- */
-export enum FindMode {
-    /**
-     * @generated from protobuf enum value: NODE = 0;
-     */
-    NODE = 0,
-    /**
-     * @generated from protobuf enum value: DATA = 1;
-     */
-    DATA = 1
-}
-/**
  * @generated from protobuf enum dht.NodeType
  */
 export enum NodeType {
@@ -946,7 +933,7 @@ class FindRequest$Type extends MessageType$<FindRequest> {
     constructor() {
         super("dht.FindRequest", [
             { no: 1, name: "recursiveFindSessionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "findMode", kind: "enum", T: () => ["dht.FindMode", FindMode] }
+            { no: 2, name: "fetchData", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }

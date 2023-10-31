@@ -111,14 +111,9 @@ message ClosestPeersResponse {
   string requestId = 2;
 }
 
-enum FindMode {
-  NODE = 0;
-  DATA = 1;
-}
-
 message FindRequest {
   string recursiveFindSessionId = 1;
-  FindMode findMode = 2;
+  bool fetchData = 2;
 }
 
 message FindResponse {

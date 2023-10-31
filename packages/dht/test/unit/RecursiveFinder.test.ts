@@ -1,5 +1,4 @@
 import {
-    FindMode,
     Message,
     MessageType,
     NodeType,
@@ -33,7 +32,7 @@ describe('RecursiveFinder', () => {
         kademliaId: PeerID.fromString('destination').value,
         type: NodeType.NODEJS
     }
-    const findRequest = createFindRequest(FindMode.NODE)
+    const findRequest = createFindRequest(false)
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),

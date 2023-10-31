@@ -1,5 +1,5 @@
 import { DhtNode } from '../dht/DhtNode'
-import { ExternalStoreDataRequest, ExternalStoreDataResponse, FindDataRequest, FindDataResponse, FindMode } from '../proto/packages/dht/protos/DhtRpc'
+import { ExternalStoreDataRequest, ExternalStoreDataResponse, FindDataRequest, FindDataResponse } from '../proto/packages/dht/protos/DhtRpc'
 
 export const registerExternalApiRpcMethods = (thisNode: DhtNode): void => {
     const rpcCommunicator = thisNode.getRpcCommunicator()
@@ -21,7 +21,7 @@ export const registerExternalApiRpcMethods = (thisNode: DhtNode): void => {
 
 // IDHTRpcService method for external findRecursive calls
 const findData = async (thisNode: DhtNode, findDataRequest: FindDataRequest): Promise<FindDataResponse> => {
-    const result = await thisNode.startRecursiveFind(findDataRequest.kademliaId, FindMode.DATA, findDataRequest.requestor)
+    const result = await thisNode.startRecursiveFind(findDataRequest.kademliaId, true, findDataRequest.requestor)
     if (result.dataEntries) {
         return FindDataResponse.create({ dataEntries: result.dataEntries })
     } else {
