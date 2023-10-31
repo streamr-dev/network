@@ -56,12 +56,12 @@ describe('ContractFacade', () => {
         })
     
         it('emitting ReviewRequest with valid metadata causes listener to be invoked', () => {
-            fakeOperator.emit('ReviewRequest', sponsorshipAddress, operatorContractAddress, '{ "partition": 7 }')
-            expect(listener).toHaveBeenLastCalledWith(sponsorshipAddress, operatorContractAddress, 7)
+            fakeOperator.emit('ReviewRequest', sponsorshipAddress, operatorContractAddress, 1000, 1050, '{ "partition": 7 }')
+            expect(listener).toHaveBeenLastCalledWith(sponsorshipAddress, operatorContractAddress, 7, 1000 * 1000, 1050 * 1000)
         })
     
         it('emitting ReviewRequest with invalid metadata causes listener to not be invoked', () => {
-            fakeOperator.emit('ReviewRequest', sponsorshipAddress, operatorContractAddress, '{ "partition": 666 }')
+            fakeOperator.emit('ReviewRequest', sponsorshipAddress, operatorContractAddress, 1000, 1050, '{ "partition": 666 }')
             expect(listener).not.toHaveBeenCalled()
         })
     
