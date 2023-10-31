@@ -88,42 +88,42 @@ export class AutoCertifier implements RestInterface {
     }
 
     public async start(): Promise<void> {
-        this.domainName = process.env['AUTOICERTIFIER_DOMAIN_NAME']
+        this.domainName = process.env['AUTOCERTIFIER_DOMAIN_NAME']
         if (!this.domainName) {
-            throw new Error('AUTOICERTIFIER_DOMAIN_NAME environment variable is not set')
+            throw new Error('AUTOCERTIFIER_DOMAIN_NAME environment variable is not set')
         }
 
         // the dns server will answer to NS queries with 
-        // AUTOICERTIFIER_OWN_HOSTNAME.AUTOICERTIFIER_DOMAIN_NAME 
+        // AUTOCERTIFIER_OWN_HOSTNAME.AUTOCERTIFIER_DOMAIN_NAME 
 
-        const ownHostName = process.env['AUTOICERTIFIER_OWN_HOSTNAME']
+        const ownHostName = process.env['AUTOCERTIFIER_OWN_HOSTNAME']
         if (!ownHostName) {
-            throw new Error('AUTOICERTIFIER_OWN_HOSTNAME environment variable is not set')
+            throw new Error('AUTOCERTIFIER_OWN_HOSTNAME environment variable is not set')
         }
 
-        const ownIpAddress = process.env['AUTOICERTIFIER_OWN_IP_ADDRESS']
+        const ownIpAddress = process.env['AUTOCERTIFIER_OWN_IP_ADDRESS']
         if (!ownIpAddress) {
-            throw new Error('AUTOICERTIFIER_OWN_IP_ADDRESS environment variable is not set')
+            throw new Error('AUTOCERTIFIER_OWN_IP_ADDRESS environment variable is not set')
         }
 
-        const dnsServerPort = process.env['AUTOICERTIFIER_DNS_SERVER_PORT']
+        const dnsServerPort = process.env['AUTOCERTIFIER_DNS_SERVER_PORT']
         if (!dnsServerPort) {
-            throw new Error('AUTOICERTIFIER_DNS_SERVER_PORT environment variable is not set')
+            throw new Error('AUTOCERTIFIER_DNS_SERVER_PORT environment variable is not set')
         }
 
-        const restServerPort = process.env['AUTOICERTIFIER_REST_SERVER_PORT']
+        const restServerPort = process.env['AUTOCERTIFIER_REST_SERVER_PORT']
         if (!restServerPort) {
-            throw new Error('AUTOICERTIFIER_REST_SERVER_PORT environment variable is not set')
+            throw new Error('AUTOCERTIFIER_REST_SERVER_PORT environment variable is not set')
         }
 
-        const databaseFilePath = process.env['AUTOICERTIFIER_DATABASE_FILE_PATH']
+        const databaseFilePath = process.env['AUTOCERTIFIER_DATABASE_FILE_PATH']
         if (!databaseFilePath) {
-            throw new Error('AUTOICERTIFIER_DATABASE_FILE_PATH environment variable is not set')
+            throw new Error('AUTOCERTIFIER_DATABASE_FILE_PATH environment variable is not set')
         }
 
-        const accountPrivateKeyPath = process.env['AUTOICERTIFIER_ACCOUNT_PRIVATE_KEY_PATH']
+        const accountPrivateKeyPath = process.env['AUTOCERTIFIER_ACCOUNT_PRIVATE_KEY_PATH']
         if (!accountPrivateKeyPath) {
-            throw new Error('AUTOICERTIFIER_ACCOUNT_PRIVATE_KEY_PATH environment variable is not set')
+            throw new Error('AUTOCERTIFIER_ACCOUNT_PRIVATE_KEY_PATH environment variable is not set')
         }
 
         const acmeDirectoryUrl = process.env['AUTOCERTIFIER_ACME_DIRECTORY_URL']
@@ -131,34 +131,34 @@ export class AutoCertifier implements RestInterface {
             throw new Error('AUTOCERTIFIER_ACME_DIRECTORY_URL environment variable is not set')
         }
 
-        const hmacKid = process.env['AUTOICERTIFIER_HMAC_KID']
+        const hmacKid = process.env['AUTOCERTIFIER_HMAC_KID']
         if (!hmacKid) {
-            throw new Error('AUTOICERTIFIER_HMAC_KID environment variable is not set')
+            throw new Error('AUTOCERTIFIER_HMAC_KID environment variable is not set')
         }
 
-        const hmacKey = process.env['AUTOICERTIFIER_HMAC_KEY']
+        const hmacKey = process.env['AUTOCERTIFIER_HMAC_KEY']
         if (!hmacKey) {
-            throw new Error('AUTOICERTIFIER_HMAC_KEY environment variable is not set')
+            throw new Error('AUTOCERTIFIER_HMAC_KEY environment variable is not set')
         }
 
-        const restServerCaCertPath = process.env['AUTOICERTIFIER_REST_SERVER_CA_CERT_PATH']
+        const restServerCaCertPath = process.env['AUTOCERTIFIER_REST_SERVER_CA_CERT_PATH']
         if (!restServerCaCertPath) {
-            throw new Error('AUTOICERTIFIER_REST_SERVER_CA__CERT_PATH environment variable is not set')
+            throw new Error('AUTOCERTIFIER_REST_SERVER_CA__CERT_PATH environment variable is not set')
         }
 
-        const restServerCaKeyPath = process.env['AUTOICERTIFIER_REST_SERVER_CA_KEY_PATH']
+        const restServerCaKeyPath = process.env['AUTOCERTIFIER_REST_SERVER_CA_KEY_PATH']
         if (!restServerCaKeyPath) {
-            throw new Error('AUTOICERTIFIER_REST_SERVER_CA_KEY_PATH environment variable is not set')
+            throw new Error('AUTOCERTIFIER_REST_SERVER_CA_KEY_PATH environment variable is not set')
         }
 
-        const restServerCertPath = process.env['AUTOICERTIFIER_REST_SERVER_CERT_PATH']
+        const restServerCertPath = process.env['AUTOCERTIFIER_REST_SERVER_CERT_PATH']
         if (!restServerCertPath) {
-            throw new Error('AUTOICERTIFIER_REST_SERVER_CERT_PATH environment variable is not set')
+            throw new Error('AUTOCERTIFIER_REST_SERVER_CERT_PATH environment variable is not set')
         }
 
-        const restServerKeyPath = process.env['AUTOICERTIFIER_REST_SERVER_KEY_PATH']
+        const restServerKeyPath = process.env['AUTOCERTIFIER_REST_SERVER_KEY_PATH']
         if (!restServerKeyPath) {
-            throw new Error('AUTOICERTIFIER_REST_SERVER_KEY_PATH environment variable is not set')
+            throw new Error('AUTOCERTIFIER_REST_SERVER_KEY_PATH environment variable is not set')
         }
 
         this.database = new Database(databaseFilePath)

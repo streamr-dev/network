@@ -37,17 +37,17 @@ sudo iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5983
 * set the following environment variables in a .env file in the packages root (values below are non-working examples):
 
 ```bash
-AUTOICERTIFIER_DOMAIN_NAME="example.com"
-AUTOICERTIFIER_OWN_HOSTNAME="ns1"
-AUTOICERTIFIER_OWN_IP_ADDRESS="234.134.54.1"
-AUTOICERTIFIER_DNS_SERVER_PORT="59832"
-AUTOICERTIFIER_REST_SERVER_PORT="59833"
+AUTOCERTIFIER_DOMAIN_NAME="example.com"
+AUTOCERTIFIER_OWN_HOSTNAME="ns1"
+AUTOCERTIFIER_OWN_IP_ADDRESS="234.134.54.1"
+AUTOCERTIFIER_DNS_SERVER_PORT="59832"
+AUTOCERTIFIER_REST_SERVER_PORT="59833"
 
 # The directory and the file will be created by AutoCertifier if they do not exist
-AUTOICERTIFIER_DATABASE_FILE_PATH="~/private/autocertifier.sqlite"
+AUTOCERTIFIER_DATABASE_FILE_PATH="~/private/autocertifier.sqlite"
 
 # The directory and the file will be created by AutoCertifier if they do not exist
-AUTOICERTIFIER_ACCOUNT_PRIVATE_KEY_PATH="~/private/autocertifier-acme-account-private-key.pem"
+AUTOCERTIFIER_ACCOUNT_PRIVATE_KEY_PATH="~/private/autocertifier-acme-account-private-key.pem"
 
 # This is the ACME directory URL of the ACME provider.
 # The production directory for Google Public CA is https://dv.acme-v02.api.pki.goog/directory
@@ -55,8 +55,8 @@ AUTOICERTIFIER_ACCOUNT_PRIVATE_KEY_PATH="~/private/autocertifier-acme-account-pr
 AUTOCERTIFIER_ACME_DIRECTORY_URL=https://dv.acme-v02.test-api.pki.goog/directory
 
 # These are the private EAB keys obtained from the ACME provider, keep them safe!
-AUTOICERTIFIER_HMAC_KID="example-kid"
-AUTOICERTIFIER_HMAC_KEY="example-key"
+AUTOCERTIFIER_HMAC_KID="example-kid"
+AUTOCERTIFIER_HMAC_KEY="example-key"
 ```
 
 * run the autocertifier server
