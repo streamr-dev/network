@@ -243,8 +243,6 @@ export class DnsServer {
     }
 
     public async stop(): Promise<void> {
-        if (this.server) {
-            await this.server.close()
-        }
+        await this.server.close()
     }
 }

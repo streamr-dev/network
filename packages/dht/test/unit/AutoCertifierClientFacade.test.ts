@@ -25,9 +25,9 @@ describe('AutoCertifierClientFacade', () => {
         setHost = jest.fn()
         updateCertificate = jest.fn()
         client = new AutoCertifierClientFacade({
-            autocertifierUrl: '',
-            autocertifiedSubdomainFilePath: '',
-            autocertifierRpcCommunicator: {} as any,
+            url: '',
+            subdomainFilePath: '',
+            rpcCommunicator: {} as any,
             wsServerPort: 0,
             setHost,
             updateCertificate,

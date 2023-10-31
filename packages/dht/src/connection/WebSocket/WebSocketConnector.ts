@@ -190,9 +190,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
     public async autoCertify(): Promise<void> {
         this.autoCertifierClient = new AutoCertifierClientFacade({
-            autocertifiedSubdomainFilePath: this.autocertifiedSubdomainFilePath,
-            autocertifierRpcCommunicator: this.autocertifierRpcCommunicator,
-            autocertifierUrl: this.autocertifierUrl,
+            subdomainFilePath: this.autocertifiedSubdomainFilePath,
+            rpcCommunicator: this.autocertifierRpcCommunicator,
+            url: this.autocertifierUrl,
             wsServerPort: this.selectedPort!,
             setHost: (hostName: string) => this.setHost(hostName),
             updateCertificate: (certificate: Certificate) => this.webSocketServer!.updateCertificate(certificate)

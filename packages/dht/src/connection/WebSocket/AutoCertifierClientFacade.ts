@@ -28,9 +28,9 @@ export interface IAutoCertifierClient {
 }
 
 interface AutoCertifierClientFacadeConfig {
-    autocertifierUrl: string
-    autocertifiedSubdomainFilePath: string
-    autocertifierRpcCommunicator: ListeningRpcCommunicator
+    url: string
+    subdomainFilePath: string
+    rpcCommunicator: ListeningRpcCommunicator
     wsServerPort: number
     setHost: (host: string) => void
     updateCertificate: (certificate: Certificate) => void
@@ -50,9 +50,9 @@ export class AutoCertifierClientFacade {
         this.updateCertificate = config.updateCertificate
         this.autocertifierClient = config.createClientFactory ? config.createClientFactory() 
             : defaultAutoCertifierClientFactory(
-                config.autocertifiedSubdomainFilePath,
-                config.autocertifierUrl,
-                config.autocertifierRpcCommunicator,
+                config.subdomainFilePath,
+                config.url,
+                config.rpcCommunicator,
                 config.wsServerPort
             )
     }
