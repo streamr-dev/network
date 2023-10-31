@@ -1,6 +1,6 @@
 {
   "name": "@streamr/autocertifier",
-  "version": "1.0.0",
+  "version": "0.0.1-tatum.6",
   "description": "Automatic TSL Certificate Manager for Streamr Network",
   "repository": {
     "type": "git",
@@ -28,7 +28,7 @@
     "start": "node dist/src/main.js"
   },
   "dependencies": {
-    "@streamr/autocertifier-client": "1.0.0",
+    "@streamr/autocertifier-client": "0.0.1-tatum.6",
     "@streamr/dht": "0.0.1-tatum.6",
     "@streamr/utils": "0.0.1-tatum.6",
     "acme-client": "^5.0.0",
