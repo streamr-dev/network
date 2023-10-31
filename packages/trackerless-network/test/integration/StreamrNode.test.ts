@@ -51,12 +51,12 @@ describe('StreamrNode', () => {
         transport2 = new SimulatorTransport(peerDescriptor2, simulator)
         await transport2.start()
         layer0Node1 = new DhtNode({
-            transportLayer: transport1,
+            transport: transport1,
             peerDescriptor: peerDescriptor1,
             entryPoints: [peerDescriptor1]
         })
         layer0Node2 = new DhtNode({
-            transportLayer: transport2,
+            transport: transport2,
             peerDescriptor: peerDescriptor2,
             entryPoints: [peerDescriptor1]
         })

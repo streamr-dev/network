@@ -48,7 +48,6 @@ describe('Router', () => {
         connections = new Map()
         router = new Router({
             ownPeerDescriptor: peerDescriptor1,
-            ownPeerId: peerId,
             rpcCommunicator: mockRpcCommunicator,
             addContact: (_contact) => {},
             serviceId: 'router',

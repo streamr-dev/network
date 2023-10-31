@@ -1,7 +1,7 @@
 import {
     DataEntry,
     PeerDescriptor,
-    isSamePeerDescriptor
+    areEqualPeerDescriptors
 } from '@streamr/dht'
 import { StreamPartID } from '@streamr/protocol'
 import { Logger, scheduleAtInterval, wait } from '@streamr/utils'
@@ -148,7 +148,7 @@ export class EntryPointDiscovery {
             try {
                 const discovered = await this.discoverEntryPoints()
                 if (discovered.length < ENTRYPOINT_STORE_LIMIT 
-                    || discovered.some((peerDescriptor) => isSamePeerDescriptor(peerDescriptor, this.config.ownPeerDescriptor))) {
+                    || discovered.some((peerDescriptor) => areEqualPeerDescriptors(peerDescriptor, this.config.ownPeerDescriptor))) {
                     await this.storeSelfAsEntryPoint()
                 }
             } catch (err) {

@@ -1,4 +1,4 @@
-import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor } from '@streamr/dht'
+import { ConnectionManager, DhtNode, DhtNodeOptions, areEqualPeerDescriptors } from '@streamr/dht'
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
 import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -66,7 +66,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         await this.layer0Node!.start()
         const connectionManager = this.layer0Node!.getTransport() as ConnectionManager
         if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
-            isSamePeerDescriptor(entryPoint, this.layer0Node!.getPeerDescriptor())
+            areEqualPeerDescriptors(entryPoint, this.layer0Node!.getPeerDescriptor())
         ))) {
             await this.layer0Node?.joinDht(this.options.layer0.entryPoints)
         } else {

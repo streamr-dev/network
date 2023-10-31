@@ -24,8 +24,6 @@ const logger = new Logger(module)
 export type Events = ManagedConnectionEvents & ConnectionEvents
 export class ManagedConnection extends EventEmitter<Events> {
 
-    private static objectCounter = 0
-    public objectId = 0
     private implementation?: IConnection
 
     private outputBuffer: Uint8Array[] = []
@@ -59,8 +57,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         incomingConnection?: IConnection,
     ) {
         super()
-        this.objectId = ManagedConnection.objectCounter
-        ManagedConnection.objectCounter++
 
         this.send = this.send.bind(this)
 
@@ -73,7 +69,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         this.onDisconnected = this.onDisconnected.bind(this)
 
-        logger.trace('creating ManagedConnection of type: ' + connectionType + ' objectId: ' + this.objectId)
+        logger.trace('creating ManagedConnection of type: ' + connectionType)
         if (incomingConnection && outgoingConnection) {
             throw new Err.IllegalArguments('Managed connection constructor only accepts either an incoming connection OR a outgoing connection')
         }
@@ -87,10 +83,9 @@ export class ManagedConnection extends EventEmitter<Events> {
             })
 
             this.handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
-                logger.trace('handshake completed for outgoing connection ' +
-                    ', ' + keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' objectid: ' + this.objectId
+                logger.trace('handshake completed for outgoing connection '
+                    + ', ' + keyOrUnknownFromPeerDescriptor(this.peerDescriptor) 
                     + ' outputBuffer.length: ' + this.outputBuffer.length)
-
                 this.attachImplementation(outgoingConnection)
                 this.onHandshakeCompleted(peerDescriptor)
             })
@@ -125,7 +120,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     ): this {
         if (event === 'managedData' && this.listenerCount('managedData') === 0) {
             while (this.inputBuffer.length > 0) {
-                logger.trace('emptying inputBuffer objectId: ' + this.objectId)
+                logger.trace('emptying inputBuffer')
                 const data = this.inputBuffer.shift()!
                 fn(data, this.getPeerDescriptor())
             }
@@ -143,7 +138,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         if (event === 'managedData' && this.listenerCount('managedData') === 0) {
             if (this.inputBuffer.length > 0) {
                 while (this.inputBuffer.length > 0) {
-                    logger.trace('emptying inputBuffer objectId: ' + this.objectId)
+                    logger.trace('emptying inputBuffer')
                     const data = this.inputBuffer.shift()!
                     fn(data, this.getPeerDescriptor())
                 }
@@ -180,17 +175,16 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.handshakeCompleted = true
 
         while (this.outputBuffer.length > 0) {
-            logger.trace('emptying outputBuffer objectId: ' + this.objectId)
-
+            logger.trace('emptying outputBuffer')
             this.implementation!.send(this.outputBuffer.shift()!)
         }
 
-        logger.trace('emitting handshake_completed, objectId: ' + this.objectId)
+        logger.trace('emitting handshake_completed')
         this.emit('handshakeCompleted', peerDescriptor)
     }
 
     public attachImplementation(impl: IConnection): void {
-        logger.trace('attachImplementation() objectId: ' + this.objectId)
+        logger.trace('attachImplementation()')
         this.implementation = impl
 
         impl.on('data', (bytes: Uint8Array) => {
@@ -239,7 +233,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         } else if (this.implementation) {
             this.implementation.send(data)
         } else {
-            logger.trace('adding data to outputBuffer objectId: ' + this.objectId)
+            logger.trace('adding data to outputBuffer')
 
             let result: RunAndRaceEventsReturnType<Events>
 
@@ -295,7 +289,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         if (this.implementation) {
             this.implementation.send(data)
         } else {
-            logger.trace('adding data to outputBuffer objectId: ' + this.objectId)
+            logger.trace('adding data to outputBuffer')
             this.outputBuffer.push(data)
         }
     }

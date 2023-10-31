@@ -1,4 +1,4 @@
-import { PeerDescriptor, isSamePeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, areEqualPeerDescriptors } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { wait } from '@streamr/utils'
 import { range } from 'lodash'
@@ -99,14 +99,14 @@ describe('EntryPointDiscovery', () => {
     it('discoverEntryPointsFromDht does not have known entrypoints', async () => {
         const res = await entryPointDiscoveryWithData.discoverEntryPointsFromDht(0)
         expect(res.discoveredEntryPoints.length).toBe(1)
-        expect(isSamePeerDescriptor(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)
+        expect(areEqualPeerDescriptors(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)
     })
 
     it('discoverEntryPointsfromDht on an empty stream', async () => {
         const res = await entryPointDiscoveryWithoutData.discoverEntryPointsFromDht(0)
         expect(res.entryPointsFromDht).toEqual(true)
         expect(res.discoveredEntryPoints.length).toBe(1)
-        expect(isSamePeerDescriptor(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)  // ownPeerDescriptor
+        expect(areEqualPeerDescriptors(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)  // ownPeerDescriptor
     })
 
     it('store on empty stream', async () => {
