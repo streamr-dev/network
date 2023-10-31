@@ -1,6 +1,6 @@
 import { Message, NodeType, PeerDescriptor, PeerID, ClientWebSocket, ManagedConnection, RoutingRpcCommunicator } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { AutoCertifierServiceClient } from './proto/packages/autocertifier/protos/AutoCertifier.client'
+import { AutoCertifierRpcClient } from './proto/packages/autocertifier/protos/AutoCertifier.client'
 import { Logger } from '@streamr/utils'
 import { ConnectionType } from '@streamr/dht/dist/src/connection/IConnection'
 import { FailedToConnectToStreamrWebSocket } from '@streamr/autocertifier-client'
@@ -61,7 +61,7 @@ export class StreamrChallenger {
                     communicator.handleMessageFromPeer(Message.fromBinary(msg))
                 })
 
-                const rpcClient = toProtoRpcClient(new AutoCertifierServiceClient(communicator.getRpcClientTransport()))
+                const rpcClient = toProtoRpcClient(new AutoCertifierRpcClient(communicator.getRpcClientTransport()))
 
                 rpcClient.getSessionId({ sessionId: sessionId }).then(() => {
                     resolve()

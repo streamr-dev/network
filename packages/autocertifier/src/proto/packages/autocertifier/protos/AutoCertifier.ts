@@ -51,8 +51,8 @@ class SessionIdResponse$Type extends MessageType<SessionIdResponse> {
  */
 export const SessionIdResponse = new SessionIdResponse$Type();
 /**
- * @generated ServiceType for protobuf service autocertifier.AutoCertifierService
+ * @generated ServiceType for protobuf service autocertifier.AutoCertifierRpc
  */
-export const AutoCertifierService = new ServiceType("autocertifier.AutoCertifierService", [
+export const AutoCertifierRpc = new ServiceType("autocertifier.AutoCertifierRpc", [
     { name: "getSessionId", options: {}, I: SessionIdRequest, O: SessionIdResponse }
 ]);

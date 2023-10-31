@@ -12,6 +12,6 @@ message SessionIdResponse {
     optional string sessionId = 2;
 }
 
-service AutoCertifierService {
+service AutoCertifierRpc {
     rpc getSessionId (SessionIdRequest) returns (SessionIdResponse);
 }

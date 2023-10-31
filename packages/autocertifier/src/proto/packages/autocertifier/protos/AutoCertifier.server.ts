@@ -5,9 +5,9 @@ import { SessionIdResponse } from "./AutoCertifier";
 import { SessionIdRequest } from "./AutoCertifier";
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service autocertifier.AutoCertifierService
+ * @generated from protobuf service autocertifier.AutoCertifierRpc
  */
-export interface IAutoCertifierService<T = ServerCallContext> {
+export interface IAutoCertifierRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: getSessionId(autocertifier.SessionIdRequest) returns (autocertifier.SessionIdResponse);
      */

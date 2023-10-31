@@ -3,28 +3,28 @@
 // tslint:disable
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
-import { AutoCertifierService } from "./AutoCertifier";
+import { AutoCertifierRpc } from "./AutoCertifier";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { SessionIdResponse } from "./AutoCertifier";
 import type { SessionIdRequest } from "./AutoCertifier";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service autocertifier.AutoCertifierService
+ * @generated from protobuf service autocertifier.AutoCertifierRpc
  */
-export interface IAutoCertifierServiceClient {
+export interface IAutoCertifierRpcClient {
     /**
      * @generated from protobuf rpc: getSessionId(autocertifier.SessionIdRequest) returns (autocertifier.SessionIdResponse);
      */
     getSessionId(input: SessionIdRequest, options?: RpcOptions): UnaryCall<SessionIdRequest, SessionIdResponse>;
 }
 /**
- * @generated from protobuf service autocertifier.AutoCertifierService
+ * @generated from protobuf service autocertifier.AutoCertifierRpc
  */
-export class AutoCertifierServiceClient implements IAutoCertifierServiceClient, ServiceInfo {
-    typeName = AutoCertifierService.typeName;
-    methods = AutoCertifierService.methods;
-    options = AutoCertifierService.options;
+export class AutoCertifierRpcClient implements IAutoCertifierRpcClient, ServiceInfo {
+    typeName = AutoCertifierRpc.typeName;
+    methods = AutoCertifierRpc.methods;
+    options = AutoCertifierRpc.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
