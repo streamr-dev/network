@@ -11,6 +11,14 @@ import 'dotenv/config'
 
 const logger = new Logger(module)
 
+const validateEnvironmentVariable = (name: string): string | never => {
+    const value = process.env[name]
+    if (!value) {
+        throw new Error(`${name} environment variable is not set`)
+    }
+    return value
+}
+
 export class AutoCertifier implements RestInterface {
 
     private domainName?: string
@@ -23,12 +31,16 @@ export class AutoCertifier implements RestInterface {
     // eslint-disable-next-line class-methods-use-this
     public async createSession(): Promise<Session> {
         logger.info('creating new session')
-        const sessionId = v4()
-        return { sessionId: sessionId }
+        return { sessionId: v4() }
     }
 
-    public async createNewSubdomainAndCertificate(ipAddress: string, port: string,
-        streamrWebSocketPort: string, sessionId: string, streamrWebSocketCaCert?: string): Promise<CertifiedSubdomain> {
+    public async createNewSubdomainAndCertificate(
+        ipAddress: string,
+        port: string,
+        streamrWebSocketPort: string,
+        sessionId: string,
+        streamrWebSocketCaCert?: string
+    ): Promise<CertifiedSubdomain> {
         logger.trace('Creating new subdomain and certificate for ' + ipAddress + ':' + port)
 
         // this will throw if the client cannot answer the challenge of getting sessionId 
@@ -47,8 +59,14 @@ export class AutoCertifier implements RestInterface {
         }
     }
 
-    public async createNewCertificateForSubdomain(subdomain: string, ipAddress: string,
-        port: string, streamrWebSocketPort: string, sessionId: string, token: string): Promise<CertifiedSubdomain> {
+    public async createNewCertificateForSubdomain(
+        subdomain: string,
+        ipAddress: string,
+        port: string,
+        streamrWebSocketPort: string,
+        sessionId: string,
+        token: string
+    ): Promise<CertifiedSubdomain> {
 
         logger.info('creating new certificate for ' + subdomain + ' and ' + ipAddress + ':' + port)
 
@@ -65,8 +83,14 @@ export class AutoCertifier implements RestInterface {
         }
     }
 
-    public async updateSubdomainIpAndPort(subdomain: string, ipAddress: string, port: string,
-        streamrWebSocketPort: string, sessionId: string, token: string): Promise<void> {
+    public async updateSubdomainIpAndPort(
+        subdomain: string,
+        ipAddress: string,
+        port: string,
+        streamrWebSocketPort: string,
+        sessionId: string,
+        token: string
+    ): Promise<void> {
 
         logger.info('updating subdomain ip and port for ' + subdomain + ' to ' + ipAddress + ':' + port)
 
@@ -95,71 +119,19 @@ export class AutoCertifier implements RestInterface {
 
         // the dns server will answer to NS queries with 
         // AUTOCERTIFIER_OWN_HOSTNAME.AUTOCERTIFIER_DOMAIN_NAME 
-
-        const ownHostName = process.env['AUTOCERTIFIER_OWN_HOSTNAME']
-        if (!ownHostName) {
-            throw new Error('AUTOCERTIFIER_OWN_HOSTNAME environment variable is not set')
-        }
-
-        const ownIpAddress = process.env['AUTOCERTIFIER_OWN_IP_ADDRESS']
-        if (!ownIpAddress) {
-            throw new Error('AUTOCERTIFIER_OWN_IP_ADDRESS environment variable is not set')
-        }
-
-        const dnsServerPort = process.env['AUTOCERTIFIER_DNS_SERVER_PORT']
-        if (!dnsServerPort) {
-            throw new Error('AUTOCERTIFIER_DNS_SERVER_PORT environment variable is not set')
-        }
-
-        const restServerPort = process.env['AUTOCERTIFIER_REST_SERVER_PORT']
-        if (!restServerPort) {
-            throw new Error('AUTOCERTIFIER_REST_SERVER_PORT environment variable is not set')
-        }
-
-        const databaseFilePath = process.env['AUTOCERTIFIER_DATABASE_FILE_PATH']
-        if (!databaseFilePath) {
-            throw new Error('AUTOCERTIFIER_DATABASE_FILE_PATH environment variable is not set')
-        }
-
-        const accountPrivateKeyPath = process.env['AUTOCERTIFIER_ACCOUNT_PRIVATE_KEY_PATH']
-        if (!accountPrivateKeyPath) {
-            throw new Error('AUTOCERTIFIER_ACCOUNT_PRIVATE_KEY_PATH environment variable is not set')
-        }
-
-        const acmeDirectoryUrl = process.env['AUTOCERTIFIER_ACME_DIRECTORY_URL']
-        if (!acmeDirectoryUrl) {
-            throw new Error('AUTOCERTIFIER_ACME_DIRECTORY_URL environment variable is not set')
-        }
-
-        const hmacKid = process.env['AUTOCERTIFIER_HMAC_KID']
-        if (!hmacKid) {
-            throw new Error('AUTOCERTIFIER_HMAC_KID environment variable is not set')
-        }
-
-        const hmacKey = process.env['AUTOCERTIFIER_HMAC_KEY']
-        if (!hmacKey) {
-            throw new Error('AUTOCERTIFIER_HMAC_KEY environment variable is not set')
-        }
-
-        const restServerCaCertPath = process.env['AUTOCERTIFIER_REST_SERVER_CA_CERT_PATH']
-        if (!restServerCaCertPath) {
-            throw new Error('AUTOCERTIFIER_REST_SERVER_CA__CERT_PATH environment variable is not set')
-        }
-
-        const restServerCaKeyPath = process.env['AUTOCERTIFIER_REST_SERVER_CA_KEY_PATH']
-        if (!restServerCaKeyPath) {
-            throw new Error('AUTOCERTIFIER_REST_SERVER_CA_KEY_PATH environment variable is not set')
-        }
-
-        const restServerCertPath = process.env['AUTOCERTIFIER_REST_SERVER_CERT_PATH']
-        if (!restServerCertPath) {
-            throw new Error('AUTOCERTIFIER_REST_SERVER_CERT_PATH environment variable is not set')
-        }
-
-        const restServerKeyPath = process.env['AUTOCERTIFIER_REST_SERVER_KEY_PATH']
-        if (!restServerKeyPath) {
-            throw new Error('AUTOCERTIFIER_REST_SERVER_KEY_PATH environment variable is not set')
-        }
+        const ownHostName = validateEnvironmentVariable('AUTOCERTIFIER_OWN_HOSTNAME')
+        const ownIpAddress = validateEnvironmentVariable('AUTOCERTIFIER_OWN_IP_ADDRESS')
+        const dnsServerPort = validateEnvironmentVariable('AUTOCERTIFIER_DNS_SERVER_PORT')
+        const restServerPort = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_PORT')
+        const databaseFilePath = validateEnvironmentVariable('AUTOCERTIFIER_DATABASE_FILE_PATH')
+        const accountPrivateKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_ACCOUNT_PRIVATE_KEY_PATH')
+        const acmeDirectoryUrl = validateEnvironmentVariable('AUTOCERTIFIER_ACME_DIRECTORY_URL')
+        const hmacKid = validateEnvironmentVariable('AUTOCERTIFIER_HMAC_KID')
+        const hmacKey = validateEnvironmentVariable('AUTOCERTIFIER_HMAC_KEY')
+        const restServerCaCertPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_CA_CERT_PATH')
+        const restServerCaKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_CA_KEY_PATH')
+        const restServerCertPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_CERT_PATH')
+        const restServerKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_KEY_PATH')
 
         this.database = new Database(databaseFilePath)
         await this.database.start()
