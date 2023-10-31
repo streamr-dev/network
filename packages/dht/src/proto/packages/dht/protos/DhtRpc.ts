@@ -178,9 +178,9 @@ export interface FindRequest {
  */
 export interface FindResponse {
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor nodes = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor closestConnectedPeers = 1;
      */
-    nodes: PeerDescriptor[];
+    closestConnectedPeers: PeerDescriptor[];
     /**
      * @generated from protobuf field: repeated dht.DataEntry dataEntries = 2;
      */
@@ -945,7 +945,7 @@ export const FindRequest = new FindRequest$Type();
 class FindResponse$Type extends MessageType$<FindResponse> {
     constructor() {
         super("dht.FindResponse", [
-            { no: 1, name: "nodes", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 1, name: "closestConnectedPeers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 2, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
             { no: 3, name: "noCloserNodesFound", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
             { no: 4, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }

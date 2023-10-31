@@ -158,7 +158,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
 
     public async sendFindResponse(report: FindResponse): Promise<Empty> {
         logger.trace('recursiveFindReport arrived: ' + JSON.stringify(report))
-        this.doSendFindResponse(report.routingPath, report.nodes, report.dataEntries, report.noCloserNodesFound)
+        this.doSendFindResponse(report.routingPath, report.closestConnectedPeers, report.dataEntries, report.noCloserNodesFound)
         return {}
     }
 

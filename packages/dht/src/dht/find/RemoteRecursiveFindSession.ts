@@ -15,7 +15,7 @@ export class RemoteRecursiveFindSession extends Remote<IRecursiveFindSessionServ
         dataEntries: DataEntry[], noCloserNodesFound: boolean): void {
         const report: FindResponse = {
             routingPath,
-            nodes: closestNodes,
+            closestConnectedPeers: closestNodes,
             dataEntries,
             noCloserNodesFound
         }

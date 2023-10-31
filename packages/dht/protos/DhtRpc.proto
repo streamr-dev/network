@@ -117,7 +117,7 @@ message FindRequest {
 }
 
 message FindResponse {
-  repeated PeerDescriptor nodes = 1;
+  repeated PeerDescriptor closestConnectedPeers = 1;
   repeated DataEntry dataEntries = 2;
   optional bool noCloserNodesFound = 3;
   repeated PeerDescriptor routingPath = 4;
