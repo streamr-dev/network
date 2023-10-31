@@ -6,6 +6,9 @@ import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
+// TODO: there is appears to be a general problem with typing in this class. Seems that the DNS2 library does
+// not provide proper typing for many fields and response types. Alternativel we should just simply send all
+// responses as the DnsResponse type instead of unknown
 export class DnsServer {
 
     private server?: any
@@ -38,7 +41,6 @@ export class DnsServer {
 
     private handleSOAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
-        // @ts-ignore private field 
         response.answers.push({
             name: mixedCaseName,
             type: Packet.TYPE.SOA,
@@ -51,20 +53,19 @@ export class DnsServer {
             retry: 7200,
             expiration: 3600000,
             minimum: 172800,
-        } as unknown)
+        })
         await send(response)
     }
 
     private handleNSQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
-        // @ts-ignore private field 
         response.answers.push({
             name: mixedCaseName,
             type: Packet.TYPE.NS,
             class: Packet.CLASS.IN,
             ttl: 86400,
             ns: this.ownHostName + '.' + this.domainName
-        } as unknown)
+        })
         await send(response)
     }
 
@@ -203,25 +204,27 @@ export class DnsServer {
         const parts = mixedCaseName.split('.')
         const mixedCaseDomainName = parts[parts.length - 2] + '.' + parts[parts.length - 1]
 
+        // TODO: Why DNS2 typing does not expose question.type? The code appears to works and process different
+        // query types correctly.
         // @ts-ignore private field
         logger.info(mixedCaseDomainName + ' question type 0x' + Number(question.type).toString(16))
         // @ts-ignore private field
-        if (question.type == Packet.TYPE.SOA) {
+        if (question.type === Packet.TYPE.SOA) {
             return this.handleSOAQuery(mixedCaseDomainName, send, response)
             // @ts-ignore private field
-        } else if (question.type == Packet.TYPE.NS) {
+        } else if (question.type === Packet.TYPE.NS) {
             return this.handleNSQuery(mixedCaseDomainName, send, response)
             // @ts-ignore private field
-        } else if (question.type == Packet.TYPE.TXT) {
+        } else if (question.type === Packet.TYPE.TXT) {
             return this.handleTextQuery(mixedCaseName, send, response)
             // @ts-ignore private field
-        } else if (question.type == Packet.TYPE.AAAA) {
+        } else if (question.type === Packet.TYPE.AAAA) {
             return this.handleAAAAQuery(mixedCaseName, send, response)
             // @ts-ignore private field
-        } else if (question.type == Packet.TYPE.CNAME) {
+        } else if (question.type === Packet.TYPE.CNAME) {
             return this.handleCNAMEQuery(mixedCaseName, send, response)
             // @ts-ignore private field
-        } else if (question.type == Packet.TYPE.CAA) {
+        } else if (question.type === Packet.TYPE.CAA) {
             return this.handleCAAQuery(mixedCaseName, send, response)
         } else {
             return this.handleNormalQuery(mixedCaseName, send, response)

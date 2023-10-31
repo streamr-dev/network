@@ -11,6 +11,8 @@ export class StreamrChallenger {
     private readonly SERVICE_ID = 'AutoCertifier'
     private readonly protocolVersion = '1.0'
 
+    // This is a dummy peer descriptor that is used to connect to the streamr websocket
+    // To ensure that the autocertified subdomain is used for the Streamr Network
     private ownPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('AutoCertifierServer').value,
         type: NodeType.NODEJS,

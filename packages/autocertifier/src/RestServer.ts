@@ -236,6 +236,7 @@ export class RestServer {
         }
     }
 
+    // TODO: use async fs methods?
     private createSelfSignedCertsIfTheyDontExist(): void {
         if (!fs.existsSync(this.caCertPath) || !fs.existsSync(this.caKeyPath) ||
             !fs.existsSync(this.certPath) || !fs.existsSync(this.keyPath)) {

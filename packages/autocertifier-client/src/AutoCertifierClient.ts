@@ -105,6 +105,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             this.ongoingSessions.delete(sessionId)
         }
         const dir = path.dirname(this.subdomainPath)
+        // TODO: use async fs methods?
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true })
         }
@@ -127,6 +128,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
 
         this.ongoingSessions.delete(sessionId)
 
+        // TODO: use async fs methods?
         fs.writeFileSync(this.subdomainPath, JSON.stringify(certifiedSubdomain))
         const certObj = forge.pki.certificateFromPem(certifiedSubdomain.certificate.cert)
 
@@ -142,6 +144,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             logger.warn('updateSubdomainIpAndPort() called while subdomain file does not exist')
             return
         }
+        // TODO: use async fs methods?
         const oldSubdomain = JSON.parse(fs.readFileSync(this.subdomainPath, 'utf8')) as CertifiedSubdomain
         logger.info('updateSubdomainIpAndPort() called for ' + JSON.stringify(oldSubdomain))
         const sessionId = await this.restClient.createSession()
