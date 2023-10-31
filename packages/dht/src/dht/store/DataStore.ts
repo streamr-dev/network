@@ -10,7 +10,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IRecursiveFinder } from '../find/RecursiveFinder'
-import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreService } from '../../proto/packages/dht/protos/DhtRpc.server'
@@ -68,7 +68,7 @@ export class DataStore implements IStoreService {
         this.rpcCommunicator.registerRpcMethod(DeleteDataRequest, DeleteDataResponse, 'deleteData',
             (request: DeleteDataRequest, context: ServerCallContext) => this.deleteData(request, context))
 
-        this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor, _closestPeers: PeerDescriptor[]) => {
+        this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor) => {
             this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
                 dataMap.forEach((dataEntry) => {
                     if (this.shouldMigrateDataToNewNode(dataEntry.dataEntry, peerDescriptor)) {
@@ -151,7 +151,7 @@ export class DataStore implements IStoreService {
         const ttl = this.highestTtl // ToDo: make TTL decrease according to some nice curve
         const storerTime = Timestamp.now()
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.numberOfCopies; i++) {
-            if (isSamePeerDescriptor(this.ownPeerDescriptor, closestNodes[i])) {
+            if (areEqualPeerDescriptors(this.ownPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
                     kademliaId: key, 
                     storer: this.ownPeerDescriptor,
@@ -201,7 +201,7 @@ export class DataStore implements IStoreService {
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.numberOfCopies; i++) {
-            if (isSamePeerDescriptor(this.ownPeerDescriptor, closestNodes[i])) {
+            if (areEqualPeerDescriptors(this.ownPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.markAsDeleted(key, peerIdFromPeerDescriptor(this.ownPeerDescriptor))
                 successfulNodes.push(closestNodes[i])
                 continue

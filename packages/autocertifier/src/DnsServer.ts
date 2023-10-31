@@ -41,6 +41,7 @@ export class DnsServer {
 
     private handleSOAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
+        // @ts-ignore private field
         response.answers.push({
             name: mixedCaseName,
             type: Packet.TYPE.SOA,
@@ -53,19 +54,20 @@ export class DnsServer {
             retry: 7200,
             expiration: 3600000,
             minimum: 172800,
-        })
+        } as unknown)
         await send(response)
     }
 
     private handleNSQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
+        // @ts-ignore private field
         response.answers.push({
             name: mixedCaseName,
             type: Packet.TYPE.NS,
             class: Packet.CLASS.IN,
             ttl: 86400,
             ns: this.ownHostName + '.' + this.domainName
-        })
+        } as unknown)
         await send(response)
     }
 

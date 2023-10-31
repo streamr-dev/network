@@ -2,7 +2,6 @@ import {
     StreamPartHandshakeRequest,
     StreamPartHandshakeResponse
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     ListeningRpcCommunicator,
     NodeType,
@@ -34,11 +33,13 @@ describe('HandshakeRpcRemote', () => {
     let mockConnectionManager1: SimulatorTransport
     let mockConnectionManager2: SimulatorTransport
 
-    beforeEach(() => {
+    beforeEach(async () => {
         Simulator.useFakeTimers()
         simulator = new Simulator()
         mockConnectionManager1 = new SimulatorTransport(serverNode, simulator)
+        await mockConnectionManager1.start()
         mockConnectionManager2 = new SimulatorTransport(clientNode, simulator)
+        await mockConnectionManager2.start()
 
         mockServerRpc = new ListeningRpcCommunicator('test', mockConnectionManager1)
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
@@ -47,7 +48,7 @@ describe('HandshakeRpcRemote', () => {
             StreamPartHandshakeRequest,
             StreamPartHandshakeResponse,
             'handshake',
-            async (msg: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
+            async (msg: StreamPartHandshakeRequest): Promise<StreamPartHandshakeResponse> => {
                 const res: StreamPartHandshakeResponse = {
                     requestId: msg.requestId,
                     accepted: true

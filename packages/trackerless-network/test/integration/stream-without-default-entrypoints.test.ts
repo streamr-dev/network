@@ -47,9 +47,10 @@ describe('stream without default entrypoints', () => {
         nodes = []
         numOfReceivedMessages = 0
         const entryPointTransport = new SimulatorTransport(entryPointPeerDescriptor, simulator)
+        await entryPointTransport.start()
         entrypoint = createNetworkNode({
             layer0: {
-                transportLayer: entryPointTransport,
+                transport: entryPointTransport,
                 peerDescriptor: entryPointPeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -58,10 +59,11 @@ describe('stream without default entrypoints', () => {
         await Promise.all(range(20).map(async () => {
             const peerDescriptor = createMockPeerDescriptor()
             const transport = new SimulatorTransport(peerDescriptor, simulator)
+            await transport.start()
             const node = createNetworkNode({
                 layer0: {
                     peerDescriptor,
-                    transportLayer: transport,
+                    transport,
                     entryPoints: [entryPointPeerDescriptor]
                 }
             })

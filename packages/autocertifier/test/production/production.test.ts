@@ -1,5 +1,13 @@
-import { ConnectionManager, ListeningRpcCommunicator, NodeType, PeerDescriptor, PeerID, Simulator } from '@streamr/dht'
-import { createPeerDescriptor } from '@streamr/dht/dist/src/dht/DhtNode'
+import { 
+    ConnectionManager,
+    ListeningRpcCommunicator,
+    NodeType,
+    PeerDescriptor,
+    PeerID,
+    Simulator,
+    SimulatorTransport,
+    DefaultConnectorFacade
+} from '@streamr/dht'
 import { AutoCertifierClient } from '@streamr/autocertifier-client'
 import os from 'os'
 import fs from 'fs'
@@ -26,7 +34,7 @@ describe('production', () => {
     }
 
     const simulator = new Simulator()
-    const mockTransport = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor1, simulator: simulator })
+    const mockTransport = new SimulatorTransport(mockPeerDescriptor1, simulator)
 
     let clientConnectionManager: ConnectionManager
     let clientRpcCommunicator: ListeningRpcCommunicator | undefined
@@ -40,16 +48,18 @@ describe('production', () => {
         }
 
         clientConnectionManager = new ConnectionManager({
-            transportLayer: mockTransport,
-            websocketHost: '127.0.0.1',
-            websocketPortRange: { min: 9991, max: 9995 }
+            createConnectorFacade: () => new DefaultConnectorFacade({
+                transport: mockTransport,
+                websocketHost: '127.0.0.1',
+                websocketPortRange: { min: 9995, max: 9995 },
+                createOwnPeerDescriptor: () => mockPeerDescriptor1
+            }),
+            metricsContext: {} as any
         })
 
-        await clientConnectionManager.start((report) => {
-            expect(report.host).toEqual('127.0.0.1')
-            expect(report.openInternet).toEqual(true)
-            return createPeerDescriptor(report)
-        })
+        await clientConnectionManager.start()
+        const peerDescriptor = clientConnectionManager.getPeerDescriptor()
+        expect(peerDescriptor.websocket!.host).toEqual('127.0.0.1')
     })
 
     afterEach(async () => {

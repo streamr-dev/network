@@ -8,7 +8,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { DhtRpcServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { SortedContactList } from '../contact/SortedContactList'
 import { RemoteDhtNode } from '../RemoteDhtNode'
-import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -37,11 +37,9 @@ export class DiscoverySession {
     private noProgressCounter = 0
     private ongoingClosestPeersRequests: Set<string> = new Set()
     private readonly config: DiscoverySessionConfig
-    private readonly ownPeerId: PeerID
 
     constructor(config: DiscoverySessionConfig) {
         this.config = config
-        this.ownPeerId = peerIdFromPeerDescriptor(config.ownPeerDescriptor)
     }
 
     private addNewContacts(contacts: PeerDescriptor[]): void {
@@ -49,13 +47,13 @@ export class DiscoverySession {
             return
         }
         contacts.forEach((contact) => {
-            const remoteDhtNode = new RemoteDhtNode(
-                this.config.ownPeerDescriptor,
-                contact,
-                toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
-                this.config.serviceId
-            )
-            if (!remoteDhtNode.getPeerId().equals(this.ownPeerId)) {
+            if (!areEqualPeerDescriptors(contact, this.config.ownPeerDescriptor)) {
+                const remoteDhtNode = new RemoteDhtNode(
+                    this.config.ownPeerDescriptor,
+                    contact,
+                    toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
+                    this.config.serviceId
+                )
                 if (this.config.newContactListener) {
                     this.config.newContactListener(remoteDhtNode)
                 }
@@ -92,7 +90,7 @@ export class DiscoverySession {
         }
     }
 
-    private onClosestPeersRequestFailed(peer: RemoteDhtNode, _exception: Error) {
+    private onClosestPeersRequestFailed(peer: RemoteDhtNode) {
         if (!this.ongoingClosestPeersRequests.has(peer.getPeerId().toKey())) {
             return
         }
@@ -119,7 +117,7 @@ export class DiscoverySession {
             // eslint-disable-next-line promise/catch-or-return
             this.getClosestPeersFromContact(nextPeer)
                 .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer.getPeerId(), contacts))
-                .catch((err) => this.onClosestPeersRequestFailed(nextPeer, err))
+                .catch(() => this.onClosestPeersRequestFailed(nextPeer))
                 .finally(() => {
                     this.outgoingClosestPeersRequestsCounter--
                     this.findMoreContacts()

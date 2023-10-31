@@ -116,8 +116,8 @@ module.exports = (env, argv) => {
                 '@streamr/autocertifier-client': false,
                 [path.resolve(__dirname, '../dht/src/connection/WebRTC/NodeWebRtcConnection.ts')]:
                     path.resolve(__dirname, '../dht/src/connection/WebRTC/BrowserWebRtcConnection.ts'),
-                [path.resolve(__dirname, '../dht/src/helpers/browser/isNodeJS.ts')]:
-                    path.resolve(__dirname, '../dht/src/helpers/browser/isBrowser.ts'),
+                [path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment.ts')]:
+                    path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment_override.ts'),
                 // swap out ServerPersistence for BrowserPersistence
                 [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: (
                     path.resolve('./src/utils/persistence/BrowserPersistence.ts')

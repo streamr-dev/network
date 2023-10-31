@@ -46,28 +46,30 @@ describe('Joining stream parts on offline nodes', () => {
         const entryPointTransport = new SimulatorTransport(entryPointPeerDescriptor, simulator)
         entryPoint = new NetworkStack({
             layer0: {
-                transportLayer: entryPointTransport,
+                transport: entryPointTransport,
                 peerDescriptor: entryPointPeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
         })
-
+        const node1Transport = new SimulatorTransport(node1PeerDescriptor, simulator)
         node1 = new NetworkStack({
             layer0: {
-                transportLayer: new SimulatorTransport(node1PeerDescriptor, simulator),
+                transport: node1Transport,
                 peerDescriptor: node1PeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
         })
-
+        const node2Transport = new SimulatorTransport(node2PeerDescriptor, simulator)
         node2 = new NetworkStack({
             layer0: {
-                transportLayer: new SimulatorTransport(node2PeerDescriptor, simulator),
+                transport: node2Transport,
                 peerDescriptor: node2PeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
         })
-
+        await entryPointTransport.start()
+        await node1Transport.start()
+        await node2Transport.start()
         await entryPoint.start()
         await node1.start()
         await node2.start()

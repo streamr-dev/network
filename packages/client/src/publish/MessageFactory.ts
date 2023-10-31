@@ -60,7 +60,7 @@ export class MessageFactory {
         this.authentication = opts.authentication
         this.streamRegistry = opts.streamRegistry
         this.groupKeyQueue = opts.groupKeyQueue
-        this.defaultMessageChainIds = new Mapping(async (_partition: number) => {
+        this.defaultMessageChainIds = new Mapping(async () => {
             return createRandomMsgChainId()
         })
     }

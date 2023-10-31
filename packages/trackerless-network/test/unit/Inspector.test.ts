@@ -1,4 +1,4 @@
-import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
+import { ListeningRpcCommunicator } from '@streamr/dht'
 import { utf8ToBinary } from '@streamr/utils'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { Inspector } from '../../src/logic/inspect/Inspector'
@@ -32,7 +32,7 @@ describe('Inspector', () => {
             streamPartId: StreamPartIDUtils.parse('stream#0'),
             rpcCommunicator: new ListeningRpcCommunicator('inspector', new MockTransport()),
             connectionLocker: mockConnectionLocker,
-            openInspectConnection: async (_peerDescriptor: PeerDescriptor, _lockId: string) => mockConnect()
+            openInspectConnection: async () => mockConnect()
         })
     })
 

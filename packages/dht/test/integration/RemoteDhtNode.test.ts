@@ -12,7 +12,6 @@ import {
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { generateId } from '../utils/utils'
-import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('RemoteDhtNode', () => {
 
@@ -34,10 +33,10 @@ describe('RemoteDhtNode', () => {
         serverRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.getClosestPeers)
         serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
-        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             serverRpcCommunicator.handleIncomingMessage(message)
         })
-        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new DhtRpcServiceClient(clientRpcCommunicator.getRpcClientTransport()))

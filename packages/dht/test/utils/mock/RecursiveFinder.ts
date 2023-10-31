@@ -1,5 +1,5 @@
 import { RecursiveFindResult, IRecursiveFinder } from '../../../src/dht/find/RecursiveFinder'
-import { RouteMessageAck, RouteMessageWrapper } from '../../../src/proto/packages/dht/protos/DhtRpc'
+import { RouteMessageAck } from '../../../src/proto/packages/dht/protos/DhtRpc'
 
 export class MockRecursiveFinder implements IRecursiveFinder {
 
@@ -12,7 +12,7 @@ export class MockRecursiveFinder implements IRecursiveFinder {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async findRecursively(_routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
+    async findRecursively(): Promise<RouteMessageAck> {
         return RouteMessageAck.create()
     }
 

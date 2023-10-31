@@ -17,7 +17,7 @@ describe('Router', () => {
         kademliaId: PeerID.fromString('destination').value,
         type: NodeType.NODEJS
     }
-    const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1, peerDescriptor2)
+    const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1)
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),
@@ -48,7 +48,6 @@ describe('Router', () => {
         connections = new Map()
         router = new Router({
             ownPeerDescriptor: peerDescriptor1,
-            ownPeerId: peerId,
             rpcCommunicator: mockRpcCommunicator,
             addContact: (_contact) => {},
             serviceId: 'router',
@@ -86,36 +85,36 @@ describe('Router', () => {
     })
 
     it('route server is destination without connections', async () => {
-        const ack = await router.routeMessage(routedMessage, {} as any)
+        const ack = await router.routeMessage(routedMessage)
         expect(ack.error).toEqual('')
     })
 
     it('route server with connections', async () => {
         connections.set(PeerID.fromString('test').toKey(), createMockRemoteDhtNode(peerDescriptor2))
-        const ack = await router.routeMessage(routedMessage, {} as any)
+        const ack = await router.routeMessage(routedMessage)
         expect(ack.error).toEqual('')
     })
 
     it('route server on duplicate message', async () => {
         router.addToDuplicateDetector(routedMessage.requestId)
-        const ack = await router.routeMessage(routedMessage, {} as any)
+        const ack = await router.routeMessage(routedMessage)
         expect(ack.error).toEqual('message given to routeMessage() service is likely a duplicate')
     })
 
     it('forward server no connections', async () => {
-        const ack = await router.forwardMessage(routedMessage, {} as any)
+        const ack = await router.forwardMessage(routedMessage)
         expect(ack.error).toEqual('No routing candidates found')
     })
 
     it('forward server with connections', async () => {
         connections.set(PeerID.fromString('test').toKey(), createMockRemoteDhtNode(peerDescriptor2))
-        const ack = await router.forwardMessage(routedMessage, {} as any)
+        const ack = await router.forwardMessage(routedMessage)
         expect(ack.error).toEqual('')
     })
 
     it('forward server on duplicate message', async () => {
         router.addToDuplicateDetector(routedMessage.requestId)
-        const ack = await router.forwardMessage(routedMessage, {} as any)
+        const ack = await router.forwardMessage(routedMessage)
         expect(ack.error).toEqual('message given to forwardMessage() service is likely a duplicate')
     })
 

@@ -1,4 +1,4 @@
-import { isSamePeerDescriptor } from '@streamr/dht'
+import { areEqualPeerDescriptors } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
@@ -24,7 +24,7 @@ describe('StreamrNode', () => {
     })
 
     it('PeerDescriptor is correct', () => {
-        expect(isSamePeerDescriptor(peerDescriptor, node.getPeerDescriptor()))
+        expect(areEqualPeerDescriptors(peerDescriptor, node.getPeerDescriptor()))
     })
 
     describe('join and leave', () => {
