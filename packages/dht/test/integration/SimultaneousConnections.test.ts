@@ -116,12 +116,12 @@ describe('SimultaneousConnections', () => {
         beforeEach(async () => {
             const websocketPortRange = { min: 43432, max: 43433 }
             connectionManager1 = createConnectionManager(wsPeer1, {
-                transportLayer: simulatorTransport1,
+                transport: simulatorTransport1,
                 websocketPortRange,
                 entryPoints: [wsPeer1]
             })
             connectionManager2 = createConnectionManager(wsPeer2, {
-                transportLayer: simulatorTransport2,
+                transport: simulatorTransport2,
                 websocketPortRange,
                 entryPoints: [wsPeer1]
             })
@@ -191,12 +191,12 @@ describe('SimultaneousConnections', () => {
 
         beforeEach(async () => {
             connectionManager1 = createConnectionManager(wsPeer1, {
-                transportLayer: simulatorTransport1,
+                transport: simulatorTransport1,
                 websocketPortRange: { min: 43432, max: 43432 },
                 entryPoints: [wsPeer1]
             })
             connectionManager2 = createConnectionManager(wsPeer2, {
-                transportLayer: simulatorTransport2
+                transport: simulatorTransport2
             })
             await connectionManager1.start()
             await connectionManager2.start()
@@ -259,10 +259,10 @@ describe('SimultaneousConnections', () => {
 
         beforeEach(async () => {
             connectionManager1 = createConnectionManager(wrtcPeer1, {
-                transportLayer: simulatorTransport1,
+                transport: simulatorTransport1,
             })
             connectionManager2 = createConnectionManager(wrtcPeer2, {
-                transportLayer: simulatorTransport2,
+                transport: simulatorTransport2,
             })
             await connectionManager1.start()
             await connectionManager2.start()

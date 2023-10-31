@@ -1,7 +1,7 @@
 import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
 import {
-    isSamePeerDescriptor,
+    areEqualPeerDescriptors,
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
@@ -30,7 +30,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             const ack = await this.getClient().routeMessage(message, options)
             // Success signal if sent to destination and error includes duplicate
             if (
-                isSamePeerDescriptor(params.destinationPeer!, this.getPeerDescriptor())
+                areEqualPeerDescriptors(params.destinationPeer!, this.getPeerDescriptor())
                 && ack.error.includes('duplicate')
             ) {
                 return true

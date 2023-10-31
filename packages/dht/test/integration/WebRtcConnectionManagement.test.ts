@@ -10,10 +10,10 @@ import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTran
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { MetricsContext } from '@streamr/utils'
 
-const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, transportLayer: ITransport) => {
+const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
         createConnectorFacade: () => new DefaultConnectorFacade({
-            transportLayer,
+            transport,
             createOwnPeerDescriptor: () => ownPeerDescriptor
         }),
         metricsContext: new MetricsContext()

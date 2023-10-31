@@ -44,13 +44,13 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(cms.map((cm) => cm.start()))
 
         dhtEntryPoint = new DhtNode({
-            transportLayer: entrypointCm,
+            transport: entrypointCm,
             peerDescriptor: entrypointDescriptor,
             serviceId: streamPartId
         })
 
         dhtNodes = range(numOfNodes).map((i) => new DhtNode({
-            transportLayer: cms[i],
+            transport: cms[i],
             peerDescriptor: peerDescriptors[i],
             serviceId: streamPartId
         }))
