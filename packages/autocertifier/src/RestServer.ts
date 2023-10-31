@@ -103,13 +103,13 @@ export class RestServer {
             app.post('/sessions', this.createSession)
 
             // create new subdomain and certificate
-            app.patch('/certifiedsubdomains', async (req, res) => {await this.createSubdomainAndCertificate(req, res)})
+            app.patch('/certified-subdomains', async (req, res) => {await this.createSubdomainAndCertificate(req, res)})
 
             // get new certificate for existing subdomain
-            app.patch('/certifiedsubdomains/:subdomain', this.createNewCertificateForExistingSubdomain)
+            app.patch('/certified-subdomains/:subdomain', this.createNewCertificateForExistingSubdomain)
 
             // update subdomain ip and port
-            app.put('/certifiedsubdomains/:subdomain/ip', this.updateSubdomainIpAndPort)
+            app.put('/certified-subdomains/:subdomain/ip', this.updateSubdomainIpAndPort)
 
             const options = {
                 key: fs.readFileSync(this.keyPath),

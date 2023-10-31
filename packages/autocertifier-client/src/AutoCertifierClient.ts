@@ -16,22 +16,28 @@ interface AutoCertifierClientEvents {
 
 const logger = new Logger(module)
 
-export const AUTOCERTIFIER_SERVICE_ID = 'AutoCertifier'
+export const AUTOCERTIFIER_SERVICE_ID = 'system/auto-certificer'
+const ONE_DAY = 1000 * 60 * 60 * 24
+const MAX_INT_32 = 2147483647
 
 export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents> implements IAutoCertifierService {
 
-    private readonly ONE_DAY = 1000 * 60 * 60 * 24
-    private MAX_INT_32 = 2147483647
     private updateTimeout?: NodeJS.Timeout
     private readonly restClient: RestClient
     private readonly subdomainPath: string
     private readonly streamrWebSocketPort: number
     private readonly ongoingSessions: Set<string> = new Set()
 
-    constructor(subdomainPath: string, streamrWebSocketPort: number, restApiUrl: string,
-        registerRpcMethod: (serviceId: string, rpcMethodName: string,
-            method: (request: SessionIdRequest, context: ServerCallContext) => Promise<SessionIdResponse>) => void) {
-
+    constructor(
+        subdomainPath: string,
+        streamrWebSocketPort: number,
+        restApiUrl: string,
+        registerRpcMethod: (
+            serviceId: string,
+            rpcMethodName: string,
+            method: (request: SessionIdRequest, context: ServerCallContext) => Promise<SessionIdResponse>
+        ) => void
+    ) {
         super()
 
         this.restClient = new RestClient(restApiUrl)
@@ -51,20 +57,20 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     private async checkSubdomainValidity(): Promise<void> {
         const sub = this.loadSubdomainFromDisk()
 
-        if (Date.now() >= sub.expiryTime - this.ONE_DAY) {
+        if (Date.now() >= sub.expirationTimestamp - ONE_DAY) {
             await this.updateCertificate()
         } else {
             await this.updateSubdomainIpAndPort()
-            this.scheduleCertificateUpdate(sub.expiryTime)
+            this.scheduleCertificateUpdate(sub.expirationTimestamp)
             this.emit('updatedSubdomain', sub.subdomain)
         }
     }
 
-    private loadSubdomainFromDisk(): { subdomain: CertifiedSubdomain, expiryTime: number } {
+    private loadSubdomainFromDisk(): { subdomain: CertifiedSubdomain, expirationTimestamp: number } {
         const subdomain = JSON.parse(fs.readFileSync(this.subdomainPath, 'utf8')) as CertifiedSubdomain
         const certObj = forge.pki.certificateFromPem(subdomain.certificate.cert)
-        const expiryTime = certObj.validity.notAfter.getTime()
-        return { subdomain, expiryTime }
+        const expirationTimestamp = certObj.validity.notAfter.getTime()
+        return { subdomain, expirationTimestamp }
     }
 
     public stop(): void {
@@ -74,19 +80,19 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         }
     }
 
-    private scheduleCertificateUpdate(expiryTime: number): void {
+    private scheduleCertificateUpdate(expirationTimestamp: number): void {
         if (this.updateTimeout) {
             clearTimeout(this.updateTimeout)
             this.updateTimeout = undefined
         }
         // update certificate 1 day before it expires
-        let updateIn = expiryTime - Date.now()
-        if (updateIn > this.ONE_DAY) {
-            updateIn = updateIn - this.ONE_DAY
+        let updateIn = expirationTimestamp - Date.now()
+        if (updateIn > ONE_DAY) {
+            updateIn = updateIn - ONE_DAY
         }
 
-        if (updateIn > this.MAX_INT_32) {
-            updateIn = this.MAX_INT_32
+        if (updateIn > MAX_INT_32) {
+            updateIn = MAX_INT_32
         }
 
         logger.info(updateIn + ' milliseconds until certificate update')
@@ -112,8 +118,8 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         fs.writeFileSync(this.subdomainPath, JSON.stringify(certifiedSubdomain))
         const certObj = forge.pki.certificateFromPem(certifiedSubdomain.certificate.cert)
 
-        const expiryTime = certObj.validity.notAfter.getTime()
-        this.scheduleCertificateUpdate(expiryTime)
+        const expirationTimestamp = certObj.validity.notAfter.getTime()
+        this.scheduleCertificateUpdate(expirationTimestamp)
 
         this.emit('updatedSubdomain', certifiedSubdomain)
     }
@@ -132,8 +138,8 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         fs.writeFileSync(this.subdomainPath, JSON.stringify(certifiedSubdomain))
         const certObj = forge.pki.certificateFromPem(certifiedSubdomain.certificate.cert)
 
-        const expiryTime = certObj.validity.notAfter.getTime()
-        this.scheduleCertificateUpdate(expiryTime)
+        const expirationTimestamp = certObj.validity.notAfter.getTime()
+        this.scheduleCertificateUpdate(expirationTimestamp)
 
         this.emit('updatedSubdomain', certifiedSubdomain)
     }
