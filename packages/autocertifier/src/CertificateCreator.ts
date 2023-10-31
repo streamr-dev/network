@@ -2,7 +2,7 @@ import { Logger } from '@streamr/utils'
 import * as acme from 'acme-client'
 import fs from 'fs'
 import path from 'path'
-import { ChallengeInterface } from './ChallengeInterface'
+import { ChallengeManager } from './ChallengeManager'
 import { Certificate } from '@streamr/autocertifier-client'
 import os from 'os'
 
@@ -15,18 +15,18 @@ export class CertificateCreator {
     private readonly acmeDirectoryUrl: string
     private readonly hmacKid: string
     private readonly hmacKey: string
-    private readonly challengeInterface: ChallengeInterface
+    private readonly challengeManager: ChallengeManager
 
     constructor(acmeDirectoryUrl: string,
         hmacKid: string,
         hmacKey: string,
         privateKeyPath: string,
-        challengeInterface: ChallengeInterface
+        challengeManager: ChallengeManager
     ) {
         this.acmeDirectoryUrl = acmeDirectoryUrl
         this.hmacKid = hmacKid
         this.hmacKey = hmacKey
-        this.challengeInterface = challengeInterface
+        this.challengeManager = challengeManager
 
         if (privateKeyPath.startsWith('~/')) {
             this.accountPrivateKeyPath = privateKeyPath.replace('~', os.homedir())
@@ -71,11 +71,11 @@ export class CertificateCreator {
                 termsOfServiceAgreed: true,
                 challengePriority: ['dns-01'],
                 challengeCreateFn: async (authz, _challenge, keyAuthorization) => {
-                    await this.challengeInterface.createChallenge(authz.identifier.value,
+                    await this.challengeManager.createChallenge(authz.identifier.value,
                         keyAuthorization)
                 },
                 challengeRemoveFn: async (authz, _challenge, _keyAuthorization) => {
-                    await this.challengeInterface.deleteChallenge(authz.identifier.value)
+                    await this.challengeManager.deleteChallenge(authz.identifier.value)
                 },
             })
         } catch (e) {

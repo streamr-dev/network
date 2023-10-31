@@ -99,13 +99,13 @@ export class AutoCertifier implements RestInterface {
         await this.dnsServer!.updateSubdomainIpAndPort(subdomain, ipAddress, port, token)
     }
 
-    // ChallengeInterface implementation
+    // ChallengeManager implementation
     public async createChallenge(fqdn: string, value: string): Promise<void> {
         logger.info('creating challenge for ' + fqdn + ' with value ' + value)
         this.dnsServer!.updateSubdomainAcmeChallenge(fqdn, value)
     }
 
-    // ChallengeInterface implementation
+    // ChallengeManager implementation
     // eslint-disable-next-line class-methods-use-this
     public async deleteChallenge(_name: string): Promise<void> {
         // TODO: Should this function do something?
