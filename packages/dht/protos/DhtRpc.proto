@@ -27,7 +27,7 @@ service StoreService {
 }
 
 service RecursiveFindSessionService {
-  rpc reportRecursiveFindResult(FindResponse) returns (google.protobuf.Empty);
+  rpc sendFindResponse(FindResponse) returns (google.protobuf.Empty);
 }
 
 service WebSocketConnectorService {

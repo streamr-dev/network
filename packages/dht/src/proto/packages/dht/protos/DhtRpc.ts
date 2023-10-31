@@ -1361,7 +1361,7 @@ export const StoreService = new ServiceType("dht.StoreService", [
  * @generated ServiceType for protobuf service dht.RecursiveFindSessionService
  */
 export const RecursiveFindSessionService = new ServiceType("dht.RecursiveFindSessionService", [
-    { name: "reportRecursiveFindResult", options: {}, I: FindResponse, O: Empty }
+    { name: "sendFindResponse", options: {}, I: FindResponse, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.WebSocketConnectorService

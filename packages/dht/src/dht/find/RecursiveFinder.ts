@@ -96,7 +96,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         })
         if (this.connections.size === 0) {
             const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
-            recursiveFindSession.doReportRecursiveFindResult(
+            recursiveFindSession.doSendFindResponse(
                 [this.ownPeerDescriptor],
                 [this.ownPeerDescriptor],
                 data ? Array.from(data.values()) : [],
@@ -160,7 +160,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         if (findMode === FindMode.DATA) {
             const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
             if (data.size > 0) {
-                this.reportRecursiveFindResult(routingPath, sourcePeer, sessionId, [], data, true)
+                this.sendFindResponse(routingPath, sourcePeer, sessionId, [], data, true)
                 return true
             }
         }
@@ -174,7 +174,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         return undefined
     }
 
-    private reportRecursiveFindResult(
+    private sendFindResponse(
         routingPath: PeerDescriptor[],
         targetPeerDescriptor: PeerDescriptor,
         serviceId: string,
@@ -186,7 +186,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         const isOwnNode = areEqualPeerDescriptors(this.ownPeerDescriptor, targetPeerDescriptor)
         if (isOwnNode && this.ongoingSessions.has(serviceId)) {
             this.ongoingSessions.get(serviceId)!
-                .doReportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+                .doSendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         } else {
             const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.sessionTransport, { rpcRequestTimeout: 15000 })
             const remoteSession = new RemoteRecursiveFindSession(
@@ -195,7 +195,7 @@ export class RecursiveFinder implements IRecursiveFinder {
                 serviceId,
                 toProtoRpcClient(new RecursiveFindSessionServiceClient(remoteCommunicator.getRpcClientTransport()))
             )
-            remoteSession.reportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+            remoteSession.sendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         }
     }
 
@@ -209,14 +209,14 @@ export class RecursiveFinder implements IRecursiveFinder {
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.kademliaId, 5)
         const data = this.findLocalData(idToFind.value, FindRequest!.findMode)
         if (areEqualPeerDescriptors(this.ownPeerDescriptor, routedMessage.destinationPeer!)) {
-            this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, FindRequest!.recursiveFindSessionId,
+            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, FindRequest!.recursiveFindSessionId,
                 closestPeersToDestination, data, true)
             return createRouteMessageAck(routedMessage)
         }
         const ack = this.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE_FIND, excludedPeer)
         if (ack.error === RoutingErrors.NO_CANDIDATES_FOUND) {
             logger.trace(`findRecursively Node found no candidates`)
-            this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, FindRequest!.recursiveFindSessionId,
+            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, FindRequest!.recursiveFindSessionId,
                 closestPeersToDestination, data, true)
         } else if (ack.error) {
             return ack
@@ -226,7 +226,7 @@ export class RecursiveFinder implements IRecursiveFinder {
                 && routedMessage.previousPeer
                 && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
             )
-            this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, FindRequest!.recursiveFindSessionId,
+            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, FindRequest!.recursiveFindSessionId,
                 closestPeersToDestination, data, noCloserContactsFound)
         }
         return ack

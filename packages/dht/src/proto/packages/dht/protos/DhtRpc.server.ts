@@ -88,9 +88,9 @@ export interface IStoreService<T = ServerCallContext> {
  */
 export interface IRecursiveFindSessionService<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: reportRecursiveFindResult(dht.FindResponse) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendFindResponse(dht.FindResponse) returns (google.protobuf.Empty);
      */
-    reportRecursiveFindResult(request: FindResponse, context: T): Promise<Empty>;
+    sendFindResponse(request: FindResponse, context: T): Promise<Empty>;
 }
 /**
  * @generated from protobuf service dht.WebSocketConnectorService

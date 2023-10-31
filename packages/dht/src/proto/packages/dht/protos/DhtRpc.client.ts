@@ -193,9 +193,9 @@ export class StoreServiceClient implements IStoreServiceClient, ServiceInfo {
  */
 export interface IRecursiveFindSessionServiceClient {
     /**
-     * @generated from protobuf rpc: reportRecursiveFindResult(dht.FindResponse) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendFindResponse(dht.FindResponse) returns (google.protobuf.Empty);
      */
-    reportRecursiveFindResult(input: FindResponse, options?: RpcOptions): UnaryCall<FindResponse, Empty>;
+    sendFindResponse(input: FindResponse, options?: RpcOptions): UnaryCall<FindResponse, Empty>;
 }
 /**
  * @generated from protobuf service dht.RecursiveFindSessionService
@@ -207,9 +207,9 @@ export class RecursiveFindSessionServiceClient implements IRecursiveFindSessionS
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: reportRecursiveFindResult(dht.FindResponse) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendFindResponse(dht.FindResponse) returns (google.protobuf.Empty);
      */
-    reportRecursiveFindResult(input: FindResponse, options?: RpcOptions): UnaryCall<FindResponse, Empty> {
+    sendFindResponse(input: FindResponse, options?: RpcOptions): UnaryCall<FindResponse, Empty> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
         return stackIntercept<FindResponse, Empty>("unary", this._transport, method, opt, input);
     }

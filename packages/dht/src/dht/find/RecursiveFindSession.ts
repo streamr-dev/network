@@ -54,8 +54,8 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
             rpcRequestTimeout: 15000
         })
-        this.rpcCommunicator.registerRpcNotification(FindResponse, 'reportRecursiveFindResult',
-            (req: FindResponse) => this.reportRecursiveFindResult(req))
+        this.rpcCommunicator.registerRpcNotification(FindResponse, 'sendFindResponse',
+            (req: FindResponse) => this.sendFindResponse(req))
     }
 
     private isFindCompleted(): boolean {
@@ -79,7 +79,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         return Array.from(this.foundData.values()).some((entry) => entry.stale === false)
     }
 
-    public doReportRecursiveFindResult(
+    public doSendFindResponse(
         routingPath: PeerDescriptor[],
         nodes: PeerDescriptor[],
         dataEntries: DataEntry[],
@@ -156,9 +156,9 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         }
     }
 
-    public async reportRecursiveFindResult(report: FindResponse): Promise<Empty> {
+    public async sendFindResponse(report: FindResponse): Promise<Empty> {
         logger.trace('recursiveFindReport arrived: ' + JSON.stringify(report))
-        this.doReportRecursiveFindResult(report.routingPath, report.nodes, report.dataEntries, report.noCloserNodesFound)
+        this.doSendFindResponse(report.routingPath, report.nodes, report.dataEntries, report.noCloserNodesFound)
         return {}
     }
 

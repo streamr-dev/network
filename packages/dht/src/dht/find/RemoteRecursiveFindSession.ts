@@ -11,7 +11,7 @@ const logger = new Logger(module)
 
 export class RemoteRecursiveFindSession extends Remote<IRecursiveFindSessionServiceClient> {
 
-    reportRecursiveFindResult(routingPath: PeerDescriptor[], closestNodes: PeerDescriptor[], 
+    sendFindResponse(routingPath: PeerDescriptor[], closestNodes: PeerDescriptor[], 
         dataEntries: DataEntry[], noCloserNodesFound: boolean): void {
         const report: FindResponse = {
             routingPath,
@@ -19,7 +19,7 @@ export class RemoteRecursiveFindSession extends Remote<IRecursiveFindSessionServ
             dataEntries,
             noCloserNodesFound
         }
-        this.getClient().reportRecursiveFindResult(report, this.formDhtRpcOptions()).catch((_e) => {
+        this.getClient().sendFindResponse(report, this.formDhtRpcOptions()).catch((_e) => {
             logger.trace('Failed to send FindResult')
         })
     }
