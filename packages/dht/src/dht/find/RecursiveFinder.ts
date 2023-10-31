@@ -204,18 +204,18 @@ export class RecursiveFinder implements IRecursiveFinder {
         }
         const idToFind = peerIdFromPeerDescriptor(routedMessage.destinationPeer!)
         const msg = routedMessage.message
-        const FindRequest = msg?.body.oneofKind === 'findRequest' ? msg.body.findRequest : undefined
+        const findRequest = msg?.body.oneofKind === 'findRequest' ? msg.body.findRequest : undefined
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.kademliaId, 5)
-        const data = this.findLocalData(idToFind.value, FindRequest!.fetchData)
+        const data = this.findLocalData(idToFind.value, findRequest!.fetchData)
         if (areEqualPeerDescriptors(this.ownPeerDescriptor, routedMessage.destinationPeer!)) {
-            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, FindRequest!.sessionId,
+            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
                 closestPeersToDestination, data, true)
             return createRouteMessageAck(routedMessage)
         }
         const ack = this.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE_FIND, excludedPeer)
         if (ack.error === RoutingErrors.NO_CANDIDATES_FOUND) {
             logger.trace(`findRecursively Node found no candidates`)
-            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, FindRequest!.sessionId,
+            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
                 closestPeersToDestination, data, true)
         } else if (ack.error) {
             return ack
@@ -225,7 +225,7 @@ export class RecursiveFinder implements IRecursiveFinder {
                 && routedMessage.previousPeer
                 && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
             )
-            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, FindRequest!.sessionId,
+            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
                 closestPeersToDestination, data, noCloserContactsFound)
         }
         return ack
