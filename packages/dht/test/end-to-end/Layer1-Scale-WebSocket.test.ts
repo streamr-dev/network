@@ -3,6 +3,8 @@ import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dh
 import { PeerID } from '../../src/helpers/PeerID'
 import { getTestInterface } from '@streamr/test-utils'
 
+const NUM_OF_NODES_PER_KBUCKET = 8
+
 describe('Layer1 Scale', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('entrypoint').value,
@@ -28,7 +30,7 @@ describe('Layer1 Scale', () => {
         await epLayer0Node.start()
         await epLayer0Node.joinDht([epPeerDescriptor])
 
-        epLayer1Node = new DhtNode({ transportLayer: epLayer0Node, peerDescriptor: epPeerDescriptor, serviceId: STREAM_ID })
+        epLayer1Node = new DhtNode({ transport: epLayer0Node, peerDescriptor: epPeerDescriptor, serviceId: STREAM_ID })
         await epLayer1Node.start()
         await epLayer1Node.joinDht([epPeerDescriptor])
 
@@ -36,14 +38,19 @@ describe('Layer1 Scale', () => {
         layer1Nodes = []
 
         for (let i = 0; i < NUM_OF_NODES; i++) {
-            const node = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
+            const node = new DhtNode({ 
+                websocketPortRange, 
+                entryPoints: [epPeerDescriptor],
+                numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
+            })
             await node.start()
             layer0Nodes.push(node)
             const layer1 = new DhtNode({
-                transportLayer: node,
+                transport: node,
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: node.getPeerDescriptor(),
-                serviceId: STREAM_ID
+                serviceId: STREAM_ID,
+                numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
             })
             await layer1.start()
             layer1Nodes.push(layer1)
@@ -65,10 +72,10 @@ describe('Layer1 Scale', () => {
     // TODO: fix flaky test in NET-1021
     it('bucket sizes', async () => {
         layer0Nodes.forEach((node) => {
-            expect(getTestInterface(node).getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
+            expect(getTestInterface(node).getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
         })
         layer1Nodes.forEach((node ) => {
-            expect(getTestInterface(node).getBucketSize()).toBeGreaterThanOrEqual(node.getK() / 2)
+            expect(getTestInterface(node).getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
         })
     })
 })

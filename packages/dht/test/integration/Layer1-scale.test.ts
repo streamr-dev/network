@@ -6,6 +6,8 @@ import { UUID } from '../../src/helpers/UUID'
 import { getTestInterface } from '@streamr/test-utils'
 import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 
+const NUM_OF_NODES_PER_KBUCKET = 8
+
 describe('Layer1', () => {
 
     let simulator: Simulator
@@ -62,7 +64,7 @@ describe('Layer1', () => {
         const layer1Nodes: DhtNode[] = []
         for (let i = 0; i < NODE_COUNT; i++) {
             const layer0 = nodes[i]
-            const layer1 = await createMockConnectionLayer1Node(layer0.getNodeId().toString(), layer0)
+            const layer1 = await createMockConnectionLayer1Node(layer0.getNodeId().toString(), layer0, undefined, NUM_OF_NODES_PER_KBUCKET)
             layer1Nodes.push(layer1)
             layer1CleanUp.push(layer1)
         }
@@ -74,7 +76,7 @@ describe('Layer1', () => {
             const layer1Node = layer1Nodes[i]
             expect(layer1Node.getNodeId().equals(layer0Node.getNodeId())).toEqual(true)
             expect(layer1Node.getNumberOfConnections()).toEqual(layer0Node.getNumberOfConnections())
-            expect(getTestInterface(layer1Node).getBucketSize()).toBeGreaterThanOrEqual(layer1Node.getK() / 2)
+            expect(getTestInterface(layer1Node).getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
             expect(layer1Node.getAllConnectionPeerDescriptors()).toEqual(layer0Node.getAllConnectionPeerDescriptors())
         }
     }, 120000)

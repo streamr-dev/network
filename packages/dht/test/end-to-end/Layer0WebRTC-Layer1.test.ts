@@ -55,31 +55,31 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
         layer1EntryPoint = new DhtNode({
             peerId: binaryToHex(entrypointDescriptor.kademliaId),
-            transportLayer: layer0EntryPoint,
+            transport: layer0EntryPoint,
             serviceId: 'layer1'
         })
 
         layer1Node1 = new DhtNode({
             peerId: layer0Node1Id,
-            transportLayer: layer0Node1,
+            transport: layer0Node1,
             serviceId: 'layer1'
         })
 
         layer1Node2 = new DhtNode({
             peerId: layer0Node2Id,
-            transportLayer: layer0Node2,
+            transport: layer0Node2,
             serviceId: 'layer1'
         })
 
         layer1Node3 = new DhtNode({
             peerId: layer0Node3Id,
-            transportLayer: layer0Node3,
+            transport: layer0Node3,
             serviceId: 'layer1'
         })
 
         layer1Node4 = new DhtNode({
             peerId: layer0Node4Id,
-            transportLayer: layer0Node4,
+            transport: layer0Node4,
             serviceId: 'layer1'
         })
 

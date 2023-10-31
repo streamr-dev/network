@@ -17,7 +17,6 @@ interface DiscoverySessionConfig {
     targetId: Uint8Array
     parallelism: number
     noProgressLimit: number
-    nodeName?: string
     peerManager: IPeerManager
 }
 
@@ -31,8 +30,7 @@ export class DiscoverySession {
     private ongoingClosestPeersRequests: Set<string> = new Set()
     private readonly config: DiscoverySessionConfig
     private contactedPeers: Set<PeerIDKey> = new Set()
-    private joiningPath: Array<string> = [] 
-
+   
     constructor(config: DiscoverySessionConfig) {
         this.config = config
     }
@@ -94,7 +92,6 @@ export class DiscoverySession {
         const uncontacted = this.config.peerManager.getClosestPeersTo(this.config.targetId, this.config.parallelism, this.contactedPeers)
 
         if (uncontacted.length < 1 || this.noProgressCounter >= this.config.noProgressLimit) {
-            logger.trace( this.config.nodeName + ' discoveryCompleted in findMoreContacts, path: ' + this.joiningPath.join(', '))
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
             return
@@ -128,7 +125,6 @@ export class DiscoverySession {
 
     public stop(): void {
         this.stopped = true
-        logger.trace(this.config.nodeName + ' discoveryCompleted in stop, path: ' + this.joiningPath.join(', '))
         this.emitter.emit('discoveryCompleted')
         this.emitter.removeAllListeners()
     }

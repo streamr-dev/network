@@ -3,7 +3,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from '@streamr/utils'
-import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('WebSocket IConnection Requests', () => {
     const epPeerDescriptor: PeerDescriptor = {
@@ -40,12 +40,12 @@ describe('WebSocket IConnection Requests', () => {
         let connected2 = false
 
         node1.on('connected', (peerDescriptor: PeerDescriptor) => {
-            if (isSamePeerDescriptor(peerDescriptor, node2.getPeerDescriptor())) {
+            if (areEqualPeerDescriptors(peerDescriptor, node2.getPeerDescriptor())) {
                 connected1 = true
             }
         })
         node2.on('connected', (peerDescriptor: PeerDescriptor) => {
-            if (isSamePeerDescriptor(peerDescriptor, node1.getPeerDescriptor())) {
+            if (areEqualPeerDescriptors(peerDescriptor, node1.getPeerDescriptor())) {
                 connected2 = true
             }
         })

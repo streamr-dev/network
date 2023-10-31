@@ -1,11 +1,11 @@
 import { DiscoverySession } from './DiscoverySession'
 import { RemoteDhtNode } from '../RemoteDhtNode'
-import crypto from 'crypto'
-import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { IPeerManager } from '../IPeerManager'
+import { createRandomKademliaId } from '../../helpers/kademliaId'
 
 interface PeerDiscoveryConfig {
     ownPeerDescriptor: PeerDescriptor
@@ -21,12 +21,11 @@ interface PeerDiscoveryConfig {
 const logger = new Logger(module)
 
 export class PeerDiscovery {
+
     private readonly config: PeerDiscoveryConfig
     private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
-    private stopped = false
     private rejoinOngoing = false
     private joinCalled = false
-
     private rejoinTimeoutRef?: NodeJS.Timeout
     private readonly abortController: AbortController
     private recoveryIntervalStarted = false
@@ -36,8 +35,8 @@ export class PeerDiscovery {
         this.abortController = new AbortController()
     }
 
-    async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin = true, _retry = true): Promise<void> {
-        if (this.stopped) {
+    async joinDht(entryPointDescriptor: PeerDescriptor, doAdditionalRandomPeerDiscovery = true, retry = true): Promise<void> {
+        if (this.isStopped()) {
             return
         }
         this.joinCalled = true
@@ -45,52 +44,55 @@ export class PeerDiscovery {
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
         )
-        if (isSamePeerDescriptor(entryPointDescriptor, this.config.ownPeerDescriptor)) {
+        if (areEqualPeerDescriptors(entryPointDescriptor, this.config.ownPeerDescriptor)) {
             return
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         this.config.peerManager.handleNewPeers([entryPointDescriptor])
 
+        const sessions = [this.createSession(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value)]
+        if (doAdditionalRandomPeerDiscovery) {
+            sessions.push(this.createSession(createRandomKademliaId()))
+        }
+        await this.runSessions(sessions, entryPointDescriptor, retry)
+        this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
+
+    }
+
+    private createSession(targetId: Uint8Array): DiscoverySession {
         const sessionOptions = {
-            targetId: this.config.ownPeerDescriptor!.kademliaId,
+            targetId,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
             peerManager: this.config.peerManager
         }
-        const session = new DiscoverySession(sessionOptions)
-        const randomSession = doRandomJoin ? new DiscoverySession({
-            ...sessionOptions,
-            targetId: crypto.randomBytes(8)
-        }) : null
-        this.ongoingDiscoverySessions.set(session.sessionId, session)
-        if (randomSession) {
-            this.ongoingDiscoverySessions.set(randomSession.sessionId, randomSession)
-        }
+        return new DiscoverySession(sessionOptions)
+    }
+
+    private async runSessions(sessions: DiscoverySession[], entryPointDescriptor: PeerDescriptor, retry: boolean): Promise<void> {
         try {
-            await session.findClosestNodes(this.config.joinTimeout)
-            if (randomSession) {
-                await randomSession.findClosestNodes(this.config.joinTimeout)
+            for (const session of sessions) {
+                this.ongoingDiscoverySessions.set(session.sessionId, session)
+                await session.findClosestNodes(this.config.joinTimeout)
             }
         } catch (_e) {
             logger.debug(`DHT join on ${this.config.serviceId} timed out`)
         } finally {
-            if (!this.stopped) {
+            if (!this.isStopped()) {
                 if (this.config.peerManager.getKBucketSize() === 0) {
-                    this.rejoinDht(entryPointDescriptor).catch(() => {})
+                    if (retry) {
+                        setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.abortController.signal)
+                    }
                 } else {
                     await this.ensureRecoveryIntervalIsRunning()
                 }
             }
-            this.ongoingDiscoverySessions.delete(session.sessionId)
-            if (randomSession) {
-                this.ongoingDiscoverySessions.delete(randomSession.sessionId)
-            }
-            this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
+            sessions.forEach((session) => this.ongoingDiscoverySessions.delete(session.sessionId))
         }
     }
 
     public async rejoinDht(entryPoint: PeerDescriptor): Promise<void> {
-        if (this.stopped || this.rejoinOngoing) {
+        if (this.isStopped() || this.rejoinOngoing) {
             return
         }
         logger.debug(`Rejoining DHT ${this.config.serviceId}`)
@@ -100,7 +102,7 @@ export class PeerDiscovery {
             logger.debug(`Rejoined DHT successfully ${this.config.serviceId}!`)
         } catch (err) {
             logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)
-            if (!this.stopped) {
+            if (!this.isStopped()) {
                 setAbortableTimeout(() => this.rejoinDht(entryPoint), 5000, this.abortController.signal)
             }
         } finally {
@@ -116,7 +118,7 @@ export class PeerDiscovery {
     }
 
     private async fetchClosestPeersFromBucket(): Promise<void> {
-        if (this.stopped) {
+        if (this.isStopped()) {
             return
         }
         await Promise.allSettled(this.config.peerManager.getClosestPeersTo(
@@ -134,8 +136,11 @@ export class PeerDiscovery {
         return this.joinCalled
     }
 
+    private isStopped() {
+        return this.abortController.signal.aborted
+    }
+
     public stop(): void {
-        this.stopped = true
         this.abortController.abort()
         if (this.rejoinTimeoutRef) {
             clearTimeout(this.rejoinTimeoutRef)

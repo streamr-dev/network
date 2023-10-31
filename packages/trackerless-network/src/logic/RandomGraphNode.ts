@@ -62,7 +62,7 @@ export interface StrictRandomGraphNodeConfig {
 const logger = new Logger(module)
 
 export class RandomGraphNode extends EventEmitter<Events> {
-    private stopped = false
+
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
     private config: StrictRandomGraphNodeConfig
@@ -167,7 +167,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     private newContact(closestNodes: PeerDescriptor[]): void {
         logger.trace(`New nearby contact found`)
-        if (this.stopped) {
+        if (this.isStopped()) {
             return
         }
         this.updateNearbyNodeView(closestNodes)
@@ -178,7 +178,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     private removedContact(closestNodes: PeerDescriptor[]): void {
         logger.trace(`Nearby contact removed`)
-        if (this.stopped) {
+        if (this.isStopped()) {
             return
         }
         this.updateNearbyNodeView(closestNodes)
@@ -209,7 +209,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
     }
 
     private newRandomContact(randomNodes: PeerDescriptor[]): void {
-        if (this.stopped) {
+        if (this.isStopped()) {
             return
         }
         this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
@@ -227,7 +227,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     private removedRandomContact(randomNodes: PeerDescriptor[]): void {
         logger.trace(`New nearby contact found`)
-        if (this.stopped) {
+        if (this.isStopped()) {
             return
         }
         this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
@@ -268,7 +268,6 @@ export class RandomGraphNode extends EventEmitter<Events> {
         if (!this.started) {
             return
         }
-        this.stopped = true
         this.abortController.abort()
         this.config.proxyConnectionRpcLocal?.stop()
         this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice())
@@ -313,7 +312,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
     }
 
     getTargetNeighborIds(): NodeID[] {
-        if (!this.started && this.stopped) {
+        if (!this.started && this.isStopped()) {
             return []
         }
         return this.config.targetNeighbors.getIds()
@@ -321,5 +320,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     getNearbyNodeView(): NodeList {
         return this.config.nearbyNodeView
+    }
+
+    private isStopped() {
+        return this.abortController.signal.aborted
     }
 }
