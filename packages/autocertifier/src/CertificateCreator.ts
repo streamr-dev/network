@@ -91,14 +91,12 @@ export class CertificateCreator {
     }
 
     private createPrivateKey = async (): Promise<boolean> => {
-        // try to read private key from file
         try {
             // try to read private key from file
             this.accountPrivateKey = fs.readFileSync(this.accountPrivateKeyPath)
         } catch (err) {
             if (err.code === 'ENOENT') {
                 // if not found, create new private key and save it to file
-
                 this.accountPrivateKey = await acme.crypto.createPrivateKey()
                 fs.mkdirSync(path.dirname(this.accountPrivateKeyPath), { recursive: true })
                 fs.writeFileSync(this.accountPrivateKeyPath, this.accountPrivateKey, { mode: 0o600 })
