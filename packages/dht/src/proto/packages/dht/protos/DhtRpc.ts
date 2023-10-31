@@ -174,9 +174,9 @@ export interface FindRequest {
     findMode: FindMode;
 }
 /**
- * @generated from protobuf message dht.RecursiveFindReport
+ * @generated from protobuf message dht.FindResponse
  */
-export interface RecursiveFindReport {
+export interface FindResponse {
     /**
      * @generated from protobuf field: repeated dht.PeerDescriptor nodes = 1;
      */
@@ -955,9 +955,9 @@ class FindRequest$Type extends MessageType$<FindRequest> {
  */
 export const FindRequest = new FindRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class RecursiveFindReport$Type extends MessageType$<RecursiveFindReport> {
+class FindResponse$Type extends MessageType$<FindResponse> {
     constructor() {
-        super("dht.RecursiveFindReport", [
+        super("dht.FindResponse", [
             { no: 1, name: "nodes", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 2, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
             { no: 3, name: "noCloserNodesFound", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
@@ -966,9 +966,9 @@ class RecursiveFindReport$Type extends MessageType$<RecursiveFindReport> {
     }
 }
 /**
- * @generated MessageType for protobuf message dht.RecursiveFindReport
+ * @generated MessageType for protobuf message dht.FindResponse
  */
-export const RecursiveFindReport = new RecursiveFindReport$Type();
+export const FindResponse = new FindResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class PingRequest$Type extends MessageType$<PingRequest> {
     constructor() {
@@ -1361,7 +1361,7 @@ export const StoreService = new ServiceType("dht.StoreService", [
  * @generated ServiceType for protobuf service dht.RecursiveFindSessionService
  */
 export const RecursiveFindSessionService = new ServiceType("dht.RecursiveFindSessionService", [
-    { name: "reportRecursiveFindResult", options: {}, I: RecursiveFindReport, O: Empty }
+    { name: "reportRecursiveFindResult", options: {}, I: FindResponse, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.WebSocketConnectorService

@@ -16,7 +16,7 @@ import { RtcOffer } from "./DhtRpc";
 import { WebRtcConnectionRequest } from "./DhtRpc";
 import { WebSocketConnectionResponse } from "./DhtRpc";
 import { WebSocketConnectionRequest } from "./DhtRpc";
-import { RecursiveFindReport } from "./DhtRpc";
+import { FindResponse } from "./DhtRpc";
 import { DeleteDataResponse } from "./DhtRpc";
 import { DeleteDataRequest } from "./DhtRpc";
 import { MigrateDataResponse } from "./DhtRpc";
@@ -88,9 +88,9 @@ export interface IStoreService<T = ServerCallContext> {
  */
 export interface IRecursiveFindSessionService<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: reportRecursiveFindResult(dht.RecursiveFindReport) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: reportRecursiveFindResult(dht.FindResponse) returns (google.protobuf.Empty);
      */
-    reportRecursiveFindResult(request: RecursiveFindReport, context: T): Promise<Empty>;
+    reportRecursiveFindResult(request: FindResponse, context: T): Promise<Empty>;
 }
 /**
  * @generated from protobuf service dht.WebSocketConnectorService

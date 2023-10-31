@@ -27,7 +27,7 @@ service StoreService {
 }
 
 service RecursiveFindSessionService {
-  rpc reportRecursiveFindResult(RecursiveFindReport) returns (google.protobuf.Empty);
+  rpc reportRecursiveFindResult(FindResponse) returns (google.protobuf.Empty);
 }
 
 service WebSocketConnectorService {
@@ -121,7 +121,7 @@ message FindRequest {
   FindMode findMode = 2;
 }
 
-message RecursiveFindReport {
+message FindResponse {
   repeated PeerDescriptor nodes = 1;
   repeated DataEntry dataEntries = 2;
   optional bool noCloserNodesFound = 3;

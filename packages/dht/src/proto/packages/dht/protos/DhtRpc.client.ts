@@ -21,7 +21,7 @@ import { WebSocketConnectorService } from "./DhtRpc";
 import type { WebSocketConnectionResponse } from "./DhtRpc";
 import type { WebSocketConnectionRequest } from "./DhtRpc";
 import { RecursiveFindSessionService } from "./DhtRpc";
-import type { RecursiveFindReport } from "./DhtRpc";
+import type { FindResponse } from "./DhtRpc";
 import { StoreService } from "./DhtRpc";
 import type { DeleteDataResponse } from "./DhtRpc";
 import type { DeleteDataRequest } from "./DhtRpc";
@@ -193,9 +193,9 @@ export class StoreServiceClient implements IStoreServiceClient, ServiceInfo {
  */
 export interface IRecursiveFindSessionServiceClient {
     /**
-     * @generated from protobuf rpc: reportRecursiveFindResult(dht.RecursiveFindReport) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: reportRecursiveFindResult(dht.FindResponse) returns (google.protobuf.Empty);
      */
-    reportRecursiveFindResult(input: RecursiveFindReport, options?: RpcOptions): UnaryCall<RecursiveFindReport, Empty>;
+    reportRecursiveFindResult(input: FindResponse, options?: RpcOptions): UnaryCall<FindResponse, Empty>;
 }
 /**
  * @generated from protobuf service dht.RecursiveFindSessionService
@@ -207,11 +207,11 @@ export class RecursiveFindSessionServiceClient implements IRecursiveFindSessionS
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: reportRecursiveFindResult(dht.RecursiveFindReport) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: reportRecursiveFindResult(dht.FindResponse) returns (google.protobuf.Empty);
      */
-    reportRecursiveFindResult(input: RecursiveFindReport, options?: RpcOptions): UnaryCall<RecursiveFindReport, Empty> {
+    reportRecursiveFindResult(input: FindResponse, options?: RpcOptions): UnaryCall<FindResponse, Empty> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<RecursiveFindReport, Empty>("unary", this._transport, method, opt, input);
+        return stackIntercept<FindResponse, Empty>("unary", this._transport, method, opt, input);
     }
 }
 /**

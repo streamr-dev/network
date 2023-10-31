@@ -1,7 +1,7 @@
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { DataEntry, FindMode, PeerDescriptor, RecursiveFindReport } from '../../proto/packages/dht/protos/DhtRpc'
+import { DataEntry, FindMode, PeerDescriptor, FindResponse } from '../../proto/packages/dht/protos/DhtRpc'
 import { IRecursiveFindSessionService } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { ITransport } from '../../transport/ITransport'
@@ -54,8 +54,8 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
             rpcRequestTimeout: 15000
         })
-        this.rpcCommunicator.registerRpcNotification(RecursiveFindReport, 'reportRecursiveFindResult',
-            (req: RecursiveFindReport) => this.reportRecursiveFindResult(req))
+        this.rpcCommunicator.registerRpcNotification(FindResponse, 'reportRecursiveFindResult',
+            (req: FindResponse) => this.reportRecursiveFindResult(req))
     }
 
     private isFindCompleted(): boolean {
@@ -156,7 +156,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         }
     }
 
-    public async reportRecursiveFindResult(report: RecursiveFindReport): Promise<Empty> {
+    public async reportRecursiveFindResult(report: FindResponse): Promise<Empty> {
         logger.trace('recursiveFindReport arrived: ' + JSON.stringify(report))
         this.doReportRecursiveFindResult(report.routingPath, report.nodes, report.dataEntries, report.noCloserNodesFound)
         return {}
