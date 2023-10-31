@@ -68,7 +68,7 @@ describe('ConnectionManager', () => {
     it('Can start alone', async () => {
 
         const connectionManager = createConnectionManager({
-            transportLayer: mockTransport,
+            transport: mockTransport,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 9991, max: 9991 },
         })
@@ -83,7 +83,7 @@ describe('ConnectionManager', () => {
     it('Throws an async exception if fails to connect to entrypoints', async () => {
 
         const connectionManager = createConnectionManager({
-            transportLayer: mockTransport,
+            transport: mockTransport,
             websocketPortRange: { min: 9992, max: 9992 },
             entryPoints: [
                 { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { host: '127.0.0.1', port: 12345, tls: false } }
@@ -97,7 +97,7 @@ describe('ConnectionManager', () => {
 
     it('Can probe connectivity in open internet', async () => {
         const connectionManager1 = createConnectionManager({
-            transportLayer: mockTransport,
+            transport: mockTransport,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 9993, max: 9993 }
         })
@@ -107,7 +107,7 @@ describe('ConnectionManager', () => {
         expect(createOwnPeerDescriptor.mock.calls[0][0].openInternet).toEqual(true)
 
         const connectionManager2 = createConnectionManager({
-            transportLayer: mockConnectorTransport2,
+            transport: mockConnectorTransport2,
             websocketPortRange: { min: 9994, max: 9994 },
             entryPoints: [
                 { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { host: '127.0.0.1', port: 9993, tls: false } }
@@ -124,7 +124,7 @@ describe('ConnectionManager', () => {
 
     it('Can send data to other connectionmanager over websocket', async () => {
         const connectionManager1 = createConnectionManager({
-            transportLayer: mockConnectorTransport1,
+            transport: mockConnectorTransport1,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 9995, max: 9995 }
         })
@@ -134,7 +134,7 @@ describe('ConnectionManager', () => {
         expect(createOwnPeerDescriptor.mock.calls[0][0].openInternet).toEqual(true)
 
         const connectionManager2 = createConnectionManager({
-            transportLayer: mockConnectorTransport2,
+            transport: mockConnectorTransport2,
             websocketPortRange: { min: 9996, max: 9996 },
             entryPoints: [
                 connectionManager1.getPeerDescriptor()
@@ -185,7 +185,7 @@ describe('ConnectionManager', () => {
 
     it('Can disconnect websockets', async () => {
         const connectionManager1 = createConnectionManager({ 
-            transportLayer: mockConnectorTransport1,
+            transport: mockConnectorTransport1,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 9997, max: 9997 }
         })
@@ -195,7 +195,7 @@ describe('ConnectionManager', () => {
         expect(createOwnPeerDescriptor.mock.calls[0][0].openInternet).toEqual(true)
 
         const connectionManager2 = createConnectionManager({
-            transportLayer: mockConnectorTransport2,
+            transport: mockConnectorTransport2,
             websocketPortRange: { min: 9999, max: 9999 },
             entryPoints: [
                 connectionManager1.getPeerDescriptor()
@@ -309,7 +309,7 @@ describe('ConnectionManager', () => {
 
     it('Cannot send to own WebSocketServer if kademliaIds do not match', async () => {
         const connectionManager1 = createConnectionManager({
-            transportLayer: mockTransport,
+            transport: mockTransport,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 10001, max: 10001 }
         })

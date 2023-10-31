@@ -75,11 +75,11 @@ export class SimulatorConnector {
         const managedConnection = new ManagedConnection(this.ownPeerDescriptor, this.protocolVersion,
             ConnectionType.SIMULATOR_SERVER, undefined, connection)
 
-        logger.trace('connected, objectId: ' + managedConnection.objectId)
+        logger.trace('connected')
 
         managedConnection.once('handshakeRequest', () => {
             logger.trace(keyFromPeerDescriptor(sourceConnection.ownPeerDescriptor) + ' incoming handshake request')
-            logger.trace('incoming handshake request objectId: ' + managedConnection.objectId)
+            logger.trace('incoming handshake request')
 
             if (this.onIncomingConnection(managedConnection)) {
                 logger.trace(keyFromPeerDescriptor(sourceConnection.ownPeerDescriptor) + ' calling acceptHandshake')

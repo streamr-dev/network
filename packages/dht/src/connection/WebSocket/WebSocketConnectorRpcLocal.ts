@@ -40,9 +40,9 @@ const canOpenConnectionFromBrowser = (websocketServer: ConnectivityMethod) => {
 
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
-interface WebSocketConnectorConfig {
+interface WebSocketConnectorRpcLocalConfig {
     protocolVersion: string
-    rpcTransport: ITransport
+    transport: ITransport
     canConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     onIncomingConnection: (connection: ManagedConnection) => boolean
     portRange?: PortRange
@@ -70,7 +70,7 @@ export class WebSocketConnectorRpcLocal implements IWebSocketConnectorRpc {
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private destroyed = false
 
-    constructor(config: WebSocketConnectorConfig) {
+    constructor(config: WebSocketConnectorRpcLocalConfig) {
         this.protocolVersion = config.protocolVersion
         this.webSocketServer = config.portRange ? new WebSocketServer({
             portRange: config.portRange!,
@@ -84,7 +84,7 @@ export class WebSocketConnectorRpcLocal implements IWebSocketConnectorRpc {
 
         this.canConnectFunction = config.canConnect.bind(this)
 
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnectorRpcLocal.WEBSOCKET_CONNECTOR_SERVICE_ID, config.rpcTransport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnectorRpcLocal.WEBSOCKET_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000
         })
 
@@ -221,7 +221,7 @@ export class WebSocketConnectorRpcLocal implements IWebSocketConnectorRpc {
     private requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         setImmediate(() => {
             const remoteConnector = new WebSocketConnectorRpcRemote(
-                ownPeerDescriptor, 
+                ownPeerDescriptor,
                 targetPeerDescriptor,
                 toProtoRpcClient(new WebSocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )

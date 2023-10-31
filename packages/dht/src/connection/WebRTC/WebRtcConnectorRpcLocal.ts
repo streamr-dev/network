@@ -18,7 +18,7 @@ import { IWebRtcConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.serv
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
-    isSamePeerDescriptor,
+    areEqualPeerDescriptors,
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
@@ -36,8 +36,8 @@ export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): 
     return parsed.join(' ')
 }
 
-export interface WebRtcConnectorConfig {
-    rpcTransport: ITransport
+export interface WebRtcConnectorRpcLocalConfig {
+    transport: ITransport
     protocolVersion: string
     iceServers?: IceServer[]
     allowPrivateAddresses?: boolean
@@ -66,11 +66,11 @@ export class WebRtcConnectorRpcLocal implements IWebRtcConnectorRpc {
     private stopped = false
     private iceServers: IceServer[]
     private allowPrivateAddresses: boolean
-    private config: WebRtcConnectorConfig
+    private config: WebRtcConnectorRpcLocalConfig
     private onIncomingConnection: (connection: ManagedConnection) => boolean
 
     constructor(
-        config: WebRtcConnectorConfig,
+        config: WebRtcConnectorRpcLocalConfig,
         onIncomingConnection: (connection: ManagedConnection) => boolean
     ) {
         this.config = config
@@ -78,7 +78,7 @@ export class WebRtcConnectorRpcLocal implements IWebRtcConnectorRpc {
         this.allowPrivateAddresses = config.allowPrivateAddresses || true
         this.onIncomingConnection = onIncomingConnection
 
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnectorRpcLocal.WEBRTC_CONNECTOR_SERVICE_ID, config.rpcTransport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnectorRpcLocal.WEBRTC_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000
         })
         this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer',
@@ -92,7 +92,7 @@ export class WebRtcConnectorRpcLocal implements IWebRtcConnectorRpc {
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        if (isSamePeerDescriptor(targetPeerDescriptor, this.ownPeerDescriptor!)) {
+        if (areEqualPeerDescriptors(targetPeerDescriptor, this.ownPeerDescriptor!)) {
             throw new Err.CannotConnectToSelf('Cannot open WebRTC Connection to self')
         }
 
@@ -189,7 +189,7 @@ export class WebRtcConnectorRpcLocal implements IWebRtcConnectorRpc {
         description: string,
         connectionId: string
     ): void {
-        if (this.stopped || !isSamePeerDescriptor(targetPeer, this.ownPeerDescriptor!)) {
+        if (this.stopped || !areEqualPeerDescriptors(targetPeer, this.ownPeerDescriptor!)) {
             return
         }
         const peerKey = keyFromPeerDescriptor(remotePeer)
@@ -241,7 +241,7 @@ export class WebRtcConnectorRpcLocal implements IWebRtcConnectorRpc {
         description: string,
         connectionId: string
     ): void {
-        if (this.stopped || !isSamePeerDescriptor(targetPeerDescriptor, this.ownPeerDescriptor!)) {
+        if (this.stopped || !areEqualPeerDescriptors(targetPeerDescriptor, this.ownPeerDescriptor!)) {
             return
         }
         const peerKey = keyFromPeerDescriptor(remotePeerDescriptor)
@@ -271,7 +271,7 @@ export class WebRtcConnectorRpcLocal implements IWebRtcConnectorRpc {
         mid: string,
         connectionId: string
     ): void {
-        if (this.stopped || !isSamePeerDescriptor(targetPeerDescriptor, this.ownPeerDescriptor!)) {
+        if (this.stopped || !areEqualPeerDescriptors(targetPeerDescriptor, this.ownPeerDescriptor!)) {
             return
         }
         const peerKey = keyFromPeerDescriptor(remotePeerDescriptor)

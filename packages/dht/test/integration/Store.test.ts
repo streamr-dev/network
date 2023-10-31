@@ -3,7 +3,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
 import { PeerID } from '../../src/helpers/PeerID'
-import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
 
 describe('Storing data in DHT', () => {
@@ -66,7 +66,7 @@ describe('Storing data in DHT', () => {
         const results = await fetchingNode.getDataFromDht(dataKey.value)
         results.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(isSamePeerDescriptor(fetchedDescriptor, entrypointDescriptor)).toBeTrue()
+            expect(areEqualPeerDescriptors(fetchedDescriptor, entrypointDescriptor)).toBeTrue()
         })
     }, 90000)
 })
