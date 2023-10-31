@@ -96,6 +96,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         }
 
         logger.info(updateIn + ' milliseconds until certificate update')
+        // TODO: use tooling from @streamr/utils to set the timeout with an abortController.
         this.updateTimeout = setTimeout(this.checkSubdomainValidity, updateIn)
     }
 

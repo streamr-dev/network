@@ -23,7 +23,7 @@ export function createSelfSignedCertificate(fqdn: string, validMonths: number, v
     } else {
         caCert.validity.notAfter.setMilliseconds(caCert.validity.notBefore.getMilliseconds() + validMilliseconds!)
     }
-    
+    // TODO: add better values for the certificate?
     const attrs = [
         { name: 'commonName', value: fqdn },
         { name: 'countryName', value: 'US' },
