@@ -195,7 +195,7 @@ export class StreamrNode extends EventEmitter<Events> {
 
     private createLayer1Node = (streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): ILayer1 => {
         return new DhtNode({
-            transportLayer: this.layer0!,
+            transport: this.layer0!,
             serviceId: 'layer1::' + streamPartId,
             peerDescriptor: this.layer0!.getPeerDescriptor(),
             entryPoints,

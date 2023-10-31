@@ -29,12 +29,12 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await Promise.all(cms.map((cm) => cm.start()))
 
         dhtEntryPoint = new DhtNode({
-            transportLayer: entrypointCm,
+            transport: entrypointCm,
             peerDescriptor: entrypointDescriptor,
             serviceId: streamPartId
         })
         layer1Nodes = range(numOfNodes).map((i) => new DhtNode({
-            transportLayer: cms[i],
+            transport: cms[i],
             peerDescriptor: peerDescriptors[i],
             serviceId: streamPartId
         }))

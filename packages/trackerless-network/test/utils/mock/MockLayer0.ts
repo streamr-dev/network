@@ -45,11 +45,6 @@ export class MockLayer0 extends EventEmitter implements ILayer0 {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getKnownEntryPoints(): PeerDescriptor[] {
-        return []
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     getAllConnectionPeerDescriptors(): PeerDescriptor[] {
         return []
     }
