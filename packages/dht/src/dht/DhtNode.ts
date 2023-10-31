@@ -71,7 +71,7 @@ export interface DhtNodeOptions {
     storeHighestTtl?: number
     storeMaxTtl?: number
     networkConnectivityTimeout?: number
-    storeNumberOfCopies?: number  // TODO better name?
+    storageRedundancyFactor?: number
 
     transport?: ITransport
     peerDescriptor?: PeerDescriptor
@@ -105,7 +105,7 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
     'storeHighestTtl' |
     'storeMaxTtl' |
     'networkConnectivityTimeout' |
-    'storeNumberOfCopies' |
+    'storageRedundancyFactor' |
     'metricsContext' |
     'peerId'>
 
@@ -165,7 +165,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             storeHighestTtl: 60000,
             storeMaxTtl: 60000,
             networkConnectivityTimeout: 10000,
-            storeNumberOfCopies: 5,
+            storageRedundancyFactor: 5,
             metricsContext: new MetricsContext(),
             peerId: new UUID().toHex(),
             ...conf  // TODO use merge() if we don't want that explicit undefined values override defaults?
@@ -283,7 +283,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             serviceId: this.config.serviceId,
             highestTtl: this.config.storeHighestTtl,
             maxTtl: this.config.storeMaxTtl,
-            numberOfCopies: this.config.storeNumberOfCopies,
+            redundancyFactor: this.config.storageRedundancyFactor,
             localDataStore: this.localDataStore,
             dhtNodeEmitter: this,
             getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
