@@ -1,4 +1,4 @@
-import { isSamePeerDescriptor } from '@streamr/dht'
+import { areEqualPeerDescriptors } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
@@ -24,7 +24,7 @@ describe('StreamrNode', () => {
     })
 
     it('PeerDescriptor is correct', () => {
-        expect(isSamePeerDescriptor(peerDescriptor, node.getPeerDescriptor()))
+        expect(areEqualPeerDescriptors(peerDescriptor, node.getPeerDescriptor()))
     })
 
     describe('join and leave', () => {
@@ -40,21 +40,21 @@ describe('StreamrNode', () => {
             node.setStreamPartEntryPoints(streamPartId, [node.getPeerDescriptor()])
         })
 
-        it('can join streams', async () => {
+        it('can join stream part', async () => {
             node.joinStreamPart(streamPartId)
-            expect(node.hasStream(streamPartId)).toEqual(true)
+            expect(node.hasStreamPart(streamPartId)).toEqual(true)
         })
 
-        it('can leave streams', async () => {
+        it('can leave stream part', async () => {
             node.joinStreamPart(streamPartId)
-            expect(node.hasStream(streamPartId)).toEqual(true)
+            expect(node.hasStreamPart(streamPartId)).toEqual(true)
             node.leaveStreamPart(streamPartId)
-            expect(node.hasStream(streamPartId)).toEqual(false)
+            expect(node.hasStreamPart(streamPartId)).toEqual(false)
         })
 
         it('broadcast joins stream', async () => {
             node.broadcast(message)
-            await waitForCondition(() => node.hasStream(streamPartId))
+            await waitForCondition(() => node.hasStreamPart(streamPartId))
         })
     })
 

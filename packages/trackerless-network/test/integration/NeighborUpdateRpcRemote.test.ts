@@ -1,4 +1,3 @@
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     ListeningRpcCommunicator,
     NodeType,
@@ -7,17 +6,17 @@ import {
     SimulatorTransport
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { RemoteNeighborUpdateManager } from '../../src/logic/neighbor-discovery/RemoteNeighborUpdateManager'
+import { NeighborUpdateRpcRemote } from '../../src/logic/neighbor-discovery/NeighborUpdateRpcRemote'
 import { NeighborUpdate } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import {
     NeighborUpdateRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
-describe('RemoteNeighborUpdateManager', () => {
+describe('NeighborUpdateRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
     let clientRpc: ListeningRpcCommunicator
-    let neighborUpdateRpcClient: RemoteNeighborUpdateManager
+    let rpcRemote: NeighborUpdateRpcRemote
 
     const clientNode: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
@@ -32,10 +31,12 @@ describe('RemoteNeighborUpdateManager', () => {
     let mockConnectionManager1: SimulatorTransport
     let mockConnectionManager2: SimulatorTransport
 
-    beforeEach(() => {
+    beforeEach(async () => {
         simulator = new Simulator()
         mockConnectionManager1 = new SimulatorTransport(serverNode, simulator)
+        await mockConnectionManager1.start()
         mockConnectionManager2 = new SimulatorTransport(clientNode, simulator)
+        await mockConnectionManager2.start()
 
         mockServerRpc = new ListeningRpcCommunicator('test', mockConnectionManager1)
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
@@ -44,7 +45,7 @@ describe('RemoteNeighborUpdateManager', () => {
             NeighborUpdate,
             NeighborUpdate,
             'neighborUpdate',
-            async (_msg: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> => {
+            async (): Promise<NeighborUpdate> => {
                 const node: PeerDescriptor = {
                     kademliaId: new Uint8Array([4, 2, 4]),
                     type: NodeType.NODEJS
@@ -59,10 +60,10 @@ describe('RemoteNeighborUpdateManager', () => {
                 return update
             }
         )
-        neighborUpdateRpcClient = new RemoteNeighborUpdateManager(
+        rpcRemote = new NeighborUpdateRpcRemote(
             clientNode,
             serverNode,
-            'test-stream',
+            'test-stream-part',
             toProtoRpcClient(new NeighborUpdateRpcClient(clientRpc.getRpcClientTransport()))
         )
     })
@@ -76,7 +77,7 @@ describe('RemoteNeighborUpdateManager', () => {
     })
 
     it('updateNeighbors', async () => {
-        const res = await neighborUpdateRpcClient.updateNeighbors([])
+        const res = await rpcRemote.updateNeighbors([])
         expect(res.peerDescriptors.length).toEqual(1)
     })
 })

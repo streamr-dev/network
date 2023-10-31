@@ -13,8 +13,7 @@ import {
 import { NodeList } from '../../src/logic/NodeList'
 import { mockConnectionLocker } from '../utils/utils'
 import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
+import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
@@ -40,7 +39,7 @@ describe('Handshakes', () => {
     let handshaker: Handshaker
     const streamPartId = StreamPartIDUtils.parse('stream#0')
 
-    const acceptHandshake = async (request: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
+    const acceptHandshake = async (request: StreamPartHandshakeRequest): Promise<StreamPartHandshakeResponse> => {
         const response: StreamPartHandshakeResponse = {
             requestId: request.requestId,
             accepted: true
@@ -48,7 +47,7 @@ describe('Handshakes', () => {
         return response
     }
 
-    const rejectHandshake = async (request: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
+    const rejectHandshake = async (request: StreamPartHandshakeRequest): Promise<StreamPartHandshakeResponse> => {
         const response: StreamPartHandshakeResponse = {
             requestId: request.requestId,
             accepted: false
@@ -56,7 +55,7 @@ describe('Handshakes', () => {
         return response
     }
 
-    const interleavingHandshake = async (request: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
+    const interleavingHandshake = async (request: StreamPartHandshakeRequest): Promise<StreamPartHandshakeResponse> => {
         const response: StreamPartHandshakeResponse = {
             requestId: request.requestId,
             accepted: true,
@@ -70,12 +69,15 @@ describe('Handshakes', () => {
     let simulatorTransport2: SimulatorTransport
     let simulatorTransport3: SimulatorTransport
 
-    beforeEach(() => {
+    beforeEach(async () => {
         Simulator.useFakeTimers()
         simulator = new Simulator()
         simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
+        await simulatorTransport1.start()
         simulatorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
+        await simulatorTransport2.start()
         simulatorTransport3 = new SimulatorTransport(peerDescriptor3, simulator)
+        await simulatorTransport3.start()
 
         rpcCommunicator1 = new ListeningRpcCommunicator(streamPartId, simulatorTransport1)
         rpcCommunicator2 = new ListeningRpcCommunicator(streamPartId, simulatorTransport2)
@@ -112,7 +114,7 @@ describe('Handshakes', () => {
         rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteHandshaker(
+            new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
                 streamPartId,
@@ -127,7 +129,7 @@ describe('Handshakes', () => {
         rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteHandshaker(
+            new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
                 streamPartId,
@@ -142,7 +144,7 @@ describe('Handshakes', () => {
         rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', rejectHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteHandshaker(
+            new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
                 streamPartId,
@@ -158,7 +160,7 @@ describe('Handshakes', () => {
         rpcCommunicator3.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteHandshaker(
+            new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
                 streamPartId,

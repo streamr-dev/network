@@ -1,4 +1,3 @@
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
@@ -20,18 +19,18 @@ const logger = new Logger(module)
 
 export interface RecursiveFindSessionConfig {
     serviceId: string
-    rpcTransport: ITransport
+    transport: ITransport
     kademliaIdToFind: Uint8Array
-    ownPeerID: PeerID
+    ownPeerId: PeerID
     waitedRoutingPathCompletions: number
     mode: FindMode
 }
 
 export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IRecursiveFindSessionService {
     private readonly serviceId: string
-    private readonly rpcTransport: ITransport
+    private readonly transport: ITransport
     private readonly kademliaIdToFind: Uint8Array
-    private readonly ownPeerID: PeerID
+    private readonly ownPeerId: PeerID
     private readonly waitedRoutingPathCompletions: number
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly mode: FindMode
@@ -46,17 +45,17 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     constructor(config: RecursiveFindSessionConfig) {
         super()
         this.serviceId = config.serviceId
-        this.rpcTransport = config.rpcTransport
+        this.transport = config.transport
         this.kademliaIdToFind = config.kademliaIdToFind
-        this.ownPeerID = config.ownPeerID
+        this.ownPeerId = config.ownPeerId
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
         this.results = new SortedContactList(PeerID.fromValue(this.kademliaIdToFind), 10, undefined, true)
         this.mode = config.mode
-        this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.rpcTransport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
             rpcRequestTimeout: 15000
         })
         this.rpcCommunicator.registerRpcNotification(RecursiveFindReport, 'reportRecursiveFindResult',
-            (req: RecursiveFindReport, context) => this.reportRecursiveFindResult(req, context))
+            (req: RecursiveFindReport) => this.reportRecursiveFindResult(req))
     }
 
     private isFindCompleted(): boolean {
@@ -90,7 +89,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         if (routingPath.length >= 1) {
             this.setHopAsReported(routingPath[routingPath.length - 1])
         }
-        nodes.map((descriptor: PeerDescriptor) => {
+        nodes.forEach((descriptor: PeerDescriptor) => {
             this.results.addContact(new Contact(descriptor))
         })
         this.processFoundData(dataEntries)
@@ -102,7 +101,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     private addKnownHops(routingPath: PeerDescriptor[]) {
         routingPath.forEach((desc) => {
             const newPeerId = PeerID.fromValue(desc.kademliaId)
-            if (!this.ownPeerID.equals(newPeerId)) {
+            if (!this.ownPeerId.equals(newPeerId)) {
                 this.allKnownHops.add(newPeerId.toKey())
             }
         })
@@ -110,7 +109,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
 
     private setHopAsReported(desc: PeerDescriptor) {
         const newPeerId = PeerID.fromValue(desc.kademliaId)
-        if (!this.ownPeerID.equals(newPeerId)) {
+        if (!this.ownPeerId.equals(newPeerId)) {
             this.reportedHops.add(newPeerId.toKey())
         }
         if (this.isFindCompleted()) {
@@ -157,7 +156,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         }
     }
 
-    public async reportRecursiveFindResult(report: RecursiveFindReport, _context: ServerCallContext): Promise<Empty> {
+    public async reportRecursiveFindResult(report: RecursiveFindReport): Promise<Empty> {
         logger.trace('recursiveFindReport arrived: ' + JSON.stringify(report))
         this.doReportRecursiveFindResult(report.routingPath, report.nodes, report.dataEntries, report.noCloserNodesFound)
         return {}

@@ -93,7 +93,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async inspect(_node: PeerDescriptor, _streamPartId: StreamPartID): Promise<boolean> {
+    async inspect(): Promise<boolean> {
         return true
     }
 

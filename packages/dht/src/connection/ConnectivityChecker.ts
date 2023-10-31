@@ -21,7 +21,7 @@ const logger = new Logger(module)
 export enum ConnectionMode { REQUEST = 'connectivityRequest', PROBE = 'connectivityProbe' }
 export class ConnectivityChecker {
 
-    private static readonly CONNECTIVITY_CHECKER_SERVICE_ID = 'system/connectivitychecker'
+    private static readonly CONNECTIVITY_CHECKER_SERVICE_ID = 'system/connectivity-checker'
     private static readonly CONNECTIVITY_CHECKER_TIMEOUT = 5000
     private destroyed = false
     private readonly webSocketPort: number
@@ -49,7 +49,7 @@ export class ConnectivityChecker {
                 mode: ConnectionMode.REQUEST
             })
         } catch (e) {
-            throw new Err.ConnectionFailed('Failed to connect to the entrypoints', e)
+            throw new Err.ConnectionFailed(`Failed to connect to the entrypoint ${connectivityMethodToWebSocketUrl(entryPoint.websocket!)}`, e)
         }
         // send connectivity request
         const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort, host: this.host, tls: this.tls }

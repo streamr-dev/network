@@ -46,14 +46,16 @@ describe('StreamrNode', () => {
     beforeEach(async () => {
         const simulator = new Simulator()
         transport1 = new SimulatorTransport(peerDescriptor1, simulator)
+        await transport1.start()
         transport2 = new SimulatorTransport(peerDescriptor2, simulator)
+        await transport2.start()
         layer01 = new DhtNode({
-            transportLayer: transport1,
+            transport: transport1,
             peerDescriptor: peerDescriptor1,
             entryPoints: [peerDescriptor1]
         })
         layer02 = new DhtNode({
-            transportLayer: transport2,
+            transport: transport2,
             peerDescriptor: peerDescriptor2,
             entryPoints: [peerDescriptor1]
         })
@@ -126,7 +128,7 @@ describe('StreamrNode', () => {
         ])
     })
 
-    it('leaving streams', async () => {
+    it('leaving stream parts', async () => {
         node1.joinStreamPart(STREAM_PART_ID)
         node2.joinStreamPart(STREAM_PART_ID)
         await Promise.all([

@@ -68,7 +68,7 @@ describe('checkOperatorValueBreach', () => {
 
         logger.debug('Waiting until above', { allowedDifference })
         await waitForCondition(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
-        await checkOperatorValueBreach(contractFacade)
+        await checkOperatorValueBreach(contractFacade, 1, 20)
 
         const earnings = await getEarnings(operatorContract)
         expect(earnings).toBeLessThan(allowedDifference)

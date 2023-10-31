@@ -78,7 +78,14 @@ describe('MaintainTopologyService', () => {
             theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl
         }
 
-        operatorFleetState = new OperatorFleetState(client, formCoordinationStreamId(serviceHelperConfig.operatorContractAddress))
+        const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
+            client,
+            10 * 1000,
+            5 * 60 * 1000,
+            30 * 1000,
+            2 * 1000
+        )
+        const operatorFleetState = createOperatorFleetState(formCoordinationStreamId(serviceHelperConfig.operatorContractAddress))
         const maintainTopologyHelper = new MaintainTopologyHelper(serviceHelperConfig)
         const assignments = new StreamPartAssignments(
             await client.getNodeId(),

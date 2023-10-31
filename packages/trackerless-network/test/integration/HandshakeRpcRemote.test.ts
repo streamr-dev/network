@@ -2,7 +2,6 @@ import {
     StreamPartHandshakeRequest,
     StreamPartHandshakeResponse
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     ListeningRpcCommunicator,
     NodeType,
@@ -14,12 +13,12 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     HandshakeRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
+import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 
-describe('RemoteHandshaker', () => {
+describe('HandshakeRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
     let clientRpc: ListeningRpcCommunicator
-    let remoteHandshaker: RemoteHandshaker
+    let rpcRemote: HandshakeRpcRemote
 
     const clientNode: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 1, 1]),
@@ -34,11 +33,13 @@ describe('RemoteHandshaker', () => {
     let mockConnectionManager1: SimulatorTransport
     let mockConnectionManager2: SimulatorTransport
 
-    beforeEach(() => {
+    beforeEach(async () => {
         Simulator.useFakeTimers()
         simulator = new Simulator()
         mockConnectionManager1 = new SimulatorTransport(serverNode, simulator)
+        await mockConnectionManager1.start()
         mockConnectionManager2 = new SimulatorTransport(clientNode, simulator)
+        await mockConnectionManager2.start()
 
         mockServerRpc = new ListeningRpcCommunicator('test', mockConnectionManager1)
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
@@ -47,7 +48,7 @@ describe('RemoteHandshaker', () => {
             StreamPartHandshakeRequest,
             StreamPartHandshakeResponse,
             'handshake',
-            async (msg: StreamPartHandshakeRequest, _context: ServerCallContext): Promise<StreamPartHandshakeResponse> => {
+            async (msg: StreamPartHandshakeRequest): Promise<StreamPartHandshakeResponse> => {
                 const res: StreamPartHandshakeResponse = {
                     requestId: msg.requestId,
                     accepted: true
@@ -56,10 +57,10 @@ describe('RemoteHandshaker', () => {
             }
         )
 
-        remoteHandshaker = new RemoteHandshaker(
+        rpcRemote = new HandshakeRpcRemote(
             clientNode,
             serverNode,
-            'test-stream',
+            'test-stream-part',
             toProtoRpcClient(new HandshakeRpcClient(clientRpc.getRpcClientTransport()))
         )
     })
@@ -74,7 +75,7 @@ describe('RemoteHandshaker', () => {
     })
 
     it('handshake', async () => {
-        const result = await remoteHandshaker.handshake([])
+        const result = await rpcRemote.handshake([])
         expect(result.accepted).toEqual(true)
     })
 })

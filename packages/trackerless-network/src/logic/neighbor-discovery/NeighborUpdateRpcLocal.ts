@@ -3,14 +3,14 @@ import { DhtCallContext, ListeningRpcCommunicator, PeerDescriptor } from '@strea
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { NetworkRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { NodeList } from '../NodeList'
-import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
+import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
 import { INeighborFinder } from './NeighborFinder'
 import { StreamPartID } from '@streamr/protocol'
 
-interface NeighborUpdateManagerServerConfig {
+interface NeighborUpdateRpcLocalConfig {
     ownPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     targetNeighbors: NodeList
@@ -19,15 +19,15 @@ interface NeighborUpdateManagerServerConfig {
     rpcCommunicator: ListeningRpcCommunicator
 }
 
-export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
+export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
 
-    private readonly config: NeighborUpdateManagerServerConfig
+    private readonly config: NeighborUpdateRpcLocalConfig
 
-    constructor(config: NeighborUpdateManagerServerConfig) {
+    constructor(config: NeighborUpdateRpcLocalConfig) {
         this.config = config
     }
 
-    // INetworkRpc server method
+    // INeighborUpdateRpc server method
     async neighborUpdate(message: NeighborUpdate, context: ServerCallContext): Promise<NeighborUpdate> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
@@ -39,11 +39,11 @@ export class NeighborUpdateManagerServer implements INeighborUpdateRpc {
                     return nodeId !== ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
                 })
             newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
-                new RemoteRandomGraphNode(
+                new DeliveryRpcRemote(
                     this.config.ownPeerDescriptor,
                     peerDescriptor,
                     this.config.streamPartId,
-                    toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                    toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
                 ))
             )
             this.config.neighborFinder.start()

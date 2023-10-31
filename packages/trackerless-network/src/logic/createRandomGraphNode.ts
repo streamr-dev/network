@@ -7,16 +7,17 @@ import { NodeList } from './NodeList'
 import { Propagation } from './propagation/Propagation'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { MarkOptional } from 'ts-essentials'
-import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
+import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'
-import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
+import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { formStreamPartDeliveryServiceId } from './formStreamPartDeliveryServiceId'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     'nearbyNodeView' | 'randomNodeView' | 'targetNeighbors' | 'propagation'
     | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'numOfTargetNeighbors'
     | 'rpcCommunicator' | 'nodeViewSize'
-    | 'inspector' | 'temporaryConnectionServer'> & {
+    | 'inspector' | 'temporaryConnectionRpcLocal'> & {
         maxNumberOfContacts?: number
         minPropagationTargets?: number
         acceptProxyConnections?: boolean
@@ -25,7 +26,10 @@ type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
 
 const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
     const ownNodeId = getNodeIdFromPeerDescriptor(config.ownPeerDescriptor)
-    const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(`layer2-${config.streamPartId}`, config.P2PTransport)
+    const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(
+        formStreamPartDeliveryServiceId(config.streamPartId),
+        config.P2PTransport
+    )
     const numOfTargetNeighbors = config.numOfTargetNeighbors ?? 4
     const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
     const minPropagationTargets = config.minPropagationTargets ?? 2
@@ -35,12 +39,12 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxNumberOfContacts)
     const targetNeighbors = config.targetNeighbors ?? new NodeList(ownNodeId, maxNumberOfContacts)
 
-    const temporaryConnectionServer = new TemporaryConnectionRpcServer({
+    const temporaryConnectionRpcLocal = new TemporaryConnectionRpcLocal({
         streamPartId: config.streamPartId,
         rpcCommunicator,
         ownPeerDescriptor: config.ownPeerDescriptor
     })
-    const proxyConnectionServer = acceptProxyConnections ? new ProxyStreamConnectionServer({
+    const proxyConnectionRpcLocal = acceptProxyConnections ? new ProxyConnectionRpcLocal({
         ownPeerDescriptor: config.ownPeerDescriptor,
         streamPartId: config.streamPartId,
         rpcCommunicator
@@ -48,8 +52,8 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const propagation = config.propagation ?? new Propagation({
         minPropagationTargets,
         sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
-            const remote = targetNeighbors.get(neighborId) ?? temporaryConnectionServer.getNodes().get(neighborId)
-            const proxyConnection = proxyConnectionServer?.getConnection(neighborId)
+            const remote = targetNeighbors.get(neighborId) ?? temporaryConnectionRpcLocal.getNodes().get(neighborId)
+            const proxyConnection = proxyConnectionRpcLocal?.getConnection(neighborId)
             if (remote) {
                 await remote.sendStreamMessage(msg)
             } else if (proxyConnection) {
@@ -102,9 +106,9 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         propagation,
         numOfTargetNeighbors,
         nodeViewSize: maxNumberOfContacts,
-        proxyConnectionServer,
+        proxyConnectionRpcLocal,
         inspector,
-        temporaryConnectionServer
+        temporaryConnectionRpcLocal
     }
 }
 

@@ -4,28 +4,28 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { NodeList } from '../NodeList'
 import { ConnectionLocker, DhtCallContext, PeerDescriptor } from '@streamr/dht'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { RemoteHandshaker } from './RemoteHandshaker'
-import { RemoteRandomGraphNode } from '../RemoteRandomGraphNode'
+import { HandshakeRpcRemote } from './HandshakeRpcRemote'
+import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { binaryToHex } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
 
-interface HandshakerServerConfig {
+interface HandshakeRpcLocalConfig {
     streamPartId: StreamPartID
     targetNeighbors: NodeList
     connectionLocker: ConnectionLocker
     ongoingHandshakes: Set<NodeID>
     maxNeighborCount: number
-    createRemoteHandshaker: (target: PeerDescriptor) => RemoteHandshaker
-    createRemoteNode: (peerDescriptor: PeerDescriptor) => RemoteRandomGraphNode
+    createRpcRemote: (target: PeerDescriptor) => HandshakeRpcRemote
+    createDeliveryRpcRemote: (peerDescriptor: PeerDescriptor) => DeliveryRpcRemote
     handshakeWithInterleaving: (target: PeerDescriptor, senderId: NodeID) => Promise<boolean>
 }
 
-export class HandshakerServer implements IHandshakeRpc {
+export class HandshakeRpcLocal implements IHandshakeRpc {
 
-    private readonly config: HandshakerServerConfig
+    private readonly config: HandshakeRpcLocalConfig
 
-    constructor(config: HandshakerServerConfig) {
+    constructor(config: HandshakeRpcLocalConfig) {
         this.config = config
     }
 
@@ -54,7 +54,7 @@ export class HandshakerServer implements IHandshakeRpc {
             requestId: request.requestId,
             accepted: true
         }
-        this.config.targetNeighbors.add(this.config.createRemoteNode(requester))
+        this.config.targetNeighbors.add(this.config.createDeliveryRpcRemote(requester))
         this.config.connectionLocker.lockConnection(requester, this.config.streamPartId)
         return res
     }
@@ -77,12 +77,12 @@ export class HandshakerServer implements IHandshakeRpc {
         const furthest = this.config.targetNeighbors.getFurthest(exclude)
         const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
         if (furthest) {
-            const remote = this.config.createRemoteHandshaker(furthest.getPeerDescriptor())
+            const remote = this.config.createRpcRemote(furthest.getPeerDescriptor())
             remote.interleaveNotice(requester)
             this.config.targetNeighbors.remove(furthest.getPeerDescriptor())
             this.config.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.config.streamPartId)
         }
-        this.config.targetNeighbors.add(this.config.createRemoteNode(requester))
+        this.config.targetNeighbors.add(this.config.createDeliveryRpcRemote(requester))
         this.config.connectionLocker.lockConnection(requester, this.config.streamPartId)
         return {
             requestId: request.requestId,

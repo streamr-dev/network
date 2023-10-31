@@ -1,10 +1,21 @@
+import { MetricsContext, waitForCondition } from '@streamr/utils'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { waitForCondition } from '@streamr/utils'
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
+
+const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createOwnPeerDescriptor'>) => {
+    return new ConnectionManager({
+        createConnectorFacade: () => new DefaultConnectorFacade({
+            createOwnPeerDescriptor: () => ownPeerDescriptor,
+            ...opts
+        }),
+        metricsContext: new MetricsContext()
+    })
+}
 
 describe('SimultaneousConnections', () => {
 
@@ -35,7 +46,9 @@ describe('SimultaneousConnections', () => {
     beforeEach(async () => {
         simulator = new Simulator()
         simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
+        await simulatorTransport1.start()
         simulatorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
+        await simulatorTransport2.start()
     })
 
     afterEach(async () => {
@@ -102,20 +115,18 @@ describe('SimultaneousConnections', () => {
 
         beforeEach(async () => {
             const websocketPortRange = { min: 43432, max: 43433 }
-            connectionManager1 = new ConnectionManager({
-                transportLayer: simulatorTransport1,
-                ownPeerDescriptor: wsPeer1,
+            connectionManager1 = createConnectionManager(wsPeer1, {
+                transport: simulatorTransport1,
                 websocketPortRange,
                 entryPoints: [wsPeer1]
             })
-            connectionManager2 = new ConnectionManager({
-                transportLayer: simulatorTransport2,
-                ownPeerDescriptor: wsPeer2,
+            connectionManager2 = createConnectionManager(wsPeer2, {
+                transport: simulatorTransport2,
                 websocketPortRange,
                 entryPoints: [wsPeer1]
             })
-            await connectionManager1.start(() => wsPeer1)
-            await connectionManager2.start(() => wsPeer2)
+            await connectionManager1.start()
+            await connectionManager2.start()
         })
 
         afterEach(async () => {
@@ -179,18 +190,16 @@ describe('SimultaneousConnections', () => {
         }
 
         beforeEach(async () => {
-            connectionManager1 = new ConnectionManager({
-                transportLayer: simulatorTransport1,
-                ownPeerDescriptor: wsPeer1,
+            connectionManager1 = createConnectionManager(wsPeer1, {
+                transport: simulatorTransport1,
                 websocketPortRange: { min: 43432, max: 43432 },
                 entryPoints: [wsPeer1]
             })
-            connectionManager2 = new ConnectionManager({
-                transportLayer: simulatorTransport2,
-                ownPeerDescriptor: wsPeer2
+            connectionManager2 = createConnectionManager(wsPeer2, {
+                transport: simulatorTransport2
             })
-            await connectionManager1.start(() => wsPeer1)
-            await connectionManager2.start(() => wsPeer2)
+            await connectionManager1.start()
+            await connectionManager2.start()
         })
 
         afterEach(async () => {
@@ -249,16 +258,14 @@ describe('SimultaneousConnections', () => {
         }
 
         beforeEach(async () => {
-            connectionManager1 = new ConnectionManager({
-                transportLayer: simulatorTransport1,
-                ownPeerDescriptor: wrtcPeer1,
+            connectionManager1 = createConnectionManager(wrtcPeer1, {
+                transport: simulatorTransport1,
             })
-            connectionManager2 = new ConnectionManager({
-                transportLayer: simulatorTransport2,
-                ownPeerDescriptor: wrtcPeer1,
+            connectionManager2 = createConnectionManager(wrtcPeer2, {
+                transport: simulatorTransport2,
             })
-            await connectionManager1.start(() => wrtcPeer1)
-            await connectionManager2.start(() => wrtcPeer2)
+            await connectionManager1.start()
+            await connectionManager2.start()
         })
 
         afterEach(async () => {

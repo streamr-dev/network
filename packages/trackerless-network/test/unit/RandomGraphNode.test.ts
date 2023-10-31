@@ -8,7 +8,7 @@ import { MockLayer1 } from '../utils/mock/MockLayer1'
 import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
 import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManager'
 import { MockTransport } from '../utils/mock/Transport'
-import { createMockPeerDescriptor, createMockRemoteNode, mockConnectionLocker } from '../utils/utils'
+import { createMockPeerDescriptor, createMockDeliveryRpcRemote, mockConnectionLocker } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('RandomGraphNode', () => {
@@ -27,7 +27,7 @@ describe('RandomGraphNode', () => {
         targetNeighbors = new NodeList(nodeId, 10)
         randomNodeView = new NodeList(nodeId, 10)
         nearbyNodeView = new NodeList(nodeId, 10)
-        layer1 = new MockLayer1(nodeId)
+        layer1 = new MockLayer1()
 
         randomGraphNode = createRandomGraphNode({
             targetNeighbors,
@@ -50,7 +50,7 @@ describe('RandomGraphNode', () => {
     })
 
     it('getTargetNeighborIds', () => {
-        const mockRemote = createMockRemoteNode()
+        const mockRemote = createMockDeliveryRpcRemote()
         targetNeighbors.add(mockRemote)
         const ids = randomGraphNode.getTargetNeighborIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
@@ -58,7 +58,7 @@ describe('RandomGraphNode', () => {
     })
 
     it('getNearbyNodeView', () => {
-        const mockRemote = createMockRemoteNode()
+        const mockRemote = createMockDeliveryRpcRemote()
         nearbyNodeView.add(mockRemote)
         const ids = randomGraphNode.getNearbyNodeView().getIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))

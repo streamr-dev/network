@@ -1,8 +1,7 @@
 import {
     DataEntry,
     PeerDescriptor,
-    RecursiveFindResult,
-    isSamePeerDescriptor
+    areEqualPeerDescriptors
 } from '@streamr/dht'
 import { StreamPartID } from '@streamr/protocol'
 import { Logger, scheduleAtInterval, wait } from '@streamr/utils'
@@ -55,32 +54,30 @@ const logger = new Logger(module)
 const ENTRYPOINT_STORE_LIMIT = 8
 export const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 
-interface StreamPartEntryPointDiscoveryConfig {
+interface EntryPointDiscoveryConfig {
     streamPartId: StreamPartID
     ownPeerDescriptor: PeerDescriptor
     layer1: ILayer1
-    getEntryPointData: (key: Uint8Array) => Promise<RecursiveFindResult>
-    getEntryPointDataViaNode: (key: Uint8Array, node: PeerDescriptor) => Promise<DataEntry[]>
+    getEntryPointData: (key: Uint8Array) => Promise<DataEntry[]>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
     deleteEntryPointData: (key: Uint8Array) => Promise<void>
     storeInterval?: number
 }
 
-export class StreamPartEntryPointDiscovery {
+export class EntryPointDiscovery {
     private readonly abortController: AbortController
-    private readonly config: StreamPartEntryPointDiscoveryConfig
+    private readonly config: EntryPointDiscoveryConfig
     private readonly storeInterval: number
     private readonly networkSplitAvoidedNodes: Set<NodeID> = new Set()
 
-    constructor(config: StreamPartEntryPointDiscoveryConfig) {
+    constructor(config: EntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
         this.storeInterval = this.config.storeInterval ?? 60000
     }
 
     async discoverEntryPointsFromDht(
-        knownEntryPointCount: number,
-        forwardingNode?: PeerDescriptor
+        knownEntryPointCount: number
     ): Promise<FindEntryPointsResult> {
         if (knownEntryPointCount > 0) {
             return {
@@ -88,7 +85,7 @@ export class StreamPartEntryPointDiscovery {
                 discoveredEntryPoints: []
             }
         }
-        const discoveredEntryPoints = await this.discoverEntryPoints(forwardingNode)
+        const discoveredEntryPoints = await this.discoverEntryPoints()
         if (discoveredEntryPoints.length === 0) {
             discoveredEntryPoints.push(this.config.ownPeerDescriptor)
         }
@@ -98,11 +95,9 @@ export class StreamPartEntryPointDiscovery {
         }
     }
 
-    private async discoverEntryPoints(forwardingNode?: PeerDescriptor): Promise<PeerDescriptor[]> {
+    private async discoverEntryPoints(): Promise<PeerDescriptor[]> {
         const dataKey = streamPartIdToDataKey(this.config.streamPartId)
-        const discoveredEntryPoints = forwardingNode ? 
-            await this.queryEntryPointsViaNode(dataKey, forwardingNode) : await this.queryEntrypoints(dataKey)
-    
+        const discoveredEntryPoints = await this.queryEntrypoints(dataKey)
         const filtered = discoveredEntryPoints.filter((node) => 
             !this.networkSplitAvoidedNodes.has(getNodeIdFromPeerDescriptor(node)))
         // If all discovered entry points have previously been detected as offline, try again
@@ -116,27 +111,8 @@ export class StreamPartEntryPointDiscovery {
     private async queryEntrypoints(key: Uint8Array): Promise<PeerDescriptor[]> {
         logger.trace(`Finding data from dht node ${getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)}`)
         try {
-            const results = await this.config.getEntryPointData(key)
-            if (results.dataEntries) {
-                return parseEntryPointData(results.dataEntries)
-            } else {
-                return []
-            }
-        } catch (err) {
-            return []
-        }
-    }
-
-    // TODO remove this method in NET-1122
-    private async queryEntryPointsViaNode(key: Uint8Array, node: PeerDescriptor): Promise<PeerDescriptor[]> {
-        logger.trace(`Finding data via node ${getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)}`)
-        try {
-            const results = await this.config.getEntryPointDataViaNode(key, node)
-            if (results) {
-                return parseEntryPointData(results)
-            } else {
-                return []
-            }
+            const result = await this.config.getEntryPointData(key)
+            return parseEntryPointData(result)
         } catch (err) {
             return []
         }
@@ -172,7 +148,7 @@ export class StreamPartEntryPointDiscovery {
             try {
                 const discovered = await this.discoverEntryPoints()
                 if (discovered.length < ENTRYPOINT_STORE_LIMIT 
-                    || discovered.some((peerDescriptor) => isSamePeerDescriptor(peerDescriptor, this.config.ownPeerDescriptor))) {
+                    || discovered.some((peerDescriptor) => areEqualPeerDescriptors(peerDescriptor, this.config.ownPeerDescriptor))) {
                     await this.storeSelfAsEntryPoint()
                 }
             } catch (err) {
