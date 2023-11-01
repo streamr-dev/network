@@ -145,7 +145,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         this.emit('updatedSubdomain', certifiedSubdomain)
     }
 
-    // This method should be called by Streamr DHT whenever the IP address or port of the node changes
+    // This method should be called whenever the IP address or port of the node changes
     public updateSubdomainIpAndPort = async (): Promise<void> => {
         if (!fs.existsSync(this.subdomainPath)) {
             logger.warn('updateSubdomainIpAndPort() called while subdomain file does not exist')
