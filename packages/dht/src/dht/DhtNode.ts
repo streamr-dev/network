@@ -51,7 +51,6 @@ export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     joinCompleted: () => void
-    openInternetContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
 }
@@ -324,9 +323,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.emit('newContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
         this.openInternetPeers = new SortedContactList(selfId, this.config.maxNeighborListSize / 2)
-        this.openInternetPeers.on('contactRemoved', (removedContact: RemoteDhtNode, activeContacts: RemoteDhtNode[]) =>
-            this.emit('openInternetContactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
-        )
         this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => this.onTransportConnected(peerDescriptor))
 
         this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, disonnectionType: DisconnectionType) => {
