@@ -111,11 +111,7 @@ export class AutoCertifier implements RestInterface {
     }
 
     public async start(): Promise<void> {
-        this.domainName = process.env['AUTOCERTIFIER_DOMAIN_NAME']
-        if (!this.domainName) {
-            throw new Error('AUTOCERTIFIER_DOMAIN_NAME environment variable is not set')
-        }
-
+        this.domainName = validateEnvironmentVariable('AUTOCERTIFIER_DOMAIN_NAME')
         // the dns server will answer to NS queries with 
         // AUTOCERTIFIER_OWN_HOSTNAME.AUTOCERTIFIER_DOMAIN_NAME 
         const ownHostName = validateEnvironmentVariable('AUTOCERTIFIER_OWN_HOSTNAME')
