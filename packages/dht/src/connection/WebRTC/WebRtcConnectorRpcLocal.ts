@@ -40,7 +40,6 @@ export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): 
 
 export interface WebRtcConnectorRpcLocalConfig {
     transport: ITransport
-    protocolVersion: string
     iceServers?: IceServer[]
     allowPrivateAddresses?: boolean
     bufferThresholdLow?: number
@@ -119,9 +118,9 @@ export class WebRtcConnectorRpcLocal implements IWebRtcConnectorRpc {
         let managedConnection: ManagedWebRtcConnection
 
         if (offering) {
-            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, connection)
+            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, connection)
         } else {
-            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, undefined, connection)
+            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, undefined, connection)
         }
 
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
@@ -200,7 +199,7 @@ export class WebRtcConnectorRpcLocal implements IWebRtcConnectorRpc {
 
         if (!managedConnection) {
             connection = new NodeWebRtcConnection({ remotePeerDescriptor: remotePeer })
-            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, undefined, connection)
+            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, undefined, connection)
 
             managedConnection.setPeerDescriptor(remotePeer)
 

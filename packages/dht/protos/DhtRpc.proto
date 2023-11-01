@@ -201,15 +201,13 @@ message ConnectivityResponse {
 
 message HandshakeRequest {
   bytes sourceId = 1;
-  string protocolVersion = 2;
-  PeerDescriptor peerDescriptor = 3;
+  PeerDescriptor peerDescriptor = 2;
 }
 
 message HandshakeResponse {
   bytes sourceId = 1;
-  string protocolVersion = 2;
-  PeerDescriptor peerDescriptor = 3;
-  optional string responseError = 4;
+  PeerDescriptor peerDescriptor = 2;
+  optional string responseError = 3;
 }
 
 // Wraps all messages
@@ -274,13 +272,11 @@ message IceCandidate {
 }
 
 message LockRequest {
-  string protocolVersion = 1;
-  string serviceId = 2;
+  string serviceId = 1;
 }
 
 message UnlockRequest {
-  string protocolVersion = 1;
-  string serviceId = 2;
+  string serviceId = 1;
 }
 
 message LockResponse {
@@ -294,12 +290,10 @@ enum DisconnectMode {
 }
 
 message DisconnectNotice {
-  string protocolVersion = 1;
-  DisconnectMode disconnecMode = 2;
+  DisconnectMode disconnectMode = 1;
 }
 
 message DisconnectNoticeResponse {
-  string protocolVersion = 1;
 }
 
 message FindDataRequest {

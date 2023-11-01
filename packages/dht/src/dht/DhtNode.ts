@@ -25,6 +25,7 @@ import {
     Logger,
     MetricsContext,
     hexToBinary,
+    merge,
     waitForCondition
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -153,7 +154,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     constructor(conf: DhtNodeOptions) {
         super()
-        this.config = {
+        this.config = merge({
             serviceId: 'layer0',
             joinParallelism: 3,
             maxNeighborListSize: 200,
@@ -167,9 +168,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             networkConnectivityTimeout: 10000,
             storeNumberOfCopies: 5,
             metricsContext: new MetricsContext(),
-            peerId: new UUID().toHex(),
-            ...conf  // TODO use merge() if we don't want that explicit undefined values override defaults?
-        }
+            peerId: new UUID().toHex()
+        }, conf)
         this.send = this.send.bind(this)
     }
 

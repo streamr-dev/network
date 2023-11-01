@@ -11,22 +11,17 @@ const logger = new Logger(module)
 
 export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
 
-    private protocolVersion: string
-
     constructor(
         ownPeerDescriptor: PeerDescriptor,
         targetPeerDescriptor: PeerDescriptor,
-        protocolVersion: string,
         client: ProtoRpcClient<IConnectionLockRpcClient>
     ) {
         super(ownPeerDescriptor, targetPeerDescriptor, 'DUMMY', client)
-        this.protocolVersion = protocolVersion
     }
 
     public async lockRequest(serviceId: string): Promise<boolean> {
         logger.trace(`Requesting locked connection to ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: LockRequest = {
-            protocolVersion: this.protocolVersion,
             serviceId
         }
         const options = this.formDhtRpcOptions()
@@ -42,7 +37,6 @@ export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
     public unlockRequest(serviceId: string): void {
         logger.trace(`Requesting connection to be unlocked from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: UnlockRequest = {
-            protocolVersion: this.protocolVersion,
             serviceId
         }
         const options = this.formDhtRpcOptions({
@@ -53,11 +47,10 @@ export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
         })
     }
 
-    public async gracefulDisconnect(disconnecMode: DisconnectMode): Promise<void> {
+    public async gracefulDisconnect(disconnectMode: DisconnectMode): Promise<void> {
         logger.trace(`Notifying a graceful disconnect to ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: DisconnectNotice = {
-            protocolVersion: this.protocolVersion,
-            disconnecMode
+            disconnectMode
         }
         const options = this.formDhtRpcOptions({
             doNotConnect: true,

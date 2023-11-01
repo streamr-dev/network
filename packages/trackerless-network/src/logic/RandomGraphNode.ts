@@ -41,7 +41,7 @@ export interface Events {
 export interface StrictRandomGraphNodeConfig {
     streamPartId: StreamPartID
     layer1: ILayer1
-    P2PTransport: ITransport
+    transport: ITransport
     connectionLocker: ConnectionLocker
     ownPeerDescriptor: PeerDescriptor
     nodeViewSize: number
@@ -126,7 +126,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             this.abortController.signal
         )   
         addManagedEventListener<any, any>(
-            this.config.P2PTransport as any,
+            this.config.transport as any,
             'disconnected',
             (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor),
             this.abortController.signal

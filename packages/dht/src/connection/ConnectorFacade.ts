@@ -4,7 +4,7 @@ import {
     PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../transport/ITransport'
-import { ConnectionManager, PortRange, TlsCertificate } from './ConnectionManager'
+import { PortRange, TlsCertificate } from './ConnectionManager'
 import { ManagedConnection } from './ManagedConnection'
 import { Simulator } from './Simulator/Simulator'
 import { SimulatorConnector } from './Simulator/SimulatorConnector'
@@ -57,7 +57,6 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     ): Promise<void> {
         logger.trace(`Creating WebSocketConnector`)
         this.webSocketConnector = new WebSocketConnectorRpcLocal({
-            protocolVersion: ConnectionManager.PROTOCOL_VERSION,
             transport: this.config.transport!,
             // TODO should we use canConnect also for WebRtcConnector? (NET-1142)
             canConnect: (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),
@@ -71,7 +70,6 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         logger.trace(`Creating WebRTCConnector`)
         this.webrtcConnector = new WebRtcConnectorRpcLocal({
             transport: this.config.transport!,
-            protocolVersion: ConnectionManager.PROTOCOL_VERSION,
             iceServers: this.config.iceServers,
             allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
             bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
@@ -121,7 +119,6 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
     async start(onIncomingConnection: (connection: ManagedConnection) => boolean): Promise<void> {
         logger.trace(`Creating SimulatorConnector`)
         this.simulatorConnector = new SimulatorConnector(
-            ConnectionManager.PROTOCOL_VERSION,
             this.ownPeerDescriptor,
             this.simulator,
             onIncomingConnection
