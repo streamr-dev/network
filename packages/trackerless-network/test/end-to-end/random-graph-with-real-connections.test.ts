@@ -5,6 +5,8 @@ import { createStreamMessage } from '../utils/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { Layer0Node } from '../../src/logic/Layer0Node'
+import { Layer1Node } from '../../src/logic/Layer1Node'
 
 describe('random graph with real connections', () => {
 
@@ -15,11 +17,14 @@ describe('random graph with real connections', () => {
     }
 
     const streamPartId = StreamPartIDUtils.parse('random-graph#0')
-    let epDhtNode: DhtNode
-    let dhtNode1: DhtNode
-    let dhtNode2: DhtNode
-    let dhtNode3: DhtNode
-    let dhtNode4: DhtNode
+    // Currently the nodes here are practically layer0 nodes acting as layer1 nodes, for the purpose of this test
+    // they are layer1 nodes as the DHT is per stream
+    // TODO refactor the test to use normal layering style (i.e. have separate objects for layer0 and layer1 nodes)
+    let epDhtNode: Layer0Node & Layer1Node
+    let dhtNode1: Layer0Node & Layer1Node
+    let dhtNode2: Layer0Node & Layer1Node
+    let dhtNode3: Layer0Node & Layer1Node
+    let dhtNode4: Layer0Node & Layer1Node
     let randomGraphNode1: RandomGraphNode
     let randomGraphNode2: RandomGraphNode
     let randomGraphNode3: RandomGraphNode
@@ -42,7 +47,7 @@ describe('random graph with real connections', () => {
         randomGraphNode1 = createRandomGraphNode(
             {
                 streamPartId,
-                layer1: epDhtNode,
+                layer1Node: epDhtNode,
                 transport: epDhtNode.getTransport(),
                 connectionLocker: epDhtNode.getTransport() as ConnectionManager,
                 ownPeerDescriptor: epPeerDescriptor
@@ -50,28 +55,28 @@ describe('random graph with real connections', () => {
         )
         randomGraphNode2 = createRandomGraphNode({
             streamPartId,
-            layer1: dhtNode1,
+            layer1Node: dhtNode1,
             transport: dhtNode1.getTransport(),
             connectionLocker: dhtNode1.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode1.getPeerDescriptor()
         })
         randomGraphNode3 = createRandomGraphNode({
             streamPartId,
-            layer1: dhtNode2,
+            layer1Node: dhtNode2,
             transport: dhtNode2.getTransport(),
             connectionLocker: dhtNode2.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode2.getPeerDescriptor()
         })
         randomGraphNode4 = createRandomGraphNode({
             streamPartId,
-            layer1: dhtNode3,
+            layer1Node: dhtNode3,
             transport: dhtNode3.getTransport(),
             connectionLocker: dhtNode3.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode3.getPeerDescriptor()
         })
         randomGraphNode5 = createRandomGraphNode({
             streamPartId,
-            layer1: dhtNode4,
+            layer1Node: dhtNode4,
             transport: dhtNode4.getTransport(),
             connectionLocker: dhtNode4.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode4.getPeerDescriptor()

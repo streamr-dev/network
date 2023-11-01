@@ -1,14 +1,15 @@
-import { DhtNode, Simulator } from '@streamr/dht'
+import { Simulator } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockPeerDescriptor, createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils/utils'
+import { Layer1Node } from '../../src/logic/Layer1Node'
 
 describe('Propagation', () => {
     const entryPointDescriptor = createMockPeerDescriptor()
-    let dhtNodes: DhtNode[]
+    let layer1Nodes: Layer1Node[]
     let randomGraphNodes: RandomGraphNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number
@@ -17,38 +18,38 @@ describe('Propagation', () => {
     beforeEach(async () => {
         totalReceived = 0
         const simulator = new Simulator()
-        dhtNodes = []
+        layer1Nodes = []
         randomGraphNodes = []
         const [entryPoint, node1] = await createMockRandomGraphNodeAndDhtNode(entryPointDescriptor, entryPointDescriptor, STREAM_PART_ID, simulator)
         await entryPoint.start()
         await entryPoint.joinDht([entryPointDescriptor])
         await node1.start()
         node1.on('message', () => {totalReceived += 1})
-        dhtNodes.push(entryPoint)
+        layer1Nodes.push(entryPoint)
         randomGraphNodes.push(node1)
 
         await Promise.all(range(NUM_OF_NODES).map(async (_i) => {
             const descriptor = createMockPeerDescriptor()
-            const [dht, graph] = await createMockRandomGraphNodeAndDhtNode(
+            const [layer1, randomGraphNode] = await createMockRandomGraphNodeAndDhtNode(
                 descriptor,
                 entryPointDescriptor,
                 STREAM_PART_ID,
                 simulator
             )
-            await dht.start()
-            await graph.start()
+            await layer1.start()
+            await randomGraphNode.start()
             // eslint-disable-next-line promise/always-return
-            await dht.joinDht([entryPointDescriptor]).then(() => {
-                graph.on('message', () => { totalReceived += 1 })
-                dhtNodes.push(dht)
-                randomGraphNodes.push(graph)
+            await layer1.joinDht([entryPointDescriptor]).then(() => {
+                randomGraphNode.on('message', () => { totalReceived += 1 })
+                layer1Nodes.push(layer1)
+                randomGraphNodes.push(randomGraphNode)
             })
         }))
     }, 45000)
 
     afterEach(async () => {
         await Promise.all(randomGraphNodes.map((node) => node.stop()))
-        await Promise.all(dhtNodes.map((node) => node.stop()))
+        await Promise.all(layer1Nodes.map((node) => node.stop()))
     })
 
     it('All nodes receive messages', async () => {
