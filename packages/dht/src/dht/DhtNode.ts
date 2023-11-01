@@ -131,7 +131,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private bucket?: KBucket<RemoteDhtNode>
     private connections: Map<PeerIDKey, RemoteDhtNode> = new Map()
     private neighborList?: SortedContactList<RemoteDhtNode>
-    private openInternetPeers?: SortedContactList<RemoteDhtNode>
     private randomPeers?: RandomContactList<RemoteDhtNode>
     private rpcCommunicator?: RoutingRpcCommunicator
     private transport?: ITransport
@@ -243,7 +242,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connections: this.connections,
             neighborList: this.neighborList!,
             randomPeers: this.randomPeers!,
-            openInternetPeers: this.openInternetPeers!,
             joinNoProgressLimit: this.config.joinNoProgressLimit,
             getClosestContactsLimit: this.config.getClosestContactsLimit,
             joinTimeout: this.config.dhtJoinTimeout,
@@ -322,7 +320,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.neighborList.on('newContact', (newContact: RemoteDhtNode, activeContacts: RemoteDhtNode[]) =>
             this.emit('newContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
-        this.openInternetPeers = new SortedContactList(selfId, this.config.maxNeighborListSize / 2)
         this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => this.onTransportConnected(peerDescriptor))
 
         this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, disonnectionType: DisconnectionType) => {
@@ -381,7 +378,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
             if (dicsonnectionType === 'OUTGOING_GRACEFUL_LEAVE' || dicsonnectionType === 'INCOMING_GRACEFUL_LEAVE') {
                 logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
-                this.removeContact(peerDescriptor, true)
+                this.removeContact(peerDescriptor)
             } else {
                 logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
             }
@@ -540,13 +537,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             )
             if (!this.bucket!.get(contact.kademliaId) && !this.neighborList!.getContact(peerIdFromPeerDescriptor(contact))) {
                 this.neighborList!.addContact(remoteDhtNode)
-                if (contact.openInternet) {
-                    this.openInternetPeers!.addContact(remoteDhtNode)
-                }
                 if (setActive) {
                     const peerId = peerIdFromPeerDescriptor(contact)
                     this.neighborList!.setActive(peerId)
-                    this.openInternetPeers!.setActive(peerId)
                 }
                 this.bucket!.add(remoteDhtNode)
             } else {
@@ -562,7 +555,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }, 10 * 1000)
     }
 
-    public removeContact(contact: PeerDescriptor, removeFromOpenInternetPeers = false): void {
+    public removeContact(contact: PeerDescriptor): void {
         if (!this.started || this.stopped) {
             return
         }
@@ -571,9 +564,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.bucket!.remove(peerId.value)
         this.neighborList!.removeContact(peerId)
         this.randomPeers!.removeContact(peerId)
-        if (removeFromOpenInternetPeers) {
-            this.openInternetPeers!.removeContact(peerId)
-        }
     }
 
     public async send(msg: Message): Promise<void> {
@@ -697,7 +687,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.localDataStore.clear()
         this.neighborList!.stop()
         this.randomPeers!.stop()
-        this.openInternetPeers!.stop()
         this.rpcCommunicator!.stop()
         this.router!.stop()
         this.recursiveFinder!.stop()

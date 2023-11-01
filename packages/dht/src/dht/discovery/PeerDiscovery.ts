@@ -18,7 +18,6 @@ interface PeerDiscoveryConfig {
     connections: Map<PeerIDKey, RemoteDhtNode>
     neighborList: SortedContactList<RemoteDhtNode>
     randomPeers: RandomContactList<RemoteDhtNode>
-    openInternetPeers: SortedContactList<RemoteDhtNode>
     joinNoProgressLimit: number
     getClosestContactsLimit: number
     serviceId: string

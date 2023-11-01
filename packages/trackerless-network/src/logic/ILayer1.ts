@@ -11,7 +11,7 @@ export interface ILayer1 {
     on<T extends keyof ILayer1Events>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
     once<T extends keyof ILayer1Events>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
     off<T extends keyof ILayer1Events>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
-    removeContact: (peerDescriptor: PeerDescriptor, removeFromOpenInternetPeers?: boolean) => void
+    removeContact: (peerDescriptor: PeerDescriptor) => void
     getClosestContacts: (maxCount?: number) => PeerDescriptor[]
     getKBucketPeers: () => PeerDescriptor[]
     getBucketSize: () => number
