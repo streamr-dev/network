@@ -8,6 +8,7 @@ import { Logger } from '@streamr/utils'
 import { CertificateCreator } from './CertificateCreator'
 import { StreamrChallenger } from './StreamrChallenger'
 import 'dotenv/config'
+import { ChallengeManager } from './ChallengeManager'
 
 const logger = new Logger(module)
 
@@ -19,7 +20,7 @@ const validateEnvironmentVariable = (name: string): string | never => {
     return value
 }
 
-export class AutoCertifier implements RestInterface {
+export class AutoCertifier implements RestInterface, ChallengeManager {
 
     private domainName?: string
     private dnsServer?: DnsServer
