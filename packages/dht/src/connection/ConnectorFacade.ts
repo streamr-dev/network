@@ -109,15 +109,15 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     private async autoCertify(): Promise<PeerDescriptor> {
         await this.webSocketConnector!.autoCertify()
-        const autoCertifiedConnectivityResponse = await this.webSocketConnector!.checkConnectivity(false)
-        if (autoCertifiedConnectivityResponse.websocket) {
-            const ownPeerDescriptor = this.config.createOwnPeerDescriptor(autoCertifiedConnectivityResponse)
+        const connectivityResponse = await this.webSocketConnector!.checkConnectivity(false)
+        if (connectivityResponse.websocket) {
+            const ownPeerDescriptor = this.config.createOwnPeerDescriptor(connectivityResponse)
             this.ownPeerDescriptor = ownPeerDescriptor
             this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
             return ownPeerDescriptor
         } else {
             logger.warn('ConnectivityCheck failed after autocertification, disabling websocket server connectivity')
-            const ownPeerDescriptor = this.config.createOwnPeerDescriptor(autoCertifiedConnectivityResponse)
+            const ownPeerDescriptor = this.config.createOwnPeerDescriptor(connectivityResponse)
             this.ownPeerDescriptor = ownPeerDescriptor
             return ownPeerDescriptor
         }
