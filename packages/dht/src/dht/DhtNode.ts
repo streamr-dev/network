@@ -19,7 +19,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
-import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { DhtRpcServiceClient, ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
     MetricsContext,
@@ -35,12 +35,12 @@ import { Any } from '../proto/google/protobuf/any'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
 import { RecursiveFinder, RecursiveFindResult } from './find/RecursiveFinder'
-import { DataStore } from './store/DataStore'
+import { StoreRpcLocal } from './store/StoreRpcLocal'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
-import { IceServer } from '../connection/WebRTC/WebRtcConnector'
+import { IceServer } from '../connection/WebRTC/WebRtcConnectorRpcLocal'
 import { registerExternalApiRpcMethods } from './registerExternalApiRpcMethods'
-import { RemoteExternalApi } from './RemoteExternalApi'
+import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
 import { UUID } from '../helpers/UUID'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { sample } from 'lodash'
@@ -141,7 +141,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private transport?: ITransport
     private ownPeerDescriptor?: PeerDescriptor
     public router?: Router
-    public dataStore?: DataStore
+    private storeRpcLocal?: StoreRpcLocal
     private localDataStore = new LocalDataStore()
     private recursiveFinder?: RecursiveFinder
     private peerDiscovery?: PeerDiscovery
@@ -275,7 +275,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
             localDataStore: this.localDataStore
         })
-        this.dataStore = new DataStore({
+        this.storeRpcLocal = new StoreRpcLocal({
             rpcCommunicator: this.rpcCommunicator,
             recursiveFinder: this.recursiveFinder,
             ownPeerDescriptor: this.ownPeerDescriptor!,
@@ -625,17 +625,17 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
         }
-        return this.dataStore!.storeDataToDht(key, data)
+        return this.storeRpcLocal!.storeDataToDht(key, data)
     }
 
     public async storeDataViaPeer(key: Uint8Array, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
-        const target = new RemoteExternalApi(
+        const rpcRemote = new ExternalApiRpcRemote(
             this.ownPeerDescriptor!,
             peer,
             this.config.serviceId,
-            toProtoRpcClient(new ExternalApiServiceClient(this.rpcCommunicator!.getRpcClientTransport()))
+            toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        return await target.storeData(key, data)
+        return await rpcRemote.storeData(key, data)
     }
 
     public async getDataFromDht(idToFind: Uint8Array): Promise<DataEntry[]> {
@@ -648,18 +648,18 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
         if (!this.stopped) {
-            return this.dataStore!.deleteDataFromDht(idToDelete)
+            return this.storeRpcLocal!.deleteDataFromDht(idToDelete)
         }
     }
 
     public async findDataViaPeer(idToFind: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
-        const target = new RemoteExternalApi(
+        const rpcRemote = new ExternalApiRpcRemote(
             this.ownPeerDescriptor!,
             peer,
             this.config.serviceId,
-            toProtoRpcClient(new ExternalApiServiceClient(this.rpcCommunicator!.getRpcClientTransport()))
+            toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        return await target.findData(idToFind)
+        return await rpcRemote.findData(idToFind)
     }
 
     public getRpcCommunicator(): RoutingRpcCommunicator {
