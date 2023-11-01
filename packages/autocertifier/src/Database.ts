@@ -66,22 +66,18 @@ export class Database {
     }
 
     public async updateSubdomainIpAndPort(subdomain: string, ip: string, port: string, token: string): Promise<void> {
-        //let result: Awaited<ReturnType<Statement<sqlite3.Statement>['run']>> | undefined  
-
         try {
             await this.getSubdomainWithToken(subdomain, token)
         } catch (e) {
             const err = new InvalidSubdomainOrToken('Invalid subdomain or token ' + subdomain, e)
             throw err
         }
-
         try {
             await this.updateSubdomainIpAndPortStatement!.run(ip, port, subdomain, token)
         } catch (e) {
             const err = new DatabaseError('Failed to update subdomain ' + subdomain, e)
             throw err
         }
-
         logger.info('Subdomain ip and port updated')
     }
 
