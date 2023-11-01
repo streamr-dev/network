@@ -128,7 +128,7 @@ describe('clientServer', () => {
         }
 
         if (clientRpcCommunicator) {
-            await clientRpcCommunicator.stop()
+            clientRpcCommunicator.stop()
         }
         await client.stop()
     })
