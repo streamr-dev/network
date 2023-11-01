@@ -1,5 +1,5 @@
 import { DiscoverySession } from './DiscoverySession'
-import { RemoteDhtNode } from '../RemoteDhtNode'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
@@ -14,11 +14,11 @@ import { createRandomKademliaId } from '../../helpers/kademliaId'
 interface PeerDiscoveryConfig {
     rpcCommunicator: RoutingRpcCommunicator
     ownPeerDescriptor: PeerDescriptor
-    bucket: KBucket<RemoteDhtNode>
-    connections: Map<PeerIDKey, RemoteDhtNode>
-    neighborList: SortedContactList<RemoteDhtNode>
-    randomPeers: RandomContactList<RemoteDhtNode>
-    openInternetPeers: SortedContactList<RemoteDhtNode>
+    bucket: KBucket<DhtNodeRpcRemote>
+    connections: Map<PeerIDKey, DhtNodeRpcRemote>
+    neighborList: SortedContactList<DhtNodeRpcRemote>
+    randomPeers: RandomContactList<DhtNodeRpcRemote>
+    openInternetPeers: SortedContactList<DhtNodeRpcRemote>
     joinNoProgressLimit: number
     peerDiscoveryQueryBatchSize: number
     serviceId: string
@@ -81,7 +81,7 @@ export class PeerDiscovery {
             rpcCommunicator: this.config.rpcCommunicator,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
-            newContactListener: (newPeer: RemoteDhtNode) => this.config.addContact(newPeer.getPeerDescriptor())
+            newContactListener: (newPeer: DhtNodeRpcRemote) => this.config.addContact(newPeer.getPeerDescriptor())
         }
         return new DiscoverySession(sessionOptions)
     }
@@ -140,7 +140,7 @@ export class PeerDiscovery {
             return
         }
         const nodes = this.config.bucket.closest(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value, this.config.parallelism)
-        await Promise.allSettled(nodes.map(async (peer: RemoteDhtNode) => {
+        await Promise.allSettled(nodes.map(async (peer: DhtNodeRpcRemote) => {
             const contacts = await peer.getClosestPeers(this.config.ownPeerDescriptor.kademliaId)
             contacts.forEach((contact) => {
                 this.config.addContact(contact)

@@ -19,7 +19,7 @@ export interface KBucketContact {
     vectorClock: number
 }
 
-export class RemoteDhtNode extends Remote<IDhtNodeRpcClient> implements KBucketContact {
+export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBucketContact {
 
     private static counter = 0
     public vectorClock: number
@@ -33,7 +33,7 @@ export class RemoteDhtNode extends Remote<IDhtNodeRpcClient> implements KBucketC
     ) {
         super(ownPeerDescriptor, peerDescriptor, serviceId, client)
         this.id = this.getPeerId().value
-        this.vectorClock = RemoteDhtNode.counter++
+        this.vectorClock = DhtNodeRpcRemote.counter++
     }
 
     async getClosestPeers(kademliaId: Uint8Array): Promise<PeerDescriptor[]> {
