@@ -149,25 +149,36 @@ export async function inspectTarget({
         targetSponsorship: target.sponsorshipAddress
     })
 
-    for (const descriptor of shuffle(targetPeerDescriptors)) {
-        const result = await streamrClient.inspect(descriptor, target.streamPart)
-        abortSignal.throwIfAborted()
-        if (result) {
-            logger.info('Inspection done (no issue detected)', {
-                targetOperator: target.operatorAddress,
-                targetStreamPart: target.streamPart,
-                targetNode: descriptor.id,
-                targetSponsorship: target.sponsorshipAddress
-            })
-            return true
-        }
-    }
-
-    logger.info('Inspection done (issue detected)', {
-        targetOperator: target.operatorAddress,
-        targetStreamPart: target.streamPart,
-        targetNodes: targetPeerDescriptors.map(({ id }) => id),
-        targetSponsorship: target.sponsorshipAddress
+    // need to subscribe before inspecting, otherwise inspect will instantly return false
+    const sub = await streamrClient.subscribe({
+        id: StreamPartIDUtils.getStreamID(target.streamPart),
+        partition: StreamPartIDUtils.getStreamPartition(target.streamPart),
+        raw: true
     })
-    return false
+
+    try {
+        for (const descriptor of shuffle(targetPeerDescriptors)) {
+            const result = await streamrClient.inspect(descriptor, target.streamPart)
+            abortSignal.throwIfAborted()
+            if (result) {
+                logger.info('Inspection done (no issue detected)', {
+                    targetOperator: target.operatorAddress,
+                    targetStreamPart: target.streamPart,
+                    targetNode: descriptor.id,
+                    targetSponsorship: target.sponsorshipAddress
+                })
+                return true
+            }
+        }
+
+        logger.info('Inspection done (issue detected)', {
+            targetOperator: target.operatorAddress,
+            targetStreamPart: target.streamPart,
+            targetNodes: targetPeerDescriptors.map(({ id }) => id),
+            targetSponsorship: target.sponsorshipAddress
+        })
+        return false
+    } finally {
+        await sub.unsubscribe()
+    }
 }
