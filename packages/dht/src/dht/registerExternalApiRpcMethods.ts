@@ -1,5 +1,7 @@
 import { DhtNode } from '../dht/DhtNode'
 import { ExternalStoreDataRequest, ExternalStoreDataResponse, FindDataRequest, FindDataResponse, FindMode } from '../proto/packages/dht/protos/DhtRpc'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 
 export const registerExternalApiRpcMethods = (thisNode: DhtNode): void => {
     const rpcCommunicator = thisNode.getRpcCommunicator()
@@ -7,7 +9,7 @@ export const registerExternalApiRpcMethods = (thisNode: DhtNode): void => {
         FindDataRequest, 
         FindDataResponse, 
         'findData', 
-        (req: FindDataRequest) => findData(thisNode, req),
+        (req: FindDataRequest, context: ServerCallContext) => findData(thisNode, req, context),
         { timeout: 10000 }
     )
     rpcCommunicator.registerRpcMethod(
@@ -20,8 +22,9 @@ export const registerExternalApiRpcMethods = (thisNode: DhtNode): void => {
 }
 
 // IDHTRpcService method for external findRecursive calls
-const findData = async (thisNode: DhtNode, findDataRequest: FindDataRequest): Promise<FindDataResponse> => {
-    const result = await thisNode.startRecursiveFind(findDataRequest.kademliaId, FindMode.DATA, findDataRequest.requestor)
+const findData = async (thisNode: DhtNode, findDataRequest: FindDataRequest, context: ServerCallContext): Promise<FindDataResponse> => {
+    const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+    const result = await thisNode.startRecursiveFind(findDataRequest.kademliaId, FindMode.DATA, senderPeerDescriptor)
     if (result.dataEntries) {
         return FindDataResponse.create({ dataEntries: result.dataEntries })
     } else {

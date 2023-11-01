@@ -24,13 +24,8 @@ describe('WebRTC rpc messages', () => {
     let rtcAnswerCounter: number
     let iceCandidateCounter: number
 
-    const peerDescriptor1: PeerDescriptor = {
-        kademliaId: generateId('peer1'),
-        type: NodeType.NODEJS
-    }
-
-    const peerDescriptor2: PeerDescriptor = {
-        kademliaId: generateId('peer2'),
+    const targetDescriptor: PeerDescriptor = {
+        kademliaId: generateId('peer'),
         type: NodeType.NODEJS
     }
 
@@ -92,11 +87,9 @@ describe('WebRTC rpc messages', () => {
 
     it('send connectionRequest', async () => {
         client.requestConnection({
-            requester: peerDescriptor1,
-            target: peerDescriptor2,
             connectionId: 'connectionRequest'
         },
-        { targetDescriptor: peerDescriptor2, notification: true }
+        { targetDescriptor, notification: true }
         )
 
         await waitForCondition(() => requestConnectionCounter === 1)
@@ -104,12 +97,10 @@ describe('WebRTC rpc messages', () => {
 
     it('send rtcOffer', async () => {
         client.rtcOffer({
-            requester: peerDescriptor1,
-            target: peerDescriptor2,
             connectionId: 'rtcOffer',
             description: 'aaaaaa'
         },
-        { targetDescriptor: peerDescriptor2, notification: true }
+        { targetDescriptor, notification: true }
         )
 
         await waitForCondition(() => rtcOfferCounter === 1)
@@ -117,12 +108,10 @@ describe('WebRTC rpc messages', () => {
 
     it('send rtcAnswer', async () => {
         client.rtcAnswer({
-            requester: peerDescriptor1,
-            target: peerDescriptor2,
             connectionId: 'rtcOffer',
             description: 'aaaaaa'
         },
-        { targetDescriptor: peerDescriptor2, notification: true }
+        { targetDescriptor, notification: true }
         )
 
         await waitForCondition(() => rtcAnswerCounter === 1)
@@ -130,13 +119,11 @@ describe('WebRTC rpc messages', () => {
 
     it('send iceCandidate', async () => {
         client.iceCandidate({
-            requester: peerDescriptor1,
-            target: peerDescriptor2,
             connectionId: 'rtcOffer',
             candidate: 'aaaaaa',
             mid: 'asdasdasdasdasd'
         },
-        { targetDescriptor: peerDescriptor2, notification: true }
+        { targetDescriptor, notification: true }
         )
 
         await waitForCondition(() => iceCandidateCounter === 1)
