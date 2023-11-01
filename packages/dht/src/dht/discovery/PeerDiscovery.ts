@@ -20,7 +20,7 @@ interface PeerDiscoveryConfig {
     randomPeers: RandomContactList<RemoteDhtNode>
     openInternetPeers: SortedContactList<RemoteDhtNode>
     joinNoProgressLimit: number
-    getClosestContactsLimit: number
+    peerDiscoveryQueryBatchSize: number
     serviceId: string
     parallelism: number
     joinTimeout: number
@@ -59,7 +59,7 @@ export class PeerDiscovery {
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         this.config.addContact(entryPointDescriptor)
-        const closest = this.config.bucket.closest(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value, this.config.getClosestContactsLimit)
+        const closest = this.config.bucket.closest(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value, this.config.peerDiscoveryQueryBatchSize)
         this.config.neighborList.addContacts(closest)
         const sessions = [this.createSession(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value)]
         if (doAdditionalRandomPeerDiscovery) {
