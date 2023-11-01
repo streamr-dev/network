@@ -116,7 +116,6 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         setAbortableInterval(() => this.pruneOfflineNodes(), this.pruneIntervalInMs, this.abortController.signal)
     }
 
-    // TODO: just wait prune time?
     async waitUntilReady(): Promise<void> {
         return this.ready.waitUntilOpen()
     }

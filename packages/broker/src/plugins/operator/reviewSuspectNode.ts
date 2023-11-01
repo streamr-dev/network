@@ -23,6 +23,7 @@ export interface ReviewProcessOpts {
     createOperatorFleetState: CreateOperatorFleetStateFn
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>
     maxSleepTime: number
+    heartbeatTimeoutInMs: number
     votingPeriod: {
         startTime: number
         endTime: number
@@ -40,6 +41,7 @@ export const reviewSuspectNode = async ({
     createOperatorFleetState,
     getRedundancyFactor,
     maxSleepTime,
+    heartbeatTimeoutInMs,
     votingPeriod,
     inspectionIntervalInMs,
     abortSignal: userAbortSignal
@@ -65,7 +67,10 @@ export const reviewSuspectNode = async ({
     const fleetState = createOperatorFleetState(formCoordinationStreamId(targetOperator))
     await fleetState.start()
     logger.info('Waiting for fleet state')
-    await fleetState.waitUntilReady()
+    await Promise.race([
+        fleetState.waitUntilReady(),
+        wait(heartbeatTimeoutInMs, userAbortSignal)
+    ])
     logger.info('Wait done for fleet state')
 
     const abortController = new AbortController()

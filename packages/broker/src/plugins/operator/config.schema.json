@@ -19,6 +19,12 @@
       "minimum": 0,
       "default": 10000
     },
+    "heartbeatTimeoutInMs": {
+      "type": "integer",
+      "description": "The maximum time (in milliseconds) to wait for the 1st heartbeat of a target operator's nodes",
+      "minimum": 0,
+      "default": 120000
+    },
     "fleetState": {
       "type": "object",
       "description": "Operator fleet state settings (both for me and targets)",
@@ -119,12 +125,6 @@
           "description": "How often to run (in milliseconds)",
           "minimum": 0,
           "default": 900000
-        },
-        "heartbeatTimeoutInMs": {
-          "type": "integer",
-          "description": "The maximum time (in milliseconds) to wait for the 1st heartbeat of a target operator's nodes",
-          "minimum": 0,
-          "default": 120000
         }
       }
     }

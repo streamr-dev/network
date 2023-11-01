@@ -21,6 +21,7 @@ import { reviewSuspectNode } from './reviewSuspectNode'
 export interface OperatorPluginConfig {
     operatorContractAddress: string
     heartbeatUpdateIntervalInMs: number
+    heartbeatTimeoutInMs: number
     fleetState: {
         pruneAgeInMs: number
         pruneIntervalInMs: number
@@ -40,7 +41,6 @@ export interface OperatorPluginConfig {
     }
     inspectRandomNode: {
         intervalInMs: number
-        heartbeatTimeoutInMs: number
     }
 }
 
@@ -170,7 +170,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         contractFacade,
                         streamPartAssignments,
                         streamrClient,
-                        this.pluginConfig.inspectRandomNode.heartbeatTimeoutInMs,
+                        this.pluginConfig.heartbeatTimeoutInMs,
                         (operatorContractAddress) => fetchRedundancyFactor({
                             operatorContractAddress,
                             signer
@@ -204,6 +204,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                 signer
                             }),
                             maxSleepTime: 5 * 60 * 1000,
+                            heartbeatTimeoutInMs: this.pluginConfig.heartbeatTimeoutInMs,
                             votingPeriod: {
                                 startTime: votingPeriodStartTimestamp,
                                 endTime: votingPeriodEndTimestamp
