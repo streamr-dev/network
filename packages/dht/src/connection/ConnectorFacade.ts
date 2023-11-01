@@ -89,6 +89,9 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             maxMessageSize: this.config.maxMessageSize
         }, onIncomingConnection)
         await this.webSocketConnector.start()
+        // TODO: generate a PeerDescriptor in a single function. Requires changes to the createOwnPeerDescriptor
+        // function in the config. Currently it's given by the DhtNode and it sets the PeerDescriptor for the
+        // DhtNode in each call. 
         const selfSigned = (!this.config.tlsCertificate && this.config.websocketServerEnableTls === true)
         const connectivityResponse = await this.webSocketConnector.checkConnectivity(selfSigned)
         let ownPeerDescriptor = this.config.createOwnPeerDescriptor(connectivityResponse)
