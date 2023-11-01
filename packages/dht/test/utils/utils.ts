@@ -11,10 +11,8 @@ import {
     RouteMessageWrapper,
     StoreDataRequest,
     StoreDataResponse,
-    WebSocketConnectionRequest,
     WebSocketConnectionResponse,
-    RecursiveFindRequest, 
-    FindMode,
+    FindRequest, 
     DeleteDataResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
@@ -109,12 +107,12 @@ export const createWrappedClosestPeersRequest = (
     return rpcWrapper
 }
 
-export const createRecursiveFindRequest = (
-    findMode: FindMode
-): RecursiveFindRequest => {
-    const request: RecursiveFindRequest = {
-        findMode,
-        recursiveFindSessionId: v4()
+export const createFindRequest = (
+    fetchData: boolean
+): FindRequest => {
+    const request: FindRequest = {
+        fetchData,
+        sessionId: v4()
     }
     return request
 }
@@ -166,8 +164,6 @@ export const MockRoutingService: IRouterServiceWithError = {
     async routeMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
             error: ''
         }
         return response
@@ -175,8 +171,6 @@ export const MockRoutingService: IRouterServiceWithError = {
     async findRecursively(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
             error: ''
         }
         return response
@@ -184,8 +178,6 @@ export const MockRoutingService: IRouterServiceWithError = {
     async forwardMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
             error: ''
         }
         return response
@@ -223,10 +215,8 @@ export const MockStoreService: IStoreServiceWithError = {
 }
 
 export const MockWebSocketConnectorRpc: IWebSocketConnectorService = {
-    async requestConnection(request: WebSocketConnectionRequest): Promise<WebSocketConnectionResponse> {
+    async requestConnection(): Promise<WebSocketConnectionResponse> {
         const responseConnection: WebSocketConnectionResponse = {
-            target: request.target,
-            requester: request.requester,
             accepted: true
         }
         return responseConnection

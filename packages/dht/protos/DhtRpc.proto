@@ -27,7 +27,7 @@ service StoreService {
 }
 
 service RecursiveFindSessionService {
-  rpc reportRecursiveFindResult(RecursiveFindReport) returns (google.protobuf.Empty);
+  rpc sendFindResponse(FindResponse) returns (google.protobuf.Empty);
 }
 
 service WebSocketConnectorService {
@@ -111,18 +111,13 @@ message ClosestPeersResponse {
   string requestId = 2;
 }
 
-enum FindMode {
-  NODE = 0;
-  DATA = 1;
+message FindRequest {
+  string sessionId = 1;
+  bool fetchData = 2;
 }
 
-message RecursiveFindRequest {
-  string recursiveFindSessionId = 1;
-  FindMode findMode = 2;
-}
-
-message RecursiveFindReport {
-  repeated PeerDescriptor nodes = 1;
+message FindResponse {
+  repeated PeerDescriptor closestConnectedPeers = 1;
   repeated DataEntry dataEntries = 2;
   optional bool noCloserNodesFound = 3;
   repeated PeerDescriptor routingPath = 4;
@@ -180,10 +175,8 @@ message RouteMessageWrapper {
 }
 
 message RouteMessageAck {
-  PeerDescriptor sourcePeer = 1;
-  string requestId = 2;
-  PeerDescriptor destinationPeer = 3;
-  string error = 4;
+  string requestId = 1;
+  string error = 2;
 }
 
 // Correspond to the MessageType Enum
@@ -203,15 +196,13 @@ message ConnectivityResponse {
 
 message HandshakeRequest {
   bytes sourceId = 1;
-  string protocolVersion = 2;
-  PeerDescriptor peerDescriptor = 3;
+  PeerDescriptor peerDescriptor = 2;
 }
 
 message HandshakeResponse {
   bytes sourceId = 1;
-  string protocolVersion = 2;
-  PeerDescriptor peerDescriptor = 3;
-  optional string responseError = 4;
+  PeerDescriptor peerDescriptor = 2;
+  optional string responseError = 3;
 }
 
 // Wraps all messages
@@ -237,7 +228,7 @@ message Message {
     HandshakeRequest handshakeRequest = 8;
     HandshakeResponse handshakeResponse = 9;
     protorpc.RpcMessage rpcMessage = 10;
-    RecursiveFindRequest RecursiveFindRequest = 11;
+    FindRequest findRequest = 11;
   };
 }
 
@@ -245,58 +236,42 @@ message Message {
 
 // WebSocket
 message WebSocketConnectionRequest {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string ip = 3;
-  uint32 port = 4;
+  string ip = 1;
+  uint32 port = 2;
 }
 
 message WebSocketConnectionResponse {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  bool accepted = 3;
-  optional string reason = 4;
+  bool accepted = 1;
+  optional string reason = 2;
 }
 
 // WebRTC
 message WebRtcConnectionRequest {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string connectionId = 3;
+  string connectionId = 1;
 }
 
 message RtcOffer {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string description = 3;
-  string connectionId = 4;
+  string description = 1;
+  string connectionId = 2;
 }
 
 message RtcAnswer {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string description = 3;
-  string connectionId = 4;
+  string description = 1;
+  string connectionId = 2;
 }
 
 message IceCandidate {
   string candidate = 1;
   string mid = 2;
   string connectionId = 3;
-  PeerDescriptor requester = 4;
-  PeerDescriptor target = 5;
 }
 
 message LockRequest {
-  string protocolVersion = 1;
-  PeerDescriptor peerDescriptor = 2;
-  string serviceId = 3;
+  string serviceId = 1;
 }
 
 message UnlockRequest {
-  string protocolVersion = 1;
-  PeerDescriptor peerDescriptor = 2;
-  string serviceId = 3;
+  string serviceId = 1;
 }
 
 message LockResponse {
@@ -310,18 +285,14 @@ enum DisconnectMode {
 }
 
 message DisconnectNotice {
-  string protocolVersion = 1;
-  PeerDescriptor peerDescriptor = 2;
-  DisconnectMode disconnecMode = 3;
+  DisconnectMode disconnectMode = 1;
 }
 
 message DisconnectNoticeResponse {
-  string protocolVersion = 1;
 }
 
 message FindDataRequest {
   bytes kademliaId = 1;
-  PeerDescriptor requestor = 2;
 }
 
 message FindDataResponse {

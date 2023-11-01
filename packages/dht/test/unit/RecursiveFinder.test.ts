@@ -1,5 +1,4 @@
 import {
-    FindMode,
     Message,
     MessageType,
     NodeType,
@@ -10,7 +9,7 @@ import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
 import {
     createMockRoutingRpcCommunicator,
     createWrappedClosestPeersRequest,
-    createRecursiveFindRequest
+    createFindRequest
 } from '../utils/utils'
 import { RecursiveFinder } from '../../src/dht/find/RecursiveFinder'
 import { RemoteDhtNode } from '../../src/dht/RemoteDhtNode'
@@ -33,14 +32,14 @@ describe('RecursiveFinder', () => {
         kademliaId: PeerID.fromString('destination').value,
         type: NodeType.NODEJS
     }
-    const recursiveFindRequest = createRecursiveFindRequest(FindMode.NODE)
+    const findRequest = createFindRequest(false)
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),
         messageType: MessageType.RPC,
         body: {
-            oneofKind: 'recursiveFindRequest',
-            recursiveFindRequest
+            oneofKind: 'findRequest',
+            findRequest
         },
         sourceDescriptor: peerDescriptor1,
         targetDescriptor: peerDescriptor2
@@ -83,7 +82,7 @@ describe('RecursiveFinder', () => {
         expect(areEqualPeerDescriptors(res.closestNodes[0], peerDescriptor1)).toEqual(true)
     })
 
-    it('RecursiveFinder server throws if payload is not recursiveFindRequest', async () => {
+    it('RecursiveFinder server throws if payload is not FindRequest', async () => {
         const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1)
         const badMessage: Message = {
             serviceId: 'unknown',

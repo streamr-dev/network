@@ -16,17 +16,14 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
 
     private static readonly HANDSHAKER_SERVICE_ID = 'system/handshaker'
     private ownPeerDescriptor: PeerDescriptor
-    private protocolVersion: string
     private connection: IConnection
 
     constructor(
         ownPeerDescriptor: PeerDescriptor,
-        protocolVersion: string, 
         connection: IConnection
     ) {
         super()
         this.ownPeerDescriptor = ownPeerDescriptor
-        this.protocolVersion = protocolVersion
         this.connection = connection
         this.connection.on('data', this.onData)
     }
@@ -57,7 +54,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
     public sendHandshakeRequest(): void {
         const outgoingHandshake: HandshakeRequest = {
             sourceId: this.ownPeerDescriptor.kademliaId,
-            protocolVersion: this.protocolVersion,
             peerDescriptor: this.ownPeerDescriptor
         }
         const msg: Message = {
@@ -76,7 +72,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
     public sendHandshakeResponse(error?: string): void {
         const outgoingHandshakeResponse: HandshakeResponse = {
             sourceId: this.ownPeerDescriptor.kademliaId,
-            protocolVersion: this.protocolVersion,
             peerDescriptor: this.ownPeerDescriptor
         }
         if (error) {

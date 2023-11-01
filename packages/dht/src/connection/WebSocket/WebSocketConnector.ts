@@ -26,6 +26,8 @@ import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/p
 import { ParsedUrlQuery } from 'querystring'
 import { range, sample } from 'lodash'
 import { isPrivateIPv4 } from '../../helpers/AddressTools'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 
 const logger = new Logger(module)
 
@@ -41,7 +43,6 @@ const canOpenConnectionFromBrowser = (websocketServer: ConnectivityMethod) => {
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
 interface WebSocketConnectorConfig {
-    protocolVersion: string
     transport: ITransport
     canConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     onIncomingConnection: (connection: ManagedConnection) => boolean
@@ -64,13 +65,11 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
     private selectedPort?: number
-    private readonly protocolVersion: string
     private ownPeerDescriptor?: PeerDescriptor
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private destroyed = false
 
     constructor(config: WebSocketConnectorConfig) {
-        this.protocolVersion = config.protocolVersion
         this.webSocketServer = config.portRange ? new WebSocketServer({
             portRange: config.portRange!,
             tlsCertificate: config.tlsCertificate,
@@ -91,12 +90,12 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             WebSocketConnectionRequest,
             WebSocketConnectionResponse,
             'requestConnection',
-            (req: WebSocketConnectionRequest) => this.requestConnection(req)
+            (req: WebSocketConnectionRequest, context: ServerCallContext) => this.requestConnection(req, context)
         )
     }
 
     private attachHandshaker(connection: IConnection) {
-        const handshaker = new Handshaker(this.ownPeerDescriptor!, this.protocolVersion, connection)
+        const handshaker = new Handshaker(this.ownPeerDescriptor!, connection)
         handshaker.once('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
             this.onServerSocketHandshakeRequest(peerDescriptor, connection)
         })
@@ -195,8 +194,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
             const url = connectivityMethodToWebSocketUrl(targetPeerDescriptor.websocket!)
 
-            const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
-                ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
+            const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
             managedConnection.setPeerDescriptor(targetPeerDescriptor)
 
             this.connectingConnections.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
@@ -225,7 +223,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             )
             remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.host, ownPeerDescriptor.websocket!.port)
         })
-        const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion, ConnectionType.WEBSOCKET_SERVER)
+        const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, ConnectionType.WEBSOCKET_SERVER)
         managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor)))
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
         this.ongoingConnectRequests.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
@@ -242,8 +240,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             ongoingConnectReguest.acceptHandshake()
             this.ongoingConnectRequests.delete(peerId.toKey())
         } else {
-            const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
-                ConnectionType.WEBSOCKET_SERVER, undefined, serverWebSocket)
+            const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, ConnectionType.WEBSOCKET_SERVER, undefined, serverWebSocket)
 
             managedConnection.setPeerDescriptor(peerDescriptor)
 
@@ -274,13 +271,14 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     // IWebSocketConnectorService implementation
-    public async requestConnection(request: WebSocketConnectionRequest): Promise<WebSocketConnectionResponse> {
-        if (!this.destroyed && this.canConnectFunction(request.requester!, request.ip, request.port)) {
+    public async requestConnection(request: WebSocketConnectionRequest, context: ServerCallContext): Promise<WebSocketConnectionResponse> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        if (!this.destroyed && this.canConnectFunction(senderPeerDescriptor, request.ip, request.port)) {
             setImmediate(() => {
                 if (this.destroyed) {
                     return
                 }
-                const connection = this.connect(request.requester!)
+                const connection = this.connect(senderPeerDescriptor)
                 this.onIncomingConnection(connection)
             })
             const res: WebSocketConnectionResponse = {

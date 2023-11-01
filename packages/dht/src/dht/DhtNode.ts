@@ -15,7 +15,6 @@ import {
     PeerDescriptor,
     PingRequest,
     PingResponse,
-    FindMode,
     DataEntry,
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
@@ -25,6 +24,7 @@ import {
     Logger,
     MetricsContext,
     hexToBinary,
+    merge,
     waitForCondition
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -153,7 +153,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     constructor(conf: DhtNodeOptions) {
         super()
-        this.config = {
+        this.config = merge({
             serviceId: 'layer0',
             joinParallelism: 3,
             maxNeighborListSize: 200,
@@ -167,9 +167,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             networkConnectivityTimeout: 10000,
             storeNumberOfCopies: 5,
             metricsContext: new MetricsContext(),
-            peerId: new UUID().toHex(),
-            ...conf  // TODO use merge() if we don't want that explicit undefined values override defaults?
-        }
+            peerId: new UUID().toHex()
+        }, conf)
         this.send = this.send.bind(this)
     }
 
@@ -618,8 +617,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         ))
     }
 
-    public async startRecursiveFind(idToFind: Uint8Array, findMode?: FindMode, excludedPeer?: PeerDescriptor): Promise<RecursiveFindResult> {
-        return this.recursiveFinder!.startRecursiveFind(idToFind, findMode, excludedPeer)
+    public async startRecursiveFind(idToFind: Uint8Array, fetchData?: boolean, excludedPeer?: PeerDescriptor): Promise<RecursiveFindResult> {
+        return this.recursiveFinder!.startRecursiveFind(idToFind, fetchData, excludedPeer)
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
@@ -643,7 +642,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
         }
-        const result = await this.recursiveFinder!.startRecursiveFind(idToFind, FindMode.DATA)
+        const result = await this.recursiveFinder!.startRecursiveFind(idToFind, true)
         return result.dataEntries ?? []
     }
 

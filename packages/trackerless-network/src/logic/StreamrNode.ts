@@ -59,7 +59,7 @@ export interface StreamrNodeConfig {
 
 // TODO rename class?
 export class StreamrNode extends EventEmitter<Events> {
-    private P2PTransport?: ITransport
+    private transport?: ITransport
     private connectionLocker?: ConnectionLocker
     private layer0Node?: Layer0Node
     private readonly metricsContext: MetricsContext
@@ -89,7 +89,7 @@ export class StreamrNode extends EventEmitter<Events> {
         logger.info(`Starting new StreamrNode with id ${getNodeIdFromPeerDescriptor(startedAndJoinedLayer0Node.getPeerDescriptor())}`)
         this.started = true
         this.layer0Node = startedAndJoinedLayer0Node
-        this.P2PTransport = transport
+        this.transport = transport
         this.connectionLocker = connectionLocker
         cleanUp = () => this.destroy()
     }
@@ -105,9 +105,9 @@ export class StreamrNode extends EventEmitter<Events> {
         this.removeAllListeners()
         // TODO stopping should be in NetworkStack#stop?
         await this.layer0Node!.stop()
-        await this.P2PTransport!.stop()
+        await this.transport!.stop()
         this.layer0Node = undefined
-        this.P2PTransport = undefined
+        this.transport = undefined
         this.connectionLocker = undefined
     }
 
@@ -208,7 +208,7 @@ export class StreamrNode extends EventEmitter<Events> {
     private createRandomGraphNode = (streamPartId: StreamPartID, layer1Node: Layer1Node) => {
         return createRandomGraphNode({
             streamPartId,
-            P2PTransport: this.P2PTransport!,
+            transport: this.transport!,
             layer1Node,
             connectionLocker: this.connectionLocker!,
             ownPeerDescriptor: this.layer0Node!.getPeerDescriptor(),
@@ -256,7 +256,7 @@ export class StreamrNode extends EventEmitter<Events> {
 
     private createProxyClient(streamPartId: StreamPartID): ProxyClient {
         return new ProxyClient({
-            P2PTransport: this.P2PTransport!,
+            transport: this.transport!,
             ownPeerDescriptor: this.layer0Node!.getPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,

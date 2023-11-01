@@ -32,6 +32,8 @@ import { ConnectorFacade } from './ConnectorFacade'
 import { ManagedConnection, Events as ManagedConnectionEvents } from './ManagedConnection'
 import { RemoteConnectionLocker } from './RemoteConnectionLocker'
 import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number
@@ -109,7 +111,6 @@ export const keyOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescriptor | 
 
 export class ConnectionManager extends EventEmitter<Events> implements ITransport, ConnectionLocker {
 
-    public static PROTOCOL_VERSION = '1.0'
     private config: ConnectionManagerConfig
     private readonly metricsContext: MetricsContext
     private readonly duplicateMessageDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
@@ -142,11 +143,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             rpcRequestTimeout: 10000
         })
         this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest',
-            (req: LockRequest) => this.lockRequest(req))
+            (req: LockRequest, context: ServerCallContext) => this.lockRequest(req, context))
         this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest',
-            (req: UnlockRequest) => this.unlockRequest(req))
+            (req: UnlockRequest, context: ServerCallContext) => this.unlockRequest(req, context))
         this.rpcCommunicator.registerRpcMethod(DisconnectNotice, DisconnectNoticeResponse, 'gracefulDisconnect',
-            (req: DisconnectNotice) => this.gracefulDisconnect(req))
+            (req: DisconnectNotice, context: ServerCallContext) => this.gracefulDisconnect(req, context))
     }
 
     public garbageCollectConnections(maxConnections: number, lastUsedLimit: number): void {
@@ -467,7 +468,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const remoteConnectionLocker = new RemoteConnectionLocker(
             this.getOwnPeerDescriptor(),
             targetDescriptor,
-            ConnectionManager.PROTOCOL_VERSION,
             toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         this.locks.addLocalLocked(peerIdKey, serviceId)
@@ -485,7 +485,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const remoteConnectionLocker = new RemoteConnectionLocker(
             this.getOwnPeerDescriptor(),
             targetDescriptor,
-            ConnectionManager.PROTOCOL_VERSION,
             toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         if (this.connections.has(peerIdKey)) {
@@ -549,7 +548,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const remoteConnectionLocker = new RemoteConnectionLocker(
             this.getOwnPeerDescriptor(),
             targetDescriptor,
-            ConnectionManager.PROTOCOL_VERSION,
             toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         try {
@@ -566,9 +564,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     // IConnectionLocker server implementation
-    private async lockRequest(lockRequest: LockRequest): Promise<LockResponse> {
-        const remotePeerId = peerIdFromPeerDescriptor(lockRequest.peerDescriptor!)
-        if (areEqualPeerDescriptors(lockRequest.peerDescriptor!, this.getOwnPeerDescriptor())) {
+    private async lockRequest(lockRequest: LockRequest, context: ServerCallContext): Promise<LockResponse> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const remotePeerId = peerIdFromPeerDescriptor(senderPeerDescriptor)
+        if (areEqualPeerDescriptors(senderPeerDescriptor, this.getOwnPeerDescriptor())) {
             const response: LockResponse = {
                 accepted: false
             }
@@ -582,20 +581,22 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     // IConnectionLocker server implementation
-    private async unlockRequest(unlockRequest: UnlockRequest): Promise<Empty> {
-        const peerIdKey = keyFromPeerDescriptor(unlockRequest.peerDescriptor!)
+    private async unlockRequest(unlockRequest: UnlockRequest, context: ServerCallContext): Promise<Empty> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const peerIdKey = keyFromPeerDescriptor(senderPeerDescriptor)
         this.locks.removeRemoteLocked(peerIdKey, unlockRequest.serviceId)
         return {}
     }
 
     // IConnectionLocker server implementation
-    private async gracefulDisconnect(disconnectNotice: DisconnectNotice): Promise<Empty> {
-        logger.trace(keyOrUnknownFromPeerDescriptor(disconnectNotice.peerDescriptor) + ' received gracefulDisconnect notice')
+    private async gracefulDisconnect(disconnectNotice: DisconnectNotice, context: ServerCallContext): Promise<Empty> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        logger.trace(keyOrUnknownFromPeerDescriptor(senderPeerDescriptor) + ' received gracefulDisconnect notice')
 
-        if (disconnectNotice.disconnecMode === DisconnectMode.LEAVING) {
-            this.closeConnection(disconnectNotice.peerDescriptor!, 'INCOMING_GRACEFUL_LEAVE', 'graceful leave notified')
+        if (disconnectNotice.disconnectMode === DisconnectMode.LEAVING) {
+            this.closeConnection(senderPeerDescriptor, 'INCOMING_GRACEFUL_LEAVE', 'graceful leave notified')
         } else {
-            this.closeConnection(disconnectNotice.peerDescriptor!, 'INCOMING_GRACEFUL_DISCONNECT', 'graceful disconnect notified')
+            this.closeConnection(senderPeerDescriptor, 'INCOMING_GRACEFUL_DISCONNECT', 'graceful disconnect notified')
         }
         return {}
     }
