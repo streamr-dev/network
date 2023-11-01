@@ -30,7 +30,6 @@ export class RemoteConnectionLocker {
     public async lockRequest(serviceId: string): Promise<boolean> {
         logger.trace(`Requesting locked connection to ${keyFromPeerDescriptor(this.targetPeerDescriptor)}`)
         const request: LockRequest = {
-            peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,
             serviceId
         }
@@ -50,7 +49,6 @@ export class RemoteConnectionLocker {
     public unlockRequest(serviceId: string): void {
         logger.trace(`Requesting connection to be unlocked from ${keyFromPeerDescriptor(this.targetPeerDescriptor)}`)
         const request: UnlockRequest = {
-            peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,
             serviceId
         }
@@ -69,7 +67,6 @@ export class RemoteConnectionLocker {
     public async gracefulDisconnect(disconnecMode: DisconnectMode): Promise<void> {
         logger.trace(`Notifying a graceful disconnect to ${keyFromPeerDescriptor(this.targetPeerDescriptor)}`)
         const request: DisconnectNotice = {
-            peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,
             disconnecMode
         }

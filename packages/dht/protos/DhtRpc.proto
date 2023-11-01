@@ -175,10 +175,8 @@ message RouteMessageWrapper {
 }
 
 message RouteMessageAck {
-  PeerDescriptor sourcePeer = 1;
-  string requestId = 2;
-  PeerDescriptor destinationPeer = 3;
-  string error = 4;
+  string requestId = 1;
+  string error = 2;
 }
 
 // Correspond to the MessageType Enum
@@ -240,58 +238,44 @@ message Message {
 
 // WebSocket
 message WebSocketConnectionRequest {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string ip = 3;
-  uint32 port = 4;
+  string ip = 1;
+  uint32 port = 2;
 }
 
 message WebSocketConnectionResponse {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  bool accepted = 3;
-  optional string reason = 4;
+  bool accepted = 1;
+  optional string reason = 2;
 }
 
 // WebRTC
 message WebRtcConnectionRequest {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string connectionId = 3;
+  string connectionId = 1;
 }
 
 message RtcOffer {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string description = 3;
-  string connectionId = 4;
+  string description = 1;
+  string connectionId = 2;
 }
 
 message RtcAnswer {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string description = 3;
-  string connectionId = 4;
+  string description = 1;
+  string connectionId = 2;
 }
 
 message IceCandidate {
   string candidate = 1;
   string mid = 2;
   string connectionId = 3;
-  PeerDescriptor requester = 4;
-  PeerDescriptor target = 5;
 }
 
 message LockRequest {
   string protocolVersion = 1;
-  PeerDescriptor peerDescriptor = 2;
-  string serviceId = 3;
+  string serviceId = 2;
 }
 
 message UnlockRequest {
   string protocolVersion = 1;
-  PeerDescriptor peerDescriptor = 2;
-  string serviceId = 3;
+  string serviceId = 2;
 }
 
 message LockResponse {
@@ -306,8 +290,7 @@ enum DisconnectMode {
 
 message DisconnectNotice {
   string protocolVersion = 1;
-  PeerDescriptor peerDescriptor = 2;
-  DisconnectMode disconnecMode = 3;
+  DisconnectMode disconnecMode = 2;
 }
 
 message DisconnectNoticeResponse {
@@ -316,7 +299,6 @@ message DisconnectNoticeResponse {
 
 message FindDataRequest {
   bytes kademliaId = 1;
-  PeerDescriptor requestor = 2;
 }
 
 message FindDataResponse {

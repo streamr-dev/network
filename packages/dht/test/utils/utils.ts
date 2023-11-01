@@ -11,7 +11,6 @@ import {
     RouteMessageWrapper,
     StoreDataRequest,
     StoreDataResponse,
-    WebSocketConnectionRequest,
     WebSocketConnectionResponse,
     FindRequest, 
     DeleteDataResponse
@@ -165,8 +164,6 @@ export const MockRoutingService: IRouterServiceWithError = {
     async routeMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
             error: ''
         }
         return response
@@ -174,8 +171,6 @@ export const MockRoutingService: IRouterServiceWithError = {
     async findRecursively(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
             error: ''
         }
         return response
@@ -183,8 +178,6 @@ export const MockRoutingService: IRouterServiceWithError = {
     async forwardMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
             error: ''
         }
         return response
@@ -222,10 +215,8 @@ export const MockStoreService: IStoreServiceWithError = {
 }
 
 export const MockWebSocketConnectorRpc: IWebSocketConnectorService = {
-    async requestConnection(request: WebSocketConnectionRequest): Promise<WebSocketConnectionResponse> {
+    async requestConnection(): Promise<WebSocketConnectionResponse> {
         const responseConnection: WebSocketConnectionResponse = {
-            target: request.target,
-            requester: request.requester,
             accepted: true
         }
         return responseConnection
