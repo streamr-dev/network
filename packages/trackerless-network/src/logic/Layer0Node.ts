@@ -1,7 +1,7 @@
 import { DataEntry, ITransport, PeerDescriptor } from '@streamr/dht'
 import { Any } from '../proto/google/protobuf/any'
 
-export interface ILayer0 extends ITransport {
+export interface Layer0Node extends ITransport {
     joinDht(entryPointDescriptors: PeerDescriptor[]): Promise<void>
     hasJoined(): boolean
     getPeerDescriptor(): PeerDescriptor

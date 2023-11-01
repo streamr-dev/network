@@ -1,9 +1,9 @@
 import { PeerDescriptor } from '@streamr/dht'
 import { EventEmitter } from 'eventemitter3'
-import { ILayer1 } from '../../../src/logic/ILayer1'
+import { Layer1Node } from '../../../src/logic/Layer1Node'
 import { createMockPeerDescriptor } from '../utils'
 
-export class MockLayer1 extends EventEmitter implements ILayer1 {
+export class MockLayer1Node extends EventEmitter implements Layer1Node {
     
     private readonly kbucketPeers: PeerDescriptor[] = []
 
