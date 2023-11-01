@@ -6,9 +6,9 @@ import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
 import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
-import { RemoteRouter } from './RemoteRouter'
+import { RouterRpcRemote } from './RouterRpcRemote'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { RoutingServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Contact } from '../contact/Contact'
 
@@ -18,19 +18,19 @@ const MAX_FAILED_HOPS = 2
 
 class RemoteContact extends Contact {
 
-    private router: RemoteRouter
+    private router: RouterRpcRemote
 
     constructor(peer: RemoteDhtNode, ownPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
         super(peer.getPeerDescriptor())
-        this.router = new RemoteRouter(
+        this.router = new RouterRpcRemote(
             ownPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
-            toProtoRpcClient(new RoutingServiceClient(rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport()))
         )
     }
 
-    getRouter(): RemoteRouter {
+    getRouter(): RouterRpcRemote {
         return this.router
     }
 }

@@ -8,7 +8,7 @@ import { Logger, scheduleAtInterval, wait } from '@streamr/utils'
 import { createHash } from 'crypto'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { Any } from '../proto/google/protobuf/any'
-import { ILayer1 } from './ILayer1'
+import { Layer1Node } from './Layer1Node'
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): Uint8Array => {
     return new Uint8Array(createHash('md5').update(streamPartId).digest())
@@ -57,7 +57,7 @@ export const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 interface EntryPointDiscoveryConfig {
     streamPartId: StreamPartID
     ownPeerDescriptor: PeerDescriptor
-    layer1: ILayer1
+    layer1Node: Layer1Node
     getEntryPointData: (key: Uint8Array) => Promise<DataEntry[]>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
     deleteEntryPointData: (key: Uint8Array) => Promise<void>
@@ -122,7 +122,7 @@ export class EntryPointDiscovery {
         if (this.abortController.signal.aborted) {
             return
         }
-        const possibleNetworkSplitDetected = this.config.layer1.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT
+        const possibleNetworkSplitDetected = this.config.layer1Node.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT
         if ((currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) || possibleNetworkSplitDetected) {
             await this.storeSelfAsEntryPoint()
             await this.keepSelfAsEntryPoint()
@@ -160,11 +160,11 @@ export class EntryPointDiscovery {
     private async avoidNetworkSplit(): Promise<void> {
         await exponentialRunOff(async () => {
             const rediscoveredEntrypoints = await this.discoverEntryPoints()
-            await this.config.layer1.joinDht(rediscoveredEntrypoints, false, false)
-            if (this.config.layer1!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
+            await this.config.layer1Node.joinDht(rediscoveredEntrypoints, false, false)
+            if (this.config.layer1Node!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
                 // Filter out nodes that are not in the k-bucket, assumed to be offline
                 const nodesToAvoid = rediscoveredEntrypoints
-                    .filter((peer) => !this.config.layer1!.getKBucketPeers().includes(peer))
+                    .filter((peer) => !this.config.layer1Node!.getKBucketPeers().includes(peer))
                     .map((peer) => getNodeIdFromPeerDescriptor(peer))
                 nodesToAvoid.forEach((node) => this.networkSplitAvoidedNodes.add(node))
                 throw new Error(`Network split is still possible`)

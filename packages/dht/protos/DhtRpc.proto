@@ -14,40 +14,40 @@ service DhtRpcService {
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
 }
 
-service RoutingService {
+service RouterRpc {
   rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
   rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
   rpc findRecursively (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
-service StoreService {
+service StoreRpc {
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
   rpc migrateData (MigrateDataRequest) returns (MigrateDataResponse);
   rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
 }
 
 service RecursiveFindSessionService {
-  rpc reportRecursiveFindResult(RecursiveFindReport) returns (google.protobuf.Empty);
+  rpc sendFindResponse(FindResponse) returns (google.protobuf.Empty);
 }
 
-service WebSocketConnectorService {
+service WebSocketConnectorRpc {
   rpc requestConnection (WebSocketConnectionRequest) returns (WebSocketConnectionResponse);
 }
 
-service WebRtcConnectorService {
+service WebRtcConnectorRpc {
   rpc requestConnection (WebRtcConnectionRequest) returns (google.protobuf.Empty);
   rpc rtcOffer (RtcOffer) returns (google.protobuf.Empty);
   rpc rtcAnswer (RtcAnswer) returns (google.protobuf.Empty);
   rpc iceCandidate (IceCandidate) returns (google.protobuf.Empty);
 }
 
-service ConnectionLocker {
+service ConnectionLockRpc {
   rpc lockRequest (LockRequest) returns (LockResponse);
   rpc unlockRequest (UnlockRequest) returns (google.protobuf.Empty);
   rpc gracefulDisconnect (DisconnectNotice) returns (DisconnectNoticeResponse);
 }
 
-service ExternalApiService {
+service ExternalApiRpc {
   rpc findData (FindDataRequest) returns (FindDataResponse);
   rpc externalStoreData (ExternalStoreDataRequest) returns (ExternalStoreDataResponse);
 }
@@ -111,18 +111,13 @@ message ClosestPeersResponse {
   string requestId = 2;
 }
 
-enum FindMode {
-  NODE = 0;
-  DATA = 1;
+message FindRequest {
+  string sessionId = 1;
+  bool fetchData = 2;
 }
 
-message RecursiveFindRequest {
-  string recursiveFindSessionId = 1;
-  FindMode findMode = 2;
-}
-
-message RecursiveFindReport {
-  repeated PeerDescriptor nodes = 1;
+message FindResponse {
+  repeated PeerDescriptor closestConnectedPeers = 1;
   repeated DataEntry dataEntries = 2;
   optional bool noCloserNodesFound = 3;
   repeated PeerDescriptor routingPath = 4;
@@ -201,15 +196,13 @@ message ConnectivityResponse {
 
 message HandshakeRequest {
   bytes sourceId = 1;
-  string protocolVersion = 2;
-  PeerDescriptor peerDescriptor = 3;
+  PeerDescriptor peerDescriptor = 2;
 }
 
 message HandshakeResponse {
   bytes sourceId = 1;
-  string protocolVersion = 2;
-  PeerDescriptor peerDescriptor = 3;
-  optional string responseError = 4;
+  PeerDescriptor peerDescriptor = 2;
+  optional string responseError = 3;
 }
 
 // Wraps all messages
@@ -235,7 +228,7 @@ message Message {
     HandshakeRequest handshakeRequest = 8;
     HandshakeResponse handshakeResponse = 9;
     protorpc.RpcMessage rpcMessage = 10;
-    RecursiveFindRequest RecursiveFindRequest = 11;
+    FindRequest findRequest = 11;
   };
 }
 
@@ -274,13 +267,11 @@ message IceCandidate {
 }
 
 message LockRequest {
-  string protocolVersion = 1;
-  string serviceId = 2;
+  string serviceId = 1;
 }
 
 message UnlockRequest {
-  string protocolVersion = 1;
-  string serviceId = 2;
+  string serviceId = 1;
 }
 
 message LockResponse {
@@ -294,12 +285,10 @@ enum DisconnectMode {
 }
 
 message DisconnectNotice {
-  string protocolVersion = 1;
-  DisconnectMode disconnecMode = 2;
+  DisconnectMode disconnectMode = 1;
 }
 
 message DisconnectNoticeResponse {
-  string protocolVersion = 1;
 }
 
 message FindDataRequest {
