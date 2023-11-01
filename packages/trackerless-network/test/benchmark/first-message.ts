@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import { LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
+import { DhtNode, LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
 import { MessageID, StreamMessage, StreamMessageType, StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import fs from 'fs'
@@ -9,7 +9,7 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
-import { ILayer1 } from '../../src/logic/ILayer1'
+import { Layer1Node } from '../../src/logic/Layer1Node'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 
 const numNodes = 10000
@@ -90,7 +90,7 @@ const measureJoiningTime = async () => {
     }, 1000)
     // get random node from network to use as entrypoint
     const randomNode = nodes[Math.floor(Math.random() * nodes.length)]
-    const streamSubscriber = createNetworkNodeWithSimulator(peerDescriptor, simulator, [randomNode.stack.getLayer0DhtNode().getPeerDescriptor()])
+    const streamSubscriber = createNetworkNodeWithSimulator(peerDescriptor, simulator, [randomNode.stack.getLayer0Node().getPeerDescriptor()])
     currentNode = streamSubscriber
     const start = performance.now()
     await streamSubscriber.start()
@@ -132,13 +132,15 @@ run().then(() => {
     console.log('done')
 }).catch((err) => {
     console.error(err)
-    const streamParts = currentNode.stack.getStreamrNode()!.getStreamParts()
-    const foundData = nodes[0].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
+    const streamrNode = currentNode.stack.getStreamrNode()
+    const streamParts = streamrNode.getStreamParts()
+    const foundData = nodes[0].stack.getLayer0Node().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
-    console.log(currentNode.stack.getLayer0DhtNode().getKBucketPeers().length)
-    console.log(currentNode.stack.getLayer0DhtNode().getNumberOfConnections())
-    const streamPartDelivery = currentNode.stack.getStreamrNode().getStreamPartDelivery(streamParts[0])! as { layer1: ILayer1, node: RandomGraphNode }
-    console.log(streamPartDelivery.layer1.getKBucketPeers())
+    const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
+    console.log(layer0Node.getKBucketPeers().length)
+    console.log(layer0Node.getNumberOfConnections())
+    const streamPartDelivery = streamrNode.getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: RandomGraphNode }
+    console.log(streamPartDelivery.layer1Node.getKBucketPeers())
     console.log(streamPartDelivery.node.getTargetNeighborIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {

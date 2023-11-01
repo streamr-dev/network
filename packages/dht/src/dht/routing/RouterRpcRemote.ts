@@ -5,13 +5,13 @@ import {
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
-import { IRoutingServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { IRouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Remote } from '../contact/Remote'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-export class RemoteRouter extends Remote<IRoutingServiceClient> {
+export class RouterRpcRemote extends Remote<IRouterRpcClient> {
 
     async routeMessage(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {

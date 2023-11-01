@@ -8,13 +8,13 @@ import { Empty } from '../../proto/google/protobuf/empty'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection'
-import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
-import { WebRtcConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { WebRtcConnectorRpcRemote } from './WebRtcConnectorRpcRemote'
+import { WebRtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { ManagedWebRtcConnection } from '../ManagedWebRtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
-import { IWebRtcConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { IWebRtcConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
@@ -24,6 +24,8 @@ import {
 } from '../../helpers/peerIdFromPeerDescriptor'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
 import { PortRange } from '../ConnectionManager'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 
 const logger = new Logger(module)
 
@@ -36,9 +38,8 @@ export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): 
     return parsed.join(' ')
 }
 
-export interface WebRtcConnectorConfig {
+export interface WebRtcConnectorRpcLocalConfig {
     transport: ITransport
-    protocolVersion: string
     iceServers?: IceServer[]
     allowPrivateAddresses?: boolean
     bufferThresholdLow?: number
@@ -57,7 +58,8 @@ export interface IceServer {
     tcp?: boolean
 }
 
-export class WebRtcConnector implements IWebRtcConnectorService {
+export class WebRtcConnectorRpcLocal implements IWebRtcConnectorRpc {
+
     private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
@@ -65,11 +67,11 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     private stopped = false
     private iceServers: IceServer[]
     private allowPrivateAddresses: boolean
-    private config: WebRtcConnectorConfig
+    private config: WebRtcConnectorRpcLocalConfig
     private onIncomingConnection: (connection: ManagedConnection) => boolean
 
     constructor(
-        config: WebRtcConnectorConfig,
+        config: WebRtcConnectorRpcLocalConfig,
         onIncomingConnection: (connection: ManagedConnection) => boolean
     ) {
         this.config = config
@@ -77,17 +79,17 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         this.allowPrivateAddresses = config.allowPrivateAddresses || true
         this.onIncomingConnection = onIncomingConnection
 
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.transport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnectorRpcLocal.WEBRTC_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000
         })
         this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer',
-            (req: RtcOffer) => this.rtcOffer(req))
+            (req: RtcOffer, context: ServerCallContext) => this.rtcOffer(req, context))
         this.rpcCommunicator.registerRpcNotification(RtcAnswer, 'rtcAnswer',
-            (req: RtcAnswer) => this.rtcAnswer(req))
+            (req: RtcAnswer, context: ServerCallContext) => this.rtcAnswer(req, context))
         this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate',
-            (req: IceCandidate) => this.iceCandidate(req))
+            (req: IceCandidate, context: ServerCallContext) => this.iceCandidate(req, context))
         this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection',
-            (req: WebRtcConnectionRequest) => this.requestConnection(req))
+            (req: WebRtcConnectionRequest, context: ServerCallContext) => this.requestConnection(req, context))
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
@@ -116,9 +118,9 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         let managedConnection: ManagedWebRtcConnection
 
         if (offering) {
-            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, connection)
+            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, connection)
         } else {
-            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, undefined, connection)
+            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, undefined, connection)
         }
 
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
@@ -135,9 +137,10 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         connection.on('disconnected', delFunc)
         managedConnection.on('handshakeCompleted', delFunc)
 
-        const remoteConnector = new RemoteWebrtcConnector(
+        const remoteConnector = new WebRtcConnectorRpcRemote(
+            this.ownPeerDescriptor!,
             targetPeerDescriptor,
-            toProtoRpcClient(new WebRtcConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new WebRtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
         )
 
         connection.on('localCandidate', (candidate: string, mid: string) => {
@@ -145,23 +148,23 @@ export class WebRtcConnector implements IWebRtcConnectorService {
                 candidate = replaceInternalIpWithExternalIp(candidate, this.config.externalIp)
                 logger.debug(`onLocalCandidate injected external ip ${candidate} ${mid}`)
             }
-            remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
+            remoteConnector.sendIceCandidate(candidate, mid, connection.connectionId.toString())
         })
 
         if (offering) {
             connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcOffer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
+                remoteConnector.sendRtcOffer(description, connection.connectionId.toString())
             })
         } else {
             connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcAnswer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
+                remoteConnector.sendRtcAnswer(description, connection.connectionId.toString())
             })
         }
 
         connection.start(offering)
 
         if (!offering) {
-            remoteConnector.requestConnection(this.ownPeerDescriptor!, connection.connectionId.toString())
+            remoteConnector.requestConnection(connection.connectionId.toString())
         }
 
         return managedConnection
@@ -196,24 +199,25 @@ export class WebRtcConnector implements IWebRtcConnectorService {
 
         if (!managedConnection) {
             connection = new NodeWebRtcConnection({ remotePeerDescriptor: remotePeer })
-            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, undefined, connection)
+            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, undefined, connection)
 
             managedConnection.setPeerDescriptor(remotePeer)
 
             this.ongoingConnectAttempts.set(peerKey, managedConnection)
             this.onIncomingConnection(managedConnection)
 
-            const remoteConnector = new RemoteWebrtcConnector(
+            const remoteConnector = new WebRtcConnectorRpcRemote(
+                this.ownPeerDescriptor!,
                 remotePeer,
-                toProtoRpcClient(new WebRtcConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new WebRtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
 
             connection.on('localCandidate', (candidate: string, mid: string) => {
-                remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection!.connectionId.toString())
+                remoteConnector.sendIceCandidate(candidate, mid, connection!.connectionId.toString())
             })
 
             connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcAnswer(this.ownPeerDescriptor!, description, connection!.connectionId.toString())
+                remoteConnector.sendRtcAnswer(description, connection!.connectionId.toString())
             })
 
             connection.start(false)
@@ -301,23 +305,31 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     }
 
     // IWebRTCConnector implementation
-    async requestConnection(request: WebRtcConnectionRequest): Promise<Empty> {
-        this.onConnectionRequest(request.requester!)
+    // TODO should we read connectionId from WebRtcConnectionRequest (or remove the field)?
+    async requestConnection(_request: WebRtcConnectionRequest, context: ServerCallContext): Promise<Empty> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        this.onConnectionRequest(senderPeerDescriptor)
         return {}
     }
 
-    async rtcOffer(request: RtcOffer): Promise<Empty> {
-        this.onRtcOffer(request.requester!, request.target!, request.description, request.connectionId)
+    async rtcOffer(request: RtcOffer, context: ServerCallContext): Promise<Empty> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const receiverPeerDescriptor = (context as DhtCallContext).incomingTargetDescriptor!
+        this.onRtcOffer(senderPeerDescriptor, receiverPeerDescriptor, request.description, request.connectionId)
         return {}
     }
 
-    async rtcAnswer(request: RtcAnswer): Promise<Empty> {
-        this.onRtcAnswer(request.requester!, request.target!, request.description, request.connectionId)
+    async rtcAnswer(request: RtcAnswer, context: ServerCallContext): Promise<Empty> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const receiverPeerDescriptor = (context as DhtCallContext).incomingTargetDescriptor!
+        this.onRtcAnswer(senderPeerDescriptor, receiverPeerDescriptor, request.description, request.connectionId)
         return {}
     }
 
-    async iceCandidate(request: IceCandidate): Promise<Empty> {
-        this.onRemoteCandidate(request.requester!, request.target!, request.candidate, request.mid, request.connectionId)
+    async iceCandidate(request: IceCandidate, context: ServerCallContext): Promise<Empty> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const receiverPeerDescriptor = (context as DhtCallContext).incomingTargetDescriptor!
+        this.onRemoteCandidate(senderPeerDescriptor, receiverPeerDescriptor, request.candidate, request.mid, request.connectionId)
         return {}
     }
 }
