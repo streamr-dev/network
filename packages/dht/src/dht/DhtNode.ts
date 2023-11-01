@@ -51,7 +51,6 @@ export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     joinCompleted: () => void
-    kbucketContactRemoved: (peerDescriptor: PeerDescriptor) => void
     newOpenInternetContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     openInternetContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -461,10 +460,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
         logger.trace(`Removed contact ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
-        this.emit(
-            'kbucketContactRemoved',
-            contact.getPeerDescriptor()
-        )
         if (this.bucket!.count() === 0
             && !this.peerDiscovery!.isJoinOngoing()
             && this.config.entryPoints
