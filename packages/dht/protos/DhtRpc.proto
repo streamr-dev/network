@@ -290,7 +290,7 @@ enum DisconnectMode {
 }
 
 message DisconnectNotice {
-  DisconnectMode disconnecMode = 1;
+  DisconnectMode disconnectMode = 1;
 }
 
 message DisconnectNoticeResponse {

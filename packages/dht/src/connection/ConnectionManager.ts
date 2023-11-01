@@ -593,7 +593,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         logger.trace(keyOrUnknownFromPeerDescriptor(senderPeerDescriptor) + ' received gracefulDisconnect notice')
 
-        if (disconnectNotice.disconnecMode === DisconnectMode.LEAVING) {
+        if (disconnectNotice.disconnectMode === DisconnectMode.LEAVING) {
             this.closeConnection(senderPeerDescriptor, 'INCOMING_GRACEFUL_LEAVE', 'graceful leave notified')
         } else {
             this.closeConnection(senderPeerDescriptor, 'INCOMING_GRACEFUL_DISCONNECT', 'graceful disconnect notified')

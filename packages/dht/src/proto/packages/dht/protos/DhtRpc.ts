@@ -574,9 +574,9 @@ export interface LockResponse {
  */
 export interface DisconnectNotice {
     /**
-     * @generated from protobuf field: dht.DisconnectMode disconnecMode = 1;
+     * @generated from protobuf field: dht.DisconnectMode disconnectMode = 1;
      */
-    disconnecMode: DisconnectMode;
+    disconnectMode: DisconnectMode;
 }
 /**
  * @generated from protobuf message dht.DisconnectNoticeResponse
@@ -1169,7 +1169,7 @@ export const LockResponse = new LockResponse$Type();
 class DisconnectNotice$Type extends MessageType$<DisconnectNotice> {
     constructor() {
         super("dht.DisconnectNotice", [
-            { no: 1, name: "disconnecMode", kind: "enum", T: () => ["dht.DisconnectMode", DisconnectMode] }
+            { no: 1, name: "disconnectMode", kind: "enum", T: () => ["dht.DisconnectMode", DisconnectMode] }
         ]);
     }
 }
