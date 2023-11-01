@@ -51,7 +51,7 @@ export type IRouter = IRouterRpc & IRouterFunc
 
 const logger = new Logger(module)
 
-export class Router implements IRouter {
+export class RouterRpcLocal implements IRouter {
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly connections: Map<PeerIDKey, RemoteDhtNode>

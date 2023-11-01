@@ -33,7 +33,7 @@ import { Empty } from '../proto/google/protobuf/empty'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { Any } from '../proto/google/protobuf/any'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
-import { Router } from './routing/Router'
+import { RouterRpcLocal } from './routing/RouterRpcLocal'
 import { RecursiveFinder, RecursiveFindResult } from './find/RecursiveFinder'
 import { StoreRpcLocal } from './store/StoreRpcLocal'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
@@ -140,7 +140,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private rpcCommunicator?: RoutingRpcCommunicator
     private transport?: ITransport
     private ownPeerDescriptor?: PeerDescriptor
-    public router?: Router
+    public routerRpcLocal?: RouterRpcLocal
     private storeRpcLocal?: StoreRpcLocal
     private localDataStore = new LocalDataStore()
     private recursiveFinder?: RecursiveFinder
@@ -256,7 +256,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             addContact: this.addNewContact.bind(this),
             connectionManager: this.connectionManager
         })
-        this.router = new Router({
+        this.routerRpcLocal = new RouterRpcLocal({
             rpcCommunicator: this.rpcCommunicator,
             connections: this.connections,
             ownPeerDescriptor: this.ownPeerDescriptor!,
@@ -266,7 +266,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         })
         this.recursiveFinder = new RecursiveFinder({
             rpcCommunicator: this.rpcCommunicator,
-            router: this.router,
+            routerRpcLocal: this.routerRpcLocal,
             sessionTransport: this,
             connections: this.connections,
             ownPeerDescriptor: this.ownPeerDescriptor!,
@@ -605,7 +605,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             return
         }
         const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints || [] : []
-        await this.router!.send(msg, reachableThrough)
+        await this.routerRpcLocal!.send(msg, reachableThrough)
     }
 
     public async joinDht(entryPointDescriptors: PeerDescriptor[], doAdditionalRandomPeerDiscovery?: boolean, retry?: boolean): Promise<void> {
@@ -723,7 +723,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.randomPeers!.stop()
         this.openInternetPeers!.stop()
         this.rpcCommunicator!.stop()
-        this.router!.stop()
+        this.routerRpcLocal!.stop()
         this.recursiveFinder!.stop()
         this.peerDiscovery!.stop()
         if (this.connectionManager) {
