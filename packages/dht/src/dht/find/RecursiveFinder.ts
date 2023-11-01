@@ -20,7 +20,7 @@ import { RecursiveFindSession, RecursiveFindSessionEvents } from './RecursiveFin
 import { RemoteDhtNode } from '../RemoteDhtNode'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
-import { IRoutingService } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { RecursiveFindSessionServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -42,7 +42,7 @@ interface RecursiveFinderFunc {
     startRecursiveFind(idToFind: Uint8Array, fetchData?: boolean): Promise<RecursiveFindResult>
 }
 
-export interface IRecursiveFinder extends Pick<IRoutingService, 'findRecursively'>, RecursiveFinderFunc {}
+export interface IRecursiveFinder extends Pick<IRouterRpc, 'findRecursively'>, RecursiveFinderFunc {}
 
 export interface RecursiveFindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
 
@@ -244,7 +244,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         return closestPeers.getClosestContacts(limit).map((peer) => peer.getPeerDescriptor())
     }
 
-    // IRoutingService method
+    // IRouterRpc method
     async findRecursively(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, 'findRecursively() service is not running')

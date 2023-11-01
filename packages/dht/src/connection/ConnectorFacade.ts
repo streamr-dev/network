@@ -8,8 +8,8 @@ import { PortRange, TlsCertificate } from './ConnectionManager'
 import { ManagedConnection } from './ManagedConnection'
 import { Simulator } from './Simulator/Simulator'
 import { SimulatorConnector } from './Simulator/SimulatorConnector'
-import { IceServer, WebRtcConnector } from './WebRTC/WebRtcConnector'
-import { WebSocketConnector } from './WebSocket/WebSocketConnector'
+import { IceServer, WebRtcConnectorRpcLocal } from './WebRTC/WebRtcConnectorRpcLocal'
+import { WebSocketConnectorRpcLocal } from './WebSocket/WebSocketConnectorRpcLocal'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
@@ -44,8 +44,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     private readonly config: DefaultConnectorFacadeConfig
     private ownPeerDescriptor?: PeerDescriptor
-    private webSocketConnector?: WebSocketConnector
-    private webrtcConnector?: WebRtcConnector
+    private webSocketConnector?: WebSocketConnectorRpcLocal
+    private webrtcConnector?: WebRtcConnectorRpcLocal
 
     constructor(config: DefaultConnectorFacadeConfig) {
         this.config = config
@@ -56,7 +56,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         canConnect: (peerDescriptor: PeerDescriptor) => boolean
     ): Promise<void> {
         logger.trace(`Creating WebSocketConnector`)
-        this.webSocketConnector = new WebSocketConnector({
+        this.webSocketConnector = new WebSocketConnectorRpcLocal({
             transport: this.config.transport!,
             // TODO should we use canConnect also for WebRtcConnector? (NET-1142)
             canConnect: (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),
@@ -68,7 +68,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             maxMessageSize: this.config.maxMessageSize
         })
         logger.trace(`Creating WebRTCConnector`)
-        this.webrtcConnector = new WebRtcConnector({
+        this.webrtcConnector = new WebRtcConnectorRpcLocal({
             transport: this.config.transport!,
             iceServers: this.config.iceServers,
             allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
