@@ -261,8 +261,6 @@ export class RestServer {
     }
 
     public async stop(): Promise<void> {
-        if (this.server) {
-            this.server.close()
-        }
+        this.server!.close()
     }
 }
