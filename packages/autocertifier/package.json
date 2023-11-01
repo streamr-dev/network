@@ -1,7 +1,7 @@
 {
   "name": "@streamr/autocertifier",
   "version": "0.0.1-tatum.6",
-  "description": "Automatic TSL Certificate Manager for Streamr Network",
+  "description": "Automatic TLS Certificate Manager for Streamr Network",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network.git",
