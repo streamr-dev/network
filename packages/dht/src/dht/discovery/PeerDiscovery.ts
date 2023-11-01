@@ -6,18 +6,14 @@ import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import KBucket from 'k-bucket'
 import { SortedContactList } from '../contact/SortedContactList'
 import { ConnectionManager } from '../../connection/ConnectionManager'
-import { PeerIDKey } from '../../helpers/PeerID'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { RandomContactList } from '../contact/RandomContactList'
 import { createRandomKademliaId } from '../../helpers/kademliaId'
 
 interface PeerDiscoveryConfig {
     rpcCommunicator: RoutingRpcCommunicator
     ownPeerDescriptor: PeerDescriptor
     bucket: KBucket<RemoteDhtNode>
-    connections: Map<PeerIDKey, RemoteDhtNode>
     neighborList: SortedContactList<RemoteDhtNode>
-    randomPeers: RandomContactList<RemoteDhtNode>
     joinNoProgressLimit: number
     peerDiscoveryQueryBatchSize: number
     serviceId: string
