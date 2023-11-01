@@ -47,7 +47,5 @@
     "@types/uuid": "^9.0.6",
     "request": "^2.88.2",
     "ts-node": "^10.9.1"
-  },
-  "optionalDependencies": {
   }
 }
