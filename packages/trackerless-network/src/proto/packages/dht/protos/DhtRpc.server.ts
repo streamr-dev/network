@@ -89,9 +89,9 @@ export interface IStoreRpc<T = ServerCallContext> {
     deleteData(request: DeleteDataRequest, context: T): Promise<DeleteDataResponse>;
 }
 /**
- * @generated from protobuf service dht.RecursiveFindSessionService
+ * @generated from protobuf service dht.FindSessionRpc
  */
-export interface IRecursiveFindSessionService<T = ServerCallContext> {
+export interface IFindSessionRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: sendFindResponse(dht.FindResponse) returns (google.protobuf.Empty);
      */

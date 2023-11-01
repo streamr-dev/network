@@ -20,7 +20,7 @@ import type { WebRtcConnectionRequest } from "./DhtRpc";
 import { WebSocketConnectorRpc } from "./DhtRpc";
 import type { WebSocketConnectionResponse } from "./DhtRpc";
 import type { WebSocketConnectionRequest } from "./DhtRpc";
-import { RecursiveFindSessionService } from "./DhtRpc";
+import { FindSessionRpc } from "./DhtRpc";
 import type { FindResponse } from "./DhtRpc";
 import { StoreRpc } from "./DhtRpc";
 import type { DeleteDataResponse } from "./DhtRpc";
@@ -205,21 +205,21 @@ export class StoreRpcClient implements IStoreRpcClient, ServiceInfo {
     }
 }
 /**
- * @generated from protobuf service dht.RecursiveFindSessionService
+ * @generated from protobuf service dht.FindSessionRpc
  */
-export interface IRecursiveFindSessionServiceClient {
+export interface IFindSessionRpcClient {
     /**
      * @generated from protobuf rpc: sendFindResponse(dht.FindResponse) returns (google.protobuf.Empty);
      */
     sendFindResponse(input: FindResponse, options?: RpcOptions): UnaryCall<FindResponse, Empty>;
 }
 /**
- * @generated from protobuf service dht.RecursiveFindSessionService
+ * @generated from protobuf service dht.FindSessionRpc
  */
-export class RecursiveFindSessionServiceClient implements IRecursiveFindSessionServiceClient, ServiceInfo {
-    typeName = RecursiveFindSessionService.typeName;
-    methods = RecursiveFindSessionService.methods;
-    options = RecursiveFindSessionService.options;
+export class FindSessionRpcClient implements IFindSessionRpcClient, ServiceInfo {
+    typeName = FindSessionRpc.typeName;
+    methods = FindSessionRpc.methods;
+    options = FindSessionRpc.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**

@@ -3,13 +3,13 @@ import {
     PeerDescriptor,
     FindResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { IRecursiveFindSessionServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { IFindSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger } from '@streamr/utils'
 import { Remote } from '../contact/Remote'
 
 const logger = new Logger(module)
 
-export class RemoteRecursiveFindSession extends Remote<IRecursiveFindSessionServiceClient> {
+export class RemoteRecursiveFindSession extends Remote<IFindSessionRpcClient> {
 
     sendFindResponse(routingPath: PeerDescriptor[], closestNodes: PeerDescriptor[], 
         dataEntries: DataEntry[], noCloserNodesFound: boolean): void {

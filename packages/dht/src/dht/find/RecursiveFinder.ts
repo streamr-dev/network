@@ -22,7 +22,7 @@ import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
 import { IFindRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { RecursiveFindSessionServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { FindSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { SortedContactList } from '../contact/SortedContactList'
 
@@ -192,7 +192,7 @@ export class RecursiveFinder implements IRecursiveFinder {
                 this.ownPeerDescriptor,
                 targetPeerDescriptor,
                 serviceId,
-                toProtoRpcClient(new RecursiveFindSessionServiceClient(remoteCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new FindSessionRpcClient(remoteCommunicator.getRpcClientTransport()))
             )
             remoteSession.sendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         }

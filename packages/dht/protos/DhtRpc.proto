@@ -29,7 +29,7 @@ service StoreRpc {
   rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
 }
 
-service RecursiveFindSessionService {
+service FindSessionRpc {
   rpc sendFindResponse(FindResponse) returns (google.protobuf.Empty);
 }
 
