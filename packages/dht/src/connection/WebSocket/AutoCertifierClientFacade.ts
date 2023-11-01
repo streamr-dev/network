@@ -9,7 +9,10 @@ import {
 import { ListeningRpcCommunicator } from '../../exports'
 import { Logger, waitForEvent3 } from '@streamr/utils'
 import { ITransport } from '../../transport/ITransport' 
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 const START_TIMEOUT = 60 * 1000
+
+type GetSessionId = (request: SessionIdRequest, context: ServerCallContext) => Promise<SessionIdResponse>
 
 const defaultAutoCertifierClientFactory = (
     filePath: string,
@@ -19,14 +22,16 @@ const defaultAutoCertifierClientFactory = (
 ) => new AutoCertifierClient(
     filePath,
     wsServerPort,
-    autoCertifierUrl, (_, rpcMethodName, method) => {
+    autoCertifierUrl, 
+    (_serviceId: string, rpcMethodName: string, method: GetSessionId) => {
         autoCertifierRpcCommunicator.registerRpcMethod(
             SessionIdRequest,
             SessionIdResponse,
             rpcMethodName,
             method
-        )                        
-    })
+        )                       
+    }
+)
 
 export interface IAutoCertifierClient {
     start(): Promise<void>
