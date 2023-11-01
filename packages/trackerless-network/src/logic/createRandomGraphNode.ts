@@ -28,7 +28,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const ownNodeId = getNodeIdFromPeerDescriptor(config.ownPeerDescriptor)
     const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(
         formStreamPartDeliveryServiceId(config.streamPartId),
-        config.P2PTransport
+        config.transport
     )
     const numOfTargetNeighbors = config.numOfTargetNeighbors ?? 4
     const maxNumberOfContacts = config.maxNumberOfContacts ?? 20

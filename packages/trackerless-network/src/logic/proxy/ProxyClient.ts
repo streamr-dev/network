@@ -43,7 +43,7 @@ export const retry = async <T>(task: () => Promise<T>, description: string, abor
 }
 
 interface ProxyClientConfig {
-    P2PTransport: ITransport
+    transport: ITransport
     ownPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     connectionLocker: ConnectionLocker
@@ -76,7 +76,7 @@ export class ProxyClient extends EventEmitter {
     constructor(config: ProxyClientConfig) {
         super()
         this.config = config
-        this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(config.streamPartId), config.P2PTransport)
+        this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(config.streamPartId), config.transport)
         this.targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor), 1000)
         this.deliveryRpcLocal = new DeliveryRpcLocal({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
@@ -241,7 +241,7 @@ export class ProxyClient extends EventEmitter {
     async start(): Promise<void> {
         this.registerDefaultServerMethods()
         addManagedEventListener<any, any>(
-            this.config.P2PTransport as any,
+            this.config.transport as any,
             'disconnected',
             (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor),
             this.abortController.signal

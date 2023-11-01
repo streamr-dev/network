@@ -40,7 +40,7 @@ export const createMockRandomGraphNodeAndDhtNode = async (
     })
     const randomGraphNode = createRandomGraphNode({
         streamPartId,
-        P2PTransport: mockCm,
+        transport: mockCm,
         layer1,
         connectionLocker: mockCm,
         ownPeerDescriptor

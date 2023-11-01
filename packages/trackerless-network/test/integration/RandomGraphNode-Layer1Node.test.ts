@@ -59,7 +59,7 @@ describe('RandomGraphNode-DhtNode', () => {
         graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
             streamPartId,
             layer1: layer1Nodes[i],
-            P2PTransport: cms[i],
+            transport: cms[i],
             connectionLocker: cms[i],
             ownPeerDescriptor: peerDescriptors[i],
             neighborUpdateInterval: 2000
@@ -68,7 +68,7 @@ describe('RandomGraphNode-DhtNode', () => {
         entryPointRandomGraphNode = createRandomGraphNode({
             streamPartId,
             layer1: dhtEntryPoint,
-            P2PTransport: entrypointCm,
+            transport: entrypointCm,
             connectionLocker: entrypointCm,
             ownPeerDescriptor: entrypointDescriptor,
             neighborUpdateInterval: 2000

@@ -13,8 +13,6 @@ import { IRoutingService } from '../../proto/packages/dht/protos/DhtRpc.server'
 export const createRouteMessageAck = (routedMessage: RouteMessageWrapper, error?: string): RouteMessageAck => {
     const ack: RouteMessageAck = {
         requestId: routedMessage.requestId,
-        destinationPeer: routedMessage.sourcePeer,
-        sourcePeer: routedMessage.destinationPeer,
         error: error ? error : ''
     }
     return ack
