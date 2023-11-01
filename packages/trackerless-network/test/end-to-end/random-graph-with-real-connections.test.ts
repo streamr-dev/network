@@ -5,6 +5,8 @@ import { createStreamMessage } from '../utils/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { ILayer0 } from '../../src/logic/ILayer0'
+import { ILayer1 } from '../../src/logic/ILayer1'
 
 describe('random graph with real connections', () => {
 
@@ -15,11 +17,14 @@ describe('random graph with real connections', () => {
     }
 
     const streamPartId = StreamPartIDUtils.parse('random-graph#0')
-    let epDhtNode: DhtNode  // TODO is this Layer0 or Layer1?
-    let dhtNode1: DhtNode  // TODO is this Layer0 or Layer1?
-    let dhtNode2: DhtNode  // TODO is this Layer0 or Layer1?
-    let dhtNode3: DhtNode  // TODO is this Layer0 or Layer1?
-    let dhtNode4: DhtNode  // TODO is this Layer0 or Layer1?
+    // Currently the nodes here are practically layer0 nodes acting as layer1 nodes, for the purpose of this test
+    // they are layer1 nodes as the DHT is per stream
+    // TODO refactor the test to use normal layering style (i.e. have separate objects for layer0 and layer1 nodes)
+    let epDhtNode: ILayer0 & ILayer1
+    let dhtNode1: ILayer0 & ILayer1
+    let dhtNode2: ILayer0 & ILayer1
+    let dhtNode3: ILayer0 & ILayer1
+    let dhtNode4: ILayer0 & ILayer1
     let randomGraphNode1: RandomGraphNode
     let randomGraphNode2: RandomGraphNode
     let randomGraphNode3: RandomGraphNode

@@ -12,7 +12,7 @@ const logger = new Logger(module)
 describe('RandomGraphNode-DhtNode', () => {
     const numOfNodes = 64
     let layer1Nodes: ILayer1[]
-    let dhtEntryPoint: DhtNode  // TODO is this Layer0 or Layer1?
+    let dhtEntryPoint: ILayer1
     let entryPointRandomGraphNode: RandomGraphNode
     let graphNodes: RandomGraphNode[]
 
