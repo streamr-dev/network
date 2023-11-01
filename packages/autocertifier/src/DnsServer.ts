@@ -55,7 +55,7 @@ export class DnsServer {
             expiration: 3600000,
             minimum: 172800,
         } as unknown)
-        await send(response)
+        send(response)
     }
 
     private handleNSQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
@@ -68,7 +68,7 @@ export class DnsServer {
             ttl: 86400,
             ns: this.ownHostName + '.' + this.domainName
         } as unknown)
-        await send(response)
+        send(response)
     }
 
     private handleTextQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
@@ -110,29 +110,28 @@ export class DnsServer {
             ttl: 300,
             data: acmeChallenge!
         })
-
-        await send(response)
+        send(response)
     }
 
     // eslint-disable-next-line class-methods-use-this
     private handleAAAAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
         logger.info('handleAAAAQuery() ' + mixedCaseName)
-        await send(response)
+        send(response)
     }
 
     // eslint-disable-next-line class-methods-use-this
     private handleCNAMEQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
         logger.info('handleCNAMEQuery() ' + mixedCaseName)
-        await send(response)
+        send(response)
     }
 
     // eslint-disable-next-line class-methods-use-this
     private handleCAAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
         logger.info('handleCAAQuery() ' + mixedCaseName)
-        await send(response)
+        send(response)
     }
 
     private handleNormalQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
@@ -178,7 +177,7 @@ export class DnsServer {
             ttl: 300,
             address: retIp
         })
-        await send(response)
+        send(response)
     }
 
     private handleQuery: DnsHandler = async (request, send, _rinfo): Promise<void> => {
