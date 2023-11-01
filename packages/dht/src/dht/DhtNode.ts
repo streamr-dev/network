@@ -92,8 +92,8 @@ export interface DhtNodeOptions {
     maxConnections?: number
     tlsCertificate?: TlsCertificate
     externalIp?: string
-    autocertifierUrl?: string
-    autocertifiedSubdomainFilePath?: string
+    autoCertifierUrl?: string
+    autoCertifiedSubdomainFilePath?: string
 }
 
 type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions, 
@@ -210,8 +210,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 websocketServerEnableTls: this.config.websocketServerEnableTls,
                 tlsCertificate: this.config.tlsCertificate,
                 externalIp: this.config.externalIp,
-                autocertifierUrl: this.config.autocertifierUrl,
-                autocertifiedSubdomainFilePath: this.config.autocertifiedSubdomainFilePath,
+                autoCertifierUrl: this.config.autoCertifierUrl,
+                autoCertifiedSubdomainFilePath: this.config.autoCertifiedSubdomainFilePath,
                 createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server

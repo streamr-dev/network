@@ -48,10 +48,10 @@ interface WebSocketConnectorConfig {
     transport: ITransport
     canConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     onIncomingConnection: (connection: ManagedConnection) => boolean
-    autocertifierTransport: ITransport
-    autocertifierUrl: string
+    autoCertifierTransport: ITransport
+    autoCertifierUrl: string
     serverEnableTls: boolean
-    autocertifiedSubdomainFilePath: string
+    autoCertifiedSubdomainFilePath: string
     portRange?: PortRange
     maxMessageSize?: number
     host?: string
@@ -67,9 +67,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private onIncomingConnection: (connection: ManagedConnection) => boolean
-    private readonly autocertifierTransport: ITransport
-    private readonly autocertifierUrl: string
-    private readonly autocertifiedSubdomainFilePath: string
+    private readonly autoCertifierTransport: ITransport
+    private readonly autoCertifierUrl: string
+    private readonly autoCertifiedSubdomainFilePath: string
     private host?: string
     private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
@@ -93,9 +93,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         this.host = config.host
         this.entrypoints = config.entrypoints
         this.tlsCertificate = config.tlsCertificate
-        this.autocertifierTransport = config.autocertifierTransport
-        this.autocertifierUrl = config.autocertifierUrl
-        this.autocertifiedSubdomainFilePath = config.autocertifiedSubdomainFilePath
+        this.autoCertifierTransport = config.autoCertifierTransport
+        this.autoCertifierUrl = config.autoCertifierUrl
+        this.autoCertifiedSubdomainFilePath = config.autoCertifiedSubdomainFilePath
         this.serverEnableTls = config.serverEnableTls
 
         this.canConnectFunction = config.canConnect.bind(this)
@@ -190,9 +190,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
     public async autoCertify(): Promise<void> {
         this.autoCertifierClient = new AutoCertifierClientFacade({
-            subdomainFilePath: this.autocertifiedSubdomainFilePath,
-            transport: this.autocertifierTransport,
-            url: this.autocertifierUrl,
+            subdomainFilePath: this.autoCertifiedSubdomainFilePath,
+            transport: this.autoCertifierTransport,
+            url: this.autoCertifierUrl,
             wsServerPort: this.selectedPort!,
             setHost: (hostName: string) => this.setHost(hostName),
             updateCertificate: (certificate: Certificate) => this.webSocketServer!.updateCertificate(certificate)

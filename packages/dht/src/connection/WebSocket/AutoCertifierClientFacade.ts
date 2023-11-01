@@ -13,14 +13,14 @@ const START_TIMEOUT = 60 * 1000
 
 const defaultAutoCertifierClientFactory = (
     filePath: string,
-    autocertifierUrl: string,
-    autocertifierRpcCommunicator: ListeningRpcCommunicator,
+    autoCertifierUrl: string,
+    autoCertifierRpcCommunicator: ListeningRpcCommunicator,
     wsServerPort: number
 ) => new AutoCertifierClient(
     filePath,
     wsServerPort,
-    autocertifierUrl, (_, rpcMethodName, method) => {
-        autocertifierRpcCommunicator.registerRpcMethod(
+    autoCertifierUrl, (_, rpcMethodName, method) => {
+        autoCertifierRpcCommunicator.registerRpcMethod(
             SessionIdRequest,
             SessionIdResponse,
             rpcMethodName,
@@ -48,7 +48,7 @@ const logger = new Logger(module)
 
 export class AutoCertifierClientFacade {
 
-    private autocertifierClient: IAutoCertifierClient
+    private autoCertifierClient: IAutoCertifierClient
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly setHost: (host: string) => void
     private readonly updateCertificate: (certificate: Certificate) => void
@@ -57,7 +57,7 @@ export class AutoCertifierClientFacade {
         this.setHost = config.setHost
         this.updateCertificate = config.updateCertificate
         this.rpcCommunicator = new ListeningRpcCommunicator(AUTOCERTIFIER_SERVICE_ID, config.transport)
-        this.autocertifierClient = config.createClientFactory ? config.createClientFactory() 
+        this.autoCertifierClient = config.createClientFactory ? config.createClientFactory() 
             : defaultAutoCertifierClientFactory(
                 config.subdomainFilePath,
                 config.url,
@@ -67,20 +67,20 @@ export class AutoCertifierClientFacade {
     }
 
     async start(): Promise<void> {
-        this.autocertifierClient.on('updatedSubdomain', (subdomain: CertifiedSubdomain) => {
+        this.autoCertifierClient.on('updatedSubdomain', (subdomain: CertifiedSubdomain) => {
             logger.trace(`Updating certificate for WSS server`)
             this.setHost(subdomain.subdomain + '.' + subdomain.fqdn)
             this.updateCertificate(subdomain.certificate)
             logger.trace(`Updated certificate for WSS server`)
         })
         await Promise.all([
-            waitForEvent3(this.autocertifierClient as any, 'updatedSubdomain', START_TIMEOUT),
-            this.autocertifierClient.start()
+            waitForEvent3(this.autoCertifierClient as any, 'updatedSubdomain', START_TIMEOUT),
+            this.autoCertifierClient.start()
         ])
     }
 
     stop(): void {
-        this.autocertifierClient.stop()
+        this.autoCertifierClient.stop()
         this.rpcCommunicator.stop()
     }
 

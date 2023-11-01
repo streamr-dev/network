@@ -209,11 +209,11 @@
                             "type": "boolean",
                             "default": true
                         },
-                        "autocertifierUrl": {
+                        "autoCertifierUrl": {
                             "type": "string",
                             "default": "https://ns1.fe6a54d8-8d6f-4743-890d-e9ecd680a4c7.xyz:59833"
                         },
-                        "autocertifiedSubdomainFilePath": {
+                        "autoCertifiedSubdomainFilePath": {
                             "type": "string",
                             "default": "~/.streamr/subdomain.json"
                         }

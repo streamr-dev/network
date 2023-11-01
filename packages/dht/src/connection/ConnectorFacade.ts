@@ -17,7 +17,7 @@ export interface ConnectorFacade {
     start: (
         onIncomingConnection: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean,
-        autocertifierTransport: ITransport
+        autoCertifierTransport: ITransport
     ) => Promise<void>
     stop: () => Promise<void>
 }
@@ -39,8 +39,8 @@ export interface DefaultConnectorFacadeConfig {
     maxMessageSize?: number
     tlsCertificate?: TlsCertificate
     websocketServerEnableTls?: boolean
-    autocertifierUrl?: string
-    autocertifiedSubdomainFilePath?: string
+    autoCertifierUrl?: string
+    autoCertifiedSubdomainFilePath?: string
     createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => PeerDescriptor
 }
 
@@ -58,7 +58,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     async start(
         onIncomingConnection: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean,
-        autocertifierTransport: ITransport
+        autoCertifierTransport: ITransport
     ): Promise<void> {
         logger.trace(`Creating WebSocketConnector`)
         this.webSocketConnector = new WebSocketConnector({
@@ -72,9 +72,9 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             entrypoints: this.config.entryPoints,
             tlsCertificate: this.config.tlsCertificate,
             serverEnableTls: this.config.websocketServerEnableTls!,
-            autocertifierUrl: this.config.autocertifierUrl!,
-            autocertifiedSubdomainFilePath: this.config.autocertifiedSubdomainFilePath!,
-            autocertifierTransport,
+            autoCertifierUrl: this.config.autoCertifierUrl!,
+            autoCertifiedSubdomainFilePath: this.config.autoCertifiedSubdomainFilePath!,
+            autoCertifierTransport,
             maxMessageSize: this.config.maxMessageSize
         })
         logger.trace(`Creating WebRTCConnector`)
