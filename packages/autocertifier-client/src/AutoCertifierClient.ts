@@ -1,6 +1,6 @@
 import { EventEmitter } from 'eventemitter3'
-import { IAutoCertifierService } from './proto/packages/autocertifier/protos/AutoCertifier.server'
-import { SessionIdRequest, SessionIdResponse } from './proto/packages/autocertifier/protos/AutoCertifier'
+import { IAutoCertifierRpc } from './proto/packages/autocertifier-client/protos/AutoCertifier.server'
+import { SessionIdRequest, SessionIdResponse } from './proto/packages/autocertifier-client/protos/AutoCertifier'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { filePathToNodeFormat } from '@streamr/utils'
 import { RestClient } from './RestClient'
@@ -20,7 +20,7 @@ export const AUTOCERTIFIER_SERVICE_ID = 'system/auto-certificer'
 const ONE_DAY = 1000 * 60 * 60 * 24
 const MAX_INT_32 = 2147483647
 
-export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents> implements IAutoCertifierService {
+export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents> implements IAutoCertifierRpc {
 
     private updateTimeout?: NodeJS.Timeout
     private readonly restClient: RestClient
@@ -160,7 +160,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         this.ongoingSessions.delete(sessionId)
     }
 
-    // IAutoCertifierService implementation
+    // IAutoCertifierRpc implementation
     public async getSessionId(request: SessionIdRequest, _context: ServerCallContext): Promise<SessionIdResponse> {
         logger.info('getSessionId() called ' + this.ongoingSessions.size + ' ongoing sessions')
         if (this.ongoingSessions.has(request.sessionId)) {

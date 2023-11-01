@@ -8,16 +8,20 @@ import {
     SimulatorTransport,
     DefaultConnectorFacade
 } from '@streamr/dht'
-import { AutoCertifierClient, createSelfSignedCertificate } from '@streamr/autocertifier-client'
 import os from 'os'
 import fs from 'fs'
 import { RestServer } from '../../src/RestServer'
-import { CertifiedSubdomain } from '@streamr/autocertifier-client'
-import { Session } from '@streamr/autocertifier-client'
+import { 
+    CertifiedSubdomain,
+    Session,
+    AutoCertifierClient,
+    createSelfSignedCertificate,
+    SessionIdRequest,
+    SessionIdResponse
+} from '@streamr/autocertifier-client'
 import { v4 } from 'uuid'
 import { Logger } from '@streamr/utils'
 import { StreamrChallenger } from '../../src/StreamrChallenger'
-import { SessionIdRequest, SessionIdResponse } from '../../src/proto/packages/autocertifier/protos/AutoCertifier'
 
 const logger = new Logger(module)
 

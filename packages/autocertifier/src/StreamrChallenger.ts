@@ -1,9 +1,8 @@
 import { Message, NodeType, PeerDescriptor, PeerID, ClientWebSocket, ManagedConnection, RoutingRpcCommunicator } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { AutoCertifierRpcClient } from './proto/packages/autocertifier/protos/AutoCertifier.client'
 import { Logger } from '@streamr/utils'
 import { ConnectionType } from '@streamr/dht/dist/src/connection/IConnection'
-import { FailedToConnectToStreamrWebSocket } from '@streamr/autocertifier-client'
+import { FailedToConnectToStreamrWebSocket, AutoCertifierRpcClient } from '@streamr/autocertifier-client'
 
 const logger = new Logger(module)
 

@@ -8,11 +8,10 @@ import {
     SimulatorTransport,
     DefaultConnectorFacade
 } from '@streamr/dht'
-import { AutoCertifierClient } from '@streamr/autocertifier-client'
+import { AutoCertifierClient, SessionIdRequest, SessionIdResponse } from '@streamr/autocertifier-client'
 import os from 'os'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'
-import { SessionIdRequest, SessionIdResponse } from '../../src/proto/packages/autocertifier/protos/AutoCertifier'
 
 const logger = new Logger(module)
 
