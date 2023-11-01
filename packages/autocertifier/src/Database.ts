@@ -139,18 +139,20 @@ export class Database {
     }
 
     private async createTables(): Promise<void> {
-        let query = "BEGIN TRANSACTION; "
-        query += "CREATE TABLE subdomains ("
-        query += "id INTEGER PRIMARY KEY,"
-        query += "subdomainName TEXT NOT NULL,"
-        query += "ip TEXT NOT NULL,"
-        query += "port TEXT NOT NULL,"
-        query += "token TEXT NOT NULL,"
-        query += "acmeChallenge TEXT,"
-        query += "createdAt DATETIME DEFAULT CURRENT_TIMESTAMP); "
-        query += "CREATE INDEX subdomain_index on subdomains(subdomainName); "
-        query += "COMMIT;"
-
+        const query = `
+            BEGIN TRANSACTION;
+            CREATE TABLE subdomains (
+                id INTEGER PRIMARY KEY,
+                subdomainName TEXT NOT NULL,
+                ip TEXT NOT NULL,
+                port TEXT NOT NULL,
+                token TEXT NOT NULL,
+                acmeChallenge TEXT,
+                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX subdomain_index on subdomains(subdomainName);
+            COMMIT;
+        `
         await this.db!.exec(query)
     }
 }
