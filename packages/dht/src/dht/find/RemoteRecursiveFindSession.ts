@@ -1,7 +1,7 @@
 import {
     DataEntry,
     PeerDescriptor,
-    RecursiveFindReport
+    FindResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { IRecursiveFindSessionServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger } from '@streamr/utils'
@@ -11,16 +11,16 @@ const logger = new Logger(module)
 
 export class RemoteRecursiveFindSession extends Remote<IRecursiveFindSessionServiceClient> {
 
-    reportRecursiveFindResult(routingPath: PeerDescriptor[], closestNodes: PeerDescriptor[], 
+    sendFindResponse(routingPath: PeerDescriptor[], closestNodes: PeerDescriptor[], 
         dataEntries: DataEntry[], noCloserNodesFound: boolean): void {
-        const report: RecursiveFindReport = {
+        const report: FindResponse = {
             routingPath,
-            nodes: closestNodes,
+            closestConnectedPeers: closestNodes,
             dataEntries,
             noCloserNodesFound
         }
-        this.getClient().reportRecursiveFindResult(report, this.formDhtRpcOptions()).catch((_e) => {
-            logger.trace('Failed to send RecursiveFindResult')
+        this.getClient().sendFindResponse(report, this.formDhtRpcOptions()).catch((_e) => {
+            logger.trace('Failed to send FindResult')
         })
     }
 }
