@@ -24,8 +24,6 @@ export class WebRtcConnectorRpcRemote extends Remote<IWebRtcConnectorRpcClient> 
 
     requestConnection(connectionId: string): void {
         const request: WebRtcConnectionRequest = {
-            target: this.getPeerDescriptor(),
-            requester: this.getLocalPeerDescriptor(),
             connectionId
         }
         const options = this.formDhtRpcOptions({
@@ -38,8 +36,6 @@ export class WebRtcConnectorRpcRemote extends Remote<IWebRtcConnectorRpcClient> 
 
     sendRtcOffer(description: string, connectionId: string): void {
         const request: RtcOffer = {
-            target: this.getPeerDescriptor(),
-            requester: this.getLocalPeerDescriptor(),
             connectionId,
             description
         }
@@ -51,8 +47,6 @@ export class WebRtcConnectorRpcRemote extends Remote<IWebRtcConnectorRpcClient> 
 
     sendRtcAnswer(description: string, connectionId: string): void {
         const request: RtcAnswer = {
-            target: this.getPeerDescriptor(),
-            requester: this.getLocalPeerDescriptor(),
             connectionId,
             description
         }
@@ -64,8 +58,6 @@ export class WebRtcConnectorRpcRemote extends Remote<IWebRtcConnectorRpcClient> 
 
     sendIceCandidate(candidate: string, mid: string, connectionId: string): void {
         const request: IceCandidate = {
-            target: this.getPeerDescriptor(),
-            requester: this.getLocalPeerDescriptor(),
             connectionId,
             mid,
             candidate

@@ -24,8 +24,6 @@ export class WebSocketConnectorRpcRemote extends Remote<IWebSocketConnectorRpcCl
     async requestConnection(ip: string, port: number): Promise<boolean> {
         logger.trace(`Requesting WebSocket connection from ${keyFromPeerDescriptor(this.getLocalPeerDescriptor())}`)
         const request: WebSocketConnectionRequest = {
-            target: this.getPeerDescriptor(),
-            requester: this.getLocalPeerDescriptor(),
             ip,
             port
         }

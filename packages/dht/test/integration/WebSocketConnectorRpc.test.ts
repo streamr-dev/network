@@ -62,8 +62,6 @@ describe('WebSocketConnectorRpc', () => {
 
     it('Happy path', async () => {
         const response1 = client1.requestConnection({
-            requester: peerDescriptor1,
-            target: peerDescriptor2,
             ip: '127.0.0.1',
             port: 9099
         },
@@ -73,8 +71,6 @@ describe('WebSocketConnectorRpc', () => {
         expect(res1.accepted).toEqual(true)
 
         const response2 = client2.requestConnection({
-            requester: peerDescriptor2,
-            target: peerDescriptor1,
             ip: '127.0.0.1',
             port: 9111
         },

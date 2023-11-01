@@ -26,7 +26,6 @@ export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
     public async lockRequest(serviceId: string): Promise<boolean> {
         logger.trace(`Requesting locked connection to ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: LockRequest = {
-            peerDescriptor: this.getLocalPeerDescriptor(),
             protocolVersion: this.protocolVersion,
             serviceId
         }
@@ -43,7 +42,6 @@ export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
     public unlockRequest(serviceId: string): void {
         logger.trace(`Requesting connection to be unlocked from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: UnlockRequest = {
-            peerDescriptor: this.getLocalPeerDescriptor(),
             protocolVersion: this.protocolVersion,
             serviceId
         }
@@ -58,7 +56,6 @@ export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
     public async gracefulDisconnect(disconnecMode: DisconnectMode): Promise<void> {
         logger.trace(`Notifying a graceful disconnect to ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: DisconnectNotice = {
-            peerDescriptor: this.getLocalPeerDescriptor(),
             protocolVersion: this.protocolVersion,
             disconnecMode
         }
