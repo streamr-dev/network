@@ -143,7 +143,6 @@ export class ConnectivityChecker {
         } catch (err) {
             logger.debug('error', { err })
             connectivityResponseMessage = {
-                openInternet: false,
                 host,
                 natType: NatType.UNKNOWN
             }
@@ -152,7 +151,6 @@ export class ConnectivityChecker {
             outgoingConnection.close('OTHER')
             logger.trace('Connectivity test produced positive result, communicating reply to the requester ' + host + ':' + connectivityRequest.port)
             connectivityResponseMessage = {
-                openInternet: true,
                 host,
                 natType: NatType.OPEN_INTERNET,
                 websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls }

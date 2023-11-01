@@ -120,7 +120,6 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
     const ret: PeerDescriptor = { kademliaId, type: nodeType }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
-        ret.openInternet = true
     }
     return ret
 }
