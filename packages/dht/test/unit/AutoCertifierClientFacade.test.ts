@@ -2,7 +2,7 @@ import EventEmitter from 'eventemitter3'
 import { AutoCertifierClientFacade, IAutoCertifierClient } from '../../src/connection/WebSocket/AutoCertifierClientFacade'
 import { MockTransport } from '../utils/mock/Transport'
 
-class mockAutoCertifierClient extends EventEmitter {
+class MockAutoCertifierClient extends EventEmitter {
     start = async () => {
         this.emit('updatedSubdomain', {})
     }
@@ -21,7 +21,7 @@ describe('AutoCertifierClientFacade', () => {
     let updateCertificate: jest.Mock
 
     beforeEach(() => {
-        mockClient = new mockAutoCertifierClient()
+        mockClient = new MockAutoCertifierClient()
         const mockClientFactory = (): IAutoCertifierClient => mockClient
         setHost = jest.fn()
         updateCertificate = jest.fn()
@@ -50,7 +50,7 @@ describe('AutoCertifierClientFacade', () => {
         await client.start()
         expect(setHost).toBeCalledTimes(1)
         expect(updateCertificate).toBeCalledTimes(1);
-        (mockClient as mockAutoCertifierClient).emitUpdateSubdomain()
+        (mockClient as MockAutoCertifierClient).emitUpdateSubdomain()
         expect(setHost).toBeCalledTimes(2)
         expect(updateCertificate).toBeCalledTimes(2)
     })
