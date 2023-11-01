@@ -12,8 +12,7 @@ import {
     StoreDataRequest,
     StoreDataResponse,
     WebSocketConnectionResponse,
-    RecursiveFindRequest, 
-    FindMode,
+    FindRequest, 
     DeleteDataResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
@@ -108,12 +107,12 @@ export const createWrappedClosestPeersRequest = (
     return rpcWrapper
 }
 
-export const createRecursiveFindRequest = (
-    findMode: FindMode
-): RecursiveFindRequest => {
-    const request: RecursiveFindRequest = {
-        findMode,
-        recursiveFindSessionId: v4()
+export const createFindRequest = (
+    fetchData: boolean
+): FindRequest => {
+    const request: FindRequest = {
+        fetchData,
+        sessionId: v4()
     }
     return request
 }
