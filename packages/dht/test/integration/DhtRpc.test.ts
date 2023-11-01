@@ -1,6 +1,6 @@
 import { getMockPeers, MockDhtRpc } from '../utils/utils'
 import { ProtoRpcClient, RpcCommunicator, RpcError, toProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
+import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { generateId } from '../utils/utils'
 import { ClosestPeersRequest, ClosestPeersResponse, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { wait } from '@streamr/utils'
@@ -9,8 +9,8 @@ import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 describe('DhtRpc', () => {
     let rpcCommunicator1: RpcCommunicator
     let rpcCommunicator2: RpcCommunicator
-    let client1: ProtoRpcClient<DhtRpcServiceClient>
-    let client2: ProtoRpcClient<DhtRpcServiceClient>
+    let client1: ProtoRpcClient<DhtNodeRpcClient>
+    let client2: ProtoRpcClient<DhtNodeRpcClient>
 
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: generateId('peer1'),
@@ -39,8 +39,8 @@ describe('DhtRpc', () => {
 
         rpcCommunicator2.on('outgoingMessage', outgoingListener2)
 
-        client1 = toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator1.getRpcClientTransport()))
-        client2 = toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator1.getRpcClientTransport()))
+        client1 = toProtoRpcClient(new DhtNodeRpcClient(rpcCommunicator1.getRpcClientTransport()))
+        client2 = toProtoRpcClient(new DhtNodeRpcClient(rpcCommunicator1.getRpcClientTransport()))
     })
 
     afterEach(async () => {

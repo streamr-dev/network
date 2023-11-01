@@ -5,7 +5,7 @@ import KBucket from 'k-bucket'
 import { v4 } from 'uuid'
 import { PeerID } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { DhtRpcServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { DhtNodeRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { SortedContactList } from '../contact/SortedContactList'
 import { RemoteDhtNode } from '../RemoteDhtNode'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
@@ -51,7 +51,7 @@ export class DiscoverySession {
                 const remoteDhtNode = new RemoteDhtNode(
                     this.config.ownPeerDescriptor,
                     contact,
-                    toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
+                    toProtoRpcClient(new DhtNodeRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
                     this.config.serviceId
                 )
                 if (this.config.newContactListener) {

@@ -19,7 +19,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
-import { DhtRpcServiceClient, ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { DhtNodeRpcClient, ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
     MetricsContext,
@@ -318,7 +318,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 new RemoteDhtNode(
                     this.ownPeerDescriptor!,
                     removedContact.getPeerDescriptor(),
-                    toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                    toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
                     this.config.serviceId
                 )
             )
@@ -343,7 +343,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             const remoteDhtNode = new RemoteDhtNode(
                 this.ownPeerDescriptor!,
                 peer,
-                toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
                 this.config.serviceId
             )
             if (areEqualPeerDescriptors(peer, this.ownPeerDescriptor!)) {
@@ -369,7 +369,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         const remoteDhtNode = new RemoteDhtNode(
             this.ownPeerDescriptor!,
             peerDescriptor,
-            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+            toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
             this.config.serviceId
         )
         if (!this.connections.has(PeerID.fromValue(remoteDhtNode.id).toKey())) {
@@ -559,7 +559,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             const remoteDhtNode = new RemoteDhtNode(
                 this.ownPeerDescriptor!,
                 contact,
-                toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
                 this.config.serviceId
             )
             if (!this.bucket!.get(contact.kademliaId) && !this.neighborList!.getContact(peerIdFromPeerDescriptor(contact))) {
@@ -735,7 +735,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.removeAllListeners()
     }
 
-    // IDHTRpcService implementation
+    // IDhtNodeRpc implementation
     private async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
         this.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
         const response = {
@@ -745,7 +745,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return response
     }
 
-    // IDHTRpcService implementation
+    // IDhtNodeRpc implementation
     private async ping(request: PingRequest, context: ServerCallContext): Promise<PingResponse> {
         logger.trace('received ping request: ' + keyFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!))
         setImmediate(() => {
@@ -757,7 +757,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return response
     }
 
-    // IDHTRpcService implementation
+    // IDhtNodeRpc implementation
     private async leaveNotice(request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
         // TODO check signature??
         if (request.serviceId === this.config.serviceId) {

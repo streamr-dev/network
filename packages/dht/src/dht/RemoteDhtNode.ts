@@ -1,4 +1,4 @@
-import { IDhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { IDhtNodeRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     ClosestPeersRequest,
     PeerDescriptor,
@@ -19,7 +19,7 @@ export interface KBucketContact {
     vectorClock: number
 }
 
-export class RemoteDhtNode extends Remote<IDhtRpcServiceClient> implements KBucketContact {
+export class RemoteDhtNode extends Remote<IDhtNodeRpcClient> implements KBucketContact {
 
     private static counter = 0
     public vectorClock: number
@@ -28,7 +28,7 @@ export class RemoteDhtNode extends Remote<IDhtRpcServiceClient> implements KBuck
     constructor(
         ownPeerDescriptor: PeerDescriptor,
         peerDescriptor: PeerDescriptor,
-        client: ProtoRpcClient<IDhtRpcServiceClient>,
+        client: ProtoRpcClient<IDhtNodeRpcClient>,
         serviceId: string
     ) {
         super(ownPeerDescriptor, peerDescriptor, serviceId, client)

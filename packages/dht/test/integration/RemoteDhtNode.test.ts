@@ -10,7 +10,7 @@ import {
     PingResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
+import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { generateId } from '../utils/utils'
 
 describe('RemoteDhtNode', () => {
@@ -39,7 +39,7 @@ describe('RemoteDhtNode', () => {
         serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
-        const client = toProtoRpcClient(new DhtRpcServiceClient(clientRpcCommunicator.getRpcClientTransport()))
+        const client = toProtoRpcClient(new DhtNodeRpcClient(clientRpcCommunicator.getRpcClientTransport()))
         remoteDhtNode = new RemoteDhtNode(clientPeerDescriptor, serverPeerDescriptor, client, serviceId)
     })
 
