@@ -49,13 +49,12 @@ export class AutoCertifier implements RestInterface {
         const subdomain = v4()
         const token = v4()
         await this.dnsServer!.createSubdomain(subdomain, ipAddress, port, token)
-        const cert = await this.certificateCreator!.createCertificate(subdomain + '.' + this.domainName)
-
+        const certificate = await this.certificateCreator!.createCertificate(subdomain + '.' + this.domainName)
         return { 
-            subdomain: subdomain,
+            subdomain,
             fqdn: this.domainName!,
-            token: token,
-            certificate: cert
+            token,
+            certificate
         }
     }
 
