@@ -32,8 +32,6 @@ import { ConnectorFacade } from './ConnectorFacade'
 import { ManagedConnection, Events as ManagedConnectionEvents } from './ManagedConnection'
 import { RemoteConnectionLocker } from './RemoteConnectionLocker'
 import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
-import { ListeningRpcCommunicator } from '../transport/ListeningRpcCommunicator'
-import { AUTOCERTIFIER_SERVICE_ID } from '@streamr/autocertifier-client'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number
@@ -178,11 +176,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         this.state = ConnectionManagerState.RUNNING
         logger.trace(`Starting ConnectionManager...`)
-        const autocertifierRpcCommunicator = new ListeningRpcCommunicator(AUTOCERTIFIER_SERVICE_ID, this)
         await this.connectorFacade.start(
             (connection: ManagedConnection) => this.onIncomingConnection(connection),
             (peerDescriptor: PeerDescriptor) => this.canConnect(peerDescriptor),
-            autocertifierRpcCommunicator
+            this
         )
         // Garbage collection of connections
         this.disconnectorIntervalRef = setInterval(() => {

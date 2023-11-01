@@ -48,7 +48,7 @@ interface WebSocketConnectorConfig {
     transport: ITransport
     canConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     onIncomingConnection: (connection: ManagedConnection) => boolean
-    autocertifierRpcCommunicator: ListeningRpcCommunicator
+    autocertifierTransport: ITransport
     autocertifierUrl: string
     serverEnableTls: boolean
     autocertifiedSubdomainFilePath: string
@@ -67,7 +67,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private onIncomingConnection: (connection: ManagedConnection) => boolean
-    private readonly autocertifierRpcCommunicator: ListeningRpcCommunicator
+    private readonly autocertifierTransport: ITransport
     private readonly autocertifierUrl: string
     private readonly autocertifiedSubdomainFilePath: string
     private host?: string
@@ -93,7 +93,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         this.host = config.host
         this.entrypoints = config.entrypoints
         this.tlsCertificate = config.tlsCertificate
-        this.autocertifierRpcCommunicator = config.autocertifierRpcCommunicator
+        this.autocertifierTransport = config.autocertifierTransport
         this.autocertifierUrl = config.autocertifierUrl
         this.autocertifiedSubdomainFilePath = config.autocertifiedSubdomainFilePath
         this.serverEnableTls = config.serverEnableTls
@@ -191,7 +191,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     public async autoCertify(): Promise<void> {
         this.autoCertifierClient = new AutoCertifierClientFacade({
             subdomainFilePath: this.autocertifiedSubdomainFilePath,
-            rpcCommunicator: this.autocertifierRpcCommunicator,
+            transport: this.autocertifierTransport,
             url: this.autocertifierUrl,
             wsServerPort: this.selectedPort!,
             setHost: (hostName: string) => this.setHost(hostName),
@@ -299,7 +299,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     public async destroy(): Promise<void> {
         this.destroyed = true
         this.rpcCommunicator.stop()
-        this.autocertifierRpcCommunicator.stop()
         this.autoCertifierClient?.stop()
         const requests = Array.from(this.ongoingConnectRequests.values())
         await Promise.allSettled(requests.map((conn) => conn.close('OTHER')))

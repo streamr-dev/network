@@ -1,7 +1,14 @@
-import { AutoCertifierClient, SessionIdRequest, SessionIdResponse, CertifiedSubdomain, Certificate } from '@streamr/autocertifier-client'
+import {
+    AutoCertifierClient,
+    SessionIdRequest,
+    SessionIdResponse, 
+    CertifiedSubdomain,
+    Certificate,
+    AUTOCERTIFIER_SERVICE_ID
+} from '@streamr/autocertifier-client'
 import { ListeningRpcCommunicator } from '../../exports'
 import { Logger, waitForEvent3 } from '@streamr/utils'
-
+import { ITransport } from '../../transport/ITransport' 
 const START_TIMEOUT = 60 * 1000
 
 const defaultAutoCertifierClientFactory = (
@@ -30,7 +37,7 @@ export interface IAutoCertifierClient {
 interface AutoCertifierClientFacadeConfig {
     url: string
     subdomainFilePath: string
-    rpcCommunicator: ListeningRpcCommunicator
+    transport: ITransport
     wsServerPort: number
     setHost: (host: string) => void
     updateCertificate: (certificate: Certificate) => void
@@ -42,17 +49,19 @@ const logger = new Logger(module)
 export class AutoCertifierClientFacade {
 
     private autocertifierClient: IAutoCertifierClient
+    private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly setHost: (host: string) => void
     private readonly updateCertificate: (certificate: Certificate) => void
 
     constructor(config: AutoCertifierClientFacadeConfig) {
         this.setHost = config.setHost
         this.updateCertificate = config.updateCertificate
+        this.rpcCommunicator = new ListeningRpcCommunicator(AUTOCERTIFIER_SERVICE_ID, config.transport)
         this.autocertifierClient = config.createClientFactory ? config.createClientFactory() 
             : defaultAutoCertifierClientFactory(
                 config.subdomainFilePath,
                 config.url,
-                config.rpcCommunicator,
+                this.rpcCommunicator,
                 config.wsServerPort
             )
     }
@@ -72,6 +81,7 @@ export class AutoCertifierClientFacade {
 
     stop(): void {
         this.autocertifierClient.stop()
+        this.rpcCommunicator.stop()
     }
 
 }

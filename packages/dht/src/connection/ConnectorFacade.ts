@@ -10,7 +10,6 @@ import { Simulator } from './Simulator/Simulator'
 import { SimulatorConnector } from './Simulator/SimulatorConnector'
 import { IceServer, WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
-import { ListeningRpcCommunicator } from '../exports'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
@@ -18,7 +17,7 @@ export interface ConnectorFacade {
     start: (
         onIncomingConnection: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean,
-        autocertifierRpcCommunicator: ListeningRpcCommunicator
+        autocertifierTransport: ITransport
     ) => Promise<void>
     stop: () => Promise<void>
 }
@@ -59,7 +58,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     async start(
         onIncomingConnection: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean,
-        autocertifierRpcCommunicator: ListeningRpcCommunicator
+        autocertifierTransport: ITransport
     ): Promise<void> {
         logger.trace(`Creating WebSocketConnector`)
         this.webSocketConnector = new WebSocketConnector({
@@ -75,7 +74,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             serverEnableTls: this.config.websocketServerEnableTls!,
             autocertifierUrl: this.config.autocertifierUrl!,
             autocertifiedSubdomainFilePath: this.config.autocertifiedSubdomainFilePath!,
-            autocertifierRpcCommunicator,
+            autocertifierTransport,
             maxMessageSize: this.config.maxMessageSize
         })
         logger.trace(`Creating WebRTCConnector`)

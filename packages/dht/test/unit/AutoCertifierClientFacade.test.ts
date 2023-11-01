@@ -1,5 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { AutoCertifierClientFacade, IAutoCertifierClient } from '../../src/connection/WebSocket/AutoCertifierClientFacade'
+import { MockTransport } from '../utils/mock/Transport'
 
 class mockAutoCertifierClient extends EventEmitter {
     start = async () => {
@@ -27,7 +28,7 @@ describe('AutoCertifierClientFacade', () => {
         client = new AutoCertifierClientFacade({
             url: '',
             subdomainFilePath: '',
-            rpcCommunicator: {} as any,
+            transport: new MockTransport(),
             wsServerPort: 0,
             setHost,
             updateCertificate,
