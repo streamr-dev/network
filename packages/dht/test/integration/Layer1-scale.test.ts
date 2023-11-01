@@ -3,7 +3,9 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
 import { UUID } from '../../src/helpers/UUID'
-import { NodeType } from '../../src/exports'
+import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
+
+const NUM_OF_NODES_PER_KBUCKET = 8
 
 describe('Layer1', () => {
 
@@ -12,8 +14,7 @@ describe('Layer1', () => {
 
     const entryPoint0Descriptor = {
         kademliaId: PeerID.fromString(layer0EntryPointId).value,
-        type: NodeType.NODEJS,
-        nodeName: layer0EntryPointId
+        type: NodeType.NODEJS
     }
 
     let layer0EntryPoint: DhtNode
@@ -35,7 +36,6 @@ describe('Layer1', () => {
             const node = await createMockConnectionDhtNode(
                 new UUID().toString(),
                 simulator,
-                undefined,
                 undefined,
                 undefined,
                 undefined,
@@ -63,7 +63,7 @@ describe('Layer1', () => {
         const layer1Nodes: DhtNode[] = []
         for (let i = 0; i < NODE_COUNT; i++) {
             const layer0 = nodes[i]
-            const layer1 = await createMockConnectionLayer1Node(layer0.getNodeId().toString(), layer0)
+            const layer1 = await createMockConnectionLayer1Node(layer0.getNodeId().toString(), layer0, undefined, NUM_OF_NODES_PER_KBUCKET)
             layer1Nodes.push(layer1)
             layer1CleanUp.push(layer1)
         }
@@ -75,7 +75,7 @@ describe('Layer1', () => {
             const layer1Node = layer1Nodes[i]
             expect(layer1Node.getNodeId().equals(layer0Node.getNodeId())).toEqual(true)
             expect(layer1Node.getNumberOfConnections()).toEqual(layer0Node.getNumberOfConnections())
-            expect(layer1Node.getBucketSize()).toBeGreaterThanOrEqual(layer1Node.getK() / 2)
+            expect(layer1Node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
             expect(layer1Node.getAllConnectionPeerDescriptors()).toEqual(layer0Node.getAllConnectionPeerDescriptors())
         }
     }, 120000)
@@ -163,8 +163,8 @@ describe('Layer1', () => {
     //
     //     await Promise.all(layer1Nodes.map((node) => node.joinDht(entryPoint0Descriptor)))
     //
-    //     layer1Nodes.map((sender) => {
-    //         layer1Nodes.map(async (receiver) => {
+    //     layer1Nodes.forEach((sender) => {
+    //         layer1Nodes.forEach(async (receiver) => {
     //             if (!sender.getNodeId().equals(receiver.getNodeId())) {
     //                 const rpcWrapper = createWrappedClosestPeersRequest(sender.getPeerDescriptor(), receiver.getPeerDescriptor())
     //                 const message: Message = {

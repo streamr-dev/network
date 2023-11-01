@@ -46,14 +46,16 @@ describe('StreamrNode', () => {
     beforeEach(async () => {
         const simulator = new Simulator()
         transport1 = new SimulatorTransport(peerDescriptor1, simulator)
+        await transport1.start()
         transport2 = new SimulatorTransport(peerDescriptor2, simulator)
+        await transport2.start()
         layer01 = new DhtNode({
-            transportLayer: transport1,
+            transport: transport1,
             peerDescriptor: peerDescriptor1,
             entryPoints: [peerDescriptor1]
         })
         layer02 = new DhtNode({
-            transportLayer: transport2,
+            transport: transport2,
             peerDescriptor: peerDescriptor2,
             entryPoints: [peerDescriptor1]
         })
@@ -80,22 +82,22 @@ describe('StreamrNode', () => {
     })
 
     it('Joining stream', async () => {
-        await node1.joinStream(STREAM_PART_ID)
-        await node2.joinStream(STREAM_PART_ID)
-        await waitForCondition(() => node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1)
-        await waitForCondition(() => node2.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1)
-        expect(node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length).toEqual(1)
-        expect(node2.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length).toEqual(1)
+        node1.joinStreamPart(STREAM_PART_ID)
+        node2.joinStreamPart(STREAM_PART_ID)
+        await waitForCondition(() => node1.getNeighbors(STREAM_PART_ID).length === 1)
+        await waitForCondition(() => node2.getNeighbors(STREAM_PART_ID).length === 1)
+        expect(node1.getNeighbors(STREAM_PART_ID).length).toEqual(1)
+        expect(node2.getNeighbors(STREAM_PART_ID).length).toEqual(1)
     })
 
     it('Publishing after joining and waiting for neighbors', async () => {
-        node1.subscribeToStream(STREAM_PART_ID)
-        await node2.joinStream(STREAM_PART_ID)
-        await waitForCondition(() => node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1)
-        await waitForCondition(() => node2.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1)
+        node1.joinStreamPart(STREAM_PART_ID)
+        node2.joinStreamPart(STREAM_PART_ID)
+        await waitForCondition(() => node1.getNeighbors(STREAM_PART_ID).length === 1)
+        await waitForCondition(() => node2.getNeighbors(STREAM_PART_ID).length === 1)
         await Promise.all([
             waitForEvent3<Events>(node1, 'newMessage'),
-            node2.publishToStream(msg)
+            node2.broadcast(msg)
         ])
     })
 
@@ -103,17 +105,15 @@ describe('StreamrNode', () => {
         const streamPartId2 = StreamPartIDUtils.parse('test2#0')
         node1.setStreamPartEntryPoints(streamPartId2, [peerDescriptor1])
         node2.setStreamPartEntryPoints(streamPartId2, [peerDescriptor1])
-        await node1.joinStream(STREAM_PART_ID)
-        await node1.joinStream(streamPartId2)
-        await node2.joinStream(STREAM_PART_ID)
-        await node2.joinStream(streamPartId2)
-        node1.subscribeToStream(STREAM_PART_ID)
-        node2.subscribeToStream(streamPartId2)
+        node1.joinStreamPart(STREAM_PART_ID)
+        node1.joinStreamPart(streamPartId2)
+        node2.joinStreamPart(STREAM_PART_ID)
+        node2.joinStreamPart(streamPartId2)
         await Promise.all([
-            waitForCondition(() => node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1),
-            waitForCondition(() => node2.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1),
-            waitForCondition(() => node1.getStream(streamPartId2)!.layer2.getTargetNeighborIds().length === 1),
-            waitForCondition(() => node2.getStream(streamPartId2)!.layer2.getTargetNeighborIds().length === 1)
+            waitForCondition(() => node1.getNeighbors(STREAM_PART_ID).length === 1),
+            waitForCondition(() => node2.getNeighbors(STREAM_PART_ID).length === 1),
+            waitForCondition(() => node1.getNeighbors(streamPartId2).length === 1),
+            waitForCondition(() => node2.getNeighbors(streamPartId2).length === 1)
         ])
         const msg2 = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
@@ -123,20 +123,20 @@ describe('StreamrNode', () => {
         await Promise.all([
             waitForEvent3<Events>(node1, 'newMessage'),
             waitForEvent3<Events>(node2, 'newMessage'),
-            node1.publishToStream(msg2),
-            node2.publishToStream(msg)
+            node1.broadcast(msg2),
+            node2.broadcast(msg)
         ])
     })
 
-    it('leaving streams', async () => {
-        await node1.joinStream(STREAM_PART_ID)
-        await node2.joinStream(STREAM_PART_ID)
+    it('leaving stream parts', async () => {
+        node1.joinStreamPart(STREAM_PART_ID)
+        node2.joinStreamPart(STREAM_PART_ID)
         await Promise.all([
-            waitForCondition(() => node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1),
-            waitForCondition(() => node2.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 1)
+            waitForCondition(() => node1.getNeighbors(STREAM_PART_ID).length === 1),
+            waitForCondition(() => node2.getNeighbors(STREAM_PART_ID).length === 1)
         ])
-        node2.leaveStream(STREAM_PART_ID)
-        await waitForCondition(() => node1.getStream(STREAM_PART_ID)!.layer2.getTargetNeighborIds().length === 0)
+        node2.leaveStreamPart(STREAM_PART_ID)
+        await waitForCondition(() => node1.getNeighbors(STREAM_PART_ID).length === 0)
     })
 
 })

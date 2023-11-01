@@ -6,7 +6,6 @@ import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '.
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { v4 } from 'uuid'
-import { UUID } from '../../src/helpers/UUID'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { RoutingMode } from '../../src/dht/routing/RoutingSession'
 
@@ -34,7 +33,6 @@ describe('Route Message With Mock Connections', () => {
 
         entryPointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            nodeName: 'entrypoint',
             type: NodeType.NODEJS
         }
 
@@ -67,7 +65,7 @@ describe('Route Message With Mock Connections', () => {
     }, 10000)
 
     it('Happy path', async () => {
-        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor())
         const message: Message = {
             serviceId: 'unknown',
             messageId: v4(),
@@ -96,10 +94,10 @@ describe('Route Message With Mock Connections', () => {
     it('Receives multiple messages', async () => {
         const numOfMessages = 20
         let receivedMessages = 0
-        destinationNode.on('message', (_message: Message) => {
+        destinationNode.on('message', () => {
             receivedMessages += 1
         })
-        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor())
 
         for (let i = 0; i < numOfMessages; i++) {
             const message: Message = {
@@ -137,7 +135,7 @@ describe('Route Message With Mock Connections', () => {
         }
 
         const numsOfReceivedMessages: Record<string, number> = {}
-        routerNodes.map((node) => {
+        routerNodes.forEach((node) => {
             numsOfReceivedMessages[node.getNodeId().toKey()] = 0
             node.on('message', (msg: Message) => {
                 numsOfReceivedMessages[node.getNodeId().toKey()] = numsOfReceivedMessages[node.getNodeId().toKey()] + 1
@@ -157,7 +155,7 @@ describe('Route Message With Mock Connections', () => {
             routerNodes.map(async (node) =>
                 Promise.all(routerNodes.map(async (receiver) => {
                     if (!node.getNodeId().equals(receiver.getNodeId())) {
-                        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+                        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor())
                         const message: Message = {
                             serviceId: 'nonexisting_service',
                             messageId: v4(),
@@ -192,7 +190,7 @@ describe('Route Message With Mock Connections', () => {
     }, 90000)
 
     it('Destination receives forwarded message', async () => {
-        const closestPeersRequest = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        const closestPeersRequest = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor())
         const closestPeersRequestMessage: Message = {
             serviceId: 'unknown',
             messageId: v4(),
@@ -208,7 +206,7 @@ describe('Route Message With Mock Connections', () => {
         const routeMessageWrapper: RouteMessageWrapper = {
             message: closestPeersRequestMessage,
             destinationPeer: destinationNode.getPeerDescriptor(),
-            requestId: new UUID().toString(),
+            requestId: v4(),
             sourcePeer: sourceNode.getPeerDescriptor(),
             reachableThrough: [entryPointDescriptor],
             routingPath: []

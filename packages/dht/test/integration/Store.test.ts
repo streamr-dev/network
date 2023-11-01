@@ -2,7 +2,8 @@ import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
-import { isSamePeerDescriptor, PeerID } from '../../src/exports'
+import { PeerID } from '../../src/helpers/PeerID'
+import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
 
 describe('Storing data in DHT', () => {
@@ -23,19 +24,18 @@ describe('Storing data in DHT', () => {
         nodes = []
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
-            undefined, K, entryPointId, MAX_CONNECTIONS)
+            undefined, K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
-            nodeName: entryPointId
+            type: NodeType.NODEJS
         }
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
             const node = await createMockConnectionDhtNode(nodeId, simulator, 
-                undefined, K, nodeId, MAX_CONNECTIONS, 60000)
+                undefined, K, MAX_CONNECTIONS, 60000)
             nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }
@@ -55,8 +55,7 @@ describe('Storing data in DHT', () => {
         expect(successfulStorers.length).toBeGreaterThan(4)
     }, 90000)
 
-    // TODO: flaky test, fix in NET-1027
-    it.skip('Storing and getting data works', async () => {
+    it('Storing and getting data works', async () => {
         const storingNode = getRandomNode()
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
@@ -65,9 +64,9 @@ describe('Storing data in DHT', () => {
 
         const fetchingNode = getRandomNode()
         const results = await fetchingNode.getDataFromDht(dataKey.value)
-        results.dataEntries!.forEach((entry) => {
+        results.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(isSamePeerDescriptor(fetchedDescriptor, entrypointDescriptor)).toBeTrue()
+            expect(areEqualPeerDescriptors(fetchedDescriptor, entrypointDescriptor)).toBeTrue()
         })
     }, 90000)
 })

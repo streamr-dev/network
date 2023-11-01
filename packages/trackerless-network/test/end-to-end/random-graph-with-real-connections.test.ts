@@ -14,7 +14,7 @@ describe('random graph with real connections', () => {
         websocket: { host: '127.0.0.1', port: 12221, tls: false }
     }
 
-    const randomGraphId = StreamPartIDUtils.parse('random-graph#0')
+    const streamPartId = StreamPartIDUtils.parse('random-graph#0')
     let epDhtNode: DhtNode
     let dhtNode1: DhtNode
     let dhtNode2: DhtNode
@@ -41,38 +41,38 @@ describe('random graph with real connections', () => {
 
         randomGraphNode1 = createRandomGraphNode(
             {
-                randomGraphId,
+                streamPartId,
                 layer1: epDhtNode,
-                P2PTransport: epDhtNode.getTransport(),
+                transport: epDhtNode.getTransport(),
                 connectionLocker: epDhtNode.getTransport() as ConnectionManager,
                 ownPeerDescriptor: epPeerDescriptor
             }
         )
         randomGraphNode2 = createRandomGraphNode({
-            randomGraphId,
+            streamPartId,
             layer1: dhtNode1,
-            P2PTransport: dhtNode1.getTransport(),
+            transport: dhtNode1.getTransport(),
             connectionLocker: dhtNode1.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode1.getPeerDescriptor()
         })
         randomGraphNode3 = createRandomGraphNode({
-            randomGraphId,
+            streamPartId,
             layer1: dhtNode2,
-            P2PTransport: dhtNode2.getTransport(),
+            transport: dhtNode2.getTransport(),
             connectionLocker: dhtNode2.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode2.getPeerDescriptor()
         })
         randomGraphNode4 = createRandomGraphNode({
-            randomGraphId,
+            streamPartId,
             layer1: dhtNode3,
-            P2PTransport: dhtNode3.getTransport(),
+            transport: dhtNode3.getTransport(),
             connectionLocker: dhtNode3.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode3.getPeerDescriptor()
         })
         randomGraphNode5 = createRandomGraphNode({
-            randomGraphId,
+            streamPartId,
             layer1: dhtNode4,
-            P2PTransport: dhtNode4.getTransport(),
+            transport: dhtNode4.getTransport(),
             connectionLocker: dhtNode4.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode4.getPeerDescriptor()
         })
@@ -144,7 +144,7 @@ describe('random graph with real connections', () => {
 
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
-            randomGraphId,
+            streamPartId,
             randomEthereumAddress()
         )
         randomGraphNode1.broadcast(msg)

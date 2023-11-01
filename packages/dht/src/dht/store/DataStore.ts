@@ -10,7 +10,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IRecursiveFinder } from '../find/RecursiveFinder'
-import { isSamePeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreService } from '../../proto/packages/dht/protos/DhtRpc.server'
@@ -20,7 +20,7 @@ import EventEmitter from 'eventemitter3'
 import { Events } from '../DhtNode'
 import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
-import { DhtPeer } from '../DhtPeer'
+import { RemoteDhtNode } from '../RemoteDhtNode'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -32,7 +32,7 @@ interface DataStoreConfig {
     highestTtl: number
     numberOfCopies: number
     dhtNodeEmitter: EventEmitter<Events>
-    getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtPeer[]
+    getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => RemoteDhtNode[]
 }
 
 const logger = new Logger(module)
@@ -48,7 +48,7 @@ export class DataStore implements IStoreService {
     private readonly highestTtl: number
     private readonly numberOfCopies: number
     private readonly dhtNodeEmitter: EventEmitter<Events>
-    private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtPeer[]
+    private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => RemoteDhtNode[]
 
     constructor(config: DataStoreConfig) {
         this.rpcCommunicator = config.rpcCommunicator
@@ -68,7 +68,7 @@ export class DataStore implements IStoreService {
         this.rpcCommunicator.registerRpcMethod(DeleteDataRequest, DeleteDataResponse, 'deleteData',
             (request: DeleteDataRequest, context: ServerCallContext) => this.deleteData(request, context))
 
-        this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor, _closestPeers: PeerDescriptor[]) => {
+        this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor) => {
             this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
                 dataMap.forEach((dataEntry) => {
                     if (this.shouldMigrateDataToNewNode(dataEntry.dataEntry, peerDescriptor)) {
@@ -130,8 +130,8 @@ export class DataStore implements IStoreService {
         const remoteStore = new RemoteStore(
             this.ownPeerDescriptor,
             contact,
-            toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport())),
-            this.serviceId
+            this.serviceId,
+            toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport()))
         )
         try {
             const response = await remoteStore.migrateData({ dataEntry }, doNotConnect)
@@ -151,7 +151,7 @@ export class DataStore implements IStoreService {
         const ttl = this.highestTtl // ToDo: make TTL decrease according to some nice curve
         const storerTime = Timestamp.now()
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.numberOfCopies; i++) {
-            if (isSamePeerDescriptor(this.ownPeerDescriptor, closestNodes[i])) {
+            if (areEqualPeerDescriptors(this.ownPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
                     kademliaId: key, 
                     storer: this.ownPeerDescriptor,
@@ -168,8 +168,8 @@ export class DataStore implements IStoreService {
             const remoteStore = new RemoteStore(
                 this.ownPeerDescriptor,
                 closestNodes[i],
-                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport())),
-                this.serviceId
+                this.serviceId,
+                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             try {
                 const response = await remoteStore.storeData({ kademliaId: key, data, ttl, storerTime })
@@ -201,7 +201,7 @@ export class DataStore implements IStoreService {
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.numberOfCopies; i++) {
-            if (isSamePeerDescriptor(this.ownPeerDescriptor, closestNodes[i])) {
+            if (areEqualPeerDescriptors(this.ownPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.markAsDeleted(key, peerIdFromPeerDescriptor(this.ownPeerDescriptor))
                 successfulNodes.push(closestNodes[i])
                 continue
@@ -209,15 +209,15 @@ export class DataStore implements IStoreService {
             const remoteStore = new RemoteStore(
                 this.ownPeerDescriptor,
                 closestNodes[i],
-                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport())),
-                this.serviceId
+                this.serviceId,
+                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             try {
                 const response = await remoteStore.deleteData({ kademliaId: key })
                 if (response.deleted) {
                     logger.trace('remoteStore.deleteData() returned success')
                 } else {
-                    logger.trace('could not delete data from ' + PeerID.fromValue(closestNodes[i].kademliaId))
+                    logger.trace('could not delete data from ' + keyFromPeerDescriptor(closestNodes[i]))
                 }
                 successfulNodes.push(closestNodes[i])
             } catch (e) {
@@ -246,7 +246,7 @@ export class DataStore implements IStoreService {
             this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(kademliaId))
         }
 
-        logger.trace(this.ownPeerDescriptor.nodeName + ' storeData()')
+        logger.trace('storeData()')
         return StoreDataResponse.create()
     }
 
@@ -260,7 +260,7 @@ export class DataStore implements IStoreService {
 
     // RPC service implementation
     public async migrateData(request: MigrateDataRequest, context: ServerCallContext): Promise<MigrateDataResponse> {
-        logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData()')
+        logger.trace('server-side migrateData()')
         const dataEntry = request.dataEntry!
 
         const wasStored = this.localDataStore.storeEntry(dataEntry)
@@ -271,7 +271,7 @@ export class DataStore implements IStoreService {
         if (!this.selfIsOneOfClosestPeers(dataEntry.kademliaId)) {
             this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.kademliaId))
         }
-        logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData() at end')
+        logger.trace('server-side migrateData() at end')
         return MigrateDataResponse.create()
     }
 

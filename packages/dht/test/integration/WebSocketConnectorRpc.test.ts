@@ -8,7 +8,6 @@ import {
     WebSocketConnectionResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { MockWebSocketConnectorRpc } from '../utils/utils'
-import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 describe('WebSocketConnectorRpc', () => {
@@ -44,11 +43,11 @@ describe('WebSocketConnectorRpc', () => {
             MockWebSocketConnectorRpc.requestConnection
         )
 
-        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator2.on('outgoingMessage', (message: RpcMessage) => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 
@@ -63,8 +62,6 @@ describe('WebSocketConnectorRpc', () => {
 
     it('Happy path', async () => {
         const response1 = client1.requestConnection({
-            requester: peerDescriptor1,
-            target: peerDescriptor2,
             ip: '127.0.0.1',
             port: 9099
         },
@@ -74,8 +71,6 @@ describe('WebSocketConnectorRpc', () => {
         expect(res1.accepted).toEqual(true)
 
         const response2 = client2.requestConnection({
-            requester: peerDescriptor2,
-            target: peerDescriptor1,
             ip: '127.0.0.1',
             port: 9111
         },

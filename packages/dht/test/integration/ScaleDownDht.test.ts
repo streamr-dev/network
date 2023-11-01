@@ -2,7 +2,7 @@ import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
-import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
@@ -20,18 +20,17 @@ describe('Scaling down a Dht network', () => {
         nodes = []
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
-            undefined, K, entryPointId, MAX_CONNECTIONS)
+            undefined, K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
 
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
-            nodeName: entryPointId
+            type: NodeType.NODEJS
         }
 
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, nodeId, MAX_CONNECTIONS)
+            const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, MAX_CONNECTIONS)
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
@@ -54,10 +53,11 @@ describe('Scaling down a Dht network', () => {
             await nodes[nodeIndex].stop()
             const nodeIsCleaned = nodes.every((node) =>
                 node.getAllConnectionPeerDescriptors().every((peer) => {
-                    if (isSamePeerDescriptor(peer, stoppingPeerDescriptor)) {
-                        logger.error(' ' + node.getPeerDescriptor().nodeName + ', ' + stoppingPeerDescriptor.nodeName + ' cleaning up failed')
+                    if (areEqualPeerDescriptors(peer, stoppingPeerDescriptor)) {
+                        logger.error(keyFromPeerDescriptor(node.getPeerDescriptor()) + ', ' 
+                            + keyFromPeerDescriptor(stoppingPeerDescriptor) + ' cleaning up failed')
                     }
-                    return !isSamePeerDescriptor(peer, stoppingPeerDescriptor)
+                    return !areEqualPeerDescriptors(peer, stoppingPeerDescriptor)
                 })
             )
             expect(nodeIsCleaned).toEqual(true)

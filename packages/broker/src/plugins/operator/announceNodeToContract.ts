@@ -1,29 +1,29 @@
 import { Logger } from '@streamr/utils'
-import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
 import StreamrClient from 'streamr-client'
+import { ContractFacade } from './ContractFacade'
 
 const logger = new Logger(module)
 
 export const announceNodeToContract = async (
     writeIntervalInMs: number,
-    helper: AnnounceNodeToContractHelper,
+    contractFacade: ContractFacade,
     streamrClient: StreamrClient
 ): Promise<void> => {
-    if (await isHeartbeatStale(writeIntervalInMs, helper)) {
-        await writeHeartbeat(helper, streamrClient)
+    if (await isHeartbeatStale(writeIntervalInMs, contractFacade)) {
+        await writeHeartbeat(contractFacade, streamrClient)
     }
 }
 
 const isHeartbeatStale = async (
     writeIntervalInMs: number,
-    helper: AnnounceNodeToContractHelper
+    contractFacade: ContractFacade
 ): Promise<boolean> => {
     logger.debug('Polling last heartbeat timestamp', {
-        operatorContractAddress: helper.getOperatorContractAddress()
+        operatorContractAddress: contractFacade.getOperatorContractAddress()
     })
     let lastHeartbeatTs
     try {
-        lastHeartbeatTs = await helper.getTimestampOfLastHeartbeat()
+        lastHeartbeatTs = await contractFacade.getTimestampOfLastHeartbeat()
     } catch (err) {
         logger.warn('Failed to poll last heartbeat timestamp', { reason: err?.message })
         return false // we don't know if heartbeat is stale, but we don't want execution to continue
@@ -34,13 +34,13 @@ const isHeartbeatStale = async (
 }
 
 const writeHeartbeat = async (
-    helper: AnnounceNodeToContractHelper,
+    contractFacade: ContractFacade,
     streamrClient: StreamrClient
 ): Promise<void> => {
     logger.info('Write heartbeat')
     try {
         const nodeDescriptor = await streamrClient.getPeerDescriptor()
-        await helper.writeHeartbeat(nodeDescriptor)
+        await contractFacade.writeHeartbeat(nodeDescriptor)
         logger.debug('Wrote heartbeat', { nodeDescriptor })
     } catch (err) {
         logger.warn('Failed to write heartbeat', { reason: err?.message })

@@ -7,7 +7,6 @@ import {
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { generateId, MockStoreService } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 import { StoreServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RemoteStore } from '../../src/dht/store/RemoteStore'
 import { Any } from '../../src/proto/google/protobuf/any'
@@ -19,7 +18,7 @@ describe('RemoteStore', () => {
     let serverRpcCommunicator: RpcCommunicator
     const serviceId = 'test'
     const clientPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('dhtPeer'),
+        kademliaId: generateId('client'),
         type: NodeType.NODEJS
     }
     const serverPeerDescriptor: PeerDescriptor = {
@@ -37,14 +36,14 @@ describe('RemoteStore', () => {
         clientRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', MockStoreService.storeData)
-        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             serverRpcCommunicator.handleIncomingMessage(message)
         })
-        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new StoreServiceClient(clientRpcCommunicator.getRpcClientTransport()))
-        remoteStore = new RemoteStore(clientPeerDescriptor, serverPeerDescriptor, client, serviceId)
+        remoteStore = new RemoteStore(clientPeerDescriptor, serverPeerDescriptor, serviceId, client)
     })
 
     it('storeData happy path', async () => {
@@ -55,7 +54,7 @@ describe('RemoteStore', () => {
     it('storeData rejects', async () => {
         serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', MockStoreService.throwStoreDataError)
         await expect(remoteStore.storeData(request))
-            .rejects.toThrowError('Could not store data to 736572766572 from 64687450656572 Error: Mock')
+            .rejects.toThrowError('Could not store data to 736572766572 from 636c69656e74 Error: Mock')
     })
 
     it('storeData response error', async () => {

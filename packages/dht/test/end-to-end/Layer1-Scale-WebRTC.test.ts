@@ -2,12 +2,13 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 
+const NUM_OF_NODES_PER_KBUCKET = 8
+
 describe('Layer1 Scale', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('0').value,
         type: NodeType.NODEJS,
-        websocket: { host: '127.0.0.1', port: 43228, tls: false },
-        nodeName: 'entrypoint'
+        websocket: { host: '127.0.0.1', port: 43228, tls: false }
     }
 
     const STREAM_ID = 'stream'
@@ -26,7 +27,7 @@ describe('Layer1 Scale', () => {
         await epLayer0Node.start()
         await epLayer0Node.joinDht([epPeerDescriptor])
 
-        epLayer1Node = new DhtNode({ transportLayer: epLayer0Node, peerDescriptor: epPeerDescriptor, serviceId: STREAM_ID })
+        epLayer1Node = new DhtNode({ transport: epLayer0Node, peerDescriptor: epPeerDescriptor, serviceId: STREAM_ID })
         await epLayer1Node.start()
         await epLayer1Node.joinDht([epPeerDescriptor])
 
@@ -34,15 +35,19 @@ describe('Layer1 Scale', () => {
         layer1Nodes = []
 
         for (let i = 1; i < NUM_OF_NODES; i++) {
-            const node = new DhtNode({ nodeName: `${i}`, entryPoints: [epPeerDescriptor] })
+            const node = new DhtNode({ 
+                entryPoints: [epPeerDescriptor],
+                numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
+            })
             await node.start()
             layer0Nodes.push(node)
             const layer1 = new DhtNode({
-                transportLayer: node,
+                transport: node,
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: node.getPeerDescriptor(),
                 serviceId: STREAM_ID,
-                rpcRequestTimeout: 5000
+                rpcRequestTimeout: 5000,
+                numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
             })
             await layer1.start()
             layer1Nodes.push(layer1)
@@ -60,10 +65,10 @@ describe('Layer1 Scale', () => {
 
     it('bucket sizes', async () => {
         layer0Nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
+            expect(node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
         })
         layer1Nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() / 2)
+            expect(node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
         })
     })
 })

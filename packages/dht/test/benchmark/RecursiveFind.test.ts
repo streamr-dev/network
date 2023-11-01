@@ -5,7 +5,8 @@ import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dh
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
-import { PeerID, peerIdFromPeerDescriptor } from '../../src/exports'
+import { PeerID } from '../../src/helpers/PeerID'
+import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger, wait } from '@streamr/utils'
 import { debugVars } from '../../src/helpers/debugHelpers'
 
@@ -31,19 +32,18 @@ describe('Recursive find correctness', () => {
 
         nodes = []
         const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data), undefined, entryPointId)
+        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data), undefined)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
-            nodeName: entryPointId
+            type: NodeType.NODEJS
         }
 
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
 
-            const node = await createMockConnectionDhtNode(nodeId, simulator, Uint8Array.from(dhtIds[i].data), undefined, nodeId)
+            const node = await createMockConnectionDhtNode(nodeId, simulator, Uint8Array.from(dhtIds[i].data), undefined)
             nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }
@@ -70,7 +70,7 @@ describe('Recursive find correctness', () => {
         debugVars['waiting'] = false
         logger.info('waiting over')
 
-        nodes.forEach((node) => logger.info(node.getPeerDescriptor().nodeName + ': connections:' +
+        nodes.forEach((node) => logger.info(keyFromPeerDescriptor(node.getPeerDescriptor()) + ': connections:' +
             node.getNumberOfConnections() + ', kbucket: ' + node.getBucketSize()
             + ', localLocked: ' + node.getNumberOfLocalLockedConnections()
             + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()

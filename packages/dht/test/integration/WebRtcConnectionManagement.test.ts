@@ -6,7 +6,19 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
-import { SimulatorTransport } from '../../src/exports'
+import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
+import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
+import { MetricsContext } from '@streamr/utils'
+
+const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, transport: ITransport) => {
+    return new ConnectionManager({
+        createConnectorFacade: () => new DefaultConnectorFacade({
+            transport,
+            createOwnPeerDescriptor: () => ownPeerDescriptor
+        }),
+        metricsContext: new MetricsContext()
+    })
+}
 
 describe('WebRTC Connection Management', () => {
 
@@ -17,32 +29,27 @@ describe('WebRTC Connection Management', () => {
 
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('peer1').value,
-        nodeName: 'peer1',
         type: NodeType.NODEJS,
     }
 
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('peer2').value,
-        nodeName: 'peer2',
         type: NodeType.NODEJS,
     }
 
-    let connectorTransport1: ITransport
-    let connectorTransport2: ITransport
+    let connectorTransport1: SimulatorTransport
+    let connectorTransport2: SimulatorTransport
 
     beforeEach(async () => {
-
         simulator = new Simulator(LatencyType.FIXED, 500)
-
         connectorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
-        manager1 = new ConnectionManager({ transportLayer: connectorTransport1 })
-
+        await connectorTransport1.start()
+        manager1 = createConnectionManager(peerDescriptor1, connectorTransport1)
         connectorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
-        manager2 = new ConnectionManager({ transportLayer: connectorTransport2 })
-
-        await manager1.start((_msg) => peerDescriptor1)
-        await manager2.start((_msg) => peerDescriptor2)
-
+        await connectorTransport2.start()
+        manager2 = createConnectionManager(peerDescriptor2, connectorTransport2)
+        await manager1.start()
+        await manager2.start()
     })
 
     afterEach(async () => {
@@ -138,26 +145,26 @@ describe('WebRTC Connection Management', () => {
         })
 
         const connectedPromise1 = new Promise<void>((resolve, _reject) => {
-            manager1.on('connected', (_peerDescriptor: PeerDescriptor) => {
+            manager1.on('connected', () => {
                 //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
 
         const connectedPromise2 = new Promise<void>((resolve, _reject) => {
-            manager2.on('connected', (_peerDescriptor: PeerDescriptor) => {
+            manager2.on('connected', () => {
                 resolve()
             })
         })
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
-            manager1.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+            manager1.on('disconnected', () => {
                 resolve()
             })
         })
 
         const disconnectedPromise2 = new Promise<void>((resolve, _reject) => {
-            manager2.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+            manager2.on('disconnected', () => {
                 resolve()
             })
         })
@@ -186,7 +193,7 @@ describe('WebRTC Connection Management', () => {
         }
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
-            manager1.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+            manager1.on('disconnected', () => {
                 resolve()
             })
         })

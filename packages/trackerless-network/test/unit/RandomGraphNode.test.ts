@@ -1,23 +1,20 @@
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { NodeType, PeerDescriptor } from '@streamr/dht'
-import { MockTransport } from '../utils/mock/Transport'
-import { createMockRemoteNode, createRandomNodeId, mockConnectionLocker } from '../utils/utils'
-import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
-import { NodeList } from '../../src/logic/NodeList'
-import { MockHandshaker } from '../utils/mock/MockHandshaker'
-import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManager'
-import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
-import { MockLayer1 } from '../utils/mock/MockLayer1'
+import { waitForCondition } from '@streamr/utils'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
-import { hexToBinary, waitForCondition } from '@streamr/utils'
+import { NodeList } from '../../src/logic/NodeList'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { MockHandshaker } from '../utils/mock/MockHandshaker'
+import { MockLayer1 } from '../utils/mock/MockLayer1'
+import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
+import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManager'
+import { MockTransport } from '../utils/mock/Transport'
+import { createMockPeerDescriptor, createMockDeliveryRpcRemote, mockConnectionLocker } from '../utils/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('RandomGraphNode', () => {
 
     let randomGraphNode: RandomGraphNode
-    const peerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
+    const peerDescriptor = createMockPeerDescriptor()
 
     let targetNeighbors: NodeList
     let nearbyNodeView: NodeList
@@ -30,20 +27,20 @@ describe('RandomGraphNode', () => {
         targetNeighbors = new NodeList(nodeId, 10)
         randomNodeView = new NodeList(nodeId, 10)
         nearbyNodeView = new NodeList(nodeId, 10)
-        layer1 = new MockLayer1(nodeId)
+        layer1 = new MockLayer1()
 
         randomGraphNode = createRandomGraphNode({
             targetNeighbors,
             randomNodeView,
             nearbyNodeView,
-            P2PTransport: new MockTransport(),
+            transport: new MockTransport(),
             ownPeerDescriptor: peerDescriptor,
             layer1,
             connectionLocker: mockConnectionLocker,
             handshaker: new MockHandshaker(),
             neighborUpdateManager: new MockNeighborUpdateManager(),
             neighborFinder: new MockNeighborFinder(),
-            randomGraphId: 'random-graph'
+            streamPartId: StreamPartIDUtils.parse('stream#0')
         })
         await randomGraphNode.start()
     })
@@ -53,7 +50,7 @@ describe('RandomGraphNode', () => {
     })
 
     it('getTargetNeighborIds', () => {
-        const mockRemote = createMockRemoteNode()
+        const mockRemote = createMockDeliveryRpcRemote()
         targetNeighbors.add(mockRemote)
         const ids = randomGraphNode.getTargetNeighborIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
@@ -61,62 +58,38 @@ describe('RandomGraphNode', () => {
     })
 
     it('getNearbyNodeView', () => {
-        const mockRemote = createMockRemoteNode()
+        const mockRemote = createMockDeliveryRpcRemote()
         nearbyNodeView.add(mockRemote)
         const ids = randomGraphNode.getNearbyNodeView().getIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
     it('Adds Closest Nodes from layer1 newContact event to nearbyNodeView', async () => {
-        const nodeId1 = createRandomNodeId()
-        const peerDescriptor1 = {
-            kademliaId: hexToBinary(nodeId1),
-            type: NodeType.NODEJS 
-        }
-        const nodeId2 = createRandomNodeId()
-        const peerDescriptor2 = {
-            kademliaId: hexToBinary(nodeId2),
-            type: NodeType.NODEJS 
-        }
+        const peerDescriptor1 = createMockPeerDescriptor()
+        const peerDescriptor2 = createMockPeerDescriptor()
         layer1.emit('newContact', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
         await waitForCondition(() => nearbyNodeView.size() === 2)
-        expect(nearbyNodeView.getNeighborById(nodeId1)).toBeTruthy()
-        expect(nearbyNodeView.getNeighborById(nodeId2)).toBeTruthy()
+        expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
+        expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
     })
 
     it('Adds Random Nodes from layer1 newRandomContact event to randomNodeView', async () => {
-        const nodeId1 = createRandomNodeId()
-        const peerDescriptor1 = {
-            kademliaId: hexToBinary(nodeId1),
-            type: NodeType.NODEJS 
-        }
-        const nodeId2 = createRandomNodeId()
-        const peerDescriptor2 = {
-            kademliaId: hexToBinary(nodeId2),
-            type: NodeType.NODEJS 
-        }
+        const peerDescriptor1 = createMockPeerDescriptor()
+        const peerDescriptor2 = createMockPeerDescriptor()
         layer1.emit('newRandomContact', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
         await waitForCondition(() => randomNodeView.size() === 2)
-        expect(randomNodeView.getNeighborById(nodeId1)).toBeTruthy()
-        expect(randomNodeView.getNeighborById(nodeId2)).toBeTruthy()
+        expect(randomNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
+        expect(randomNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
     })
 
     it('Adds Nodes from layer1 KBucket to nearbyNodeView if its size is below nodeViewSize', async () => {
-        const nodeId1 = createRandomNodeId()
-        const peerDescriptor1 = {
-            kademliaId: hexToBinary(nodeId1),
-            type: NodeType.NODEJS 
-        }
-        const nodeId2 = createRandomNodeId()
-        const peerDescriptor2 = {
-            kademliaId: hexToBinary(nodeId2),
-            type: NodeType.NODEJS 
-        }
+        const peerDescriptor1 = createMockPeerDescriptor()
+        const peerDescriptor2 = createMockPeerDescriptor()
         layer1.addNewRandomPeerToKBucket()
         layer1.emit('newContact', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
         await waitForCondition(() => nearbyNodeView.size() === 3)
-        expect(nearbyNodeView.getNeighborById(nodeId1)).toBeTruthy()
-        expect(nearbyNodeView.getNeighborById(nodeId2)).toBeTruthy()
+        expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
+        expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
     })
 
 })

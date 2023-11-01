@@ -3,14 +3,13 @@ import {
     EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
-    GroupKeyResponseSerialized,
     MessageID,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, Logger } from '@streamr/utils'
+import { EthereumAddress, Logger, utf8ToBinary } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -75,7 +74,7 @@ export class PublisherKeyExchange {
                             request.getPublisherId(),
                             requestId)
                         const node = await this.networkNodeFacade.getNode()
-                        await node.publish(response)
+                        await node.broadcast(response)
                         this.logger.debug('Handled group key request (found keys)', {
                             groupKeyIds: keys.map((k) => k.id).join(),
                             recipient: request.getPublisherId()
@@ -99,7 +98,7 @@ export class PublisherKeyExchange {
         rsaPublicKey: string,
         recipient: EthereumAddress,
         requestId: string
-    ): Promise<StreamMessage<GroupKeyResponseSerialized>> {
+    ): Promise<StreamMessage> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {
             const encryptedGroupKey = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey)
             return new EncryptedGroupKey(key.id, encryptedGroupKey)
@@ -109,7 +108,7 @@ export class PublisherKeyExchange {
             requestId,
             encryptedGroupKeys
         })
-        const response = createSignedMessage<GroupKeyResponseSerialized>({
+        const response = createSignedMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
                 StreamPartIDUtils.getStreamPartition(streamPartId),
@@ -118,7 +117,7 @@ export class PublisherKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
-            serializedContent: JSON.stringify(responseContent.toArray()),
+            serializedContent: utf8ToBinary(JSON.stringify(responseContent.toArray())),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.RSA,
             authentication: this.authentication

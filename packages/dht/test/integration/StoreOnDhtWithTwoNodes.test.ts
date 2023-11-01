@@ -4,7 +4,7 @@ import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { waitForCondition } from '@streamr/utils'
 
 describe('Storing data in DHT with two peers', () => {
@@ -48,13 +48,13 @@ describe('Storing data in DHT with two peers', () => {
 
         const successfulStorers1 = await otherNode.storeDataToDht(dataKey1.value, data1)
         const successfulStorers2 = await entryPoint.storeDataToDht(dataKey2.value, data2)
-        expect(successfulStorers1[0].nodeName).toEqual(entryPoint.getPeerDescriptor().nodeName)
-        expect(successfulStorers2[0].nodeName).toEqual(otherNode.getPeerDescriptor().nodeName)
+        expect(successfulStorers1[0].kademliaId).toStrictEqual(entryPoint.getPeerDescriptor().kademliaId)
+        expect(successfulStorers2[0].kademliaId).toStrictEqual(otherNode.getPeerDescriptor().kademliaId)
 
         const foundData1 = await otherNode.getDataFromDht(dataKey1.value)
         const foundData2 = await entryPoint.getDataFromDht(dataKey2.value)
-        expect(isSamePeerDescriptor(otherNode.getPeerDescriptor(), Any.unpack(foundData1.dataEntries![0]!.data!, PeerDescriptor))).toBeTrue()
-        expect(isSamePeerDescriptor(entryPoint.getPeerDescriptor(), Any.unpack(foundData2.dataEntries![0]!.data!, PeerDescriptor))).toBeTrue()
+        expect(areEqualPeerDescriptors(otherNode.getPeerDescriptor(), Any.unpack(foundData1[0]!.data!, PeerDescriptor))).toBeTrue()
+        expect(areEqualPeerDescriptors(entryPoint.getPeerDescriptor(), Any.unpack(foundData2[0]!.data!, PeerDescriptor))).toBeTrue()
     })
 
     it('Can store on one peer DHT', async () => {
@@ -63,9 +63,9 @@ describe('Storing data in DHT with two peers', () => {
         const dataKey = PeerID.fromString('data-to-store')
         const data = Any.pack(entryPoint.getPeerDescriptor(), PeerDescriptor)
         const successfulStorers = await entryPoint.storeDataToDht(dataKey.value, data)
-        expect(successfulStorers[0].nodeName).toEqual(entryPoint.getPeerDescriptor().nodeName)
+        expect(successfulStorers[0].kademliaId).toStrictEqual(entryPoint.getPeerDescriptor().kademliaId)
 
         const foundData = await entryPoint.getDataFromDht(dataKey.value)
-        expect(isSamePeerDescriptor(entryPoint.getPeerDescriptor(), Any.unpack(foundData.dataEntries![0]!.data!, PeerDescriptor))).toBeTrue()
+        expect(areEqualPeerDescriptors(entryPoint.getPeerDescriptor(), Any.unpack(foundData[0]!.data!, PeerDescriptor))).toBeTrue()
     }, 60000)
 })

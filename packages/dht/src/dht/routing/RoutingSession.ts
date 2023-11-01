@@ -1,19 +1,39 @@
-import { PeerDescriptor } from '../../exports'
-import { DhtPeer } from '../DhtPeer'
+import { RemoteDhtNode } from '../RemoteDhtNode'
 import { SortedContactList } from '../contact/SortedContactList'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
+import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
-import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { RemoteRouter } from './RemoteRouter'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RoutingServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { Contact } from '../contact/Contact'
 
 const logger = new Logger(module)
 
 const MAX_FAILED_HOPS = 2
+
+class RemoteContact extends Contact {
+
+    private router: RemoteRouter
+
+    constructor(peer: RemoteDhtNode, ownPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
+        super(peer.getPeerDescriptor())
+        this.router = new RemoteRouter(
+            ownPeerDescriptor,
+            peer.getPeerDescriptor(),
+            peer.getServiceId(),
+            toProtoRpcClient(new RoutingServiceClient(rpcCommunicator.getRpcClientTransport()))
+        )
+    }
+
+    getRouter(): RemoteRouter {
+        return this.router
+    }
+}
 
 export interface RoutingSessionEvents {
     // This event is emitted when a peer responds with a success ack
@@ -35,10 +55,10 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     public readonly sessionId = v4()
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private ongoingRequests: Set<PeerIDKey> = new Set()
-    private contactList: SortedContactList<RemoteRouter>
+    private contactList: SortedContactList<RemoteContact>
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly messageToRoute: RouteMessageWrapper
-    private connections: Map<PeerIDKey, DhtPeer>
+    private connections: Map<PeerIDKey, RemoteDhtNode>
     private readonly parallelism: number
     private failedHopCounter = 0
     private successfulHopCounter = 0
@@ -49,7 +69,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         rpcCommunicator: RoutingRpcCommunicator,
         ownPeerDescriptor: PeerDescriptor,
         messageToRoute: RouteMessageWrapper,
-        connections: Map<PeerIDKey, DhtPeer>,
+        connections: Map<PeerIDKey, RemoteDhtNode>,
         parallelism: number,
         mode: RoutingMode = RoutingMode.ROUTE,
         destinationId?: Uint8Array,
@@ -102,7 +122,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    private onRequestSucceeded = (_peerId: PeerID) => {
+    private onRequestSucceeded = () => {
         logger.trace('onRequestSucceeded() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
@@ -117,51 +137,40 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    private sendRouteMessageRequest = async (contact: RemoteRouter): Promise<boolean> => {
+    private sendRouteMessageRequest = async (contact: RemoteContact): Promise<boolean> => {
         if (this.stopped) {
             return false
         }
+        const router = contact.getRouter()
         if (this.mode === RoutingMode.FORWARD) {
-            return contact.forwardMessage({
+            return router.forwardMessage({
                 ...this.messageToRoute,
                 previousPeer: this.ownPeerDescriptor
             })
         } else if (this.mode === RoutingMode.RECURSIVE_FIND) {
-            return contact.findRecursively({
+            return router.findRecursively({
                 ...this.messageToRoute,
                 previousPeer: this.ownPeerDescriptor
             })
         } else {
-            return contact.routeMessage({
+            return router.routeMessage({
                 ...this.messageToRoute,
                 previousPeer: this.ownPeerDescriptor
             })
         }
     }
 
-    private findMoreContacts = (): RemoteRouter[] => {
+    private findMoreContacts = (): RemoteContact[] => {
         logger.trace('findMoreContacts() sessionId: ' + this.sessionId)
         // the contents of the connections might have changed between the rounds
         // addContacts() will only add new contacts that were not there yet
         const contacts = Array.from(this.connections.values())
-            .map((contact) => {
-                return new RemoteRouter(
-                    this.ownPeerDescriptor,
-                    contact.getPeerDescriptor(),
-                    toProtoRpcClient(new RoutingServiceClient(this.rpcCommunicator.getRpcClientTransport())),
-                    contact.getServiceId()
-                )  
-            })
+            .map((peer) => new RemoteContact(peer, this.ownPeerDescriptor, this.rpcCommunicator))
         this.contactList.addContacts(contacts)
         return this.contactList.getUncontactedContacts(this.parallelism)
     }
 
-    public getClosestContacts = (limit: number): PeerDescriptor[] => {
-        const contacts = this.contactList.getClosestContacts(limit)
-        return contacts.map((contact) => contact.getPeerDescriptor())
-    }
-
-    private sendMoreRequests = (uncontacted: RemoteRouter[]) => {
+    private sendMoreRequests = (uncontacted: RemoteContact[]) => {
         logger.trace('sendMoreRequests() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
@@ -178,14 +187,14 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         while ((this.ongoingRequests.size) < this.parallelism && (uncontacted.length > 0) && !this.stopped) {
             const nextPeer = uncontacted.shift()
             // eslint-disable-next-line max-len
-            logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${nextPeer!.getPeerId()} (sessionId=${this.sessionId})`)
+            logger.trace(`Sending routeMessage request to contact: ${keyFromPeerDescriptor(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
             this.contactList.setContacted(nextPeer!.getPeerId())
             this.ongoingRequests.add(nextPeer!.getPeerId().toKey())
             setImmediate(async () => {
                 try {
                     const succeeded = await this.sendRouteMessageRequest(nextPeer!)
                     if (succeeded) {
-                        this.onRequestSucceeded(nextPeer!.getPeerId())
+                        this.onRequestSucceeded()
                     } else {
                         this.onRequestFailed(nextPeer!.getPeerId())
                     }

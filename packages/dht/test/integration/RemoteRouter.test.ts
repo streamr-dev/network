@@ -3,7 +3,6 @@ import { RemoteRouter } from '../../src/dht/routing/RemoteRouter'
 import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RoutingServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 import { createWrappedClosestPeersRequest, generateId, MockRoutingService } from '../utils/utils'
 
 describe('RemoteRouter', () => {
@@ -13,7 +12,7 @@ describe('RemoteRouter', () => {
     let serverRpcCommunicator: RpcCommunicator
     const serviceId = 'test'
     const clientPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('dhtPeer'),
+        kademliaId: generateId('client'),
         type: NodeType.NODEJS
     }
     const serverPeerDescriptor: PeerDescriptor = {
@@ -25,18 +24,18 @@ describe('RemoteRouter', () => {
         clientRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockRoutingService.routeMessage)
-        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             serverRpcCommunicator.handleIncomingMessage(message)
         })
-        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
+        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new RoutingServiceClient(clientRpcCommunicator.getRpcClientTransport()))
-        remoteRouter = new RemoteRouter(clientPeerDescriptor, serverPeerDescriptor, client, serviceId)
+        remoteRouter = new RemoteRouter(clientPeerDescriptor, serverPeerDescriptor, serviceId, client)
     })
 
     it('routeMessage happy path', async () => {
-        const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor, serverPeerDescriptor)
+        const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor)
         const routed: Message = {
             serviceId,
             messageId: 'routed',
@@ -59,7 +58,7 @@ describe('RemoteRouter', () => {
 
     it('routeMessage error path', async () => {
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockRoutingService.throwRouteMessageError)
-        const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor, serverPeerDescriptor)
+        const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor)
         const routed: Message = {
             serviceId,
             messageId: 'routed',
