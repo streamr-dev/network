@@ -19,12 +19,12 @@ const MAX_FAILED_HOPS = 2
 
 class RemoteContact extends Contact {
 
-    private router: RouterRpcRemote
+    private routerRpcRemote: RouterRpcRemote
     private findRpcRemote: FindRpcRemote
 
     constructor(peer: RemoteDhtNode, ownPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
         super(peer.getPeerDescriptor())
-        this.router = new RouterRpcRemote(
+        this.routerRpcRemote = new RouterRpcRemote(
             ownPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
@@ -38,8 +38,8 @@ class RemoteContact extends Contact {
         )
     }
 
-    getRouter(): RouterRpcRemote {
-        return this.router
+    getRouterRpcRemote(): RouterRpcRemote {
+        return this.routerRpcRemote
     }
 
     getFindRpcRemote(): FindRpcRemote {
@@ -154,7 +154,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             return false
         }
         if (this.mode === RoutingMode.FORWARD) {
-            return contact.getRouter().forwardMessage({
+            return contact.getRouterRpcRemote().forwardMessage({
                 ...this.messageToRoute,
                 previousPeer: this.ownPeerDescriptor
             })
@@ -164,7 +164,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 previousPeer: this.ownPeerDescriptor
             })
         } else {
-            return contact.getRouter().routeMessage({
+            return contact.getRouterRpcRemote().routeMessage({
                 ...this.messageToRoute,
                 previousPeer: this.ownPeerDescriptor
             })
