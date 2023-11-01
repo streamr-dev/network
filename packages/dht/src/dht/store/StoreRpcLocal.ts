@@ -30,7 +30,7 @@ interface DataStoreConfig {
     serviceId: string
     maxTtl: number
     highestTtl: number
-    numberOfCopies: number
+    redundancyFactor: number
     dhtNodeEmitter: EventEmitter<Events>
     getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => RemoteDhtNode[]
 }
@@ -46,7 +46,7 @@ export class StoreRpcLocal implements IStoreRpc {
     private readonly serviceId: string
     private readonly maxTtl: number
     private readonly highestTtl: number
-    private readonly numberOfCopies: number
+    private readonly redundancyFactor: number
     private readonly dhtNodeEmitter: EventEmitter<Events>
     private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => RemoteDhtNode[]
 
@@ -58,7 +58,7 @@ export class StoreRpcLocal implements IStoreRpc {
         this.serviceId = config.serviceId
         this.maxTtl = config.maxTtl
         this.highestTtl = config.highestTtl
-        this.numberOfCopies = config.numberOfCopies
+        this.redundancyFactor = config.redundancyFactor
         this.dhtNodeEmitter = config.dhtNodeEmitter
         this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
         this.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
@@ -114,10 +114,10 @@ export class StoreRpcLocal implements IStoreRpc {
             }
         }
 
-        // if new node is within the storeNumberOfCopies closest nodes to the data
+        // if new node is within the storageRedundancyFactor closest nodes to the data
         // do migrate data to it
 
-        if (index < this.numberOfCopies) {
+        if (index < this.redundancyFactor) {
             this.localDataStore.setStale(dataId, dataEntry.storer!, false)
             return true
         } else {
@@ -150,7 +150,7 @@ export class StoreRpcLocal implements IStoreRpc {
         const successfulNodes: PeerDescriptor[] = []
         const ttl = this.highestTtl // ToDo: make TTL decrease according to some nice curve
         const storerTime = Timestamp.now()
-        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.numberOfCopies; i++) {
+        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.redundancyFactor; i++) {
             if (areEqualPeerDescriptors(this.ownPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
                     kademliaId: key, 
@@ -188,8 +188,8 @@ export class StoreRpcLocal implements IStoreRpc {
 
     private selfIsOneOfClosestPeers(dataId: Uint8Array): boolean {
         const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
-        const closestPeers = this.getNodesClosestToIdFromBucket(dataId, this.numberOfCopies)
-        const sortedList = new SortedContactList<Contact>(ownPeerId, this.numberOfCopies, undefined, true)
+        const closestPeers = this.getNodesClosestToIdFromBucket(dataId, this.redundancyFactor)
+        const sortedList = new SortedContactList<Contact>(ownPeerId, this.redundancyFactor, undefined, true)
         sortedList.addContact(new Contact(this.ownPeerDescriptor))
         closestPeers.forEach((con) => sortedList.addContact(new Contact(con.getPeerDescriptor())))
         return sortedList.getClosestContacts().some((node) => node.getPeerId().equals(ownPeerId))
@@ -200,7 +200,7 @@ export class StoreRpcLocal implements IStoreRpc {
         const result = await this.recursiveFinder.startRecursiveFind(key)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
-        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.numberOfCopies; i++) {
+        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.redundancyFactor; i++) {
             if (areEqualPeerDescriptors(this.ownPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.markAsDeleted(key, peerIdFromPeerDescriptor(this.ownPeerDescriptor))
                 successfulNodes.push(closestNodes[i])
@@ -283,7 +283,7 @@ export class StoreRpcLocal implements IStoreRpc {
         const incomingPeerId = PeerID.fromValue(incomingPeer.kademliaId)
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
 
-        const sortedList = new SortedContactList<Contact>(dataId, this.numberOfCopies, undefined, true)
+        const sortedList = new SortedContactList<Contact>(dataId, this.redundancyFactor, undefined, true)
         sortedList.addContact(new Contact(this.ownPeerDescriptor))
 
         closestToData.forEach((con) => {
@@ -307,7 +307,7 @@ export class StoreRpcLocal implements IStoreRpc {
                 })
             }
         } else {
-            // if we are the closest to the data, migrate to all storeNumberOfCopies nearest
+            // if we are the closest to the data, migrate to all storageRedundancyFactor nearest
             sortedList.getAllContacts().forEach((contact) => {
                 const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
                 if (!incomingPeerId.equals(contactPeerId) && !ownPeerId.equals(contactPeerId)) {

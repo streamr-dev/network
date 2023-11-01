@@ -15,6 +15,7 @@ import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { NodeID } from '../../src/identifiers'
+import { ILayer1 } from '../../src/logic/ILayer1'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -28,10 +29,10 @@ export const createMockRandomGraphNodeAndDhtNode = async (
     entryPointDescriptor: PeerDescriptor,
     streamPartId: StreamPartID,
     simulator: Simulator
-): Promise<[ DhtNode, RandomGraphNode ]> => {
+): Promise<[ ILayer1, RandomGraphNode ]> => {
     const mockCm = new SimulatorTransport(ownPeerDescriptor, simulator)
     await mockCm.start()
-    const dhtNode = new DhtNode({
+    const layer1 = new DhtNode({
         transport: mockCm,
         peerDescriptor: ownPeerDescriptor,
         numberOfNodesPerKBucket: 4,
@@ -40,11 +41,11 @@ export const createMockRandomGraphNodeAndDhtNode = async (
     const randomGraphNode = createRandomGraphNode({
         streamPartId,
         transport: mockCm,
-        layer1: dhtNode,
+        layer1,
         connectionLocker: mockCm,
         ownPeerDescriptor
     })
-    return [dhtNode, randomGraphNode]
+    return [layer1, randomGraphNode]
 }
 
 export const createStreamMessage = (
