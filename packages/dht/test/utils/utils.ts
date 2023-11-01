@@ -168,13 +168,6 @@ export const mockRouterRpc: IRouterRpcWithError = {
         }
         return response
     },
-    async findRecursively(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
-        const response: RouteMessageAck = {
-            requestId: routed.requestId,
-            error: ''
-        }
-        return response
-    },
     async forwardMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,

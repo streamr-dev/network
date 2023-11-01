@@ -61,6 +61,11 @@ export interface IRouterRpc<T = ServerCallContext> {
      * @generated from protobuf rpc: forwardMessage(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
     forwardMessage(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
+}
+/**
+ * @generated from protobuf service dht.FindRpc
+ */
+export interface IFindRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: findRecursively(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */

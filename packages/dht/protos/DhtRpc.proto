@@ -17,6 +17,9 @@ service DhtRpcService {
 service RouterRpc {
   rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
   rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
+}
+
+service FindRpc {
   rpc findRecursively (RouteMessageWrapper) returns (RouteMessageAck);
 }
 

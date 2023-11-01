@@ -1212,7 +1212,12 @@ export const DhtRpcService = new ServiceType("dht.DhtRpcService", [
  */
 export const RouterRpc = new ServiceType("dht.RouterRpc", [
     { name: "routeMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
-    { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
+    { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
+]);
+/**
+ * @generated ServiceType for protobuf service dht.FindRpc
+ */
+export const FindRpc = new ServiceType("dht.FindRpc", [
     { name: "findRecursively", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
 ]);
 /**
