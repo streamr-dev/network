@@ -31,32 +31,32 @@ export class RestClient {
     public async createNewSubdomainAndCertificate(streamrWebSocketPort: number, sessionId: string): Promise<CertifiedSubdomain> {
         const url = this.baseUrl + '/certified-subdomains'
         const body: CreateCertifiedSubdomainRequest = {
-            streamrWebSocketPort: streamrWebSocketPort,
-            sessionId: sessionId
+            streamrWebSocketPort,
+            sessionId
         }
         const response = await this.patch<CertifiedSubdomain>(url, body)
         return response
     }
 
-    public async updateCertificate(subdomain: string, streamrWebSocketPort: number, sessioId: string, token: string): Promise<CertifiedSubdomain> {
+    public async updateCertificate(subdomain: string, streamrWebSocketPort: number, sessionId: string, token: string): Promise<CertifiedSubdomain> {
         const url = this.baseUrl + '/certified-subdomains/' + encodeURIComponent(subdomain)
         const body: UpdateIpAndPortRequest = {
-            token: token,
-            sessionId: sessioId,
-            streamrWebSocketPort: streamrWebSocketPort
+            token,
+            sessionId,
+            streamrWebSocketPort
         }
         const response = await this.patch<CertifiedSubdomain>(url, body)
         return response
     }
 
-    public async updateSubdomainIpAndPort(subdomain: string, streamrWebSocketPort: number, sessioId: string, token: string): Promise<void> {
+    public async updateSubdomainIpAndPort(subdomain: string, streamrWebSocketPort: number, sessionId: string, token: string): Promise<void> {
         logger.debug('updateSubdomainIpAndPort() subdomain: ' + subdomain + ', streamrWebSocketPort:  ' + streamrWebSocketPort
             + ', sessionId: ' + sessioId + ', token: ' + token)
         const url = this.baseUrl + '/certified-subdomains/' + encodeURIComponent(subdomain) + '/ip'
         const body: UpdateIpAndPortRequest = {
-            token: token,
-            sessionId: sessioId,
-            streamrWebSocketPort: streamrWebSocketPort
+            token,
+            sessionId,
+            streamrWebSocketPort
         }
         await this.put<any>(url, body)
     }
