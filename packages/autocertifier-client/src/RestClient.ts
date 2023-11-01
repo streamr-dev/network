@@ -51,7 +51,7 @@ export class RestClient {
 
     public async updateSubdomainIpAndPort(subdomain: string, streamrWebSocketPort: number, sessionId: string, token: string): Promise<void> {
         logger.debug('updateSubdomainIpAndPort() subdomain: ' + subdomain + ', streamrWebSocketPort:  ' + streamrWebSocketPort
-            + ', sessionId: ' + sessioId + ', token: ' + token)
+            + ', sessionId: ' + sessionId + ', token: ' + token)
         const url = this.baseUrl + '/certified-subdomains/' + encodeURIComponent(subdomain) + '/ip'
         const body: UpdateIpAndPortRequest = {
             token,
