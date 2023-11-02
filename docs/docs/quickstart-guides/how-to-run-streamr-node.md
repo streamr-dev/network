@@ -105,7 +105,7 @@ docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:dev-tatum bi
 
 _"Generate or import Ethereum private key"_
 
-You can generate a new private key or use one you already have. You can avoid having the private key of the wallet with your soon-to-be staked DATA stored in a plain text file by generating a new private key in this step and adding your staking wallet's public key as a *beneficiary address* once you are done configuring the node via the config wizard (highly recommended).
+You can generate a new private key or use one you already have.
 
 _"Plugins to enable"_
 
@@ -147,7 +147,7 @@ docker run --name streamr --restart unless-stopped -d -v ${pwd}:/home/streamr/.s
 
 The `--name` option gives the Docker container a custom name, in this case `streamr`. This makes it easier to check in on your node later. If you don't set a custom name, Docker will automatically give each container a funky name a la `nifty_lovelace`.
 
-The `--restart` option enables a restart policy of `unless-stopped`. This means that if a node stops running due to an error (such as it running out of memory), it will start up again automatically and continue to claim rewards. If you, however, stop a node manually, it won't start again on its own, which is practical in case you need to make changes to the config file before you start it again. You can restart a stopped node manually with the command `sudo docker restart streamr` (remove `sudo ` if you are using Windows PowerShell). If you don't set a restart policy and your node stops running, you will miss out on rewards if you don't notice that the node is down and restart it shortly after.
+The `--restart` option enables a restart policy of `unless-stopped`. This means that if a node stops running due to an error (such as it running out of memory), it will start up again automatically and continue to claim rewards. If you, however, stop a node manually, it won't start again on its own, which is practical in case you need to make changes to the config file before you start it again. You can restart a stopped node manually with the command `sudo docker restart streamr` (remove `sudo ` if you are using Windows PowerShell).
 
 The `-d` option starts your Docker container and node in detached mode, meaning it runs in the background and you can check in on and follow the logs as you please. The alternative is to start it in attached mode, which requires you to keep the window open to keep the node running. The latter is not practical in most cases unless you use a terminal multiplexer such as `tmux` or `screen` to detach.
 
