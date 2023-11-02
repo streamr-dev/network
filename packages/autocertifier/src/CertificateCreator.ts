@@ -4,7 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import { ChallengeManager } from './ChallengeManager'
 import { Certificate } from '@streamr/autocertifier-client'
-import os from 'os'
+import { filePathToNodeFormat } from '@streamr/utils'
 
 const logger = new Logger(module)
 
@@ -17,7 +17,8 @@ export class CertificateCreator {
     private readonly hmacKey: string
     private readonly challengeManager: ChallengeManager
 
-    constructor(acmeDirectoryUrl: string,
+    constructor(
+        acmeDirectoryUrl: string,
         hmacKid: string,
         hmacKey: string,
         privateKeyPath: string,
@@ -27,43 +28,31 @@ export class CertificateCreator {
         this.hmacKid = hmacKid
         this.hmacKey = hmacKey
         this.challengeManager = challengeManager
-
-        if (privateKeyPath.startsWith('~/')) {
-            this.accountPrivateKeyPath = privateKeyPath.replace('~', os.homedir())
-        } else {
-            this.accountPrivateKeyPath = privateKeyPath
-        }
+        this.accountPrivateKeyPath = filePathToNodeFormat(privateKeyPath)
     }
 
     public async createCertificate(fqdn: string): Promise<Certificate> {
-
         logger.info(`Creating certificate for ${fqdn}`)
-        logger.info('Creating acme client')
 
         const wasNewKeyCreated = await this.createPrivateKey()
-
         const clientOptions: acme.ClientOptions = {
             directoryUrl: this.acmeDirectoryUrl,
             accountKey: this.accountPrivateKey!
         }
-
         if (wasNewKeyCreated) {
             clientOptions.externalAccountBinding = {
                 kid: this.hmacKid,
                 hmacKey: this.hmacKey
             }
         }
-
         const client = new acme.Client(clientOptions)
-
-        logger.info('Creating CSR')
+        logger.debug('Creating CSR')
         const [key, csr] = await acme.crypto.createCsr({
             commonName: fqdn
         })
-
-        logger.info('Creating certificate using client.auto')
+       
+        logger.debug('Creating certificate using client.auto')
         let cert: string
-
         try {
             cert = await client.auto({
                 csr,
@@ -82,11 +71,6 @@ export class CertificateCreator {
             logger.error('Failed to create certificate: ' + e.message)
             throw e
         }
-
-        logger.info(`CSR:\n${csr.toString()}`)
-        logger.info(`Private key:\n${key.toString()}`)
-        logger.info(`Certificate:\n${cert.toString()}`)
-
         return { cert: cert.toString(), key: key.toString() }
     }
 
