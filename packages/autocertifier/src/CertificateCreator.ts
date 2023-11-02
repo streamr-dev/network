@@ -5,6 +5,7 @@ import path from 'path'
 import { ChallengeManager } from './ChallengeManager'
 import { Certificate } from '@streamr/autocertifier-client'
 import { filePathToNodeFormat } from '@streamr/utils'
+import { Challenge } from 'acme-client/types/rfc8555'
 
 const logger = new Logger(module)
 
@@ -59,10 +60,10 @@ export class CertificateCreator {
                 email: 'autocertifier@streamr.network',
                 termsOfServiceAgreed: true,
                 challengePriority: ['dns-01'],
-                challengeCreateFn: async (authz, _challenge, keyAuthorization) => {
+                challengeCreateFn: async (authz: acme.Authorization, _challenge: Challenge, keyAuthorization: string) => {
                     await this.challengeManager.createChallenge(authz.identifier.value, keyAuthorization)
                 },
-                challengeRemoveFn: async (authz, _challenge, _keyAuthorization) => {
+                challengeRemoveFn: async (authz: acme.Authorization) => {
                     await this.challengeManager.deleteChallenge(authz.identifier.value)
                 },
             })
