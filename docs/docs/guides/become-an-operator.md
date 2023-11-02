@@ -53,7 +53,6 @@ Once your familiar with your node you'll need to update its config file with the
 Scroll down on the Operator page and find the "Operator's node addresses" section. Click the "Add node address" button, paste in the address of your node wallet, click the button in the dialog and then don't forget to click the Save button.
 On the top section of the Operator page, take note of your "Contract" address. You'll need it soon when configuring your nodes.
 
-With that done, your node is now aware of your Operator, but your Operator is not aware of your node. To fix that, add your node address to your Operator in your Operator page, in the Streamr Hub UI. Your node address is the public 0x ethereum address that matches with your node's signing private key and it's displayed when your node starts. Repeat for as many nodes as you have in your fleet.
 
 ### Step 4: Fund your nodes
 You’ll need a bit of `MATIC` (the gas token of Polygon) in your node’s wallets as Streamr nodes that participate in sponsored streams will periodically make transactions. 1 to 5 `MATIC` is recommended since the nodes will be making a few transactions per day. If the node runs out of gas while they’re a part of an active Sponsorship, then a penalty may be applied to your unclaimed earnings. See [Operator value maintenance](../streamr-network/network-roles/operators#operator-maintenance).
