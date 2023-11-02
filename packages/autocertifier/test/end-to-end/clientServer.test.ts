@@ -85,10 +85,15 @@ describe('clientServer', () => {
                 async createSession(): Promise<Session> {
                     return { sessionId: v4() }
                 },
-                async createNewSubdomainAndCertificate(ip: string, _port: string, streamrWebsocketPort: string,
-                    sessionId: string, streamrWebSocketCaCert?: string): Promise<CertifiedSubdomain> {
+                async createNewSubdomainAndCertificate(
+                    ip: string,
+                    _port: string,
+                    streamrWebsocketPort:
+                    string,
+                    sessionId: string
+                ): Promise<CertifiedSubdomain> {
                     const challenger = new StreamrChallenger()
-                    await challenger.testStreamrChallenge(ip, streamrWebsocketPort, sessionId, streamrWebSocketCaCert)
+                    await challenger.testStreamrChallenge(ip, streamrWebsocketPort, sessionId)
                     return certifiedSubdomain
                 },
                 async createNewCertificateForSubdomain(_subdomain: string, _ipAddress: string,
@@ -137,8 +142,11 @@ describe('clientServer', () => {
         const streamrWebSocketPort = clientConnectionManager.getPeerDescriptor().websocket!.port
         const autoCertifierUrl = 'https://localhost:' + restServerPort
 
-        client = new AutoCertifierClient(subdomainPath, streamrWebSocketPort,
-            autoCertifierUrl, (serviceId, rpcMethodName, method) => {
+        client = new AutoCertifierClient(
+            subdomainPath,
+            streamrWebSocketPort,
+            autoCertifierUrl,
+            (serviceId, rpcMethodName, method) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
                 clientRpcCommunicator.registerRpcMethod(
                     SessionIdRequest,
@@ -161,8 +169,11 @@ describe('clientServer', () => {
         const streamrWebSocketPort = 100
         const autoCertifierUrl = 'https://localhost:' + restServerPort
 
-        client = new AutoCertifierClient(subdomainPath, streamrWebSocketPort,
-            autoCertifierUrl, (serviceId, rpcMethodName, method) => {
+        client = new AutoCertifierClient(
+            subdomainPath,
+            streamrWebSocketPort,
+            autoCertifierUrl,
+            (serviceId, rpcMethodName, method) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
                 clientRpcCommunicator.registerRpcMethod(
                     SessionIdRequest,

@@ -60,8 +60,7 @@ export class CertificateCreator {
                 termsOfServiceAgreed: true,
                 challengePriority: ['dns-01'],
                 challengeCreateFn: async (authz, _challenge, keyAuthorization) => {
-                    await this.challengeManager.createChallenge(authz.identifier.value,
-                        keyAuthorization)
+                    await this.challengeManager.createChallenge(authz.identifier.value, keyAuthorization)
                 },
                 challengeRemoveFn: async (authz, _challenge, _keyAuthorization) => {
                     await this.challengeManager.deleteChallenge(authz.identifier.value)

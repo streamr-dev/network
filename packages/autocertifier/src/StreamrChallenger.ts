@@ -16,8 +16,11 @@ export class StreamrChallenger {
         type: NodeType.NODEJS,
     }
 
-    public testStreamrChallenge(streamrWebSocketIp: string, streamrWebSocketPort: string,
-        sessionId: string, _caCert?: string): Promise<void> {
+    public testStreamrChallenge(
+        streamrWebSocketIp: string,
+        streamrWebSocketPort: string,
+        sessionId: string
+    ): Promise<void> {
 
         return new Promise((resolve, reject) => {
 

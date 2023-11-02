@@ -39,13 +39,12 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
         ipAddress: string,
         port: string,
         streamrWebSocketPort: string,
-        sessionId: string,
-        streamrWebSocketCaCert?: string
+        sessionId: string
     ): Promise<CertifiedSubdomain> {
         logger.trace('Creating new subdomain and certificate for ' + ipAddress + ':' + port)
 
         // this will throw if the client cannot answer the challenge of getting sessionId 
-        await this.streamrChallenger.testStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId, streamrWebSocketCaCert)
+        await this.streamrChallenger.testStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
         
         const subdomain = v4()
         const token = v4()
@@ -133,31 +132,43 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
         await this.database.start()
         logger.info('database is running on file ' + databaseFilePath)
 
-        this.dnsServer = new DnsServer(this.domainName, ownHostName, dnsServerPort,
-            ownIpAddress, this.database)
+        this.dnsServer = new DnsServer(
+            this.domainName,
+            ownHostName,
+            dnsServerPort,
+            ownIpAddress,
+            this.database
+        )
         await this.dnsServer.start()
         logger.info('dns server is running for domain ' + this.domainName + ' on port ' + dnsServerPort)
 
-        this.certificateCreator = new CertificateCreator(acmeDirectoryUrl, hmacKid, hmacKey,
-            accountPrivateKeyPath, this)
+        this.certificateCreator = new CertificateCreator(
+            acmeDirectoryUrl,
+            hmacKid,
+            hmacKey,
+            accountPrivateKeyPath,
+            this
+        )
         logger.info('certificate creator is running')
 
-        this.restServer = new RestServer(ownHostName + '.' + this.domainName, ownIpAddress, restServerPort, restServerCaCertPath, restServerCaKeyPath,
-            restServerCertPath, restServerKeyPath, this)
+        this.restServer = new RestServer(
+            ownHostName + '.' + this.domainName,
+            ownIpAddress,
+            restServerPort,
+            restServerCaCertPath,
+            restServerCaKeyPath,
+            restServerCertPath,
+            restServerKeyPath,
+            this
+        )
         await this.restServer.start()
         logger.info('rest server is running on port ' + restServerPort)
     }
 
     public async stop(): Promise<void> {
-        if (this.restServer) {
-            await this.restServer.stop()
-        }
-        if (this.dnsServer) {
-            await this.dnsServer.stop()
-        }
-        if (this.database) {
-            await this.database.stop()
-        }
+        await this.restServer!.stop()
+        await this.dnsServer!.stop()
+        await this.database!.stop()
     }
 }
 
