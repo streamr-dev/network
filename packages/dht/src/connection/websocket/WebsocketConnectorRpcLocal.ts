@@ -8,12 +8,12 @@ import {
     ConnectivityResponse,
     NodeType,
     PeerDescriptor,
-    WebSocketConnectionRequest,
-    WebSocketConnectionResponse
+    WebsocketConnectionRequest,
+    WebsocketConnectionResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { WebSocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { WebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger, binaryToHex, wait } from '@streamr/utils'
-import { IWebSocketConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { IWebsocketConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebsocketServer } from './WebsocketServer'
 import { ConnectivityChecker } from '../ConnectivityChecker'
@@ -53,7 +53,7 @@ interface WebsocketConnectorRpcLocalConfig {
     tlsCertificate?: TlsCertificate
 }
 
-export class WebsocketConnectorRpcLocal implements IWebSocketConnectorRpc {
+export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
 
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
@@ -88,10 +88,10 @@ export class WebsocketConnectorRpcLocal implements IWebSocketConnectorRpc {
         })
 
         this.rpcCommunicator.registerRpcMethod(
-            WebSocketConnectionRequest,
-            WebSocketConnectionResponse,
+            WebsocketConnectionRequest,
+            WebsocketConnectionResponse,
             'requestConnection',
-            (req: WebSocketConnectionRequest, context: ServerCallContext) => this.requestConnection(req, context)
+            (req: WebsocketConnectionRequest, context: ServerCallContext) => this.requestConnection(req, context)
         )
     }
 
@@ -221,7 +221,7 @@ export class WebsocketConnectorRpcLocal implements IWebSocketConnectorRpc {
             const remoteConnector = new WebsocketConnectorRpcRemote(
                 ownPeerDescriptor,
                 targetPeerDescriptor,
-                toProtoRpcClient(new WebSocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new WebsocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             remoteConnector.requestConnection(ownPeerDescriptor.websocket!.host, ownPeerDescriptor.websocket!.port)
         })
@@ -272,8 +272,8 @@ export class WebsocketConnectorRpcLocal implements IWebSocketConnectorRpc {
         await this.webSocketServer?.stop()
     }
 
-    // IWebSocketConnectorRpc implementation
-    public async requestConnection(request: WebSocketConnectionRequest, context: ServerCallContext): Promise<WebSocketConnectionResponse> {
+    // IWebsocketConnectorRpc implementation
+    public async requestConnection(request: WebsocketConnectionRequest, context: ServerCallContext): Promise<WebsocketConnectionResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         if (!this.destroyed && this.canConnectFunction(senderPeerDescriptor, request.ip, request.port)) {
             setImmediate(() => {
@@ -283,7 +283,7 @@ export class WebsocketConnectorRpcLocal implements IWebSocketConnectorRpc {
                 const connection = this.connect(senderPeerDescriptor)
                 this.onIncomingConnection(connection)
             })
-            const res: WebSocketConnectionResponse = {
+            const res: WebsocketConnectionResponse = {
                 accepted: true
             }
             return res

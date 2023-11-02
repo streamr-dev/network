@@ -17,9 +17,9 @@ import type { IceCandidate } from "./DhtRpc";
 import type { RtcAnswer } from "./DhtRpc";
 import type { RtcOffer } from "./DhtRpc";
 import type { WebRtcConnectionRequest } from "./DhtRpc";
-import { WebSocketConnectorRpc } from "./DhtRpc";
-import type { WebSocketConnectionResponse } from "./DhtRpc";
-import type { WebSocketConnectionRequest } from "./DhtRpc";
+import { WebsocketConnectorRpc } from "./DhtRpc";
+import type { WebsocketConnectionResponse } from "./DhtRpc";
+import type { WebsocketConnectionRequest } from "./DhtRpc";
 import { RecursiveFindSessionService } from "./DhtRpc";
 import type { FindResponse } from "./DhtRpc";
 import { StoreRpc } from "./DhtRpc";
@@ -215,29 +215,29 @@ export class RecursiveFindSessionServiceClient implements IRecursiveFindSessionS
     }
 }
 /**
- * @generated from protobuf service dht.WebSocketConnectorRpc
+ * @generated from protobuf service dht.WebsocketConnectorRpc
  */
-export interface IWebSocketConnectorRpcClient {
+export interface IWebsocketConnectorRpcClient {
     /**
-     * @generated from protobuf rpc: requestConnection(dht.WebSocketConnectionRequest) returns (dht.WebSocketConnectionResponse);
+     * @generated from protobuf rpc: requestConnection(dht.WebsocketConnectionRequest) returns (dht.WebsocketConnectionResponse);
      */
-    requestConnection(input: WebSocketConnectionRequest, options?: RpcOptions): UnaryCall<WebSocketConnectionRequest, WebSocketConnectionResponse>;
+    requestConnection(input: WebsocketConnectionRequest, options?: RpcOptions): UnaryCall<WebsocketConnectionRequest, WebsocketConnectionResponse>;
 }
 /**
- * @generated from protobuf service dht.WebSocketConnectorRpc
+ * @generated from protobuf service dht.WebsocketConnectorRpc
  */
-export class WebSocketConnectorRpcClient implements IWebSocketConnectorRpcClient, ServiceInfo {
-    typeName = WebSocketConnectorRpc.typeName;
-    methods = WebSocketConnectorRpc.methods;
-    options = WebSocketConnectorRpc.options;
+export class WebsocketConnectorRpcClient implements IWebsocketConnectorRpcClient, ServiceInfo {
+    typeName = WebsocketConnectorRpc.typeName;
+    methods = WebsocketConnectorRpc.methods;
+    options = WebsocketConnectorRpc.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: requestConnection(dht.WebSocketConnectionRequest) returns (dht.WebSocketConnectionResponse);
+     * @generated from protobuf rpc: requestConnection(dht.WebsocketConnectionRequest) returns (dht.WebsocketConnectionResponse);
      */
-    requestConnection(input: WebSocketConnectionRequest, options?: RpcOptions): UnaryCall<WebSocketConnectionRequest, WebSocketConnectionResponse> {
+    requestConnection(input: WebsocketConnectionRequest, options?: RpcOptions): UnaryCall<WebsocketConnectionRequest, WebsocketConnectionResponse> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<WebSocketConnectionRequest, WebSocketConnectionResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<WebsocketConnectionRequest, WebsocketConnectionResponse>("unary", this._transport, method, opt, input);
     }
 }
 /**

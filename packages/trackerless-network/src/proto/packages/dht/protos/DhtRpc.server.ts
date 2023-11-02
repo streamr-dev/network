@@ -14,9 +14,9 @@ import { IceCandidate } from "./DhtRpc";
 import { RtcAnswer } from "./DhtRpc";
 import { RtcOffer } from "./DhtRpc";
 import { WebRtcConnectionRequest } from "./DhtRpc";
-import { WebSocketConnectionResponse } from "./DhtRpc";
-import { WebSocketConnectionRequest } from "./DhtRpc";
-import { RecursiveFindReport } from "./DhtRpc";
+import { WebsocketConnectionResponse } from "./DhtRpc";
+import { WebsocketConnectionRequest } from "./DhtRpc";
+import { FindResponse } from "./DhtRpc";
 import { DeleteDataResponse } from "./DhtRpc";
 import { DeleteDataRequest } from "./DhtRpc";
 import { MigrateDataResponse } from "./DhtRpc";
@@ -50,9 +50,9 @@ export interface IDhtRpcService<T = ServerCallContext> {
     leaveNotice(request: LeaveNotice, context: T): Promise<Empty>;
 }
 /**
- * @generated from protobuf service dht.RoutingService
+ * @generated from protobuf service dht.RouterRpc
  */
-export interface IRoutingService<T = ServerCallContext> {
+export interface IRouterRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: routeMessage(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
@@ -67,9 +67,9 @@ export interface IRoutingService<T = ServerCallContext> {
     findRecursively(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
 }
 /**
- * @generated from protobuf service dht.StoreService
+ * @generated from protobuf service dht.StoreRpc
  */
-export interface IStoreService<T = ServerCallContext> {
+export interface IStoreRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: storeData(dht.StoreDataRequest) returns (dht.StoreDataResponse);
      */
@@ -88,23 +88,23 @@ export interface IStoreService<T = ServerCallContext> {
  */
 export interface IRecursiveFindSessionService<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: reportRecursiveFindResult(dht.RecursiveFindReport) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendFindResponse(dht.FindResponse) returns (google.protobuf.Empty);
      */
-    reportRecursiveFindResult(request: RecursiveFindReport, context: T): Promise<Empty>;
+    sendFindResponse(request: FindResponse, context: T): Promise<Empty>;
 }
 /**
- * @generated from protobuf service dht.WebSocketConnectorService
+ * @generated from protobuf service dht.WebsocketConnectorRpc
  */
-export interface IWebSocketConnectorService<T = ServerCallContext> {
+export interface IWebsocketConnectorRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: requestConnection(dht.WebSocketConnectionRequest) returns (dht.WebSocketConnectionResponse);
+     * @generated from protobuf rpc: requestConnection(dht.WebsocketConnectionRequest) returns (dht.WebsocketConnectionResponse);
      */
-    requestConnection(request: WebSocketConnectionRequest, context: T): Promise<WebSocketConnectionResponse>;
+    requestConnection(request: WebsocketConnectionRequest, context: T): Promise<WebsocketConnectionResponse>;
 }
 /**
- * @generated from protobuf service dht.WebRtcConnectorService
+ * @generated from protobuf service dht.WebRtcConnectorRpc
  */
-export interface IWebRtcConnectorService<T = ServerCallContext> {
+export interface IWebRtcConnectorRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: requestConnection(dht.WebRtcConnectionRequest) returns (google.protobuf.Empty);
      */
@@ -123,9 +123,9 @@ export interface IWebRtcConnectorService<T = ServerCallContext> {
     iceCandidate(request: IceCandidate, context: T): Promise<Empty>;
 }
 /**
- * @generated from protobuf service dht.ConnectionLocker
+ * @generated from protobuf service dht.ConnectionLockRpc
  */
-export interface IConnectionLocker<T = ServerCallContext> {
+export interface IConnectionLockRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: lockRequest(dht.LockRequest) returns (dht.LockResponse);
      */
@@ -140,9 +140,9 @@ export interface IConnectionLocker<T = ServerCallContext> {
     gracefulDisconnect(request: DisconnectNotice, context: T): Promise<DisconnectNoticeResponse>;
 }
 /**
- * @generated from protobuf service dht.ExternalApiService
+ * @generated from protobuf service dht.ExternalApiRpc
  */
-export interface IExternalApiService<T = ServerCallContext> {
+export interface IExternalApiRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: findData(dht.FindDataRequest) returns (dht.FindDataResponse);
      */

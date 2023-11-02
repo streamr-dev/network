@@ -30,8 +30,8 @@ service RecursiveFindSessionService {
   rpc sendFindResponse(FindResponse) returns (google.protobuf.Empty);
 }
 
-service WebSocketConnectorRpc {
-  rpc requestConnection (WebSocketConnectionRequest) returns (WebSocketConnectionResponse);
+service WebsocketConnectorRpc {
+  rpc requestConnection (WebsocketConnectionRequest) returns (WebsocketConnectionResponse);
 }
 
 service WebRtcConnectorRpc {
@@ -235,12 +235,12 @@ message Message {
 // Connector Messages
 
 // WebSocket
-message WebSocketConnectionRequest {
+message WebsocketConnectionRequest {
   string ip = 1;
   uint32 port = 2;
 }
 
-message WebSocketConnectionResponse {
+message WebsocketConnectionResponse {
   bool accepted = 1;
   optional string reason = 2;
 }

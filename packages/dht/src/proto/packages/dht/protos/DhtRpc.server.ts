@@ -14,8 +14,8 @@ import { IceCandidate } from "./DhtRpc";
 import { RtcAnswer } from "./DhtRpc";
 import { RtcOffer } from "./DhtRpc";
 import { WebRtcConnectionRequest } from "./DhtRpc";
-import { WebSocketConnectionResponse } from "./DhtRpc";
-import { WebSocketConnectionRequest } from "./DhtRpc";
+import { WebsocketConnectionResponse } from "./DhtRpc";
+import { WebsocketConnectionRequest } from "./DhtRpc";
 import { FindResponse } from "./DhtRpc";
 import { DeleteDataResponse } from "./DhtRpc";
 import { DeleteDataRequest } from "./DhtRpc";
@@ -93,13 +93,13 @@ export interface IRecursiveFindSessionService<T = ServerCallContext> {
     sendFindResponse(request: FindResponse, context: T): Promise<Empty>;
 }
 /**
- * @generated from protobuf service dht.WebSocketConnectorRpc
+ * @generated from protobuf service dht.WebsocketConnectorRpc
  */
-export interface IWebSocketConnectorRpc<T = ServerCallContext> {
+export interface IWebsocketConnectorRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: requestConnection(dht.WebSocketConnectionRequest) returns (dht.WebSocketConnectionResponse);
+     * @generated from protobuf rpc: requestConnection(dht.WebsocketConnectionRequest) returns (dht.WebsocketConnectionResponse);
      */
-    requestConnection(request: WebSocketConnectionRequest, context: T): Promise<WebSocketConnectionResponse>;
+    requestConnection(request: WebsocketConnectionRequest, context: T): Promise<WebsocketConnectionResponse>;
 }
 /**
  * @generated from protobuf service dht.WebRtcConnectorRpc

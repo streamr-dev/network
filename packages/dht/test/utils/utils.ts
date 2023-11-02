@@ -11,7 +11,7 @@ import {
     RouteMessageWrapper,
     StoreDataRequest,
     StoreDataResponse,
-    WebSocketConnectionResponse,
+    WebsocketConnectionResponse,
     FindRequest, 
     DeleteDataResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -21,7 +21,7 @@ import {
     IDhtRpcService,
     IRouterRpc,
     IStoreRpc,
-    IWebSocketConnectorRpc
+    IWebsocketConnectorRpc
 } from '../../src/proto/packages/dht/protos/DhtRpc.server'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
@@ -214,9 +214,9 @@ export const mockStoreRpc: IStoreRpcWithError = {
     }
 }
 
-export const mockWebSocketConnectorRpc: IWebSocketConnectorRpc = {
-    async requestConnection(): Promise<WebSocketConnectionResponse> {
-        const responseConnection: WebSocketConnectionResponse = {
+export const mockWebsocketConnectorRpc: IWebsocketConnectorRpc = {
+    async requestConnection(): Promise<WebsocketConnectionResponse> {
+        const responseConnection: WebsocketConnectionResponse = {
             accepted: true
         }
         return responseConnection
