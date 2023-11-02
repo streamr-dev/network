@@ -12,7 +12,7 @@ import {
     createFindRequest
 } from '../utils/utils'
 import { RecursiveFinder } from '../../src/dht/find/RecursiveFinder'
-import { RemoteDhtNode } from '../../src/dht/RemoteDhtNode'
+import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import { v4 } from 'uuid'
 import { MockRouter } from '../utils/mock/Router'
@@ -22,7 +22,7 @@ import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescrip
 describe('RecursiveFinder', () => {
 
     let recursiveFinder: RecursiveFinder
-    let connections: Map<PeerIDKey, RemoteDhtNode>
+    let connections: Map<PeerIDKey, DhtNodeRpcRemote>
 
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('peerid').value,
