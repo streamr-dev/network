@@ -80,7 +80,7 @@ await stream.publish(msg, {
 ```
 
 ## Subscribe to partitioned streams
-By default, the client subscribes to the first partition (partition `0`) of a stream.
+By default, the Streamr SDK is configured to subscribe to the first partition (partition `0`) of a stream.
 
 The partition number can be explicitly given in `subscribe`:
 
