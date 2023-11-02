@@ -60,7 +60,7 @@ With that done, your node is now aware of your Operator, but your Operator is no
 You’ll need a bit of `MATIC` (the gas token of Polygon) in your node’s wallets as Streamr nodes that participate in sponsored streams will periodically make transactions. 1 to 5 `MATIC` is recommended since the nodes will be making a few transactions per day. If the node runs out of gas while they’re a part of an active Sponsorship, then a penalty may be applied to your unclaimed earnings. See [Operator value maintenance](../streamr-network/network-roles/operators#operator-maintenance).
 
 ### Step 5: Fund your Operator
-At this point the Operator is paired with your funded node(s). Now you'll need to fund your Operator Contract with DATA tokens. There's no minimum amount but if you delegate too little, then your capacity to accept delegations will be limited since the owner of the Operator (you) must maintain at least a 10% owner stake in your Operator.
+Now, on your Operator page in the Streamr Hub UI, fund your Operator with DATA tokens (on Mumbai, TEST tokens). There's no minimum amount, but note that the more you fund, the more you can accept delegations. The owner (you) must have at least a 5% stake in the Operator.
 
 ### Step 6: Join sponsorships
 You’re now in a position to join Sponsorships. Go back to the Hub, go to Network -> Sponsorships and find a Sponsorship you want your Operator to start working on. Click the "Join as Operator" button and select your stake. Note there is a minimum stake of 5000 `DATA` tokens.
