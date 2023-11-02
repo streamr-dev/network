@@ -74,6 +74,7 @@ export class CertificateCreator {
         return { cert: cert.toString(), key: key.toString() }
     }
 
+    // TODO: should this funcion just reject if private key is not found?
     private createPrivateKey = async (): Promise<boolean> => {
         try {
             // try to read private key from file
