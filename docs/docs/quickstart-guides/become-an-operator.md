@@ -47,11 +47,10 @@ While there are no strict hardware recommendations, 8GB of RAM, 3-4 virtual core
 :::
 
 ### Step 3: Pair your node with your Operator contract
-Once your familiar with your node you'll need to update its config file with the address of your Operator contract. If you're in the Mumbai test environment, you'll want to copy and paste the following config file, and replace the `"YOUR_OPERATOR_CONTRACT_ADDRESS"`and `"NODE_PRIVATE_KEY"` with your own (and keep the "quotes"). For the testnets, keep an eye on the [official testnet page](../streamr-testnets/testnets.md) for the correct configuration to enter. 
+Once your familiar with your node you'll need to update its config file with the address of your Operator contract. If you're in the Mumbai test environment, you'll want to copy and paste [this config snippet](#mumbai-testing-environment-node-config), and replace the `"YOUR_OPERATOR_CONTRACT_ADDRESS"`and `"NODE_PRIVATE_KEY"` with your own (and keep the "quotes"). For the testnets, keep an eye on the [official testnet page](../streamr-testnets/testnets.md) for the correct configuration to enter. 
 
 Scroll down on the Operator page and find the "Operator's node addresses" section. Click the "Add node address" button, paste in the address of your node wallet, click the button in the dialog and then don't forget to click the Save button.
 On the top section of the Operator page, take note of your "Contract" address. You'll need it soon when configuring your nodes.
-
 
 With that done, your node is now aware of your Operator, but your Operator is not aware of your node. To fix that, add your node address to your Operator in your Operator page, in the Streamr Hub UI. Your node address is the public 0x ethereum address that matches with your node's signing private key and it's displayed when your node starts. Repeat for as many nodes as you have in your fleet.
 

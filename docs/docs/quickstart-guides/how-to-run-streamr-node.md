@@ -218,11 +218,11 @@ See [Docker's documentation](https://docs.docker.com/engine/reference/commandlin
 ## The npm approach
 If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Broker requires at least Node.js version 16.x. Once installed, you can download, configure, and start the Streamr Broker.
 
-### Step 1: Install the latest "tatum" version using npm
--   Run `npm install -g streamr-broker@0.0.1-tatum.8` to download and install the package. You may need administrative access to run this command.
+### Step 1: Install the latest "pretestnet" version using npm
+-   Run `npm install -g streamr-broker@100.0.0-pretestnet.0` to download and install the package. You may need administrative access to run this command. The latest testnet version may be different to the version listed here, if in doubt, check the [npm registry](https://www.npmjs.com/package/streamr-broker?activeTab=versions).
 
 ```
-npm install -g streamr-broker@0.0.1-tatum.8
+npm install -g streamr-broker@100.0.0-pretestnet.0
 ```
 
 There can be plenty of output from npm. If the installation fails with an error, you should address it before continuing.
@@ -244,7 +244,7 @@ If you're running the node in the Mumbai environment then a [special testnet con
 -   Run `streamr-broker` to start the node! You should start to see logging similar to this:
 
 ```
-INFO [2023-10-31T17:42:30.897] (broker              ): Start broker version 0.0.1-tatum.8
+INFO [2023-10-31T17:42:30.897] (broker              ): Start broker version ...
 INFO [2023-10-31T17:42:32.660] (StreamrNode         ): Starting new StreamrNode with id 251cdad515544d7e863602413a5d91b2
 INFO [2023-10-31T17:42:33.131] (OperatorPlugin      ): Fetched redundancy factor {"redundancyFactor":1}
 INFO [2023-10-31T17:42:33.152] (MaintainTopologyHelp): Starting
