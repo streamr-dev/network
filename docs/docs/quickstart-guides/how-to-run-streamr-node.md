@@ -77,7 +77,7 @@ Change the permissions on the node's folder:
 sudo chmod -R 777 ~/.streamrDocker/
 ```
 
-### Step 3: Run the config wizard to create and configure your Streamr node
+### Step 3a: Run the config wizard to create and configure your Streamr node
 
 Start the config wizard with the below command. Docker will download the node image unless you have it already.
 
@@ -119,9 +119,10 @@ Press 'enter' to use the default path.
 The path to the config file in the `docker run` command and the path defined via the config wizard differs and tend to cause some confusion. They are different for a reason. The path in the `docker run` command (`/home/streamr/.streamr`) refers to the path _inside_ the Docker container, whereas the path you define via the config wizard refers to the path _outside_ the Docker container. Hence, you need to use the default path as mentioned above.
 :::
 
-:::info
-If you're running a node to become an Operator, then you could now edit the node config file at `~/.streamrDocker/config/default.json` with the necessary updates. If you're running the node in the Mumbai environment then a [special testnet config](../quickstart-guides/become-an-operator#mumbai-testing-environment-node-config) is necessary.
-:::
+### Step 3b: Update the node config file
+If you're running a node to become an Operator, then you could now edit the node config file at `~/.streamrDocker/config/default.json` with the necessary updates mentioned in the to [become an Operator guide](become-an-operator#step-3-pair-your-node-with-your-operator-contract). 
+
+If you're running the node in the Mumbai environment then a [special testnet config](../quickstart-guides/become-an-operator#mumbai-testing-environment-node-config) is necessary.
 
 ### Step 4: Start your Streamr node using Docker
 
@@ -218,15 +219,15 @@ See [Docker's documentation](https://docs.docker.com/engine/reference/commandlin
 If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Broker requires at least Node.js version 16.x. Once installed, you can download, configure, and start the Streamr Broker.
 
 ### Step 1: Install the latest "tatum" version using npm
--   Run `npm install -g streamr-broker@0.0.1-tatum.7` to download and install the package. You may need administrative access to run this command.
+-   Run `npm install -g streamr-broker@0.0.1-tatum.8` to download and install the package. You may need administrative access to run this command.
 
 ```
-npm install -g streamr-broker@0.0.1-tatum.7
+npm install -g streamr-broker@0.0.1-tatum.8
 ```
 
 There can be plenty of output from npm. If the installation fails with an error, you should address it before continuing.
 
-### Step 2: Configure your node with streamr-broker-init
+### Step 2a: Configure your node with streamr-broker-init
 -   Run `streamr-broker-init` to generate a configuration file using a step-by-step wizard. Answer the questions by using arrow keys and ‘enter’ to navigate.
 -   Generate or Import Ethereum private key: Generate one unless you have one you want to use with the node
 -   Plugins to enable: Hit enter
@@ -234,11 +235,16 @@ There can be plenty of output from npm. If the installation fails with an error,
 
 Towards the end, the wizard asks if you would like it to display your Ethereum private key. From here, you should copy-paste it to a safe place! You can also find it later in the configuration file, which is saved by default to `.streamr/config/default.json` under your home directory.
 
+### Step 2b: Update the node config file
+If you're running a node to become an Operator, then you could now edit the node config file at `.streamr/config/default.json` with the necessary updates mentioned in the to [become an Operator guide](become-an-operator#step-3-pair-your-node-with-your-operator-contract). 
+
+If you're running the node in the Mumbai environment then a [special testnet config](../quickstart-guides/become-an-operator#mumbai-testing-environment-node-config) is necessary.
+
 ### Step 3: Start the Streamr node
 -   Run `streamr-broker` to start the node! You should start to see logging similar to this:
 
 ```
-INFO [2023-10-31T17:42:30.897] (broker              ): Start broker version 0.0.1-tatum.6
+INFO [2023-10-31T17:42:30.897] (broker              ): Start broker version 0.0.1-tatum.8
 INFO [2023-10-31T17:42:32.660] (StreamrNode         ): Starting new StreamrNode with id 251cdad515544d7e863602413a5d91b2
 INFO [2023-10-31T17:42:33.131] (OperatorPlugin      ): Fetched redundancy factor {"redundancyFactor":1}
 INFO [2023-10-31T17:42:33.152] (MaintainTopologyHelp): Starting
