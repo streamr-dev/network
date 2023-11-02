@@ -144,8 +144,7 @@ message PeerDescriptor {
   ConnectivityMethod udp = 3;
   ConnectivityMethod tcp = 4;
   ConnectivityMethod websocket = 5;
-  optional bool openInternet = 6;
-  optional uint32 region = 7;
+  optional uint32 region = 6;
 }
 
 message ConnectivityMethod {
@@ -191,10 +190,9 @@ message ConnectivityRequest {
 }
 
 message ConnectivityResponse {
-  bool open_internet = 1;
-  string host = 2;
-  string natType = 3;
-  ConnectivityMethod websocket = 4;
+  string host = 1;
+  string natType = 2;
+  ConnectivityMethod websocket = 3;
 }
 
 message HandshakeRequest {
