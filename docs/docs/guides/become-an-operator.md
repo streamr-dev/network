@@ -43,7 +43,7 @@ Running multiple nodes on the same virtual machine (VM) is not in your best inte
 While there are no strict hardware recommendations, 8GB of RAM, 3-4 virtual cores, and ideally 1Gbps bandwidth would be a safe bet for participating in most [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md).
 
 :::caution Important
-- A public IP is a must and a configurable TCP port must be reachable from the internet.
+- A public IP is a must
 - Nodes need to have a WebSocket port accessible from the internet. The default WebSocket port is (tcp) 32200.
 :::
 
