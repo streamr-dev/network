@@ -58,7 +58,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
-    private readonly webSocketServer?: WebsocketServer
+    private readonly websocketServer?: WebsocketServer
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private onIncomingConnection: (connection: ManagedConnection) => boolean
@@ -71,7 +71,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
     private destroyed = false
 
     constructor(config: WebsocketConnectorRpcLocalConfig) {
-        this.webSocketServer = config.portRange ? new WebsocketServer({
+        this.websocketServer = config.portRange ? new WebsocketServer({
             portRange: config.portRange!,
             tlsCertificate: config.tlsCertificate,
             maxMessageSize: config.maxMessageSize
@@ -103,8 +103,8 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
     }
 
     public async start(): Promise<void> {
-        if (!this.destroyed && this.webSocketServer) {
-            this.webSocketServer.on('connected', (connection: IConnection) => {
+        if (!this.destroyed && this.websocketServer) {
+            this.websocketServer.on('connected', (connection: IConnection) => {
 
                 const serverSocket = connection as unknown as ServerWebsocket
                 if (serverSocket.resourceURL &&
@@ -122,7 +122,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
                     this.attachHandshaker(connection)
                 }
             })
-            const port = await this.webSocketServer.start()
+            const port = await this.websocketServer.start()
             this.selectedPort = port
             this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.tlsCertificate !== undefined, this.host)
         }
@@ -141,7 +141,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
         for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS)) {
             const entryPoint = sample(this.entrypoints)!
             try {
-                if (!this.webSocketServer) {
+                if (!this.websocketServer) {
                     // If no websocket server, return openInternet: false
                     return noServerConnectivityResponse
                 } else {
@@ -269,7 +269,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
         const attempts = Array.from(this.connectingConnections.values())
         await Promise.allSettled(attempts.map((conn) => conn.close('OTHER')))
         this.connectivityChecker?.destroy()
-        await this.webSocketServer?.stop()
+        await this.websocketServer?.stop()
     }
 
     // IWebsocketConnectorRpc implementation

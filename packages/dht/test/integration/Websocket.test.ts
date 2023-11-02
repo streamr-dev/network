@@ -9,18 +9,18 @@ const logger = new Logger(module)
 
 describe('WebSocket', () => {
 
-    const webSocketServer = new WebsocketServer({
+    const websocketServer = new WebsocketServer({
         portRange: { min: 9999, max: 9999 }
     })
     const clientWebSocket = new ClientWebsocket()
 
     beforeAll(async () => {
-        await webSocketServer.start()
+        await websocketServer.start()
     })
 
     it('Happy path', (done) => {
             
-        webSocketServer.on('connected', (serverConnection: IConnection) => {
+        websocketServer.on('connected', (serverConnection: IConnection) => {
             const time = Date.now()
             logger.info('server side sendind msg at ' + time)
             serverConnection.send(Uint8Array.from([1, 2, 3, 4]))
@@ -61,6 +61,6 @@ describe('WebSocket', () => {
     })
 
     afterAll(async () => {
-        await webSocketServer.stop()
+        await websocketServer.stop()
     })
 })

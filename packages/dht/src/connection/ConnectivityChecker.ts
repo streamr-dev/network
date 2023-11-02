@@ -24,12 +24,12 @@ export class ConnectivityChecker {
     private static readonly CONNECTIVITY_CHECKER_SERVICE_ID = 'system/connectivity-checker'
     private static readonly CONNECTIVITY_CHECKER_TIMEOUT = 5000
     private destroyed = false
-    private readonly webSocketPort: number
+    private readonly websocketPort: number
     private readonly tls: boolean 
     private readonly host?: string
 
-    constructor(webSocketPort: number, tls: boolean, host?: string) {
-        this.webSocketPort = webSocketPort
+    constructor(websocketPort: number, tls: boolean, host?: string) {
+        this.websocketPort = websocketPort
         this.tls = tls
         this.host = host
     }
@@ -52,7 +52,7 @@ export class ConnectivityChecker {
             throw new Err.ConnectionFailed(`Failed to connect to the entrypoint ${connectivityMethodToWebSocketUrl(entryPoint.websocket!)}`, e)
         }
         // send connectivity request
-        const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort, host: this.host, tls: this.tls }
+        const connectivityRequestMessage: ConnectivityRequest = { port: this.websocketPort, host: this.host, tls: this.tls }
         const msg: Message = {
             serviceId: ConnectivityChecker.CONNECTIVITY_CHECKER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_REQUEST, messageId: v4(),
