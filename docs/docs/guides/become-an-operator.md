@@ -36,7 +36,7 @@ You'll need to decide on your [owner's cut](../streamr-network/network-roles/ope
 ### Step 2: Run a Streamr node
 Spin up a Streamr node using this [guide](./how-to-run-streamr-node.md). 
 
-Nodes will consume resources, mainly bandwidth and CPU. RAM usage is moderate and disk usage in negligable. 
+Nodes will consume resources, mainly bandwidth and CPU. RAM usage is moderate and disk usage in negligible. 
 
 Running multiple nodes on the same virtual machine (VM) is not in your best interest. The point of running multiple nodes is redundancy as well as load balancing/horizontal scaling, neither of which are really achieved if multiple nodes run on the same VM. Ideally each VM would run on separate physical hardware or geographical location.
 
