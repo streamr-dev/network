@@ -75,6 +75,7 @@ export class WebSocketConnectorRpcLocal implements IWebSocketConnectorRpc {
     private host?: string
     private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
+    // TODO: could this be in the WebSocketServer itself?
     private autoCertifierClient?: AutoCertifierClientFacade
     private readonly serverEnableTls: boolean
     private selectedPort?: number
