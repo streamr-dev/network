@@ -50,7 +50,6 @@ While there are no strict hardware recommendations, 8GB of RAM, 3-4 virtual core
 ### Step 3: Pair your node with your Operator contract
 Once your familiar with your node you'll need to update its config file with the address of your Operator contract. If you're in the Mumbai test environment, you'll want to copy and paste [this config snippet](#mumbai-testing-environment-node-config), and replace the `"YOUR_OPERATOR_CONTRACT_ADDRESS"`and `"NODE_PRIVATE_KEY"` with your own (and keep the "quotes"). For the testnets, keep an eye on the [official testnet page](../streamr-testnets/testnets.md) for the correct configuration to enter. 
 
-On the top section of the Operator page, take note of your "Contract" address. You'll need it soon when configuring your nodes.
 
 
 ### Step 4: Fund your nodes
