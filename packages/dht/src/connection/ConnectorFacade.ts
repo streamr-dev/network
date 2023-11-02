@@ -6,10 +6,10 @@ import {
 import { ITransport } from '../transport/ITransport'
 import { PortRange, TlsCertificate } from './ConnectionManager'
 import { ManagedConnection } from './ManagedConnection'
-import { Simulator } from './Simulator/Simulator'
-import { SimulatorConnector } from './Simulator/SimulatorConnector'
-import { IceServer, WebRtcConnectorRpcLocal } from './WebRTC/WebRtcConnectorRpcLocal'
-import { WebSocketConnectorRpcLocal } from './WebSocket/WebSocketConnectorRpcLocal'
+import { Simulator } from './simulator/Simulator'
+import { SimulatorConnector } from './simulator/SimulatorConnector'
+import { IceServer, WebRtcConnectorRpcLocal } from './webrtc/WebRtcConnectorRpcLocal'
+import { WebSocketConnectorRpcLocal } from './websocket/WebSocketConnectorRpcLocal'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection

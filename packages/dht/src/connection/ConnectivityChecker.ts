@@ -6,11 +6,11 @@ import {
 import { ConnectionEvents, IConnection } from './IConnection'
 import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
 import * as Err from '../helpers/errors'
-import { ClientWebSocket } from './WebSocket/ClientWebSocket'
+import { ClientWebSocket } from './websocket/ClientWebSocket'
 import { v4 } from 'uuid'
 import { NatType } from './ConnectionManager'
-import { ServerWebSocket } from './WebSocket/ServerWebSocket'
-import { connectivityMethodToWebSocketUrl } from './WebSocket/WebSocketConnectorRpcLocal'
+import { ServerWebSocket } from './websocket/ServerWebSocket'
+import { connectivityMethodToWebSocketUrl } from './websocket/WebSocketConnectorRpcLocal'
 
 const logger = new Logger(module)
 

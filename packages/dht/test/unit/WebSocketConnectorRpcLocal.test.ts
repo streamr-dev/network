@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { WebSocketConnectorRpcLocal } from '../../src/connection/WebSocket/WebSocketConnectorRpcLocal'
+import { WebSocketConnectorRpcLocal } from '../../src/connection/websocket/WebSocketConnectorRpcLocal'
 import { ConnectivityMethod, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import crypto from 'crypto'
 import { MockTransport } from '../utils/mock/Transport'

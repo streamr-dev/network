@@ -31,7 +31,7 @@ import { ConnectionLockHandler } from './ConnectionLockHandler'
 import { ConnectorFacade } from './ConnectorFacade'
 import { ManagedConnection, Events as ManagedConnectionEvents } from './ManagedConnection'
 import { ConnectionLockRpcRemote } from './ConnectionLockRpcRemote'
-import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
+import { WEB_RTC_CLEANUP } from './webrtc/NodeWebRtcConnection'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 

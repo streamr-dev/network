@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 
-import { WebSocketServer } from '../../src/connection/WebSocket/WebSocketServer'
+import { WebSocketServer } from '../../src/connection/websocket/WebSocketServer'
 import { IConnection } from '../../src/connection/IConnection'
-import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
+import { ClientWebSocket } from '../../src/connection/websocket/ClientWebSocket'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
