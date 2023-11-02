@@ -2,12 +2,11 @@ import { Message, NodeType, PeerDescriptor, PeerID, ClientWebSocket, ManagedConn
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { ConnectionType } from '@streamr/dht'
-import { FailedToConnectToStreamrWebSocket, AutoCertifierRpcClient } from '@streamr/autocertifier-client'
+import { FailedToConnectToStreamrWebSocket, AutoCertifierRpcClient, AUTOCERTIFIER_SERVICE_ID } from '@streamr/autocertifier-client'
 
 const logger = new Logger(module)
 
 export class StreamrChallenger {
-    private readonly SERVICE_ID = 'AutoCertifier'
 
     // This is a dummy peer descriptor that is used to connect to the streamr websocket
     // To ensure that the autocertified subdomain is used for the Streamr Network
@@ -52,7 +51,7 @@ export class StreamrChallenger {
 
             managedConnection.on('handshakeCompleted', () => {
                 socket.off('disconnected', onDisconnected)
-                const communicator = new RoutingRpcCommunicator(this.SERVICE_ID,
+                const communicator = new RoutingRpcCommunicator(AUTOCERTIFIER_SERVICE_ID,
                     (msg: Message, _doNotConnect?: boolean): Promise<void> => {
                         logger.info('sending message to peer')
                         return managedConnection.send(Message.toBinary(msg), true)
