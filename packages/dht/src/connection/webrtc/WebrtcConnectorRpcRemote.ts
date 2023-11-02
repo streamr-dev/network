@@ -4,26 +4,26 @@ import {
     PeerDescriptor,
     RtcAnswer,
     RtcOffer,
-    WebRtcConnectionRequest
+    WebrtcConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { IWebRtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { IWebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-export class WebrtcConnectorRpcRemote extends Remote<IWebRtcConnectorRpcClient> {
+export class WebrtcConnectorRpcRemote extends Remote<IWebrtcConnectorRpcClient> {
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
         remotePeerDescriptor: PeerDescriptor,
-        client: ProtoRpcClient<IWebRtcConnectorRpcClient>
+        client: ProtoRpcClient<IWebrtcConnectorRpcClient>
     ) {
         super(localPeerDescriptor, remotePeerDescriptor, 'DUMMY', client)
     }
 
     requestConnection(connectionId: string): void {
-        const request: WebRtcConnectionRequest = {
+        const request: WebrtcConnectionRequest = {
             connectionId
         }
         const options = this.formDhtRpcOptions({

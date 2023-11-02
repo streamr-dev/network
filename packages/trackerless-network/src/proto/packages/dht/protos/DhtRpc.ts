@@ -487,9 +487,9 @@ export interface WebsocketConnectionResponse {
 /**
  * WebRTC
  *
- * @generated from protobuf message dht.WebRtcConnectionRequest
+ * @generated from protobuf message dht.WebrtcConnectionRequest
  */
-export interface WebRtcConnectionRequest {
+export interface WebrtcConnectionRequest {
     /**
      * @generated from protobuf field: string connectionId = 1;
      */
@@ -1064,17 +1064,17 @@ class WebsocketConnectionResponse$Type extends MessageType$<WebsocketConnectionR
  */
 export const WebsocketConnectionResponse = new WebsocketConnectionResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class WebRtcConnectionRequest$Type extends MessageType$<WebRtcConnectionRequest> {
+class WebrtcConnectionRequest$Type extends MessageType$<WebrtcConnectionRequest> {
     constructor() {
-        super("dht.WebRtcConnectionRequest", [
+        super("dht.WebrtcConnectionRequest", [
             { no: 1, name: "connectionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.WebRtcConnectionRequest
+ * @generated MessageType for protobuf message dht.WebrtcConnectionRequest
  */
-export const WebRtcConnectionRequest = new WebRtcConnectionRequest$Type();
+export const WebrtcConnectionRequest = new WebrtcConnectionRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RtcOffer$Type extends MessageType$<RtcOffer> {
     constructor() {
@@ -1236,10 +1236,10 @@ export const WebsocketConnectorRpc = new ServiceType("dht.WebsocketConnectorRpc"
     { name: "requestConnection", options: {}, I: WebsocketConnectionRequest, O: WebsocketConnectionResponse }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.WebRtcConnectorRpc
+ * @generated ServiceType for protobuf service dht.WebrtcConnectorRpc
  */
-export const WebRtcConnectorRpc = new ServiceType("dht.WebRtcConnectorRpc", [
-    { name: "requestConnection", options: {}, I: WebRtcConnectionRequest, O: Empty },
+export const WebrtcConnectorRpc = new ServiceType("dht.WebrtcConnectorRpc", [
+    { name: "requestConnection", options: {}, I: WebrtcConnectionRequest, O: Empty },
     { name: "rtcOffer", options: {}, I: RtcOffer, O: Empty },
     { name: "rtcAnswer", options: {}, I: RtcAnswer, O: Empty },
     { name: "iceCandidate", options: {}, I: IceCandidate, O: Empty }

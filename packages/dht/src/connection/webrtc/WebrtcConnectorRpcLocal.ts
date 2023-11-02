@@ -2,19 +2,19 @@ import {
     IceCandidate,
     PeerDescriptor,
     RtcAnswer,
-    RtcOffer, WebRtcConnectionRequest
+    RtcOffer, WebrtcConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
-import { WebRtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { WebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
-import { IWebRtcConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { IWebrtcConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
@@ -58,7 +58,7 @@ export interface IceServer {
     tcp?: boolean
 }
 
-export class WebrtcConnectorRpcLocal implements IWebRtcConnectorRpc {
+export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
 
     private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
@@ -88,8 +88,8 @@ export class WebrtcConnectorRpcLocal implements IWebRtcConnectorRpc {
             (req: RtcAnswer, context: ServerCallContext) => this.rtcAnswer(req, context))
         this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate',
             (req: IceCandidate, context: ServerCallContext) => this.iceCandidate(req, context))
-        this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection',
-            (req: WebRtcConnectionRequest, context: ServerCallContext) => this.requestConnection(req, context))
+        this.rpcCommunicator.registerRpcNotification(WebrtcConnectionRequest, 'requestConnection',
+            (req: WebrtcConnectionRequest, context: ServerCallContext) => this.requestConnection(req, context))
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
@@ -140,7 +140,7 @@ export class WebrtcConnectorRpcLocal implements IWebRtcConnectorRpc {
         const remoteConnector = new WebrtcConnectorRpcRemote(
             this.ownPeerDescriptor!,
             targetPeerDescriptor,
-            toProtoRpcClient(new WebRtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new WebrtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
         )
 
         connection.on('localCandidate', (candidate: string, mid: string) => {
@@ -209,7 +209,7 @@ export class WebrtcConnectorRpcLocal implements IWebRtcConnectorRpc {
             const remoteConnector = new WebrtcConnectorRpcRemote(
                 this.ownPeerDescriptor!,
                 remotePeer,
-                toProtoRpcClient(new WebRtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new WebrtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
 
             connection.on('localCandidate', (candidate: string, mid: string) => {
@@ -305,8 +305,8 @@ export class WebrtcConnectorRpcLocal implements IWebRtcConnectorRpc {
     }
 
     // IWebRTCConnector implementation
-    // TODO should we read connectionId from WebRtcConnectionRequest (or remove the field)?
-    async requestConnection(_request: WebRtcConnectionRequest, context: ServerCallContext): Promise<Empty> {
+    // TODO should we read connectionId from WebrtcConnectionRequest (or remove the field)?
+    async requestConnection(_request: WebrtcConnectionRequest, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         this.onConnectionRequest(senderPeerDescriptor)
         return {}

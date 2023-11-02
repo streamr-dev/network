@@ -13,7 +13,7 @@ import { LockRequest } from "./DhtRpc";
 import { IceCandidate } from "./DhtRpc";
 import { RtcAnswer } from "./DhtRpc";
 import { RtcOffer } from "./DhtRpc";
-import { WebRtcConnectionRequest } from "./DhtRpc";
+import { WebrtcConnectionRequest } from "./DhtRpc";
 import { WebsocketConnectionResponse } from "./DhtRpc";
 import { WebsocketConnectionRequest } from "./DhtRpc";
 import { FindResponse } from "./DhtRpc";
@@ -102,13 +102,13 @@ export interface IWebsocketConnectorRpc<T = ServerCallContext> {
     requestConnection(request: WebsocketConnectionRequest, context: T): Promise<WebsocketConnectionResponse>;
 }
 /**
- * @generated from protobuf service dht.WebRtcConnectorRpc
+ * @generated from protobuf service dht.WebrtcConnectorRpc
  */
-export interface IWebRtcConnectorRpc<T = ServerCallContext> {
+export interface IWebrtcConnectorRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: requestConnection(dht.WebRtcConnectionRequest) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: requestConnection(dht.WebrtcConnectionRequest) returns (google.protobuf.Empty);
      */
-    requestConnection(request: WebRtcConnectionRequest, context: T): Promise<Empty>;
+    requestConnection(request: WebrtcConnectionRequest, context: T): Promise<Empty>;
     /**
      * @generated from protobuf rpc: rtcOffer(dht.RtcOffer) returns (google.protobuf.Empty);
      */

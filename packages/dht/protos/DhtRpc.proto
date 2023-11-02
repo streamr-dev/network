@@ -34,8 +34,8 @@ service WebsocketConnectorRpc {
   rpc requestConnection (WebsocketConnectionRequest) returns (WebsocketConnectionResponse);
 }
 
-service WebRtcConnectorRpc {
-  rpc requestConnection (WebRtcConnectionRequest) returns (google.protobuf.Empty);
+service WebrtcConnectorRpc {
+  rpc requestConnection (WebrtcConnectionRequest) returns (google.protobuf.Empty);
   rpc rtcOffer (RtcOffer) returns (google.protobuf.Empty);
   rpc rtcAnswer (RtcAnswer) returns (google.protobuf.Empty);
   rpc iceCandidate (IceCandidate) returns (google.protobuf.Empty);
@@ -246,7 +246,7 @@ message WebsocketConnectionResponse {
 }
 
 // WebRTC
-message WebRtcConnectionRequest {
+message WebrtcConnectionRequest {
   string connectionId = 1;
 }
 
