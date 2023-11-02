@@ -4,15 +4,14 @@ import {
     SessionIdResponse, 
     CertifiedSubdomain,
     Certificate,
-    AUTOCERTIFIER_SERVICE_ID
+    AUTOCERTIFIER_SERVICE_ID,
+    GetSessionId
 } from '@streamr/autocertifier-client'
 import { ListeningRpcCommunicator } from '../../exports'
 import { Logger, waitForEvent3 } from '@streamr/utils'
 import { ITransport } from '../../transport/ITransport' 
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-const START_TIMEOUT = 60 * 1000
 
-type GetSessionId = (request: SessionIdRequest, context: ServerCallContext) => Promise<SessionIdResponse>
+const START_TIMEOUT = 60 * 1000
 
 const defaultAutoCertifierClientFactory = (
     filePath: string,

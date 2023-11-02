@@ -14,6 +14,8 @@ interface AutoCertifierClientEvents {
     updatedSubdomain: (domain: CertifiedSubdomain) => void
 }
 
+export type GetSessionId = (request: SessionIdRequest, context: ServerCallContext) => Promise<SessionIdResponse>
+
 const logger = new Logger(module)
 
 export const AUTOCERTIFIER_SERVICE_ID = 'system/auto-certificer'
@@ -35,7 +37,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         registerRpcMethod: (
             serviceId: string,
             rpcMethodName: string,
-            method: (request: SessionIdRequest, context: ServerCallContext) => Promise<SessionIdResponse>
+            method: GetSessionId
         ) => void
     ) {
         super()

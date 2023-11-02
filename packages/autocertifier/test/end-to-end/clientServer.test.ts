@@ -17,7 +17,8 @@ import {
     AutoCertifierClient,
     createSelfSignedCertificate,
     SessionIdRequest,
-    SessionIdResponse
+    SessionIdResponse,
+    GetSessionId
 } from '@streamr/autocertifier-client'
 import { v4 } from 'uuid'
 import { Logger } from '@streamr/utils'
@@ -34,7 +35,7 @@ const createTestSubdomain = (validityMillis?: number) => {
         const fakeCerts = createSelfSignedCertificate('localhost', 1200)
         certifiedSubdomain = { 
             fqdn: 'localhost',
-            subdomain: 'fwefwafeaw',
+            subdomain: 'mock',
             token: 'token',
             certificate: {
                 cert: fakeCerts.serverCert,
@@ -45,7 +46,7 @@ const createTestSubdomain = (validityMillis?: number) => {
         const fakeCerts = createSelfSignedCertificate('localhost', 0, validityMillis)
         certifiedSubdomain = { 
             fqdn: 'localhost',
-            subdomain: 'fwefwafeaw',
+            subdomain: 'mock',
             token: 'token',
             certificate: {
                 cert: fakeCerts.serverCert,
@@ -80,8 +81,15 @@ describe('clientServer', () => {
             fs.unlinkSync(subdomainPath)
         }
         createTestSubdomain()
-        server = new RestServer('localhost', '127.0.0.1', restServerPort, dir + '/restServerCaCert.pem', dir + '/restServerCaKey.pem',
-            dir + '/restServerCert.pem', dir + '/restServerKey.pem', {
+        server = new RestServer(
+            'localhost',
+            '127.0.0.1',
+            restServerPort,
+            dir + '/restServerCaCert.pem',
+            dir + '/restServerCaKey.pem',
+            dir + '/restServerCert.pem',
+            dir + '/restServerKey.pem',
+            {
                 async createSession(): Promise<Session> {
                     return { sessionId: v4() }
                 },
@@ -96,12 +104,10 @@ describe('clientServer', () => {
                     await challenger.testStreamrChallenge(ip, streamrWebsocketPort, sessionId)
                     return certifiedSubdomain
                 },
-                async createNewCertificateForSubdomain(_subdomain: string, _ipAddress: string,
-                    _port: string, _streamrWebSocketPort: string, _token: string): Promise<CertifiedSubdomain> {
-
+                async createNewCertificateForSubdomain(): Promise<CertifiedSubdomain> {
                     return certifiedSubdomain
                 },
-                async updateSubdomainIpAndPort(_subdomain: string, _ip: string, _port: string, _streamrWebsocketPort: string, _token: string) {
+                async updateSubdomainIpAndPort() {
                     // do nothing
                 }
             })
@@ -146,7 +152,7 @@ describe('clientServer', () => {
             subdomainPath,
             streamrWebSocketPort,
             autoCertifierUrl,
-            (serviceId, rpcMethodName, method) => {
+            (serviceId: string, rpcMethodName: string, method: GetSessionId) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
                 clientRpcCommunicator.registerRpcMethod(
                     SessionIdRequest,
@@ -156,7 +162,7 @@ describe('clientServer', () => {
                 )
             })
 
-        client.on('updatedSubdomain', (subdomain) => {
+        client.on('updatedSubdomain', (subdomain: CertifiedSubdomain) => {
             logger.info(JSON.stringify(subdomain))
             expect(subdomain).toEqual(certifiedSubdomain)
             done()
@@ -173,7 +179,7 @@ describe('clientServer', () => {
             subdomainPath,
             streamrWebSocketPort,
             autoCertifierUrl,
-            (serviceId, rpcMethodName, method) => {
+            (serviceId: string, rpcMethodName: string, method: GetSessionId) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
                 clientRpcCommunicator.registerRpcMethod(
                     SessionIdRequest,
