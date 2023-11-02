@@ -69,6 +69,7 @@ export class AutoCertifierClientFacade {
                 this.rpcCommunicator,
                 config.wsServerPort
             )
+        console.log(config.subdomainFilePath, config.url)
     }
 
     async start(): Promise<void> {
