@@ -31,7 +31,7 @@ Currently you can practice your Operator deployment in the Mumbai pre-testnet. G
 
 The wallet/account that you use to make the Operator creation transaction will be known as the **Owner wallet**. It's the wallet you'll use to control your Operator business. The owner wallet controls the Operator and is able to stake and unstake on Sponsorships, update the Operator settings, and withdraw the owner's share of the Operator's stake and earnings. This should be a very secure wallet as it controls the whole Operator. A hardware wallet (Ledger, etc) is recommended, although a software wallet (Metamask) will work too - just be sure to keep the account private and never share your private key or seed phrase with anyone.
 
-You'll need to decide on your [owner's cut](../streamr-network/network-roles/operators#owners-cut) at the time of deployment, but you'll be able to change this value later on, as long as you haven't already staked your Operator on Sponsorships.
+You'll need to decide on your [owner's cut](../streamr-network/network-roles/operators#owners-cut) at the time of deployment. You'll be able to change this value later on, as long as you unstake from all Sponsorships first.
 
 ### Step 2: Run a Streamr node
 Spin up a Streamr node using this [guide](./how-to-run-streamr-node.md). 
