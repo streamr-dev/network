@@ -166,7 +166,6 @@ export interface NetworkPeerDescriptor {
     id: string
     type?: NetworkNodeType
     websocket?: ConnectivityMethod
-    openInternet?: boolean
     region?: number
 }
 

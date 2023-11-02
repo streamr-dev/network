@@ -131,7 +131,6 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
     public async checkConnectivity(): Promise<ConnectivityResponse> {
         // TODO: this could throw if the server is not running
         const noServerConnectivityResponse: ConnectivityResponse = {
-            openInternet: false,
             host: '127.0.0.1',
             natType: NatType.UNKNOWN
         }
@@ -142,13 +141,11 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
             const entryPoint = sample(this.entrypoints)!
             try {
                 if (!this.websocketServer) {
-                    // If no websocket server, return openInternet: false
                     return noServerConnectivityResponse
                 } else {
                     if (!this.entrypoints || this.entrypoints.length < 1) {
                         // return connectivity info given in config
                         const preconfiguredConnectivityResponse: ConnectivityResponse = {
-                            openInternet: true,
                             host: this.host!,
                             natType: NatType.OPEN_INTERNET,
                             websocket: { host: this.host!, port: this.selectedPort!, tls: this.tlsCertificate !== undefined }

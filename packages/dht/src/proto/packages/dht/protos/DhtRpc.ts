@@ -246,11 +246,7 @@ export interface PeerDescriptor {
      */
     websocket?: ConnectivityMethod;
     /**
-     * @generated from protobuf field: optional bool openInternet = 6;
-     */
-    openInternet?: boolean;
-    /**
-     * @generated from protobuf field: optional uint32 region = 7;
+     * @generated from protobuf field: optional uint32 region = 6;
      */
     region?: number;
 }
@@ -341,19 +337,15 @@ export interface ConnectivityRequest {
  */
 export interface ConnectivityResponse {
     /**
-     * @generated from protobuf field: bool open_internet = 1;
-     */
-    openInternet: boolean;
-    /**
-     * @generated from protobuf field: string host = 2;
+     * @generated from protobuf field: string host = 1;
      */
     host: string;
     /**
-     * @generated from protobuf field: string natType = 3;
+     * @generated from protobuf field: string natType = 2;
      */
     natType: string;
     /**
-     * @generated from protobuf field: dht.ConnectivityMethod websocket = 4;
+     * @generated from protobuf field: dht.ConnectivityMethod websocket = 3;
      */
     websocket?: ConnectivityMethod;
 }
@@ -905,8 +897,7 @@ class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
             { no: 3, name: "udp", kind: "message", T: () => ConnectivityMethod },
             { no: 4, name: "tcp", kind: "message", T: () => ConnectivityMethod },
             { no: 5, name: "websocket", kind: "message", T: () => ConnectivityMethod },
-            { no: 6, name: "openInternet", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
-            { no: 7, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ }
+            { no: 6, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
 }
@@ -977,10 +968,9 @@ export const ConnectivityRequest = new ConnectivityRequest$Type();
 class ConnectivityResponse$Type extends MessageType$<ConnectivityResponse> {
     constructor() {
         super("dht.ConnectivityResponse", [
-            { no: 1, name: "open_internet", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "host", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "websocket", kind: "message", T: () => ConnectivityMethod }
+            { no: 1, name: "host", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "websocket", kind: "message", T: () => ConnectivityMethod }
         ]);
     }
 }
