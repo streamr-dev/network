@@ -26,19 +26,6 @@ export class DnsServer {
         this.db = db
     }
 
-    public async createSubdomain(subdomain: string, ipAddress: string, port: string, token: string): Promise<void> {
-        await this.db.createSubdomain(subdomain, ipAddress, port, token)
-    }
-
-    public async updateSubdomainIpAndPort(subdomain: string, ipAddress: string, port: string, token: string): Promise<void> {
-        await this.db.updateSubdomainIpAndPort(subdomain, ipAddress, port, token)
-    }
-
-    public async updateSubdomainAcmeChallenge(fqdn: string, acmeChallenge: string): Promise<void> {
-        const parts = fqdn.split('.')
-        await this.db.updateSubdomainAcmeChallenge(parts[0], acmeChallenge)
-    }
-
     private handleSOAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
         response: DnsResponse): Promise<void> => {
         // @ts-ignore private field

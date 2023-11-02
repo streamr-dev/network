@@ -14,9 +14,9 @@ beforeAll(async () => {
     dnsServer = new DnsServer('example.com', 'ns1', '9876', ownIp, db)
     await dnsServer.start()
 
-    await dnsServer.createSubdomain('www', '1.2.3.4', '80', 'wfewfweafe')
-    await dnsServer.createSubdomain('mail', '5.6.7.8', '25', 'geegreaegrge')
-    await dnsServer.updateSubdomainAcmeChallenge('www', 'abc123')
+    await db.createSubdomain('www', '1.2.3.4', '80', 'wfewfweafe')
+    await db.createSubdomain('mail', '5.6.7.8', '25', 'geegreaegrge')
+    await db.updateSubdomainAcmeChallenge('www', 'abc123')
 
 })
 
