@@ -104,7 +104,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
                 connectivityResponse.websocket = undefined
                 ownPeerDescriptor = this.config.createOwnPeerDescriptor(connectivityResponse)
                 this.ownPeerDescriptor = ownPeerDescriptor
-                logger.warn('Failed to autocertify, disabling websocket server connectivity')
+                logger.warn('Failed to autocertify, disabling websocket server connectivity: ' + err?.message, { err })
             }
         }
         this.webrtcConnector.setOwnPeerDescriptor(ownPeerDescriptor)
