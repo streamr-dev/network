@@ -130,8 +130,8 @@ const config = {
                         title: "DOCS",
                         items: [
                             {
-                                label: "Quickstart",
-                                to: "quickstart/nodejs",
+                                label: "Quickstart guides",
+                                to: "quickstart-guides/nodejs",
                             },
                             {
                                 label: "Usage",
@@ -142,8 +142,8 @@ const config = {
                                 to: "streamr-network",
                             },
                             {
-                                label: "Node runners",
-                                to: "node-runners/run-a-node",
+                                label: "Node operators",
+                                to: "streamr-network/network-roles/operators",
                             },
                             {
                                 label: "Help",

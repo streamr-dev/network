@@ -1,8 +1,8 @@
 {
-  "label": "👾 Node runners",
+  "label": "Network roles",
   "position": 3,
   "link": {
-    "slug": "/node-runners",
+    "slug": "/network-roles",
     "type": "generated-index"
   }
 }
