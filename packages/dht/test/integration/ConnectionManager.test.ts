@@ -75,7 +75,6 @@ describe('ConnectionManager', () => {
 
         await connectionManager.start()
         expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
-        expect(createLocalPeerDescriptor.mock.calls[0][0].openInternet).toEqual(true)
 
         await connectionManager.stop()
     })
@@ -104,7 +103,6 @@ describe('ConnectionManager', () => {
 
         await connectionManager1.start()
         expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
-        expect(createLocalPeerDescriptor.mock.calls[0][0].openInternet).toEqual(true)
 
         const connectionManager2 = createConnectionManager({
             transport: mockConnectorTransport2,
@@ -116,7 +114,6 @@ describe('ConnectionManager', () => {
 
         await connectionManager2.start()
         expect(createLocalPeerDescriptor.mock.calls[1][0].host).toEqual('127.0.0.1')
-        expect(createLocalPeerDescriptor.mock.calls[1][0].openInternet).toEqual(true)
 
         await connectionManager1.stop()
         await connectionManager2.stop()
@@ -131,7 +128,6 @@ describe('ConnectionManager', () => {
 
         await connectionManager1.start()
         expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
-        expect(createLocalPeerDescriptor.mock.calls[0][0].openInternet).toEqual(true)
 
         const connectionManager2 = createConnectionManager({
             transport: mockConnectorTransport2,
@@ -143,7 +139,6 @@ describe('ConnectionManager', () => {
 
         await connectionManager2.start()
         expect(createLocalPeerDescriptor.mock.calls[1][0].host).toEqual('127.0.0.1')
-        expect(createLocalPeerDescriptor.mock.calls[1][0].openInternet).toEqual(true)
 
         const msg: Message = {
             serviceId,
@@ -192,7 +187,6 @@ describe('ConnectionManager', () => {
 
         await connectionManager1.start()
         expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
-        expect(createLocalPeerDescriptor.mock.calls[0][0].openInternet).toEqual(true)
 
         const connectionManager2 = createConnectionManager({
             transport: mockConnectorTransport2,
@@ -316,7 +310,6 @@ describe('ConnectionManager', () => {
 
         await connectionManager1.start()
         expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
-        expect(createLocalPeerDescriptor.mock.calls[0][0].openInternet).toEqual(true)
         
         const peerDescriptor = connectionManager1.getPeerDescriptor()
         peerDescriptor.kademliaId = new Uint8Array([12, 12, 12, 12])

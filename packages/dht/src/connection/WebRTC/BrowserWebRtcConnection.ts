@@ -3,7 +3,7 @@ import { WebRtcConnectionEvents, IWebRtcConnection, RtcDescription } from './IWe
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
 import { Logger } from '@streamr/utils'
 import { DisconnectionType } from '../../transport/ITransport'
-import { IceServer } from './WebRtcConnector'
+import { IceServer } from './WebRtcConnectorRpcLocal'
 
 const logger = new Logger(module)
 
