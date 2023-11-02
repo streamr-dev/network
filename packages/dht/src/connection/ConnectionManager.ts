@@ -31,7 +31,7 @@ import { ConnectionLockHandler } from './ConnectionLockHandler'
 import { ConnectorFacade } from './ConnectorFacade'
 import { ManagedConnection, Events as ManagedConnectionEvents } from './ManagedConnection'
 import { ConnectionLockRpcRemote } from './ConnectionLockRpcRemote'
-import { WEB_RTC_CLEANUP } from './webrtc/NodeWebRtcConnection'
+import { WEB_RTC_CLEANUP } from './webrtc/NodeWebrtcConnection'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 
@@ -224,7 +224,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.duplicateMessageDetector.clear()
         this.locks.clear()
         this.removeAllListeners()
-        // TODO would it make sense to move this call to WebRtcConnector#stop()?
+        // TODO would it make sense to move this call to WebrtcConnector#stop()?
         // - but note that we should call this only after connections have been closed
         //   (i.e the this.gracefullyDisconnectAsync() calls above)
         WEB_RTC_CLEANUP.cleanUp()

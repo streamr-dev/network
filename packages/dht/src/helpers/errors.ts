@@ -39,7 +39,7 @@ export class CouldNotStart extends Err { constructor(message?: string, originalE
 export class CouldNotStop extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.COULD_NOT_STOP, message, originalError) } }
 export class CannotConnectToSelf extends Err { constructor(message?: string, originalError?: Error | string) {super(ErrorCode.CANNOT_CONNECT_TO_SELF, message, originalError) } }
 export class NotImplemented extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.NOT_IMPLEMENTED, message, originalError) } }
-export class IllegalRTCPeerConnectionState extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.ILLEGAL_RTC_PEER_CONNECTION_STATE, message, originalError) } }
+export class IllegalRtcPeerConnectionState extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.ILLEGAL_RTC_PEER_CONNECTION_STATE, message, originalError) } }
 export class IllegalArguments extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.ILLEGAL_ARGUMENTS, message, originalError) } }
 export class ConnectivityResponseTimeout extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT, message, originalError) } }
 export class ConnectionLocker extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTION_LOCKER, message, originalError) } }

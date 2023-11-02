@@ -8,7 +8,7 @@ import { PortRange, TlsCertificate } from './ConnectionManager'
 import { ManagedConnection } from './ManagedConnection'
 import { Simulator } from './simulator/Simulator'
 import { SimulatorConnector } from './simulator/SimulatorConnector'
-import { IceServer, WebRtcConnectorRpcLocal } from './webrtc/WebRtcConnectorRpcLocal'
+import { IceServer, WebrtcConnectorRpcLocal } from './webrtc/WebrtcConnectorRpcLocal'
 import { WebsocketConnectorRpcLocal } from './websocket/WebsocketConnectorRpcLocal'
 
 export interface ConnectorFacade {
@@ -45,7 +45,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     private readonly config: DefaultConnectorFacadeConfig
     private ownPeerDescriptor?: PeerDescriptor
     private webSocketConnector?: WebsocketConnectorRpcLocal
-    private webrtcConnector?: WebRtcConnectorRpcLocal
+    private webrtcConnector?: WebrtcConnectorRpcLocal
 
     constructor(config: DefaultConnectorFacadeConfig) {
         this.config = config
@@ -58,7 +58,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         logger.trace(`Creating WebSocketConnector`)
         this.webSocketConnector = new WebsocketConnectorRpcLocal({
             transport: this.config.transport!,
-            // TODO should we use canConnect also for WebRtcConnector? (NET-1142)
+            // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
             canConnect: (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),
             onIncomingConnection,
             portRange: this.config.websocketPortRange,
@@ -68,7 +68,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             maxMessageSize: this.config.maxMessageSize
         })
         logger.trace(`Creating WebRTCConnector`)
-        this.webrtcConnector = new WebRtcConnectorRpcLocal({
+        this.webrtcConnector = new WebrtcConnectorRpcLocal({
             transport: this.config.transport!,
             iceServers: this.config.iceServers,
             allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,

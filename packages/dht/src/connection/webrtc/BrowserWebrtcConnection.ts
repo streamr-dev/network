@@ -1,9 +1,9 @@
 import EventEmitter from 'eventemitter3'
-import { WebRtcConnectionEvents, IWebRtcConnection, RtcDescription } from './IWebRtcConnection'
+import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from './IWebrtcConnection'
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
 import { Logger } from '@streamr/utils'
 import { DisconnectionType } from '../../transport/ITransport'
-import { IceServer } from './WebRtcConnectorRpcLocal'
+import { IceServer } from './WebrtcConnectorRpcLocal'
 
 const logger = new Logger(module)
 
@@ -13,13 +13,13 @@ export const WEB_RTC_CLEANUP = new class {
     }
 }
 
-type Events = WebRtcConnectionEvents & ConnectionEvents
+type Events = WebrtcConnectionEvents & ConnectionEvents
 
 interface Params {
     iceServers?: IceServer[]
 }
 
-export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRtcConnection, IConnection {
+export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrtcConnection, IConnection {
 
     public readonly connectionId: ConnectionID
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC

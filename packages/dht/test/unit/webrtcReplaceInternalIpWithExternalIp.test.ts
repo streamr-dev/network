@@ -1,4 +1,4 @@
-import { replaceInternalIpWithExternalIp } from '../../src/connection/webrtc/WebRtcConnectorRpcLocal'
+import { replaceInternalIpWithExternalIp } from '../../src/connection/webrtc/WebrtcConnectorRpcLocal'
 
 describe('replaceIpIfCandidateTypeIsHost', () => {
 
