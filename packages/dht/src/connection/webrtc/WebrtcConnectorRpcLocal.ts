@@ -304,7 +304,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         return myId.hasSmallerHashThan(theirId)
     }
 
-    // IWebRTCConnector implementation
+    // IWebRtcConnector implementation
     // TODO should we read connectionId from WebrtcConnectionRequest (or remove the field)?
     async requestConnection(_request: WebrtcConnectionRequest, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!

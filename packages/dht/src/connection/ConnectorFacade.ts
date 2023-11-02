@@ -67,7 +67,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             tlsCertificate: this.config.tlsCertificate,
             maxMessageSize: this.config.maxMessageSize
         })
-        logger.trace(`Creating WebRTCConnector`)
+        logger.trace(`Creating WebRtcConnectorRpcLocal`)
         this.webrtcConnector = new WebrtcConnectorRpcLocal({
             transport: this.config.transport!,
             iceServers: this.config.iceServers,
