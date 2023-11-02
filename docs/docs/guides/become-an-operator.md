@@ -63,7 +63,7 @@ You’ll need a bit of `MATIC` (the gas token of Polygon) in your node’s walle
 Now, on your Operator page in the Streamr Hub UI, fund your Operator with DATA tokens (on Mumbai, TEST tokens). There's no minimum amount, but note that the more you fund, the more you can accept delegations. The owner (you) must have at least a 5% stake in the Operator.
 
 ### Step 6: Join sponsorships
-You’re now in a position to join Sponsorships. Go back to the Hub, go to Network -> Sponsorships and find a Sponsorship you want your Operator to start working on. Click the "Join as Operator" button and select your stake. Note there is a minimum stake of 5000 `DATA` tokens.
+All the checkmarks in the Operator status section on your Operator page should now be green, and you’re ready to join Sponsorships! In the Hub, go to Network -> Sponsorships and find a Sponsorship you want your Operator to start working on. Click the "Join as Operator" button and select your stake. Note there is a minimum stake of 5000 `DATA` tokens for each Sponsorship that you join.
 
 ## The Mumbai test environment
 You can configure your node to connect with the Mumbai testnet (not to be confused with the Streamr incentivized testnets that will run on Polygon with real tokens). The Mumbai environment is handy for testing Operator..operations with fake tokens.
