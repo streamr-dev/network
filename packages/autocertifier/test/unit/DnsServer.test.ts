@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import { DnsServer } from '../../src/DnsServer'
+import { DnsServer, NXDOMAIN } from '../../src/DnsServer'
 import { Database } from '../../src/Database'
 import { MockProxy, mock } from 'jest-mock-extended'
+import { FORMERR } from '../../src/DnsServer'
 
 describe('DnsServer', () => {
     let dnsServer: DnsServer
     let db: MockProxy<Database>
-
     beforeEach(() => {
         db = mock<Database>()
         dnsServer = new DnsServer('example.com', 'ns1', '9876', '127.0.0.1', db)
@@ -61,12 +61,12 @@ describe('DnsServer', () => {
             // @ts-ignore private field
             await dnsServer.handleTextQuery('_acme-challenge.invalid.com', send, response)
 
-            expect(response.header.rcode).toBe(3)
+            expect(response.header.rcode).toBe(FORMERR)
             expect(response.answers).toHaveLength(0)
         })
     })
 
-    describe('handleNormalQuery', () => {
+    describe('handleAQuery', () => {
         it('should return IP address for valid subdomain', async () => {
             const response = {
                 header: {},
@@ -80,7 +80,7 @@ describe('DnsServer', () => {
             db.getSubdomain.mockResolvedValue(subdomainRecord)
 
             // @ts-ignore private field
-            await dnsServer.handleNormalQuery('test.example.com', send, response)
+            await dnsServer.handleAQuery('test.example.com', send, response)
 
             expect(response.answers).toHaveLength(1)
             expect(response.answers[0].type).toBe(1)
@@ -96,9 +96,9 @@ describe('DnsServer', () => {
             db.getSubdomain.mockResolvedValue(undefined)
 
             // @ts-ignore private field
-            await dnsServer.handleNormalQuery('invalid.com', send, response)
+            await dnsServer.handleAQuery('invalid.com', send, response)
 
-            expect(response.header.rcode).toBe(3)
+            expect(response.header.rcode).toBe(NXDOMAIN)
             expect(response.answers).toHaveLength(0)
         })
     })
@@ -182,7 +182,7 @@ describe('DnsServer', () => {
             await dnsServer.handleQuery(request, send, null)
 
             expect(send).toHaveBeenCalled()
-            expect(send.mock.calls[0][0].header.rcode).toBe(3)
+            expect(send.mock.calls[0][0].header.rcode).toBe(NXDOMAIN)
             expect(send.mock.calls[0][0].answers).toHaveLength(0)
         })
     })

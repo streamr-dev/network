@@ -8,9 +8,9 @@ const logger = new Logger(module)
 
 // https://help.dnsfilter.com/hc/en-us/articles/4408415850003-DNS-Return-Codes
 // DNS Query Format Error
-const FORMERR = 1
+export const FORMERR = 1
 // Domain name not exist
-const NXDOMAIN = 3
+export const NXDOMAIN = 3
 
 // TODO: there is appears to be a general problem with typing in this class. Seems that the DNS2 library does
 // not provide proper typing for many fields and response types. Alternativel we should just simply send all
@@ -175,7 +175,7 @@ export class DnsServer {
             if (!subdomainRecord) {
                 logger.info('handleNormalQuery() not found: ' + name)
                 // @ts-ignore private field
-                response.header.rcode = 3
+                response.header.rcode = NXDOMAIN
                 return send(response)
             }
             retIp = subdomainRecord.ip
