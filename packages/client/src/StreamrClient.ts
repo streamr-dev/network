@@ -573,6 +573,8 @@ export class StreamrClient {
 
     async inspect(node: NetworkPeerDescriptor, streamDefinition: StreamDefinition): Promise<boolean> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        // TODO: right now if the node is not joined to the stream partition, the below will return false instantly.
+        // It would be better if it actually joined the stream partition for us (and maybe left when we are done?).
         return this.node.inspect(node, streamPartId)
     }
 
