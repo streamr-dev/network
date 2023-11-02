@@ -1,10 +1,16 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import { DnsHandler, DnsResponse, Packet, createServer } from 'dns2'
+import { DnsHandler, DnsRequest, DnsResponse, Packet, createServer } from 'dns2'
 import { Database, Subdomain } from './Database'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
+
+// https://help.dnsfilter.com/hc/en-us/articles/4408415850003-DNS-Return-Codes
+// DNS Query Format Error
+const FORMERR = 1
+// Domain name not exist
+const NXDOMAIN = 3
 
 // TODO: there is appears to be a general problem with typing in this class. Seems that the DNS2 library does
 // not provide proper typing for many fields and response types. Alternativel we should just simply send all
@@ -26,8 +32,11 @@ export class DnsServer {
         this.db = db
     }
 
-    private handleSOAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
-        response: DnsResponse): Promise<void> => {
+    private handleSOAQuery = async (
+        mixedCaseName: string,
+        send: (response: DnsResponse) => void,
+        response: DnsResponse
+    ): Promise<void> => {
         // @ts-ignore private field
         response.answers.push({
             name: mixedCaseName,
@@ -45,8 +54,11 @@ export class DnsServer {
         send(response)
     }
 
-    private handleNSQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
-        response: DnsResponse): Promise<void> => {
+    private handleNSQuery = async (
+        mixedCaseName: string,
+        send: (response: DnsResponse) => void,
+        response: DnsResponse
+    ): Promise<void> => {
         // @ts-ignore private field
         response.answers.push({
             name: mixedCaseName,
@@ -58,8 +70,11 @@ export class DnsServer {
         send(response)
     }
 
-    private handleTextQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
-        response: DnsResponse): Promise<void> => {
+    private handleTextQuery = async (
+        mixedCaseName: string,
+        send: (response: DnsResponse) => void,
+        response: DnsResponse
+    ): Promise<void> => {
 
         const name = mixedCaseName.toLowerCase()
         logger.info('handleTextQuery() ' + name)
@@ -68,7 +83,7 @@ export class DnsServer {
 
         if (parts.length < 4 || parts[0] !== '_acme-challenge') {
             // @ts-ignore private field
-            response.header.rcode = 3
+            response.header.rcode = FORMERR
             return send(response)
         }
 
@@ -83,7 +98,7 @@ export class DnsServer {
 
         if (!subdomainRecord) {
             // @ts-ignore private field
-            response.header.rcode = 3
+            response.header.rcode = NXDOMAIN
             return send(response)
         }
 
@@ -108,21 +123,30 @@ export class DnsServer {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private handleCNAMEQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
-        response: DnsResponse): Promise<void> => {
+    private handleCNAMEQuery = async (
+        mixedCaseName: string,
+        send: (response: DnsResponse) => void,
+        response: DnsResponse
+    ): Promise<void> => {
         logger.info('handleCNAMEQuery() ' + mixedCaseName)
         send(response)
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private handleCAAQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
-        response: DnsResponse): Promise<void> => {
+    private handleCAAQuery = async (
+        mixedCaseName: string,
+        send: (response: DnsResponse) => void,
+        response: DnsResponse
+    ): Promise<void> => {
         logger.info('handleCAAQuery() ' + mixedCaseName)
         send(response)
     }
 
-    private handleNormalQuery = async (mixedCaseName: string, send: (response: DnsResponse) => void,
-        response: DnsResponse): Promise<void> => {
+    private handleAQuery = async (
+        mixedCaseName: string,
+        send: (response: DnsResponse) => void,
+        response: DnsResponse
+    ): Promise<void> => {
 
         const name = mixedCaseName.toLowerCase()
         logger.info('handleNormalQuery() ' + name)
@@ -131,7 +155,7 @@ export class DnsServer {
 
         if (parts.length < 3) {
             // @ts-ignore private field
-            response.header.rcode = 3
+            response.header.rcode = NXDOMAIN
             return send(response)
         }
 
@@ -167,7 +191,7 @@ export class DnsServer {
         send(response)
     }
 
-    private handleQuery: DnsHandler = async (request, send, _rinfo): Promise<void> => {
+    private handleQuery: DnsHandler = async (request: DnsRequest, send: (response: DnsResponse) => void): Promise<void> => {
 
         const response = Packet.createResponseFromRequest(request)
         // @ts-ignore private field
@@ -176,7 +200,7 @@ export class DnsServer {
         if (question === undefined || question.name === undefined) {
             logger.debug('filtering invalid question')
             // @ts-ignore private field
-            response.header.rcode = 3
+            response.header.rcode = FORMERR
             return send(response)
         }
         const mixedCaseName = question.name
@@ -185,7 +209,7 @@ export class DnsServer {
         if (!name.endsWith(this.domainName)) {
             logger.debug('invalid domain name in query: ' + name)
             // @ts-ignore private field
-            response.header.rcode = 3
+            response.header.rcode = NXDOMAIN
             return send(response)
         }
 
@@ -214,8 +238,12 @@ export class DnsServer {
             // @ts-ignore private field
         } else if (question.type === Packet.TYPE.CAA) {
             return this.handleCAAQuery(mixedCaseName, send, response)
+            // @ts-ignore private field
+        } else if (question.type === Packet.TYPE.A) {
+            return this.handleAQuery(mixedCaseName, send, response)
         } else {
-            return this.handleNormalQuery(mixedCaseName, send, response)
+            // @ts-ignore private field
+            logger.warn(`Unsupported query type ${question.type}`)
         }
     }
 
