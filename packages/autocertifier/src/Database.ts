@@ -149,6 +149,7 @@ export class Database {
 }
 
 export interface Subdomain {
+    // TODO: could be called just name / label?
     subdomainName: string
     ip: string
     port: string
