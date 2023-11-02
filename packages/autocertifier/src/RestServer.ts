@@ -144,7 +144,6 @@ export class RestServer {
             return
         }
         const streamrWebSocketPort = body.streamrWebSocketPort + ''
-        const streamrWebSocketCaCert: string | undefined = body.streamrWebSocketCaCert
         const ipAndPort = extractIpAndPort(req)
         if (!ipAndPort) {
             const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
@@ -154,7 +153,7 @@ export class RestServer {
         const sessionId = body.sessionId
         try {
             const certifiedSubdomain = await this.engine.createNewSubdomainAndCertificate(
-                ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId, streamrWebSocketCaCert
+                ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId
             )
             sendResponse(res, certifiedSubdomain)
         } catch (err) {

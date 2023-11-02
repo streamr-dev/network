@@ -38,7 +38,7 @@ describe('RestServer', () => {
                     return { sessionId: sessionId }
                 },
                 async createNewSubdomainAndCertificate(_ip: string, _port: string, _streamrWebsocketPort: string,
-                    _streamrWebSocketCaCert: string | undefined, _sessionId: string): Promise<CertifiedSubdomain> {
+                    _sessionId: string): Promise<CertifiedSubdomain> {
                     return certifiedSubdomain
                 },
                 async createNewCertificateForSubdomain(_subdomain: string, _ipAddress: string,
