@@ -44,7 +44,7 @@ While there are no strict hardware recommendations, 8GB of RAM, 3-4 virtual core
 
 :::caution Important
 - A public IP is a must
-- Nodes need to have a WebSocket port accessible from the internet. The default WebSocket port is (tcp) 32200.
+-  A TCP port for WebSocket connectivity must be open. The port is configurable and the default is 32200.
 :::
 
 ### Step 3: Pair your node with your Operator contract
