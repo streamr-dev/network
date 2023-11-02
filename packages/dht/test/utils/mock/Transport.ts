@@ -10,7 +10,7 @@ export class MockTransport extends EventEmitter<TransportEvents> implements ITra
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getPeerDescriptor(): PeerDescriptor {
+    getLocalPeerDescriptor(): PeerDescriptor {
         return PeerDescriptor.create()
     }
 

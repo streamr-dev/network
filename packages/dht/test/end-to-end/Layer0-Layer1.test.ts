@@ -81,9 +81,9 @@ describe('Layer0-Layer1', () => {
         expect(stream2Node1.getClosestContacts()).toHaveLength(1)
         expect(stream2Node2.getClosestContacts()).toHaveLength(1)
 
-        expect(areEqualPeerDescriptors(stream1Node1.getClosestContacts()[0], node1.getPeerDescriptor())).toBe(true)
+        expect(areEqualPeerDescriptors(stream1Node1.getClosestContacts()[0], node1.getLocalPeerDescriptor())).toBe(true)
         expect(areEqualPeerDescriptors(stream1Node2.getClosestContacts()[0], epPeerDescriptor)).toBe(true)
-        expect(areEqualPeerDescriptors(stream2Node1.getClosestContacts()[0], node2.getPeerDescriptor())).toBe(true)
+        expect(areEqualPeerDescriptors(stream2Node1.getClosestContacts()[0], node2.getLocalPeerDescriptor())).toBe(true)
         expect(areEqualPeerDescriptors(stream2Node2.getClosestContacts()[0], epPeerDescriptor)).toBe(true)
     })
 })

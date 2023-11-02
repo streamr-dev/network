@@ -182,7 +182,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         // If transport is given, do not create a ConnectionManager
         if (this.config.transport) {
             this.transport = this.config.transport
-            this.localPeerDescriptor = this.transport.getPeerDescriptor()
+            this.localPeerDescriptor = this.transport.getLocalPeerDescriptor()
             if (this.config.transport instanceof ConnectionManager) {
                 this.connectionManager = this.config.transport
             }
@@ -633,7 +633,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.transport!
     }
 
-    public getPeerDescriptor(): PeerDescriptor {
+    public getLocalPeerDescriptor(): PeerDescriptor {
         return this.localPeerDescriptor!
     }
 

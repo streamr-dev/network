@@ -133,7 +133,7 @@ describe('ConnectionManager', () => {
             transport: mockConnectorTransport2,
             websocketPortRange: { min: 9996, max: 9996 },
             entryPoints: [
-                connectionManager1.getPeerDescriptor()
+                connectionManager1.getLocalPeerDescriptor()
             ]
         })
 
@@ -169,7 +169,7 @@ describe('ConnectionManager', () => {
             })
         })
 
-        msg.targetDescriptor = connectionManager2.getPeerDescriptor()
+        msg.targetDescriptor = connectionManager2.getLocalPeerDescriptor()
         connectionManager1.send(msg)
 
         await Promise.all([promise, connectedPromise1, connectedPromise2])
@@ -192,7 +192,7 @@ describe('ConnectionManager', () => {
             transport: mockConnectorTransport2,
             websocketPortRange: { min: 9999, max: 9999 },
             entryPoints: [
-                connectionManager1.getPeerDescriptor()
+                connectionManager1.getLocalPeerDescriptor()
             ]
         })
 
@@ -228,13 +228,13 @@ describe('ConnectionManager', () => {
                 resolve()
             })
         })
-        msg.targetDescriptor = connectionManager2.getPeerDescriptor()
+        msg.targetDescriptor = connectionManager2.getLocalPeerDescriptor()
         connectionManager1.send(msg)
 
         await promise
 
         // @ts-expect-error private field
-        connectionManager1.closeConnection(connectionManager2.getPeerDescriptor())
+        connectionManager1.closeConnection(connectionManager2.getLocalPeerDescriptor())
 
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
 
@@ -311,7 +311,7 @@ describe('ConnectionManager', () => {
         await connectionManager1.start()
         expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
         
-        const peerDescriptor = connectionManager1.getPeerDescriptor()
+        const peerDescriptor = connectionManager1.getLocalPeerDescriptor()
         peerDescriptor.kademliaId = new Uint8Array([12, 12, 12, 12])
         const msg: Message = {
             serviceId,

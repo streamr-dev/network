@@ -290,12 +290,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return this.connections.get(peerIdKey)
     }
 
-    // TODO remove this method or getLocalPeerDescriptor
-    public getPeerDescriptor(): PeerDescriptor {
-        return this.getLocalPeerDescriptor()
-    }
-
-    private getLocalPeerDescriptor(): PeerDescriptor {
+    public getLocalPeerDescriptor(): PeerDescriptor {
         return this.connectorFacade.getLocalPeerDescriptor()!
     }
 
