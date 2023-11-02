@@ -135,9 +135,9 @@ export class RouterRpcClient implements IRouterRpcClient, ServiceInfo {
  */
 export interface IFindRpcClient {
     /**
-     * @generated from protobuf rpc: findRecursively(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
+     * @generated from protobuf rpc: find(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
-    findRecursively(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
+    find(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
 }
 /**
  * @generated from protobuf service dht.FindRpc
@@ -149,9 +149,9 @@ export class FindRpcClient implements IFindRpcClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: findRecursively(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
+     * @generated from protobuf rpc: find(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
-    findRecursively(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
+    find(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
         return stackIntercept<RouteMessageWrapper, RouteMessageAck>("unary", this._transport, method, opt, input);
     }

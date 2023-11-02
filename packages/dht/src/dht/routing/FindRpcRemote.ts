@@ -9,7 +9,7 @@ const logger = new Logger(module)
 
 export class FindRpcRemote extends Remote<IFindRpcClient> {
 
-    async findRecursively(params: RouteMessageWrapper): Promise<boolean> {
+    async find(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
             destinationPeer: params.destinationPeer,
             sourcePeer: params.sourcePeer,
@@ -23,7 +23,7 @@ export class FindRpcRemote extends Remote<IFindRpcClient> {
             timeout: 10000
         })
         try {
-            const ack = await this.getClient().findRecursively(message, options)
+            const ack = await this.getClient().find(message, options)
             if (ack.error.length > 0) {
                 logger.debug('Next hop responded with error ' + ack.error)
                 return false

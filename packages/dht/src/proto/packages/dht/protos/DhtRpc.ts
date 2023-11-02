@@ -1218,7 +1218,7 @@ export const RouterRpc = new ServiceType("dht.RouterRpc", [
  * @generated ServiceType for protobuf service dht.FindRpc
  */
 export const FindRpc = new ServiceType("dht.FindRpc", [
-    { name: "findRecursively", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
+    { name: "find", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.StoreRpc
