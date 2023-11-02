@@ -29,33 +29,33 @@ const config = {
         locales: ["en"],
     },
 
-    // plugins: [
-    //     [
-    //         "docusaurus-plugin-typedoc",
+    plugins: [
+        [
+            "docusaurus-plugin-typedoc",
 
-    //         // Plugin / TypeDoc options
-    //         {
-    //             entryPoints: ["../packages/client/src/exports.ts"],
-    //             disableSources: true,
-    //             name: "API reference",
-    //             excludePrivate: true,
-    //             excludeProtected: true,
-    //             excludeInternal: true,
-    //             includeVersion: true,
-    //             categorizeByGroup: true,
-    //             treatWarningsAsErrors: true,
-    //             watch: process.env.TYPEDOC_WATCH,
-    //             sidebar: {
-    //                 categoryLabel: "API reference",
-    //                 indexLabel: " ",
-    //                 position: 5,
-    //             },
-    //             out: "usage/streamr-js-client/api",
-    //             tsconfig: "../packages/client/tsconfig.json",
-    //         },
-    //     ],
-    //     path.resolve("plugins", "refine-docs"),
-    // ],
+            // Plugin / TypeDoc options
+            {
+                entryPoints: ["../packages/client/src/exports.ts"],
+                disableSources: true,
+                name: "API reference",
+                excludePrivate: true,
+                excludeProtected: true,
+                excludeInternal: true,
+                includeVersion: true,
+                categorizeByGroup: true,
+                treatWarningsAsErrors: true,
+                watch: process.env.TYPEDOC_WATCH,
+                sidebar: {
+                    categoryLabel: "API reference",
+                    indexLabel: " ",
+                    position: 5,
+                },
+                out: "usage/streamr-js-client/api",
+                tsconfig: "../packages/client/tsconfig.json",
+            },
+        ],
+        path.resolve("plugins", "refine-docs"),
+    ],
 
     presets: [
         [
