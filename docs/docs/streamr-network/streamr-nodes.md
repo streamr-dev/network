@@ -6,7 +6,7 @@ sidebar_position: 2
 Applications publish and subscribe to [streams](../usage/streams/creating-streams) via Streamr nodes. In other words, nodes are the access points to the Streamr Network. To connect your application to streams, you interface it with a Streamr node.
 
 :::info
-If you'd like instructions on running a Streamr node, checkout [this guide](../quickstart-guides/how-to-run-streamr-node.md).
+If you'd like instructions on running a Streamr node, checkout [this guide](../guides/how-to-run-streamr-node.md).
 :::
 
 There are two strategies for interfacing applications with Streamr nodes:

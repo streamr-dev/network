@@ -11,7 +11,7 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 The 1.0 testnets will be launched with the technical parameters set out in: [SIP-16](https://snapshot.org/#/streamr.eth/proposal/0xf95e691103efc4ce9ebd2ed22da3df6df446f982e6e34df1180a9a5366b3060f)
 
 ### How to participate & earn
-1. [Become a node Operator](../quickstart-guides/become-an-operator.md)
+1. [Become a node Operator](../guides/become-an-operator.md)
 2. Stake your [Operator](../streamr-network/network-roles/operators.md) on [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md), or,
 3. [Delegate](../streamr-network/network-roles/delegators.md) your `DATA` tokens onto other Operators
 
@@ -47,4 +47,4 @@ The only information they will need from you is your address. Please do not enga
 Watch this space for updates.
 
 ## Node configuration
-Watch this space. For now, configure your node to the [Mumbai testing environment](../quickstart-guides/become-an-operator#mumbai-testing-environment-node-config) and await further instructions for the official testnet configuration. 
+Watch this space. For now, configure your node to the [Mumbai testing environment](../guides/become-an-operator#mumbai-testing-environment-node-config) and await further instructions for the official testnet configuration. 

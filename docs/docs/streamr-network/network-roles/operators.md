@@ -5,7 +5,7 @@ sidebar_position: 2
 # Operators
 
 :::info
-For instructions on becoming an Operator, check out [this guide](../../quickstart-guides/become-an-operator.md).
+For instructions on becoming an Operator, check out [this guide](../../guides/become-an-operator.md).
 :::
 
 Operators are the node running "miners" in the Streamr Network. To be specific– Operators are the persons/entities that operate (own/control) Streamr nodes. They choose which Sponsorships they want to stake DATA on, and run a fleet of Streamr nodes to do the work of relaying the data in related streams. The promise of Operators is: _"I run honest and stable nodes, and my nodes will join the stream topologies to help stabilise and secure them"._ An Operator's nodes don’t subscribe to a stream because they’re interested in the data, they join because they want to earn a share of the DATA tokens flowing through a Sponsorship. The Operator can claim their rewards periodically to withdraw earned tokens from the Sponsorship contract.

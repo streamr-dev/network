@@ -19,7 +19,7 @@ const FeatureList: GatewayCard[] = [
             <>Practical guides for developers to get started with Streamr</>
         ),
         buttonText: "Discover quickstart",
-        link: "quickstart-guides/nodejs",
+        link: "guides/nodejs",
     },
     {
         title: "Building on Streamr",
@@ -55,7 +55,7 @@ const FeatureList: GatewayCard[] = [
             </>
         ),
         buttonText: "Become an Operator",
-        link: "quickstart-guides/become-an-operator",
+        link: "guides/become-an-operator",
     },
 ]
 

@@ -2,7 +2,7 @@
   "label": "Quickstart guides",
   "position": 0,
   "link": {
-    "slug": "/quickstart",
+    "slug": "/guides",
     "type": "generated-index"
   }
 }

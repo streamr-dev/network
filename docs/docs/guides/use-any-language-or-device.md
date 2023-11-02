@@ -30,7 +30,7 @@ Before the Streamr node can be started, its configuration files need to be creat
 $ streamr-broker-init
 ```
 
-During initiziliation make sure to enable the `mqtt-plugin` and assign a port to it (default is 1883). Other plugins are unnecessary. For more in depth information on installing a Streamr node, see the guide on [running a Streamr node](../quickstart-guides/how-to-run-streamr-node.md).
+During initiziliation make sure to enable the `mqtt-plugin` and assign a port to it (default is 1883). Other plugins are unnecessary. For more in depth information on installing a Streamr node, see the guide on [running a Streamr node](../guides/how-to-run-streamr-node.md).
 
 ![image](@site/static/img/mqtt-guide-1.png)
 

@@ -122,7 +122,7 @@ The path to the config file in the `docker run` command and the path defined via
 ### Step 3b: Update the node config file
 If you're running a node to become an Operator, then you could now edit the node config file at `~/.streamrDocker/config/default.json` with the necessary updates mentioned in the to [become an Operator guide](become-an-operator#step-3-pair-your-node-with-your-operator-contract). 
 
-If you're running the node in the Mumbai environment then a [special testnet config](../quickstart-guides/become-an-operator#mumbai-testing-environment-node-config) is necessary.
+If you're running the node in the Mumbai environment then a [special testnet config](../guides/become-an-operator#mumbai-testing-environment-node-config) is necessary.
 
 ### Step 4: Start your Streamr node using Docker
 
@@ -238,7 +238,7 @@ Towards the end, the wizard asks if you would like it to display your Ethereum p
 ### Step 2b: Update the node config file
 If you're running a node to become an Operator, then you could now edit the node config file at `.streamr/config/default.json` with the necessary updates mentioned in the to [become an Operator guide](become-an-operator#step-3-pair-your-node-with-your-operator-contract). 
 
-If you're running the node in the Mumbai environment then a [special testnet config](../quickstart-guides/become-an-operator#mumbai-testing-environment-node-config) is necessary.
+If you're running the node in the Mumbai environment then a [special testnet config](../guides/become-an-operator#mumbai-testing-environment-node-config) is necessary.
 
 ### Step 3: Start the Streamr node
 -   Run `streamr-broker` to start the node! You should start to see logging similar to this:
