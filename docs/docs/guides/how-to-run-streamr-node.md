@@ -84,7 +84,7 @@ Start the config wizard with the below command. Docker will download the node im
 **Linux / macOS**
 
 ```
-sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:dev-tatum bin/config-wizard
+sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-pretestnet.0 bin/config-wizard
 ```
 
 **Windows PowerShell**
@@ -98,7 +98,7 @@ cd ~/.streamrDocker
 Then run the config wizard:
 
 ```
-docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:dev-tatum bin/config-wizard
+docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-pretestnet.0 bin/config-wizard
 ```
 
 **Using the config wizard**
@@ -120,16 +120,16 @@ The path to the config file in the `docker run` command and the path defined via
 :::
 
 ### Step 3b: Update the node config file
-If you're running a node to become an Operator, then you could now edit the node config file at `~/.streamrDocker/config/default.json` with the necessary updates mentioned in the to [become an Operator guide](become-an-operator#step-3-pair-your-node-with-your-operator-contract). 
+Replace the node config file(typically located at `~/streamrDocker/config/default.json`)) contents with the Mumbai environment [testnet config](become-an-operator#mumbai-testing-environment-node-config) using a text editor. If you previously generated a node signing key then you can keep using that `privateKey` but the file schema must match what's in the provided [testnet config](become-an-operator#mumbai-testing-environment-node-config).
 
-If you're running the node in the Mumbai environment then a [special testnet config](../guides/become-an-operator#mumbai-testing-environment-node-config) is necessary.
+If you're running a node to become an Operator, then you could now jump back to [Step 3 of becoming an Operator](become-an-operator#step-3-pair-your-node-with-your-operator-contract) to add your Operator contract address into the node config before starting your node. 
 
 ### Step 4: Start your Streamr node using Docker
 
 **Linux / macOS**
 
 ```
-sudo docker run --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:dev-tatum
+sudo docker run --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-pretestnet.0
 ```
 
 **Windows PowerShell**
@@ -143,7 +143,7 @@ cd ~/.streamrDocker
 Start your node:
 
 ```
-docker run --name streamr --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/broker-node:dev-tatum
+docker run --name streamr --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-pretestnet.0
 ```
 
 **The `docker run` command, deconstructed:**
@@ -236,9 +236,9 @@ There can be plenty of output from npm. If the installation fails with an error,
 Towards the end, the wizard asks if you would like it to display your Ethereum private key. From here, you should copy-paste it to a safe place! You can also find it later in the configuration file, which is saved by default to `.streamr/config/default.json` under your home directory.
 
 ### Step 2b: Update the node config file
-If you're running a node to become an Operator, then you could now edit the node config file at `.streamr/config/default.json` with the necessary updates mentioned in the to [become an Operator guide](become-an-operator#step-3-pair-your-node-with-your-operator-contract). 
+Replace the node config file (typically located at `.streamr/config/default.json`) contents with the Mumbai environment [testnet config](become-an-operator#mumbai-testing-environment-node-config) using a text editor. If you previously generated a node signing key then you can keep using that `privateKey` but the file schema must match what's in the [testnet config](become-an-operator#mumbai-testing-environment-node-config).
 
-If you're running the node in the Mumbai environment then a [special testnet config](../guides/become-an-operator#mumbai-testing-environment-node-config) is necessary.
+If you're running a node to become an Operator, then you could now jump to [Step 3 of becoming an Operator](become-an-operator#step-3-pair-your-node-with-your-operator-contract) to add your Operator contract address into the node config before starting your node. 
 
 ### Step 3: Start the Streamr node
 -   Run `streamr-broker` to start the node! You should start to see logging similar to this:

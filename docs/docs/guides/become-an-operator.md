@@ -61,8 +61,6 @@ Then, update your node's config file. For Mumbai pre-testnet, copy and paste [th
 
 After the config file changes, restart your node(s). If you run several nodes, you can use the same config file for all of them.
 
-
-
 ### Step 4: Fund your nodes
 You’ll need a bit of `MATIC` (the gas token of Polygon) in your node’s wallets as Streamr nodes that participate in sponsored streams will periodically make transactions. 1 to 5 `MATIC` is recommended since the nodes will be making a few transactions per day. If the node runs out of gas while they’re a part of an active Sponsorship, then a penalty may be applied to your unclaimed earnings. See [Operator value maintenance](../streamr-network/network-roles/operators#operator-maintenance).
 
@@ -143,8 +141,3 @@ The only information they will need from you is your address. Please do not enga
     }
 }
 ```
-
-## Testnet configuration
-Editing the `config/default.json` is the main way to configure your node.
-
-To participate in the incentivized testnets, you'll need to add a few extra lines of config to your node. That config can be found on the [dedicated testnet page](../streamr-testnets/testnets.md) closer to the date of the testnets.

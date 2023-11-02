@@ -39,12 +39,9 @@ Each testnet will have a set of Sponsorships that will be the source of incentiv
 ### The Mumbai testing environment
 The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens.
 
-You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need `DATATEST` tokens (the Mumbai network's worthless `DATA` tokens) - you can ask for those on the [Streamr Discord](https://discord.gg/gZAm8P7hK8) and a community admin will send you some to your address. 
+You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - you can ask for those on the [Streamr Discord](https://discord.gg/gZAm8P7hK8) and a community admin will send you some to your address. 
 
 The only information they will need from you is your address. Please do not engage with any accounts claiming to be Support, Admin or Help. Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens.
 
 ### Bounty prizes
 Watch this space for updates.
-
-## Node configuration
-Watch this space. For now, configure your node to the [Mumbai testing environment](../guides/become-an-operator#mumbai-testing-environment-node-config) and await further instructions for the official testnet configuration. 
