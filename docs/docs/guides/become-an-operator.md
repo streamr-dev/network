@@ -18,7 +18,7 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 - You can run ~~up to 5 nodes per IP address~~ any number of nodes from the same IP address, although one node per machine is recommended
 - Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships periodically
 - You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
-- While the testnets are ongoing, use tagged releases, e.g. "dev-tatum", of the Streamr node software. Using the latest tag will deploy a node configured to the Brubeck network.
+- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `100.0.0-pretestnet.0`. The `latest` tag still points to the previous milestone (Brubeck) software.
 - There is no need for a "beneficiary address" in Streamr 1.0.
 :::
 
