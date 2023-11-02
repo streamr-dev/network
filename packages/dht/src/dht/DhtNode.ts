@@ -1,4 +1,4 @@
-import { RemoteDhtNode } from './RemoteDhtNode'
+import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import KBucket from 'k-bucket'
 import { EventEmitter } from 'eventemitter3'
 import { SortedContactList } from './contact/SortedContactList'
@@ -19,7 +19,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
-import { DhtRpcServiceClient, ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { DhtNodeRpcClient, ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
     MetricsContext,
@@ -127,10 +127,10 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
 export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private readonly config: StrictDhtNodeOptions
-    private bucket?: KBucket<RemoteDhtNode>
-    private connections: Map<PeerIDKey, RemoteDhtNode> = new Map()
-    private neighborList?: SortedContactList<RemoteDhtNode>
-    private randomPeers?: RandomContactList<RemoteDhtNode>
+    private bucket?: KBucket<DhtNodeRpcRemote>
+    private connections: Map<PeerIDKey, DhtNodeRpcRemote> = new Map()
+    private neighborList?: SortedContactList<DhtNodeRpcRemote>
+    private randomPeers?: RandomContactList<DhtNodeRpcRemote>
     private rpcCommunicator?: RoutingRpcCommunicator
     private transport?: ITransport
     private ownPeerDescriptor?: PeerDescriptor
@@ -288,33 +288,33 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private initKBuckets = (selfId: PeerID) => {
-        this.bucket = new KBucket<RemoteDhtNode>({
+        this.bucket = new KBucket<DhtNodeRpcRemote>({
             localNodeId: selfId.value,
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
             numberOfNodesToPing: this.config.numberOfNodesPerKBucket
         })
-        this.bucket.on('ping', (oldContacts: RemoteDhtNode[], newContact: RemoteDhtNode) => this.onKBucketPing(oldContacts, newContact))
-        this.bucket.on('removed', (contact: RemoteDhtNode) => this.onKBucketRemoved(contact))
-        this.bucket.on('added', (contact: RemoteDhtNode) => this.onKBucketAdded(contact))
+        this.bucket.on('ping', (oldContacts: DhtNodeRpcRemote[], newContact: DhtNodeRpcRemote) => this.onKBucketPing(oldContacts, newContact))
+        this.bucket.on('removed', (contact: DhtNodeRpcRemote) => this.onKBucketRemoved(contact))
+        this.bucket.on('added', (contact: DhtNodeRpcRemote) => this.onKBucketAdded(contact))
         this.bucket.on('updated', () => {
             // TODO: Update contact info to the connection manager and reconnect
         })
         this.neighborList = new SortedContactList(selfId, this.config.maxNeighborListSize)
-        this.neighborList.on('contactRemoved', (removedContact: RemoteDhtNode, activeContacts: RemoteDhtNode[]) => {
+        this.neighborList.on('contactRemoved', (removedContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) => {
             if (this.stopped) {
                 return
             }
             this.emit('contactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
             this.randomPeers!.addContact(
-                new RemoteDhtNode(
+                new DhtNodeRpcRemote(
                     this.ownPeerDescriptor!,
                     removedContact.getPeerDescriptor(),
-                    toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                    toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
                     this.config.serviceId
                 )
             )
         })
-        this.neighborList.on('newContact', (newContact: RemoteDhtNode, activeContacts: RemoteDhtNode[]) =>
+        this.neighborList.on('newContact', (newContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
             this.emit('newContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
         this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => this.onTransportConnected(peerDescriptor))
@@ -324,22 +324,22 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         })
 
         this.transport!.getAllConnectionPeerDescriptors().forEach((peer) => {
-            const remoteDhtNode = new RemoteDhtNode(
+            const rpcRemote = new DhtNodeRpcRemote(
                 this.ownPeerDescriptor!,
                 peer,
-                toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
                 this.config.serviceId
             )
             if (areEqualPeerDescriptors(peer, this.ownPeerDescriptor!)) {
                 logger.error('own peerdescriptor added to connections in initKBucket')
             }
-            this.connections.set(keyFromPeerDescriptor(peer), remoteDhtNode)
+            this.connections.set(keyFromPeerDescriptor(peer), rpcRemote)
         })
         this.randomPeers = new RandomContactList(selfId, this.config.maxNeighborListSize)
-        this.randomPeers.on('contactRemoved', (removedContact: RemoteDhtNode, activeContacts: RemoteDhtNode[]) =>
+        this.randomPeers.on('contactRemoved', (removedContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
             this.emit('randomContactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
-        this.randomPeers.on('newContact', (newContact: RemoteDhtNode, activeContacts: RemoteDhtNode[]) =>
+        this.randomPeers.on('newContact', (newContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
             this.emit('newRandomContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
     }
@@ -350,14 +350,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             logger.error('onTransportConnected() to self')
         }
 
-        const remoteDhtNode = new RemoteDhtNode(
+        const rpcRemote = new DhtNodeRpcRemote(
             this.ownPeerDescriptor!,
             peerDescriptor,
-            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+            toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
             this.config.serviceId
         )
-        if (!this.connections.has(PeerID.fromValue(remoteDhtNode.id).toKey())) {
-            this.connections.set(PeerID.fromValue(remoteDhtNode.id).toKey(), remoteDhtNode)
+        if (!this.connections.has(PeerID.fromValue(rpcRemote.id).toKey())) {
+            this.connections.set(PeerID.fromValue(rpcRemote.id).toKey(), rpcRemote)
             logger.trace('connectionschange add ' + this.connections.size)
         } else {
             logger.trace('new connection not set to connections, there is already a connection with the peer ID')
@@ -425,14 +425,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private getClosestPeerDescriptors(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
         const closestPeers = this.bucket!.closest(kademliaId, limit)
-        return closestPeers.map((remoteDhtNode: RemoteDhtNode) => remoteDhtNode.getPeerDescriptor())
+        return closestPeers.map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
     }
 
-    private onKBucketPing(oldContacts: RemoteDhtNode[], newContact: RemoteDhtNode): void {
+    private onKBucketPing(oldContacts: DhtNodeRpcRemote[], newContact: DhtNodeRpcRemote): void {
         if (this.stopped) {
             return
         }
-        const sortingList: SortedContactList<RemoteDhtNode> = new SortedContactList(this.getNodeId(), 100)
+        const sortingList: SortedContactList<DhtNodeRpcRemote> = new SortedContactList(this.getNodeId(), 100)
         sortingList.addContacts(oldContacts)
         const sortedContacts = sortingList.getAllContacts()
         this.connectionManager?.weakUnlockConnection(sortedContacts[sortedContacts.length - 1].getPeerDescriptor())
@@ -440,7 +440,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.bucket!.add(newContact)
     }
 
-    private onKBucketRemoved(contact: RemoteDhtNode): void {
+    private onKBucketRemoved(contact: DhtNodeRpcRemote): void {
         if (this.stopped) {
             return
         }
@@ -459,7 +459,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    private onKBucketAdded(contact: RemoteDhtNode): void {
+    private onKBucketAdded(contact: DhtNodeRpcRemote): void {
         if (this.stopped) {
             return
         }
@@ -499,7 +499,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    private getClosestActiveContactNotInBucket(): RemoteDhtNode | undefined {
+    private getClosestActiveContactNotInBucket(): DhtNodeRpcRemote | undefined {
         for (const contactId of this.neighborList!.getContactIds()) {
             if (!this.bucket!.get(contactId.value) && this.neighborList!.isActive(contactId)) {
                 return this.neighborList!.getContact(contactId).contact
@@ -526,21 +526,21 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         if (!areEqualPeerDescriptors(contact, this.ownPeerDescriptor!)) {
             logger.trace(`Adding new contact ${keyFromPeerDescriptor(contact)}`)
-            const remoteDhtNode = new RemoteDhtNode(
+            const rpcRemote = new DhtNodeRpcRemote(
                 this.ownPeerDescriptor!,
                 contact,
-                toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
                 this.config.serviceId
             )
             if (!this.bucket!.get(contact.kademliaId) && !this.neighborList!.getContact(peerIdFromPeerDescriptor(contact))) {
-                this.neighborList!.addContact(remoteDhtNode)
+                this.neighborList!.addContact(rpcRemote)
                 if (setActive) {
                     const peerId = peerIdFromPeerDescriptor(contact)
                     this.neighborList!.setActive(peerId)
                 }
-                this.bucket!.add(remoteDhtNode)
+                this.bucket!.add(rpcRemote)
             } else {
-                this.randomPeers!.addContact(remoteDhtNode)
+                this.randomPeers!.addContact(rpcRemote)
             }
         }
     }
@@ -642,7 +642,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getKBucketPeers(): PeerDescriptor[] {
-        return this.bucket!.toArray().map((remoteDhtNode: RemoteDhtNode) => remoteDhtNode.getPeerDescriptor())
+        return this.bucket!.toArray().map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
     }
 
     public getNumberOfConnections(): number {
@@ -679,7 +679,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.entryPointDisconnectTimeout) {
             clearTimeout(this.entryPointDisconnectTimeout)
         }
-        this.bucket!.toArray().forEach((remoteDhtNode: RemoteDhtNode) => this.bucket!.remove(remoteDhtNode.id))
+        this.bucket!.toArray().forEach((rpcRemote: DhtNodeRpcRemote) => this.bucket!.remove(rpcRemote.id))
         this.bucket!.removeAllListeners()
         this.localDataStore.clear()
         this.neighborList!.stop()
@@ -697,7 +697,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.removeAllListeners()
     }
 
-    // IDHTRpcService implementation
+    // IDhtNodeRpc implementation
     private async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
         this.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
         const response = {
@@ -707,7 +707,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return response
     }
 
-    // IDHTRpcService implementation
+    // IDhtNodeRpc implementation
     private async ping(request: PingRequest, context: ServerCallContext): Promise<PingResponse> {
         logger.trace('received ping request: ' + keyFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!))
         setImmediate(() => {
@@ -719,7 +719,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return response
     }
 
-    // IDHTRpcService implementation
+    // IDhtNodeRpc implementation
     private async leaveNotice(request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
         // TODO check signature??
         if (request.serviceId === this.config.serviceId) {
