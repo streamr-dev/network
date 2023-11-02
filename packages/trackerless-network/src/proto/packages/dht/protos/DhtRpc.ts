@@ -1190,9 +1190,9 @@ class FindDataResponse$Type extends MessageType$<FindDataResponse> {
  */
 export const FindDataResponse = new FindDataResponse$Type();
 /**
- * @generated ServiceType for protobuf service dht.DhtRpcService
+ * @generated ServiceType for protobuf service dht.DhtNodeRpc
  */
-export const DhtRpcService = new ServiceType("dht.DhtRpcService", [
+export const DhtNodeRpc = new ServiceType("dht.DhtNodeRpc", [
     { name: "getClosestPeers", options: {}, I: ClosestPeersRequest, O: ClosestPeersResponse },
     { name: "ping", options: {}, I: PingRequest, O: PingResponse },
     { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty }

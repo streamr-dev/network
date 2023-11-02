@@ -1,4 +1,4 @@
-import { RemoteDhtNode } from '../RemoteDhtNode'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { SortedContactList } from '../contact/SortedContactList'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
@@ -22,7 +22,7 @@ class RemoteContact extends Contact {
     private routerRpcRemote: RouterRpcRemote
     private findRpcRemote: FindRpcRemote
 
-    constructor(peer: RemoteDhtNode, ownPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
+    constructor(peer: DhtNodeRpcRemote, ownPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
         super(peer.getPeerDescriptor())
         this.routerRpcRemote = new RouterRpcRemote(
             ownPeerDescriptor,
@@ -70,7 +70,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     private contactList: SortedContactList<RemoteContact>
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly messageToRoute: RouteMessageWrapper
-    private connections: Map<PeerIDKey, RemoteDhtNode>
+    private connections: Map<PeerIDKey, DhtNodeRpcRemote>
     private readonly parallelism: number
     private failedHopCounter = 0
     private successfulHopCounter = 0
@@ -81,7 +81,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         rpcCommunicator: RoutingRpcCommunicator,
         ownPeerDescriptor: PeerDescriptor,
         messageToRoute: RouteMessageWrapper,
-        connections: Map<PeerIDKey, RemoteDhtNode>,
+        connections: Map<PeerIDKey, DhtNodeRpcRemote>,
         parallelism: number,
         mode: RoutingMode = RoutingMode.ROUTE,
         destinationId?: Uint8Array,

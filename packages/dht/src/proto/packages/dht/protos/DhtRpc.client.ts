@@ -35,7 +35,7 @@ import type { RouteMessageAck } from "./DhtRpc";
 import type { RouteMessageWrapper } from "./DhtRpc";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
-import { DhtRpcService } from "./DhtRpc";
+import { DhtNodeRpc } from "./DhtRpc";
 import type { Empty } from "../../../google/protobuf/empty";
 import type { LeaveNotice } from "./DhtRpc";
 import type { PingResponse } from "./DhtRpc";
@@ -46,9 +46,9 @@ import type { ClosestPeersRequest } from "./DhtRpc";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service dht.DhtRpcService
+ * @generated from protobuf service dht.DhtNodeRpc
  */
-export interface IDhtRpcServiceClient {
+export interface IDhtNodeRpcClient {
     /**
      * @generated from protobuf rpc: getClosestPeers(dht.ClosestPeersRequest) returns (dht.ClosestPeersResponse);
      */
@@ -63,12 +63,12 @@ export interface IDhtRpcServiceClient {
     leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty>;
 }
 /**
- * @generated from protobuf service dht.DhtRpcService
+ * @generated from protobuf service dht.DhtNodeRpc
  */
-export class DhtRpcServiceClient implements IDhtRpcServiceClient, ServiceInfo {
-    typeName = DhtRpcService.typeName;
-    methods = DhtRpcService.methods;
-    options = DhtRpcService.options;
+export class DhtNodeRpcClient implements IDhtNodeRpcClient, ServiceInfo {
+    typeName = DhtNodeRpc.typeName;
+    methods = DhtNodeRpc.methods;
+    options = DhtNodeRpc.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
