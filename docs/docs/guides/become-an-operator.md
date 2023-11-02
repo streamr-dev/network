@@ -48,7 +48,18 @@ While there are no strict hardware recommendations, 8GB of RAM, 3-4 virtual core
 :::
 
 ### Step 3: Pair your node with your Operator contract
-Once your familiar with your node you'll need to update its config file with the address of your Operator contract. If you're in the Mumbai test environment, you'll want to copy and paste [this config snippet](#mumbai-testing-environment-node-config), and replace the `"YOUR_OPERATOR_CONTRACT_ADDRESS"`and `"NODE_PRIVATE_KEY"` with your own (and keep the "quotes"). For the testnets, keep an eye on the [official testnet page](../streamr-testnets/testnets.md) for the correct configuration to enter. 
+To pair your node(s) with your Operator contract, you must make them aware about each other. For this, you need two things:
+
+- Your **Operator address** (found near the top of your Operator page in the Streamr Hub).
+- Your **node wallet**, which consists of an Ethereum private key and address. You might already have created one with the config wizard when setting up the node. Alternatively, you can use any method, such as create a new account in Metamask and export the private key, or use [vanity-eth](https://vanity-eth.tk/).
+
+First, scroll down on your Operator page and find the "Operator's node addresses" section. Click the "Add node address" button, paste in the **address** of your **node wallet** (not its private key!), click the button in the dialog and then don't forget to click the Save button.
+
+Then, update your node's config file. For Mumbai pre-testnet, copy and paste [this config snippet](#mumbai-testing-environment-node-config). In that snippet:
+- Replace `"YOUR_OPERATOR_CONTRACT_ADDRESS"` with your **Operator address** (keep the quotes).
+- Replace `"NODE_PRIVATE_KEY"` with the **private key** of your **node wallet** (keep the quotes).
+
+After the config file changes, restart your node(s). If you run several nodes, you can use the same config file for all of them.
 
 
 
