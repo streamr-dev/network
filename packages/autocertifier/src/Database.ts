@@ -17,7 +17,6 @@ export class Database {
     private updateSubdomainIpAndPortStatement?: Statement
     private getSubdomainAcmeChallengeStatement?: Statement
     private updateSubdomainAcmeChallengeStatement?: Statement
-
     private databaseFilePath: string
 
     constructor(filePath: string) {
@@ -28,10 +27,8 @@ export class Database {
         try {
             await this.createSubdomainStatement!.run(subdomain, ip, port, token)
         } catch (e) {
-            const err = new DatabaseError('Failed to create subdomain ' + subdomain, e)
-            throw err
+            throw new DatabaseError('Failed to create subdomain ' + subdomain, e)
         }
-
         logger.info('Subdomain created: ' + subdomain)
     }
 
@@ -40,12 +37,10 @@ export class Database {
         try {
             ret = await this.getSubdomainStatement!.get(subdomain)
         } catch (e) {
-            const err = new DatabaseError('Failed to get subdomain ' + subdomain, e)
-            throw err
+            throw new DatabaseError('Failed to get subdomain ' + subdomain, e)
         }
         if (!ret) {
-            const err = new DatabaseError('Subdomain not found ' + subdomain)
-            throw err
+            throw new DatabaseError('Subdomain not found ' + subdomain)
         }
         return ret
     }
@@ -55,12 +50,10 @@ export class Database {
         try {
             ret = await this.getSubdomainWithTokenStatement!.get(subdomain, token)
         } catch (e) {
-            const err = new DatabaseError('Failed to get subdomain ' + subdomain, e)
-            throw err
+            throw new DatabaseError('Failed to get subdomain ' + subdomain, e)
         }
         if (!ret) {
-            const err = new DatabaseError('Subdomain not found ' + subdomain)
-            throw err
+            throw new DatabaseError('Subdomain not found ' + subdomain)
         }
         return ret
     }
@@ -69,14 +62,12 @@ export class Database {
         try {
             await this.getSubdomainWithToken(subdomain, token)
         } catch (e) {
-            const err = new InvalidSubdomainOrToken('Invalid subdomain or token ' + subdomain, e)
-            throw err
+            throw new InvalidSubdomainOrToken('Invalid subdomain or token ' + subdomain, e)
         }
         try {
             await this.updateSubdomainIpAndPortStatement!.run(ip, port, subdomain, token)
         } catch (e) {
-            const err = new DatabaseError('Failed to update subdomain ' + subdomain, e)
-            throw err
+            throw new DatabaseError('Failed to update subdomain ' + subdomain, e)
         }
         logger.info('Subdomain ip and port updated')
     }
@@ -86,8 +77,7 @@ export class Database {
         try {
             await this.updateSubdomainAcmeChallengeStatement!.run(acmeChallenge, subdomain)
         } catch (e) {
-            const err = new DatabaseError('Failed to update subdomain Acme challenge' + subdomain, e)
-            throw err
+            throw new DatabaseError('Failed to update subdomain Acme challenge' + subdomain, e)
         }
         logger.info('Subdomain acme challenge updated')
     }
