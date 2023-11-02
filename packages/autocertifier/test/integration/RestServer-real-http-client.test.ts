@@ -1,4 +1,5 @@
 import request from 'request'
+import { Response } from 'request'
 import { RestServer } from '../../src/RestServer'
 import { CertifiedSubdomain } from '@streamr/autocertifier-client'
 import { ApiError } from '@streamr/autocertifier-client'
@@ -37,16 +38,14 @@ describe('RestServer', () => {
                 async createSession(): Promise<Session> {
                     return { sessionId: sessionId }
                 },
-                async createNewSubdomainAndCertificate(_ip: string, _port: string, _streamrWebsocketPort: string,
-                    _sessionId: string): Promise<CertifiedSubdomain> {
+                async createNewSubdomainAndCertificate(): Promise<CertifiedSubdomain> {
                     return certifiedSubdomain
                 },
-                async createNewCertificateForSubdomain(_subdomain: string, _ipAddress: string,
-                    _port: string, _streamrWebSocketPort: string, _token: string): Promise<CertifiedSubdomain> {
+                async createNewCertificateForSubdomain(): Promise<CertifiedSubdomain> {
 
                     return certifiedSubdomain
                 },
-                async updateSubdomainIpAndPort(_subdomain: string, _ip: string, _port: string, _streamrWebsocketPort: string, _token: string) {
+                async updateSubdomainIpAndPort() {
                     // do nothing
                 }
             })
@@ -67,7 +66,7 @@ describe('RestServer', () => {
                 ca: ca
             }
 
-            request(options, (error, response, body) => {
+            request(options, (error: any, response: Response, body: any) => {
                 expect(error).toBeFalsy()
                 expect(response.statusCode).toEqual(200)
                 expect(body).toEqual({ sessionId: sessionId })
@@ -87,7 +86,7 @@ describe('RestServer', () => {
                 ca: ca
             }
 
-            request(options, (error, response, body) => {
+            request(options, (error: any, response: Response, body: any) => {
                 expect(error).toBeFalsy()
                 expect(response.statusCode).toEqual(200)
                 expect(body).toEqual(certifiedSubdomain)
@@ -103,7 +102,7 @@ describe('RestServer', () => {
                 ca: ca
             }
 
-            request(options, (error, response, body) => {
+            request(options, (error: any, response: Response, body: any) => {
                 expect(error).toBeFalsy()
                 expect(response.statusCode).toEqual(400)
                 const responseBody = body as ApiError
@@ -125,7 +124,7 @@ describe('RestServer', () => {
                 ca: ca
             }
 
-            request(options, (error, response, body) => {
+            request(options, (error: any, response: Response, body: any) => {
                 expect(error).toBeFalsy()
                 expect(response.statusCode).toEqual(200)
                 expect(body).toEqual({})
@@ -143,7 +142,7 @@ describe('RestServer', () => {
                 ca: ca
             }
 
-            request(options, (error, response, body) => {
+            request(options, (error: any, response: Response, body: any) => {
                 expect(error).toBeFalsy()
                 expect(response.statusCode).toEqual(400)
                 const responseBody = body as ApiError
@@ -162,7 +161,7 @@ describe('RestServer', () => {
                 ca: ca
             }
 
-            request(options, (error, response, body) => {
+            request(options, (error: any, response: Response, body: any) => {
                 expect(error).toBeFalsy()
                 expect(response.statusCode).toEqual(400)
                 const responseBody = body as ApiError

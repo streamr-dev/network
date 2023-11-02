@@ -5,6 +5,7 @@ import { UpdateIpAndPortRequest } from './data/UpdateIpAndPortRequest'
 import { CreateCertifiedSubdomainRequest } from './data/CreateCertifiedSubdomainRequest'
 import { ServerError } from './errors'
 import { Logger } from '@streamr/utils'
+import { Response } from 'request'
 
 const logger = new Logger(module)
 
@@ -64,7 +65,7 @@ export class RestClient {
     // eslint-disable-next-line class-methods-use-this
     private post<T>(url: string, body: any): Promise<T> {
         return new Promise((resolve, reject) => {
-            request.post(url, { json: body, rejectUnauthorized: false }, (error, response, body) => {
+            request.post(url, { json: body, rejectUnauthorized: false }, (error: any, response: Response, body: any) => {
                 if (error) {
                     reject(error)
                 } else if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -79,7 +80,7 @@ export class RestClient {
     // eslint-disable-next-line class-methods-use-this
     private put<T>(url: string, body: any): Promise<T> {
         return new Promise((resolve, reject) => {
-            request.put(url, { json: body, rejectUnauthorized: false }, (error, response, body) => {
+            request.put(url, { json: body, rejectUnauthorized: false }, (error: any, response: Response, body: any) => {
                 if (error) {
                     reject(error)
                 } else if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -94,7 +95,7 @@ export class RestClient {
     // eslint-disable-next-line class-methods-use-this
     private patch<T>(url: string, body: any): Promise<T> {
         return new Promise((resolve, reject) => {
-            request.patch(url, { json: body, rejectUnauthorized: false }, (error, response, body) => {
+            request.patch(url, { json: body, rejectUnauthorized: false }, (error: any, response: Response, body: any) => {
                 if (error) {
                     reject(error)
                 } else if (response.statusCode >= 200 && response.statusCode < 300) {
