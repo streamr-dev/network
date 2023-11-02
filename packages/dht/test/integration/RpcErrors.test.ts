@@ -12,11 +12,11 @@ import { NodeType, PeerDescriptor, PingRequest, PingResponse } from '../../src/p
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { MetricsContext } from '@streamr/utils'
 
-const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, transport: ITransport) => {
+const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
         createConnectorFacade: () => new DefaultConnectorFacade({
             transport,
-            createOwnPeerDescriptor: () => ownPeerDescriptor
+            createLocalPeerDescriptor: () => localPeerDescriptor
         }),
         metricsContext: new MetricsContext()
     })

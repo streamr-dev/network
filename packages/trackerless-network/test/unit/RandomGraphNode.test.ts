@@ -35,7 +35,7 @@ describe('RandomGraphNode', () => {
             randomNodeView,
             nearbyNodeView,
             transport: new MockTransport(),
-            ownPeerDescriptor: peerDescriptor,
+            localPeerDescriptor: peerDescriptor,
             layer1Node,
             connectionLocker: mockConnectionLocker,
             handshaker: new MockHandshaker(),

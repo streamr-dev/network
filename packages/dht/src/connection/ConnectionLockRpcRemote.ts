@@ -12,11 +12,11 @@ const logger = new Logger(module)
 export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
 
     constructor(
-        ownPeerDescriptor: PeerDescriptor,
+        localPeerDescriptor: PeerDescriptor,
         targetPeerDescriptor: PeerDescriptor,
         client: ProtoRpcClient<IConnectionLockRpcClient>
     ) {
-        super(ownPeerDescriptor, targetPeerDescriptor, 'DUMMY', client)
+        super(localPeerDescriptor, targetPeerDescriptor, 'DUMMY', client)
     }
 
     public async lockRequest(serviceId: string): Promise<boolean> {

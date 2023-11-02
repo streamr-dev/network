@@ -137,7 +137,7 @@ export class StreamrNode extends EventEmitter<Events> {
         const node = this.createRandomGraphNode(streamPartId, layer1Node)
         const entryPointDiscovery = new EntryPointDiscovery({
             streamPartId,
-            ownPeerDescriptor: this.getPeerDescriptor(),
+            localPeerDescriptor: this.getPeerDescriptor(),
             layer1Node,
             getEntryPointData: (key) => this.layer0Node!.getDataFromDht(key),
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
@@ -211,7 +211,7 @@ export class StreamrNode extends EventEmitter<Events> {
             transport: this.transport!,
             layer1Node,
             connectionLocker: this.connectionLocker!,
-            ownPeerDescriptor: this.layer0Node!.getPeerDescriptor(),
+            localPeerDescriptor: this.layer0Node!.getPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
             numOfTargetNeighbors: this.config.streamPartitionNumOfNeighbors,
             acceptProxyConnections: this.config.acceptProxyConnections
@@ -257,7 +257,7 @@ export class StreamrNode extends EventEmitter<Events> {
     private createProxyClient(streamPartId: StreamPartID): ProxyClient {
         return new ProxyClient({
             transport: this.transport!,
-            ownPeerDescriptor: this.layer0Node!.getPeerDescriptor(),
+            localPeerDescriptor: this.layer0Node!.getPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets

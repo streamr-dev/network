@@ -26,12 +26,12 @@ export class RemoteDhtNode extends Remote<IDhtRpcServiceClient> implements KBuck
     public readonly id: Uint8Array
 
     constructor(
-        ownPeerDescriptor: PeerDescriptor,
+        localPeerDescriptor: PeerDescriptor,
         peerDescriptor: PeerDescriptor,
         client: ProtoRpcClient<IDhtRpcServiceClient>,
         serviceId: string
     ) {
-        super(ownPeerDescriptor, peerDescriptor, serviceId, client)
+        super(localPeerDescriptor, peerDescriptor, serviceId, client)
         this.id = this.getPeerId().value
         this.vectorClock = RemoteDhtNode.counter++
     }

@@ -139,7 +139,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private randomPeers?: RandomContactList<RemoteDhtNode>
     private rpcCommunicator?: RoutingRpcCommunicator
     private transport?: ITransport
-    private ownPeerDescriptor?: PeerDescriptor
+    private localPeerDescriptor?: PeerDescriptor
     public router?: Router
     private storeRpcLocal?: StoreRpcLocal
     private localDataStore = new LocalDataStore()
@@ -188,7 +188,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         // If transport is given, do not create a ConnectionManager
         if (this.config.transport) {
             this.transport = this.config.transport
-            this.ownPeerDescriptor = this.transport.getPeerDescriptor()
+            this.localPeerDescriptor = this.transport.getPeerDescriptor()
             if (this.config.transport instanceof ConnectionManager) {
                 this.connectionManager = this.config.transport
             }
@@ -205,7 +205,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 maxMessageSize: this.config.maxMessageSize,
                 tlsCertificate: this.config.tlsCertificate,
                 externalIp: this.config.externalIp,
-                createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
+                createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
@@ -239,10 +239,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.transport.on('message', (message: Message) => this.handleMessage(message))
 
         this.bindDefaultServerMethods()
-        this.initKBuckets(peerIdFromPeerDescriptor(this.ownPeerDescriptor!))
+        this.initKBuckets(peerIdFromPeerDescriptor(this.localPeerDescriptor!))
         this.peerDiscovery = new PeerDiscovery({
             rpcCommunicator: this.rpcCommunicator,
-            ownPeerDescriptor: this.ownPeerDescriptor!,
+            localPeerDescriptor: this.localPeerDescriptor!,
             bucket: this.bucket!,
             connections: this.connections,
             neighborList: this.neighborList!,
@@ -259,7 +259,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.router = new Router({
             rpcCommunicator: this.rpcCommunicator,
             connections: this.connections,
-            ownPeerDescriptor: this.ownPeerDescriptor!,
+            localPeerDescriptor: this.localPeerDescriptor!,
             addContact: this.addNewContact.bind(this),
             serviceId: this.config.serviceId,
             connectionManager: this.connectionManager
@@ -269,7 +269,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             router: this.router,
             sessionTransport: this,
             connections: this.connections,
-            ownPeerDescriptor: this.ownPeerDescriptor!,
+            localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
             addContact: this.addNewContact.bind(this),
             isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
@@ -278,7 +278,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.storeRpcLocal = new StoreRpcLocal({
             rpcCommunicator: this.rpcCommunicator,
             recursiveFinder: this.recursiveFinder,
-            ownPeerDescriptor: this.ownPeerDescriptor!,
+            localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
             highestTtl: this.config.storeHighestTtl,
             maxTtl: this.config.storeMaxTtl,
@@ -291,7 +291,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         })
         registerExternalApiRpcMethods(this)
         if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
-            && !areEqualPeerDescriptors(this.config.entryPoints[0], this.ownPeerDescriptor!)) {
+            && !areEqualPeerDescriptors(this.config.entryPoints[0], this.localPeerDescriptor!)) {
             this.connectToEntryPoint(this.config.entryPoints[0])
         }
     }
@@ -316,7 +316,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.emit('contactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
             this.randomPeers!.addContact(
                 new RemoteDhtNode(
-                    this.ownPeerDescriptor!,
+                    this.localPeerDescriptor!,
                     removedContact.getPeerDescriptor(),
                     toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
                     this.config.serviceId
@@ -341,12 +341,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         this.transport!.getAllConnectionPeerDescriptors().forEach((peer) => {
             const remoteDhtNode = new RemoteDhtNode(
-                this.ownPeerDescriptor!,
+                this.localPeerDescriptor!,
                 peer,
                 toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
                 this.config.serviceId
             )
-            if (areEqualPeerDescriptors(peer, this.ownPeerDescriptor!)) {
+            if (areEqualPeerDescriptors(peer, this.localPeerDescriptor!)) {
                 logger.error('own peerdescriptor added to connections in initKBucket')
             }
             this.connections.set(keyFromPeerDescriptor(peer), remoteDhtNode)
@@ -362,12 +362,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private onTransportConnected(peerDescriptor: PeerDescriptor): void {
 
-        if (areEqualPeerDescriptors(this.ownPeerDescriptor!, peerDescriptor)) {
+        if (areEqualPeerDescriptors(this.localPeerDescriptor!, peerDescriptor)) {
             logger.error('onTransportConnected() to self')
         }
 
         const remoteDhtNode = new RemoteDhtNode(
-            this.ownPeerDescriptor!,
+            this.localPeerDescriptor!,
             peerDescriptor,
             toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
             this.config.serviceId
@@ -415,7 +415,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
         const distance1 = this.bucket!.distance(peer1.kademliaId, compareToId.value)
-        const distance2 = this.bucket!.distance(this.ownPeerDescriptor!.kademliaId, compareToId.value)
+        const distance2 = this.bucket!.distance(this.localPeerDescriptor!.kademliaId, compareToId.value)
         return distance1 < distance2
     }
 
@@ -432,11 +432,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private generatePeerDescriptorCallBack = (connectivityResponse: ConnectivityResponse) => {
         if (this.config.peerDescriptor) {
-            this.ownPeerDescriptor = this.config.peerDescriptor
+            this.localPeerDescriptor = this.config.peerDescriptor
         } else {
-            this.ownPeerDescriptor = createPeerDescriptor(connectivityResponse, this.config.peerId)
+            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.config.peerId)
         }
-        return this.ownPeerDescriptor
+        return this.localPeerDescriptor
     }
 
     private getClosestPeerDescriptors(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
@@ -543,7 +543,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getNodeId(): PeerID {
-        return peerIdFromPeerDescriptor(this.ownPeerDescriptor!)
+        return peerIdFromPeerDescriptor(this.localPeerDescriptor!)
     }
 
     public getBucketSize(): number {
@@ -554,10 +554,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started || this.stopped) {
             return
         }
-        if (!areEqualPeerDescriptors(contact, this.ownPeerDescriptor!)) {
+        if (!areEqualPeerDescriptors(contact, this.localPeerDescriptor!)) {
             logger.trace(`Adding new contact ${keyFromPeerDescriptor(contact)}`)
             const remoteDhtNode = new RemoteDhtNode(
-                this.ownPeerDescriptor!,
+                this.localPeerDescriptor!,
                 contact,
                 toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
                 this.config.serviceId
@@ -630,7 +630,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public async storeDataViaPeer(key: Uint8Array, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
         const rpcRemote = new ExternalApiRpcRemote(
-            this.ownPeerDescriptor!,
+            this.localPeerDescriptor!,
             peer,
             this.config.serviceId,
             toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
@@ -654,7 +654,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public async findDataViaPeer(idToFind: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
         const rpcRemote = new ExternalApiRpcRemote(
-            this.ownPeerDescriptor!,
+            this.localPeerDescriptor!,
             peer,
             this.config.serviceId,
             toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
@@ -671,7 +671,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getPeerDescriptor(): PeerDescriptor {
-        return this.ownPeerDescriptor!
+        return this.localPeerDescriptor!
     }
 
     public getAllConnectionPeerDescriptors(): PeerDescriptor[] {

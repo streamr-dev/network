@@ -50,7 +50,7 @@ describe('random graph with real connections', () => {
                 layer1Node: epDhtNode,
                 transport: epDhtNode.getTransport(),
                 connectionLocker: epDhtNode.getTransport() as ConnectionManager,
-                ownPeerDescriptor: epPeerDescriptor
+                localPeerDescriptor: epPeerDescriptor
             }
         )
         randomGraphNode2 = createRandomGraphNode({
@@ -58,28 +58,28 @@ describe('random graph with real connections', () => {
             layer1Node: dhtNode1,
             transport: dhtNode1.getTransport(),
             connectionLocker: dhtNode1.getTransport() as ConnectionManager,
-            ownPeerDescriptor: dhtNode1.getPeerDescriptor()
+            localPeerDescriptor: dhtNode1.getPeerDescriptor()
         })
         randomGraphNode3 = createRandomGraphNode({
             streamPartId,
             layer1Node: dhtNode2,
             transport: dhtNode2.getTransport(),
             connectionLocker: dhtNode2.getTransport() as ConnectionManager,
-            ownPeerDescriptor: dhtNode2.getPeerDescriptor()
+            localPeerDescriptor: dhtNode2.getPeerDescriptor()
         })
         randomGraphNode4 = createRandomGraphNode({
             streamPartId,
             layer1Node: dhtNode3,
             transport: dhtNode3.getTransport(),
             connectionLocker: dhtNode3.getTransport() as ConnectionManager,
-            ownPeerDescriptor: dhtNode3.getPeerDescriptor()
+            localPeerDescriptor: dhtNode3.getPeerDescriptor()
         })
         randomGraphNode5 = createRandomGraphNode({
             streamPartId,
             layer1Node: dhtNode4,
             transport: dhtNode4.getTransport(),
             connectionLocker: dhtNode4.getTransport() as ConnectionManager,
-            ownPeerDescriptor: dhtNode4.getPeerDescriptor()
+            localPeerDescriptor: dhtNode4.getPeerDescriptor()
         })
         await epDhtNode.joinDht([epPeerDescriptor])
         await Promise.all([

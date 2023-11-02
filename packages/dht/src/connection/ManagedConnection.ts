@@ -44,12 +44,12 @@ export class ManagedConnection extends EventEmitter<Events> {
     private bufferSentbyOtherConnection = false
     private closing = false
     public replacedByOtherConnection = false
-    private ownPeerDescriptor: PeerDescriptor
+    private localPeerDescriptor: PeerDescriptor
     protected outgoingConnection?: IConnection
     protected incomingConnection?: IConnection
 
     constructor(
-        ownPeerDescriptor: PeerDescriptor,
+        localPeerDescriptor: PeerDescriptor,
         connectionType: ConnectionType,
         outgoingConnection?: IConnection,
         incomingConnection?: IConnection,
@@ -58,7 +58,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         this.send = this.send.bind(this)
 
-        this.ownPeerDescriptor = ownPeerDescriptor
+        this.localPeerDescriptor = localPeerDescriptor
         this.outgoingConnection = outgoingConnection
         this.incomingConnection = incomingConnection
         this.connectionType = connectionType
@@ -72,7 +72,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
 
         if (outgoingConnection) {
-            this.handshaker = new Handshaker(this.ownPeerDescriptor, outgoingConnection)
+            this.handshaker = new Handshaker(this.localPeerDescriptor, outgoingConnection)
 
             this.handshaker.once('handshakeFailed', (errorMessage) => {
                 logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' handshakeFailed: ' + errorMessage)
@@ -95,7 +95,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         } else {
             if (incomingConnection) {
-                this.handshaker = new Handshaker(this.ownPeerDescriptor, incomingConnection)
+                this.handshaker = new Handshaker(this.localPeerDescriptor, incomingConnection)
                 this.handshaker.on('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
                     this.setPeerDescriptor(peerDescriptor)
                     this.emit('handshakeRequest', peerDescriptor)
@@ -305,7 +305,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         // This happens when connectionRequest has been made and answered
         if (this.implementation) {
             if (!this.handshaker) {
-                this.handshaker = new Handshaker(this.ownPeerDescriptor, this.implementation)
+                this.handshaker = new Handshaker(this.localPeerDescriptor, this.implementation)
             }
 
             this.handshaker.sendHandshakeResponse()

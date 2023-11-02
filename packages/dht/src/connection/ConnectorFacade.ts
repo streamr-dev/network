@@ -13,7 +13,7 @@ import { WebSocketConnectorRpcLocal } from './WebSocket/WebSocketConnectorRpcLoc
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
-    getOwnPeerDescriptor: () => PeerDescriptor | undefined
+    getLocalPeerDescriptor: () => PeerDescriptor | undefined
     start: (
         onIncomingConnection: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean
@@ -37,13 +37,13 @@ export interface DefaultConnectorFacadeConfig {
     webrtcPortRange?: PortRange
     maxMessageSize?: number
     tlsCertificate?: TlsCertificate
-    createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => PeerDescriptor
+    createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) => PeerDescriptor
 }
 
 export class DefaultConnectorFacade implements ConnectorFacade {
 
     private readonly config: DefaultConnectorFacadeConfig
-    private ownPeerDescriptor?: PeerDescriptor
+    private localPeerDescriptor?: PeerDescriptor
     private webSocketConnector?: WebSocketConnectorRpcLocal
     private webrtcConnector?: WebRtcConnectorRpcLocal
 
@@ -81,10 +81,10 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         }, onIncomingConnection)
         await this.webSocketConnector.start()
         const connectivityResponse = await this.webSocketConnector.checkConnectivity()
-        const ownPeerDescriptor = this.config.createOwnPeerDescriptor(connectivityResponse)
-        this.ownPeerDescriptor = ownPeerDescriptor
-        this.webSocketConnector.setOwnPeerDescriptor(ownPeerDescriptor)
-        this.webrtcConnector.setOwnPeerDescriptor(ownPeerDescriptor)
+        const localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
+        this.localPeerDescriptor = localPeerDescriptor
+        this.webSocketConnector.setLocalPeerDescriptor(localPeerDescriptor)
+        this.webrtcConnector.setLocalPeerDescriptor(localPeerDescriptor)
     }
 
     createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
@@ -95,8 +95,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         }
     }
 
-    getOwnPeerDescriptor(): PeerDescriptor | undefined {
-        return this.ownPeerDescriptor
+    getLocalPeerDescriptor(): PeerDescriptor | undefined {
+        return this.localPeerDescriptor
     }
 
     async stop(): Promise<void> {
@@ -107,19 +107,19 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
 export class SimulatorConnectorFacade implements ConnectorFacade {
 
-    private readonly ownPeerDescriptor: PeerDescriptor
+    private readonly localPeerDescriptor: PeerDescriptor
     private simulatorConnector?: SimulatorConnector
     private simulator: Simulator
 
-    constructor(ownPeerDescriptor: PeerDescriptor, simulator: Simulator) {
-        this.ownPeerDescriptor = ownPeerDescriptor
+    constructor(localPeerDescriptor: PeerDescriptor, simulator: Simulator) {
+        this.localPeerDescriptor = localPeerDescriptor
         this.simulator = simulator
     }
 
     async start(onIncomingConnection: (connection: ManagedConnection) => boolean): Promise<void> {
         logger.trace(`Creating SimulatorConnector`)
         this.simulatorConnector = new SimulatorConnector(
-            this.ownPeerDescriptor,
+            this.localPeerDescriptor,
             this.simulator,
             onIncomingConnection
         )
@@ -130,8 +130,8 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
         return this.simulatorConnector!.connect(peerDescriptor)
     }
 
-    getOwnPeerDescriptor(): PeerDescriptor {
-        return this.ownPeerDescriptor
+    getLocalPeerDescriptor(): PeerDescriptor {
+        return this.localPeerDescriptor
     }
 
     async stop(): Promise<void> {
