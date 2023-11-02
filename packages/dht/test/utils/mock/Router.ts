@@ -1,4 +1,4 @@
-import { IRouter } from '../../../src/dht/routing/RouterRpcLocal'
+import { IRouter } from '../../../src/dht/routing/Router'
 import { RouteMessageAck } from '../../../src/proto/packages/dht/protos/DhtRpc'
 
 export class MockRouter implements IRouter {

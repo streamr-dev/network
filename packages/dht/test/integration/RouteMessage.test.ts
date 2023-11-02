@@ -79,7 +79,7 @@ describe('Route Message With Mock Connections', () => {
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
-            sourceNode.routerRpcLocal!.doRouteMessage({
+            sourceNode.router!.doRouteMessage({
                 message,
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 requestId: v4(),
@@ -111,7 +111,7 @@ describe('Route Message With Mock Connections', () => {
                 sourceDescriptor: sourceNode.getPeerDescriptor(),
                 targetDescriptor: destinationNode.getPeerDescriptor()
             }
-            sourceNode.routerRpcLocal!.doRouteMessage({
+            sourceNode.router!.doRouteMessage({
                 message,
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 requestId: v4(),
@@ -167,7 +167,7 @@ describe('Route Message With Mock Connections', () => {
                             sourceDescriptor: node.getPeerDescriptor(),
                             targetDescriptor: destinationNode.getPeerDescriptor()
                         }
-                        node.routerRpcLocal!.doRouteMessage({
+                        node.router!.doRouteMessage({
                             message,
                             destinationPeer: receiver.getPeerDescriptor(),
                             sourcePeer: node.getPeerDescriptor(),
@@ -243,7 +243,7 @@ describe('Route Message With Mock Connections', () => {
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
-            sourceNode.routerRpcLocal!.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
+            sourceNode.router!.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
         }], [[destinationNode, 'message']])
 
     })

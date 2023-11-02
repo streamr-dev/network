@@ -9,7 +9,7 @@ import {
     RouteMessageWrapper
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { createRouteMessageAck, RoutingErrors, IRouter } from '../routing/RouterRpcLocal'
+import { createRouteMessageAck, RoutingErrors, IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
@@ -30,7 +30,7 @@ interface RecursiveFinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
     connections: Map<PeerIDKey, RemoteDhtNode>
-    routerRpcLocal: IRouter
+    router: IRouter
     ownPeerDescriptor: PeerDescriptor
     serviceId: string
     localDataStore: LocalDataStore
@@ -53,7 +53,7 @@ export class RecursiveFinder implements IRecursiveFinder {
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly sessionTransport: ITransport
     private readonly connections: Map<PeerIDKey, RemoteDhtNode>
-    private readonly routerRpcLocal: IRouter
+    private readonly router: IRouter
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly serviceId: string
     private readonly localDataStore: LocalDataStore
@@ -66,7 +66,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         this.rpcCommunicator = config.rpcCommunicator
         this.sessionTransport = config.sessionTransport
         this.connections = config.connections
-        this.routerRpcLocal = config.routerRpcLocal
+        this.router = config.router
         this.ownPeerDescriptor = config.ownPeerDescriptor
         this.serviceId = config.serviceId
         this.localDataStore = config.localDataStore
@@ -212,7 +212,7 @@ export class RecursiveFinder implements IRecursiveFinder {
                 closestPeersToDestination, data, true)
             return createRouteMessageAck(routedMessage)
         }
-        const ack = this.routerRpcLocal.doRouteMessage(routedMessage, RoutingMode.RECURSIVE_FIND, excludedPeer)
+        const ack = this.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE_FIND, excludedPeer)
         if (ack.error === RoutingErrors.NO_CANDIDATES_FOUND) {
             logger.trace(`findRecursively Node found no candidates`)
             this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
@@ -248,13 +248,13 @@ export class RecursiveFinder implements IRecursiveFinder {
     async findRecursively(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, 'findRecursively() service is not running')
-        } else if (this.routerRpcLocal.isMostLikelyDuplicate(routedMessage.requestId)) {
+        } else if (this.router.isMostLikelyDuplicate(routedMessage.requestId)) {
             return createRouteMessageAck(routedMessage, 'message given to findRecursively() service is likely a duplicate')
         }
         const senderKey = keyFromPeerDescriptor(routedMessage.previousPeer || routedMessage.sourcePeer!)
         logger.trace(`Received findRecursively call from ${senderKey}`)
         this.addContact(routedMessage.sourcePeer!, true)
-        this.routerRpcLocal.addToDuplicateDetector(routedMessage.requestId)
+        this.router.addToDuplicateDetector(routedMessage.requestId)
         return this.doFindRecursevily(routedMessage)
     }
 

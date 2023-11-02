@@ -1,13 +1,12 @@
-import { RouterRpcLocal } from '../../src/dht/routing/RouterRpcLocal'
+import { Router } from '../../src/dht/routing/Router'
 import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
 import { RemoteDhtNode } from '../../src/dht/RemoteDhtNode'
 import { createWrappedClosestPeersRequest, createMockRoutingRpcCommunicator } from '../utils/utils'
 import { v4 } from 'uuid'
 
-describe('RouterRpcLocal', () => {
-
-    let rpcLocal: RouterRpcLocal
+describe('Router', () => {
+    let router: Router
 
     const peerId = PeerID.fromString('router')
     const peerDescriptor1: PeerDescriptor = {
@@ -47,7 +46,7 @@ describe('RouterRpcLocal', () => {
 
     beforeEach(() => {
         connections = new Map()
-        rpcLocal = new RouterRpcLocal({
+        router = new Router({
             ownPeerDescriptor: peerDescriptor1,
             rpcCommunicator: mockRpcCommunicator,
             addContact: (_contact) => {},
@@ -57,11 +56,11 @@ describe('RouterRpcLocal', () => {
     })
 
     afterEach(() => {
-        rpcLocal.stop()
+        router.stop()
     })
 
     it('doRouteMessage without connections', () => {
-        const ack = rpcLocal.doRouteMessage({
+        const ack = router.doRouteMessage({
             message,
             destinationPeer: peerDescriptor2,
             requestId: v4(),
@@ -74,7 +73,7 @@ describe('RouterRpcLocal', () => {
 
     it('doRouteMessage with connections', () => {
         connections.set(PeerID.fromString('test').toKey(), createMockRemoteDhtNode(peerDescriptor2))
-        const ack = rpcLocal.doRouteMessage({
+        const ack = router.doRouteMessage({
             message,
             destinationPeer: peerDescriptor2,
             requestId: v4(),
@@ -86,36 +85,36 @@ describe('RouterRpcLocal', () => {
     })
 
     it('route server is destination without connections', async () => {
-        const ack = await rpcLocal.routeMessage(routedMessage)
+        const ack = await router.routeMessage(routedMessage)
         expect(ack.error).toEqual('')
     })
 
     it('route server with connections', async () => {
         connections.set(PeerID.fromString('test').toKey(), createMockRemoteDhtNode(peerDescriptor2))
-        const ack = await rpcLocal.routeMessage(routedMessage)
+        const ack = await router.routeMessage(routedMessage)
         expect(ack.error).toEqual('')
     })
 
     it('route server on duplicate message', async () => {
-        rpcLocal.addToDuplicateDetector(routedMessage.requestId)
-        const ack = await rpcLocal.routeMessage(routedMessage)
+        router.addToDuplicateDetector(routedMessage.requestId)
+        const ack = await router.routeMessage(routedMessage)
         expect(ack.error).toEqual('message given to routeMessage() service is likely a duplicate')
     })
 
     it('forward server no connections', async () => {
-        const ack = await rpcLocal.forwardMessage(routedMessage)
+        const ack = await router.forwardMessage(routedMessage)
         expect(ack.error).toEqual('No routing candidates found')
     })
 
     it('forward server with connections', async () => {
         connections.set(PeerID.fromString('test').toKey(), createMockRemoteDhtNode(peerDescriptor2))
-        const ack = await rpcLocal.forwardMessage(routedMessage)
+        const ack = await router.forwardMessage(routedMessage)
         expect(ack.error).toEqual('')
     })
 
     it('forward server on duplicate message', async () => {
-        rpcLocal.addToDuplicateDetector(routedMessage.requestId)
-        const ack = await rpcLocal.forwardMessage(routedMessage)
+        router.addToDuplicateDetector(routedMessage.requestId)
+        const ack = await router.forwardMessage(routedMessage)
         expect(ack.error).toEqual('message given to forwardMessage() service is likely a duplicate')
     })
 
