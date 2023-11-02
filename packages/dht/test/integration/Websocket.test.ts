@@ -1,26 +1,26 @@
 /* eslint-disable no-console */
 
-import { WebSocketServer } from '../../src/connection/WebSocket/WebSocketServer'
+import { WebsocketServer } from '../../src/connection/websocket/WebsocketServer'
 import { IConnection } from '../../src/connection/IConnection'
-import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
+import { ClientWebsocket } from '../../src/connection/websocket/ClientWebsocket'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-describe('WebSocket', () => {
+describe('Websocket', () => {
 
-    const webSocketServer = new WebSocketServer({
+    const websocketServer = new WebsocketServer({
         portRange: { min: 9999, max: 9999 }
     })
-    const clientWebSocket = new ClientWebSocket()
+    const clientWebsocket = new ClientWebsocket()
 
     beforeAll(async () => {
-        await webSocketServer.start()
+        await websocketServer.start()
     })
 
     it('Happy path', (done) => {
             
-        webSocketServer.on('connected', (serverConnection: IConnection) => {
+        websocketServer.on('connected', (serverConnection: IConnection) => {
             const time = Date.now()
             logger.info('server side sendind msg at ' + time)
             serverConnection.send(Uint8Array.from([1, 2, 3, 4]))
@@ -40,11 +40,11 @@ describe('WebSocket', () => {
             })
         })
         
-        clientWebSocket.on('connected', () => {
+        clientWebsocket.on('connected', () => {
             const time = Date.now()
             logger.info('client side setting listeners at ' + time)
             
-            clientWebSocket.on('data', (bytes: Uint8Array) => {
+            clientWebsocket.on('data', (bytes: Uint8Array) => {
                 const time = Date.now()
                 logger.info('client side receiving message at ' + time)
 
@@ -53,14 +53,14 @@ describe('WebSocket', () => {
                 
                 const time2 = Date.now()
                 logger.info('client side sendind msg at ' + time2)
-                clientWebSocket.send(Uint8Array.from([1, 2, 3, 4]))
+                clientWebsocket.send(Uint8Array.from([1, 2, 3, 4]))
             })
         })
 
-        clientWebSocket.connect('ws://127.0.0.1:9999')
+        clientWebsocket.connect('ws://127.0.0.1:9999')
     })
 
     afterAll(async () => {
-        await webSocketServer.stop()
+        await websocketServer.stop()
     })
 })

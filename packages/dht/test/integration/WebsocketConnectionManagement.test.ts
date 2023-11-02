@@ -4,7 +4,7 @@ import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 import { ConnectionType } from '../../src/connection/IConnection'
-import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/exports'
 import { PeerID } from '../../src/helpers/PeerID'
 import * as Err from '../../src/helpers/errors'
@@ -21,7 +21,7 @@ const createConfig = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultCon
     }
 }
 
-describe('WebSocket Connection Management', () => {
+describe('Websocket Connection Management', () => {
 
     const serviceId = 'test'
     let wsServerManager: ConnectionManager

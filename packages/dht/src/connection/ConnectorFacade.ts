@@ -6,10 +6,10 @@ import {
 import { ITransport } from '../transport/ITransport'
 import { PortRange, TlsCertificate } from './ConnectionManager'
 import { ManagedConnection } from './ManagedConnection'
-import { Simulator } from './Simulator/Simulator'
-import { SimulatorConnector } from './Simulator/SimulatorConnector'
-import { IceServer, WebRtcConnectorRpcLocal } from './WebRTC/WebRtcConnectorRpcLocal'
-import { WebSocketConnectorRpcLocal } from './WebSocket/WebSocketConnectorRpcLocal'
+import { Simulator } from './simulator/Simulator'
+import { SimulatorConnector } from './simulator/SimulatorConnector'
+import { IceServer, WebrtcConnectorRpcLocal } from './webrtc/WebrtcConnectorRpcLocal'
+import { WebsocketConnectorRpcLocal } from './websocket/WebsocketConnectorRpcLocal'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
@@ -44,8 +44,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     private readonly config: DefaultConnectorFacadeConfig
     private localPeerDescriptor?: PeerDescriptor
-    private webSocketConnector?: WebSocketConnectorRpcLocal
-    private webrtcConnector?: WebRtcConnectorRpcLocal
+    private websocketConnector?: WebsocketConnectorRpcLocal
+    private webrtcConnector?: WebrtcConnectorRpcLocal
 
     constructor(config: DefaultConnectorFacadeConfig) {
         this.config = config
@@ -55,10 +55,10 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         onIncomingConnection: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean
     ): Promise<void> {
-        logger.trace(`Creating WebSocketConnector`)
-        this.webSocketConnector = new WebSocketConnectorRpcLocal({
+        logger.trace(`Creating WebsocketConnectorRpcLocal`)
+        this.websocketConnector = new WebsocketConnectorRpcLocal({
             transport: this.config.transport!,
-            // TODO should we use canConnect also for WebRtcConnector? (NET-1142)
+            // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
             canConnect: (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),
             onIncomingConnection,
             portRange: this.config.websocketPortRange,
@@ -67,8 +67,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             tlsCertificate: this.config.tlsCertificate,
             maxMessageSize: this.config.maxMessageSize
         })
-        logger.trace(`Creating WebRTCConnector`)
-        this.webrtcConnector = new WebRtcConnectorRpcLocal({
+        logger.trace(`Creating WebRtcConnectorRpcLocal`)
+        this.webrtcConnector = new WebrtcConnectorRpcLocal({
             transport: this.config.transport!,
             iceServers: this.config.iceServers,
             allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
@@ -79,17 +79,17 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             portRange: this.config.webrtcPortRange,
             maxMessageSize: this.config.maxMessageSize
         }, onIncomingConnection)
-        await this.webSocketConnector.start()
-        const connectivityResponse = await this.webSocketConnector.checkConnectivity()
+        await this.websocketConnector.start()
+        const connectivityResponse = await this.websocketConnector.checkConnectivity()
         const localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
         this.localPeerDescriptor = localPeerDescriptor
-        this.webSocketConnector.setLocalPeerDescriptor(localPeerDescriptor)
+        this.websocketConnector.setLocalPeerDescriptor(localPeerDescriptor)
         this.webrtcConnector.setLocalPeerDescriptor(localPeerDescriptor)
     }
 
     createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
-        if (this.webSocketConnector!.isPossibleToFormConnection(peerDescriptor)) {
-            return this.webSocketConnector!.connect(peerDescriptor)
+        if (this.websocketConnector!.isPossibleToFormConnection(peerDescriptor)) {
+            return this.websocketConnector!.connect(peerDescriptor)
         } else {
             return this.webrtcConnector!.connect(peerDescriptor)
         }
@@ -100,7 +100,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     }
 
     async stop(): Promise<void> {
-        await this.webSocketConnector!.destroy()
+        await this.websocketConnector!.destroy()
         await this.webrtcConnector!.stop()
     }
 }

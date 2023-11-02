@@ -1,6 +1,6 @@
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { Simulator } from '../../src/connection/simulator/Simulator'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'

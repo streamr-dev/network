@@ -5,7 +5,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from '@streamr/utils'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 
-describe('WebSocket IConnection Requests', () => {
+describe('Websocket IConnection Requests', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('3').value,
         type: NodeType.NODEJS,

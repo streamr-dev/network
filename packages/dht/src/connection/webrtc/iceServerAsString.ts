@@ -1,4 +1,4 @@
-import { IceServer } from './WebRtcConnectorRpcLocal'
+import { IceServer } from './WebrtcConnectorRpcLocal'
 
 export function iceServerAsString({ url, port, username, password, tcp }: IceServer): string {
     const [protocol, hostname] = url.split(':')
