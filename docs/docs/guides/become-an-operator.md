@@ -23,7 +23,7 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 :::
 
 ## Operator setup instructions
-Follow these steps below to setup your Operator so that you can participate in the rewards. 
+Follow these steps below to setup your Operator so that you can participate in the protocol and collect rewards. 
 
 ### Step 1: Deploy your Operator Contract
 You can do this in the Network section of the [Streamr Hub](https://streamr.network/hub) (available in mid November). Navigate to Network -> Operators, then click "Become an Operator" and complete the dialog. The [Operator contract](../streamr-network/network-roles/operators#the-operator-contract) is deployed on the Polygon blockchain.
