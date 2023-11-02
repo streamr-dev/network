@@ -140,4 +140,4 @@ The only information they will need from you is your address. Please do not enga
 ## Testnet configuration
 Editing the `config/default.json` is the main way to configure your node.
 
-To particpate in the incentivized testnets, you'll need to add a few extra lines of config to your node. That config can be found on the [dedicated testnet page](../streamr-testnets/testnets.md) closer to the date of the testnets.
+To participate in the incentivized testnets, you'll need to add a few extra lines of config to your node. That config can be found on the [dedicated testnet page](../streamr-testnets/testnets.md) closer to the date of the testnets.
