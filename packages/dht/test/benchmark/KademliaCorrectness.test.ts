@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
 import { keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'

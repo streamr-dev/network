@@ -30,12 +30,12 @@ service RecursiveFindSessionService {
   rpc sendFindResponse(FindResponse) returns (google.protobuf.Empty);
 }
 
-service WebSocketConnectorRpc {
-  rpc requestConnection (WebSocketConnectionRequest) returns (WebSocketConnectionResponse);
+service WebsocketConnectorRpc {
+  rpc requestConnection (WebsocketConnectionRequest) returns (WebsocketConnectionResponse);
 }
 
-service WebRtcConnectorRpc {
-  rpc requestConnection (WebRtcConnectionRequest) returns (google.protobuf.Empty);
+service WebrtcConnectorRpc {
+  rpc requestConnection (WebrtcConnectionRequest) returns (google.protobuf.Empty);
   rpc rtcOffer (RtcOffer) returns (google.protobuf.Empty);
   rpc rtcAnswer (RtcAnswer) returns (google.protobuf.Empty);
   rpc iceCandidate (IceCandidate) returns (google.protobuf.Empty);
@@ -233,18 +233,18 @@ message Message {
 // Connector Messages
 
 // WebSocket
-message WebSocketConnectionRequest {
+message WebsocketConnectionRequest {
   string ip = 1;
   uint32 port = 2;
 }
 
-message WebSocketConnectionResponse {
+message WebsocketConnectionResponse {
   bool accepted = 1;
   optional string reason = 2;
 }
 
 // WebRTC
-message WebRtcConnectionRequest {
+message WebrtcConnectionRequest {
   string connectionId = 1;
 }
 

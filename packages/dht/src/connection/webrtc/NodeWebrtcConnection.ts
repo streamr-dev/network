@@ -1,19 +1,19 @@
-import { IWebRtcConnection, WebRtcConnectionEvents } from './IWebRtcConnection'
+import { IWebrtcConnection, WebrtcConnectionEvents } from './IWebrtcConnection'
 import { ConnectionType, IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import EventEmitter from 'eventemitter3'
 import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
 import { Logger } from '@streamr/utils'
-import { IllegalRTCPeerConnectionState } from '../../helpers/errors'
+import { IllegalRtcPeerConnectionState } from '../../helpers/errors'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { DisconnectionType } from '../../transport/ITransport'
 import { iceServerAsString } from './iceServerAsString'
-import { IceServer } from './WebRtcConnectorRpcLocal'
+import { IceServer } from './WebrtcConnectorRpcLocal'
 import { PortRange } from '../ConnectionManager'
 
 const logger = new Logger(module)
 
-export const WEB_RTC_CLEANUP = new class {
+export const WEBRTC_CLEANUP = new class {
     // eslint-disable-next-line class-methods-use-this
     cleanUp(): void {
         nodeDatachannel.cleanup()
@@ -33,7 +33,7 @@ export interface Params {
 // Re-defined accoring to https://github.com/microsoft/TypeScript/blob/main/src/lib/dom.generated.d.ts
 // because importing single dom definitions in not possible
 
-enum RTCPeerConnectionStateEnum {
+enum RtcPeerConnectionStateEnum {
     closed = 'closed',
     connected = 'connected',
     connecting = 'connecting',
@@ -44,16 +44,16 @@ enum RTCPeerConnectionStateEnum {
 
 nodeDatachannel.initLogger('Fatal')
 
-type RTCPeerConnectionState = keyof typeof RTCPeerConnectionStateEnum
+type RtcPeerConnectionState = keyof typeof RtcPeerConnectionStateEnum
 
-type Events = WebRtcConnectionEvents & ConnectionEvents
+type Events = WebrtcConnectionEvents & ConnectionEvents
 
-export class NodeWebRtcConnection extends EventEmitter<Events> implements IConnection, IWebRtcConnection {
+export class NodeWebrtcConnection extends EventEmitter<Events> implements IConnection, IWebrtcConnection {
 
     public connectionId: ConnectionID
     private connection?: PeerConnection
     private dataChannel?: DataChannel
-    private lastState: RTCPeerConnectionState = 'connecting'
+    private lastState: RtcPeerConnectionState = 'connecting'
     private remoteDescriptionSet = false
     private connectingTimeoutRef?: NodeJS.Timeout
 
@@ -239,15 +239,15 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
     private onStateChange(state: string): void {
         logger.trace('onStateChange ' + state)
-        if (!Object.keys(RTCPeerConnectionStateEnum).filter((s) => isNaN(+s)).includes(state)) {
-            throw new IllegalRTCPeerConnectionState('NodeWebRtcConnection used an unknown state: ' + state)
+        if (!Object.keys(RtcPeerConnectionStateEnum).filter((s) => isNaN(+s)).includes(state)) {
+            throw new IllegalRtcPeerConnectionState('NodeWebrtcConnection used an unknown state: ' + state)
         } else {
-            this.lastState = state as RTCPeerConnectionState
+            this.lastState = state as RtcPeerConnectionState
         }
         
-        if (state === RTCPeerConnectionStateEnum.closed
-            || state === RTCPeerConnectionStateEnum.disconnected
-            || state === RTCPeerConnectionStateEnum.failed
+        if (state === RtcPeerConnectionStateEnum.closed
+            || state === RtcPeerConnectionStateEnum.disconnected
+            || state === RtcPeerConnectionStateEnum.failed
         ) {
             this.doClose('OTHER')
         }
