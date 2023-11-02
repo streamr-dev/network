@@ -1,6 +1,6 @@
 import { WebsocketServer } from '../../src/connection/websocket/WebsocketServer'
 
-describe('WebSocketServer', () => {
+describe('WebsocketServer', () => {
 
     it('starts and stops', async () => {
         const server = new WebsocketServer({

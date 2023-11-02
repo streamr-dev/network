@@ -7,12 +7,12 @@ import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-describe('WebSocket', () => {
+describe('Websocket', () => {
 
     const websocketServer = new WebsocketServer({
         portRange: { min: 9999, max: 9999 }
     })
-    const clientWebSocket = new ClientWebsocket()
+    const clientWebsocket = new ClientWebsocket()
 
     beforeAll(async () => {
         await websocketServer.start()
@@ -40,11 +40,11 @@ describe('WebSocket', () => {
             })
         })
         
-        clientWebSocket.on('connected', () => {
+        clientWebsocket.on('connected', () => {
             const time = Date.now()
             logger.info('client side setting listeners at ' + time)
             
-            clientWebSocket.on('data', (bytes: Uint8Array) => {
+            clientWebsocket.on('data', (bytes: Uint8Array) => {
                 const time = Date.now()
                 logger.info('client side receiving message at ' + time)
 
@@ -53,11 +53,11 @@ describe('WebSocket', () => {
                 
                 const time2 = Date.now()
                 logger.info('client side sendind msg at ' + time2)
-                clientWebSocket.send(Uint8Array.from([1, 2, 3, 4]))
+                clientWebsocket.send(Uint8Array.from([1, 2, 3, 4]))
             })
         })
 
-        clientWebSocket.connect('ws://127.0.0.1:9999')
+        clientWebsocket.connect('ws://127.0.0.1:9999')
     })
 
     afterAll(async () => {

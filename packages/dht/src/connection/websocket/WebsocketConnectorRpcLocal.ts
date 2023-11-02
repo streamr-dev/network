@@ -31,7 +31,7 @@ import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 
 const logger = new Logger(module)
 
-export const connectivityMethodToWebSocketUrl = (ws: ConnectivityMethod): string => {
+export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod): string => {
     return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
 }
 
@@ -162,7 +162,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
             } catch (err) {
                 if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
                     const error = `Failed to connect to entrypoint with id ${binaryToHex(entryPoint.kademliaId)} `
-                        + `and URL ${connectivityMethodToWebSocketUrl(entryPoint.websocket!)}`
+                        + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
                     logger.error(error, { error: err })
                     await wait(2000)
                 }
@@ -193,7 +193,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
         } else {
             const socket = new ClientWebsocket()
 
-            const url = connectivityMethodToWebSocketUrl(targetPeerDescriptor.websocket!)
+            const url = connectivityMethodToWebsocketUrl(targetPeerDescriptor.websocket!)
 
             const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
             managedConnection.setPeerDescriptor(targetPeerDescriptor)
@@ -232,17 +232,17 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
         return managedConnection
     }
 
-    private onServerSocketHandshakeRequest = (peerDescriptor: PeerDescriptor, serverWebSocket: IConnection) => {
+    private onServerSocketHandshakeRequest = (peerDescriptor: PeerDescriptor, serverWebsocket: IConnection) => {
 
         const peerId = peerIdFromPeerDescriptor(peerDescriptor)
 
         if (this.ongoingConnectRequests.has(peerId.toKey())) {
             const ongoingConnectReguest = this.ongoingConnectRequests.get(peerId.toKey())!
-            ongoingConnectReguest.attachImplementation(serverWebSocket)
+            ongoingConnectReguest.attachImplementation(serverWebsocket)
             ongoingConnectReguest.acceptHandshake()
             this.ongoingConnectRequests.delete(peerId.toKey())
         } else {
-            const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, ConnectionType.WEBSOCKET_SERVER, undefined, serverWebSocket)
+            const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, ConnectionType.WEBSOCKET_SERVER, undefined, serverWebsocket)
 
             managedConnection.setPeerDescriptor(peerDescriptor)
 

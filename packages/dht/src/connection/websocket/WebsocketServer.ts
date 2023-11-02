@@ -8,7 +8,7 @@ import {
 } from '../IConnectionSource'
 
 import { Logger, asAbortable } from '@streamr/utils'
-import { WebSocketServerStartError } from '../../helpers/errors'
+import { WebsocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
 import fs from 'fs'
@@ -54,11 +54,11 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                 if (err.originalError?.code === 'EADDRINUSE') {
                     logger.debug(`failed to start WebSocket server on port: ${port} reattempting on next port`)
                 } else {
-                    throw new WebSocketServerStartError(err)
+                    throw new WebsocketServerStartError(err)
                 }
             }
         }
-        throw new WebSocketServerStartError(`Failed to start WebSocket server on any port in range: ${this.portRange.min}-${this.portRange.min}`)
+        throw new WebsocketServerStartError(`Failed to start WebSocket server on any port in range: ${this.portRange.min}-${this.portRange.min}`)
     }
 
     private startServer(port: number, tlsCertificate?: TlsCertificate): Promise<void> {
@@ -97,7 +97,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                 this.emit('connected', new ServerWebsocket(connection, request.resourceURL))
             })
             this.httpServer.once('error', (err: Error) => {
-                reject(new WebSocketServerStartError('Starting Websocket server failed', err))
+                reject(new WebsocketServerStartError('Starting Websocket server failed', err))
             })
 
             this.httpServer.once('listening', () => {
@@ -109,7 +109,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                 // Listen only to IPv4 network interfaces, default value listens to IPv6 as well
                 this.httpServer.listen(port, '0.0.0.0')
             } catch (e) {
-                reject(new WebSocketServerStartError('Websocket server threw an exception', e))
+                reject(new WebsocketServerStartError('Websocket server threw an exception', e))
             }
         })
     }

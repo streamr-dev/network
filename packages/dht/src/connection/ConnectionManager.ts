@@ -272,10 +272,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private isConnectionToSelf(peerDescriptor: PeerDescriptor): boolean { 
-        return areEqualPeerDescriptors(peerDescriptor, this.getOwnPeerDescriptor()) || this.isOwnWebSocketServer(peerDescriptor)
+        return areEqualPeerDescriptors(peerDescriptor, this.getOwnPeerDescriptor()) || this.isOwnWebsocketServer(peerDescriptor)
     }
 
-    private isOwnWebSocketServer(peerDescriptor: PeerDescriptor): boolean {
+    private isOwnWebsocketServer(peerDescriptor: PeerDescriptor): boolean {
         const ownPeerDescriptor = this.getOwnPeerDescriptor()
         if ((peerDescriptor.websocket !== undefined) && (ownPeerDescriptor.websocket !== undefined)) {
             return ((peerDescriptor.websocket.port === ownPeerDescriptor.websocket.port) 

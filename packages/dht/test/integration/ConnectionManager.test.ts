@@ -307,7 +307,7 @@ describe('ConnectionManager', () => {
         await connectionManager4.stop()
     })
 
-    it('Cannot send to own WebSocketServer if kademliaIds do not match', async () => {
+    it('Cannot send to own WebsocketServer if kademliaIds do not match', async () => {
         const connectionManager1 = createConnectionManager({
             transport: mockTransport,
             websocketHost: '127.0.0.1',

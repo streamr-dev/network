@@ -10,7 +10,7 @@ import { ClientWebsocket } from './websocket/ClientWebsocket'
 import { v4 } from 'uuid'
 import { NatType } from './ConnectionManager'
 import { ServerWebsocket } from './websocket/ServerWebsocket'
-import { connectivityMethodToWebSocketUrl } from './websocket/WebsocketConnectorRpcLocal'
+import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnectorRpcLocal'
 
 const logger = new Logger(module)
 
@@ -49,7 +49,7 @@ export class ConnectivityChecker {
                 mode: ConnectionMode.REQUEST
             })
         } catch (e) {
-            throw new Err.ConnectionFailed(`Failed to connect to the entrypoint ${connectivityMethodToWebSocketUrl(entryPoint.websocket!)}`, e)
+            throw new Err.ConnectionFailed(`Failed to connect to the entrypoint ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`, e)
         }
         // send connectivity request
         const connectivityRequestMessage: ConnectivityRequest = { port: this.websocketPort, host: this.host, tls: this.tls }
@@ -135,7 +135,7 @@ export class ConnectivityChecker {
                 port: connectivityRequest.port,
                 tls: connectivityRequest.tls
             }
-            logger.trace(`Attempting Connectivity Check to ${connectivityMethodToWebSocketUrl(wsServerInfo)}`)
+            logger.trace(`Attempting Connectivity Check to ${connectivityMethodToWebsocketUrl(wsServerInfo)}`)
             outgoingConnection = await this.connectAsync({
                 wsServerInfo,
                 mode: ConnectionMode.PROBE
@@ -175,7 +175,7 @@ export class ConnectivityChecker {
         { wsServerInfo: ConnectivityMethod, mode: ConnectionMode, timeoutMs?: number }
     ): Promise<IConnection> {
         const socket = new ClientWebsocket()
-        const url = `${connectivityMethodToWebSocketUrl(wsServerInfo)}?${mode}=true`
+        const url = `${connectivityMethodToWebsocketUrl(wsServerInfo)}?${mode}=true`
         let result: RunAndRaceEventsReturnType<ConnectionEvents>
         try {
             result = await runAndRaceEvents3<ConnectionEvents>([

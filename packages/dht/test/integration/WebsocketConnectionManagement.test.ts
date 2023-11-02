@@ -21,7 +21,7 @@ const createConfig = (ownPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConne
     }
 }
 
-describe('WebSocket Connection Management', () => {
+describe('Websocket Connection Management', () => {
 
     const serviceId = 'test'
     let wsServerManager: ConnectionManager
