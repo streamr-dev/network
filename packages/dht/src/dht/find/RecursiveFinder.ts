@@ -17,7 +17,7 @@ import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RemoteRecursiveFindSession } from './RemoteRecursiveFindSession'
 import { v4 } from 'uuid'
 import { RecursiveFindSession, RecursiveFindSessionEvents } from './RecursiveFindSession'
-import { RemoteDhtNode } from '../RemoteDhtNode'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
 import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
@@ -29,7 +29,7 @@ import { SortedContactList } from '../contact/SortedContactList'
 interface RecursiveFinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
-    connections: Map<PeerIDKey, RemoteDhtNode>
+    connections: Map<PeerIDKey, DhtNodeRpcRemote>
     router: IRouter
     localPeerDescriptor: PeerDescriptor
     serviceId: string
@@ -52,7 +52,7 @@ export class RecursiveFinder implements IRecursiveFinder {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly sessionTransport: ITransport
-    private readonly connections: Map<PeerIDKey, RemoteDhtNode>
+    private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
     private readonly router: IRouter
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly serviceId: string
@@ -233,7 +233,7 @@ export class RecursiveFinder implements IRecursiveFinder {
 
     private getClosestConnections(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
         const connectedPeers = Array.from(this.connections.values())
-        const closestPeers = new SortedContactList<RemoteDhtNode>(
+        const closestPeers = new SortedContactList<DhtNodeRpcRemote>(
             PeerID.fromValue(kademliaId),
             limit,
             undefined,

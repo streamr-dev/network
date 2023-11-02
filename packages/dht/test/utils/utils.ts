@@ -18,7 +18,7 @@ import {
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import {
-    IDhtRpcService,
+    IDhtNodeRpc,
     IRouterRpc,
     IStoreRpc,
     IWebSocketConnectorRpc
@@ -117,7 +117,7 @@ export const createFindRequest = (
     return request
 }
 
-interface IDhtRpcWithError extends IDhtRpcService {
+interface IDhtRpcWithError extends IDhtNodeRpc {
     throwPingError: (request: PingRequest) => Promise<PingResponse>
     respondPingWithTimeout: (request: PingRequest) => Promise<PingResponse>
     throwGetClosestPeersError: (request: ClosestPeersRequest) => Promise<ClosestPeersResponse>

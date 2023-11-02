@@ -6,7 +6,7 @@ import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { DuplicateDetector } from './DuplicateDetector'
 import { ConnectionManager } from '../../connection/ConnectionManager'
-import { RemoteDhtNode } from '../RemoteDhtNode'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 
@@ -26,7 +26,7 @@ export enum RoutingErrors {
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
-    connections: Map<PeerIDKey, RemoteDhtNode>
+    connections: Map<PeerIDKey, DhtNodeRpcRemote>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     serviceId: string
     connectionManager?: ConnectionManager
@@ -54,7 +54,7 @@ const logger = new Logger(module)
 export class Router implements IRouter {
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly localPeerDescriptor: PeerDescriptor
-    private readonly connections: Map<PeerIDKey, RemoteDhtNode>
+    private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
     private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     private readonly serviceId: string
     private readonly connectionManager?: ConnectionManager

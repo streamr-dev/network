@@ -20,7 +20,7 @@ import EventEmitter from 'eventemitter3'
 import { Events } from '../DhtNode'
 import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
-import { RemoteDhtNode } from '../RemoteDhtNode'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -32,7 +32,7 @@ interface DataStoreConfig {
     highestTtl: number
     redundancyFactor: number
     dhtNodeEmitter: EventEmitter<Events>
-    getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => RemoteDhtNode[]
+    getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
 }
 
 const logger = new Logger(module)
@@ -48,7 +48,7 @@ export class StoreRpcLocal implements IStoreRpc {
     private readonly highestTtl: number
     private readonly redundancyFactor: number
     private readonly dhtNodeEmitter: EventEmitter<Events>
-    private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => RemoteDhtNode[]
+    private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
 
     constructor(config: DataStoreConfig) {
         this.rpcCommunicator = config.rpcCommunicator
