@@ -44,6 +44,7 @@ describe(OperatorFleetState, () => {
             10,
             100,
             0,
+            0,
             () => currentTime
         )
         state = createOperatorFleetState(coordinationStreamId)

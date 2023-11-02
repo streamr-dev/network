@@ -59,7 +59,9 @@ export function parsePartitionFromReviewRequestMetadata(metadataAsString: string
 export type ReviewRequestListener = (
     sponsorship: EthereumAddress,
     operatorContractAddress: EthereumAddress,
-    partition: number
+    partition: number,
+    votingPeriodStartTime: number,
+    votingPeriodEndTime: number
 ) => void
 
 const logger = new Logger(module)
@@ -329,7 +331,13 @@ export class ContractFacade {
         addManagedEventListener<any, any>(
             this.operatorContract as any,
             'ReviewRequest',
-            (sponsorship: string, targetOperator: string, metadataAsString?: string) => {
+            (
+                sponsorship: string,
+                targetOperator: string,
+                voteStartTimestampInSecs: number,
+                voteEndTimestampInSecs: number,
+                metadataAsString?: string
+            ) => {
                 let partition: number
                 try {
                     partition = parsePartitionFromReviewRequestMetadata(metadataAsString)
@@ -351,7 +359,13 @@ export class ContractFacade {
                     targetOperator,
                     partition
                 })
-                listener(toEthereumAddress(sponsorship), toEthereumAddress(targetOperator), partition)
+                listener(
+                    toEthereumAddress(sponsorship),
+                    toEthereumAddress(targetOperator),
+                    partition,
+                    voteStartTimestampInSecs * 1000,
+                    voteEndTimestampInSecs * 1000
+                )
             },
             abortSignal
         )

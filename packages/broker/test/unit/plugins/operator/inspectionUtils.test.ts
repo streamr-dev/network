@@ -1,5 +1,5 @@
 import { mock, MockProxy } from 'jest-mock-extended'
-import { NetworkPeerDescriptor, NodeID, StreamrClient } from 'streamr-client'
+import { NetworkPeerDescriptor, NodeID, StreamrClient, Subscription } from 'streamr-client'
 import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { findNodesForTarget, findTarget, inspectTarget } from '../../../../src/plugins/operator/inspectionUtils'
@@ -179,6 +179,7 @@ describe(inspectTarget, () => {
 
     beforeEach(() => {
         streamrClient = mock<StreamrClient>()
+        streamrClient.subscribe.mockResolvedValue(mock<Subscription>()) // TODO: test sub/unsub interaction
         abortController = new AbortController()
     })
 
