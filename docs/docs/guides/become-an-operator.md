@@ -10,6 +10,8 @@ sidebar_position: 5
 - Stake `DATA` tokens on your Operator and give your nodes some `MATIC`
 - Join Sponsorships through your Operator that will earn you DATA tokens.
 
+## Migrating from Brubeck
+
 If you’ve been running a Streamr node in the past you might be familiar with a two step process– run some software and stake some tokens, i.e. a software step and a blockchain step. Behind the scenes, the Streamr core team would validate user’s stake and transfer tokens to node runner wallets at the end of each month. This has worked, but its been highly centralized. With the introduction of stream Sponsorships, Operators, Sponsors and Delegators we now have everything we need for a peer to peer decentralized and market based incentivization on Streamr. The most important role is the Operator, so let's learn how to become one.
 
 :::tip Streamr 1.0 network versus the Brubeck (older) network
