@@ -15,7 +15,7 @@ export class ManagedWebrtcConnection extends ManagedConnection {
             connectedConnection)
     }
 
-    public getWebRtcConnection(): NodeWebrtcConnection {
+    public getWebrtcConnection(): NodeWebrtcConnection {
         if (this.outgoingConnection) {
             return this.outgoingConnection as unknown as NodeWebrtcConnection
         } else {

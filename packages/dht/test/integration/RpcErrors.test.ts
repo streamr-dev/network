@@ -133,7 +133,7 @@ describe('RPC errors', () => {
         
     }, 60000)
 
-    it('Disconnects WebRtcConnection while being connected', async () => {
+    it('Disconnects WebrtcConnection while being connected', async () => {
         
         const rpcMessage: RpcMessage = {
             header: {},

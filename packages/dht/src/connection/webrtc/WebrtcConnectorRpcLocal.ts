@@ -195,7 +195,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         }
         const peerKey = keyFromPeerDescriptor(remotePeer)
         let managedConnection = this.ongoingConnectAttempts.get(peerKey)
-        let connection = managedConnection?.getWebRtcConnection()
+        let connection = managedConnection?.getWebrtcConnection()
 
         if (!managedConnection) {
             connection = new NodeWebrtcConnection({ remotePeerDescriptor: remotePeer })
@@ -246,7 +246,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
             return
         }
         const peerKey = keyFromPeerDescriptor(remotePeerDescriptor)
-        const connection = this.ongoingConnectAttempts.get(peerKey)?.getWebRtcConnection()
+        const connection = this.ongoingConnectAttempts.get(peerKey)?.getWebrtcConnection()
         if (!connection) {
             return
         } else if (connection.connectionId.toString() !== connectionId) {
@@ -276,7 +276,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
             return
         }
         const peerKey = keyFromPeerDescriptor(remotePeerDescriptor)
-        const connection = this.ongoingConnectAttempts.get(peerKey)?.getWebRtcConnection()
+        const connection = this.ongoingConnectAttempts.get(peerKey)?.getWebrtcConnection()
 
         if (!connection) {
             return
