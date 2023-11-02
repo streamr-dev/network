@@ -125,6 +125,7 @@ export class RestServer {
         })
     }
 
+    // TODO: perhaps this can be moved out of class? At the moment it is required by RestInterface
     private createSession = async (_req: express.Request, res: express.Response): Promise<void> => {
         try {
             const session = await this.engine.createSession()
