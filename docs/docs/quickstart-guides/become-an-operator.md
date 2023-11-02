@@ -26,7 +26,7 @@ Follow these steps below to setup your Operator so that you can participate in t
 ### Step 1: Deploy your Operator Contract
 You can do this in the Network section of the [Streamr Hub](https://streamr.network/hub) (available in mid November). Navigate to Network -> Operators, then click "Become an Operator" and complete the dialog. The [Operator contract](../streamr-network/network-roles/operators#the-operator-contract) is deployed on the Polygon blockchain.
 
-You can also take advantage of the Mumbai testing environment: [Mumbai Streamr Hub](https://mumbaistreamr.network/hub) to test your Operator deployment. 
+You can also take advantage of the Mumbai testing environment: [Mumbai Streamr Hub](https://mumbai.streamr.network/hub) to test your Operator deployment. 
 
 The wallet/account that you use to make the Operator creation transaction will be known as the **Owner wallet**. It's the wallet you'll use to control your Operator business. The owner wallet is a beneficiary wallet– it’s where your Operator earnings get withdrawn to. It can be a hot wallet (Metamask), or a cold wallet (Ledger, etc) or whatever you want, just be sure to keep the account private and never share your private key or seed phrase with anyone.
 

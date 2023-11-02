@@ -116,9 +116,11 @@ _"Path to store the configuration"_
 Press 'enter' to use the default path.
 
 :::caution
-
 The path to the config file in the `docker run` command and the path defined via the config wizard differs and tend to cause some confusion. They are different for a reason. The path in the `docker run` command (`/home/streamr/.streamr`) refers to the path _inside_ the Docker container, whereas the path you define via the config wizard refers to the path _outside_ the Docker container. Hence, you need to use the default path as mentioned above.
+:::
 
+:::info
+If you're running a node to become an Operator, then you could now edit the node config file at `~/.streamrDocker/config/default.json` with the necessary updates. If you're running the node in the Mumbai environment then a [special testnet config](../quickstart-guides/become-an-operator#mumbai-testing-environment-node-config) is necessary.
 :::
 
 ### Step 4: Start your Streamr node using Docker
