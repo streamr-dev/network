@@ -236,7 +236,7 @@ export class RestServer {
         }
     }
 
-    // TODO: use async fs methods?
+    // TODO: use async fs methods? Add helper function to avoid code duplication
     private createSelfSignedCertsIfTheyDontExist(): void {
         if (!fs.existsSync(this.caCertPath) || !fs.existsSync(this.caKeyPath) ||
             !fs.existsSync(this.certPath) || !fs.existsSync(this.keyPath)) {
