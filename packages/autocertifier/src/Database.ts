@@ -11,6 +11,7 @@ const logger = new Logger(module)
 export class Database {
 
     private db?: SqliteDatabase
+    // TODO: create statements on demand when needed, no need to hold these as fields
     private createSubdomainStatement?: Statement
     private getSubdomainStatement?: Statement
     private getSubdomainWithTokenStatement?: Statement
