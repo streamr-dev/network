@@ -13,7 +13,7 @@ import { PortRange } from '../ConnectionManager'
 
 const logger = new Logger(module)
 
-export const WEB_RTC_CLEANUP = new class {
+export const WEBRTC_CLEANUP = new class {
     // eslint-disable-next-line class-methods-use-this
     cleanUp(): void {
         nodeDatachannel.cleanup()
