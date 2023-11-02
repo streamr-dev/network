@@ -48,7 +48,6 @@ describe('StreamrChallenger', () => {
                     privateKeyFileName: path.join(__dirname, '../utils/self-signed-certs/key.pem'),
                     certFileName: path.join(__dirname, '../utils/self-signed-certs/certificate.pem')
                 },
-                websocketServerEnableTls: true,
                 websocketHost: '127.0.0.1',
                 websocketPortRange: { min: 12323, max: 12323 },
                 createOwnPeerDescriptor: () => mockPeerDescriptor1

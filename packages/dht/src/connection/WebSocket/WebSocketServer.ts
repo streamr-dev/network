@@ -70,13 +70,13 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
             response.end()
         }
         return new Promise((resolve, reject) => {
-            if (!tls) {
-                this.httpServer = createHttpServer(requestListener)
-            } else if (tlsCertificate) {
+            if (tlsCertificate) {
                 this.httpServer = createHttpsServer({
                     key: fs.readFileSync(tlsCertificate.privateKeyFileName),
                     cert: fs.readFileSync(tlsCertificate.certFileName)
                 }, requestListener)
+            } else if (!tls) {
+                this.httpServer = createHttpServer(requestListener)
             } else {
                 const certificate = createSelfSignedCertificate('streamr-self-signed-' + new UUID().toString(), 1000)
                 this.httpServer = createHttpsServer({
