@@ -90,7 +90,8 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         if (updateIn > ONE_DAY) {
             updateIn = updateIn - ONE_DAY
         }
-
+        // TODO: This sets the timeout to the maximum value of a 32-bit integer due to the limitation setTimeout has.
+        // The original expirationTimestamp should be kept somewhere so that the certificate is not updated every 24 days.
         if (updateIn > MAX_INT_32) {
             updateIn = MAX_INT_32
         }
