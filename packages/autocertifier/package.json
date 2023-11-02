@@ -1,6 +1,6 @@
 {
   "name": "@streamr/autocertifier",
-  "version": "0.0.1-tatum.8",
+  "version": "100.0.0-pretestnet.0",
   "description": "Automatic TLS Certificate Manager for Streamr Network",
   "repository": {
     "type": "git",
@@ -27,9 +27,9 @@
     "start": "node dist/src/main.js"
   },
   "dependencies": {
-    "@streamr/autocertifier-client": "0.0.1-tatum.8",
-    "@streamr/dht": "0.0.1-tatum.8",
-    "@streamr/utils": "0.0.1-tatum.8",
+    "@streamr/autocertifier-client": "100.0.0-pretestnet.0",
+    "@streamr/dht": "100.0.0-pretestnet.0",
+    "@streamr/utils": "100.0.0-pretestnet.0",
     "acme-client": "^5.0.0",
     "body-parser": "^1.20.2",
     "dns2": "^2.1.0",
@@ -40,7 +40,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@streamr/test-utils": "0.0.1-tatum.8",
+    "@streamr/test-utils": "100.0.0-pretestnet.0",
     "@types/dns2": "^2.0.3",
     "@types/express": "^4.17.20",
     "@types/request": "^2.48.8",
