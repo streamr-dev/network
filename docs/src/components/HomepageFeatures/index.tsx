@@ -19,10 +19,10 @@ const FeatureList: GatewayCard[] = [
             <>Practical guides for developers to get started with Streamr</>
         ),
         buttonText: "Discover quickstart",
-        link: "quickstart/nodejs",
+        link: "quickstart-guides/nodejs",
     },
     {
-        title: "Usage",
+        title: "Building on Streamr",
         icon: "img/usage.png",
         description: (
             <>
@@ -46,16 +46,16 @@ const FeatureList: GatewayCard[] = [
         link: "streamr-network",
     },
     {
-        title: "Node runners",
+        title: "Node Operators",
         icon: "img/noderunner.png",
         description: (
             <>
                 Learn how to contribute your bandwidth and support the Network
-                as a node runner.
+                as a node Operator.
             </>
         ),
-        buttonText: "Run a node",
-        link: "node-runners/run-a-node",
+        buttonText: "Become an Operator",
+        link: "quickstart-guides/become-an-operator",
     },
 ]
 

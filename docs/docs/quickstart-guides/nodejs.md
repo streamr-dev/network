@@ -2,9 +2,9 @@
 sidebar_position: 1
 ---
 
-# NodeJS
+# Pub/Sub in NodeJS
 
-This is a quickstart guide on creating your first stream using the Streamr JavaScript client in a NodeJS script.
+This is a quickstart guide on creating your first stream using the Streamr TypeScript SDK in a NodeJS script.
 
 **Prerequisites:**
 
@@ -12,24 +12,25 @@ This is a quickstart guide on creating your first stream using the Streamr JavaS
 -   NodeJS 16.13.x or greater
 -   A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 
-## Streamr client
+## Streamr SDK
 
-The client is available on [NPM](https://www.npmjs.com/package/streamr-client) and can be installed simply with:
+The Streamr SDK is available on [NPM](https://www.npmjs.com/package/streamr-client) and can be installed simply with:
 
 ```shell
 $ npm install streamr-client
 ```
 
-Having trouble installing the client? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
+Having trouble installing the SDK? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
 
-### Initialize the client
+### Initialize the SDK
 
 ```ts
-// Import the Streamr client
-const StreamrClient = require("streamr-client")
+// Import Streamr
+const Streamr = require("streamr-client")
+const { StreamrClient } = require('streamr-client')
 
 // Initialize the client with an Ethereum account
-const streamr = new StreamrClient({
+const streamr = new Streamr({
     auth: {
         privateKey: "ethereum-private-key",
     },

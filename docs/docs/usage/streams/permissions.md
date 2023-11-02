@@ -11,7 +11,7 @@ User's are identified by their Ethereum public key address. It is these addresse
 :::info Good to know:
 
 - The user that created the stream typically has all stream permissions.
-- Stream permissions can be modified using the [Streamr JS client](https://www.npmjs.com/package/streamr-client) or with the [Streamr user interface](https://streamr.network/core)
+- Stream permissions can be modified using the [Streamr SDK](https://www.npmjs.com/package/streamr-client) or with the [Streamr user interface](https://streamr.network/core)
 :::
 
 **Here is the full list of permissions a user may have on a stream:**
@@ -26,7 +26,7 @@ User's are identified by their Ethereum public key address. It is these addresse
 
 ### Querying stream permissions
 
-Using the Streamr JS client, the full list of permissions for a stream can be queried as follows:
+Using the Streamr SDK, the full list of permissions for a stream can be queried as follows:
 
 ```ts
 const permissions = await stream.getPermissions();
@@ -113,7 +113,7 @@ await stream.revokePermissions({
 
 ### Set multiple permissions
 
-The method `streamr.setPermissions` can be used to set an exact set of permissions for one or more streams. Note that if there are existing permissions for the same users in a stream, the previous permissions are overwritten. Also note that this method cannot be used on the `stream` object, but via the `StreamrClient` instance. The `StreamrClient` instance is typically named `streamr`.
+The method `streamr.setPermissions` can be used to set an exact set of permissions for one or more streams. Note that if there are existing permissions for the same users in a stream, the previous permissions are overwritten. Also note that this method cannot be used on the `stream` object, but via the `Streamr` instance.
 
 ```ts
 await streamr.setPermissions({

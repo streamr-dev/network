@@ -1,11 +1,15 @@
 ---
-sidebar_position: 1
+sidebar_position: 3
 ---
 
-# Run a Streamr node
+# Run a Brubeck Streamr node
+:::caution
+This information is provided for the Brubeck Network - the predecessor to the Streamr 1.0 network that's being released over Q4 2023 and Q1 2024. 
+
+Streamr 1.0 Network includes Streamr (Broker) node versions 34 and above. Streamr SDK versions 9 and above. And also any dev-tatum tagged releases.
+:::
 
 :::tip
-
 - You can run up to 5 nodes per IP address
 - Rewards are automatically paid out at the beginning of the following month. The DATA token rewards are transferred to the wallet(s) you use for staking.
 - You can stake up to 20K DATA per node. However, if you stake the full amount, you will need to transfer the amount above 20K after you get your first rewards paid out to also stake and earn rewards on those. You can avoid the need to transfer tokens every month by staking less than 20K per node, such as 17K-18K DATA.

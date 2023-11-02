@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-# Web app frameworks
+# Use Streamr in your web app
 
 In this quickstart guide, you'll be using Streamr in a **ReactJS** web application. You'll be reading from a publicly readable stream. Your ReactJS app will be a consumer (subscriber) of the stream. If you want your app to be able to write data to the stream, then you'll need to grant access to individual users of your app or create a publicly writable stream (the latter is typically not recommended). Publishing is typically accomplished with a centralized gatekeeping service (like a NodeJS server).
 
@@ -17,17 +17,17 @@ In this quickstart guide, you'll be using Streamr in a **ReactJS** web applicati
 
 #### Installation
 
-First you need to install the Streamr client in your application:
+First you need to install the Streamr SDK in your application:
 
 <!-- TODO: add hub video tutorial -->
 
-The client is available on [NPM](https://www.npmjs.com/package/streamr-client) and can be installed simply with:
+The SDK is available on [NPM](https://www.npmjs.com/package/streamr-client) and can be installed simply with:
 
 ```shell
 $ npm install streamr-client
 ```
 
-Having trouble installing the client? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
+Having trouble installing the SDK? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
 
 ## Subscribe to data of a stream
 
@@ -64,7 +64,7 @@ export const startSubscribing = () => {
 
 ## Use our React hooks
 
-**If you'd like to use hooks for the Streamr client, checkout the [Streamr React Client](https://www.npmjs.com/package/streamr-client-react).**
+**If you'd like to use hooks for the Streamr SDK, checkout the [Streamr React SDK](https://www.npmjs.com/package/streamr-client-react).**
 
 Simply install the following packages in your application:
 
@@ -125,9 +125,9 @@ The result should look something like this:
 
 Congratulations! You accomplished:
 
--   Published data to the Streamr Network using the Streamr client
--   Subscribed to flowing data on the Streamr Network using the Streamr client
+-   Published data to the Streamr Network using the Streamr SDK
+-   Subscribed to flowing data on the Streamr Network using the Streamr SDK
 -   Authenticated your users via Metamask
--   Learned how to use the React hooks with the Streamr client
+-   Learned how to use the React hooks with the Streamr SDK
 
 If you had any problems along the way, please drop a message to the core team on the #dev channel of our [Discord](https://discord.gg/gZAm8P7hK8).
