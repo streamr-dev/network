@@ -19,7 +19,7 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 - Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships periodically
 - You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
 - To participate in the testnets, use specific versions/tags of the Streamr node software, such as `100.0.0-pretestnet.0`. The `latest` tag still points to the previous milestone (Brubeck) software.
-- There is no need for a "beneficiary address" in Streamr 1.0.
+- There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
 :::
 
 ## Operator setup instructions
