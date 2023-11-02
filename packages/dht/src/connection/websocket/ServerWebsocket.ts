@@ -18,7 +18,7 @@ enum MessageType {
     BINARY = 'binary'
 }
 
-export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements IConnection {
+export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements IConnection {
 
     public readonly connectionId: ConnectionID
     public readonly connectionType = ConnectionType.WEBSOCKET_SERVER
@@ -34,7 +34,7 @@ export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements I
 
         socket.on('message', (message) => {
             if (!this.stopped) {
-                logger.trace('ServerWebSocket::onMessage')
+                logger.trace('ServerWebsocket::onMessage')
                 if (message.type === MessageType.UTF8) {
                     logger.debug('Received string Message: ' + message.utf8Data)
                 } else if (message.type === MessageType.BINARY) {

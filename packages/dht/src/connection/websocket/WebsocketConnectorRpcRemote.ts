@@ -11,7 +11,7 @@ import { Remote } from '../../dht/contact/Remote'
 
 const logger = new Logger(module)
 
-export class WebSocketConnectorRpcRemote extends Remote<IWebSocketConnectorRpcClient> {
+export class WebsocketConnectorRpcRemote extends Remote<IWebSocketConnectorRpcClient> {
 
     constructor(
         localPeerDescriptor: PeerDescriptor,

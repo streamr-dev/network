@@ -8,7 +8,7 @@ const logger = new Logger(module)
 
 const BINARY_TYPE = 'arraybuffer'
 
-export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements IConnection {
+export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements IConnection {
     public readonly connectionId: ConnectionID
     private socket?: WebSocket
     public connectionType = ConnectionType.WEBSOCKET_CLIENT

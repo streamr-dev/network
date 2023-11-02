@@ -6,16 +6,16 @@ import {
 import { ConnectionEvents, IConnection } from './IConnection'
 import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
 import * as Err from '../helpers/errors'
-import { ClientWebSocket } from './websocket/ClientWebSocket'
+import { ClientWebsocket } from './websocket/ClientWebsocket'
 import { v4 } from 'uuid'
 import { NatType } from './ConnectionManager'
-import { ServerWebSocket } from './websocket/ServerWebSocket'
-import { connectivityMethodToWebSocketUrl } from './websocket/WebSocketConnectorRpcLocal'
+import { ServerWebsocket } from './websocket/ServerWebsocket'
+import { connectivityMethodToWebSocketUrl } from './websocket/WebsocketConnectorRpcLocal'
 
 const logger = new Logger(module)
 
 // Class for handling both client and server side of the connectivity
-// checks. This is attached to all ServerWebSockets to listen to
+// checks. This is attached to all ServerWebsockets to listen to
 // ConnectivityRequest messages. 
 
 export enum ConnectionMode { REQUEST = 'connectivityRequest', PROBE = 'connectivityProbe' }
@@ -98,7 +98,7 @@ export class ConnectivityChecker {
         }
     }
 
-    public listenToIncomingConnectivityRequests(connectionToListenTo: ServerWebSocket): void {
+    public listenToIncomingConnectivityRequests(connectionToListenTo: ServerWebsocket): void {
         connectionToListenTo.on('data', (data: Uint8Array) => {
             logger.trace('server received data')
             try {
@@ -120,7 +120,7 @@ export class ConnectivityChecker {
     }
 
     private async handleIncomingConnectivityRequest(
-        connection: ServerWebSocket,
+        connection: ServerWebsocket,
         connectivityRequest: ConnectivityRequest
     ): Promise<void> {
         if (this.destroyed) {
@@ -174,7 +174,7 @@ export class ConnectivityChecker {
     private async connectAsync({ wsServerInfo, mode, timeoutMs = 1000, }:
         { wsServerInfo: ConnectivityMethod, mode: ConnectionMode, timeoutMs?: number }
     ): Promise<IConnection> {
-        const socket = new ClientWebSocket()
+        const socket = new ClientWebsocket()
         const url = `${connectivityMethodToWebSocketUrl(wsServerInfo)}?${mode}=true`
         let result: RunAndRaceEventsReturnType<ConnectionEvents>
         try {

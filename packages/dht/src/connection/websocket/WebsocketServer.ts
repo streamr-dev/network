@@ -2,7 +2,7 @@ import { createServer as createHttpServer, Server as HttpServer, IncomingMessage
 import { createServer as createHttpsServer, Server as HttpsServer } from 'https'
 import EventEmitter from 'eventemitter3'
 import { server as WsServer } from 'websocket'
-import { ServerWebSocket } from './ServerWebSocket'
+import { ServerWebsocket } from './ServerWebsocket'
 import {
     ConnectionSourceEvents
 } from '../IConnectionSource'
@@ -22,13 +22,13 @@ const logger = new Logger(module)
 
 declare class NodeJsWsServer extends WsServer { }
 
-interface WebSocketServerConfig {
+interface WebsocketServerConfig {
     portRange: PortRange
     tlsCertificate?: TlsCertificate
     maxMessageSize?: number
 }
 
-export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
+export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
 
     private httpServer?: HttpServer | HttpsServer
     private wsServer?: WsServer
@@ -37,7 +37,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
     private readonly tlsCertificate?: TlsCertificate
     private readonly maxMessageSize: number
 
-    constructor(config: WebSocketServerConfig) {
+    constructor(config: WebsocketServerConfig) {
         super()
         this.portRange = config.portRange
         this.tlsCertificate = config.tlsCertificate
@@ -94,7 +94,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
                 
                 logger.trace('IConnection accepted.')
 
-                this.emit('connected', new ServerWebSocket(connection, request.resourceURL))
+                this.emit('connected', new ServerWebsocket(connection, request.resourceURL))
             })
             this.httpServer.once('error', (err: Error) => {
                 reject(new WebSocketServerStartError('Starting Websocket server failed', err))

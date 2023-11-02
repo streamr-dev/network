@@ -1,18 +1,18 @@
 /* eslint-disable no-console */
 
-import { WebSocketServer } from '../../src/connection/websocket/WebSocketServer'
+import { WebsocketServer } from '../../src/connection/websocket/WebsocketServer'
 import { IConnection } from '../../src/connection/IConnection'
-import { ClientWebSocket } from '../../src/connection/websocket/ClientWebSocket'
+import { ClientWebsocket } from '../../src/connection/websocket/ClientWebsocket'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
 describe('WebSocket', () => {
 
-    const webSocketServer = new WebSocketServer({
+    const webSocketServer = new WebsocketServer({
         portRange: { min: 9999, max: 9999 }
     })
-    const clientWebSocket = new ClientWebSocket()
+    const clientWebSocket = new ClientWebsocket()
 
     beforeAll(async () => {
         await webSocketServer.start()

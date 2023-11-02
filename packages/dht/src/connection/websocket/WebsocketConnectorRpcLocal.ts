@@ -1,8 +1,8 @@
-import { ClientWebSocket } from './ClientWebSocket'
+import { ClientWebsocket } from './ClientWebsocket'
 import { IConnection, ConnectionType } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { WebSocketConnectorRpcRemote } from './WebSocketConnectorRpcRemote'
+import { WebsocketConnectorRpcRemote } from './WebsocketConnectorRpcRemote'
 import {
     ConnectivityMethod,
     ConnectivityResponse,
@@ -15,11 +15,11 @@ import { WebSocketConnectorRpcClient } from '../../proto/packages/dht/protos/Dht
 import { Logger, binaryToHex, wait } from '@streamr/utils'
 import { IWebSocketConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ManagedConnection } from '../ManagedConnection'
-import { WebSocketServer } from './WebSocketServer'
+import { WebsocketServer } from './WebsocketServer'
 import { ConnectivityChecker } from '../ConnectivityChecker'
 import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
 import { PeerIDKey } from '../../helpers/PeerID'
-import { ServerWebSocket } from './ServerWebSocket'
+import { ServerWebsocket } from './ServerWebsocket'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from '../Handshaker'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
@@ -42,7 +42,7 @@ const canOpenConnectionFromBrowser = (websocketServer: ConnectivityMethod) => {
 
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
-interface WebSocketConnectorRpcLocalConfig {
+interface WebsocketConnectorRpcLocalConfig {
     transport: ITransport
     canConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     onIncomingConnection: (connection: ManagedConnection) => boolean
@@ -53,12 +53,12 @@ interface WebSocketConnectorRpcLocalConfig {
     tlsCertificate?: TlsCertificate
 }
 
-export class WebSocketConnectorRpcLocal implements IWebSocketConnectorRpc {
+export class WebsocketConnectorRpcLocal implements IWebSocketConnectorRpc {
 
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
-    private readonly webSocketServer?: WebSocketServer
+    private readonly webSocketServer?: WebsocketServer
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private onIncomingConnection: (connection: ManagedConnection) => boolean
@@ -70,8 +70,8 @@ export class WebSocketConnectorRpcLocal implements IWebSocketConnectorRpc {
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private destroyed = false
 
-    constructor(config: WebSocketConnectorRpcLocalConfig) {
-        this.webSocketServer = config.portRange ? new WebSocketServer({
+    constructor(config: WebsocketConnectorRpcLocalConfig) {
+        this.webSocketServer = config.portRange ? new WebsocketServer({
             portRange: config.portRange!,
             tlsCertificate: config.tlsCertificate,
             maxMessageSize: config.maxMessageSize
@@ -83,7 +83,7 @@ export class WebSocketConnectorRpcLocal implements IWebSocketConnectorRpc {
 
         this.canConnectFunction = config.canConnect.bind(this)
 
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnectorRpcLocal.WEBSOCKET_CONNECTOR_SERVICE_ID, config.transport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebsocketConnectorRpcLocal.WEBSOCKET_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000
         })
 
@@ -106,7 +106,7 @@ export class WebSocketConnectorRpcLocal implements IWebSocketConnectorRpc {
         if (!this.destroyed && this.webSocketServer) {
             this.webSocketServer.on('connected', (connection: IConnection) => {
 
-                const serverSocket = connection as unknown as ServerWebSocket
+                const serverSocket = connection as unknown as ServerWebsocket
                 if (serverSocket.resourceURL &&
                     serverSocket.resourceURL.query) {
                     const query = serverSocket.resourceURL.query as unknown as ParsedUrlQuery
@@ -191,7 +191,7 @@ export class WebSocketConnectorRpcLocal implements IWebSocketConnectorRpc {
         if (this.ownPeerDescriptor!.websocket && !targetPeerDescriptor.websocket) {
             return this.requestConnectionFromPeer(this.ownPeerDescriptor!, targetPeerDescriptor)
         } else {
-            const socket = new ClientWebSocket()
+            const socket = new ClientWebsocket()
 
             const url = connectivityMethodToWebSocketUrl(targetPeerDescriptor.websocket!)
 
@@ -218,7 +218,7 @@ export class WebSocketConnectorRpcLocal implements IWebSocketConnectorRpc {
 
     private requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         setImmediate(() => {
-            const remoteConnector = new WebSocketConnectorRpcRemote(
+            const remoteConnector = new WebsocketConnectorRpcRemote(
                 ownPeerDescriptor,
                 targetPeerDescriptor,
                 toProtoRpcClient(new WebSocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
