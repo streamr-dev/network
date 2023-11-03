@@ -5,18 +5,19 @@ import { Message } from '../proto/packages/dht/protos/DhtRpc'
 
 export class ListeningRpcCommunicator extends RoutingRpcCommunicator {
     private readonly transport: ITransport
-    private readonly handler: (msg: Message) => void
+    private readonly listener: (msg: Message) => void
+
     constructor(ownServiceId: string, transport: ITransport, config?: RpcCommunicatorConfig) {
         super(ownServiceId, transport.send, config)
-        this.handler = (msg: Message) => {
+        this.listener = (msg: Message) => {
             this.handleMessageFromPeer(msg)
         }
         this.transport = transport
-        transport.on('message', this.handler) 
+        transport.on('message', this.listener) 
     }
 
     destroy(): void {
-        this.transport.off('message', this.handler)
+        this.transport.off('message', this.listener)
         this.stop()
     }
 }
