@@ -15,8 +15,8 @@ export class FindRpcRemote extends Remote<IFindRpcClient> {
             sourcePeer: params.sourcePeer,
             previousPeer: params.previousPeer,
             message: params.message,
-            requestId: params.requestId || v4(),
-            reachableThrough: params.reachableThrough || [],
+            requestId: params.requestId ?? v4(),
+            reachableThrough: params.reachableThrough ?? [],
             routingPath: params.routingPath
         }
         const options = this.formDhtRpcOptions({

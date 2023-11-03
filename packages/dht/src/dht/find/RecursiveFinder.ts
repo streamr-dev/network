@@ -251,7 +251,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         } else if (this.router.isMostLikelyDuplicate(routedMessage.requestId)) {
             return createRouteMessageAck(routedMessage, 'message given to routeFindRequest() service is likely a duplicate')
         }
-        const senderKey = keyFromPeerDescriptor(routedMessage.previousPeer || routedMessage.sourcePeer!)
+        const senderKey = keyFromPeerDescriptor(routedMessage.previousPeer ?? routedMessage.sourcePeer!)
         logger.trace(`Received routeFindRequest call from ${senderKey}`)
         this.addContact(routedMessage.sourcePeer!, true)
         this.router.addToDuplicateDetector(routedMessage.requestId)

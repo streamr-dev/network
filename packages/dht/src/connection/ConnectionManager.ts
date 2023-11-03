@@ -127,7 +127,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.config = config
         this.onData = this.onData.bind(this)
         this.onIncomingConnection = this.onIncomingConnection.bind(this)
-        this.metricsContext = this.config.metricsContext || new MetricsContext()
+        this.metricsContext = this.config.metricsContext ?? new MetricsContext()
         this.metrics = {
             sendMessagesPerSecond: new RateMetric(),
             sendBytesPerSecond: new RateMetric(),
