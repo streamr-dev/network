@@ -8,9 +8,9 @@ sidebar_position: 2
 For instructions on becoming an Operator, check out [this guide](../../guides/become-an-operator.md).
 :::
 
-Operators are the node running "miners" in the Streamr Network. To be specific– Operators are the persons/entities that operate (own/control) Streamr nodes. They choose which Sponsorships they want to stake DATA on, and run a fleet of Streamr nodes to do the work of relaying the data in related streams. The promise of Operators is: _"I run honest and stable nodes, and my nodes will join the stream topologies to help stabilise and secure them"._ An Operator's nodes don’t subscribe to a stream because they’re interested in the data, they join because they want to earn a share of the DATA tokens flowing through a Sponsorship. The Operator can claim their rewards periodically to withdraw earned tokens from the Sponsorship contract.
+Operators are the node running "miners" in the Streamr Network. To be specific– Operators are the persons/entities that operate (own/control) Streamr nodes. They choose which Sponsorships they want to stake DATA on, and run a fleet of Streamr nodes to do the work of relaying the data in related streams. The promise of Operators is: _"I run honest and stable nodes, and my nodes will join the stream topologies to help stabilise and secure them"._ An Operator's nodes don’t subscribe to a stream because they’re interested in the data, they join because they want to earn a share of the DATA tokens flowing through a Sponsorship. The Operator can claim their rewards at any time, to withdraw earned tokens from the Sponsorship contract.
 
-Operators have an owner address and private key, and (once deployed) they will have an Operator contract address. The address/key pair is Ethereum based and is the same for other chains that are connected to Ethereum. All contracts are deployed on the Polygon blockchain.
+Operators have an owner address and private key, and (once deployed) they will have an Operator contract address. The address/key pair is Ethereum based and is the same all Ethereum-compatible chains. All Streamr contracts are deployed on the Polygon blockchain.
 
 An Operator's nodes are expected to be honest and to follow the protocol rule of properly forwarding messages to other connected nodes. They are also expected to be stable, with good uptime along with sufficient bandwidth and hardware resources to handle the traffic of the incentivized streams. If the Operator fails to meet these standards, they could be kicked out of the Sponsorship and their stake could be slashed.
 
@@ -29,12 +29,12 @@ When new nodes want to join the network, they need to find someone already in th
 In order to stake on Sponsorships and start earning, the Operators fund their Operator contract (technically, self-delegate) or accept delegations from external Delegators, with whom they then share revenue. The Operator contract is also the exit point for earnings and delegated stake.
 
 ### The Operator plugin
-The Operator plugin is packed with the Streamr node software. It’s essential that Operators use run this plugin (or build a functional equivalent) to be able to join Sponsorships and participate on the Streamr Network incentive layer. 
+The Operator plugin is packed with the Streamr node software. It’s essential that Operators use run this plugin (or build a functional equivalent) to be able to join Sponsorships and participate on the Streamr Network incentive layer.
 
 ![image](@site/static/img/operator-flows.png)
 The Operator plugin interfaces with the Network and the Operator contract, which is connected to Sponsorship smart contracts.
 
-The Operator plugin will automatically validate that other Operators are doing work in the Sponsorship by conducting randomized spot tests, raising flags when appropriate, and voting on flags raised by other Operators that are also validating work on the Network. 
+The Operator plugin will automatically validate that other Operators are doing work in the Sponsorship by conducting randomized spot tests, raising flags when appropriate, and voting on flags raised by other Operators that are also validating work on the Network.
 
 ### Node redundancy factor
 The redundancy factor sets the amount of duplicated work when running a fleet of multiple nodes. Doing redundant work protects against slashing in case some of your nodes experience failures. For example, setting this to 1 means that no duplication of work occurs (the feature is off), and setting it to 2 means that each stream assignment will be worked on by 2 nodes in your fleet.
@@ -42,13 +42,13 @@ The redundancy factor sets the amount of duplicated work when running a fleet of
 ### Owner’s cut
 The Operator’s cut is the percentage taken by the Operator from all earnings. This percentage can not be changed later. The remainder percentage is shared among all Delegators, including the Operator's own stake (if the Operator has self-delegated).
 Redundancy factor
-The redundancy factor sets the amount of duplicated work when running a fleet of multiple nodes. Doing redundant work protects against slashing in case some of your nodes experience failures. 
+The redundancy factor sets the amount of duplicated work when running a fleet of multiple nodes. Doing redundant work protects against slashing in case some of your nodes experience failures.
 
 For example, setting this to 1 means that no duplication of work occurs (the feature is off), and setting it to 2 means that each stream assignment will be worked on by 2 nodes in your fleet.
 
 The Streamr node Operator to Streamr node connection
 A pairing process needs to happen.
-The easiest way to deploy the Operator contract is with the Streamr Hub UI. 
+The easiest way to deploy the Operator contract is with the Streamr Hub UI.
 
 The Node Operator contract parameters
 The Operator factory contract is referenced in the [project contract registry].
@@ -67,16 +67,16 @@ Importantly, only the operator who violated the error margin loses a portion of 
 ![image](@site/static/img/operator-sponsorship-relational-diagram.png)
 
 ### Network validation
-Streamr nodes are also the validators in the Streamr Network. They inspect and validate that other nodes in the same [sponsored stream] are doing the work 
+Streamr nodes are also the validators in the Streamr Network. They inspect and validate that other nodes in the same [sponsored stream] are doing the work
 If an operator fails completely (all their nodes go offline), they will eventually get flagged in all the sponsorships where they are staked. So yes more Sponsorships means more flagging in this case.
 
 If the flags are raised by the random inspection process, it's likely that the flags will be raised evenly by all the other operators, so no one operator's MATIC balance gets a major unexpected drain.
 
 By default, nodes inspect each other quite lazily (pick one operator-sponsorship-partition triplet every 15 minutes). However, correctly flagging and voting is profitable, so more 'eager' flaggers might appear in the network, with smarter inspection strategies - for example if a node gets slashed in one sponsorship, it might be worthwhile for someone to inspect them in all their other sponsorships too, and raise flags if the inspection fails.
 How to earn DATA tokens by being an Operator
-[DATA tokens] are the native currency of the Streamr Network. As an Operator, you can earn DATA tokens by running nodes and joining Sponsorships that promise your node’s abilities towards relaying data on the sponsored stream. 
+[DATA tokens] are the native currency of the Streamr Network. As an Operator, you can earn DATA tokens by running nodes and joining Sponsorships that promise your node’s abilities towards relaying data on the sponsored stream.
 
-### Operator risks  
+### Operator risks
 Operators promise to deliver, but what happens if they break that promise? Well, they will lose some of their staked DATA tokens in a process that’s commonly referred to as “slashing”. Delegators are also at risk of losing value if they delegate to unreliable Operators.
 
 Under the hood, Operators are running an [Operator plugin] on their Streamr Nodes. This plugin is continuously validating other nodes’ activity on the Streamr Network, and based on their findings they can raise flags, and vote on flags if selected as voters through a random selection. Operators that are found to have violated protocol rules are slashed, meaning that they lose some fraction of their committed stake. Operators are the ones that vote to kick other Operators out of Sponsorships.
