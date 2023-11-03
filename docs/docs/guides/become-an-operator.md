@@ -11,7 +11,6 @@ sidebar_position: 5
 - Join Sponsorships through your Operator that will earn you DATA tokens.
 
 ## Migrating from Brubeck
-
 If you’ve been running a Streamr node in the past you might be familiar with a two step process– run some software and stake some tokens, i.e. a software step and a blockchain step. Behind the scenes, the Streamr core team would validate user’s stake and transfer tokens to node runner wallets at the end of each month. This has worked, but its been highly centralized. With the introduction of stream Sponsorships, Operators, Sponsors and Delegators we now have everything we need for a peer to peer decentralized and market based incentivization on Streamr. The most important role is the Operator, so let's learn how to become one.
 
 :::tip Streamr 1.0 network versus the Brubeck (older) network
@@ -27,7 +26,6 @@ Follow these steps below to setup your Operator so that you can participate in t
 
 ### Step 1: Deploy your Operator Contract
 Currently you can practice your Operator deployment in the Mumbai pre-testnet. Go the the [Mumbai Streamr Hub](https://mumbai.streamr.network/hub), Navigate to Network -> Operators, then click "Become an Operator" and complete the dialog. The [Operator contract](../streamr-network/network-roles/operators#the-operator-contract) is deployed on the Polygon Mumbai blockchain.
-
 
 The wallet/account that you use to make the Operator creation transaction will be known as the **Owner wallet**. It's the wallet you'll use to control your Operator business. The owner wallet controls the Operator and is able to stake and unstake on Sponsorships, update the Operator settings, and withdraw the owner's share of the Operator's stake and earnings. This should be a very secure wallet as it controls the whole Operator. A hardware wallet (Ledger, etc) is recommended, although a software wallet (Metamask) will work too - just be sure to keep the account private and never share your private key or seed phrase with anyone.
 
