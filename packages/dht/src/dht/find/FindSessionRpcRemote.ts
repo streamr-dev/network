@@ -11,8 +11,12 @@ const logger = new Logger(module)
 
 export class FindSessionRpcRemote extends Remote<IFindSessionRpcClient> {
 
-    sendFindResponse(routingPath: PeerDescriptor[], closestNodes: PeerDescriptor[], 
-        dataEntries: DataEntry[], noCloserNodesFound: boolean): void {
+    sendFindResponse(
+        routingPath: PeerDescriptor[],
+        closestNodes: PeerDescriptor[],
+        dataEntries: DataEntry[],
+        noCloserNodesFound: boolean
+    ): void {
         const report: FindResponse = {
             routingPath,
             closestConnectedPeers: closestNodes,
