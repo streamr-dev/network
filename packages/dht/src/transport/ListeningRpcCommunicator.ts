@@ -4,7 +4,7 @@ import { RpcCommunicatorConfig } from '@streamr/proto-rpc'
 import { Message } from '../proto/packages/dht/protos/DhtRpc'
 
 export class ListeningRpcCommunicator extends RoutingRpcCommunicator {
-    private transport: ITransport | undefined
+    private readonly transport: ITransport | undefined
     private readonly handler: (msg: Message) => void
     constructor(ownServiceId: string, transport: ITransport, config?: RpcCommunicatorConfig) {
         super(ownServiceId, transport.send, config)
@@ -17,7 +17,6 @@ export class ListeningRpcCommunicator extends RoutingRpcCommunicator {
 
     destroy(): void {
         this.transport!.off('message', this.handler)
-        this.transport = undefined
         this.stop()
     }
 }
