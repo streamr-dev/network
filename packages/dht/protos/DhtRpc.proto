@@ -245,7 +245,6 @@ message WebsocketConnectionResponse {
 
 // WebRTC
 message WebrtcConnectionRequest {
-  string connectionId = 1;
 }
 
 message RtcOffer {
