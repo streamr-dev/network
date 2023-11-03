@@ -284,19 +284,15 @@ export interface RouteMessageWrapper {
      */
     destinationPeer?: PeerDescriptor;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor previousPeer = 4;
-     */
-    previousPeer?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: dht.Message message = 5;
+     * @generated from protobuf field: dht.Message message = 4;
      */
     message?: Message;
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor reachableThrough = 6;
+     * @generated from protobuf field: repeated dht.PeerDescriptor reachableThrough = 5;
      */
     reachableThrough: PeerDescriptor[];
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 7;
+     * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 6;
      */
     routingPath: PeerDescriptor[];
 }
@@ -926,10 +922,9 @@ class RouteMessageWrapper$Type extends MessageType$<RouteMessageWrapper> {
             { no: 1, name: "sourcePeer", kind: "message", T: () => PeerDescriptor },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "destinationPeer", kind: "message", T: () => PeerDescriptor },
-            { no: 4, name: "previousPeer", kind: "message", T: () => PeerDescriptor },
-            { no: 5, name: "message", kind: "message", T: () => Message },
-            { no: 6, name: "reachableThrough", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
-            { no: 7, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+            { no: 4, name: "message", kind: "message", T: () => Message },
+            { no: 5, name: "reachableThrough", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 6, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }

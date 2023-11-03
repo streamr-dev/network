@@ -4,6 +4,7 @@ import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Remote } from '../contact/Remote'
 import { Logger } from '@streamr/utils'
 import { IFindRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { getPreviousPeer } from './getPreviousPeer'
 
 const logger = new Logger(module)
 
@@ -13,7 +14,6 @@ export class FindRpcRemote extends Remote<IFindRpcClient> {
         const message: RouteMessageWrapper = {
             destinationPeer: params.destinationPeer,
             sourcePeer: params.sourcePeer,
-            previousPeer: params.previousPeer,
             message: params.message,
             requestId: params.requestId || v4(),
             reachableThrough: params.reachableThrough || [],
@@ -29,7 +29,10 @@ export class FindRpcRemote extends Remote<IFindRpcClient> {
                 return false
             }
         } catch (err) {
-            const fromNode = params.previousPeer ? keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
+            const previousPeer = getPreviousPeer(params)
+            const fromNode = previousPeer
+                ? keyFromPeerDescriptor(previousPeer)
+                : keyFromPeerDescriptor(params.sourcePeer!)
             logger.debug(`Failed to send recursiveFind message from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
             return false
         }

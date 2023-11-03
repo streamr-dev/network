@@ -25,6 +25,7 @@ import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicat
 import { FindSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { SortedContactList } from '../contact/SortedContactList'
+import { getPreviousPeer } from '../routing/getPreviousPeer'
 
 interface RecursiveFinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -222,7 +223,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         } else {
             const noCloserContactsFound = (
                 closestPeersToDestination.length > 0
-                && routedMessage.previousPeer
+                && getPreviousPeer(routedMessage)
                 && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
             )
             this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
@@ -251,7 +252,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         } else if (this.router.isMostLikelyDuplicate(routedMessage.requestId)) {
             return createRouteMessageAck(routedMessage, 'message given to routeFindRequest() service is likely a duplicate')
         }
-        const senderKey = keyFromPeerDescriptor(routedMessage.previousPeer || routedMessage.sourcePeer!)
+        const senderKey = keyFromPeerDescriptor(getPreviousPeer(routedMessage) || routedMessage.sourcePeer!)
         logger.trace(`Received routeFindRequest call from ${senderKey}`)
         this.addContact(routedMessage.sourcePeer!, true)
         this.router.addToDuplicateDetector(routedMessage.requestId)
