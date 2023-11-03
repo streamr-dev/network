@@ -118,11 +118,12 @@ const config = {
 
                 // Public API key: it is safe to commit it
                 apiKey: "f9fcf2cbeb33f2edee5ee580110d8045",
-
+                
                 indexName: "streamr",
 
                 // Optional: see doc section below
                 contextualSearch: true,
+                schedule: 'every 1 day at 3:00 pm',
             },
             footer: {
                 links: [
