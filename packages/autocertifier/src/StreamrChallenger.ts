@@ -15,6 +15,7 @@ export class StreamrChallenger {
         type: NodeType.NODEJS,
     }
 
+    // TODO: async/await
     public testStreamrChallenge(
         streamrWebSocketIp: string,
         streamrWebSocketPort: string,
