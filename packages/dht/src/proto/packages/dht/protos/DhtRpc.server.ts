@@ -3,8 +3,8 @@
 // tslint:disable
 import { ExternalStoreDataResponse } from "./DhtRpc";
 import { ExternalStoreDataRequest } from "./DhtRpc";
-import { FindDataResponse } from "./DhtRpc";
-import { FindDataRequest } from "./DhtRpc";
+import { ExternalFindDataResponse } from "./DhtRpc";
+import { ExternalFindDataRequest } from "./DhtRpc";
 import { DisconnectNoticeResponse } from "./DhtRpc";
 import { DisconnectNotice } from "./DhtRpc";
 import { UnlockRequest } from "./DhtRpc";
@@ -144,9 +144,9 @@ export interface IConnectionLockRpc<T = ServerCallContext> {
  */
 export interface IExternalApiRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: findData(dht.FindDataRequest) returns (dht.FindDataResponse);
+     * @generated from protobuf rpc: externalFindData(dht.ExternalFindDataRequest) returns (dht.ExternalFindDataResponse);
      */
-    findData(request: FindDataRequest, context: T): Promise<FindDataResponse>;
+    externalFindData(request: ExternalFindDataRequest, context: T): Promise<ExternalFindDataResponse>;
     /**
      * @generated from protobuf rpc: externalStoreData(dht.ExternalStoreDataRequest) returns (dht.ExternalStoreDataResponse);
      */

@@ -48,7 +48,7 @@ service ConnectionLockRpc {
 }
 
 service ExternalApiRpc {
-  rpc findData (FindDataRequest) returns (FindDataResponse);
+  rpc externalFindData (ExternalFindDataRequest) returns (ExternalFindDataResponse);
   rpc externalStoreData (ExternalStoreDataRequest) returns (ExternalStoreDataResponse);
 }
 
@@ -289,11 +289,11 @@ message DisconnectNotice {
 message DisconnectNoticeResponse {
 }
 
-message FindDataRequest {
+message ExternalFindDataRequest {
   bytes kademliaId = 1;
 }
 
-message FindDataResponse {
+message ExternalFindDataResponse {
   repeated DataEntry dataEntries = 1;
   optional string error = 2;
 }

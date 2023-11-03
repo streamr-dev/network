@@ -576,18 +576,18 @@ export interface DisconnectNotice {
 export interface DisconnectNoticeResponse {
 }
 /**
- * @generated from protobuf message dht.FindDataRequest
+ * @generated from protobuf message dht.ExternalFindDataRequest
  */
-export interface FindDataRequest {
+export interface ExternalFindDataRequest {
     /**
      * @generated from protobuf field: bytes kademliaId = 1;
      */
     kademliaId: Uint8Array;
 }
 /**
- * @generated from protobuf message dht.FindDataResponse
+ * @generated from protobuf message dht.ExternalFindDataResponse
  */
-export interface FindDataResponse {
+export interface ExternalFindDataResponse {
     /**
      * @generated from protobuf field: repeated dht.DataEntry dataEntries = 1;
      */
@@ -1165,30 +1165,30 @@ class DisconnectNoticeResponse$Type extends MessageType$<DisconnectNoticeRespons
  */
 export const DisconnectNoticeResponse = new DisconnectNoticeResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class FindDataRequest$Type extends MessageType$<FindDataRequest> {
+class ExternalFindDataRequest$Type extends MessageType$<ExternalFindDataRequest> {
     constructor() {
-        super("dht.FindDataRequest", [
+        super("dht.ExternalFindDataRequest", [
             { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.FindDataRequest
+ * @generated MessageType for protobuf message dht.ExternalFindDataRequest
  */
-export const FindDataRequest = new FindDataRequest$Type();
+export const ExternalFindDataRequest = new ExternalFindDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class FindDataResponse$Type extends MessageType$<FindDataResponse> {
+class ExternalFindDataResponse$Type extends MessageType$<ExternalFindDataResponse> {
     constructor() {
-        super("dht.FindDataResponse", [
+        super("dht.ExternalFindDataResponse", [
             { no: 1, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
             { no: 2, name: "error", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.FindDataResponse
+ * @generated MessageType for protobuf message dht.ExternalFindDataResponse
  */
-export const FindDataResponse = new FindDataResponse$Type();
+export const ExternalFindDataResponse = new ExternalFindDataResponse$Type();
 /**
  * @generated ServiceType for protobuf service dht.DhtNodeRpc
  */
@@ -1246,6 +1246,6 @@ export const ConnectionLockRpc = new ServiceType("dht.ConnectionLockRpc", [
  * @generated ServiceType for protobuf service dht.ExternalApiRpc
  */
 export const ExternalApiRpc = new ServiceType("dht.ExternalApiRpc", [
-    { name: "findData", options: {}, I: FindDataRequest, O: FindDataResponse },
+    { name: "externalFindData", options: {}, I: ExternalFindDataRequest, O: ExternalFindDataResponse },
     { name: "externalStoreData", options: {}, I: ExternalStoreDataRequest, O: ExternalStoreDataResponse }
 ]);

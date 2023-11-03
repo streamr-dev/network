@@ -622,7 +622,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.config.serviceId,
             toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        return await rpcRemote.findData(idToFind)
+        return await rpcRemote.externalFindData(idToFind)
     }
 
     public getRpcCommunicator(): RoutingRpcCommunicator {
