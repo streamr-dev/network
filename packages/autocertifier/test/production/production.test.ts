@@ -51,13 +51,13 @@ describe('production', () => {
                 transport: mockTransport,
                 websocketHost: '127.0.0.1',
                 websocketPortRange: { min: 9995, max: 9995 },
-                createOwnPeerDescriptor: () => mockPeerDescriptor1
+                createLocalPeerDescriptor: () => mockPeerDescriptor1
             }),
             metricsContext: {} as any
         })
 
         await clientConnectionManager.start()
-        const peerDescriptor = clientConnectionManager.getPeerDescriptor()
+        const peerDescriptor = clientConnectionManager.getLocalPeerDescriptor()
         expect(peerDescriptor.websocket!.host).toEqual('127.0.0.1')
     })
 
@@ -74,7 +74,7 @@ describe('production', () => {
     })
 
     it('The client can start', (done) => {
-        const streamrWebSocketPort = clientConnectionManager.getPeerDescriptor().websocket!.port
+        const streamrWebSocketPort = clientConnectionManager.getLocalPeerDescriptor().websocket!.port
 
         logger.info(subdomainPath)
         logger.info(restServerUrl)
@@ -102,7 +102,7 @@ describe('production', () => {
     }, 120000)
 
     it('The client can start if the subdomain already exits', async () => {
-        const streamrWebSocketPort = clientConnectionManager.getPeerDescriptor().websocket!.port
+        const streamrWebSocketPort = clientConnectionManager.getLocalPeerDescriptor().websocket!.port
 
         logger.info(subdomainPath)
         logger.info(restServerUrl)

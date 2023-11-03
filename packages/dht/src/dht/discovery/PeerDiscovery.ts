@@ -1,24 +1,19 @@
 import { DiscoverySession } from './DiscoverySession'
-import { RemoteDhtNode } from '../RemoteDhtNode'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import KBucket from 'k-bucket'
 import { SortedContactList } from '../contact/SortedContactList'
 import { ConnectionManager } from '../../connection/ConnectionManager'
-import { PeerIDKey } from '../../helpers/PeerID'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { RandomContactList } from '../contact/RandomContactList'
 import { createRandomKademliaId } from '../../helpers/kademliaId'
 
 interface PeerDiscoveryConfig {
     rpcCommunicator: RoutingRpcCommunicator
-    ownPeerDescriptor: PeerDescriptor
-    bucket: KBucket<RemoteDhtNode>
-    connections: Map<PeerIDKey, RemoteDhtNode>
-    neighborList: SortedContactList<RemoteDhtNode>
-    randomPeers: RandomContactList<RemoteDhtNode>
-    openInternetPeers: SortedContactList<RemoteDhtNode>
+    localPeerDescriptor: PeerDescriptor
+    bucket: KBucket<DhtNodeRpcRemote>
+    neighborList: SortedContactList<DhtNodeRpcRemote>
     joinNoProgressLimit: number
     peerDiscoveryQueryBatchSize: number
     serviceId: string
@@ -54,12 +49,12 @@ export class PeerDiscovery {
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
         )
-        if (areEqualPeerDescriptors(entryPointDescriptor, this.config.ownPeerDescriptor)) {
+        if (areEqualPeerDescriptors(entryPointDescriptor, this.config.localPeerDescriptor)) {
             return
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         this.config.addContact(entryPointDescriptor)
-        const targetId = peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value
+        const targetId = peerIdFromPeerDescriptor(this.config.localPeerDescriptor).value
         const closest = this.config.bucket.closest(targetId, this.config.peerDiscoveryQueryBatchSize)
         this.config.neighborList.addContacts(closest)
         const sessions = [this.createSession(targetId)]
@@ -76,12 +71,12 @@ export class PeerDiscovery {
             bucket: this.config.bucket,
             neighborList: this.config.neighborList,
             targetId,
-            ownPeerDescriptor: this.config.ownPeerDescriptor,
+            localPeerDescriptor: this.config.localPeerDescriptor,
             serviceId: this.config.serviceId,
             rpcCommunicator: this.config.rpcCommunicator,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
-            newContactListener: (newPeer: RemoteDhtNode) => this.config.addContact(newPeer.getPeerDescriptor())
+            newContactListener: (newPeer: DhtNodeRpcRemote) => this.config.addContact(newPeer.getPeerDescriptor())
         }
         return new DiscoverySession(sessionOptions)
     }
@@ -139,9 +134,9 @@ export class PeerDiscovery {
         if (this.isStopped()) {
             return
         }
-        const nodes = this.config.bucket.closest(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value, this.config.parallelism)
-        await Promise.allSettled(nodes.map(async (peer: RemoteDhtNode) => {
-            const contacts = await peer.getClosestPeers(this.config.ownPeerDescriptor.kademliaId)
+        const nodes = this.config.bucket.closest(peerIdFromPeerDescriptor(this.config.localPeerDescriptor).value, this.config.parallelism)
+        await Promise.allSettled(nodes.map(async (peer: DhtNodeRpcRemote) => {
+            const contacts = await peer.getClosestPeers(this.config.localPeerDescriptor.kademliaId)
             contacts.forEach((contact) => {
                 this.config.addContact(contact)
             })

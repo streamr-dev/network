@@ -25,7 +25,7 @@ export interface ITransport {
     off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType) => void): void
 
     send(msg: Message, doNotConnect?: boolean): Promise<void>
-    getPeerDescriptor(): PeerDescriptor
+    getLocalPeerDescriptor(): PeerDescriptor
     getAllConnectionPeerDescriptors(): PeerDescriptor[]
     stop(): void | Promise<void>
 }

@@ -246,11 +246,7 @@ export interface PeerDescriptor {
      */
     websocket?: ConnectivityMethod;
     /**
-     * @generated from protobuf field: optional bool openInternet = 6;
-     */
-    openInternet?: boolean;
-    /**
-     * @generated from protobuf field: optional uint32 region = 7;
+     * @generated from protobuf field: optional uint32 region = 6;
      */
     region?: number;
 }
@@ -345,19 +341,15 @@ export interface ConnectivityRequest {
  */
 export interface ConnectivityResponse {
     /**
-     * @generated from protobuf field: bool open_internet = 1;
-     */
-    openInternet: boolean;
-    /**
-     * @generated from protobuf field: string host = 2;
+     * @generated from protobuf field: string host = 1;
      */
     host: string;
     /**
-     * @generated from protobuf field: string natType = 3;
+     * @generated from protobuf field: string natType = 2;
      */
     natType: string;
     /**
-     * @generated from protobuf field: dht.ConnectivityMethod websocket = 4;
+     * @generated from protobuf field: dht.ConnectivityMethod websocket = 3;
      */
     websocket?: ConnectivityMethod;
 }
@@ -463,9 +455,9 @@ export interface Message {
 /**
  * WebSocket
  *
- * @generated from protobuf message dht.WebSocketConnectionRequest
+ * @generated from protobuf message dht.WebsocketConnectionRequest
  */
-export interface WebSocketConnectionRequest {
+export interface WebsocketConnectionRequest {
     /**
      * @generated from protobuf field: string ip = 1;
      */
@@ -476,9 +468,9 @@ export interface WebSocketConnectionRequest {
     port: number;
 }
 /**
- * @generated from protobuf message dht.WebSocketConnectionResponse
+ * @generated from protobuf message dht.WebsocketConnectionResponse
  */
-export interface WebSocketConnectionResponse {
+export interface WebsocketConnectionResponse {
     /**
      * @generated from protobuf field: bool accepted = 1;
      */
@@ -491,9 +483,9 @@ export interface WebSocketConnectionResponse {
 /**
  * WebRTC
  *
- * @generated from protobuf message dht.WebRtcConnectionRequest
+ * @generated from protobuf message dht.WebrtcConnectionRequest
  */
-export interface WebRtcConnectionRequest {
+export interface WebrtcConnectionRequest {
     /**
      * @generated from protobuf field: string connectionId = 1;
      */
@@ -909,8 +901,7 @@ class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
             { no: 3, name: "udp", kind: "message", T: () => ConnectivityMethod },
             { no: 4, name: "tcp", kind: "message", T: () => ConnectivityMethod },
             { no: 5, name: "websocket", kind: "message", T: () => ConnectivityMethod },
-            { no: 6, name: "openInternet", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
-            { no: 7, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ }
+            { no: 6, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
 }
@@ -982,10 +973,9 @@ export const ConnectivityRequest = new ConnectivityRequest$Type();
 class ConnectivityResponse$Type extends MessageType$<ConnectivityResponse> {
     constructor() {
         super("dht.ConnectivityResponse", [
-            { no: 1, name: "open_internet", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "host", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "websocket", kind: "message", T: () => ConnectivityMethod }
+            { no: 1, name: "host", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "websocket", kind: "message", T: () => ConnectivityMethod }
         ]);
     }
 }
@@ -1043,43 +1033,43 @@ class Message$Type extends MessageType$<Message> {
  */
 export const Message = new Message$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class WebSocketConnectionRequest$Type extends MessageType$<WebSocketConnectionRequest> {
+class WebsocketConnectionRequest$Type extends MessageType$<WebsocketConnectionRequest> {
     constructor() {
-        super("dht.WebSocketConnectionRequest", [
+        super("dht.WebsocketConnectionRequest", [
             { no: 1, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.WebSocketConnectionRequest
+ * @generated MessageType for protobuf message dht.WebsocketConnectionRequest
  */
-export const WebSocketConnectionRequest = new WebSocketConnectionRequest$Type();
+export const WebsocketConnectionRequest = new WebsocketConnectionRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class WebSocketConnectionResponse$Type extends MessageType$<WebSocketConnectionResponse> {
+class WebsocketConnectionResponse$Type extends MessageType$<WebsocketConnectionResponse> {
     constructor() {
-        super("dht.WebSocketConnectionResponse", [
+        super("dht.WebsocketConnectionResponse", [
             { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 2, name: "reason", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.WebSocketConnectionResponse
+ * @generated MessageType for protobuf message dht.WebsocketConnectionResponse
  */
-export const WebSocketConnectionResponse = new WebSocketConnectionResponse$Type();
+export const WebsocketConnectionResponse = new WebsocketConnectionResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class WebRtcConnectionRequest$Type extends MessageType$<WebRtcConnectionRequest> {
+class WebrtcConnectionRequest$Type extends MessageType$<WebrtcConnectionRequest> {
     constructor() {
-        super("dht.WebRtcConnectionRequest", [
+        super("dht.WebrtcConnectionRequest", [
             { no: 1, name: "connectionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.WebRtcConnectionRequest
+ * @generated MessageType for protobuf message dht.WebrtcConnectionRequest
  */
-export const WebRtcConnectionRequest = new WebRtcConnectionRequest$Type();
+export const WebrtcConnectionRequest = new WebrtcConnectionRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RtcOffer$Type extends MessageType$<RtcOffer> {
     constructor() {
@@ -1205,9 +1195,9 @@ class FindDataResponse$Type extends MessageType$<FindDataResponse> {
  */
 export const FindDataResponse = new FindDataResponse$Type();
 /**
- * @generated ServiceType for protobuf service dht.DhtRpcService
+ * @generated ServiceType for protobuf service dht.DhtNodeRpc
  */
-export const DhtRpcService = new ServiceType("dht.DhtRpcService", [
+export const DhtNodeRpc = new ServiceType("dht.DhtNodeRpc", [
     { name: "getClosestPeers", options: {}, I: ClosestPeersRequest, O: ClosestPeersResponse },
     { name: "ping", options: {}, I: PingRequest, O: PingResponse },
     { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty }
@@ -1235,16 +1225,16 @@ export const RecursiveFindSessionService = new ServiceType("dht.RecursiveFindSes
     { name: "sendFindResponse", options: {}, I: FindResponse, O: Empty }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.WebSocketConnectorRpc
+ * @generated ServiceType for protobuf service dht.WebsocketConnectorRpc
  */
-export const WebSocketConnectorRpc = new ServiceType("dht.WebSocketConnectorRpc", [
-    { name: "requestConnection", options: {}, I: WebSocketConnectionRequest, O: WebSocketConnectionResponse }
+export const WebsocketConnectorRpc = new ServiceType("dht.WebsocketConnectorRpc", [
+    { name: "requestConnection", options: {}, I: WebsocketConnectionRequest, O: WebsocketConnectionResponse }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.WebRtcConnectorRpc
+ * @generated ServiceType for protobuf service dht.WebrtcConnectorRpc
  */
-export const WebRtcConnectorRpc = new ServiceType("dht.WebRtcConnectorRpc", [
-    { name: "requestConnection", options: {}, I: WebRtcConnectionRequest, O: Empty },
+export const WebrtcConnectorRpc = new ServiceType("dht.WebrtcConnectorRpc", [
+    { name: "requestConnection", options: {}, I: WebrtcConnectionRequest, O: Empty },
     { name: "rtcOffer", options: {}, I: RtcOffer, O: Empty },
     { name: "rtcAnswer", options: {}, I: RtcAnswer, O: Empty },
     { name: "iceCandidate", options: {}, I: IceCandidate, O: Empty }

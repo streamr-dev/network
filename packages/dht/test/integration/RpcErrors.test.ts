@@ -1,22 +1,22 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ITransport } from '../../src/transport/ITransport'
 import { v4 } from 'uuid'
-import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
+import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DhtRpcOptions } from '../../src/rpc-protocol/DhtRpcOptions'
 import { ListeningRpcCommunicator } from '../../src/transport/ListeningRpcCommunicator'
 import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
+import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { NodeType, PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { MetricsContext } from '@streamr/utils'
 
-const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, transport: ITransport) => {
+const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
         createConnectorFacade: () => new DefaultConnectorFacade({
             transport,
-            createOwnPeerDescriptor: () => ownPeerDescriptor
+            createLocalPeerDescriptor: () => localPeerDescriptor
         }),
         metricsContext: new MetricsContext()
     })
@@ -30,8 +30,8 @@ describe('RPC errors', () => {
     let rpcCommunicator1: ListeningRpcCommunicator
     let rpcCommunicator2: ListeningRpcCommunicator
 
-    let client1: ProtoRpcClient<DhtRpcServiceClient>
-    //let client2: ProtoRpcClient<DhtRpcServiceClient>
+    let client1: ProtoRpcClient<DhtNodeRpcClient>
+    //let client2: ProtoRpcClient<DhtNodeRpcClient>
 
     let simulator: Simulator
 
@@ -57,13 +57,13 @@ describe('RPC errors', () => {
         await connectorTransport1.start()
         manager1 = createConnectionManager(peerDescriptor1, connectorTransport1)
         rpcCommunicator1 = new ListeningRpcCommunicator(serviceId, manager1)
-        client1 = toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator1.getRpcClientTransport()))
+        client1 = toProtoRpcClient(new DhtNodeRpcClient(rpcCommunicator1.getRpcClientTransport()))
 
         connectorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
         await connectorTransport2.start()
         manager2 = createConnectionManager(peerDescriptor2, connectorTransport2)
         rpcCommunicator2 = new ListeningRpcCommunicator(serviceId, manager2)
-        //client2 = toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator2.getRpcClientTransport()))
+        //client2 = toProtoRpcClient(new DhtNodeRpcClient(rpcCommunicator2.getRpcClientTransport()))
 
         await manager1.start()
         await manager2.start()
@@ -133,7 +133,7 @@ describe('RPC errors', () => {
         
     }, 60000)
 
-    it('Disconnects WebRtcConnection while being connected', async () => {
+    it('Disconnects WebrtcConnection while being connected', async () => {
         
         const rpcMessage: RpcMessage = {
             header: {},

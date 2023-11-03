@@ -49,7 +49,7 @@ describe('StreamrChallenger', () => {
                 },
                 websocketHost: '127.0.0.1',
                 websocketPortRange: { min: 12323, max: 12323 },
-                createOwnPeerDescriptor: () => mockPeerDescriptor1
+                createLocalPeerDescriptor: () => mockPeerDescriptor1
             }),
             metricsContext: new MetricsContext()
         })

@@ -1,17 +1,17 @@
 import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
-import { Simulator } from '../../src/connection/Simulator/Simulator'
-import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
+import { Simulator } from '../../src/connection/simulator/Simulator'
+import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { ITransport } from '../../src/exports'
 import { PeerID } from '../../src/helpers/PeerID'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 
-const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, transport: ITransport) => {
+const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
         createConnectorFacade: () => new DefaultConnectorFacade({
             transport,
-            createOwnPeerDescriptor: () => ownPeerDescriptor
+            createLocalPeerDescriptor: () => localPeerDescriptor
         }),
         metricsContext: new MetricsContext()
     })

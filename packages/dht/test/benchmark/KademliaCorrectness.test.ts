@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
 import { keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
@@ -88,7 +88,7 @@ describe('Kademlia correctness', () => {
                     correctNeighbors++
                 }
             } catch (e) {
-                console.error('Node ' + keyFromPeerDescriptor(nodes[i].getPeerDescriptor()) + ' had only ' 
+                console.error('Node ' + keyFromPeerDescriptor(nodes[i].getLocalPeerDescriptor()) + ' had only ' 
                     + kademliaNeighbors.length + ' kademlia neighbors')
             }
             if (correctNeighbors === 0) {

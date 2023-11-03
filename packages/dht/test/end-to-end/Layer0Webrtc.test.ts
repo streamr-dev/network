@@ -61,18 +61,18 @@ describe('Layer0 with WebRTC connections', () => {
                 'connected',
                 20000,
                 (peerDescriptor: PeerDescriptor) => {
-                    return areEqualBinaries(peerDescriptor.kademliaId, node1.getPeerDescriptor().kademliaId)
+                    return areEqualBinaries(peerDescriptor.kademliaId, node1.getLocalPeerDescriptor().kademliaId)
                 }
             ),
             node2.joinDht([epPeerDescriptor]),
             node1.joinDht([epPeerDescriptor])
         ])
 
-        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getPeerDescriptor())).toEqual(true)
-        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getPeerDescriptor())).toEqual(true)
-        expect((node1.getTransport() as ConnectionManager).getConnection(node2.getPeerDescriptor())!.connectionType)
+        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getLocalPeerDescriptor())).toEqual(true)
+        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getLocalPeerDescriptor())).toEqual(true)
+        expect((node1.getTransport() as ConnectionManager).getConnection(node2.getLocalPeerDescriptor())!.connectionType)
             .toEqual(ConnectionType.WEBRTC)
-        expect((node2.getTransport() as ConnectionManager).getConnection(node1.getPeerDescriptor())!.connectionType)
+        expect((node2.getTransport() as ConnectionManager).getConnection(node1.getLocalPeerDescriptor())!.connectionType)
             .toEqual(ConnectionType.WEBRTC)
 
     }, 60000)
@@ -85,11 +85,11 @@ describe('Layer0 with WebRTC connections', () => {
             node4.joinDht([epPeerDescriptor])
         ])
 
-        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getPeerDescriptor())).toEqual(true)
-        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getPeerDescriptor())).toEqual(true)
-        expect((node1.getTransport() as ConnectionManager).getConnection(node2.getPeerDescriptor())!.connectionType)
+        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getLocalPeerDescriptor())).toEqual(true)
+        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getLocalPeerDescriptor())).toEqual(true)
+        expect((node1.getTransport() as ConnectionManager).getConnection(node2.getLocalPeerDescriptor())!.connectionType)
             .toEqual(ConnectionType.WEBRTC)
-        expect((node2.getTransport() as ConnectionManager).getConnection(node1.getPeerDescriptor())!.connectionType)
+        expect((node2.getTransport() as ConnectionManager).getConnection(node1.getLocalPeerDescriptor())!.connectionType)
             .toEqual(ConnectionType.WEBRTC)
     })
 })

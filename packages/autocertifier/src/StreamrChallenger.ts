@@ -1,4 +1,4 @@
-import { Message, NodeType, PeerDescriptor, PeerID, ClientWebSocket, ManagedConnection, RoutingRpcCommunicator } from '@streamr/dht'
+import { Message, NodeType, PeerDescriptor, PeerID, ClientWebsocket, ManagedConnection, RoutingRpcCommunicator } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { ConnectionType } from '@streamr/dht'
@@ -29,7 +29,7 @@ export const runStreamrChallenge = (
                 tls: true
             }
         }
-        const socket = new ClientWebSocket()
+        const socket = new ClientWebsocket()
         const address = 'wss://' + remotePeerDescriptor.websocket!.host + ':' +
         remotePeerDescriptor.websocket!.port
 

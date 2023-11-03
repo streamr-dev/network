@@ -6,14 +6,14 @@ import {
 import { ITransport } from '../transport/ITransport'
 import { PortRange, TlsCertificate } from './ConnectionManager'
 import { ManagedConnection } from './ManagedConnection'
-import { Simulator } from './Simulator/Simulator'
-import { SimulatorConnector } from './Simulator/SimulatorConnector'
-import { IceServer, WebRtcConnectorRpcLocal } from './WebRTC/WebRtcConnectorRpcLocal'
-import { WebSocketConnectorRpcLocal } from './WebSocket/WebSocketConnectorRpcLocal'
+import { Simulator } from './simulator/Simulator'
+import { SimulatorConnector } from './simulator/SimulatorConnector'
+import { IceServer, WebrtcConnectorRpcLocal } from './webrtc/WebrtcConnectorRpcLocal'
+import { WebsocketConnectorRpcLocal } from './websocket/WebsocketConnectorRpcLocal'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
-    getOwnPeerDescriptor: () => PeerDescriptor | undefined
+    getLocalPeerDescriptor: () => PeerDescriptor | undefined
     start: (
         onIncomingConnection: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean,
@@ -41,15 +41,15 @@ export interface DefaultConnectorFacadeConfig {
     websocketServerEnableTls?: boolean
     autoCertifierUrl?: string
     autoCertifiedSubdomainFilePath?: string
-    createOwnPeerDescriptor: (connectivityResponse: ConnectivityResponse) => PeerDescriptor
+    createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) => PeerDescriptor
 }
 
 export class DefaultConnectorFacade implements ConnectorFacade {
 
     private readonly config: DefaultConnectorFacadeConfig
-    private ownPeerDescriptor?: PeerDescriptor
-    private webSocketConnector?: WebSocketConnectorRpcLocal
-    private webrtcConnector?: WebRtcConnectorRpcLocal
+    private localPeerDescriptor?: PeerDescriptor
+    private websocketConnector?: WebsocketConnectorRpcLocal
+    private webrtcConnector?: WebrtcConnectorRpcLocal
 
     constructor(config: DefaultConnectorFacadeConfig) {
         this.config = config
@@ -60,10 +60,10 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         canConnect: (peerDescriptor: PeerDescriptor) => boolean,
         autoCertifierTransport: ITransport
     ): Promise<void> {
-        logger.trace(`Creating WebSocketConnector`)
-        this.webSocketConnector = new WebSocketConnectorRpcLocal({
+        logger.trace(`Creating WebsocketConnectorRpcLocal`)
+        this.websocketConnector = new WebsocketConnectorRpcLocal({
             transport: this.config.transport!,
-            // TODO should we use canConnect also for WebRtcConnector? (NET-1142)
+            // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
             canConnect: (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),
             onIncomingConnection,
             portRange: this.config.websocketPortRange,
@@ -76,8 +76,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             autoCertifierTransport,
             maxMessageSize: this.config.maxMessageSize
         })
-        logger.trace(`Creating WebRTCConnector`)
-        this.webrtcConnector = new WebRtcConnectorRpcLocal({
+        logger.trace(`Creating WebRtcConnectorRpcLocal`)
+        this.webrtcConnector = new WebrtcConnectorRpcLocal({
             transport: this.config.transport!,
             iceServers: this.config.iceServers,
             allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
@@ -88,77 +88,77 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             portRange: this.config.webrtcPortRange,
             maxMessageSize: this.config.maxMessageSize
         }, onIncomingConnection)
-        await this.webSocketConnector.start()
+        await this.websocketConnector.start()
         // TODO: generate a PeerDescriptor in a single function. Requires changes to the createOwnPeerDescriptor
         // function in the config. Currently it's given by the DhtNode and it sets the PeerDescriptor for the
         // DhtNode in each call. 
         const selfSigned = (!this.config.tlsCertificate && this.config.websocketServerEnableTls === true)
-        const connectivityResponse = await this.webSocketConnector.checkConnectivity(selfSigned)
-        let ownPeerDescriptor = this.config.createOwnPeerDescriptor(connectivityResponse)
-        this.ownPeerDescriptor = ownPeerDescriptor
-        this.webSocketConnector.setOwnPeerDescriptor(ownPeerDescriptor)
-        if (ownPeerDescriptor.websocket && !this.config.tlsCertificate && this.config.websocketServerEnableTls) {
+        const connectivityResponse = await this.websocketConnector.checkConnectivity(selfSigned)
+        let localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
+        this.localPeerDescriptor = localPeerDescriptor
+        this.websocketConnector.setLocalPeerDescriptor(localPeerDescriptor)
+        if (localPeerDescriptor.websocket && !this.config.tlsCertificate && this.config.websocketServerEnableTls) {
             try {
-                ownPeerDescriptor = await this.autoCertify()
+                localPeerDescriptor = await this.autoCertify()
             } catch (err) {
                 connectivityResponse.websocket = undefined
-                ownPeerDescriptor = this.config.createOwnPeerDescriptor(connectivityResponse)
-                this.ownPeerDescriptor = ownPeerDescriptor
+                localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
+                this.localPeerDescriptor = localPeerDescriptor
                 logger.warn('Failed to autocertify, disabling websocket server connectivity')
             }
         }
-        this.webrtcConnector.setOwnPeerDescriptor(ownPeerDescriptor)
+        this.webrtcConnector.setLocalPeerDescriptor(localPeerDescriptor)
     }
 
     private async autoCertify(): Promise<PeerDescriptor> {
-        await this.webSocketConnector!.autoCertify()
-        const connectivityResponse = await this.webSocketConnector!.checkConnectivity(false)
+        await this.websocketConnector!.autoCertify()
+        const connectivityResponse = await this.websocketConnector!.checkConnectivity(false)
         if (connectivityResponse.websocket) {
-            const ownPeerDescriptor = this.config.createOwnPeerDescriptor(connectivityResponse)
-            this.ownPeerDescriptor = ownPeerDescriptor
-            this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
-            return ownPeerDescriptor
+            const localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
+            this.localPeerDescriptor = localPeerDescriptor
+            this.websocketConnector!.setLocalPeerDescriptor(localPeerDescriptor)
+            return localPeerDescriptor
         } else {
             logger.warn('ConnectivityCheck failed after autocertification, disabling websocket server connectivity')
-            const ownPeerDescriptor = this.config.createOwnPeerDescriptor(connectivityResponse)
-            this.ownPeerDescriptor = ownPeerDescriptor
-            return ownPeerDescriptor
+            const localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
+            this.localPeerDescriptor = localPeerDescriptor
+            return localPeerDescriptor
         }
     }
 
     createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
-        if (this.webSocketConnector!.isPossibleToFormConnection(peerDescriptor)) {
-            return this.webSocketConnector!.connect(peerDescriptor)
+        if (this.websocketConnector!.isPossibleToFormConnection(peerDescriptor)) {
+            return this.websocketConnector!.connect(peerDescriptor)
         } else {
             return this.webrtcConnector!.connect(peerDescriptor)
         }
     }
 
-    getOwnPeerDescriptor(): PeerDescriptor | undefined {
-        return this.ownPeerDescriptor
+    getLocalPeerDescriptor(): PeerDescriptor | undefined {
+        return this.localPeerDescriptor
     }
 
     async stop(): Promise<void> {
-        await this.webSocketConnector!.destroy()
+        await this.websocketConnector!.destroy()
         await this.webrtcConnector!.stop()
     }
 }
 
 export class SimulatorConnectorFacade implements ConnectorFacade {
 
-    private readonly ownPeerDescriptor: PeerDescriptor
+    private readonly localPeerDescriptor: PeerDescriptor
     private simulatorConnector?: SimulatorConnector
     private simulator: Simulator
 
-    constructor(ownPeerDescriptor: PeerDescriptor, simulator: Simulator) {
-        this.ownPeerDescriptor = ownPeerDescriptor
+    constructor(localPeerDescriptor: PeerDescriptor, simulator: Simulator) {
+        this.localPeerDescriptor = localPeerDescriptor
         this.simulator = simulator
     }
 
     async start(onIncomingConnection: (connection: ManagedConnection) => boolean): Promise<void> {
         logger.trace(`Creating SimulatorConnector`)
         this.simulatorConnector = new SimulatorConnector(
-            this.ownPeerDescriptor,
+            this.localPeerDescriptor,
             this.simulator,
             onIncomingConnection
         )
@@ -169,8 +169,8 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
         return this.simulatorConnector!.connect(peerDescriptor)
     }
 
-    getOwnPeerDescriptor(): PeerDescriptor {
-        return this.ownPeerDescriptor
+    getLocalPeerDescriptor(): PeerDescriptor {
+        return this.localPeerDescriptor
     }
 
     async stop(): Promise<void> {

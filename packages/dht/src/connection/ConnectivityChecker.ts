@@ -6,16 +6,16 @@ import {
 import { ConnectionEvents, IConnection } from './IConnection'
 import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
 import * as Err from '../helpers/errors'
-import { ClientWebSocket } from './WebSocket/ClientWebSocket'
+import { ClientWebsocket } from './websocket/ClientWebsocket'
 import { v4 } from 'uuid'
 import { NatType } from './ConnectionManager'
-import { ServerWebSocket } from './WebSocket/ServerWebSocket'
-import { connectivityMethodToWebSocketUrl } from './WebSocket/WebSocketConnectorRpcLocal'
+import { ServerWebsocket } from './websocket/ServerWebsocket'
+import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnectorRpcLocal'
 
 const logger = new Logger(module)
 
 // Class for handling both client and server side of the connectivity
-// checks. This is attached to all ServerWebSockets to listen to
+// checks. This is attached to all ServerWebsockets to listen to
 // ConnectivityRequest messages. 
 
 export enum ConnectionMode { REQUEST = 'connectivityRequest', PROBE = 'connectivityProbe' }
@@ -24,12 +24,12 @@ export class ConnectivityChecker {
     private static readonly CONNECTIVITY_CHECKER_SERVICE_ID = 'system/connectivity-checker'
     private static readonly CONNECTIVITY_CHECKER_TIMEOUT = 5000
     private destroyed = false
-    private readonly webSocketPort: number
+    private readonly websocketPort: number
     private readonly tls: boolean 
     private host?: string
 
-    constructor(webSocketPort: number, tls: boolean, host?: string) {
-        this.webSocketPort = webSocketPort
+    constructor(websocketPort: number, tls: boolean, host?: string) {
+        this.websocketPort = websocketPort
         this.tls = tls
         this.host = host
     }
@@ -50,10 +50,10 @@ export class ConnectivityChecker {
                 selfSigned
             })
         } catch (e) {
-            throw new Err.ConnectionFailed(`Failed to connect to the entrypoint ${connectivityMethodToWebSocketUrl(entryPoint.websocket!)}`, e)
+            throw new Err.ConnectionFailed(`Failed to connect to the entrypoint ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`, e)
         }
         // send connectivity request
-        const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort, host: this.host, tls: this.tls, selfSigned }
+        const connectivityRequestMessage: ConnectivityRequest = { port: this.websocketPort, host: this.host, tls: this.tls, selfSigned }
         const msg: Message = {
             serviceId: ConnectivityChecker.CONNECTIVITY_CHECKER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_REQUEST, messageId: v4(),
@@ -103,7 +103,7 @@ export class ConnectivityChecker {
         this.host = hostName
     }
 
-    public listenToIncomingConnectivityRequests(connectionToListenTo: ServerWebSocket): void {
+    public listenToIncomingConnectivityRequests(connectionToListenTo: ServerWebsocket): void {
         connectionToListenTo.on('data', (data: Uint8Array) => {
             logger.trace('server received data')
             try {
@@ -125,7 +125,7 @@ export class ConnectivityChecker {
     }
 
     private async handleIncomingConnectivityRequest(
-        connection: ServerWebSocket,
+        connection: ServerWebsocket,
         connectivityRequest: ConnectivityRequest
     ): Promise<void> {
         if (this.destroyed) {
@@ -140,7 +140,7 @@ export class ConnectivityChecker {
                 port: connectivityRequest.port,
                 tls: connectivityRequest.tls
             }
-            logger.trace(`Attempting Connectivity Check to ${connectivityMethodToWebSocketUrl(wsServerInfo)}`)
+            logger.trace(`Attempting Connectivity Check to ${connectivityMethodToWebsocketUrl(wsServerInfo)}`)
             outgoingConnection = await this.connectAsync({
                 wsServerInfo,
                 mode: ConnectionMode.PROBE,
@@ -149,7 +149,6 @@ export class ConnectivityChecker {
         } catch (err) {
             logger.debug('error', { err })
             connectivityResponseMessage = {
-                openInternet: false,
                 host,
                 natType: NatType.UNKNOWN
             }
@@ -158,7 +157,6 @@ export class ConnectivityChecker {
             outgoingConnection.close('OTHER')
             logger.trace('Connectivity test produced positive result, communicating reply to the requester ' + host + ':' + connectivityRequest.port)
             connectivityResponseMessage = {
-                openInternet: true,
                 host,
                 natType: NatType.OPEN_INTERNET,
                 websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls }
@@ -180,8 +178,8 @@ export class ConnectivityChecker {
     private async connectAsync({ wsServerInfo, mode, selfSigned, timeoutMs = 1000, }:
         { wsServerInfo: ConnectivityMethod, mode: ConnectionMode, selfSigned: boolean, timeoutMs?: number }
     ): Promise<IConnection> {
-        const socket = new ClientWebSocket()
-        const url = `${connectivityMethodToWebSocketUrl(wsServerInfo)}?${mode}=true`
+        const socket = new ClientWebsocket()
+        const url = `${connectivityMethodToWebsocketUrl(wsServerInfo)}?${mode}=true`
         let result: RunAndRaceEventsReturnType<ConnectionEvents>
         try {
             result = await runAndRaceEvents3<ConnectionEvents>([

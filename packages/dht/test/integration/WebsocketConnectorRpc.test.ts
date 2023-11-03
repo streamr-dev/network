@@ -1,20 +1,20 @@
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { WebSocketConnectorRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
+import { WebsocketConnectorRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { generateId } from '../utils/utils'
 import {
     NodeType,
     PeerDescriptor,
-    WebSocketConnectionRequest,
-    WebSocketConnectionResponse
+    WebsocketConnectionRequest,
+    WebsocketConnectionResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { mockWebSocketConnectorRpc } from '../utils/utils'
+import { mockWebsocketConnectorRpc } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
-describe('WebSocketConnectorRpc', () => {
+describe('WebsocketConnectorRpc', () => {
     let rpcCommunicator1: RpcCommunicator
     let rpcCommunicator2: RpcCommunicator
-    let client1: ProtoRpcClient<WebSocketConnectorRpcClient>
-    let client2: ProtoRpcClient<WebSocketConnectorRpcClient>
+    let client1: ProtoRpcClient<WebsocketConnectorRpcClient>
+    let client2: ProtoRpcClient<WebsocketConnectorRpcClient>
 
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: generateId('peer1'),
@@ -29,18 +29,18 @@ describe('WebSocketConnectorRpc', () => {
     beforeEach(() => {
         rpcCommunicator1 = new RpcCommunicator()
         rpcCommunicator1.registerRpcMethod(
-            WebSocketConnectionRequest,
-            WebSocketConnectionResponse,
+            WebsocketConnectionRequest,
+            WebsocketConnectionResponse,
             'requestConnection',
-            mockWebSocketConnectorRpc.requestConnection
+            mockWebsocketConnectorRpc.requestConnection
         )
 
         rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator2.registerRpcMethod(
-            WebSocketConnectionRequest,
-            WebSocketConnectionResponse,
+            WebsocketConnectionRequest,
+            WebsocketConnectionResponse,
             'requestConnection',
-            mockWebSocketConnectorRpc.requestConnection
+            mockWebsocketConnectorRpc.requestConnection
         )
 
         rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {
@@ -51,8 +51,8 @@ describe('WebSocketConnectorRpc', () => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 
-        client1 = toProtoRpcClient(new WebSocketConnectorRpcClient(rpcCommunicator1.getRpcClientTransport()))
-        client2 = toProtoRpcClient(new WebSocketConnectorRpcClient(rpcCommunicator2.getRpcClientTransport()))
+        client1 = toProtoRpcClient(new WebsocketConnectorRpcClient(rpcCommunicator1.getRpcClientTransport()))
+        client2 = toProtoRpcClient(new WebsocketConnectorRpcClient(rpcCommunicator2.getRpcClientTransport()))
     })
 
     afterEach(async () => {

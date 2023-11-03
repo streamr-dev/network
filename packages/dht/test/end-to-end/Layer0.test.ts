@@ -16,7 +16,7 @@ describe('Layer0', () => {
         
         epDhtNode = new DhtNode({ websocketHost: '127.0.0.1', websocketPortRange: { min: 10011, max: 10011 }, websocketServerEnableTls: false })
         await epDhtNode.start()
-        epPeerDescriptor = epDhtNode.getPeerDescriptor()
+        epPeerDescriptor = epDhtNode.getLocalPeerDescriptor()
         await epDhtNode.joinDht([epPeerDescriptor])
 
         node1 = new DhtNode({ 

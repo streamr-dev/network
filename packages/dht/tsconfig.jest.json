@@ -9,7 +9,7 @@
         "test/**/*"
     ],
     "exclude": [
-        "src/connection/WebRTC/BrowserWebRtcConnection.ts"
+        "src/connection/webrtc/BrowserWebrtcConnection.ts"
     ],  
     "references": [
         { "path": "../utils/tsconfig.node.json" },

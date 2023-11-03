@@ -20,19 +20,19 @@ import EventEmitter from 'eventemitter3'
 import { Events } from '../DhtNode'
 import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
-import { RemoteDhtNode } from '../RemoteDhtNode'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
     recursiveFinder: IRecursiveFinder
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
     serviceId: string
     maxTtl: number
     highestTtl: number
     redundancyFactor: number
     dhtNodeEmitter: EventEmitter<Events>
-    getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => RemoteDhtNode[]
+    getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
 }
 
 const logger = new Logger(module)
@@ -41,19 +41,19 @@ export class StoreRpcLocal implements IStoreRpc {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly recursiveFinder: IRecursiveFinder
-    private readonly ownPeerDescriptor: PeerDescriptor
+    private readonly localPeerDescriptor: PeerDescriptor
     private readonly localDataStore: LocalDataStore
     private readonly serviceId: string
     private readonly maxTtl: number
     private readonly highestTtl: number
     private readonly redundancyFactor: number
     private readonly dhtNodeEmitter: EventEmitter<Events>
-    private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => RemoteDhtNode[]
+    private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
 
     constructor(config: DataStoreConfig) {
         this.rpcCommunicator = config.rpcCommunicator
         this.recursiveFinder = config.recursiveFinder
-        this.ownPeerDescriptor = config.ownPeerDescriptor
+        this.localPeerDescriptor = config.localPeerDescriptor
         this.localDataStore = config.localDataStore
         this.serviceId = config.serviceId
         this.maxTtl = config.maxTtl
@@ -83,12 +83,12 @@ export class StoreRpcLocal implements IStoreRpc {
 
         const dataId = PeerID.fromValue(dataEntry.kademliaId)
         const newNodeId = PeerID.fromValue(newNode.kademliaId)
-        const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
+        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.kademliaId)
 
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
 
         const sortedList = new SortedContactList<Contact>(dataId, 20, undefined, true)
-        sortedList.addContact(new Contact(this.ownPeerDescriptor))
+        sortedList.addContact(new Contact(this.localPeerDescriptor))
 
         closestToData.forEach((con) => {
             if (!newNodeId.equals(PeerID.fromValue(con.getPeerDescriptor().kademliaId))) {
@@ -96,7 +96,7 @@ export class StoreRpcLocal implements IStoreRpc {
             }
         })
 
-        if (!sortedList.getAllContacts()[0].getPeerId().equals(ownPeerId)) {
+        if (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)) {
             // If we are not the closes node to the data, do not migrate
             return false
         }
@@ -128,7 +128,7 @@ export class StoreRpcLocal implements IStoreRpc {
 
     private async migrateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor, doNotConnect: boolean = false): Promise<void> {
         const rpcRemote = new StoreRpcRemote(
-            this.ownPeerDescriptor,
+            this.localPeerDescriptor,
             contact,
             this.serviceId,
             toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport()))
@@ -151,10 +151,10 @@ export class StoreRpcLocal implements IStoreRpc {
         const ttl = this.highestTtl // ToDo: make TTL decrease according to some nice curve
         const storerTime = Timestamp.now()
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.redundancyFactor; i++) {
-            if (areEqualPeerDescriptors(this.ownPeerDescriptor, closestNodes[i])) {
+            if (areEqualPeerDescriptors(this.localPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
                     kademliaId: key, 
-                    storer: this.ownPeerDescriptor,
+                    storer: this.localPeerDescriptor,
                     ttl, 
                     storedAt: Timestamp.now(), 
                     data,
@@ -166,7 +166,7 @@ export class StoreRpcLocal implements IStoreRpc {
                 continue
             }
             const rpcRemote = new StoreRpcRemote(
-                this.ownPeerDescriptor,
+                this.localPeerDescriptor,
                 closestNodes[i],
                 this.serviceId,
                 toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport()))
@@ -187,12 +187,12 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     private selfIsOneOfClosestPeers(dataId: Uint8Array): boolean {
-        const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
+        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.kademliaId)
         const closestPeers = this.getNodesClosestToIdFromBucket(dataId, this.redundancyFactor)
-        const sortedList = new SortedContactList<Contact>(ownPeerId, this.redundancyFactor, undefined, true)
-        sortedList.addContact(new Contact(this.ownPeerDescriptor))
+        const sortedList = new SortedContactList<Contact>(localPeerId, this.redundancyFactor, undefined, true)
+        sortedList.addContact(new Contact(this.localPeerDescriptor))
         closestPeers.forEach((con) => sortedList.addContact(new Contact(con.getPeerDescriptor())))
-        return sortedList.getClosestContacts().some((node) => node.getPeerId().equals(ownPeerId))
+        return sortedList.getClosestContacts().some((node) => node.getPeerId().equals(localPeerId))
     }
 
     public async deleteDataFromDht(key: Uint8Array): Promise<void> {
@@ -201,13 +201,13 @@ export class StoreRpcLocal implements IStoreRpc {
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.redundancyFactor; i++) {
-            if (areEqualPeerDescriptors(this.ownPeerDescriptor, closestNodes[i])) {
-                this.localDataStore.markAsDeleted(key, peerIdFromPeerDescriptor(this.ownPeerDescriptor))
+            if (areEqualPeerDescriptors(this.localPeerDescriptor, closestNodes[i])) {
+                this.localDataStore.markAsDeleted(key, peerIdFromPeerDescriptor(this.localPeerDescriptor))
                 successfulNodes.push(closestNodes[i])
                 continue
             }
             const rpcRemote = new StoreRpcRemote(
-                this.ownPeerDescriptor,
+                this.localPeerDescriptor,
                 closestNodes[i],
                 this.serviceId,
                 toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport()))
@@ -278,25 +278,25 @@ export class StoreRpcLocal implements IStoreRpc {
     private migrateDataToNeighborsIfNeeded(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
 
         // sort own contact list according to data id
-        const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
+        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.kademliaId)
         const dataId = PeerID.fromValue(dataEntry.kademliaId)
         const incomingPeerId = PeerID.fromValue(incomingPeer.kademliaId)
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
 
         const sortedList = new SortedContactList<Contact>(dataId, this.redundancyFactor, undefined, true)
-        sortedList.addContact(new Contact(this.ownPeerDescriptor))
+        sortedList.addContact(new Contact(this.localPeerDescriptor))
 
         closestToData.forEach((con) => {
             sortedList.addContact(new Contact(con.getPeerDescriptor()))
         })
 
-        if (!sortedList.getAllContacts()[0].getPeerId().equals(ownPeerId)) {
+        if (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)) {
             // If we are not the closest node to the data, migrate only to the 
             // closest one to the data
 
             const contact = sortedList.getAllContacts()[0]
             const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
-            if (!incomingPeerId.equals(contactPeerId) && !ownPeerId.equals(contactPeerId)) {
+            if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
                 setImmediate(async () => {
                     try {
                         await this.migrateDataToContact(dataEntry, contact.getPeerDescriptor())
@@ -310,8 +310,8 @@ export class StoreRpcLocal implements IStoreRpc {
             // if we are the closest to the data, migrate to all storageRedundancyFactor nearest
             sortedList.getAllContacts().forEach((contact) => {
                 const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
-                if (!incomingPeerId.equals(contactPeerId) && !ownPeerId.equals(contactPeerId)) {
-                    if (!incomingPeerId.equals(contactPeerId) && !ownPeerId.equals(contactPeerId)) {
+                if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
+                    if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
                         setImmediate(async () => {
                             try {
                                 await this.migrateDataToContact(dataEntry, contact.getPeerDescriptor())

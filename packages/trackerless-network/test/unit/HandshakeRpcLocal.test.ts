@@ -13,14 +13,14 @@ describe('HandshakeRpcLocal', () => {
 
     let rpcLocal: HandshakeRpcLocal
 
-    const ownPeerDescriptor = createMockPeerDescriptor()
+    const localPeerDescriptor = createMockPeerDescriptor()
 
     let targetNeighbors: NodeList
     let ongoingHandshakes: Set<NodeID>
     let handshakeWithInterleaving: jest.Mock
 
     beforeEach(() => {
-        targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(ownPeerDescriptor), 10)
+        targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(localPeerDescriptor), 10)
         ongoingHandshakes = new Set()
 
         handshakeWithInterleaving = jest.fn()

@@ -1,4 +1,4 @@
-import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
@@ -49,12 +49,12 @@ describe('Scaling down a Dht network', () => {
             const index = Math.floor(Math.random() * randomIndices.length)
             const nodeIndex = randomIndices[index]
             randomIndices.splice(index, 1)
-            const stoppingPeerDescriptor = nodes[nodeIndex].getPeerDescriptor()
+            const stoppingPeerDescriptor = nodes[nodeIndex].getLocalPeerDescriptor()
             await nodes[nodeIndex].stop()
             const nodeIsCleaned = nodes.every((node) =>
                 node.getAllConnectionPeerDescriptors().every((peer) => {
                     if (areEqualPeerDescriptors(peer, stoppingPeerDescriptor)) {
-                        logger.error(keyFromPeerDescriptor(node.getPeerDescriptor()) + ', ' 
+                        logger.error(keyFromPeerDescriptor(node.getLocalPeerDescriptor()) + ', ' 
                             + keyFromPeerDescriptor(stoppingPeerDescriptor) + ' cleaning up failed')
                     }
                     return !areEqualPeerDescriptors(peer, stoppingPeerDescriptor)

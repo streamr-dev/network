@@ -5,7 +5,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from '@streamr/utils'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 
-describe('WebSocket IConnection Requests', () => {
+describe('Websocket IConnection Requests', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('3').value,
         type: NodeType.NODEJS,
@@ -48,12 +48,12 @@ describe('WebSocket IConnection Requests', () => {
         let connected2 = false
 
         node1.on('connected', (peerDescriptor: PeerDescriptor) => {
-            if (areEqualPeerDescriptors(peerDescriptor, node2.getPeerDescriptor())) {
+            if (areEqualPeerDescriptors(peerDescriptor, node2.getLocalPeerDescriptor())) {
                 connected1 = true
             }
         })
         node2.on('connected', (peerDescriptor: PeerDescriptor) => {
-            if (areEqualPeerDescriptors(peerDescriptor, node1.getPeerDescriptor())) {
+            if (areEqualPeerDescriptors(peerDescriptor, node1.getLocalPeerDescriptor())) {
                 connected2 = true
             }
         })
@@ -63,8 +63,8 @@ describe('WebSocket IConnection Requests', () => {
 
         await waitForCondition(() => { return (connected1 && connected2) })
 
-        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getPeerDescriptor())).toEqual(true)
-        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getPeerDescriptor())).toEqual(true)
+        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getLocalPeerDescriptor())).toEqual(true)
+        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getLocalPeerDescriptor())).toEqual(true)
 
     }, 10000)
 })

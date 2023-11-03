@@ -1,6 +1,6 @@
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import { ICloseEvent, IMessageEvent, w3cwebsocket as WebSocket } from 'websocket'
+import { ICloseEvent, IMessageEvent, w3cwebsocket as Websocket } from 'websocket'
 import { DisconnectionType } from '../../transport/ITransport'
 import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from '../IConnection'
 
@@ -8,9 +8,9 @@ const logger = new Logger(module)
 
 const BINARY_TYPE = 'arraybuffer'
 
-export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements IConnection {
+export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements IConnection {
     public readonly connectionId: ConnectionID
-    private socket?: WebSocket
+    private socket?: Websocket
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
 
     private destroyed = false
@@ -22,7 +22,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
 
     public connect(address: string, selfSigned?: boolean): void {
         if (!this.destroyed) {
-            this.socket = new WebSocket(address, undefined, undefined, undefined, { rejectUnauthorized: !selfSigned })
+            this.socket = new Websocket(address, undefined, undefined, undefined, { rejectUnauthorized: !selfSigned })
             this.socket.binaryType = BINARY_TYPE
             this.socket.onerror = (error: Error) => {
                 if (!this.destroyed) {

@@ -13,7 +13,7 @@ import { StreamPartID } from '@streamr/protocol'
 interface TemporaryConnectionRpcLocalConfig {
     streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
 } 
 
 export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
@@ -23,7 +23,7 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
 
     constructor(config: TemporaryConnectionRpcLocalConfig) {
         this.config = config
-        this.temporaryNodes = new NodeList(getNodeIdFromPeerDescriptor(config.ownPeerDescriptor), 10)
+        this.temporaryNodes = new NodeList(getNodeIdFromPeerDescriptor(config.localPeerDescriptor), 10)
     }
 
     getNodes(): NodeList {
@@ -40,7 +40,7 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
     ): Promise<TemporaryConnectionResponse> {
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
         const remote = new DeliveryRpcRemote(
-            this.config.ownPeerDescriptor,
+            this.config.localPeerDescriptor,
             sender,
             this.config.streamPartId,
             toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))

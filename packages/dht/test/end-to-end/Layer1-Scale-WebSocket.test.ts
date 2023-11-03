@@ -51,7 +51,7 @@ describe('Layer1 Scale', () => {
             const layer1 = new DhtNode({
                 transport: node,
                 entryPoints: [epPeerDescriptor],
-                peerDescriptor: node.getPeerDescriptor(),
+                peerDescriptor: node.getLocalPeerDescriptor(),
                 serviceId: STREAM_ID,
                 numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
             })

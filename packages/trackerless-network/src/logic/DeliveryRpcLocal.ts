@@ -12,7 +12,7 @@ import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
 export interface DeliveryRpcLocalConfig {
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
     broadcast: (message: StreamMessage, previousNode?: NodeID) => void

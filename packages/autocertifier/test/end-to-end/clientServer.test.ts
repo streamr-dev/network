@@ -117,13 +117,13 @@ describe('clientServer', () => {
                 transport: mockTransport,
                 websocketHost: '127.0.0.1',
                 websocketPortRange: { min: 9991, max: 9991 },
-                createOwnPeerDescriptor: () => mockPeerDescriptor1
+                createLocalPeerDescriptor: () => mockPeerDescriptor1
             }),
             metricsContext: {} as any
         })
 
         await clientConnectionManager.start()
-        const peerDescriptor = clientConnectionManager.getPeerDescriptor()
+        const peerDescriptor = clientConnectionManager.getLocalPeerDescriptor()
         expect(peerDescriptor.websocket!.host).toEqual('127.0.0.1')
     })
 
@@ -144,7 +144,7 @@ describe('clientServer', () => {
     })
      
     it('The client can start', (done) => {
-        const streamrWebSocketPort = clientConnectionManager.getPeerDescriptor().websocket!.port
+        const streamrWebSocketPort = clientConnectionManager.getLocalPeerDescriptor().websocket!.port
         const autoCertifierUrl = 'https://localhost:' + restServerPort
 
         client = new AutoCertifierClient(

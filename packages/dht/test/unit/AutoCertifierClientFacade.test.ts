@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3'
-import { AutoCertifierClientFacade, IAutoCertifierClient } from '../../src/connection/WebSocket/AutoCertifierClientFacade'
+import { AutoCertifierClientFacade, IAutoCertifierClient } from '../../src/connection/websocket/AutoCertifierClientFacade'
 import { MockTransport } from '../utils/mock/Transport'
 
 class MockAutoCertifierClient extends EventEmitter {

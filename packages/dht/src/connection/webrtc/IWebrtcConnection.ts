@@ -1,4 +1,4 @@
-export interface WebRtcConnectionEvents {
+export interface WebrtcConnectionEvents {
     localDescription: (description: string, type: string) => void
     localCandidate: (candidate: string, mid: string) => void
 }
@@ -8,7 +8,7 @@ export enum RtcDescription {
     ANSWER = 'answer'
 }
 
-export interface IWebRtcConnection {
+export interface IWebrtcConnection {
     start(isOffering: boolean): void
 
     on(event: 'localDescription', listener: (description: string, type: string) => void): this

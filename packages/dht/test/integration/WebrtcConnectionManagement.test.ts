@@ -1,20 +1,20 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
-import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
+import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { MetricsContext } from '@streamr/utils'
 
-const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, transport: ITransport) => {
+const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
         createConnectorFacade: () => new DefaultConnectorFacade({
             transport,
-            createOwnPeerDescriptor: () => ownPeerDescriptor
+            createLocalPeerDescriptor: () => localPeerDescriptor
         }),
         metricsContext: new MetricsContext()
     })

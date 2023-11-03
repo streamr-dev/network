@@ -26,7 +26,7 @@ interface ProxyConnection {
 }
 
 interface ProxyConnectionRpcLocalConfig {
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
 }
@@ -95,7 +95,7 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
             direction: request.direction,
             userId: toEthereumAddress(binaryToHex(request.userId, true)),
             remote: new DeliveryRpcRemote(
-                this.config.ownPeerDescriptor,
+                this.config.localPeerDescriptor,
                 senderPeerDescriptor,
                 this.config.streamPartId,
                 toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
