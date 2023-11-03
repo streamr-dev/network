@@ -1,7 +1,7 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { ConnectivityResponse, Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
-import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { Simulator } from '../../src/connection/simulator/Simulator'
 import { createPeerDescriptor } from '../../src/dht/DhtNode'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Logger, MetricsContext } from '@streamr/utils'
@@ -301,7 +301,7 @@ describe('ConnectionManager', () => {
         await connectionManager4.stop()
     })
 
-    it('Cannot send to own WebSocketServer if kademliaIds do not match', async () => {
+    it('Cannot send to own WebsocketServer if kademliaIds do not match', async () => {
         const connectionManager1 = createConnectionManager({
             transport: mockTransport,
             websocketHost: '127.0.0.1',

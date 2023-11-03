@@ -1,13 +1,13 @@
 import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionType } from './IConnection'
 import { ManagedConnection } from './ManagedConnection'
-import { NodeWebRtcConnection } from './WebRTC/NodeWebRtcConnection'
+import { NodeWebrtcConnection } from './webrtc/NodeWebrtcConnection'
 
-export class ManagedWebRtcConnection extends ManagedConnection {
+export class ManagedWebrtcConnection extends ManagedConnection {
 
     constructor(ownPeerDescriptor: PeerDescriptor,
-        connectingConnection?: NodeWebRtcConnection,
-        connectedConnection?: NodeWebRtcConnection) {
+        connectingConnection?: NodeWebrtcConnection,
+        connectedConnection?: NodeWebrtcConnection) {
         super(
             ownPeerDescriptor,
             ConnectionType.WEBRTC,
@@ -15,11 +15,11 @@ export class ManagedWebRtcConnection extends ManagedConnection {
             connectedConnection)
     }
 
-    public getWebRtcConnection(): NodeWebRtcConnection {
+    public getWebrtcConnection(): NodeWebrtcConnection {
         if (this.outgoingConnection) {
-            return this.outgoingConnection as unknown as NodeWebRtcConnection
+            return this.outgoingConnection as unknown as NodeWebrtcConnection
         } else {
-            return this.incomingConnection as unknown as NodeWebRtcConnection
+            return this.incomingConnection as unknown as NodeWebrtcConnection
         }
     }
 }

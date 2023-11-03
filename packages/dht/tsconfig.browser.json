@@ -10,6 +10,6 @@
     "test/**/*"
   ],
   "exclude": [
-    "src/connection/WebRTC/NodeWebRtcConnection.ts"
+    "src/connection/webrtc/NodeWebrtcConnection.ts"
   ]
 }

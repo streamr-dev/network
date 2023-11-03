@@ -11,7 +11,7 @@ import {
     RouteMessageWrapper,
     StoreDataRequest,
     StoreDataResponse,
-    WebSocketConnectionResponse,
+    WebsocketConnectionResponse,
     FindRequest, 
     DeleteDataResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -21,17 +21,17 @@ import {
     IDhtNodeRpc,
     IRouterRpc,
     IStoreRpc,
-    IWebSocketConnectorRpc
+    IWebsocketConnectorRpc
 } from '../../src/proto/packages/dht/protos/DhtRpc.server'
-import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { Simulator } from '../../src/connection/simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { v4 } from 'uuid'
-import { getRandomRegion } from '../../src/connection/Simulator/pings'
+import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { wait, waitForCondition } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
-import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
+import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
@@ -207,9 +207,9 @@ export const mockStoreRpc: IStoreRpcWithError = {
     }
 }
 
-export const mockWebSocketConnectorRpc: IWebSocketConnectorRpc = {
-    async requestConnection(): Promise<WebSocketConnectionResponse> {
-        const responseConnection: WebSocketConnectionResponse = {
+export const mockWebsocketConnectorRpc: IWebsocketConnectorRpc = {
+    async requestConnection(): Promise<WebsocketConnectionResponse> {
+        const responseConnection: WebsocketConnectionResponse = {
             accepted: true
         }
         return responseConnection

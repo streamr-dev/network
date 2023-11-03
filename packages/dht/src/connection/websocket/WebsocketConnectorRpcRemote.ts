@@ -1,8 +1,8 @@
 import {
     PeerDescriptor,
-    WebSocketConnectionRequest
+    WebsocketConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { IWebSocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { IWebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
@@ -11,19 +11,19 @@ import { Remote } from '../../dht/contact/Remote'
 
 const logger = new Logger(module)
 
-export class WebSocketConnectorRpcRemote extends Remote<IWebSocketConnectorRpcClient> {
+export class WebsocketConnectorRpcRemote extends Remote<IWebsocketConnectorRpcClient> {
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
         remotePeerDescriptor: PeerDescriptor,
-        client: ProtoRpcClient<IWebSocketConnectorRpcClient>
+        client: ProtoRpcClient<IWebsocketConnectorRpcClient>
     ) {
         super(localPeerDescriptor, remotePeerDescriptor, 'DUMMY', client)
     }
 
     async requestConnection(ip: string, port: number): Promise<boolean> {
         logger.trace(`Requesting WebSocket connection from ${keyFromPeerDescriptor(this.getLocalPeerDescriptor())}`)
-        const request: WebSocketConnectionRequest = {
+        const request: WebsocketConnectionRequest = {
             ip,
             port
         }
@@ -32,13 +32,13 @@ export class WebSocketConnectorRpcRemote extends Remote<IWebSocketConnectorRpcCl
             const res = await this.getClient().requestConnection(request, options)
             
             if (res.reason) {
-                logger.debug('WebSocketConnectionRequest Rejected', {
-                    stack: new Err.WebSocketConnectionRequestRejected(res.reason).stack
+                logger.debug('WebsocketConnectionRequest Rejected', {
+                    stack: new Err.WebsocketConnectionRequestRejected(res.reason).stack
                 })
             }
             return res.accepted
         } catch (err) {
-            logger.debug(new Err.WebSocketConnectionRequestRejected('WebSocketConnectionRequest rejected', err).stack!)
+            logger.debug(new Err.WebsocketConnectionRequestRejected('WebsocketConnectionRequest rejected', err).stack!)
             return false
         }
     }
