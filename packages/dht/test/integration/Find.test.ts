@@ -5,7 +5,7 @@ import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } fr
 import { PeerID } from '../../src/helpers/PeerID'
 import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
-describe('Recursive find correctness', () => {
+describe('Find correctness', () => {
 
     let entryPoint: DhtNode
     let nodes: DhtNode[]
