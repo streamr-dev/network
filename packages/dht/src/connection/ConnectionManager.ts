@@ -254,8 +254,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         logger.trace(`Sending message to: ${keyFromPeerDescriptor(peerDescriptor)}`)
         message = {
             ...message,
-            targetDescriptor: message.targetDescriptor || peerDescriptor,
-            sourceDescriptor: message.sourceDescriptor || this.getLocalPeerDescriptor(),
+            sourceDescriptor: this.getLocalPeerDescriptor()
         }
         const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
         let connection = this.connections.get(peerIdKey)
