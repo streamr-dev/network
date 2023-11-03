@@ -212,7 +212,7 @@ export class Finder implements IFinder {
                 closestPeersToDestination, data, true)
             return createRouteMessageAck(routedMessage)
         }
-        const ack = this.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE_FIND, excludedPeer)
+        const ack = this.router.doRouteMessage(routedMessage, RoutingMode.FIND, excludedPeer)
         if (ack.error === RoutingErrors.NO_CANDIDATES_FOUND) {
             logger.trace(`routeFindRequest Node found no candidates`)
             this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
