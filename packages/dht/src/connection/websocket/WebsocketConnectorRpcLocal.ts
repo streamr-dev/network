@@ -258,7 +258,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
 
     public async destroy(): Promise<void> {
         this.destroyed = true
-        this.rpcCommunicator.stop()
+        this.rpcCommunicator.destroy()
 
         const requests = Array.from(this.ongoingConnectRequests.values())
         await Promise.allSettled(requests.map((conn) => conn.close('OTHER')))
