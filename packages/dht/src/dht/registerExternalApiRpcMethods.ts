@@ -1,5 +1,10 @@
 import { DhtNode } from '../dht/DhtNode'
-import { ExternalStoreDataRequest, ExternalStoreDataResponse, ExternalFindDataRequest, ExternalFindDataResponse } from '../proto/packages/dht/protos/DhtRpc'
+import { 
+    ExternalStoreDataRequest,
+    ExternalStoreDataResponse,
+    ExternalFindDataRequest,
+    ExternalFindDataResponse
+} from '../proto/packages/dht/protos/DhtRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 
@@ -21,7 +26,11 @@ export const registerExternalApiRpcMethods = (thisNode: DhtNode): void => {
     )
 }
 
-const externalFindData = async (thisNode: DhtNode, request: ExternalFindDataRequest, context: ServerCallContext): Promise<ExternalFindDataResponse> => {
+const externalFindData = async (
+    thisNode: DhtNode,
+    request: ExternalFindDataRequest,
+    context: ServerCallContext
+): Promise<ExternalFindDataResponse> => {
     const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
     const result = await thisNode.startRecursiveFind(request.kademliaId, true, senderPeerDescriptor)
     if (result.dataEntries) {
@@ -34,7 +43,10 @@ const externalFindData = async (thisNode: DhtNode, request: ExternalFindDataRequ
     }
 }
 
-const externalStoreData = async (thisNode: DhtNode, request: ExternalStoreDataRequest): Promise<ExternalStoreDataResponse> => {
+const externalStoreData = async (
+    thisNode: DhtNode,
+    request: ExternalStoreDataRequest
+): Promise<ExternalStoreDataResponse> => {
     const result = await thisNode.storeDataToDht(request.key, request.data!)
     return ExternalStoreDataResponse.create({
         storers: result
