@@ -1,13 +1,17 @@
 import * as forge from 'node-forge'
 
-interface Certificates {
+interface CertificateChain {
     caCert: string
     caKey: string
     serverCert: string
     serverKey: string
 }
 
-export function createSelfSignedCertificate(fqdn: string, validMonths: number, validMilliseconds?: number): Certificates {
+export function createSelfSignedCertificate(fqdn: string, validMonths: number): CertificateChain {
+    if (validMonths < 1) {
+        throw new Error('validMonths must be greater than 0')
+    }
+
     // Generate a new RSA key pair for the certificate authority
     const caKeys = forge.pki.rsa.generateKeyPair(2048)
 
@@ -17,12 +21,8 @@ export function createSelfSignedCertificate(fqdn: string, validMonths: number, v
     caCert.serialNumber = '01'
     caCert.validity.notBefore = new Date()
     caCert.validity.notAfter = new Date()
+    caCert.validity.notAfter.setMonth(caCert.validity.notBefore.getMonth() + validMonths)
 
-    if (validMonths > 0) {
-        caCert.validity.notAfter.setMonth(caCert.validity.notBefore.getMonth() + validMonths)
-    } else {
-        caCert.validity.notAfter.setMilliseconds(caCert.validity.notBefore.getMilliseconds() + validMilliseconds!)
-    }
     // TODO: add better values for the certificate?
     const attrs = [
         { name: 'commonName', value: fqdn },
@@ -69,7 +69,6 @@ export function createSelfSignedCertificate(fqdn: string, validMonths: number, v
     ])
     serverCert.sign(caKeys.privateKey, forge.md.sha256.create())
 
-    // Return the certificates and keys as an object
     return {
         caCert: forge.pki.certificateToPem(caCert),
         caKey: forge.pki.privateKeyToPem(caKeys.privateKey),

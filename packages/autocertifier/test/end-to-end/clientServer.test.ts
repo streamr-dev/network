@@ -30,28 +30,15 @@ let server: RestServer
 const dir = os.tmpdir()
 let certifiedSubdomain: CertifiedSubdomain
 
-const createTestSubdomain = (validityMillis?: number) => {
-    if (validityMillis) {
-        const fakeCerts = createSelfSignedCertificate('localhost', 1200)
-        certifiedSubdomain = { 
-            fqdn: 'localhost',
-            subdomain: 'mock',
-            token: 'token',
-            certificate: {
-                cert: fakeCerts.serverCert,
-                key: fakeCerts.serverKey
-            }
-        }
-    } else {
-        const fakeCerts = createSelfSignedCertificate('localhost', 0, validityMillis)
-        certifiedSubdomain = { 
-            fqdn: 'localhost',
-            subdomain: 'mock',
-            token: 'token',
-            certificate: {
-                cert: fakeCerts.serverCert,
-                key: fakeCerts.serverKey
-            }
+const createTestSubdomain = () => {
+    const fakeCerts = createSelfSignedCertificate('localhost', 1200)
+    certifiedSubdomain = { 
+        fqdn: 'localhost',
+        subdomain: 'mock',
+        token: 'token',
+        certificate: {
+            cert: fakeCerts.serverCert,
+            key: fakeCerts.serverKey
         }
     }
 }
