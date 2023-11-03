@@ -8,7 +8,7 @@ import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Contact } from '../contact/Contact'
 import { SortedContactList } from '../contact/SortedContactList'
-import { RecursiveFindResult } from './RecursiveFinder'
+import { FindResult } from './Finder'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 export interface FindSessionEvents {
@@ -162,7 +162,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> implements IFin
         return {}
     }
 
-    public getResults = (): RecursiveFindResult => ({
+    public getResults = (): FindResult => ({
         closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
         dataEntries: (this.foundData && this.foundData.size > 0) ? Array.from(this.foundData.values()) : undefined
     })

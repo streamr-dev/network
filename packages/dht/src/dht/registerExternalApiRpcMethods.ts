@@ -24,7 +24,7 @@ export const registerExternalApiRpcMethods = (thisNode: DhtNode): void => {
 // IDhtNodeRpc method for external findRecursive calls
 const findData = async (thisNode: DhtNode, findDataRequest: FindDataRequest, context: ServerCallContext): Promise<FindDataResponse> => {
     const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-    const result = await thisNode.startRecursiveFind(findDataRequest.kademliaId, true, senderPeerDescriptor)
+    const result = await thisNode.startFind(findDataRequest.kademliaId, true, senderPeerDescriptor)
     if (result.dataEntries) {
         return FindDataResponse.create({ dataEntries: result.dataEntries })
     } else {

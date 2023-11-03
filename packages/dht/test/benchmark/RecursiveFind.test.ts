@@ -78,7 +78,7 @@ describe('Recursive find correctness', () => {
 
         logger.info('starting recursive find')
         const kademliaIdToFind = Uint8Array.from(dhtIds[9].data)
-        const results = await nodes[159].startRecursiveFind(kademliaIdToFind)
+        const results = await nodes[159].startFind(kademliaIdToFind)
         logger.info('recursive find over')
         expect(results.closestNodes).toBeGreaterThanOrEqual(5)
         expect(PeerID.fromValue(kademliaIdToFind).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))

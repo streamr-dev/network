@@ -26,7 +26,7 @@ import { FindSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.cli
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { SortedContactList } from '../contact/SortedContactList'
 
-interface RecursiveFinderConfig {
+interface FinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
     connections: Map<PeerIDKey, DhtNodeRpcRemote>
@@ -38,17 +38,17 @@ interface RecursiveFinderConfig {
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
 }
 
-interface RecursiveFinderFunc {
-    startRecursiveFind(idToFind: Uint8Array, fetchData?: boolean): Promise<RecursiveFindResult>
+interface FinderFunc {
+    startFind(idToFind: Uint8Array, fetchData?: boolean): Promise<FindResult>
 }
 
-export type IRecursiveFinder = IFindRpc & RecursiveFinderFunc
+export type IFinder = IFindRpc & FinderFunc
 
-export interface RecursiveFindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
+export interface FindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
 
 const logger = new Logger(module)
 
-export class RecursiveFinder implements IRecursiveFinder {
+export class Finder implements IFinder {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly sessionTransport: ITransport
@@ -62,7 +62,7 @@ export class RecursiveFinder implements IRecursiveFinder {
     private ongoingSessions: Map<string, FindSession> = new Map()
     private stopped = false
 
-    constructor(config: RecursiveFinderConfig) {
+    constructor(config: FinderConfig) {
         this.rpcCommunicator = config.rpcCommunicator
         this.sessionTransport = config.sessionTransport
         this.connections = config.connections
@@ -76,11 +76,11 @@ export class RecursiveFinder implements IRecursiveFinder {
             (routedMessage: RouteMessageWrapper) => this.routeFindRequest(routedMessage))
     }
 
-    public async startRecursiveFind(
+    public async startFind(
         idToFind: Uint8Array,
         fetchData: boolean = false,
         excludedPeer?: PeerDescriptor
-    ): Promise<RecursiveFindResult> {
+    ): Promise<FindResult> {
         if (this.stopped) {
             return { closestNodes: [] }
         }

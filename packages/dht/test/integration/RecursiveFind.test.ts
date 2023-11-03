@@ -42,7 +42,7 @@ describe('Recursive find correctness', () => {
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
         const kademliaIdToFind = nodes[45].getNodeId().value
-        const results = await entryPoint.startRecursiveFind(kademliaIdToFind)
+        const results = await entryPoint.startFind(kademliaIdToFind)
         expect(results.closestNodes.length).toBeGreaterThanOrEqual(5)
         expect(PeerID.fromValue(kademliaIdToFind).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))
     }, 30000)
