@@ -49,12 +49,12 @@ describe('Scaling down a Dht network', () => {
             const index = Math.floor(Math.random() * randomIndices.length)
             const nodeIndex = randomIndices[index]
             randomIndices.splice(index, 1)
-            const stoppingPeerDescriptor = nodes[nodeIndex].getPeerDescriptor()
+            const stoppingPeerDescriptor = nodes[nodeIndex].getLocalPeerDescriptor()
             await nodes[nodeIndex].stop()
             const nodeIsCleaned = nodes.every((node) =>
                 node.getAllConnectionPeerDescriptors().every((peer) => {
                     if (areEqualPeerDescriptors(peer, stoppingPeerDescriptor)) {
-                        logger.error(keyFromPeerDescriptor(node.getPeerDescriptor()) + ', ' 
+                        logger.error(keyFromPeerDescriptor(node.getLocalPeerDescriptor()) + ', ' 
                             + keyFromPeerDescriptor(stoppingPeerDescriptor) + ' cleaning up failed')
                     }
                     return !areEqualPeerDescriptors(peer, stoppingPeerDescriptor)

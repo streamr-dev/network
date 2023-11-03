@@ -25,16 +25,16 @@ export const mockConnectionLocker: ConnectionLocker = {
 }
 
 export const createMockRandomGraphNodeAndDhtNode = async (
-    ownPeerDescriptor: PeerDescriptor,
+    localPeerDescriptor: PeerDescriptor,
     entryPointDescriptor: PeerDescriptor,
     streamPartId: StreamPartID,
     simulator: Simulator
 ): Promise<[ Layer1Node, RandomGraphNode ]> => {
-    const mockCm = new SimulatorTransport(ownPeerDescriptor, simulator)
+    const mockCm = new SimulatorTransport(localPeerDescriptor, simulator)
     await mockCm.start()
     const layer1Node = new DhtNode({
         transport: mockCm,
-        peerDescriptor: ownPeerDescriptor,
+        peerDescriptor: localPeerDescriptor,
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor]
     })
@@ -43,7 +43,7 @@ export const createMockRandomGraphNodeAndDhtNode = async (
         transport: mockCm,
         layer1Node,
         connectionLocker: mockCm,
-        ownPeerDescriptor
+        localPeerDescriptor
     })
     return [layer1Node, randomGraphNode]
 }

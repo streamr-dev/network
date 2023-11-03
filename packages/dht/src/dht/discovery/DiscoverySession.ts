@@ -20,7 +20,7 @@ interface DiscoverySessionConfig {
     bucket: KBucket<DhtNodeRpcRemote>
     neighborList: SortedContactList<DhtNodeRpcRemote>
     targetId: Uint8Array
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     serviceId: string
     rpcCommunicator: RpcCommunicator
     parallelism: number
@@ -47,9 +47,9 @@ export class DiscoverySession {
             return
         }
         contacts.forEach((contact) => {
-            if (!areEqualPeerDescriptors(contact, this.config.ownPeerDescriptor)) {
+            if (!areEqualPeerDescriptors(contact, this.config.localPeerDescriptor)) {
                 const rpcRemote = new DhtNodeRpcRemote(
-                    this.config.ownPeerDescriptor,
+                    this.config.localPeerDescriptor,
                     contact,
                     toProtoRpcClient(new DhtNodeRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
                     this.config.serviceId

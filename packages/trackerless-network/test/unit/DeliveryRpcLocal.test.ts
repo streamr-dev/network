@@ -35,7 +35,7 @@ describe('DeliveryRpcLocal', () => {
             broadcast: mockBroadcast,
             onLeaveNotice: mockOnLeaveNotice,
             markForInspection: mockMarkForInspection,
-            ownPeerDescriptor: peerDescriptor,
+            localPeerDescriptor: peerDescriptor,
             streamPartId: StreamPartIDUtils.parse('stream#0'),
             rpcCommunicator: new ListeningRpcCommunicator('random-graph-node', new MockTransport())
         })

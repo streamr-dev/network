@@ -7,10 +7,10 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
-const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createOwnPeerDescriptor'>) => {
+const createConnectionManager = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
     return new ConnectionManager({
         createConnectorFacade: () => new DefaultConnectorFacade({
-            createOwnPeerDescriptor: () => ownPeerDescriptor,
+            createLocalPeerDescriptor: () => localPeerDescriptor,
             ...opts
         }),
         metricsContext: new MetricsContext()

@@ -56,7 +56,7 @@ describe('RecursiveFinder', () => {
     beforeEach(() => {
         connections = new Map()
         recursiveFinder = new RecursiveFinder({
-            ownPeerDescriptor: peerDescriptor1,
+            localPeerDescriptor: peerDescriptor1,
             router: new MockRouter(),
             connections,
             serviceId: 'RecursiveFinder',

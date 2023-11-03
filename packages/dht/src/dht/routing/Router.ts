@@ -25,7 +25,7 @@ export enum RoutingErrors {
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     connections: Map<PeerIDKey, DhtNodeRpcRemote>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     serviceId: string
@@ -53,7 +53,7 @@ const logger = new Logger(module)
 
 export class Router implements IRouter {
     private readonly rpcCommunicator: RoutingRpcCommunicator
-    private readonly ownPeerDescriptor: PeerDescriptor
+    private readonly localPeerDescriptor: PeerDescriptor
     private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
     private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     private readonly serviceId: string
@@ -65,7 +65,7 @@ export class Router implements IRouter {
 
     constructor(config: RouterConfig) {
         this.rpcCommunicator = config.rpcCommunicator
-        this.ownPeerDescriptor = config.ownPeerDescriptor
+        this.localPeerDescriptor = config.localPeerDescriptor
         this.connections = config.connections
         this.addContact = config.addContact
         this.serviceId = config.serviceId
@@ -77,7 +77,7 @@ export class Router implements IRouter {
     }
 
     public async send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void> {
-        msg.sourceDescriptor = this.ownPeerDescriptor
+        msg.sourceDescriptor = this.localPeerDescriptor
         const targetPeerDescriptor = msg.targetDescriptor!
         const forwardingEntry = this.forwardingTable.get(keyFromPeerDescriptor(targetPeerDescriptor))
         if (forwardingEntry && forwardingEntry.peerDescriptors.length > 0) {
@@ -86,7 +86,7 @@ export class Router implements IRouter {
                 message: msg,
                 requestId: v4(),
                 destinationPeer: forwardingPeer,
-                sourcePeer: this.ownPeerDescriptor,
+                sourcePeer: this.localPeerDescriptor,
                 reachableThrough,
                 routingPath: []
             }
@@ -96,7 +96,7 @@ export class Router implements IRouter {
                 message: msg,
                 requestId: v4(),
                 destinationPeer: targetPeerDescriptor,
-                sourcePeer: this.ownPeerDescriptor,
+                sourcePeer: this.localPeerDescriptor,
                 reachableThrough,
                 routingPath: []
             }
@@ -110,7 +110,7 @@ export class Router implements IRouter {
         }
         logger.trace(`Routing message ${routedMessage.requestId} from ${keyFromPeerDescriptor(routedMessage.sourcePeer!)} `
             + `to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}`)
-        routedMessage.routingPath.push(this.ownPeerDescriptor)
+        routedMessage.routingPath.push(this.localPeerDescriptor)
         const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         this.addRoutingSession(session)
         try {
@@ -135,7 +135,7 @@ export class Router implements IRouter {
             })
             session.start()
         } catch (e) {
-            if (areEqualPeerDescriptors(routedMessage.sourcePeer!, this.ownPeerDescriptor)) {
+            if (areEqualPeerDescriptors(routedMessage.sourcePeer!, this.localPeerDescriptor)) {
                 logger.warn(
                     `Failed to send (routeMessage: ${this.serviceId}) to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}: ${e}`
                 )
@@ -153,10 +153,10 @@ export class Router implements IRouter {
         logger.trace(' routing session created with connections: ' + this.connections.size )
         return new RoutingSession(
             this.rpcCommunicator,
-            this.ownPeerDescriptor,
+            this.localPeerDescriptor,
             routedMessage,
             this.connections,
-            areEqualPeerDescriptors(this.ownPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
+            areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
             undefined,
             excludedPeers
@@ -204,7 +204,7 @@ export class Router implements IRouter {
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
         this.addContact(routedMessage.sourcePeer!, true)
         this.addToDuplicateDetector(routedMessage.requestId)
-        if (areEqualPeerDescriptors(this.ownPeerDescriptor, routedMessage.destinationPeer!)) {
+        if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
             logger.trace(`routing message targeted to self ${routedMessage.requestId}`)
             this.setForwardingEntries(routedMessage)
             this.connectionManager?.handleMessage(routedMessage.message!)
@@ -216,7 +216,7 @@ export class Router implements IRouter {
 
     private setForwardingEntries(routedMessage: RouteMessageWrapper): void {
         const reachableThroughWithoutSelf = routedMessage.reachableThrough.filter((peer) => {
-            return !areEqualPeerDescriptors(peer, this.ownPeerDescriptor)
+            return !areEqualPeerDescriptors(peer, this.localPeerDescriptor)
         })
         
         if (reachableThroughWithoutSelf.length > 0) {
@@ -248,7 +248,7 @@ export class Router implements IRouter {
         logger.trace(`Processing received forward routeMessage ${forwardMessage.requestId}`)
         this.addContact(forwardMessage.sourcePeer!, true)
         this.addToDuplicateDetector(forwardMessage.requestId)
-        if (areEqualPeerDescriptors(this.ownPeerDescriptor, forwardMessage.destinationPeer!)) {
+        if (areEqualPeerDescriptors(this.localPeerDescriptor, forwardMessage.destinationPeer!)) {
             return this.forwardToDestination(forwardMessage)
         } else {
             return this.doRouteMessage(forwardMessage, RoutingMode.FORWARD)
@@ -258,7 +258,7 @@ export class Router implements IRouter {
     private forwardToDestination(routedMessage: RouteMessageWrapper): RouteMessageAck {
         logger.trace(`Forwarding found message targeted to self ${routedMessage.requestId}`)
         const forwardedMessage = routedMessage.message!
-        if (areEqualPeerDescriptors(this.ownPeerDescriptor, forwardedMessage.targetDescriptor!)) {
+        if (areEqualPeerDescriptors(this.localPeerDescriptor, forwardedMessage.targetDescriptor!)) {
             this.connectionManager?.handleMessage(forwardedMessage)
             return createRouteMessageAck(routedMessage)
         }

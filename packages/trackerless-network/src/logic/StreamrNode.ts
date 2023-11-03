@@ -86,7 +86,7 @@ export class StreamrNode extends EventEmitter<Events> {
         if (this.started || this.destroyed) {
             return
         }
-        logger.info(`Starting new StreamrNode with id ${getNodeIdFromPeerDescriptor(startedAndJoinedLayer0Node.getPeerDescriptor())}`)
+        logger.info(`Starting new StreamrNode with id ${getNodeIdFromPeerDescriptor(startedAndJoinedLayer0Node.getLocalPeerDescriptor())}`)
         this.started = true
         this.layer0Node = startedAndJoinedLayer0Node
         this.transport = transport
@@ -137,7 +137,7 @@ export class StreamrNode extends EventEmitter<Events> {
         const node = this.createRandomGraphNode(streamPartId, layer1Node)
         const entryPointDiscovery = new EntryPointDiscovery({
             streamPartId,
-            ownPeerDescriptor: this.getPeerDescriptor(),
+            localPeerDescriptor: this.getPeerDescriptor(),
             layer1Node,
             getEntryPointData: (key) => this.layer0Node!.getDataFromDht(key),
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
@@ -197,7 +197,7 @@ export class StreamrNode extends EventEmitter<Events> {
         return new DhtNode({
             transport: this.layer0Node!,
             serviceId: 'layer1::' + streamPartId,
-            peerDescriptor: this.layer0Node!.getPeerDescriptor(),
+            peerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             entryPoints,
             numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 5000,
@@ -211,7 +211,7 @@ export class StreamrNode extends EventEmitter<Events> {
             transport: this.transport!,
             layer1Node,
             connectionLocker: this.connectionLocker!,
-            ownPeerDescriptor: this.layer0Node!.getPeerDescriptor(),
+            localPeerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
             numOfTargetNeighbors: this.config.streamPartitionNumOfNeighbors,
             acceptProxyConnections: this.config.acceptProxyConnections
@@ -257,7 +257,7 @@ export class StreamrNode extends EventEmitter<Events> {
     private createProxyClient(streamPartId: StreamPartID): ProxyClient {
         return new ProxyClient({
             transport: this.transport!,
-            ownPeerDescriptor: this.layer0Node!.getPeerDescriptor(),
+            localPeerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets
@@ -292,11 +292,11 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     getPeerDescriptor(): PeerDescriptor {
-        return this.layer0Node!.getPeerDescriptor()
+        return this.layer0Node!.getLocalPeerDescriptor()
     }
 
     getNodeId(): NodeID {
-        return getNodeIdFromPeerDescriptor(this.layer0Node!.getPeerDescriptor())
+        return getNodeIdFromPeerDescriptor(this.layer0Node!.getLocalPeerDescriptor())
     }
 
     getNeighbors(streamPartId: StreamPartID): NodeID[] {

@@ -70,7 +70,7 @@ describe('Recursive find correctness', () => {
         debugVars['waiting'] = false
         logger.info('waiting over')
 
-        nodes.forEach((node) => logger.info(keyFromPeerDescriptor(node.getPeerDescriptor()) + ': connections:' +
+        nodes.forEach((node) => logger.info(keyFromPeerDescriptor(node.getLocalPeerDescriptor()) + ': connections:' +
             node.getNumberOfConnections() + ', kbucket: ' + node.getBucketSize()
             + ', localLocked: ' + node.getNumberOfLocalLockedConnections()
             + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()

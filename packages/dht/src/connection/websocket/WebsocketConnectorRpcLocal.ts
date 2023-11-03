@@ -66,7 +66,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
     private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
     private selectedPort?: number
-    private ownPeerDescriptor?: PeerDescriptor
+    private localPeerDescriptor?: PeerDescriptor
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private destroyed = false
 
@@ -96,7 +96,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
     }
 
     private attachHandshaker(connection: IConnection) {
-        const handshaker = new Handshaker(this.ownPeerDescriptor!, connection)
+        const handshaker = new Handshaker(this.localPeerDescriptor!, connection)
         handshaker.once('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
             this.onServerSocketHandshakeRequest(peerDescriptor, connection)
         })
@@ -169,10 +169,10 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
     }
 
     public isPossibleToFormConnection(targetPeerDescriptor: PeerDescriptor): boolean {
-        if (this.ownPeerDescriptor!.websocket !== undefined) {
-            return (targetPeerDescriptor.type !== NodeType.BROWSER) || canOpenConnectionFromBrowser(this.ownPeerDescriptor!.websocket)
+        if (this.localPeerDescriptor!.websocket !== undefined) {
+            return (targetPeerDescriptor.type !== NodeType.BROWSER) || canOpenConnectionFromBrowser(this.localPeerDescriptor!.websocket)
         } else if (targetPeerDescriptor.websocket !== undefined) {
-            return (this.ownPeerDescriptor!.type !== NodeType.BROWSER) || canOpenConnectionFromBrowser(targetPeerDescriptor.websocket)
+            return (this.localPeerDescriptor!.type !== NodeType.BROWSER) || canOpenConnectionFromBrowser(targetPeerDescriptor.websocket)
         } else {
             return false
         }
@@ -185,14 +185,14 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
             return existingConnection
         }
 
-        if (this.ownPeerDescriptor!.websocket && !targetPeerDescriptor.websocket) {
-            return this.requestConnectionFromPeer(this.ownPeerDescriptor!, targetPeerDescriptor)
+        if (this.localPeerDescriptor!.websocket && !targetPeerDescriptor.websocket) {
+            return this.requestConnectionFromPeer(this.localPeerDescriptor!, targetPeerDescriptor)
         } else {
             const socket = new ClientWebsocket()
 
             const url = connectivityMethodToWebsocketUrl(targetPeerDescriptor.websocket!)
 
-            const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
+            const managedConnection = new ManagedConnection(this.localPeerDescriptor!, ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
             managedConnection.setPeerDescriptor(targetPeerDescriptor)
 
             this.connectingConnections.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
@@ -213,16 +213,16 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
         }
     }
 
-    private requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+    private requestConnectionFromPeer(localPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         setImmediate(() => {
             const remoteConnector = new WebsocketConnectorRpcRemote(
-                ownPeerDescriptor,
+                localPeerDescriptor,
                 targetPeerDescriptor,
                 toProtoRpcClient(new WebsocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
-            remoteConnector.requestConnection(ownPeerDescriptor.websocket!.host, ownPeerDescriptor.websocket!.port)
+            remoteConnector.requestConnection(localPeerDescriptor.websocket!.host, localPeerDescriptor.websocket!.port)
         })
-        const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, ConnectionType.WEBSOCKET_SERVER)
+        const managedConnection = new ManagedConnection(this.localPeerDescriptor!, ConnectionType.WEBSOCKET_SERVER)
         managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor)))
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
         this.ongoingConnectRequests.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
@@ -239,7 +239,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
             ongoingConnectReguest.acceptHandshake()
             this.ongoingConnectRequests.delete(peerId.toKey())
         } else {
-            const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, ConnectionType.WEBSOCKET_SERVER, undefined, serverWebsocket)
+            const managedConnection = new ManagedConnection(this.localPeerDescriptor!, ConnectionType.WEBSOCKET_SERVER, undefined, serverWebsocket)
 
             managedConnection.setPeerDescriptor(peerDescriptor)
 
@@ -252,8 +252,8 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
         }
     }
 
-    public setOwnPeerDescriptor(ownPeerDescriptor: PeerDescriptor): void {
-        this.ownPeerDescriptor = ownPeerDescriptor
+    public setLocalPeerDescriptor(localPeerDescriptor: PeerDescriptor): void {
+        this.localPeerDescriptor = localPeerDescriptor
     }
 
     public async destroy(): Promise<void> {
