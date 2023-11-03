@@ -1,4 +1,3 @@
-import { NodeId } from '@streamr/network-node'
 import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
 import merge from 'lodash/merge'
 import { DependencyContainer, container } from 'tsyringe'
@@ -20,9 +19,6 @@ import { FakeStreamRegistry } from './FakeStreamRegistry'
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
-    network: {
-        trackers: [] // without this setting NetworkNodeFacade would query the tracker addresses from the contract
-    },
     encryption: {
         rsaKeyLength: MIN_KEY_LENGTH
     },
@@ -68,10 +64,8 @@ export class FakeEnvironment {
         return client
     }
 
-    startNode(nodeId: NodeId): FakeNetworkNode {
-        const node = new FakeNetworkNode({
-            id: nodeId
-        } as any, this.network)
+    startNode(): FakeNetworkNode {
+        const node = new FakeNetworkNode(this.network)
         node.start()
         return node
     }

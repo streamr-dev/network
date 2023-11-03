@@ -1,22 +1,23 @@
-import { Wallet } from '@ethersproject/wallet'
-import { Web3Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
+import { Provider, Web3Provider } from '@ethersproject/providers'
 import { computeAddress } from '@ethersproject/transactions'
-import { getStreamRegistryChainProviders } from './Ethereum'
-import { PrivateKeyAuthConfig, ProviderAuthConfig } from './Config'
-import { pLimitFn } from './utils/promises'
+import { Wallet } from '@ethersproject/wallet'
+import { EthereumAddress, hexToBinary, toEthereumAddress, wait } from '@streamr/utils'
 import pMemoize from 'p-memoize'
-import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
+import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
+import { getStreamRegistryChainProviders } from './Ethereum'
+import { pLimitFn } from './utils/promises'
 import { sign } from './utils/signingUtils'
-import { StrictStreamrClientConfig } from './Config'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
+
+export type SignerWithProvider = Signer & { readonly provider: Provider }
 
 export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
-    createMessageSignature: (payload: string) => Promise<string>
-    getStreamRegistryChainSigner: () => Promise<Signer>
+    createMessageSignature: (payload: string) => Promise<Uint8Array>
+    getStreamRegistryChainSigner: () => Promise<SignerWithProvider>
 }
 
 export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictStreamrClientConfig, 'contracts'>): Authentication => {
@@ -59,7 +60,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                 // otherwise MetaMask extension may not show the prompt window
                 const sig = await signer.signMessage(payload)
                 await wait(50)
-                return sig
+                return hexToBinary(sig)
             }, 1),
             getStreamRegistryChainSigner: async () => {
                 if (config.contracts.streamRegistryChainRPCs.chainId === undefined) {

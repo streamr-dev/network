@@ -49,7 +49,8 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 fallback: {
                     'fs': false,
                     'module': false,
-                    'net': false
+                    'net': false,
+                    'timers': require.resolve('timers-browserify')
                 }
             },
             output: {
@@ -68,8 +69,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 'https': 'HTTPS',
                 'express': 'Express',
                 'process': 'process',
-                'ws': 'WebSocket',
-                '@streamr/network-tracker': 'StreamrNetworkTracker'
+                'ws': 'WebSocket'
             }
         }
     }

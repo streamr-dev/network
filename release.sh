@@ -19,11 +19,15 @@ cd packages/protocol
 npm publish --access public --tag $NPM_TAG
 cd ../..
 
-cd packages/network
+cd packages/proto-rpc
 npm publish --access public --tag $NPM_TAG
 cd ../..
 
-cd packages/network-tracker
+cd packages/dht
+npm publish --access public --tag $NPM_TAG
+cd ../..
+
+cd packages/trackerless-network
 npm publish --access public --tag $NPM_TAG
 cd ../..
 
@@ -40,6 +44,10 @@ fi
 cd dist
 npm publish --tag $NPM_TAG
 cd ../../..
+
+cd packages/broker
+npm publish --tag $NPM_TAG --access public
+cd ../..
 
 cd packages/cli-tools
 npm publish --tag $NPM_TAG --access public

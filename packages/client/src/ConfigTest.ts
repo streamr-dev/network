@@ -3,20 +3,10 @@ import { StreamrClientConfig } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
-const MAIN_CHAIN_CONFIG = CHAIN_CONFIG['dev0']
-const SIDE_CHAIN_CONFIG = CHAIN_CONFIG['dev1']
+const DOCKER_DEV_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
 function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
-}
-
-const sideChainConfig = {
-    name: SIDE_CHAIN_CONFIG.name,
-    chainId: SIDE_CHAIN_CONFIG.id,
-    rpcs: [{
-        url: SIDE_CHAIN_CONFIG.rpcEndpoints[0].url,
-        timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
-    }]
 }
 
 /**
@@ -24,38 +14,37 @@ const sideChainConfig = {
  */
 export const CONFIG_TEST: StreamrClientConfig = {
     network: {
-        trackers: [
-            {
-                id: '0xb9e7cEBF7b03AE26458E32a059488386b05798e8',
-                ws: `ws://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30301`,
-                http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30301`
-            }, {
-                id: '0x0540A3e144cdD81F402e7772C76a5808B71d2d30',
-                ws: `ws://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30302`,
-                http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30302`
-            }, {
-                id: '0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2',
-                ws: `ws://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30303`,
-                http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30303`
-            }
-        ],
-        webrtcDisallowPrivateAddresses: false,
-        iceServers: []
+        controlLayer: {
+            entryPoints: CHAIN_CONFIG.dev2.entryPoints,
+            websocketPortRange: {
+                min: 32400,
+                max: 32800
+            },
+            iceServers: [],
+            webrtcAllowPrivateAddresses: true
+        }
     },
     contracts: {
-        streamRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StreamRegistry,
-        streamStorageRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StreamStorageRegistry,
-        storageNodeRegistryChainAddress: SIDE_CHAIN_CONFIG.contracts.StorageNodeRegistry,
+        streamRegistryChainAddress: DOCKER_DEV_CHAIN_CONFIG.contracts.StreamRegistry,
+        streamStorageRegistryChainAddress: DOCKER_DEV_CHAIN_CONFIG.contracts.StreamStorageRegistry,
+        storageNodeRegistryChainAddress: DOCKER_DEV_CHAIN_CONFIG.contracts.StorageNodeRegistry,
         mainChainRPCs: {
-            name: MAIN_CHAIN_CONFIG.name,
-            chainId: MAIN_CHAIN_CONFIG.id,
+            name: DOCKER_DEV_CHAIN_CONFIG.name,
+            chainId: DOCKER_DEV_CHAIN_CONFIG.id,
             rpcs: [{
-                url: MAIN_CHAIN_CONFIG.rpcEndpoints[0].url,
+                url: DOCKER_DEV_CHAIN_CONFIG.rpcEndpoints[0].url,
                 timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
             }]
         },
-        streamRegistryChainRPCs: sideChainConfig,
-        theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
+        streamRegistryChainRPCs: {
+            name: DOCKER_DEV_CHAIN_CONFIG.name,
+            chainId: DOCKER_DEV_CHAIN_CONFIG.id,
+            rpcs: [{
+                url: DOCKER_DEV_CHAIN_CONFIG.rpcEndpoints[0].url,
+                timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
+            }]
+        },
+        theGraphUrl: DOCKER_DEV_CHAIN_CONFIG.theGraphUrl,
     },
     encryption: {
         rsaKeyLength: MIN_KEY_LENGTH

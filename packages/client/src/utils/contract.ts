@@ -1,5 +1,4 @@
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
-import { NameDirectory } from '@streamr/network-node'
 import { initEventGateway } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import shuffle from 'lodash/shuffle'
@@ -39,7 +38,7 @@ const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: 
         logger.debug('Submit transaction', {
             method: methodName,
             tx: tx.hash,
-            to: NameDirectory.getName(tx.to),
+            to: tx.to,
             nonce: tx.nonce,
             gasLimit: tx.gasLimit.toNumber(),
             gasPrice: tx.gasPrice?.toNumber()

@@ -1,5 +1,5 @@
 import { Wallet } from '@ethersproject/wallet'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, hexToBinary } from '@streamr/utils'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
@@ -13,7 +13,7 @@ const PARTITION_COUNT = 3
 interface MessageOptions {
     partition?: number
     publisher?: Wallet
-    signature?: string
+    signature?: Uint8Array
 }
 
 const validate = async (messageOptions: MessageOptions) => {
@@ -53,7 +53,7 @@ describe('Validator', () => {
 
         it('invalid signature', async () => {
             await expect(() => validate({
-                signature: 'invalid-signature'
+                signature: hexToBinary('0x3333')
             })).rejects.toThrow('Signature validation failed')
         })
 
@@ -65,4 +65,3 @@ describe('Validator', () => {
         })
     })
 })
-

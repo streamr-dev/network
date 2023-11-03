@@ -74,7 +74,7 @@ TODO: ** Create a stream widget **
 
 ```ts
 // Import the Streamr client
-import StreamrClient from "streamr-client"
+import { StreamrClient } from "streamr-client"
 const PRIVATE_KEY = ""
 
 // Initialize Streamr with an Ethereum account

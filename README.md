@@ -22,8 +22,9 @@ Monorepo containing all the main components of Streamr Network.
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
 
 ### Internal
-* [network-node](packages/network/README.md) (@streamr/network-node)
-* [network-tracker](packages/network-tracker/README.md) (@streamr/network-tracker)
+* [trackerless-network](packages/trackerless-network/README.md) (@streamr/trackerless-network)
+* [dht](packages/dht/README.md) (@streamr/dht)
+* [proto-rpc](packages/proto-rpc/README.md) (@streamr/proto-rpc)
 * [protocol](packages/protocol/README.md) (@streamr/protocol)
 * [utils](packages/utils/README.md) (@streamr/utils)
 * [test-utils](packages/test-utils/README.md) (@streamr/test-utils)
@@ -145,7 +146,7 @@ npm install
 
 | Variable                     | Description                                                                            | Packages                                    |
 |------------------------------|----------------------------------------------------------------------------------------|---------------------------------------------|
-| `BROWSER_TEST_DEBUG_MODE`    | Leaves the Electron window open while running browser tests                            | utils, network-node, client |
+| `BROWSER_TEST_DEBUG_MODE`    | Leaves the Electron window open while running browser tests                            | utils, proto-rpc, dht, network-node, client |
 | `STREAMR_DOCKER_DEV_HOST`    | Sets an alternative IP address for streamr-docker-dev in end-to-end tests              | client, broker                              |
 | `LOG_LEVEL`                  | Adjust logging level                                                                   | _all_                                       |
 | `DISABLE_PRETTY_LOG`         | Set to true to disable pretty printing of logs and print JSONL instead                 | _all_                                       |
@@ -157,11 +158,9 @@ npm install
 
 ## Release
 
-### utils, test-utils, protocol, network-tracker, network-node, client, cli-tools
+All packages are released at the same time under the same version (except for internal dev-dependency packages).
 
-All the above packages are released at the same time.
-
-1. `git checkout main && git pull`
+1. `git checkout streamr-1.0 && git pull`
 2. (skip if beta) Read [CHANGELOG](CHANGELOG.md), decide new version, and edit file.
 3. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
 4. `npm run clean && npm install && npm run build && npm run versions`
@@ -177,25 +176,6 @@ All the above packages are released at the same time.
 cd packages/client
 npm run docs
 aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
-```
-
-### broker
-
-Broker is released independently of other packages because it follows its own versioning
-for the time being.
-
-```shell
-git checkout main && git pull
-cd packages/broker
-# Read CHANGELOG.md, decide new version, and edit file
-npm version <SEMVER_OPTION>
-git add package.json ../../package-lock.json CHANGELOG.md
-git commit -m "release(broker): vX.Y.Z"
-git tag broker/vX.Y.Z
-git push --atomic origin main broker/vX.Y.Z
-
-npm run build
-npm publish
 ```
 
 #### Docker release

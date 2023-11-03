@@ -1,12 +1,12 @@
 import { StreamMessage, StreamMessageType } from '@streamr/protocol'
-import { NodeId } from '@streamr/network-node'
+import { NodeID } from '@streamr/trackerless-network'
 import { FakeNetworkNode } from './FakeNetworkNode'
 import { waitForCondition } from '@streamr/utils'
 
 interface Send {
     message: StreamMessage
-    sender: NodeId
-    recipients: NodeId[]
+    sender: NodeID
+    recipients: NodeID[]
 }
 
 interface SentMessagesFilter {
@@ -16,22 +16,22 @@ interface SentMessagesFilter {
 
 export class FakeNetwork {
 
-    private readonly nodes: Map<NodeId, FakeNetworkNode> = new Map()
+    private readonly nodes: Map<NodeID, FakeNetworkNode> = new Map()
     private sends: Send[] = []
 
     addNode(node: FakeNetworkNode): void {
-        if (!this.nodes.has(node.id)) {
-            this.nodes.set(node.id, node)
+        if (!this.nodes.has(node.getNodeId())) {
+            this.nodes.set(node.getNodeId(), node)
         } else {
-            throw new Error(`Duplicate node: ${node.id}`)
+            throw new Error(`Duplicate node: ${node.getNodeId()}`)
         }
     }
 
-    removeNode(id: NodeId): void {
+    removeNode(id: NodeID): void {
         this.nodes.delete(id)
     }
 
-    getNode(id: NodeId): FakeNetworkNode | undefined {
+    getNode(id: NodeID): FakeNetworkNode | undefined {
         return this.nodes.get(id)
     }
 
@@ -39,7 +39,7 @@ export class FakeNetwork {
         return Array.from(this.nodes.values())
     }
 
-    send(msg: StreamMessage, sender: NodeId, isRecipient: (networkNode: FakeNetworkNode) => boolean): void {
+    send(msg: StreamMessage, sender: NodeID, isRecipient: (networkNode: FakeNetworkNode) => boolean): void {
         const recipients = this.getNodes().filter((n) => isRecipient(n))
         recipients.forEach((n) => {
             n.messageListeners.forEach((listener) => listener(msg))
@@ -47,7 +47,7 @@ export class FakeNetwork {
         this.sends.push({
             message: msg,
             sender,
-            recipients: recipients.map((n) => n.id)
+            recipients: recipients.map((n) => n.getNodeId())
         })
     }
 

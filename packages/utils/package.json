@@ -1,6 +1,6 @@
 {
   "name": "@streamr/utils",
-  "version": "8.5.5",
+  "version": "100.0.0-pretestnet.0",
   "description": "A collection of shared common utilities",
   "repository": {
     "type": "git",

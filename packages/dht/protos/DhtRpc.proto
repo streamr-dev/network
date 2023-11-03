@@ -1,0 +1,299 @@
+syntax = "proto3";
+option optimize_for = CODE_SIZE;
+
+package dht;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+import "packages/proto-rpc/protos/ProtoRpc.proto";
+
+service DhtNodeRpc {
+  rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
+  rpc ping (PingRequest) returns (PingResponse);
+  rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
+}
+
+service RouterRpc {
+  rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
+  rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
+  rpc findRecursively (RouteMessageWrapper) returns (RouteMessageAck);
+}
+
+service StoreRpc {
+  rpc storeData (StoreDataRequest) returns (StoreDataResponse);
+  rpc migrateData (MigrateDataRequest) returns (MigrateDataResponse);
+  rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
+}
+
+service RecursiveFindSessionService {
+  rpc sendFindResponse(FindResponse) returns (google.protobuf.Empty);
+}
+
+service WebsocketConnectorRpc {
+  rpc requestConnection (WebsocketConnectionRequest) returns (WebsocketConnectionResponse);
+}
+
+service WebrtcConnectorRpc {
+  rpc requestConnection (WebrtcConnectionRequest) returns (google.protobuf.Empty);
+  rpc rtcOffer (RtcOffer) returns (google.protobuf.Empty);
+  rpc rtcAnswer (RtcAnswer) returns (google.protobuf.Empty);
+  rpc iceCandidate (IceCandidate) returns (google.protobuf.Empty);
+}
+
+service ConnectionLockRpc {
+  rpc lockRequest (LockRequest) returns (LockResponse);
+  rpc unlockRequest (UnlockRequest) returns (google.protobuf.Empty);
+  rpc gracefulDisconnect (DisconnectNotice) returns (DisconnectNoticeResponse);
+}
+
+service ExternalApiRpc {
+  rpc findData (FindDataRequest) returns (FindDataResponse);
+  rpc externalStoreData (ExternalStoreDataRequest) returns (ExternalStoreDataResponse);
+}
+
+// Used inside RpcMessage
+
+message StoreDataRequest {
+  bytes kademliaId = 1;
+  google.protobuf.Any data = 2;
+  uint32 ttl = 3;
+  google.protobuf.Timestamp storerTime = 4;
+}
+
+message StoreDataResponse {
+  string error = 1;
+}
+
+message ExternalStoreDataRequest {
+  bytes key = 1;
+  google.protobuf.Any data = 2;
+}
+
+message ExternalStoreDataResponse {
+  repeated PeerDescriptor storers = 1;
+}
+
+message MigrateDataRequest {
+  DataEntry dataEntry = 1;
+}
+  
+message MigrateDataResponse {
+  string error = 1;
+}
+
+message DeleteDataRequest {
+  bytes kademliaId = 1;
+}
+
+message DeleteDataResponse {
+  bool deleted = 1;
+}
+
+message DataEntry {
+  PeerDescriptor storer = 1;
+  bytes kademliaId = 2;
+  google.protobuf.Any data = 3;
+  google.protobuf.Timestamp storedAt = 4; 
+  uint32 ttl = 5;   // milliseconds
+  bool stale = 6;
+  bool deleted = 7;
+  google.protobuf.Timestamp storerTime = 8;
+}
+
+message ClosestPeersRequest {
+  bytes kademliaId = 1;
+  string requestId = 2;
+}
+
+message ClosestPeersResponse {
+  repeated PeerDescriptor peers = 1;
+  string requestId = 2;
+}
+
+message FindRequest {
+  string sessionId = 1;
+  bool fetchData = 2;
+}
+
+message FindResponse {
+  repeated PeerDescriptor closestConnectedPeers = 1;
+  repeated DataEntry dataEntries = 2;
+  optional bool noCloserNodesFound = 3;
+  repeated PeerDescriptor routingPath = 4;
+}
+
+message PingRequest {
+  string requestId = 1;
+}
+
+message PingResponse {
+  string requestId = 1;
+}
+
+message LeaveNotice {
+  string serviceId = 1;
+}
+
+message PeerDescriptor {
+  bytes kademliaId = 1;
+  NodeType type = 2;
+  ConnectivityMethod udp = 3;
+  ConnectivityMethod tcp = 4;
+  ConnectivityMethod websocket = 5;
+  optional uint32 region = 6;
+}
+
+message ConnectivityMethod {
+  uint32 port = 1;
+  string host = 2;
+  bool tls = 3;
+}
+
+enum NodeType {
+  NODEJS = 0;
+  BROWSER = 1;
+  VIRTUAL = 3;
+}
+
+enum RpcResponseError {
+  SERVER_TIMOUT = 0;
+  CLIENT_TIMEOUT = 1;
+  SERVER_ERROR = 2;
+  UNKNOWN_RPC_METHOD = 3;
+}
+
+message RouteMessageWrapper {
+  PeerDescriptor sourcePeer = 1;
+  string requestId = 2;
+  PeerDescriptor destinationPeer = 3;
+  PeerDescriptor previousPeer = 4;
+  Message message = 5;
+  repeated PeerDescriptor reachableThrough = 6;
+  repeated PeerDescriptor routingPath = 7;
+}
+
+message RouteMessageAck {
+  string requestId = 1;
+  string error = 2;
+}
+
+// Correspond to the MessageType Enum
+
+message ConnectivityRequest {
+  uint32 port = 1;
+  bool tls = 2;
+  optional string host = 3;
+}
+
+message ConnectivityResponse {
+  string host = 1;
+  string natType = 2;
+  ConnectivityMethod websocket = 3;
+}
+
+message HandshakeRequest {
+  bytes sourceId = 1;
+  PeerDescriptor peerDescriptor = 2;
+}
+
+message HandshakeResponse {
+  bytes sourceId = 1;
+  PeerDescriptor peerDescriptor = 2;
+  optional string responseError = 3;
+}
+
+// Wraps all messages
+
+enum MessageType {
+  CONNECTIVITY_REQUEST = 0;
+  CONNECTIVITY_RESPONSE = 1;
+  HANDSHAKE_REQUEST = 2;
+  HANDSHAKE_RESPONSE = 3;
+  RPC = 4;
+  RECURSIVE_FIND_REQUEST = 5;
+}
+
+message Message {
+  string messageId = 1;
+  MessageType messageType = 2;
+  PeerDescriptor sourceDescriptor = 3;
+  PeerDescriptor targetDescriptor = 4;
+  string serviceId = 5; // id of the RPC service
+  oneof body {
+    ConnectivityRequest connectivityRequest = 6;
+    ConnectivityResponse connectivityResponse = 7;
+    HandshakeRequest handshakeRequest = 8;
+    HandshakeResponse handshakeResponse = 9;
+    protorpc.RpcMessage rpcMessage = 10;
+    FindRequest findRequest = 11;
+  };
+}
+
+// Connector Messages
+
+// WebSocket
+message WebsocketConnectionRequest {
+  string ip = 1;
+  uint32 port = 2;
+}
+
+message WebsocketConnectionResponse {
+  bool accepted = 1;
+  optional string reason = 2;
+}
+
+// WebRTC
+message WebrtcConnectionRequest {
+  string connectionId = 1;
+}
+
+message RtcOffer {
+  string description = 1;
+  string connectionId = 2;
+}
+
+message RtcAnswer {
+  string description = 1;
+  string connectionId = 2;
+}
+
+message IceCandidate {
+  string candidate = 1;
+  string mid = 2;
+  string connectionId = 3;
+}
+
+message LockRequest {
+  string serviceId = 1;
+}
+
+message UnlockRequest {
+  string serviceId = 1;
+}
+
+message LockResponse {
+  bool accepted = 1;
+  optional bool reason = 2;
+}
+
+enum DisconnectMode {
+  NORMAL = 0;
+  LEAVING = 1;
+}
+
+message DisconnectNotice {
+  DisconnectMode disconnectMode = 1;
+}
+
+message DisconnectNoticeResponse {
+}
+
+message FindDataRequest {
+  bytes kademliaId = 1;
+}
+
+message FindDataResponse {
+  repeated DataEntry dataEntries = 1;
+  optional string error = 2;
+}

@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { MAX_PARTITION_COUNT, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastPrivateKey, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { EthereumAddress, Logger, merge, wait, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, Logger, merge, wait, waitForCondition, utf8ToBinary } from '@streamr/utils'
 import crypto from 'crypto'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
@@ -133,6 +133,9 @@ export const createMockMessage = async (
     }, partition)
 }
 
+// When binary contents are supported we don't need this anymore.
+export const MOCK_CONTENT = utf8ToBinary(JSON.stringify({}))
+
 export const getLocalGroupKeyStore = (userAddress: EthereumAddress): LocalGroupKeyStore => {
     const authentication = {
         getAddress: () => userAddress
@@ -153,7 +156,7 @@ export const startPublisherKeyExchangeSubscription = async (
     publisherClient: StreamrClient,
     streamPartId: StreamPartID): Promise<void> => {
     const node = await publisherClient.getNode()
-    node.subscribe(streamPartId)
+    await node.join(streamPartId)
 }
 
 export const createRandomAuthentication = (): Authentication => {
@@ -227,6 +230,24 @@ export const createGroupKeyQueue = async (authentication: Authentication, curren
 export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Promise<void> => {
     await waitForCondition(() => mockFunction.mock.calls.length >= n, 1000, 10, undefined, () => {
         return `Timeout while waiting for calls: got ${mockFunction.mock.calls.length} out of ${n}`
+    })
+}
+
+export const createTestClient = (privateKey: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
+    return new StreamrClient({
+        ...CONFIG_TEST,
+        auth: {
+            privateKey
+        },
+        network: {
+            controlLayer: {
+                ...CONFIG_TEST.network!.controlLayer,
+                websocketPortRange: wsPort !== undefined ? { min: wsPort, max: wsPort } : undefined
+            },
+            node: {
+                acceptProxyConnections
+            }
+        }
     })
 }
 

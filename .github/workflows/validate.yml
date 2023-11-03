@@ -41,23 +41,44 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: protocol
-  network:
+  proto-rpc:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: network
-  network-browser:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: network
+      package: proto-rpc
       command: |
+        npm run test
         xvfb-run --auto-servernum npm run test-browser
-  tracker:
+  dht:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: network-tracker
+      package: dht
+  dht-browser:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: dht
+      command: |
+        sudo apt-get install xvfb
+        xvfb-run --auto-servernum npm run test-browser
+  trackerless-network:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: trackerless-network
+      command: |
+        npm run test-unit
+        npm run test-integration
+        npm run test-end-to-end
+  trackerless-network-browser:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: trackerless-network
+      command: |
+        sudo apt-get install xvfb
+        xvfb-run --auto-servernum npm run test-browser
   client:
     needs: build
     uses: ./.github/workflows/test-setup.yml
@@ -72,8 +93,9 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: client
-      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph ens-sync-script
-      run-brokers-and-trackers: true
+      docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain ens-sync-script
+      run-entry-point: true
+      run-brokers: true
       command: npm run test-end-to-end
   broker:
     needs: build
@@ -86,36 +108,32 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: broker
-      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
+      docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
+      run-entry-point: true
       command: npm run test-integration
   client-browser:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: client
-      docker-services: init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
-      run-brokers-and-trackers: true
+      docker-services: init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
+      run-entry-point: true
+      run-brokers: true
       command: npm run test-browser
   cli-tools:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: cli-tools
-      docker-services: parity-node0 graph-deploy-streamregistry-subgraph broker-node-storage-1
+      docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
+      run-entry-point: true
+      run-brokers: true
       command: npm run test
-  tracker-docker-image:
-    uses: ./.github/workflows/docker-build.yml
-    with:
-      docker_file: Dockerfile.tracker
-      image_name: streamr/tracker
-      test_services_to_start: tracker-1
-      build_platforms: linux/amd64
-      test_script: bash ./.github/healthcheck.sh http://localhost:30301/topology streamr-dev-tracker-1
   broker-docker-image:
     uses: ./.github/workflows/docker-build.yml
     with:
       docker_file: Dockerfile.broker
       image_name: streamr/broker-node
-      test_services_to_start: parity-node0 broker-node-no-storage-1
+      test_services_to_start: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain broker-node-storage-1 entry-point
       build_platforms: linux/amd64
-      test_script: bash ./.github/healthcheck.sh http://localhost:8791/info streamr-dev-broker-node-no-storage-1
+      test_script: bash ./.github/healthcheck.sh http://localhost:8891/info streamr-dev-broker-node-storage-1

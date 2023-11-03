@@ -8,8 +8,8 @@ By default, the Streamr SDK is configured to publish metrics to the Streamr Netw
 ```ts
 {
     node: {
-        publishMessagesPerSecond: number
-        publishBytesPerSecond: number
+        broadcastMessagesPerSecond: number
+        broadcastBytesPerSecond: number
         sendMessagesPerSecond: number
         sendBytesPerSecond: number
         receiveMessagesPerSecond: number
