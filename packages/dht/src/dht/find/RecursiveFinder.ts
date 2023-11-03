@@ -195,6 +195,7 @@ export class RecursiveFinder implements IRecursiveFinder {
                 toProtoRpcClient(new RecursiveFindSessionServiceClient(remoteCommunicator.getRpcClientTransport()))
             )
             remoteSession.sendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+            remoteCommunicator.destroy()
         }
     }
 

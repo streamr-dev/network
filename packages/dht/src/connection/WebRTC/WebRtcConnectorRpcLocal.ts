@@ -295,7 +295,7 @@ export class WebRtcConnectorRpcLocal implements IWebRtcConnectorRpc {
         const attempts = Array.from(this.ongoingConnectAttempts.values())
         await Promise.allSettled(attempts.map((conn) => conn.close('OTHER')))
 
-        this.rpcCommunicator.stop()
+        this.rpcCommunicator.destroy()
     }
 
     public isOffering(targetPeerDescriptor: PeerDescriptor): boolean {
