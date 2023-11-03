@@ -9,7 +9,7 @@ import { Remote } from '../contact/Remote'
 
 const logger = new Logger(module)
 
-export class RemoteRecursiveFindSession extends Remote<IFindSessionRpcClient> {
+export class FindSessionRpcRemote extends Remote<IFindSessionRpcClient> {
 
     sendFindResponse(routingPath: PeerDescriptor[], closestNodes: PeerDescriptor[], 
         dataEntries: DataEntry[], noCloserNodesFound: boolean): void {

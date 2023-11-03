@@ -14,7 +14,7 @@ import { RoutingMode } from '../routing/RoutingSession'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { RemoteRecursiveFindSession } from './RemoteRecursiveFindSession'
+import { FindSessionRpcRemote } from './FindSessionRpcRemote'
 import { v4 } from 'uuid'
 import { RecursiveFindSession, RecursiveFindSessionEvents } from './RecursiveFindSession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
@@ -188,13 +188,13 @@ export class RecursiveFinder implements IRecursiveFinder {
                 .doSendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         } else {
             const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.sessionTransport, { rpcRequestTimeout: 15000 })
-            const remoteSession = new RemoteRecursiveFindSession(
+            const rpcRemote = new FindSessionRpcRemote(
                 this.localPeerDescriptor,
                 targetPeerDescriptor,
                 serviceId,
                 toProtoRpcClient(new FindSessionRpcClient(remoteCommunicator.getRpcClientTransport()))
             )
-            remoteSession.sendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+            rpcRemote.sendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         }
     }
 
