@@ -131,6 +131,7 @@ export class Router implements IRouter {
                 } catch (e) {
                     logger.trace('raceEvents timed out for routingSession ' + session.sessionId) 
                 }
+                session.stop()
                 this.removeRoutingSession(session.sessionId) 
             })
             session.start()
