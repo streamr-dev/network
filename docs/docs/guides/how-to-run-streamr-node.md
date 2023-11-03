@@ -19,7 +19,7 @@ Once you have either Docker or Node.js installed, the steps to download and star
 As part of both approaches, we show how to run the configuration wizard to initialize your node’s config file, which will be saved on your disk. The wizard will let you either generate or import an Ethereum private key for your node. It will also allow you to enable additional plugins, but they are entirely unnecessary if you simply want to run a node to help expand the network and [become an Operator](../streamr-network/network-roles/operators.md).
 
 ## The Docker approach
-If you are using Windows/PowerShell or macOS and don’t have Docker installed, get Docker Desktop [here](https://docs.docker.com/get-docker/). 
+If you are using Windows/PowerShell or macOS and don’t have Docker installed, get Docker Desktop [here](https://docs.docker.com/get-docker/).
 
 **Linux**
 
@@ -230,17 +230,17 @@ There can be plenty of output from npm. If the installation fails with an error,
 ### Step 2a: Configure your node with streamr-broker-init
 -   Run `streamr-broker-init` to generate a configuration file using a step-by-step wizard. Answer the questions by using arrow keys and ‘enter’ to navigate.
 -   Generate or Import Ethereum private key: Generate one unless you have one you want to use with the node
--   Plugins to enable: Hit enter
+-   Plugins to enable: Hit enter (do not select/enable any additional plugins)
 -   Path to store the configuration: Press 'enter' to use the default path
 
-Towards the end, the wizard asks if you would like it to display your Ethereum private key. From here, you should copy-paste it to a safe place! You can also find it later in the configuration file, which is saved by default to `.streamr/config/default.json` under your home directory.
+The wizard asks if you would like it to display your Ethereum private key. From here, you should copy-paste it to a safe place! You can also find it later in the configuration file, which is saved by default to `.streamr/config/default.json` under your home directory.
 
 ### Step 2b: Update the node config file
 Replace the node config file (typically located at `.streamr/config/default.json`) contents with the Mumbai environment [testnet config](https://docs.streamr.network/guides/become-an-operator/#mumbai-testing-environment-node-config) using a text editor. If you previously generated a node signing key then you can keep using that `privateKey` but the file schema must match what's in the [testnet config](https://docs.streamr.network/guides/become-an-operator/#mumbai-testing-environment-node-config).
 
-If you're running a node to become an Operator, then you could now jump to [Step 3 of becoming an Operator](https://docs.streamr.network/guides/become-an-operator/#step-3-pair-your-node-with-your-operator-contract) to add your Operator contract address into the node config before starting your node.
-
 ### Step 3: Start the Streamr node
+If you're running a node to become an Operator, then you should first perform the [Step 3 of becoming an Operator](https://docs.streamr.network/guides/become-an-operator/#step-3-pair-your-node-with-your-operator-contract) to add your Operator contract address into the node config before starting your node.
+
 -   Run `streamr-broker` to start the node! You should start to see logging similar to this:
 
 ```
