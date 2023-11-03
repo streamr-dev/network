@@ -150,7 +150,7 @@ export class ProxyClient extends EventEmitter {
 
     private getInvalidConnections(): NodeID[] {
         return Array.from(this.connections.keys()).filter((id) => {
-            return !this.definition!.nodes.has(id )
+            return !this.definition!.nodes.has(id)
                 || this.definition!.direction !== this.connections.get(id)
         })
     }
