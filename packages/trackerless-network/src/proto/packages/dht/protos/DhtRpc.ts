@@ -662,9 +662,9 @@ export enum MessageType {
      */
     RPC = 4,
     /**
-     * @generated from protobuf enum value: RECURSIVE_FIND_REQUEST = 5;
+     * @generated from protobuf enum value: FIND_REQUEST = 5;
      */
-    RECURSIVE_FIND_REQUEST = 5
+    FIND_REQUEST = 5
 }
 /**
  * @generated from protobuf enum dht.DisconnectMode

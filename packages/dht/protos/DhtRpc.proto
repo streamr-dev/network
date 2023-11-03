@@ -214,7 +214,7 @@ enum MessageType {
   HANDSHAKE_REQUEST = 2;
   HANDSHAKE_RESPONSE = 3;
   RPC = 4;
-  RECURSIVE_FIND_REQUEST = 5;
+  FIND_REQUEST = 5;
 }
 
 message Message {

@@ -130,7 +130,7 @@ export class RecursiveFinder implements IRecursiveFinder {
             fetchData
         }
         const msg: Message = {
-            messageType: MessageType.RECURSIVE_FIND_REQUEST,
+            messageType: MessageType.FIND_REQUEST,
             messageId: v4(),
             serviceId: this.serviceId,
             body: {
