@@ -143,7 +143,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
                 if (!this.websocketServer) {
                     return noServerConnectivityResponse
                 } else {
-                    if (!this.entrypoints || this.entrypoints.length < 1) {
+                    if (!this.entrypoints || this.entrypoints.length === 0) {
                         // return connectivity info given in config
                         const preconfiguredConnectivityResponse: ConnectivityResponse = {
                             host: this.host!,
