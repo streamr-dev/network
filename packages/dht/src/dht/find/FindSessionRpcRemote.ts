@@ -24,7 +24,7 @@ export class FindSessionRpcRemote extends Remote<IFindSessionRpcClient> {
             noCloserNodesFound
         }
         this.getClient().sendFindResponse(report, this.formDhtRpcOptions()).catch((_e) => {
-            logger.trace('Failed to send FindResult')
+            logger.trace('Failed to send FindResponse')
         })
     }
 }
