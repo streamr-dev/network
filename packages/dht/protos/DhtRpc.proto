@@ -17,7 +17,10 @@ service DhtNodeRpc {
 service RouterRpc {
   rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
   rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
-  rpc findRecursively (RouteMessageWrapper) returns (RouteMessageAck);
+}
+
+service FindRpc {
+  rpc routeFindRequest (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
 service StoreRpc {
@@ -26,7 +29,7 @@ service StoreRpc {
   rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
 }
 
-service RecursiveFindSessionService {
+service FindSessionRpc {
   rpc sendFindResponse(FindResponse) returns (google.protobuf.Empty);
 }
 
