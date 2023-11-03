@@ -1,5 +1,5 @@
 import { AUTOCERTIFIER_SERVICE_ID, SessionIdRequest, SessionIdResponse } from '@streamr/autocertifier-client'
-import { StreamrChallenger } from '../../src/StreamrChallenger'
+import { runStreamrChallenge } from '../../src/StreamrChallenger'
 import { 
     ConnectionManager,
     DefaultConnectorFacade,
@@ -15,7 +15,6 @@ import { MetricsContext } from '@streamr/utils'
 
 describe('StreamrChallenger', () => {
 
-    let streamrChallenger: StreamrChallenger
     let challengedClientTransport: ConnectionManager
     let challengedClient: ListeningRpcCommunicator
     let simulator: Simulator
@@ -57,7 +56,6 @@ describe('StreamrChallenger', () => {
         await challengedClientTransport.start()
         challengedClient = new ListeningRpcCommunicator(AUTOCERTIFIER_SERVICE_ID, challengedClientTransport)
         challengedClient.registerRpcMethod(SessionIdRequest, SessionIdResponse, 'getSessionId', rpcMethod)
-        streamrChallenger = new StreamrChallenger()
     })
 
     afterEach(async () => {
@@ -67,7 +65,7 @@ describe('StreamrChallenger', () => {
     })
 
     it('Happy path', async () => {
-        await streamrChallenger.testStreamrChallenge('127.0.0.1', '12323', sessionId)
+        await runStreamrChallenge('127.0.0.1', '12323', sessionId)
     })
 
 })

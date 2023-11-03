@@ -6,7 +6,7 @@ import { v4 } from 'uuid'
 import { CertifiedSubdomain, Session } from '@streamr/autocertifier-client'
 import { Logger } from '@streamr/utils'
 import { CertificateCreator } from './CertificateCreator'
-import { StreamrChallenger } from './StreamrChallenger'
+import { runStreamrChallenge } from './StreamrChallenger'
 import 'dotenv/config'
 import { ChallengeManager } from './ChallengeManager'
 
@@ -27,7 +27,6 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
     private restServer?: RestServer
     private database?: Database
     private certificateCreator?: CertificateCreator
-    private streamrChallenger = new StreamrChallenger()
 
     // eslint-disable-next-line class-methods-use-this
     public async createSession(): Promise<Session> {
@@ -44,7 +43,7 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
         logger.trace('Creating new subdomain and certificate for ' + ipAddress + ':' + port)
 
         // this will throw if the client cannot answer the challenge of getting sessionId 
-        await this.streamrChallenger.testStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
+        await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
         
         const subdomain = v4()
         const token = v4()
@@ -94,7 +93,7 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
         logger.info('updating subdomain ip and port for ' + subdomain + ' to ' + ipAddress + ':' + port)
 
         // this will throw if the client cannot answer the challenge of getting sessionId 
-        await this.streamrChallenger.testStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
+        await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
         await this.database!.updateSubdomainIpAndPort(subdomain, ipAddress, port, token)
     }
 

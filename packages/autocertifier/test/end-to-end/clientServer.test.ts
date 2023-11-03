@@ -22,7 +22,7 @@ import {
 } from '@streamr/autocertifier-client'
 import { v4 } from 'uuid'
 import { Logger } from '@streamr/utils'
-import { StreamrChallenger } from '../../src/StreamrChallenger'
+import { runStreamrChallenge } from '../../src/StreamrChallenger'
 
 const logger = new Logger(module)
 
@@ -100,8 +100,7 @@ describe('clientServer', () => {
                     string,
                     sessionId: string
                 ): Promise<CertifiedSubdomain> {
-                    const challenger = new StreamrChallenger()
-                    await challenger.testStreamrChallenge(ip, streamrWebsocketPort, sessionId)
+                    await runStreamrChallenge(ip, streamrWebsocketPort, sessionId)
                     return certifiedSubdomain
                 },
                 async createNewCertificateForSubdomain(): Promise<CertifiedSubdomain> {
