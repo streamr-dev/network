@@ -16,7 +16,7 @@ import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { FindSessionRpcRemote } from './FindSessionRpcRemote'
 import { v4 } from 'uuid'
-import { RecursiveFindSession, RecursiveFindSessionEvents } from './RecursiveFindSession'
+import { FindSession, FindSessionEvents } from './FindSession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
@@ -59,7 +59,7 @@ export class RecursiveFinder implements IRecursiveFinder {
     private readonly localDataStore: LocalDataStore
     private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     private readonly isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
-    private ongoingSessions: Map<string, RecursiveFindSession> = new Map()
+    private ongoingSessions: Map<string, FindSession> = new Map()
     private stopped = false
 
     constructor(config: RecursiveFinderConfig) {
@@ -85,7 +85,7 @@ export class RecursiveFinder implements IRecursiveFinder {
             return { closestNodes: [] }
         }
         const sessionId = v4()
-        const recursiveFindSession = new RecursiveFindSession({
+        const session = new FindSession({
             serviceId: sessionId,
             transport: this.sessionTransport,
             kademliaIdToFind: idToFind,
@@ -95,20 +95,20 @@ export class RecursiveFinder implements IRecursiveFinder {
         })
         if (this.connections.size === 0) {
             const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
-            recursiveFindSession.doSendFindResponse(
+            session.doSendFindResponse(
                 [this.localPeerDescriptor],
                 [this.localPeerDescriptor],
                 data ? Array.from(data.values()) : [],
                 true
             )
-            return recursiveFindSession.getResults()
+            return session.getResults()
         }
         const routeMessage = this.wrapFindRequest(idToFind, sessionId, fetchData)
-        this.ongoingSessions.set(sessionId, recursiveFindSession)
+        this.ongoingSessions.set(sessionId, session)
         try {
-            await runAndWaitForEvents3<RecursiveFindSessionEvents>(
+            await runAndWaitForEvents3<FindSessionEvents>(
                 [() => this.doRouteFindRequest(routeMessage, excludedPeer)],
-                [[recursiveFindSession, 'findCompleted']],
+                [[session, 'findCompleted']],
                 15000
             )
         } catch (err) {
@@ -116,8 +116,8 @@ export class RecursiveFinder implements IRecursiveFinder {
         }
         this.findAndReportLocalData(idToFind, fetchData, [], this.localPeerDescriptor, sessionId)
         this.ongoingSessions.delete(sessionId)
-        recursiveFindSession.stop()
-        return recursiveFindSession.getResults()
+        session.stop()
+        return session.getResults()
     }
 
     private wrapFindRequest(idToFind: Uint8Array, sessionId: string, fetchData: boolean): RouteMessageWrapper {
