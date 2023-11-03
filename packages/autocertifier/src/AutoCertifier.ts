@@ -115,8 +115,8 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
         // AUTOCERTIFIER_OWN_HOSTNAME.AUTOCERTIFIER_DOMAIN_NAME 
         const ownHostName = validateEnvironmentVariable('AUTOCERTIFIER_OWN_HOSTNAME')
         const ownIpAddress = validateEnvironmentVariable('AUTOCERTIFIER_OWN_IP_ADDRESS')
-        const dnsServerPort = validateEnvironmentVariable('AUTOCERTIFIER_DNS_SERVER_PORT')
-        const restServerPort = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_PORT')
+        const dnsServerPort = parseInt(validateEnvironmentVariable('AUTOCERTIFIER_DNS_SERVER_PORT'))
+        const restServerPort = parseInt(validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_PORT'))
         const databaseFilePath = validateEnvironmentVariable('AUTOCERTIFIER_DATABASE_FILE_PATH')
         const accountPrivateKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_ACCOUNT_PRIVATE_KEY_PATH')
         const acmeDirectoryUrl = validateEnvironmentVariable('AUTOCERTIFIER_ACME_DIRECTORY_URL')
@@ -161,7 +161,6 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
             this
         )
         await this.restServer.start()
-        logger.info('rest server is running on port ' + restServerPort)
     }
 
     public async stop(): Promise<void> {

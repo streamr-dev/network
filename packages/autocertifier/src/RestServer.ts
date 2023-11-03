@@ -66,13 +66,13 @@ export class RestServer {
 
     private ownFqdn: string
     private ownIpAddress: string
-    private port: string
+    private port: number
     private caCertPath: string
     private caKeyPath: string
     private certPath: string
     private keyPath: string
 
-    constructor(ownFqdn: string, ownIpAddress: string, port: string, caCertPath: string,
+    constructor(ownFqdn: string, ownIpAddress: string, port: number, caCertPath: string,
         caKeyPath: string, certPath: string, keyPath: string,
         engine: RestInterface) {
 
@@ -118,7 +118,7 @@ export class RestServer {
 
             this.server = https.createServer(options, app)
 
-            this.server.listen(parseInt(this.port), this.ownIpAddress, () => {
+            this.server.listen(this.port, this.ownIpAddress, () => {
                 logger.info('Rest server is running on port ' + this.port)
                 resolve()
             })

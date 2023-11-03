@@ -45,7 +45,7 @@ const createTestSubdomain = () => {
 
 describe('clientServer', () => {
 
-    const restServerPort = '3000'
+    const restServerPort = 3000
 
     const mockPeerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('tester1').value,

@@ -29,7 +29,7 @@ describe('RestServer', () => {
         server = new RestServer(
             'localhost',
             'localhost',
-            '3000',
+            9877,
             dir + '/restServerCaCert.pem',
             dir + '/restServerCaKey.pem',
             dir + '/restServerCert.pem',
@@ -60,7 +60,7 @@ describe('RestServer', () => {
     describe('POST /sessions', () => {
         it('should return session with sessionId', (done) => {
             const options = {
-                url: 'https://localhost:3000/sessions',
+                url: 'https://localhost:9877/sessions',
                 method: 'POST',
                 json: true,
                 ca: ca
@@ -78,7 +78,7 @@ describe('RestServer', () => {
     describe('PATCH /certified-subdomains', () => {
         it('should return a certified subdomain', (done) => {
             const options = {
-                url: 'https://localhost:3000/certified-subdomains',
+                url: 'https://localhost:9877/certified-subdomains',
                 method: 'PATCH',
                 json: {
                     streamrWebSocketPort: '1234'
@@ -96,7 +96,7 @@ describe('RestServer', () => {
 
         it('should return an error if streamrWebSocketPort is missing', (done) => {
             const options = {
-                url: 'https://localhost:3000/certified-subdomains',
+                url: 'https://localhost:9877/certified-subdomains',
                 method: 'PATCH',
                 json: true,
                 ca: ca
@@ -115,7 +115,7 @@ describe('RestServer', () => {
     describe('PUT /certified-subdomains/:subdomain/ip', () => {
         it('should update the subdomain IP and port', (done) => {
             const options = {
-                url: 'https://localhost:3000/certified-subdomains/test/ip',
+                url: 'https://localhost:9877/certified-subdomains/test/ip',
                 method: 'PUT',
                 json: {
                     streamrWebSocketPort: '1234',
@@ -134,7 +134,7 @@ describe('RestServer', () => {
 
         it('should return an error if streamrWebSocketPort is missing', (done) => {
             const options = {
-                url: 'https://localhost:3000/certified-subdomains/test/ip',
+                url: 'https://localhost:9877/certified-subdomains/test/ip',
                 method: 'PUT',
                 json: {
                     token: 'token'
@@ -153,7 +153,7 @@ describe('RestServer', () => {
 
         it('should return an error if token is missing', (done) => {
             const options = {
-                url: 'https://localhost:3000/certified-subdomains/test/ip',
+                url: 'https://localhost:9877/certified-subdomains/test/ip',
                 method: 'PUT',
                 json: {
                     streamrWebSocketPort: '1234'

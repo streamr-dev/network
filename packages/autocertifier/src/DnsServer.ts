@@ -20,14 +20,14 @@ export class DnsServer {
     private server?: any
     private readonly domainName: string
     private readonly ownHostName: string
-    private readonly dnsServerPort: string
+    private readonly port: number
     private readonly ownIpAddress: string
     private readonly db: Database
 
-    constructor(domainName: string, ownHostName: string, dnsServerPort: string, ownIpAddress: string, db: Database) {
+    constructor(domainName: string, ownHostName: string, port: number, ownIpAddress: string, db: Database) {
         this.domainName = domainName
         this.ownHostName = ownHostName
-        this.dnsServerPort = dnsServerPort
+        this.port = port
         this.ownIpAddress = ownIpAddress
         this.db = db
     }
@@ -253,7 +253,7 @@ export class DnsServer {
             handle: this.handleQuery
         })
 
-        return this.server.listen({ udp: { host: this.ownIpAddress, port: parseInt(this.dnsServerPort) } })
+        return this.server.listen({ udp: { host: this.ownIpAddress, port: this.port } })
     }
 
     public async stop(): Promise<void> {

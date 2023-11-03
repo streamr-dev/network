@@ -11,7 +11,7 @@ const ownIp = '127.0.0.1'
 beforeAll(async () => {
     dns.setServers(['127.0.0.1:9876'])
     await db.start()
-    dnsServer = new DnsServer('example.com', 'ns1', '9876', ownIp, db)
+    dnsServer = new DnsServer('example.com', 'ns1', 9876, ownIp, db)
     await dnsServer.start()
 
     await db.createSubdomain('www', '1.2.3.4', '80', 'wfewfweafe')

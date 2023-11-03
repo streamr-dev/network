@@ -10,7 +10,7 @@ describe('DnsServer', () => {
     let db: MockProxy<Database>
     beforeEach(() => {
         db = mock<Database>()
-        dnsServer = new DnsServer('example.com', 'ns1', '9876', '127.0.0.1', db)
+        dnsServer = new DnsServer('example.com', 'ns1', 9878, '127.0.0.1', db)
     })
 
     describe('handleSOAQuery', () => {
