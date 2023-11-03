@@ -43,6 +43,7 @@ const createTestSubdomain = () => {
     }
 }
 
+// TODO: make this test work
 describe('clientServer', () => {
 
     const restServerPort = 3000
