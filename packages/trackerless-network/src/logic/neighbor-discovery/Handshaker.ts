@@ -19,7 +19,7 @@ import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
 interface HandshakerConfig {
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     connectionLocker: ConnectionLocker
     targetNeighbors: NodeList
@@ -141,7 +141,7 @@ export class Handshaker implements IHandshaker {
 
     private async handshakeWithInterleaving(target: PeerDescriptor, interleaveSourceId: NodeID): Promise<boolean> {
         const targetNeighbor = new HandshakeRpcRemote(
-            this.config.ownPeerDescriptor,
+            this.config.localPeerDescriptor,
             target,
             this.config.streamPartId,
             this.client
@@ -162,12 +162,12 @@ export class Handshaker implements IHandshaker {
     }
 
     private createRpcRemote(targetPeerDescriptor: PeerDescriptor): HandshakeRpcRemote {
-        return new HandshakeRpcRemote(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
+        return new HandshakeRpcRemote(this.config.localPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
     }
 
     private createDeliveryRpcRemote(targetPeerDescriptor: PeerDescriptor): DeliveryRpcRemote {
         return new DeliveryRpcRemote(
-            this.config.ownPeerDescriptor,
+            this.config.localPeerDescriptor,
             targetPeerDescriptor,
             this.config.streamPartId,
             toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))

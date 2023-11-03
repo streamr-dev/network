@@ -87,7 +87,7 @@ describe('Handshakes', () => {
         nodeView = new NodeList(handshakerNodeId, 10)
         targetNeighbors = new NodeList(handshakerNodeId, 4)
         handshaker = new Handshaker({
-            ownPeerDescriptor: peerDescriptor2,
+            localPeerDescriptor: peerDescriptor2,
             streamPartId,
             nearbyNodeView: nodeView,
             randomNodeView: nodeView,

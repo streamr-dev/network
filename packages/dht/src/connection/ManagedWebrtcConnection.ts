@@ -5,11 +5,11 @@ import { NodeWebrtcConnection } from './webrtc/NodeWebrtcConnection'
 
 export class ManagedWebrtcConnection extends ManagedConnection {
 
-    constructor(ownPeerDescriptor: PeerDescriptor,
+    constructor(localPeerDescriptor: PeerDescriptor,
         connectingConnection?: NodeWebrtcConnection,
         connectedConnection?: NodeWebrtcConnection) {
         super(
-            ownPeerDescriptor,
+            localPeerDescriptor,
             ConnectionType.WEBRTC,
             connectingConnection,
             connectedConnection)

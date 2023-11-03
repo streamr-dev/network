@@ -33,7 +33,7 @@ describe('Handshaker', () => {
         randomNodeView = new NodeList(nodeId, 20)
 
         handshaker = new Handshaker({
-            ownPeerDescriptor: peerDescriptor,
+            localPeerDescriptor: peerDescriptor,
             streamPartId,
             connectionLocker: mockConnectionLocker,
             targetNeighbors,

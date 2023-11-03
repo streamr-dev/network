@@ -20,10 +20,10 @@ class RemoteContact extends Contact {
 
     private router: RouterRpcRemote
 
-    constructor(peer: DhtNodeRpcRemote, ownPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
+    constructor(peer: DhtNodeRpcRemote, localPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
         super(peer.getPeerDescriptor())
         this.router = new RouterRpcRemote(
-            ownPeerDescriptor,
+            localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
             toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport()))
@@ -56,7 +56,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private ongoingRequests: Set<PeerIDKey> = new Set()
     private contactList: SortedContactList<RemoteContact>
-    private readonly ownPeerDescriptor: PeerDescriptor
+    private readonly localPeerDescriptor: PeerDescriptor
     private readonly messageToRoute: RouteMessageWrapper
     private connections: Map<PeerIDKey, DhtNodeRpcRemote>
     private readonly parallelism: number
@@ -67,7 +67,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     constructor(
         rpcCommunicator: RoutingRpcCommunicator,
-        ownPeerDescriptor: PeerDescriptor,
+        localPeerDescriptor: PeerDescriptor,
         messageToRoute: RouteMessageWrapper,
         connections: Map<PeerIDKey, DhtNodeRpcRemote>,
         parallelism: number,
@@ -77,7 +77,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     ) {
         super()
         this.rpcCommunicator = rpcCommunicator
-        this.ownPeerDescriptor = ownPeerDescriptor
+        this.localPeerDescriptor = localPeerDescriptor
         this.messageToRoute = messageToRoute
         this.connections = connections
         this.parallelism = parallelism
@@ -145,17 +145,17 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (this.mode === RoutingMode.FORWARD) {
             return router.forwardMessage({
                 ...this.messageToRoute,
-                previousPeer: this.ownPeerDescriptor
+                previousPeer: this.localPeerDescriptor
             })
         } else if (this.mode === RoutingMode.RECURSIVE_FIND) {
             return router.findRecursively({
                 ...this.messageToRoute,
-                previousPeer: this.ownPeerDescriptor
+                previousPeer: this.localPeerDescriptor
             })
         } else {
             return router.routeMessage({
                 ...this.messageToRoute,
-                previousPeer: this.ownPeerDescriptor
+                previousPeer: this.localPeerDescriptor
             })
         }
     }
@@ -165,7 +165,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         // the contents of the connections might have changed between the rounds
         // addContacts() will only add new contacts that were not there yet
         const contacts = Array.from(this.connections.values())
-            .map((peer) => new RemoteContact(peer, this.ownPeerDescriptor, this.rpcCommunicator))
+            .map((peer) => new RemoteContact(peer, this.localPeerDescriptor, this.rpcCommunicator))
         this.contactList.addContacts(contacts)
         return this.contactList.getUncontactedContacts(this.parallelism)
     }

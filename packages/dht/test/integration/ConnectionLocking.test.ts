@@ -7,11 +7,11 @@ import { ITransport } from '../../src/exports'
 import { PeerID } from '../../src/helpers/PeerID'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 
-const createConnectionManager = (ownPeerDescriptor: PeerDescriptor, transport: ITransport) => {
+const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
         createConnectorFacade: () => new DefaultConnectorFacade({
             transport,
-            createOwnPeerDescriptor: () => ownPeerDescriptor
+            createLocalPeerDescriptor: () => localPeerDescriptor
         }),
         metricsContext: new MetricsContext()
     })

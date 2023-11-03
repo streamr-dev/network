@@ -5,9 +5,9 @@ import { Simulator } from './Simulator'
 import { SimulatorConnectorFacade } from '../ConnectorFacade'
 
 export class SimulatorTransport extends ConnectionManager {
-    constructor(ownPeerDescriptor: PeerDescriptor, simulator: Simulator) {
+    constructor(localPeerDescriptor: PeerDescriptor, simulator: Simulator) {
         super({
-            createConnectorFacade: () => new SimulatorConnectorFacade(ownPeerDescriptor, simulator),
+            createConnectorFacade: () => new SimulatorConnectorFacade(localPeerDescriptor, simulator),
             metricsContext: new MetricsContext()
         })
     }

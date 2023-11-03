@@ -44,7 +44,7 @@ export const retry = async <T>(task: () => Promise<T>, description: string, abor
 
 interface ProxyClientConfig {
     transport: ITransport
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     connectionLocker: ConnectionLocker
     minPropagationTargets?: number // TODO could be required option if we apply all defaults somewhere at higher level
@@ -77,9 +77,9 @@ export class ProxyClient extends EventEmitter {
         super()
         this.config = config
         this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(config.streamPartId), config.transport)
-        this.targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor), 1000)
+        this.targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor), 1000)
         this.deliveryRpcLocal = new DeliveryRpcLocal({
-            ownPeerDescriptor: this.config.ownPeerDescriptor,
+            localPeerDescriptor: this.config.localPeerDescriptor,
             streamPartId: this.config.streamPartId,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
@@ -167,13 +167,13 @@ export class ProxyClient extends EventEmitter {
     private async attemptConnection(nodeId: NodeID, direction: ProxyDirection, userId: EthereumAddress): Promise<void> {
         const peerDescriptor = this.definition!.nodes.get(nodeId)!
         const client = toProtoRpcClient(new ProxyConnectionRpcClient(this.rpcCommunicator.getRpcClientTransport()))
-        const rpcRemote = new ProxyConnectionRpcRemote(this.config.ownPeerDescriptor, peerDescriptor, this.config.streamPartId, client)
+        const rpcRemote = new ProxyConnectionRpcRemote(this.config.localPeerDescriptor, peerDescriptor, this.config.streamPartId, client)
         const accepted = await rpcRemote.requestConnection(direction, userId)
         if (accepted) {
             this.config.connectionLocker.lockConnection(peerDescriptor, SERVICE_ID)
             this.connections.set(nodeId, direction)
             const remote = new DeliveryRpcRemote(
-                this.config.ownPeerDescriptor,
+                this.config.localPeerDescriptor,
                 peerDescriptor,
                 this.config.streamPartId,
                 toProtoRpcClient(new DeliveryRpcClient(this.rpcCommunicator.getRpcClientTransport()))

@@ -102,7 +102,7 @@ export class NetworkNode {
     }
 
     getPeerDescriptor(): PeerDescriptor {
-        return this.stack.getLayer0Node().getPeerDescriptor()
+        return this.stack.getLayer0Node().getLocalPeerDescriptor()
     }
 
     getMetricsContext(): MetricsContext {

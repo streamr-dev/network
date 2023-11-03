@@ -28,7 +28,7 @@ describe('Inspector', () => {
     beforeEach(() => {
         mockConnect = jest.fn(() => {})
         inspector = new Inspector({
-            ownPeerDescriptor: inspectorDescriptor,
+            localPeerDescriptor: inspectorDescriptor,
             streamPartId: StreamPartIDUtils.parse('stream#0'),
             rpcCommunicator: new ListeningRpcCommunicator('inspector', new MockTransport()),
             connectionLocker: mockConnectionLocker,
