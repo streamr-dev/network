@@ -73,7 +73,7 @@ describe('RecursiveFinder', () => {
     })
 
     it('RecursiveFinder server', async () => {
-        const res = await recursiveFinder.find(routedMessage)
+        const res = await recursiveFinder.routeFindRequest(routedMessage)
         expect(res.error).toEqual('')
     })
 
@@ -95,7 +95,7 @@ describe('RecursiveFinder', () => {
             sourceDescriptor: peerDescriptor1,
             targetDescriptor: peerDescriptor2
         }
-        await expect(recursiveFinder.find({
+        await expect(recursiveFinder.routeFindRequest({
             message: badMessage,
             requestId: 'REQ',
             routingPath: [],

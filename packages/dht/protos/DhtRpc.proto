@@ -20,7 +20,7 @@ service RouterRpc {
 }
 
 service FindRpc {
-  rpc find (RouteMessageWrapper) returns (RouteMessageAck);
+  rpc routeFindRequest (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
 service StoreRpc {

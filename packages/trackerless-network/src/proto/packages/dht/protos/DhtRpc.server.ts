@@ -67,9 +67,9 @@ export interface IRouterRpc<T = ServerCallContext> {
  */
 export interface IFindRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: find(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
+     * @generated from protobuf rpc: routeFindRequest(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
-    find(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
+    routeFindRequest(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
 }
 /**
  * @generated from protobuf service dht.StoreRpc

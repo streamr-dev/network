@@ -159,7 +159,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 previousPeer: this.localPeerDescriptor
             })
         } else if (this.mode === RoutingMode.RECURSIVE_FIND) {
-            return contact.getFindRpcRemote().find({
+            return contact.getFindRpcRemote().routeFindRequest({
                 ...this.messageToRoute,
                 previousPeer: this.localPeerDescriptor
             })

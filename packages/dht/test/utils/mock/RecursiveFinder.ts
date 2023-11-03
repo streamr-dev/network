@@ -12,7 +12,7 @@ export class MockRecursiveFinder implements IRecursiveFinder {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async find(): Promise<RouteMessageAck> {
+    async routeFindRequest(): Promise<RouteMessageAck> {
         return RouteMessageAck.create()
     }
 
