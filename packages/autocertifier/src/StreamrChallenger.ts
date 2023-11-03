@@ -13,6 +13,7 @@ const localPeerDescriptor: PeerDescriptor = {
     type: NodeType.NODEJS,
 }
 
+// TODO: use async/await
 export const runStreamrChallenge = (
     streamrWebSocketIp: string,
     streamrWebSocketPort: string,
