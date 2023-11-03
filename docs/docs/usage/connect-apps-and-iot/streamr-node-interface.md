@@ -2,21 +2,18 @@
 sidebar_position: 1
 ---
 
-# Connect to a Broker node
-
-The Broker node ships with interface plugins, which can be used to publish and subscribe to data from applications over off-the-shelf protocols HTTP, WebSocket, and MQTT. For now, publishing and subscribing is available through these plugins however features such as resends are unavailable at this time.
+# Connect to a Streamr node
+The Streamr node ships with interface plugins, which can be used to publish and subscribe to data from applications over off-the-shelf protocols HTTP, WebSocket, and MQTT. For now, publishing and subscribing is available through these plugins however features such as resends are unavailable at this time.
 
 <!-- TODO: Feature completeness matrix diagram -->
 
 ## Configuration
-
-The plugins are enabled and configured in the Broker config file. To generate a config file and enable the plugins you need, you can use the Broker's interactive config wizard.
+The plugins are enabled and configured in the Streamr config file. To generate a config file and enable the plugins you need, you can use the Streamr node's interactive config wizard.
 
 ### Authentication
+The plugins expose ports and API endpoints which can be used to publish and subscribe to data using the identity of the Streamr node. You will want to secure those ports, either by setting up a firewall and restricting access to the ports based on IP, or configuring API keys that only allow access if the API key is provided.
 
-The plugins expose ports and API endpoints which can be used to publish and subscribe to data using the identity of the Broker node. You will want to secure those ports, either by setting up a firewall and restricting access to the ports based on IP, or configuring API keys that only allow access if the API key is provided.
-
-The API keys can be configured in the Broker config file, in a top-level field `apiAuthentication`:
+The API keys can be configured in the Streamr node config file, in a top-level field `apiAuthentication`:
 
 ```json
 {
@@ -35,7 +32,6 @@ Note that the API keys grant access to publishing and subscribing via your node,
 How to pass the API key depends on the protocol in question and is described in the sections below.
 
 ### Ports
-
 The integration plugins open TCP server ports to allow applications to connect to them. The ports need to be reachable by those applications, meaning that you may need to allow the port in your firewall and potentially set up appropriate port forwarding in your router. The port number is configurable for each plugin (see below for details).
 
 Note that the Streamr protocol itself (used for communication between nodes) does not require any ports to be opened.
@@ -44,7 +40,7 @@ Note that the Streamr protocol itself (used for communication between nodes) doe
 
 The WebSocket plugin provides a WebSocket interface for publishing and subscribing.
 
-To enable the WebSocket plugin, define a `websocket` object in the `plugins` section of the Broker configuration file:
+To enable the WebSocket plugin, define a `websocket` object in the `plugins` section of the Streamr node configuration file:
 
 ```json
 plugins: {
@@ -139,7 +135,7 @@ By default, a random partition is selected.
 
 #### Secure connections
 
-To support a SSL/TLS connections, define a SSL certificate in the Broker config:
+To support a SSL/TLS connections, define a SSL certificate in the Streamr node config:
 
 ```json
 "sslCertificate": {
@@ -157,8 +153,7 @@ const socket = new WebSocket(`wss://...`);
 **Note**: self-signed certificates don't work well in browser environments (the connection may not open at all). In Node environment self-signed certificates can be trusted by setting the an environment variable `NODE_TLS_REJECT_UNAUTHORIZED=0`. If possible, please obtain an authorized certificate, e.g. from [Let's Encrypt](https://letsencrypt.org).
 
 ## MQTT
-
-You can publish and subscribe to a stream using [MQTT](https://mqtt.org), making the Broker appear like a traditional MQTT broker towards connected applications and devices. To enable the MQTT plugin, define an `mqtt` object in the `plugins` section of the Broker configuration file:
+You can publish and subscribe to a stream using [MQTT](https://mqtt.org), making the Streamr node appear like a traditional MQTT broker towards connected applications and devices. To enable the MQTT plugin, define an `mqtt` object in the `plugins` section of the Streamr node configuration file:
 
 ```json
 plugins: {
@@ -166,7 +161,7 @@ plugins: {
 }
 ```
 
-You can use any MQTT client to connect to the Broker. Here's an example of subscribing to a stream with the [async-mqtt](https://www.npmjs.com/package/async-mqtt) library:
+You can use any MQTT client to connect to the Streamr node. Here's an example of subscribing to a stream with the [async-mqtt](https://www.npmjs.com/package/async-mqtt) library:
 
 ```ts
 import mqtt from 'async-mqtt';
@@ -187,7 +182,7 @@ await client.publish(streamId, JSON.stringify(msg));
 
 #### Passing the API key
 
-The authentication scheme of the MQTT protocol uses a username and password. When connecting to the MQTT plugin of Streamr Broker, you can provide anything you want as the username and the API key as the password:
+The authentication scheme of the MQTT protocol uses a username and password. When connecting to the MQTT plugin of Streamr node, you can provide anything you want as the username and the API key as the password:
 
 ```ts
 mqtt.connectAsync(`mqtt://localhost:${port}`, {
