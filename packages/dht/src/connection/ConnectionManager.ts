@@ -246,7 +246,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.state === ConnectionManagerState.STOPPED && !doNotMindStopped) {
             return
         }
-
         const peerDescriptor = message.targetDescriptor!
         if (this.isConnectionToSelf(peerDescriptor)) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
