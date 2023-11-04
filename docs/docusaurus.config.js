@@ -66,7 +66,7 @@ const config = {
                     routeBasePath: "/",
                     sidebarPath: require.resolve("./sidebars.js"),
                     editUrl:
-                        "https://github.com/streamr-dev/network/tree/main/docs",
+                        "https://github.com/streamr-dev/network/tree/pre-1.0-docs/docs",
                     exclude: [
                         "**usage/streamr-js-client/api/modules.mdx",
                         "**usage/streamr-js-client/api/modules.md",
@@ -123,6 +123,8 @@ const config = {
 
                 // Optional: see doc section below
                 contextualSearch: true,
+                schedule: 'every 1 day at 3:00 pm',
+                  
             },
             footer: {
                 links: [
