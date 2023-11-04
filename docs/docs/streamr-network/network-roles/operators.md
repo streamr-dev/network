@@ -10,7 +10,7 @@ For instructions on becoming an Operator, check out [this guide](../../guides/be
 
 Operators are the node running "miners" in the Streamr Network. To be specific– Operators are the persons/entities that operate (own/control) Streamr nodes. They choose which Sponsorships they want to stake DATA on, and run a fleet of Streamr nodes to do the work of relaying the data in related streams. The promise of Operators is: _"I run honest and stable nodes, and my nodes will join the stream topologies to help stabilise and secure them"._ An Operator's nodes don’t subscribe to a stream because they’re interested in the data, they join because they want to earn a share of the DATA tokens flowing through a Sponsorship. The Operator can claim their rewards at any time, to withdraw earned tokens from the Sponsorship contract.
 
-Operators have an owner address and private key, and (once deployed) they will have an Operator contract address. The address/key pair is Ethereum based and is the same all Ethereum-compatible chains. All Streamr contracts are deployed on the Polygon blockchain.
+Operators have an owner address and private key, and (once deployed) they will have an Operator contract address. The address/key pair is Ethereum based and is the same on all Ethereum-compatible chains. All Streamr contracts are deployed on the Polygon blockchain.
 
 An Operator's nodes are expected to be honest and to follow the protocol rule of properly forwarding messages to other connected nodes. They are also expected to be stable, with good uptime along with sufficient bandwidth and hardware resources to handle the traffic of the incentivized streams. If the Operator fails to meet these standards, they could be kicked out of the Sponsorship and their stake could be slashed.
 
