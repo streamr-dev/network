@@ -3,7 +3,6 @@ sidebar_position: 2
 ---
 
 # Operators
-
 :::info
 For instructions on becoming an Operator, check out [this guide](../../guides/become-an-operator.md).
 :::
@@ -35,6 +34,9 @@ The Operator plugin is packed with the Streamr node software. It’s essential t
 The Operator plugin interfaces with the Network and the Operator contract, which is connected to Sponsorship smart contracts.
 
 The Operator plugin will automatically validate that other Operators are doing work in the Sponsorship by conducting randomized spot tests, raising flags when appropriate, and voting on flags raised by other Operators that are also validating work on the Network.
+
+## Operator heartbeat
+To observe your Operator's heartbeat, paste in your Operator contract address into [streams seach](https://mumbai.streamr.network/hub/streams) and select the coordination stream, then "Live data". If your node is connectable then there will be a "websocket entry" inside the peer descriptor heartbeats. Be patient, it may require a browser refresh, also note Firefox is currently not working- please use Chrome.
 
 ### Node redundancy factor
 The redundancy factor sets the amount of duplicated work when running a fleet of multiple nodes. Doing redundant work protects against slashing in case some of your nodes experience failures. For example, setting this to 1 means that no duplication of work occurs (the feature is off), and setting it to 2 means that each stream assignment will be worked on by 2 nodes in your fleet.
@@ -79,7 +81,7 @@ How to earn DATA tokens by being an Operator
 ### Operator risks
 Operators promise to deliver, but what happens if they break that promise? Well, they will lose some of their staked DATA tokens in a process that’s commonly referred to as “slashing”. Delegators are also at risk of losing value if they delegate to unreliable Operators.
 
-Under the hood, Operators are running an [Operator plugin] on their Streamr Nodes. This plugin is continuously validating other nodes’ activity on the Streamr Network, and based on their findings they can raise flags, and vote on flags if selected as voters through a random selection. Operators that are found to have violated protocol rules are slashed, meaning that they lose some fraction of their committed stake. Operators are the ones that vote to kick other Operators out of Sponsorships.
+Under the hood, Operators are running an [Operator plugin](#the-operator-plugin) on their Streamr Nodes. This plugin is continuously validating other nodes’ activity on the Streamr Network, and based on their findings they can raise flags, and vote on flags if selected as voters through a random selection. Operators that are found to have violated protocol rules are slashed, meaning that they lose some fraction of their committed stake. Operators are the ones that vote to kick other Operators out of Sponsorships.
 
 While the above processes and roles may seem quite straightforward, one of the key challenges is preventing Operators that don’t actually do the work (of joining the stream’s topology and relaying messages to connected peers) from earning tokens from Sponsorships.
 

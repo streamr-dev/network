@@ -129,7 +129,7 @@ If you're running a node to become an Operator, then you could now jump back to 
 **Linux / macOS**
 
 ```
-sudo docker run --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-pretestnet.0
+sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-pretestnet.0
 ```
 
 **Windows PowerShell**
@@ -143,7 +143,7 @@ cd ~/.streamrDocker
 Start your node:
 
 ```
-docker run --name streamr --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-pretestnet.0
+docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-pretestnet.0
 ```
 
 **The `docker run` command, deconstructed:**
@@ -255,3 +255,42 @@ The Network Explorer is not yet supporting the 1.0 network. Your node will not a
 
 ## Earning with your Streamr node
 If you have your node up an running, you are more than half way towards becoming an Streamr node Operator, capabale of earning tokens by joining [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md). Head to the [Streamr node Operator](../streamr-network/network-roles/operators.md) page for more information.
+
+## WebSocket connectivity
+If you're running the node with Docker, then the above guided tutorial will handle the port mapping (`-p 32200:32200`). However, you must also remember to open port `32200` for **external** TCP traffic. Opening ports is environment specific, if you're in a Linux based system, [this guide may be helpful](https://www.digitalocean.com/community/tutorials/opening-a-port-on-linux).
+
+### Choosing a different WebSocket port
+If the default port is not suitable for you then you can change it by adding a `controlLayer` entry to your node config like so:
+
+```json
+"client": {
+    ...
+    "network": {
+        "controlLayer": {
+            "websocketPortRange": {
+                "min": 16100,
+                "max": 16100
+            }
+        }
+    },
+    ...
+}
+```
+
+## Troubleshooting
+Ask for help on our [Discord](https://discord.gg/gZAm8P7hK8)! There are many helpul node runners that have encountered the same issues that you have and will warmly offer their peer-to-peer assistance!
+
+Also, [ChatGPT](https://chat.openai.com) is a handy resource for debugging networking and Docker related issues.
+
+### RPC issues
+Your node may have issues if the RPC connection is flaky. The RPC is the connection to the Blockchain. 
+
+[Operators](../streamr-network/network-roles/operators.md) may choose to replace their RPC endpoint address by updating their [node config file](./become-an-operator#mumbai-testing-environment-node-config).
+
+### Diagnostics
+For extra logging on your Streamr node, add the `LOG_LEVEL` environmental variable to your run script.
+
+For example, 
+```shell
+sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -e LOG_LEVEL=trace -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-pretestnet.0
+```

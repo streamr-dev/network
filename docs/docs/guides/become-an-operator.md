@@ -11,7 +11,6 @@ sidebar_position: 5
 - Join Sponsorships through your Operator that will earn you DATA tokens.
 
 ## Migrating from Brubeck
-
 If you’ve been running a Streamr node in the past you might be familiar with a two step process– run some software and stake some tokens, i.e. a software step and a blockchain step. Behind the scenes, the Streamr core team would validate user’s stake and transfer tokens to node runner wallets at the end of each month. This has worked, but it's been highly centralized. With the introduction of stream Sponsorships, Operators, Sponsors and Delegators we now have everything we need for a peer to peer decentralized and market based incentivization on Streamr. The most important role is the Operator, so let's learn how to become one.
 
 :::tip Streamr 1.0 network versus the Brubeck (older) network
@@ -44,7 +43,7 @@ While there are no strict hardware recommendations, 8GB of RAM, 3-4 virtual core
 
 :::caution Important
 - A public IP is a must
--  A TCP port for WebSocket connectivity must be open. The port is configurable and the default is 32200.
+-  A TCP port for [WebSocket connectivity](./how-to-run-streamr-node#websocket-connectivity) must be open. The port is configurable and the default is 32200.
 :::
 
 ### Step 3: Pair your node with your Operator contract
@@ -68,18 +67,23 @@ You’ll need a bit of `MATIC` (the gas token of Polygon) in your node’s walle
 Now, on your Operator page in the Streamr Hub UI, fund your Operator with DATA tokens (on Mumbai, TEST tokens). There's no minimum amount, but note that the more you fund, the more you can accept delegations. The owner (you) must have at least a 5% stake in the Operator.
 
 ### Step 6: Join sponsorships
-All the checkmarks in the Operator status section on your Operator page should now be green, and you’re ready to join Sponsorships! In the Hub, go to Network -> Sponsorships and find a Sponsorship you want your Operator to start working on. Click the "Join as Operator" button and select your stake. Note there is a minimum stake of 5000 `DATA` tokens for each Sponsorship that you join.
+All the checkmarks in the Operator status section on your Operator page should now be green, and you’re ready to join Sponsorships! In the Hub, go to Network -> Sponsorships and find a Sponsorship you want your Operator to start working on. Click the "Join as Operator" button and select your stake. Note there is a minimum stake of 5000 `DATA` tokens for each Sponsorship that you join. Joining Sponsorships locks your tokens for a period of time, defined in the Sponsorship contract.
+
+:::info Important
+- It's best to use the Hub with Chrome and Metamask. There are known connectivity issues using other browsers such as Firefox. For example, your node connectivity status may report incorrectly in Firefox, but not in Chrome.
+:::
+
+## Running a node fleet
+Running a fleet of nodes is recommended as it will reduce your risk of slashing. Node private keys can be shared among all your nodes so there is no need to create a unique node address key pair for each node, i.e. You only need to add one node address for *N* nodes if you wish.
+
+A typical node fleet may have 2 - 10 nodes and use a node [Redundancy Factor](../streamr-network/network-roles/operators#node-redundancy-factor) of 2 - 3, for example.
 
 ## The Mumbai test environment
-You can configure your node to connect with the Mumbai testnet (not to be confused with the Streamr incentivized testnets that will run on Polygon with real tokens). The Mumbai environment is handy for testing Operator..operations with fake tokens.
+The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens.
 
-Mumbai has it's own UI - the [Mumbai Hub](https://mumbai.streamr.network). Your node will need to be configured with the [Mumbai config](#mumbai-testing-environment-node-config)
+You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
-You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need `TEST` tokens (the Mumbai network's worthless `DATA` tokens) - you can ask for those on the [Streamr Discord](https://discord.gg/gZAm8P7hK8) and a community admin will send you some to your address. 
-
-The only information they will need from you is your address. Please do not engage with any accounts claiming to be Support, Admin or Help. Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens.
-
-### Mumbai testing environment node config:
+## Mumbai testing environment node config
 ```json
 {
     "client": {
@@ -141,3 +145,8 @@ The only information they will need from you is your address. Please do not enga
     }
 }
 ```
+
+## Safety
+Your tokens are at risk by participating in these testnets - [the risks are real](../streamr-network/network-roles/operators#operator-risks).
+
+Please do not engage with any accounts claiming to be Support, Admin or Help. Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens.

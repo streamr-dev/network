@@ -18,6 +18,9 @@ The 1.0 testnets will be launched with the technical parameters set out in: [SIP
 ## Schedules
 Keep a close eye on this page as these dates may change based on the findings of each testnet.
 
+### Pre-testnet
+- Live! Checkout the [Mumbai Streamr Hub](https://mumbai.streamr.network)
+
 ### Testnet 1
 - Start date: Mid/Late Nov, 2023 (estimate)
 - Reward pool: 1 million DATA
@@ -36,12 +39,15 @@ Keep a close eye on this page as these dates may change based on the findings of
 ### Testnet Sponsorships
 Each testnet will have a set of Sponsorships that will be the source of incentivization. These will be visible on [The Hub](https://streamr.network/hub/network) (release TBA).
 
-### The Mumbai testing environment
+### The Mumbai test environment
 The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens.
 
-You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - you can ask for those on the [Streamr Discord](https://discord.gg/gZAm8P7hK8) and a community admin will send you some to your address. 
-
-The only information they will need from you is your address. Please do not engage with any accounts claiming to be Support, Admin or Help. Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens.
+You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 ### Bounty prizes
 Watch this space for updates.
+
+### Safety
+Your tokens are at risk by participating in these testnets - [the risks are real](../streamr-network/network-roles/operators#operator-risks).
+
+Please do not engage with any accounts claiming to be Support, Admin or Help. Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens.
