@@ -58,12 +58,9 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
         return response
     }
 
-    async leaveNotice(request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
+    async leaveNotice(_request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
         // TODO check signature??
-        // TODO is the serviceId check needed (it is defined DhtNode where RoutingRpcCommunicator is created)
-        if (request.serviceId === this.config.serviceId) {
-            this.config.removeContact((context as DhtCallContext).incomingSourceDescriptor!)
-        }
+        this.config.removeContact((context as DhtCallContext).incomingSourceDescriptor!)
         return {}
     }
 }
