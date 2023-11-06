@@ -8,7 +8,7 @@ import { IPeerManager } from '../IPeerManager'
 import { createRandomKademliaId } from '../../helpers/kademliaId'
 
 interface PeerDiscoveryConfig {
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     joinNoProgressLimit: number
     peerDiscoveryQueryBatchSize: number
     serviceId: string
@@ -44,13 +44,13 @@ export class PeerDiscovery {
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
         )
-        if (areEqualPeerDescriptors(entryPointDescriptor, this.config.ownPeerDescriptor)) {
+        if (areEqualPeerDescriptors(entryPointDescriptor, this.config.localPeerDescriptor)) {
             return
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         this.config.peerManager.handleNewPeers([entryPointDescriptor])
 
-        const sessions = [this.createSession(peerIdFromPeerDescriptor(this.config.ownPeerDescriptor).value)]
+        const sessions = [this.createSession(peerIdFromPeerDescriptor(this.config.localPeerDescriptor).value)]
         if (doAdditionalRandomPeerDiscovery) {
             sessions.push(this.createSession(createRandomKademliaId()))
         }
@@ -122,8 +122,8 @@ export class PeerDiscovery {
             return
         }
         await Promise.allSettled(this.config.peerManager.getClosestPeersTo(
-            this.config.ownPeerDescriptor.kademliaId, this.config.parallelism).map(async (peer: DhtNodeRpcRemote) => {
-            const contacts = await peer.getClosestPeers(this.config.ownPeerDescriptor.kademliaId!)
+            this.config.localPeerDescriptor.kademliaId, this.config.parallelism).map(async (peer: DhtNodeRpcRemote) => {
+            const contacts = await peer.getClosestPeers(this.config.localPeerDescriptor.kademliaId!)
             this.config.peerManager.handleNewPeers(contacts)
         }))
     }

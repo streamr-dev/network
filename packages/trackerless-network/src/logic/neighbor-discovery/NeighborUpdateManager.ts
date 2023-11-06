@@ -11,7 +11,7 @@ import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
 interface NeighborUpdateManagerConfig {
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
     neighborFinder: INeighborFinder
@@ -64,6 +64,6 @@ export class NeighborUpdateManager implements INeighborUpdateManager {
     }
 
     private createRemote(targetPeerDescriptor: PeerDescriptor): NeighborUpdateRpcRemote {
-        return new NeighborUpdateRpcRemote(this.config.ownPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
+        return new NeighborUpdateRpcRemote(this.config.localPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
     }
 }

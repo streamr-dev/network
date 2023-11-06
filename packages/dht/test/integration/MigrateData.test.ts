@@ -83,7 +83,7 @@ describe('Migrating data from node to node in DHT', () => {
         const sortedList = new SortedContactList<Contact>(dataKey, 10000)
 
         nodes.forEach((node) => {
-            sortedList.addContact(new Contact(node.getPeerDescriptor())
+            sortedList.addContact(new Contact(node.getLocalPeerDescriptor())
             )
         })
 
@@ -114,13 +114,14 @@ describe('Migrating data from node to node in DHT', () => {
                 hasDataMarker = '<-'
             }
 
-            logger.info(keyFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + keyFromPeerDescriptor(node.getPeerDescriptor()) + hasDataMarker)
+            // eslint-disable-next-line max-len
+            logger.info(keyFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + keyFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
         })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
             nodes.map((node) => {
-                if (keyFromPeerDescriptor(node.getPeerDescriptor()) != '0') {
+                if (keyFromPeerDescriptor(node.getLocalPeerDescriptor()) != '0') {
                     node.joinDht([entrypointDescriptor])
                 }
             })
@@ -142,7 +143,7 @@ describe('Migrating data from node to node in DHT', () => {
                 hasDataMarker = '<-'
             }
 
-            logger.info(keyFromPeerDescriptor(node.getPeerDescriptor()) + hasDataMarker)
+            logger.info(keyFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
         })
 
         const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().kademliaId).toKey())!

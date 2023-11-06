@@ -16,16 +16,16 @@ export class SimulatorConnector {
 
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private stopped = false
-    private ownPeerDescriptor: PeerDescriptor
+    private localPeerDescriptor: PeerDescriptor
     private simulator: Simulator
     private onIncomingConnection: (connection: ManagedConnection) => boolean
 
     constructor(
-        ownPeerDescriptor: PeerDescriptor,
+        localPeerDescriptor: PeerDescriptor,
         simulator: Simulator,
         onIncomingConnection: (connection: ManagedConnection) => boolean
     ) {
-        this.ownPeerDescriptor = ownPeerDescriptor
+        this.localPeerDescriptor = localPeerDescriptor
         this.simulator = simulator
         this.onIncomingConnection = onIncomingConnection
     }
@@ -38,9 +38,9 @@ export class SimulatorConnector {
             return existingConnection
         }
 
-        const connection = new SimulatorConnection(this.ownPeerDescriptor, targetPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, this.simulator)
+        const connection = new SimulatorConnection(this.localPeerDescriptor, targetPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, this.simulator)
 
-        const managedConnection = new ManagedConnection(this.ownPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, connection, undefined)
+        const managedConnection = new ManagedConnection(this.localPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, connection, undefined)
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
 
         this.connectingConnections.set(peerKey, managedConnection)
@@ -57,27 +57,27 @@ export class SimulatorConnector {
     }
 
     public getPeerDescriptor(): PeerDescriptor {
-        return this.ownPeerDescriptor
+        return this.localPeerDescriptor
     }
 
     public handleIncomingConnection(sourceConnection: SimulatorConnection): void {
-        logger.trace(keyFromPeerDescriptor(sourceConnection.ownPeerDescriptor) + ' incoming connection, stopped: ' + this.stopped)
+        logger.trace(keyFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming connection, stopped: ' + this.stopped)
         if (this.stopped) {
             return
         }
-        const connection = new SimulatorConnection(this.ownPeerDescriptor,
-            sourceConnection.ownPeerDescriptor, ConnectionType.SIMULATOR_SERVER, this.simulator)
+        const connection = new SimulatorConnection(this.localPeerDescriptor,
+            sourceConnection.localPeerDescriptor, ConnectionType.SIMULATOR_SERVER, this.simulator)
 
-        const managedConnection = new ManagedConnection(this.ownPeerDescriptor, ConnectionType.SIMULATOR_SERVER, undefined, connection)
+        const managedConnection = new ManagedConnection(this.localPeerDescriptor, ConnectionType.SIMULATOR_SERVER, undefined, connection)
 
         logger.trace('connected')
 
         managedConnection.once('handshakeRequest', () => {
-            logger.trace(keyFromPeerDescriptor(sourceConnection.ownPeerDescriptor) + ' incoming handshake request')
+            logger.trace(keyFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming handshake request')
             logger.trace('incoming handshake request')
 
             if (this.onIncomingConnection(managedConnection)) {
-                logger.trace(keyFromPeerDescriptor(sourceConnection.ownPeerDescriptor) + ' calling acceptHandshake')
+                logger.trace(keyFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' calling acceptHandshake')
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake('Duplicate connection')

@@ -91,7 +91,7 @@ const measureJoiningTime = async () => {
     }, 1000)
     // get random node from network to use as entrypoint
     const randomNode = nodes[Math.floor(Math.random() * nodes.length)]
-    const streamSubscriber = createNetworkNodeWithSimulator(peerDescriptor, simulator, [randomNode.stack.getLayer0Node().getPeerDescriptor()])
+    const streamSubscriber = createNetworkNodeWithSimulator(peerDescriptor, simulator, [randomNode.stack.getLayer0Node().getLocalPeerDescriptor()])
     currentNode = streamSubscriber
     const start = performance.now()
     await streamSubscriber.start()

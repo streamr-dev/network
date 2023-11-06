@@ -43,7 +43,7 @@ export interface StrictRandomGraphNodeConfig {
     layer1Node: Layer1Node
     transport: ITransport
     connectionLocker: ConnectionLocker
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     nodeViewSize: number
     nearbyNodeView: NodeList
     randomNodeView: NodeList
@@ -74,7 +74,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.config = config
         this.duplicateDetectors = new Map()
         this.deliveryRpcLocal = new DeliveryRpcLocal({
-            ownPeerDescriptor: this.config.ownPeerDescriptor,
+            localPeerDescriptor: this.config.localPeerDescriptor,
             streamPartId: this.config.streamPartId,
             rpcCommunicator: this.config.rpcCommunicator,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
@@ -187,7 +187,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
     private updateNearbyNodeView(nodes: PeerDescriptor[]) {
         this.config.nearbyNodeView.replaceAll(Array.from(nodes).map((descriptor) =>
             new DeliveryRpcRemote(
-                this.config.ownPeerDescriptor,
+                this.config.localPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
                 toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
@@ -199,7 +199,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             }
             this.config.nearbyNodeView.add(
                 new DeliveryRpcRemote(
-                    this.config.ownPeerDescriptor,
+                    this.config.localPeerDescriptor,
                     descriptor,
                     this.config.streamPartId,
                     toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
@@ -214,7 +214,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
         this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
             new DeliveryRpcRemote(
-                this.config.ownPeerDescriptor,
+                this.config.localPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
                 toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
@@ -232,7 +232,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
         this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
             new DeliveryRpcRemote(
-                this.config.ownPeerDescriptor,
+                this.config.localPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
                 toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
@@ -304,7 +304,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
     }
 
     getOwnNodeId(): NodeID {
-        return getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)
+        return getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
     }
 
     getNumberOfOutgoingHandshakes(): number {

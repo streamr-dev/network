@@ -21,7 +21,7 @@ export class MockLayer0Node extends EventEmitter implements Layer0Node {
         throw new Error('not implemented')
     }
 
-    getPeerDescriptor(): PeerDescriptor {
+    getLocalPeerDescriptor(): PeerDescriptor {
         return this.peerDescriptor
     }
 

@@ -37,12 +37,12 @@ describe('ConnectionManager', () => {
     const mockConnectorTransport1 = new SimulatorTransport(mockPeerDescriptor1, simulator)
     const mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
 
-    let createOwnPeerDescriptor: jest.Mock<PeerDescriptor, [ConnectivityResponse]>
+    let createLocalPeerDescriptor: jest.Mock<PeerDescriptor, [ConnectivityResponse]>
 
-    const createConnectionManager = (opts: Omit<DefaultConnectorFacadeConfig, 'createOwnPeerDescriptor'>) => {
+    const createConnectionManager = (opts: Omit<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
         return new ConnectionManager({
             createConnectorFacade: () => new DefaultConnectorFacade({
-                createOwnPeerDescriptor,
+                createLocalPeerDescriptor,
                 ...opts
             }),
             metricsContext: new MetricsContext()
@@ -50,7 +50,7 @@ describe('ConnectionManager', () => {
     }
 
     beforeEach(() => {
-        createOwnPeerDescriptor = jest.fn().mockImplementation((response) => createPeerDescriptor(response))
+        createLocalPeerDescriptor = jest.fn().mockImplementation((response) => createPeerDescriptor(response))
     })
 
     beforeAll(async () => {
@@ -74,7 +74,7 @@ describe('ConnectionManager', () => {
         })
 
         await connectionManager.start()
-        expect(createOwnPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
+        expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
 
         await connectionManager.stop()
     })
@@ -102,7 +102,7 @@ describe('ConnectionManager', () => {
         })
 
         await connectionManager1.start()
-        expect(createOwnPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
+        expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
 
         const connectionManager2 = createConnectionManager({
             transport: mockConnectorTransport2,
@@ -113,7 +113,7 @@ describe('ConnectionManager', () => {
         })
 
         await connectionManager2.start()
-        expect(createOwnPeerDescriptor.mock.calls[1][0].host).toEqual('127.0.0.1')
+        expect(createLocalPeerDescriptor.mock.calls[1][0].host).toEqual('127.0.0.1')
 
         await connectionManager1.stop()
         await connectionManager2.stop()
@@ -127,18 +127,18 @@ describe('ConnectionManager', () => {
         })
 
         await connectionManager1.start()
-        expect(createOwnPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
+        expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
 
         const connectionManager2 = createConnectionManager({
             transport: mockConnectorTransport2,
             websocketPortRange: { min: 9996, max: 9996 },
             entryPoints: [
-                connectionManager1.getPeerDescriptor()
+                connectionManager1.getLocalPeerDescriptor()
             ]
         })
 
         await connectionManager2.start()
-        expect(createOwnPeerDescriptor.mock.calls[1][0].host).toEqual('127.0.0.1')
+        expect(createLocalPeerDescriptor.mock.calls[1][0].host).toEqual('127.0.0.1')
 
         const msg: Message = {
             serviceId,
@@ -169,7 +169,7 @@ describe('ConnectionManager', () => {
             })
         })
 
-        msg.targetDescriptor = connectionManager2.getPeerDescriptor()
+        msg.targetDescriptor = connectionManager2.getLocalPeerDescriptor()
         connectionManager1.send(msg)
 
         await Promise.all([promise, connectedPromise1, connectedPromise2])
@@ -186,13 +186,13 @@ describe('ConnectionManager', () => {
         })
 
         await connectionManager1.start()
-        expect(createOwnPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
+        expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
 
         const connectionManager2 = createConnectionManager({
             transport: mockConnectorTransport2,
             websocketPortRange: { min: 9999, max: 9999 },
             entryPoints: [
-                connectionManager1.getPeerDescriptor()
+                connectionManager1.getLocalPeerDescriptor()
             ]
         })
 
@@ -228,13 +228,13 @@ describe('ConnectionManager', () => {
                 resolve()
             })
         })
-        msg.targetDescriptor = connectionManager2.getPeerDescriptor()
+        msg.targetDescriptor = connectionManager2.getLocalPeerDescriptor()
         connectionManager1.send(msg)
 
         await promise
 
         // @ts-expect-error private field
-        connectionManager1.closeConnection(connectionManager2.getPeerDescriptor())
+        connectionManager1.closeConnection(connectionManager2.getLocalPeerDescriptor())
 
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
 
@@ -309,9 +309,9 @@ describe('ConnectionManager', () => {
         })
 
         await connectionManager1.start()
-        expect(createOwnPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
+        expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
         
-        const peerDescriptor = connectionManager1.getPeerDescriptor()
+        const peerDescriptor = connectionManager1.getLocalPeerDescriptor()
         peerDescriptor.kademliaId = new Uint8Array([12, 12, 12, 12])
         const msg: Message = {
             serviceId,

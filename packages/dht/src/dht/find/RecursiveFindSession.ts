@@ -21,7 +21,7 @@ export interface RecursiveFindSessionConfig {
     serviceId: string
     transport: ITransport
     kademliaIdToFind: Uint8Array
-    ownPeerId: PeerID
+    localPeerId: PeerID
     waitedRoutingPathCompletions: number
     fetchData: boolean
 }
@@ -30,7 +30,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     private readonly serviceId: string
     private readonly transport: ITransport
     private readonly kademliaIdToFind: Uint8Array
-    private readonly ownPeerId: PeerID
+    private readonly localPeerId: PeerID
     private readonly waitedRoutingPathCompletions: number
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly fetchData: boolean
@@ -47,7 +47,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.serviceId = config.serviceId
         this.transport = config.transport
         this.kademliaIdToFind = config.kademliaIdToFind
-        this.ownPeerId = config.ownPeerId
+        this.localPeerId = config.localPeerId
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
         this.results = new SortedContactList(PeerID.fromValue(this.kademliaIdToFind), 10, undefined, true)
         this.fetchData = config.fetchData
@@ -101,7 +101,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     private addKnownHops(routingPath: PeerDescriptor[]) {
         routingPath.forEach((desc) => {
             const newPeerId = PeerID.fromValue(desc.kademliaId)
-            if (!this.ownPeerId.equals(newPeerId)) {
+            if (!this.localPeerId.equals(newPeerId)) {
                 this.allKnownHops.add(newPeerId.toKey())
             }
         })
@@ -109,7 +109,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
 
     private setHopAsReported(desc: PeerDescriptor) {
         const newPeerId = PeerID.fromValue(desc.kademliaId)
-        if (!this.ownPeerId.equals(newPeerId)) {
+        if (!this.localPeerId.equals(newPeerId)) {
             this.reportedHops.add(newPeerId.toKey())
         }
         if (this.isFindCompleted()) {

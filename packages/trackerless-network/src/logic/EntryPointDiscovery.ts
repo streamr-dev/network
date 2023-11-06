@@ -56,7 +56,7 @@ export const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 
 interface EntryPointDiscoveryConfig {
     streamPartId: StreamPartID
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     layer1Node: Layer1Node
     getEntryPointData: (key: Uint8Array) => Promise<DataEntry[]>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
@@ -87,7 +87,7 @@ export class EntryPointDiscovery {
         }
         const discoveredEntryPoints = await this.discoverEntryPoints()
         if (discoveredEntryPoints.length === 0) {
-            discoveredEntryPoints.push(this.config.ownPeerDescriptor)
+            discoveredEntryPoints.push(this.config.localPeerDescriptor)
         }
         return {
             discoveredEntryPoints,
@@ -109,7 +109,7 @@ export class EntryPointDiscovery {
     }
 
     private async queryEntrypoints(key: Uint8Array): Promise<PeerDescriptor[]> {
-        logger.trace(`Finding data from dht node ${getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)}`)
+        logger.trace(`Finding data from dht node ${getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)}`)
         try {
             const result = await this.config.getEntryPointData(key)
             return parseEntryPointData(result)
@@ -133,8 +133,8 @@ export class EntryPointDiscovery {
     }
 
     private async storeSelfAsEntryPoint(): Promise<void> {
-        const ownPeerDescriptor = this.config.ownPeerDescriptor
-        const dataToStore = Any.pack(ownPeerDescriptor, PeerDescriptor)
+        const localPeerDescriptor = this.config.localPeerDescriptor
+        const dataToStore = Any.pack(localPeerDescriptor, PeerDescriptor)
         try {
             await this.config.storeEntryPointData(streamPartIdToDataKey(this.config.streamPartId), dataToStore)
         } catch (err) {
@@ -148,7 +148,7 @@ export class EntryPointDiscovery {
             try {
                 const discovered = await this.discoverEntryPoints()
                 if (discovered.length < ENTRYPOINT_STORE_LIMIT 
-                    || discovered.some((peerDescriptor) => areEqualPeerDescriptors(peerDescriptor, this.config.ownPeerDescriptor))) {
+                    || discovered.some((peerDescriptor) => areEqualPeerDescriptors(peerDescriptor, this.config.localPeerDescriptor))) {
                     await this.storeSelfAsEntryPoint()
                 }
             } catch (err) {

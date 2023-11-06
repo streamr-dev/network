@@ -40,12 +40,12 @@ describe('Websocket IConnection Requests', () => {
         let connected2 = false
 
         node1.on('connected', (peerDescriptor: PeerDescriptor) => {
-            if (areEqualPeerDescriptors(peerDescriptor, node2.getPeerDescriptor())) {
+            if (areEqualPeerDescriptors(peerDescriptor, node2.getLocalPeerDescriptor())) {
                 connected1 = true
             }
         })
         node2.on('connected', (peerDescriptor: PeerDescriptor) => {
-            if (areEqualPeerDescriptors(peerDescriptor, node1.getPeerDescriptor())) {
+            if (areEqualPeerDescriptors(peerDescriptor, node1.getLocalPeerDescriptor())) {
                 connected2 = true
             }
         })
@@ -55,8 +55,8 @@ describe('Websocket IConnection Requests', () => {
 
         await waitForCondition(() => { return (connected1 && connected2) })
 
-        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getPeerDescriptor())).toEqual(true)
-        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getPeerDescriptor())).toEqual(true)
+        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getLocalPeerDescriptor())).toEqual(true)
+        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getLocalPeerDescriptor())).toEqual(true)
 
     }, 10000)
 })

@@ -67,7 +67,7 @@ describe('EntryPointDiscovery', () => {
         storeCalled = 0
         layer1Node = new MockLayer1Node()
         entryPointDiscoveryWithData = new EntryPointDiscovery({
-            ownPeerDescriptor: peerDescriptor,
+            localPeerDescriptor: peerDescriptor,
             streamPartId: STREAM_PART_ID,
             layer1Node,
             getEntryPointData: fakeGetEntryPointData,
@@ -76,7 +76,7 @@ describe('EntryPointDiscovery', () => {
             storeInterval: 2000
         })
         entryPointDiscoveryWithoutData = new EntryPointDiscovery({
-            ownPeerDescriptor: peerDescriptor,
+            localPeerDescriptor: peerDescriptor,
             streamPartId: STREAM_PART_ID,
             layer1Node,
             getEntryPointData: fakeEmptyGetEntryPointData,
@@ -106,7 +106,7 @@ describe('EntryPointDiscovery', () => {
         const res = await entryPointDiscoveryWithoutData.discoverEntryPointsFromDht(0)
         expect(res.entryPointsFromDht).toEqual(true)
         expect(res.discoveredEntryPoints.length).toBe(1)
-        expect(areEqualPeerDescriptors(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)  // ownPeerDescriptor
+        expect(areEqualPeerDescriptors(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)  // localPeerDescriptor
     })
 
     it('store on empty stream', async () => {
