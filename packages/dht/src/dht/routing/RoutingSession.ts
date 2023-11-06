@@ -180,7 +180,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         return this.contactList.getUncontactedContacts(this.parallelism)
     }
 
-    sendMoreRequests = (uncontacted: RemoteContact[]) => {
+    sendMoreRequests = (uncontacted: RemoteContact[]): void => {
         logger.trace('sendMoreRequests() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
