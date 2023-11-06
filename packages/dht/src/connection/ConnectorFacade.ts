@@ -24,6 +24,7 @@ export interface ConnectorFacade {
 
 const logger = new Logger(module)
 
+// TODO: Wrap component specific configs to their own objects.
 export interface DefaultConnectorFacadeConfig {
     transport: ITransport
     websocketHost?: string
