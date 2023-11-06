@@ -9,6 +9,7 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { ServiceID } from '../../types/ServiceID'
 
 export const createRouteMessageAck = (routedMessage: RouteMessageWrapper, error?: string): RouteMessageAck => {
     const ack: RouteMessageAck = {
@@ -28,7 +29,7 @@ export interface RouterConfig {
     localPeerDescriptor: PeerDescriptor
     connections: Map<PeerIDKey, DhtNodeRpcRemote>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
-    serviceId: string
+    serviceId: ServiceID
     connectionManager?: ConnectionManager
 }
 
@@ -56,7 +57,7 @@ export class Router implements IRouter {
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
     private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
-    private readonly serviceId: string
+    private readonly serviceId: ServiceID
     private readonly connectionManager?: ConnectionManager
     private readonly forwardingTable: Map<string, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
@@ -104,23 +105,24 @@ export class Router implements IRouter {
         }
     }
 
-    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE, excludedPeer?: PeerDescriptor): RouteMessageAck {
+    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RoutingErrors.STOPPED)
         }
         logger.trace(`Routing message ${routedMessage.requestId} from ${keyFromPeerDescriptor(routedMessage.sourcePeer!)} `
             + `to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}`)
         routedMessage.routingPath.push(this.localPeerDescriptor)
-        const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
-        this.addRoutingSession(session)
-        try {
+        const session = this.createRoutingSession(routedMessage, mode)
+        const contacts = session.findMoreContacts()
+        if (contacts.length > 0) {
+            this.addRoutingSession(session)
             // eslint-disable-next-line promise/catch-or-return
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
             let eventReceived: Promise<unknown>
             executeSafePromise(async () => {
                 eventReceived = raceEvents3<RoutingSessionEvents>(
                     session,
-                    ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped', 'noCandidatesFound'],
+                    ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped'],
                     null
                 )
             })
@@ -134,24 +136,21 @@ export class Router implements IRouter {
                 session.stop()
                 this.removeRoutingSession(session.sessionId) 
             })
-            session.start()
-        } catch (e) {
+            session.sendMoreRequests(contacts)
+            return createRouteMessageAck(routedMessage)
+        } else {
             if (areEqualPeerDescriptors(routedMessage.sourcePeer!, this.localPeerDescriptor)) {
                 logger.warn(
-                    `Failed to send (routeMessage: ${this.serviceId}) to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}: ${e}`
+                    `Failed to send (routeMessage: ${this.serviceId}) to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}`
                 )
             }
+            logger.trace('noCandidatesFound sessionId: ' + session.sessionId)
             return createRouteMessageAck(routedMessage, RoutingErrors.NO_CANDIDATES_FOUND)
         }
-        return createRouteMessageAck(routedMessage)
     }
 
-    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RoutingSession {
-        const excludedPeers = routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
-        if (excludedPeer) {
-            excludedPeers.push(peerIdFromPeerDescriptor(excludedPeer))
-        }
-        logger.trace(' routing session created with connections: ' + this.connections.size )
+    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode): RoutingSession {
+        logger.trace('routing session created with connections: ' + this.connections.size)
         return new RoutingSession(
             this.rpcCommunicator,
             this.localPeerDescriptor,
@@ -159,8 +158,7 @@ export class Router implements IRouter {
             this.connections,
             areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
-            undefined,
-            excludedPeers
+            routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
         )
     }
 

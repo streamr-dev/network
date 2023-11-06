@@ -1,18 +1,18 @@
 import { IExternalApiRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import {
+    ExternalFindDataRequest,
+    ExternalFindDataResponse,
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
-    FindDataRequest,
-    FindDataResponse,
     PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { RecursiveFindResult } from './find/RecursiveFinder'
+import { FindResult } from './find/Finder'
 import { Any } from '../proto/google/protobuf/any'
 
 interface ExternalApiRpcLocalConfig {
-    startRecursiveFind: (idToFind: Uint8Array, fetchData: boolean, excludedPeer: PeerDescriptor) => Promise<RecursiveFindResult>
+    startFind: (idToFind: Uint8Array, fetchData: boolean, excludedPeer: PeerDescriptor) => Promise<FindResult>
     storeDataToDht: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
 }
 
@@ -24,13 +24,13 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
         this.config = config
     }
 
-    async findData(findDataRequest: FindDataRequest, context: ServerCallContext): Promise<FindDataResponse> {
+    async externalFindData(findDataRequest: ExternalFindDataRequest, context: ServerCallContext): Promise<ExternalFindDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const result = await this.config.startRecursiveFind(findDataRequest.kademliaId, true, senderPeerDescriptor)
+        const result = await this.config.startFind(findDataRequest.kademliaId, true, senderPeerDescriptor)
         if (result.dataEntries) {
-            return FindDataResponse.create({ dataEntries: result.dataEntries })
+            return ExternalFindDataResponse.create({ dataEntries: result.dataEntries })
         } else {
-            return FindDataResponse.create({ 
+            return ExternalFindDataResponse.create({ 
                 dataEntries: [],
                 error: 'Could not find data with the given key' 
             })

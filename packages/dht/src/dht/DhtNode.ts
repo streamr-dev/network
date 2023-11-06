@@ -15,8 +15,8 @@ import {
     PingRequest,
     PingResponse,
     DataEntry,
-    FindDataRequest,
-    FindDataResponse,
+    ExternalFindDataRequest,
+    ExternalFindDataResponse,
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
 } from '../proto/packages/dht/protos/DhtRpc'
@@ -35,7 +35,7 @@ import { RandomContactList } from './contact/RandomContactList'
 import { Any } from '../proto/google/protobuf/any'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
-import { RecursiveFinder, RecursiveFindResult } from './find/RecursiveFinder'
+import { Finder, FindResult } from './find/Finder'
 import { StoreRpcLocal } from './store/StoreRpcLocal'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
@@ -140,7 +140,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public router?: Router
     private storeRpcLocal?: StoreRpcLocal
     private localDataStore = new LocalDataStore()
-    private recursiveFinder?: RecursiveFinder
+    private finder?: Finder
     private peerDiscovery?: PeerDiscovery
 
     public connectionManager?: ConnectionManager
@@ -257,7 +257,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             serviceId: this.config.serviceId,
             connectionManager: this.connectionManager
         })
-        this.recursiveFinder = new RecursiveFinder({
+        this.finder = new Finder({
             rpcCommunicator: this.rpcCommunicator,
             router: this.router,
             sessionTransport: this,
@@ -270,7 +270,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         })
         this.storeRpcLocal = new StoreRpcLocal({
             rpcCommunicator: this.rpcCommunicator,
-            recursiveFinder: this.recursiveFinder,
+            finder: this.finder,
             localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
             highestTtl: this.config.storeHighestTtl,
@@ -289,7 +289,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    private initKBuckets = (selfId: PeerID) => {
+    private initKBuckets(selfId: PeerID) {
         this.bucket = new KBucket<DhtNodeRpcRemote>({
             localNodeId: selfId.value,
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
@@ -404,16 +404,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
             (req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(req, context))
         const externalApiRpcLocal = new ExternalApiRpcLocal({
-            startRecursiveFind: (idToFind: Uint8Array, fetchData: boolean, excludedPeer: PeerDescriptor) => {
-                return this.startRecursiveFind(idToFind, fetchData, excludedPeer)
+            startFind: (idToFind: Uint8Array, fetchData: boolean, excludedPeer: PeerDescriptor) => {
+                return this.startFind(idToFind, fetchData, excludedPeer)
             },
             storeDataToDht: (key: Uint8Array, data: Any) => this.storeDataToDht(key, data)
         })
         this.rpcCommunicator!.registerRpcMethod(
-            FindDataRequest,
-            FindDataResponse,
-            'findData', 
-            (req: FindDataRequest, context: ServerCallContext) => externalApiRpcLocal.findData(req, context),
+            ExternalFindDataRequest,
+            ExternalFindDataResponse,
+            'externalFindData', 
+            (req: ExternalFindDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalFindData(req, context),
             { timeout: 10000 }
         )
         this.rpcCommunicator!.registerRpcMethod(
@@ -423,7 +423,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             (req: ExternalStoreDataRequest) => externalApiRpcLocal.externalStoreData(req),
             { timeout: 10000 }
         )
-
     }
 
     private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
@@ -443,7 +442,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    private generatePeerDescriptorCallBack = (connectivityResponse: ConnectivityResponse) => {
+    private generatePeerDescriptorCallBack(connectivityResponse: ConnectivityResponse) {
         if (this.config.peerDescriptor) {
             this.localPeerDescriptor = this.config.peerDescriptor
         } else {
@@ -487,7 +486,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.stopped) {
             return
         }
-        if (!this.stopped && !contact.getPeerId().equals(this.getNodeId())) {
+        if (!contact.getPeerId().equals(this.getNodeId())) {
             // Important to lock here, before the ping result is known
             this.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
             if (this.connections.has(contact.getPeerId().toKey())) {
@@ -591,7 +590,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started || this.stopped) {
             return
         }
-        const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints || [] : []
+        const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints ?? [] : []
         await this.router!.send(msg, reachableThrough)
     }
 
@@ -604,8 +603,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         ))
     }
 
-    public async startRecursiveFind(idToFind: Uint8Array, fetchData?: boolean, excludedPeer?: PeerDescriptor): Promise<RecursiveFindResult> {
-        return this.recursiveFinder!.startRecursiveFind(idToFind, fetchData, excludedPeer)
+    public async startFind(idToFind: Uint8Array, fetchData?: boolean, excludedPeer?: PeerDescriptor): Promise<FindResult> {
+        return this.finder!.startFind(idToFind, fetchData, excludedPeer)
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
@@ -629,7 +628,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
         }
-        const result = await this.recursiveFinder!.startRecursiveFind(idToFind, true)
+        const result = await this.finder!.startFind(idToFind, true)
         return result.dataEntries ?? []
     }
 
@@ -646,7 +645,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.config.serviceId,
             toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        return await rpcRemote.findData(idToFind)
+        return await rpcRemote.externalFindData(idToFind)
     }
 
     public getTransport(): ITransport {
@@ -706,7 +705,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.randomPeers!.stop()
         this.rpcCommunicator!.stop()
         this.router!.stop()
-        this.recursiveFinder!.stop()
+        this.finder!.stop()
         this.peerDiscovery!.stop()
         if (this.connectionManager) {
             await this.connectionManager.stop()
