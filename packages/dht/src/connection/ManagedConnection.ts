@@ -186,7 +186,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         impl.on('data', (bytes: Uint8Array) => {
             this.lastUsed = Date.now()
-            if (this.listenerCount('managedData') < 1) {
+            if (this.listenerCount('managedData') === 0) {
 
                 this.inputBuffer.push(bytes)
             } else {
