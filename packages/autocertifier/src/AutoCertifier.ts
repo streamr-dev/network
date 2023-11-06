@@ -31,7 +31,7 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
     // eslint-disable-next-line class-methods-use-this
     public async createSession(): Promise<Session> {
         logger.info('creating new session')
-        return { sessionId: v4() }
+        return { id: v4() }
     }
 
     public async createNewSubdomainAndCertificate(
@@ -48,10 +48,11 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
         const subdomain = v4()
         const token = v4()
         await this.database!.createSubdomain(subdomain, ipAddress, port, token)
-        const certificate = await this.certificateCreator!.createCertificate(subdomain + '.' + this.domainName)
+        const fqdn = subdomain + '.' + this.domainName
+        const certificate = await this.certificateCreator!.createCertificate(fqdn)
         return { 
             subdomain,
-            fqdn: this.domainName!,
+            fqdn,
             token,
             certificate
         }
@@ -70,14 +71,13 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
 
         // This will throw if the token is incorrect
         await this.updateSubdomainIpAndPort(subdomain, ipAddress, port, streamrWebSocketPort, sessionId, token)
-
-        const cert = await this.certificateCreator!.createCertificate(subdomain + '.' + this.domainName)
-
+        const fqdn = subdomain + '.' + this.domainName
+        const certificate = await this.certificateCreator!.createCertificate(fqdn)
         return {
-            subdomain: subdomain,
-            fqdn: this.domainName!,
-            token: token,
-            certificate: cert
+            subdomain,
+            fqdn,
+            token,
+            certificate
         }
     }
 

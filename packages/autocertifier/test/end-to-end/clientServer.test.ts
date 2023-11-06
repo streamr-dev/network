@@ -79,7 +79,7 @@ describe('clientServer', () => {
             dir + '/restServerKey.pem',
             {
                 async createSession(): Promise<Session> {
-                    return { sessionId: v4() }
+                    return { id: v4() }
                 },
                 async createNewSubdomainAndCertificate(
                     ip: string,

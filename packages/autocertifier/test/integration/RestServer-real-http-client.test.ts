@@ -36,7 +36,7 @@ describe('RestServer', () => {
             dir + '/restServerKey.pem', 
             {
                 async createSession(): Promise<Session> {
-                    return { sessionId: sessionId }
+                    return { id: sessionId }
                 },
                 async createNewSubdomainAndCertificate(): Promise<CertifiedSubdomain> {
                     return certifiedSubdomain
@@ -63,13 +63,13 @@ describe('RestServer', () => {
                 url: 'https://localhost:9877/sessions',
                 method: 'POST',
                 json: true,
-                ca: ca
+                ca
             }
 
             request(options, (error: any, response: Response, body: any) => {
                 expect(error).toBeFalsy()
                 expect(response.statusCode).toEqual(200)
-                expect(body).toEqual({ sessionId: sessionId })
+                expect(body).toEqual({ id: sessionId })
                 done()
             })
         })
@@ -83,7 +83,7 @@ describe('RestServer', () => {
                 json: {
                     streamrWebSocketPort: '1234'
                 },
-                ca: ca
+                ca
             }
 
             request(options, (error: any, response: Response, body: any) => {
@@ -99,7 +99,7 @@ describe('RestServer', () => {
                 url: 'https://localhost:9877/certified-subdomains',
                 method: 'PATCH',
                 json: true,
-                ca: ca
+                ca
             }
 
             request(options, (error: any, response: Response, body: any) => {
@@ -121,7 +121,7 @@ describe('RestServer', () => {
                     streamrWebSocketPort: '1234',
                     token: 'token'
                 },
-                ca: ca
+                ca
             }
 
             request(options, (error: any, response: Response, body: any) => {
@@ -139,7 +139,7 @@ describe('RestServer', () => {
                 json: {
                     token: 'token'
                 },
-                ca: ca
+                ca
             }
 
             request(options, (error: any, response: Response, body: any) => {
@@ -158,7 +158,7 @@ describe('RestServer', () => {
                 json: {
                     streamrWebSocketPort: '1234'
                 },
-                ca: ca
+                ca
             }
 
             request(options, (error: any, response: Response, body: any) => {
