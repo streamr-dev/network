@@ -112,15 +112,16 @@ export class Router implements IRouter {
             + `to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}`)
         routedMessage.routingPath.push(this.localPeerDescriptor)
         const session = this.createRoutingSession(routedMessage, mode)
-        this.addRoutingSession(session)
-        try {
+        const contacts = session.findMoreContacts()
+        if (contacts.length > 0) {
+            this.addRoutingSession(session)
             // eslint-disable-next-line promise/catch-or-return
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
             let eventReceived: Promise<unknown>
             executeSafePromise(async () => {
                 eventReceived = raceEvents3<RoutingSessionEvents>(
                     session,
-                    ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped', 'noCandidatesFound'],
+                    ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped'],
                     null
                 )
             })
@@ -134,16 +135,17 @@ export class Router implements IRouter {
                 session.stop()
                 this.removeRoutingSession(session.sessionId) 
             })
-            session.start()
-        } catch (e) {
+            session.sendMoreRequests(contacts)
+            return createRouteMessageAck(routedMessage)
+        } else {
             if (areEqualPeerDescriptors(routedMessage.sourcePeer!, this.localPeerDescriptor)) {
                 logger.warn(
-                    `Failed to send (routeMessage: ${this.serviceId}) to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}: ${e}`
+                    `Failed to send (routeMessage: ${this.serviceId}) to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}`
                 )
             }
+            logger.trace('noCandidatesFound sessionId: ' + session.sessionId)
             return createRouteMessageAck(routedMessage, RoutingErrors.NO_CANDIDATES_FOUND)
         }
-        return createRouteMessageAck(routedMessage)
     }
 
     private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode): RoutingSession {

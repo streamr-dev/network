@@ -57,7 +57,6 @@ export interface RoutingSessionEvents {
     // through, and none of them responds with a success ack
     routingFailed: (sessionId: string) => void
     stopped: (sessionId: string) => void
-    noCandidatesFound: (sessionId: string) => void
 }
 
 export enum RoutingMode { ROUTE, FORWARD, RECURSIVE_FIND }
@@ -171,7 +170,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    private findMoreContacts = (): RemoteContact[] => {
+    findMoreContacts = (): RemoteContact[] => {
         logger.trace('findMoreContacts() sessionId: ' + this.sessionId)
         // the contents of the connections might have changed between the rounds
         // addContacts() will only add new contacts that were not there yet
@@ -181,7 +180,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         return this.contactList.getUncontactedContacts(this.parallelism)
     }
 
-    private sendMoreRequests = (uncontacted: RemoteContact[]) => {
+    sendMoreRequests = (uncontacted: RemoteContact[]) => {
         logger.trace('sendMoreRequests() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
@@ -216,19 +215,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 }
             })
         }
-    }
-
-    public start(): void {
-        logger.trace('start() sessionId: ' + this.sessionId)
-        const contacts = this.findMoreContacts()
-        if (contacts.length < 1) {
-            logger.trace('start() throwing noCandidatesFound sessionId: ' + this.sessionId)
-            
-            this.stopped = true
-            this.emit('noCandidatesFound', this.sessionId)
-            throw new Error('noCandidatesFound ' + this.sessionId)
-        }
-        this.sendMoreRequests(contacts)
     }
 
     public stop(): void {
