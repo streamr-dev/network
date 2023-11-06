@@ -4,8 +4,8 @@
 import { ExternalApiRpc } from "./DhtRpc";
 import type { ExternalStoreDataResponse } from "./DhtRpc";
 import type { ExternalStoreDataRequest } from "./DhtRpc";
-import type { FindDataResponse } from "./DhtRpc";
-import type { FindDataRequest } from "./DhtRpc";
+import type { ExternalFindDataResponse } from "./DhtRpc";
+import type { ExternalFindDataRequest } from "./DhtRpc";
 import { ConnectionLockRpc } from "./DhtRpc";
 import type { DisconnectNoticeResponse } from "./DhtRpc";
 import type { DisconnectNotice } from "./DhtRpc";
@@ -368,9 +368,9 @@ export class ConnectionLockRpcClient implements IConnectionLockRpcClient, Servic
  */
 export interface IExternalApiRpcClient {
     /**
-     * @generated from protobuf rpc: findData(dht.FindDataRequest) returns (dht.FindDataResponse);
+     * @generated from protobuf rpc: externalFindData(dht.ExternalFindDataRequest) returns (dht.ExternalFindDataResponse);
      */
-    findData(input: FindDataRequest, options?: RpcOptions): UnaryCall<FindDataRequest, FindDataResponse>;
+    externalFindData(input: ExternalFindDataRequest, options?: RpcOptions): UnaryCall<ExternalFindDataRequest, ExternalFindDataResponse>;
     /**
      * @generated from protobuf rpc: externalStoreData(dht.ExternalStoreDataRequest) returns (dht.ExternalStoreDataResponse);
      */
@@ -386,11 +386,11 @@ export class ExternalApiRpcClient implements IExternalApiRpcClient, ServiceInfo 
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: findData(dht.FindDataRequest) returns (dht.FindDataResponse);
+     * @generated from protobuf rpc: externalFindData(dht.ExternalFindDataRequest) returns (dht.ExternalFindDataResponse);
      */
-    findData(input: FindDataRequest, options?: RpcOptions): UnaryCall<FindDataRequest, FindDataResponse> {
+    externalFindData(input: ExternalFindDataRequest, options?: RpcOptions): UnaryCall<ExternalFindDataRequest, ExternalFindDataResponse> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<FindDataRequest, FindDataResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<ExternalFindDataRequest, ExternalFindDataResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: externalStoreData(dht.ExternalStoreDataRequest) returns (dht.ExternalStoreDataResponse);

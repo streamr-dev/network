@@ -9,7 +9,7 @@ import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { IRecursiveFinder } from '../find/RecursiveFinder'
+import { IFinder } from '../find/Finder'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
@@ -25,7 +25,7 @@ import { ServiceID } from '../../types/ServiceID'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
-    recursiveFinder: IRecursiveFinder
+    finder: IFinder
     localPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
     serviceId: ServiceID
@@ -41,7 +41,7 @@ const logger = new Logger(module)
 export class StoreRpcLocal implements IStoreRpc {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
-    private readonly recursiveFinder: IRecursiveFinder
+    private readonly finder: IFinder
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly localDataStore: LocalDataStore
     private readonly serviceId: ServiceID
@@ -53,7 +53,7 @@ export class StoreRpcLocal implements IStoreRpc {
 
     constructor(config: DataStoreConfig) {
         this.rpcCommunicator = config.rpcCommunicator
-        this.recursiveFinder = config.recursiveFinder
+        this.finder = config.finder
         this.localPeerDescriptor = config.localPeerDescriptor
         this.localDataStore = config.localDataStore
         this.serviceId = config.serviceId
@@ -146,7 +146,7 @@ export class StoreRpcLocal implements IStoreRpc {
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.serviceId}`)
-        const result = await this.recursiveFinder.startRecursiveFind(key)
+        const result = await this.finder.startFind(key)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         const ttl = this.highestTtl // ToDo: make TTL decrease according to some nice curve
@@ -198,7 +198,7 @@ export class StoreRpcLocal implements IStoreRpc {
 
     public async deleteDataFromDht(key: Uint8Array): Promise<void> {
         logger.debug(`Deleting data from DHT ${this.serviceId}`)
-        const result = await this.recursiveFinder.startRecursiveFind(key)
+        const result = await this.finder.startFind(key)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.redundancyFactor; i++) {
