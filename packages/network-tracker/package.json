@@ -33,7 +33,7 @@
     "cors": "^2.8.5",
     "ethers": "^5.4.7",
     "express": "^4.17.1",
-    "geoip-lite": "^1.4.2",
+    "geoip-lite": "^1.4.8",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
     "uuid": "^9.0.1"
