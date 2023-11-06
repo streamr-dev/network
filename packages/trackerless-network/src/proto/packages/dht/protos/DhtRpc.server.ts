@@ -61,10 +61,15 @@ export interface IRouterRpc<T = ServerCallContext> {
      * @generated from protobuf rpc: forwardMessage(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
     forwardMessage(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
+}
+/**
+ * @generated from protobuf service dht.FindRpc
+ */
+export interface IFindRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: findRecursively(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
+     * @generated from protobuf rpc: routeFindRequest(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
-    findRecursively(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
+    routeFindRequest(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
 }
 /**
  * @generated from protobuf service dht.StoreRpc
@@ -84,9 +89,9 @@ export interface IStoreRpc<T = ServerCallContext> {
     deleteData(request: DeleteDataRequest, context: T): Promise<DeleteDataResponse>;
 }
 /**
- * @generated from protobuf service dht.RecursiveFindSessionService
+ * @generated from protobuf service dht.FindSessionRpc
  */
-export interface IRecursiveFindSessionService<T = ServerCallContext> {
+export interface IFindSessionRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: sendFindResponse(dht.FindResponse) returns (google.protobuf.Empty);
      */

@@ -47,7 +47,7 @@ interface IRouterFunc {
     stop(): void
 }
 
-export interface IRouter extends Omit<IRouterRpc, 'findRecursively'>, IRouterFunc {}
+export type IRouter = IRouterRpc & IRouterFunc
 
 const logger = new Logger(module)
 
