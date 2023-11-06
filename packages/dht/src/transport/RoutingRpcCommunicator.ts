@@ -3,13 +3,14 @@ import { v4 } from 'uuid'
 import { RpcCommunicator, RpcCommunicatorConfig } from '@streamr/proto-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RpcMessage } from '../proto/packages/proto-rpc/protos/ProtoRpc'
+import { ServiceID } from '../types/ServiceID'
 
 export class RoutingRpcCommunicator extends RpcCommunicator {
-    private ownServiceId: string
+    private ownServiceId: ServiceID
     private sendFn: (msg: Message, doNotConnect?: boolean, doNotMindStopped?: boolean) => Promise<void>
 
     constructor(
-        ownServiceId: string,
+        ownServiceId: ServiceID,
         sendFn: (msg: Message, doNotConnect?: boolean) => Promise<void>,
         config?: RpcCommunicatorConfig
     ) {

@@ -6,6 +6,7 @@ import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice, Disconnec
 import * as Err from '../helpers/errors'
 import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Remote } from '../dht/contact/Remote'
+import { ServiceID } from '../types/ServiceID'
 
 const logger = new Logger(module)
 
@@ -19,7 +20,7 @@ export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
         super(localPeerDescriptor, targetPeerDescriptor, 'DUMMY', client)
     }
 
-    public async lockRequest(serviceId: string): Promise<boolean> {
+    public async lockRequest(serviceId: ServiceID): Promise<boolean> {
         logger.trace(`Requesting locked connection to ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: LockRequest = {
             serviceId
@@ -34,7 +35,7 @@ export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
         }
     }
 
-    public unlockRequest(serviceId: string): void {
+    public unlockRequest(serviceId: ServiceID): void {
         logger.trace(`Requesting connection to be unlocked from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: UnlockRequest = {
             serviceId

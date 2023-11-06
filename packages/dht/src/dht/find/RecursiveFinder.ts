@@ -25,6 +25,7 @@ import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicat
 import { FindSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { SortedContactList } from '../contact/SortedContactList'
+import { ServiceID } from '../../types/ServiceID'
 
 interface RecursiveFinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -32,7 +33,7 @@ interface RecursiveFinderConfig {
     connections: Map<PeerIDKey, DhtNodeRpcRemote>
     router: IRouter
     localPeerDescriptor: PeerDescriptor
-    serviceId: string
+    serviceId: ServiceID
     localDataStore: LocalDataStore
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
@@ -55,7 +56,7 @@ export class RecursiveFinder implements IRecursiveFinder {
     private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
     private readonly router: IRouter
     private readonly localPeerDescriptor: PeerDescriptor
-    private readonly serviceId: string
+    private readonly serviceId: ServiceID
     private readonly localDataStore: LocalDataStore
     private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     private readonly isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
@@ -176,7 +177,7 @@ export class RecursiveFinder implements IRecursiveFinder {
     private sendFindResponse(
         routingPath: PeerDescriptor[],
         targetPeerDescriptor: PeerDescriptor,
-        serviceId: string,
+        serviceId: ServiceID,
         closestNodes: PeerDescriptor[],
         data: Map<PeerIDKey, DataEntry> | undefined,
         noCloserNodesFound: boolean = false

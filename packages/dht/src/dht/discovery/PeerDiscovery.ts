@@ -8,6 +8,7 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { createRandomKademliaId } from '../../helpers/kademliaId'
+import { ServiceID } from '../../types/ServiceID'
 
 interface PeerDiscoveryConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -16,7 +17,7 @@ interface PeerDiscoveryConfig {
     neighborList: SortedContactList<DhtNodeRpcRemote>
     joinNoProgressLimit: number
     peerDiscoveryQueryBatchSize: number
-    serviceId: string
+    serviceId: ServiceID
     parallelism: number
     joinTimeout: number
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void

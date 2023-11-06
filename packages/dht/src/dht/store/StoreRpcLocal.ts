@@ -21,13 +21,14 @@ import { Events } from '../DhtNode'
 import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
+import { ServiceID } from '../../types/ServiceID'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
     recursiveFinder: IRecursiveFinder
     localPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
-    serviceId: string
+    serviceId: ServiceID
     maxTtl: number
     highestTtl: number
     redundancyFactor: number
@@ -43,7 +44,7 @@ export class StoreRpcLocal implements IStoreRpc {
     private readonly recursiveFinder: IRecursiveFinder
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly localDataStore: LocalDataStore
-    private readonly serviceId: string
+    private readonly serviceId: ServiceID
     private readonly maxTtl: number
     private readonly highestTtl: number
     private readonly redundancyFactor: number
