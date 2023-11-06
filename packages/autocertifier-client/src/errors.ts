@@ -30,9 +30,7 @@ export class Err extends Error {
     public toApiError(): ApiError {
         const ret: ApiError = {
             code: this.code,
-        }
-        if (this.message) {
-            ret.message = this.message
+            message: this.message
         }
         return ret
     }
