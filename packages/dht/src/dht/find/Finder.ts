@@ -195,6 +195,7 @@ export class Finder implements IFinder {
                 toProtoRpcClient(new FindSessionRpcClient(remoteCommunicator.getRpcClientTransport()))
             )
             rpcRemote.sendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+            remoteCommunicator.destroy()
         }
     }
 

@@ -463,7 +463,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.stopped) {
             return
         }
-        if (!this.stopped && !contact.getPeerId().equals(this.getNodeId())) {
+        if (!contact.getPeerId().equals(this.getNodeId())) {
             // Important to lock here, before the ping result is known
             this.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
             if (this.connections.has(contact.getPeerId().toKey())) {
@@ -622,7 +622,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.config.serviceId,
             toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        return await rpcRemote.findData(idToFind)
+        return await rpcRemote.externalFindData(idToFind)
     }
 
     public getRpcCommunicator(): RoutingRpcCommunicator {

@@ -172,6 +172,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> implements IFin
             clearTimeout(this.reportFindCompletedTimeout)
             this.reportFindCompletedTimeout = undefined
         }
+        this.rpcCommunicator.destroy()
         this.emit('findCompleted', [])
     }
 }
