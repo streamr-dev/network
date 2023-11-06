@@ -568,7 +568,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             }
             return response
         }
-        this.locks.addRemoteLocked(remotePeerId.toKey(), lockRequest.serviceId)
+        this.locks.addRemoteLocked(remotePeerId.toKey(), lockRequest.lockId)
         const response: LockResponse = {
             accepted: true
         }
@@ -579,7 +579,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private async unlockRequest(unlockRequest: UnlockRequest, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const peerIdKey = keyFromPeerDescriptor(senderPeerDescriptor)
-        this.locks.removeRemoteLocked(peerIdKey, unlockRequest.serviceId)
+        this.locks.removeRemoteLocked(peerIdKey, unlockRequest.lockId)
         return {}
     }
 

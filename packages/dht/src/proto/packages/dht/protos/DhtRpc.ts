@@ -535,18 +535,18 @@ export interface IceCandidate {
  */
 export interface LockRequest {
     /**
-     * @generated from protobuf field: string serviceId = 1;
+     * @generated from protobuf field: string lockId = 1;
      */
-    serviceId: string;
+    lockId: string;
 }
 /**
  * @generated from protobuf message dht.UnlockRequest
  */
 export interface UnlockRequest {
     /**
-     * @generated from protobuf field: string serviceId = 1;
+     * @generated from protobuf field: string lockId = 1;
      */
-    serviceId: string;
+    lockId: string;
 }
 /**
  * @generated from protobuf message dht.LockResponse
@@ -1109,7 +1109,7 @@ export const IceCandidate = new IceCandidate$Type();
 class LockRequest$Type extends MessageType$<LockRequest> {
     constructor() {
         super("dht.LockRequest", [
-            { no: 1, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "lockId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1121,7 +1121,7 @@ export const LockRequest = new LockRequest$Type();
 class UnlockRequest$Type extends MessageType$<UnlockRequest> {
     constructor() {
         super("dht.UnlockRequest", [
-            { no: 1, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "lockId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
