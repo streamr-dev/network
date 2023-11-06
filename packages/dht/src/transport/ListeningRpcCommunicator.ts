@@ -2,12 +2,13 @@ import { ITransport } from './ITransport'
 import { RoutingRpcCommunicator } from './RoutingRpcCommunicator'
 import { RpcCommunicatorConfig } from '@streamr/proto-rpc'
 import { Message } from '../proto/packages/dht/protos/DhtRpc'
+import { ServiceID } from '../types/ServiceID'
 
 export class ListeningRpcCommunicator extends RoutingRpcCommunicator {
     private readonly transport: ITransport
     private readonly listener: (msg: Message) => void
 
-    constructor(ownServiceId: string, transport: ITransport, config?: RpcCommunicatorConfig) {
+    constructor(ownServiceId: ServiceID, transport: ITransport, config?: RpcCommunicatorConfig) {
         super(ownServiceId, transport.send, config)
         this.listener = (msg: Message) => {
             this.handleMessageFromPeer(msg)

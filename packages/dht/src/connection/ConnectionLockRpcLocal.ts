@@ -19,10 +19,11 @@ import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { PeerIDKey } from '../helpers/PeerID'
 import { keyOrUnknownFromPeerDescriptor } from './ConnectionManager'
 import { DisconnectionType } from '../transport/ITransport'
+import { LockID } from './ConnectionLockHandler'
 
 interface ConnectionLockRpcLocalConfig {
-    addRemoteLocked: (id: PeerIDKey, serviceId: string) => void
-    removeRemoteLocked: (id: PeerIDKey, serviceId: string) => void
+    addRemoteLocked: (id: PeerIDKey, lockId: LockID) => void
+    removeRemoteLocked: (id: PeerIDKey, lockId: LockID) => void
     closeConnection: (peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType, reason?: string) => void
     getLocalPeerDescriptor: () => PeerDescriptor
 }
@@ -46,7 +47,7 @@ export class ConnectionLockRpcLocal implements IConnectionLockRpc {
             }
             return response
         }
-        this.config.addRemoteLocked(remotePeerId.toKey(), lockRequest.serviceId)
+        this.config.addRemoteLocked(remotePeerId.toKey(), lockRequest.lockId)
         const response: LockResponse = {
             accepted: true
         }
@@ -56,7 +57,7 @@ export class ConnectionLockRpcLocal implements IConnectionLockRpc {
     async unlockRequest(unlockRequest: UnlockRequest, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const peerIdKey = keyFromPeerDescriptor(senderPeerDescriptor)
-        this.config.removeRemoteLocked(peerIdKey, unlockRequest.serviceId)
+        this.config.removeRemoteLocked(peerIdKey, unlockRequest.lockId)
         return {}
     }
 

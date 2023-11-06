@@ -8,17 +8,18 @@ import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Contact } from '../contact/Contact'
 import { SortedContactList } from '../contact/SortedContactList'
-import { RecursiveFindResult } from './RecursiveFinder'
+import { FindResult } from './Finder'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { ServiceID } from '../../types/ServiceID'
 
-export interface RecursiveFindSessionEvents {
+export interface FindSessionEvents {
     findCompleted: (results: PeerDescriptor[]) => void
 }
 
 const logger = new Logger(module)
 
-export interface RecursiveFindSessionConfig {
-    serviceId: string
+export interface FindSessionConfig {
+    serviceId: ServiceID
     transport: ITransport
     kademliaIdToFind: Uint8Array
     localPeerId: PeerID
@@ -26,8 +27,8 @@ export interface RecursiveFindSessionConfig {
     fetchData: boolean
 }
 
-export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IFindSessionRpc {
-    private readonly serviceId: string
+export class FindSession extends EventEmitter<FindSessionEvents> implements IFindSessionRpc {
+    private readonly serviceId: ServiceID
     private readonly transport: ITransport
     private readonly kademliaIdToFind: Uint8Array
     private readonly localPeerId: PeerID
@@ -42,7 +43,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     private findCompletedEmitted = false
     private noCloserNodesReceivedCounter = 0
 
-    constructor(config: RecursiveFindSessionConfig) {
+    constructor(config: FindSessionConfig) {
         super()
         this.serviceId = config.serviceId
         this.transport = config.transport
@@ -157,12 +158,12 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     }
 
     public async sendFindResponse(report: FindResponse): Promise<Empty> {
-        logger.trace('recursiveFindReport arrived: ' + JSON.stringify(report))
+        logger.trace('FindResponse arrived: ' + JSON.stringify(report))
         this.doSendFindResponse(report.routingPath, report.closestConnectedPeers, report.dataEntries, report.noCloserNodesFound)
         return {}
     }
 
-    public getResults = (): RecursiveFindResult => ({
+    public getResults = (): FindResult => ({
         closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
         dataEntries: (this.foundData && this.foundData.size > 0) ? Array.from(this.foundData.values()) : undefined
     })
