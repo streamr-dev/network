@@ -157,7 +157,6 @@ export class Router implements IRouter {
             this.connections,
             areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
-            undefined,
             routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
         )
     }

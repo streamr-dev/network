@@ -83,7 +83,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         connections: Map<PeerIDKey, DhtNodeRpcRemote>,
         parallelism: number,
         mode: RoutingMode = RoutingMode.ROUTE,
-        destinationId?: Uint8Array,
         excludedPeerIDs?: PeerID[]
     ) {
         super()
@@ -95,7 +94,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.mode = mode
         const previousId = messageToRoute.previousPeer ? PeerID.fromValue(messageToRoute.previousPeer.kademliaId) : undefined
         this.contactList = new SortedContactList(
-            destinationId ? PeerID.fromValue(destinationId) : PeerID.fromValue(this.messageToRoute.destinationPeer!.kademliaId),
+            PeerID.fromValue(this.messageToRoute.destinationPeer!.kademliaId),
             10000,
             undefined,
             true,
