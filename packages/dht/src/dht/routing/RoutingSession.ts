@@ -128,7 +128,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     private emitFailure = () => {
         if (this.successfulHopCounter >= 1) {
             this.emit('partialSuccess', this.sessionId)
-
         } else {
             this.emit('routingFailed', this.sessionId)
         }
@@ -222,9 +221,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     public stop(): void {
         this.stopped = true
         this.contactList.stop()
-
         this.emit('stopped', this.sessionId)
         this.removeAllListeners()
     }
-
 }
