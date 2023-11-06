@@ -1,6 +1,6 @@
 import { getTestInterface } from '@streamr/test-utils'
-import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
-import { getRandomRegion } from '../../src/connection/Simulator/pings'
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
+import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'

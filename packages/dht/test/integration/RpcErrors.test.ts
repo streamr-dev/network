@@ -1,9 +1,9 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ITransport } from '../../src/transport/ITransport'
 import { v4 } from 'uuid'
-import { SimulatorTransport } from '../../src/connection/Simulator/SimulatorTransport'
+import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DhtRpcOptions } from '../../src/rpc-protocol/DhtRpcOptions'
 import { ListeningRpcCommunicator } from '../../src/transport/ListeningRpcCommunicator'
 import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
@@ -133,7 +133,7 @@ describe('RPC errors', () => {
         
     }, 60000)
 
-    it('Disconnects WebRtcConnection while being connected', async () => {
+    it('Disconnects WebrtcConnection while being connected', async () => {
         
         const rpcMessage: RpcMessage = {
             header: {},
