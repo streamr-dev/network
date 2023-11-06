@@ -3,7 +3,6 @@ sidebar_position: 1
 ---
 
 # Pub/Sub in NodeJS
-
 This is a quickstart guide on creating your first stream using the Streamr TypeScript SDK in a NodeJS script.
 
 **Prerequisites:**
@@ -13,7 +12,6 @@ This is a quickstart guide on creating your first stream using the Streamr TypeS
 -   A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 
 ## Streamr SDK
-
 The Streamr SDK is available on [NPM](https://www.npmjs.com/package/streamr-client) and can be installed simply with:
 
 ```shell
@@ -23,7 +21,6 @@ $ npm install streamr-client
 Having trouble installing the SDK? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
 
 ### Initialize the SDK
-
 ```ts
 // Import Streamr
 const Streamr = require("streamr-client")
@@ -46,7 +43,6 @@ You can generate an Ethereum private key using any Ethereum wallet, or you can u
 :::
 
 ## Create the stream
-
 A stream is simply a **sequence of data points in time**, i.e. an append only log. This is semantically equivalent to **topics** in traditional pub/sub networks.
 
 ```ts
@@ -75,7 +71,6 @@ const stream = await streamr.getOrCreateStream({
 ```
 
 ### Set stream permissions
-
 By default, the creator of the stream has full read, write and manage permissions over the stream, but if you'd like different addresses or public access controls to read and write (publish and subscribe) to your stream, then you'll need to add these permissions.
 
 ```ts
@@ -91,7 +86,6 @@ await stream.grantPermissions({
 :::
 
 ## Publish data to the stream
-
 You can either push data using the stream ID,
 
 ```ts
@@ -114,7 +108,6 @@ You must give `PUBLISH` permission to the address you have authenticated `Stream
 :::
 
 ## Subscribe to the stream
-
 Just like publishing, you can either use the stream ID,
 
 ```ts
@@ -126,5 +119,4 @@ streamr.subscribe(streamId, (message) => {
 Or, by using the `stream` object.
 
 ## Summary
-
 Congrats! You've managed to create a stream and publish/subscribe data to it! 💪

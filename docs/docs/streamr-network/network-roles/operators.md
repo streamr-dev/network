@@ -35,7 +35,7 @@ The Operator plugin interfaces with the Network and the Operator contract, which
 
 The Operator plugin will automatically validate that other Operators are doing work in the Sponsorship by conducting randomized spot tests, raising flags when appropriate, and voting on flags raised by other Operators that are also validating work on the Network.
 
-## Operator heartbeat
+### Operator heartbeat
 To observe your Operator's heartbeat, paste in your Operator contract address into [streams search](https://mumbai.streamr.network/hub/streams) and select the coordination stream, then "Live data". If your node is connectable then there will be a "websocket entry" inside the peer descriptor heartbeats. Be patient, it may require a browser refresh, also note Firefox is currently not working- please use Chrome.
 
 ### Node redundancy factor
