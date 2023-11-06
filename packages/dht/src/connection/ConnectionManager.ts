@@ -27,7 +27,7 @@ import {
 import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import { ConnectionLockHandler } from './ConnectionLockHandler'
+import { ConnectionLockHandler, LockID } from './ConnectionLockHandler'
 import { ConnectorFacade } from './ConnectorFacade'
 import { ManagedConnection, Events as ManagedConnectionEvents } from './ManagedConnection'
 import { ConnectionLockRpcRemote } from './ConnectionLockRpcRemote'
@@ -455,7 +455,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
     }
 
-    public lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
+    public lockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void {
         if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getLocalPeerDescriptor())) {
             return
         }
@@ -465,25 +465,25 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             targetDescriptor,
             toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        this.locks.addLocalLocked(peerIdKey, serviceId)
-        rpcRemote.lockRequest(serviceId)
+        this.locks.addLocalLocked(peerIdKey, lockId)
+        rpcRemote.lockRequest(lockId)
             .then((_accepted) => logger.trace('LockRequest successful'))
             .catch((err) => { logger.debug(err) })
     }
 
-    public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
+    public unlockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void {
         if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getLocalPeerDescriptor())) {
             return
         }
         const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
-        this.locks.removeLocalLocked(peerIdKey, serviceId)
+        this.locks.removeLocalLocked(peerIdKey, lockId)
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
             toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         if (this.connections.has(peerIdKey)) {
-            rpcRemote.unlockRequest(serviceId)
+            rpcRemote.unlockRequest(lockId)
         }
     }
 
