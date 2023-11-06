@@ -334,8 +334,8 @@ export class ContractFacade {
             (
                 sponsorship: string,
                 targetOperator: string,
-                voteStartTimestamp: number,
-                voteEndTimestamp: number,
+                voteStartTimestampInSecs: number,
+                voteEndTimestampInSecs: number,
                 metadataAsString?: string
             ) => {
                 let partition: number
@@ -363,8 +363,8 @@ export class ContractFacade {
                     toEthereumAddress(sponsorship),
                     toEthereumAddress(targetOperator),
                     partition,
-                    voteStartTimestamp * 1000,
-                    voteEndTimestamp * 1000
+                    voteStartTimestampInSecs * 1000,
+                    voteEndTimestampInSecs * 1000
                 )
             },
             abortSignal

@@ -84,6 +84,8 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         }
         const startTime = this.timeProvider()
         this.subscription = await this.streamrClient.subscribe(this.coordinationStreamId, (rawContent) => {
+            // Ignore messages during warmup period. This is needed because network nodes may propagate old stream messages
+            // from cache.
             if ((this.timeProvider() - startTime) < this.warmupPeriodInMs) { // TODO: write test
                 return
             }

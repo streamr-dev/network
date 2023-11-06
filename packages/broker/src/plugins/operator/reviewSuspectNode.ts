@@ -79,6 +79,8 @@ export const reviewSuspectNode = async ({
         await fleetState.destroy()
     })
 
+    // TODO: check that maxSleepTime doesn't exceed votingPeriod
+
     // random sleep time to make sure multiple instances of voters don't all inspect at the same time
     const sleepTimeInMs = random(maxSleepTime)
     logger.info('Sleep', { sleepTimeInMs })
