@@ -22,7 +22,7 @@ export class RestClient {
         const url = this.baseUrl + '/sessions'
         try {
             const response = await this.post<Session>(url, {})
-            return response.sessionId
+            return response.id
         } catch (err) {
             logger.debug(err)
             throw err

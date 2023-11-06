@@ -73,7 +73,7 @@ export class AutoCertifierClientFacade {
     async start(): Promise<void> {
         this.autoCertifierClient.on('updatedSubdomain', (subdomain: CertifiedSubdomain) => {
             logger.trace(`Updating certificate for WSS server`)
-            this.setHost(subdomain.subdomain + '.' + subdomain.fqdn)
+            this.setHost(subdomain.fqdn)
             this.updateCertificate(subdomain.certificate)
             logger.trace(`Updated certificate for WSS server`)
         })

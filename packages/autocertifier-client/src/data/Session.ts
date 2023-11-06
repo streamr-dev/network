@@ -1,3 +1,3 @@
 export interface Session {
-    sessionId: string
+    id: string
 }
