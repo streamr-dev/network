@@ -1,18 +1,19 @@
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
+import { ServiceID } from '../../types/ServiceID'
 
 export abstract class Remote<T> {
 
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly remotePeerDescriptor: PeerDescriptor
-    private readonly serviceId: string
+    private readonly serviceId: ServiceID
     private readonly client: ProtoRpcClient<T>
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
         remotePeerDescriptor: PeerDescriptor,
-        serviceId: string,
+        serviceId: ServiceID,
         client: ProtoRpcClient<T>
     ) {
         this.localPeerDescriptor = localPeerDescriptor

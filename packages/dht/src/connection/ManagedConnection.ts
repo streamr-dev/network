@@ -165,7 +165,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         return this.peerDescriptor
     }
 
-    private onHandshakeCompleted = (peerDescriptor: PeerDescriptor) => {
+    private onHandshakeCompleted(peerDescriptor: PeerDescriptor) {
         this.lastUsed = Date.now()
 
         this.setPeerDescriptor(peerDescriptor)
