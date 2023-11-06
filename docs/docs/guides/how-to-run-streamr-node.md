@@ -155,8 +155,11 @@ The `--restart` option enables a restart policy of `unless-stopped`. This means 
 The `-d` option starts your Docker container and node in detached mode, meaning it runs in the background and you can check in on and follow the logs as you please. The alternative is to start it in attached mode, which requires you to keep the window open to keep the node running. The latter is not practical in most cases unless you use a terminal multiplexer such as `tmux` or `screen` to detach.
 
 ### Step 5: Follow the node log
-
 Since you started the node in detached mode, you won't see the log streamed to your screen automatically when you start the node. Run the command below to see and follow the logs.
+
+:::caution
+Remember to stop the `logs` command. If its left to run in the terminal it will consume a large amount of memory over time.
+:::
 
 **Linux / macOS**
 
