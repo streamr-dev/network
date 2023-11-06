@@ -145,7 +145,7 @@ describe('Route Message With Mock Connections', () => {
                 } catch (e) {
                     console.error(e)
                 }
-                if (parseInt(node.getNodeId().toString()) > routerNodes.length || parseInt(node.getNodeId().toString()) < 1) {
+                if (parseInt(node.getNodeId().toString()) > routerNodes.length || parseInt(node.getNodeId().toString()) === 0) {
                     console.error(node.getNodeId().toString())
                 }
             })

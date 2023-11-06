@@ -19,8 +19,8 @@ export class RouterRpcRemote extends Remote<IRouterRpcClient> {
             destinationPeer: params.destinationPeer,
             sourcePeer: params.sourcePeer,
             message: params.message,
-            requestId: params.requestId || v4(),
-            reachableThrough: params.reachableThrough || [],
+            requestId: params.requestId ?? v4(),
+            reachableThrough: params.reachableThrough ?? [],
             routingPath: params.routingPath
         }
         const options = this.formDhtRpcOptions({
@@ -53,8 +53,8 @@ export class RouterRpcRemote extends Remote<IRouterRpcClient> {
             destinationPeer: params.destinationPeer,
             sourcePeer: params.sourcePeer,
             message: params.message,
-            requestId: params.requestId || v4(),
-            reachableThrough: params.reachableThrough || [],
+            requestId: params.requestId ?? v4(),
+            reachableThrough: params.reachableThrough ?? [],
             routingPath: params.routingPath
         }
         const options = this.formDhtRpcOptions({

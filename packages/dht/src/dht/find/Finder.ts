@@ -253,7 +253,7 @@ export class Finder implements IFinder {
         } else if (this.router.isMostLikelyDuplicate(routedMessage.requestId)) {
             return createRouteMessageAck(routedMessage, 'message given to routeFindRequest() service is likely a duplicate')
         }
-        const senderKey = keyFromPeerDescriptor(getPreviousPeer(routedMessage) || routedMessage.sourcePeer!)
+        const senderKey = keyFromPeerDescriptor(getPreviousPeer(routedMessage) ?? routedMessage.sourcePeer!)
         logger.trace(`Received routeFindRequest call from ${senderKey}`)
         this.addContact(routedMessage.sourcePeer!, true)
         this.router.addToDuplicateDetector(routedMessage.requestId)
