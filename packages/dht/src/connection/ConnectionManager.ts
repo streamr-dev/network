@@ -12,7 +12,6 @@ import {
     peerIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
 import { protoToString } from '../helpers/protoToString'
-import { Empty } from '../proto/google/protobuf/empty'
 import {
     DisconnectMode,
     DisconnectNotice,
@@ -33,7 +32,7 @@ import { ManagedConnection, Events as ManagedConnectionEvents } from './ManagedC
 import { ConnectionLockRpcRemote } from './ConnectionLockRpcRemote'
 import { WEBRTC_CLEANUP } from './webrtc/NodeWebrtcConnection'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
+import { ConnectionLockRpcLocal } from './ConnectionLockRpcLocal'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number
@@ -142,12 +141,20 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.rpcCommunicator = new RoutingRpcCommunicator(INTERNAL_SERVICE_ID, this.send, {
             rpcRequestTimeout: 10000
         })
+        const lockRpcLocal = new ConnectionLockRpcLocal({
+            addRemoteLocked: (id: PeerIDKey, serviceId: string) => this.locks.addRemoteLocked(id, serviceId),
+            removeRemoteLocked: (id: PeerIDKey, serviceId: string) => this.locks.removeRemoteLocked(id, serviceId),
+            closeConnection: (peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType, reason?: string) => {
+                this.closeConnection(peerDescriptor, disconnectionType, reason)
+            },
+            getLocalPeerDescriptor: () => this.getLocalPeerDescriptor()
+        })
         this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest',
-            (req: LockRequest, context: ServerCallContext) => this.lockRequest(req, context))
+            (req: LockRequest, context: ServerCallContext) => lockRpcLocal.lockRequest(req, context))
         this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest',
-            (req: UnlockRequest, context: ServerCallContext) => this.unlockRequest(req, context))
+            (req: UnlockRequest, context: ServerCallContext) => lockRpcLocal.unlockRequest(req, context))
         this.rpcCommunicator.registerRpcMethod(DisconnectNotice, DisconnectNoticeResponse, 'gracefulDisconnect',
-            (req: DisconnectNotice, context: ServerCallContext) => this.gracefulDisconnect(req, context))
+            (req: DisconnectNotice, context: ServerCallContext) => lockRpcLocal.gracefulDisconnect(req, context))
     }
 
     public garbageCollectConnections(maxConnections: number, lastUsedLimit: number): void {
@@ -556,44 +563,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return Array.from(this.connections.values())
             .filter((managedConnection: ManagedConnection) => managedConnection.isHandshakeCompleted())
             .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor()!)
-    }
-
-    // ConnectionLockRpc local RPC method
-    private async lockRequest(lockRequest: LockRequest, context: ServerCallContext): Promise<LockResponse> {
-        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const remotePeerId = peerIdFromPeerDescriptor(senderPeerDescriptor)
-        if (areEqualPeerDescriptors(senderPeerDescriptor, this.getLocalPeerDescriptor())) {
-            const response: LockResponse = {
-                accepted: false
-            }
-            return response
-        }
-        this.locks.addRemoteLocked(remotePeerId.toKey(), lockRequest.serviceId)
-        const response: LockResponse = {
-            accepted: true
-        }
-        return response
-    }
-
-    // ConnectionLockRpc local RPC method
-    private async unlockRequest(unlockRequest: UnlockRequest, context: ServerCallContext): Promise<Empty> {
-        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const peerIdKey = keyFromPeerDescriptor(senderPeerDescriptor)
-        this.locks.removeRemoteLocked(peerIdKey, unlockRequest.serviceId)
-        return {}
-    }
-
-    // ConnectionLockRpc local RPC method
-    private async gracefulDisconnect(disconnectNotice: DisconnectNotice, context: ServerCallContext): Promise<Empty> {
-        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        logger.trace(keyOrUnknownFromPeerDescriptor(senderPeerDescriptor) + ' received gracefulDisconnect notice')
-
-        if (disconnectNotice.disconnectMode === DisconnectMode.LEAVING) {
-            this.closeConnection(senderPeerDescriptor, 'INCOMING_GRACEFUL_LEAVE', 'graceful leave notified')
-        } else {
-            this.closeConnection(senderPeerDescriptor, 'INCOMING_GRACEFUL_DISCONNECT', 'graceful disconnect notified')
-        }
-        return {}
     }
 
     private onConnectionCountChange() {
