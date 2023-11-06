@@ -486,10 +486,6 @@ export interface WebsocketConnectionResponse {
  * @generated from protobuf message dht.WebrtcConnectionRequest
  */
 export interface WebrtcConnectionRequest {
-    /**
-     * @generated from protobuf field: string connectionId = 1;
-     */
-    connectionId: string;
 }
 /**
  * @generated from protobuf message dht.RtcOffer
@@ -1061,9 +1057,7 @@ export const WebsocketConnectionResponse = new WebsocketConnectionResponse$Type(
 // @generated message type with reflection information, may provide speed optimized methods
 class WebrtcConnectionRequest$Type extends MessageType$<WebrtcConnectionRequest> {
     constructor() {
-        super("dht.WebrtcConnectionRequest", [
-            { no: 1, name: "connectionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
+        super("dht.WebrtcConnectionRequest", []);
     }
 }
 /**
