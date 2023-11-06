@@ -20,7 +20,7 @@ import type { WebrtcConnectionRequest } from "./DhtRpc";
 import { WebsocketConnectorRpc } from "./DhtRpc";
 import type { WebsocketConnectionResponse } from "./DhtRpc";
 import type { WebsocketConnectionRequest } from "./DhtRpc";
-import { RecursiveFindSessionService } from "./DhtRpc";
+import { FindSessionRpc } from "./DhtRpc";
 import type { FindResponse } from "./DhtRpc";
 import { StoreRpc } from "./DhtRpc";
 import type { DeleteDataResponse } from "./DhtRpc";
@@ -29,6 +29,7 @@ import type { MigrateDataResponse } from "./DhtRpc";
 import type { MigrateDataRequest } from "./DhtRpc";
 import type { StoreDataResponse } from "./DhtRpc";
 import type { StoreDataRequest } from "./DhtRpc";
+import { FindRpc } from "./DhtRpc";
 import { RouterRpc } from "./DhtRpc";
 import type { RouteMessageAck } from "./DhtRpc";
 import type { RouteMessageWrapper } from "./DhtRpc";
@@ -104,10 +105,6 @@ export interface IRouterRpcClient {
      * @generated from protobuf rpc: forwardMessage(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
     forwardMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
-    /**
-     * @generated from protobuf rpc: findRecursively(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
-     */
-    findRecursively(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
 }
 /**
  * @generated from protobuf service dht.RouterRpc
@@ -132,11 +129,30 @@ export class RouterRpcClient implements IRouterRpcClient, ServiceInfo {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
         return stackIntercept<RouteMessageWrapper, RouteMessageAck>("unary", this._transport, method, opt, input);
     }
+}
+/**
+ * @generated from protobuf service dht.FindRpc
+ */
+export interface IFindRpcClient {
     /**
-     * @generated from protobuf rpc: findRecursively(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
+     * @generated from protobuf rpc: routeFindRequest(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
-    findRecursively(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
-        const method = this.methods[2], opt = this._transport.mergeOptions(options);
+    routeFindRequest(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
+}
+/**
+ * @generated from protobuf service dht.FindRpc
+ */
+export class FindRpcClient implements IFindRpcClient, ServiceInfo {
+    typeName = FindRpc.typeName;
+    methods = FindRpc.methods;
+    options = FindRpc.options;
+    constructor(private readonly _transport: RpcTransport) {
+    }
+    /**
+     * @generated from protobuf rpc: routeFindRequest(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
+     */
+    routeFindRequest(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
+        const method = this.methods[0], opt = this._transport.mergeOptions(options);
         return stackIntercept<RouteMessageWrapper, RouteMessageAck>("unary", this._transport, method, opt, input);
     }
 }
@@ -189,21 +205,21 @@ export class StoreRpcClient implements IStoreRpcClient, ServiceInfo {
     }
 }
 /**
- * @generated from protobuf service dht.RecursiveFindSessionService
+ * @generated from protobuf service dht.FindSessionRpc
  */
-export interface IRecursiveFindSessionServiceClient {
+export interface IFindSessionRpcClient {
     /**
      * @generated from protobuf rpc: sendFindResponse(dht.FindResponse) returns (google.protobuf.Empty);
      */
     sendFindResponse(input: FindResponse, options?: RpcOptions): UnaryCall<FindResponse, Empty>;
 }
 /**
- * @generated from protobuf service dht.RecursiveFindSessionService
+ * @generated from protobuf service dht.FindSessionRpc
  */
-export class RecursiveFindSessionServiceClient implements IRecursiveFindSessionServiceClient, ServiceInfo {
-    typeName = RecursiveFindSessionService.typeName;
-    methods = RecursiveFindSessionService.methods;
-    options = RecursiveFindSessionService.options;
+export class FindSessionRpcClient implements IFindSessionRpcClient, ServiceInfo {
+    typeName = FindSessionRpc.typeName;
+    methods = FindSessionRpc.methods;
+    options = FindSessionRpc.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**

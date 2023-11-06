@@ -2,7 +2,7 @@ import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DataEntry, PeerDescriptor, FindResponse } from '../../proto/packages/dht/protos/DhtRpc'
-import { IRecursiveFindSessionService } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { IFindSessionRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
@@ -26,7 +26,7 @@ export interface RecursiveFindSessionConfig {
     fetchData: boolean
 }
 
-export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IRecursiveFindSessionService {
+export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IFindSessionRpc {
     private readonly serviceId: string
     private readonly transport: ITransport
     private readonly kademliaIdToFind: Uint8Array
@@ -172,6 +172,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
             clearTimeout(this.reportFindCompletedTimeout)
             this.reportFindCompletedTimeout = undefined
         }
+        this.rpcCommunicator.destroy()
         this.emit('findCompleted', [])
     }
 }

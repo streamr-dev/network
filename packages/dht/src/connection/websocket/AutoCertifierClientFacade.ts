@@ -85,7 +85,7 @@ export class AutoCertifierClientFacade {
 
     stop(): void {
         this.autoCertifierClient.stop()
-        this.rpcCommunicator.stop()
+        this.rpcCommunicator.destroy()
     }
 
 }

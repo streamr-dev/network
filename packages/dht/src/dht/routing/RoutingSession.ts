@@ -8,9 +8,10 @@ import { v4 } from 'uuid'
 import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { RouterRpcRemote } from './RouterRpcRemote'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { FindRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Contact } from '../contact/Contact'
+import { FindRpcRemote } from './FindRpcRemote'
 
 const logger = new Logger(module)
 
@@ -18,20 +19,31 @@ const MAX_FAILED_HOPS = 2
 
 class RemoteContact extends Contact {
 
-    private router: RouterRpcRemote
+    private routerRpcRemote: RouterRpcRemote
+    private findRpcRemote: FindRpcRemote
 
     constructor(peer: DhtNodeRpcRemote, localPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
         super(peer.getPeerDescriptor())
-        this.router = new RouterRpcRemote(
+        this.routerRpcRemote = new RouterRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
             toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport()))
         )
+        this.findRpcRemote = new FindRpcRemote(
+            localPeerDescriptor,
+            peer.getPeerDescriptor(),
+            peer.getServiceId(),
+            toProtoRpcClient(new FindRpcClient(rpcCommunicator.getRpcClientTransport()))
+        )
     }
 
-    getRouter(): RouterRpcRemote {
-        return this.router
+    getRouterRpcRemote(): RouterRpcRemote {
+        return this.routerRpcRemote
+    }
+
+    getFindRpcRemote(): FindRpcRemote {
+        return this.findRpcRemote
     }
 }
 
@@ -141,19 +153,18 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (this.stopped) {
             return false
         }
-        const router = contact.getRouter()
         if (this.mode === RoutingMode.FORWARD) {
-            return router.forwardMessage({
+            return contact.getRouterRpcRemote().forwardMessage({
                 ...this.messageToRoute,
                 previousPeer: this.localPeerDescriptor
             })
         } else if (this.mode === RoutingMode.RECURSIVE_FIND) {
-            return router.findRecursively({
+            return contact.getFindRpcRemote().routeFindRequest({
                 ...this.messageToRoute,
                 previousPeer: this.localPeerDescriptor
             })
         } else {
-            return router.routeMessage({
+            return contact.getRouterRpcRemote().routeMessage({
                 ...this.messageToRoute,
                 previousPeer: this.localPeerDescriptor
             })

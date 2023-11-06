@@ -16,7 +16,7 @@ You can also create a stream by defining the address in the provided id. Please 
 
 ```ts
 // Requires MATIC tokens (Polygon blockchain gas token)
-const stream = await client.createStream({
+const stream = await streamr.createStream({
   id: `${address}/foo/bar`,
 });
 
@@ -24,7 +24,7 @@ console.log(stream.id); // e.g. `0x12345.../foo/bar`
 ```
 
 :::note
-The client generally supports the following **three ways of defining a stream id**:
+The Streamr SDK generally supports the following **three ways of defining a stream id**:
 
 ```ts
 // Stream id as a string:

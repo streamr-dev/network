@@ -1207,8 +1207,13 @@ export const DhtNodeRpc = new ServiceType("dht.DhtNodeRpc", [
  */
 export const RouterRpc = new ServiceType("dht.RouterRpc", [
     { name: "routeMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
-    { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
-    { name: "findRecursively", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
+    { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
+]);
+/**
+ * @generated ServiceType for protobuf service dht.FindRpc
+ */
+export const FindRpc = new ServiceType("dht.FindRpc", [
+    { name: "routeFindRequest", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.StoreRpc
@@ -1219,9 +1224,9 @@ export const StoreRpc = new ServiceType("dht.StoreRpc", [
     { name: "deleteData", options: {}, I: DeleteDataRequest, O: DeleteDataResponse }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.RecursiveFindSessionService
+ * @generated ServiceType for protobuf service dht.FindSessionRpc
  */
-export const RecursiveFindSessionService = new ServiceType("dht.RecursiveFindSessionService", [
+export const FindSessionRpc = new ServiceType("dht.FindSessionRpc", [
     { name: "sendFindResponse", options: {}, I: FindResponse, O: Empty }
 ]);
 /**

@@ -3,7 +3,7 @@ sidebar_position: 1
 ---
 
 # Metrics publishing
-By default, the **StreamrClient** publishes metrics to the Streamr Network at regular intervals. The metrics include, for example, information about data volumes passing through the node, and are attributed to your node id. Here's the content of the metrics messages:
+By default, the Streamr SDK is configured to publish metrics to the Streamr Network at regular intervals. The metrics include, for example, information about data volumes passing through the node, and are attributed to your node id. Here's the content of the metrics messages:
 
 ```ts
 {
@@ -24,10 +24,12 @@ By default, the **StreamrClient** publishes metrics to the Streamr Network at re
 }
 ```
 
-If you don't want to publish metrics, you can turn it off in the client configuration:
+If you don't want to publish metrics, you can turn it off in the constructor configuration:
 
 ```ts
-const streamr = new StreamrClient({
+const Streamr = require('streamr-client')
+
+const streamr = new Streamr({
     ...
     metrics: false
 })
@@ -36,7 +38,8 @@ const streamr = new StreamrClient({
 If you want to use custom stream and/or reporting periods, you can specify the details like this:
 
 ```ts
-const streamr = new StreamrClient({
+const Streamr = require('streamr-client')
+const streamr = new Streamr({
     ...
     metrics: {
         periods: [{

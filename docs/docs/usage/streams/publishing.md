@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem';
 # Publishing
 Publishing to a stream means to write or push data/messages to a stream. 
 
-Applications publish and subscribe to streams via Streamr nodes. In other words, nodes are the access points to the Streamr Network. You can either run a light node which is imported as a library and runs locally as part of your application (Streamr JS client) or you can interface your app with a Streamr Broker node. The Broker node runs separately, and your application connects to it remotely using one of the supported protocols, WebSockets, HTTP or MQTT.
+Applications publish and subscribe to streams via Streamr nodes. In other words, nodes are the access points to the Streamr Network. You can either run a light node which is imported as a library and runs locally as part of your application (Streamr SDK) or you can interface your app with a Streamr node. The Streamr node runs separately, and your application connects to it remotely using one of the supported protocols, WebSockets, HTTP or MQTT.
 
 :::caution Important:
 You must grant `PUBLISH` permission **before** the user can publish data to the stream.
@@ -18,15 +18,15 @@ Learn more about [stream permissions](./permissions.md)
 
 ### Publish code snippets
 <Tabs groupId="environment">
-  <TabItem value="js-client" label="JS client">
+  <TabItem value="js-client" label="Streamr SDK">
 
 ```ts
 // Run a Streamr node right inside your JS app
-const StreamrClient = require('streamr-client');
+const Streamr = require('streamr-client');
 
-// Initialize the Client with an Ethereum account
+// Initialize the SDK with an Ethereum account
 // This account will need the publish permission on this stream to publish
-const streamr = new StreamrClient({
+const streamr = new Streamr({
   auth: {
     privateKey: 'ethereum-private-key',
   },
@@ -42,7 +42,7 @@ streamr.publish(
 ```
 
 </TabItem>
-<TabItem value="bn-websocket" label="Broker node WebSocket">
+<TabItem value="bn-websocket" label="Streamr node WebSocket">
 
 ```ts
 // Use your favourite language and Websocket library!
@@ -53,11 +53,11 @@ const streamId = encodeURIComponent(
   streamId
 );
 
-// Connect to the Websocket interface on your Streamr Broker node
+// Connect to the Websocket interface on your Streamr node
 const pub = ws.connect(`ws://127.0.0.1:7170/streams/${streamId}/publish`);
 
-// Use the Broker node to publish JSON messages to the stream.
-// Make sure that your Broker node has permission to publish on this stream
+// Use the Streamr node to publish JSON messages to the stream.
+// Make sure that your Streamr node has permission to publish on this stream
 pub.send({
   hello: 'world',
 });
@@ -65,7 +65,7 @@ pub.send({
 
 </TabItem>
 
-<TabItem value="bn-http" label="Broker node HTTP">
+<TabItem value="bn-http" label="Streamr node HTTP">
 
 ```ts
 // Use your favourite language and HTTP library!
@@ -76,8 +76,8 @@ const streamId = encodeURIComponent(
   streamId
 );
 
-// Use the Broker node to publish JSON messages to the stream.
-// Make sure that your Broker node has permission to publish on this stream
+// Use the Streamr node to publish JSON messages to the stream.
+// Make sure that your Streamr node has permission to publish on this stream
 http.post(`http://127.0.0.1:7171/streams/${streamId}`, {
   hello: 'world',
 });
@@ -85,7 +85,7 @@ http.post(`http://127.0.0.1:7171/streams/${streamId}`, {
 
 </TabItem>
 
-<TabItem value="bn-mqtt" label="Broker node MQTT">
+<TabItem value="bn-mqtt" label="Streamr node MQTT">
 
 ```ts
 // Use your favourite language and MQTT library!
@@ -94,8 +94,8 @@ http.post(`http://127.0.0.1:7171/streams/${streamId}`, {
 // Connect to MQTT interface on your Streamr node
 mqtt.connect('mqtt://127.0.0.1:1883');
 
-// Use the Broker node to publish JSON messages to the stream.
-// Make sure that your Broker node has permission to publish on this stream
+// Use the Streamr node to publish JSON messages to the stream.
+// Make sure that your Streamr node has permission to publish on this stream
 mqtt.publish(
   streamId,
   {

@@ -47,7 +47,7 @@ interface IRouterFunc {
     stop(): void
 }
 
-export interface IRouter extends Omit<IRouterRpc, 'findRecursively'>, IRouterFunc {}
+export type IRouter = IRouterRpc & IRouterFunc
 
 const logger = new Logger(module)
 
@@ -131,6 +131,7 @@ export class Router implements IRouter {
                 } catch (e) {
                     logger.trace('raceEvents timed out for routingSession ' + session.sessionId) 
                 }
+                session.stop()
                 this.removeRoutingSession(session.sessionId) 
             })
             session.start()

@@ -1,13 +1,18 @@
 ---
 sidebar_position: 3
 ---
-
 # Dashboards and APIs
+:::caution
+This information is provided for the Brubeck Network - the predecessor to the Streamr 1.0 network that's being released over Q4 2023 and Q1 2024. 
+
+Streamr 1.0 Network includes Streamr node versions 34 and above. Streamr SDK versions 9 and above. And also any dev-tatum tagged releases.
+:::
+
 Earned rewards will be automatically sent to the node’s address and therefore compounded (up to the 20 000 DATA cap). The estimated reward distribution date is the first business day of each month.
 
 There is an API as well as a community-built [BrubeckScan dashboard](https://brubeckscan.app/) for checking earnings and other mining and staking statistics.
 
-In order to see the rewards a Broker node has accumulated, the following API endpoints are available:
+In order to see the rewards a Streamr node has accumulated, the following API endpoints are available:
 
 ### Accumulated rewards for a node address
 Endpoint: https://brubeck1.streamr.network:3013/datarewards/:nodeAddress
