@@ -77,10 +77,10 @@ describe('Layer0-Layer1', () => {
             stream2Node1.joinDht([epPeerDescriptor]),
             stream2Node2.joinDht([epPeerDescriptor])
         ])
-        expect(getTestInterface(stream1Node1).getNeighborList().getSize()).toEqual(1)
-        expect(getTestInterface(stream1Node2).getNeighborList().getSize()).toEqual(1)
-        expect(getTestInterface(stream2Node1).getNeighborList().getSize()).toEqual(1)
-        expect(getTestInterface(stream2Node2).getNeighborList().getSize()).toEqual(1)
+        expect(getTestInterface(getTestInterface(stream1Node1).getPeerManager()).getNeighborList().getSize()).toEqual(1)
+        expect(getTestInterface(getTestInterface(stream1Node2).getPeerManager()).getNeighborList().getSize()).toEqual(1)
+        expect(getTestInterface(getTestInterface(stream2Node1).getPeerManager()).getNeighborList().getSize()).toEqual(1)
+        expect(getTestInterface(getTestInterface(stream2Node2).getPeerManager()).getNeighborList().getSize()).toEqual(1)
 
         expect(areEqualPeerDescriptors(stream1Node1.getClosestContacts()[0], node1.getLocalPeerDescriptor())).toBe(true)
         expect(areEqualPeerDescriptors(stream1Node2.getClosestContacts()[0], epPeerDescriptor)).toBe(true)

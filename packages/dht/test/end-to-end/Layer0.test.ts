@@ -54,9 +54,9 @@ describe('Layer0', () => {
             node4.joinDht([epPeerDescriptor])
         ])
 
-        expect(getTestInterface(node1).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTestInterface(node2).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTestInterface(node3).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTestInterface(node4).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(getTestInterface(node1).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(getTestInterface(node2).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(getTestInterface(node3).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(getTestInterface(node4).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(2)
     }, 10000)
 })

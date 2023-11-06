@@ -103,7 +103,7 @@ describe('Kademlia correctness', () => {
             }
 
             if (i > 0) {
-                sumKbucketSize += getTestInterface(nodes[i]).getBucketSize()
+                sumKbucketSize += getTestInterface(getTestInterface((nodes[i])).getPeerManager()).getKBucketSize()
                 sumCorrectNeighbors += correctNeighbors
             }
         }

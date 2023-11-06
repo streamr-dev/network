@@ -136,11 +136,12 @@ run().then(() => {
     const streamParts = currentNode.stack.getStreamrNode()!.getStreamParts()
     const foundData = nodes[0].stack.getLayer0Node().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
-    console.log(getTestInterface(currentNode.stack.getLayer0Node() as DhtNode).getKBucketPeers().length)
+    const peerManager = getTestInterface(currentNode.stack.getLayer0Node() as DhtNode).getPeerManager()
+    console.log(getTestInterface(peerManager).getKBucketPeers().length)
     console.log((currentNode.stack.getLayer0Node() as DhtNode).getNumberOfConnections())
     // eslint-disable-next-line max-len
     const streamPartDelivery = currentNode.stack.getStreamrNode().getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: RandomGraphNode }
-    console.log(getTestInterface(streamPartDelivery.layer1Node as DhtNode).getKBucketPeers())
+    console.log(getTestInterface(peerManager).getKBucketPeers())
     console.log(streamPartDelivery.node.getTargetNeighborIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {

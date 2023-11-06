@@ -43,9 +43,9 @@ describe('multiple entry point joining', () => {
                 node2.joinDht(entryPoints),
                 node3.joinDht(entryPoints)
             ])
-            expect(getTestInterface(node1).getBucketSize()).toEqual(2)
-            expect(getTestInterface(node2).getBucketSize()).toEqual(2)
-            expect(getTestInterface(node3).getBucketSize()).toEqual(2)
+            expect(getTestInterface(getTestInterface(node1).getPeerManager()).getKBucketSize()).toEqual(2)
+            expect(getTestInterface(getTestInterface(node2).getPeerManager()).getKBucketSize()).toEqual(2)
+            expect(getTestInterface(getTestInterface(node3).getPeerManager()).getKBucketSize()).toEqual(2)
         })
 
         it('can join even if a node is offline', async () => {
@@ -54,8 +54,8 @@ describe('multiple entry point joining', () => {
                 node1.joinDht(entryPoints),
                 node2.joinDht(entryPoints)
             ])
-            expect(getTestInterface(node1).getBucketSize()).toEqual(1)
-            expect(getTestInterface(node2).getBucketSize()).toEqual(1)
+            expect(getTestInterface(getTestInterface(node1).getPeerManager()).getKBucketSize()).toEqual(1)
+            expect(getTestInterface(getTestInterface(node2).getPeerManager()).getKBucketSize()).toEqual(1)
         }, 20000)
     })
 
@@ -97,9 +97,9 @@ describe('multiple entry point joining', () => {
 
         it('non-entry point nodes can join', async () => {
             await node1.joinDht(entryPoints)
-            expect(getTestInterface(node1).getBucketSize()).toEqual(2)
+            expect(getTestInterface(getTestInterface(node1).getPeerManager()).getKBucketSize()).toEqual(2)
             await node2.joinDht(entryPoints)
-            expect(getTestInterface(node2).getBucketSize()).toEqual(3)
+            expect(getTestInterface(getTestInterface(node2).getPeerManager()).getKBucketSize()).toEqual(3)
         })
 
     })

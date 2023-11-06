@@ -3,7 +3,6 @@
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import KBucket from 'k-bucket'
 import { EventEmitter } from 'eventemitter3'
-import { SortedContactList } from './contact/SortedContactList'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
@@ -44,7 +43,6 @@ import { registerExternalApiRpcMethods } from './registerExternalApiRpcMethods'
 import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
 import { PeerManager } from './PeerManager'
 import { UUID } from '../helpers/UUID'
-import { getTestInterface } from '@streamr/test-utils'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { sample } from 'lodash'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
@@ -128,10 +126,8 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
 }
 
 interface IDhtNodeTest {
-    getNeighborList: () => SortedContactList<DhtNodeRpcRemote>
-    getKBucketPeers: () => PeerDescriptor[]
     getConnections: () => Map<PeerIDKey, DhtNodeRpcRemote>
-    getBucketSize: () => number
+    getPeerManager: () => PeerManager
 }
 
 export class DhtNode extends EventEmitter<Events> implements ITransport {
@@ -159,9 +155,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private testInterface: IDhtNodeTest = {
         getConnections: () => { return this.peerManager!.connections },
-        getNeighborList: () => { return getTestInterface(this.peerManager!)!.getNeighborList() },
-        getKBucketPeers: () => { return getTestInterface(this.peerManager!)!.getKBucketPeers() },
-        getBucketSize: () => { return getTestInterface(this.peerManager!)!.getKBucketSize() }
+        getPeerManager: () => { return this.peerManager! }
     }
     public testInterfaceType?: IDhtNodeTest
 

@@ -66,10 +66,10 @@ describe('Layer1 Scale', () => {
 
     it('bucket sizes', async () => {
         layer0Nodes.forEach((node) => {
-            expect(getTestInterface(node).getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
+            expect(getTestInterface(getTestInterface(node).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
         })
         layer1Nodes.forEach((node) => {
-            expect(getTestInterface(node).getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+            expect(getTestInterface(getTestInterface(node).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
         })
     })
 })

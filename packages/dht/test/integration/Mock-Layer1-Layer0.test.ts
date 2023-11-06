@@ -85,21 +85,29 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         await layer1Node3.joinDht([entryPointDescriptor])
         await layer1Node4.joinDht([entryPointDescriptor])
 
-        logger.info('layer1EntryPoint.getBucketSize() ' + getTestInterface(layer1EntryPoint).getBucketSize())
-        logger.info('layer1Node1.getBucketSize()' + getTestInterface(layer1Node1).getBucketSize())
-        logger.info('layer1Node2.getBucketSize()' + getTestInterface(layer1Node2).getBucketSize())
-        logger.info('layer1Node3.getBucketSize()' + getTestInterface(layer1Node3).getBucketSize())
-        logger.info('layer1Node4.getBucketSize()' + getTestInterface(layer1Node4).getBucketSize())
+        logger.info('layer1EntryPoint.getBucketSize() ' + getTestInterface(getTestInterface(layer1EntryPoint).getPeerManager()).getKBucketSize())
+        logger.info('layer1Node1.getBucketSize()' + getTestInterface(getTestInterface(layer1Node1).getPeerManager()).getKBucketSize())
+        logger.info('layer1Node2.getBucketSize()' + getTestInterface(getTestInterface(layer1Node2).getPeerManager()).getKBucketSize())
+        logger.info('layer1Node3.getBucketSize()' + getTestInterface(getTestInterface(layer1Node3).getPeerManager()).getKBucketSize())
+        logger.info('layer1Node4.getBucketSize()' + getTestInterface(getTestInterface(layer1Node4).getPeerManager()).getKBucketSize())
 
-        expect(getTestInterface(layer1Node1).getBucketSize()).toEqual(getTestInterface(layer0Node1).getBucketSize())
-        expect(getTestInterface(layer1Node2).getBucketSize()).toEqual(getTestInterface(layer0Node2).getBucketSize())
-        expect(getTestInterface(layer1Node3).getBucketSize()).toEqual(getTestInterface(layer0Node3).getBucketSize())
-        expect(getTestInterface(layer1Node4).getBucketSize()).toEqual(getTestInterface(layer0Node4).getBucketSize())
+        // eslint-disable-next-line max-len
+        expect(getTestInterface(getTestInterface(layer1Node1).getPeerManager()).getKBucketSize()).toEqual(getTestInterface(getTestInterface(layer0Node1).getPeerManager()).getKBucketSize())
+        // eslint-disable-next-line max-len
+        expect(getTestInterface(getTestInterface(layer1Node2).getPeerManager()).getKBucketSize()).toEqual(getTestInterface(getTestInterface(layer0Node2).getPeerManager()).getKBucketSize())
+        // eslint-disable-next-line max-len
+        expect(getTestInterface(getTestInterface(layer1Node3).getPeerManager()).getKBucketSize()).toEqual(getTestInterface(getTestInterface(layer0Node3).getPeerManager()).getKBucketSize())
+        // eslint-disable-next-line max-len
+        expect(getTestInterface(getTestInterface(layer1Node4).getPeerManager()).getKBucketSize()).toEqual(getTestInterface(getTestInterface(layer0Node4).getPeerManager()).getKBucketSize())
 
-        expect(getTestInterface(layer1Node1).getKBucketPeers()).toContainValues(getTestInterface(layer0Node1).getKBucketPeers())
-        expect(getTestInterface(layer1Node2).getKBucketPeers()).toContainValues(getTestInterface(layer0Node2).getKBucketPeers())
-        expect(getTestInterface(layer1Node3).getKBucketPeers()).toContainValues(getTestInterface(layer0Node3).getKBucketPeers())
-        expect(getTestInterface(layer1Node4).getKBucketPeers()).toContainValues(getTestInterface(layer0Node4).getKBucketPeers())
+        // eslint-disable-next-line max-len
+        expect(getTestInterface(getTestInterface(layer1Node1).getPeerManager()).getKBucketPeers()).toContainValues(getTestInterface(getTestInterface(layer0Node1).getPeerManager()).getKBucketPeers())
+        // eslint-disable-next-line max-len
+        expect(getTestInterface(getTestInterface(layer1Node2).getPeerManager()).getKBucketPeers()).toContainValues(getTestInterface(getTestInterface(layer0Node2).getPeerManager()).getKBucketPeers())
+        // eslint-disable-next-line max-len
+        expect(getTestInterface(getTestInterface(layer1Node3).getPeerManager()).getKBucketPeers()).toContainValues(getTestInterface(getTestInterface(layer0Node3).getPeerManager()).getKBucketPeers())
+        // eslint-disable-next-line max-len
+        expect(getTestInterface(getTestInterface(layer1Node4).getPeerManager()).getKBucketPeers()).toContainValues(getTestInterface(getTestInterface(layer0Node4).getPeerManager()).getKBucketPeers())
 
     }, 60000)
 })

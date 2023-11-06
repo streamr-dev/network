@@ -71,11 +71,11 @@ describe('Layer0MixedConnectionTypes', () => {
             node5.joinDht([epPeerDescriptor])
         ])
 
-        expect(getTestInterface(node1).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTestInterface(node2).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTestInterface(node3).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTestInterface(node4).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTestInterface(node5).getBucketSize()).toBeGreaterThanOrEqual(1)
+        expect(getTestInterface(getTestInterface(node1).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(getTestInterface(node2).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(getTestInterface(node3).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(getTestInterface(node4).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(getTestInterface(node5).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(1)
 
     }, 15000)
 
@@ -87,10 +87,10 @@ describe('Layer0MixedConnectionTypes', () => {
             node4.joinDht([epPeerDescriptor]),
             node5.joinDht([epPeerDescriptor])
         ])
-        expect(getTestInterface(node1).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTestInterface(node2).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTestInterface(node3).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTestInterface(node4).getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(getTestInterface(node5).getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(getTestInterface(node1).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(getTestInterface(node2).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(getTestInterface(node3).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(getTestInterface(node4).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(getTestInterface(getTestInterface(node5).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(2)
     }, 30000)
 })

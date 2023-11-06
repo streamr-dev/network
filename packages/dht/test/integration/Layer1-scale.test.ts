@@ -76,7 +76,8 @@ describe('Layer1', () => {
             const layer1Node = layer1Nodes[i]
             expect(layer1Node.getNodeId().equals(layer0Node.getNodeId())).toEqual(true)
             expect(layer1Node.getNumberOfConnections()).toEqual(layer0Node.getNumberOfConnections())
-            expect(getTestInterface(layer1Node).getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+            // eslint-disable-next-line max-len
+            expect(getTestInterface(getTestInterface(layer1Node).getPeerManager()).getKBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
             expect(layer1Node.getAllConnectionPeerDescriptors()).toEqual(layer0Node.getAllConnectionPeerDescriptors())
         }
     }, 120000)
