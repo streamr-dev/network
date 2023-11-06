@@ -9,6 +9,7 @@ import { DhtNodeRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { SortedContactList } from '../contact/SortedContactList'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { ServiceID } from '../../types/ServiceID'
 
 const logger = new Logger(module)
 
@@ -21,7 +22,7 @@ interface DiscoverySessionConfig {
     neighborList: SortedContactList<DhtNodeRpcRemote>
     targetId: Uint8Array
     localPeerDescriptor: PeerDescriptor
-    serviceId: string
+    serviceId: ServiceID
     rpcCommunicator: RpcCommunicator
     parallelism: number
     noProgressLimit: number

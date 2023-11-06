@@ -266,11 +266,11 @@ message IceCandidate {
 }
 
 message LockRequest {
-  string serviceId = 1;
+  string lockId = 1;
 }
 
 message UnlockRequest {
-  string serviceId = 1;
+  string lockId = 1;
 }
 
 message LockResponse {

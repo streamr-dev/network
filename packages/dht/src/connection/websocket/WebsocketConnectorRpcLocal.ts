@@ -229,7 +229,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
         return managedConnection
     }
 
-    private onServerSocketHandshakeRequest = (peerDescriptor: PeerDescriptor, serverWebsocket: IConnection) => {
+    private onServerSocketHandshakeRequest(peerDescriptor: PeerDescriptor, serverWebsocket: IConnection) {
 
         const peerId = peerIdFromPeerDescriptor(peerDescriptor)
 

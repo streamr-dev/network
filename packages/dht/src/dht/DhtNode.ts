@@ -287,7 +287,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    private initKBuckets = (selfId: PeerID) => {
+    private initKBuckets(selfId: PeerID) {
         this.bucket = new KBucket<DhtNodeRpcRemote>({
             localNodeId: selfId.value,
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
@@ -414,7 +414,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    private generatePeerDescriptorCallBack = (connectivityResponse: ConnectivityResponse) => {
+    private generatePeerDescriptorCallBack(connectivityResponse: ConnectivityResponse) {
         if (this.config.peerDescriptor) {
             this.localPeerDescriptor = this.config.peerDescriptor
         } else {
