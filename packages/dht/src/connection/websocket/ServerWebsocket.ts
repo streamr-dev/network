@@ -33,29 +33,23 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.connectionId = new ConnectionID()
 
         socket.on('message', (message) => {
-            if (!this.stopped) {
-                logger.trace('ServerWebsocket::onMessage')
-                if (message.type === MessageType.UTF8) {
-                    logger.debug('Received string Message: ' + message.utf8Data)
-                } else if (message.type === MessageType.BINARY) {
-                    logger.trace('Received Binary Message of ' + message.binaryData.length + ' bytes')
-                    this.emit('data',
-                        new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset,
-                            message.binaryData.byteLength / Uint8Array.BYTES_PER_ELEMENT))
-                }
+            logger.trace('ServerWebsocket::onMessage')
+            if (message.type === MessageType.UTF8) {
+                logger.debug('Received string Message: ' + message.utf8Data)
+            } else if (message.type === MessageType.BINARY) {
+                logger.trace('Received Binary Message of ' + message.binaryData.length + ' bytes')
+                this.emit('data',
+                    new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset,
+                        message.binaryData.byteLength / Uint8Array.BYTES_PER_ELEMENT))
             }
         })
         socket.on('close', (reasonCode, description) => {
-            if (!this.stopped) {
-                logger.trace('Peer ' + socket.remoteAddress + ' disconnected.')
-                this.doDisconnect('OTHER', reasonCode, description)
-            }
+            logger.trace('Peer ' + socket.remoteAddress + ' disconnected.')
+            this.doDisconnect('OTHER', reasonCode, description)
         })
 
         socket.on('error', (error) => {
-            if (!this.stopped) {
-                this.emit('error', error.name)
-            }
+            this.emit('error', error.name)
         })
 
         this.socket = socket

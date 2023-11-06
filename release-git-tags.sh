@@ -9,7 +9,7 @@ if [[ "$1" == "" ]]; then
 fi
 
 # Exit early if version is wrong
-if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(tatum|beta)\.[0-9]+)?$ ]]; then
+if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(tatum|beta|pretestnet)\.[0-9]+)?$ ]]; then
     echo "Error: Invalid version"
     exit 1
 fi
