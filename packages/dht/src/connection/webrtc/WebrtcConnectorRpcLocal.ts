@@ -89,7 +89,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate',
             (req: IceCandidate, context: ServerCallContext) => this.iceCandidate(req, context))
         this.rpcCommunicator.registerRpcNotification(WebrtcConnectionRequest, 'requestConnection',
-            (req: WebrtcConnectionRequest, context: ServerCallContext) => this.requestConnection(req, context))
+            (_req: WebrtcConnectionRequest, context: ServerCallContext) => this.requestConnection(context))
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
@@ -164,7 +164,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         connection.start(offering)
 
         if (!offering) {
-            remoteConnector.requestConnection(connection.connectionId.toString())
+            remoteConnector.requestConnection()
         }
 
         return managedConnection
@@ -305,8 +305,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
     }
 
     // IWebRtcConnector implementation
-    // TODO should we read connectionId from WebrtcConnectionRequest (or remove the field)?
-    async requestConnection(_request: WebrtcConnectionRequest, context: ServerCallContext): Promise<Empty> {
+    async requestConnection(context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         this.onConnectionRequest(senderPeerDescriptor)
         return {}
