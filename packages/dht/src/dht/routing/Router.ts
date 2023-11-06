@@ -56,6 +56,10 @@ export class Router implements IRouter {
         this.localPeerDescriptor = config.localPeerDescriptor
         this.connections = config.connections
         this.serviceId = config.serviceId
+        this.registerLocalRpcMethods(config)
+    }
+
+    private registerLocalRpcMethods(config: RouterConfig) {
         const rpcLocal = new RouterRpcLocal({
             doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => this.doRouteMessage(routedMessage, mode),
             addContact: (contact: PeerDescriptor, setActive: boolean) => config.addContact(contact, setActive),
@@ -86,6 +90,7 @@ export class Router implements IRouter {
                 return rpcLocal.forwardMessage(forwardMessage)
             }
         )
+
     }
 
     public async send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void> {
