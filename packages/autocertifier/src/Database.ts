@@ -154,7 +154,7 @@ export interface Subdomain {
     ip: string
     port: string
     token: string
-    acmeChallenge?: string | null
+    acmeChallenge?: string
     createdAt?: Date
     id?: number
 }
