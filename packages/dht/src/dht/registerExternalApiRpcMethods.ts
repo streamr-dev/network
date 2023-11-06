@@ -32,7 +32,7 @@ const externalFindData = async (
     context: ServerCallContext
 ): Promise<ExternalFindDataResponse> => {
     const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-    const result = await thisNode.startRecursiveFind(request.kademliaId, true, senderPeerDescriptor)
+    const result = await thisNode.startFind(request.kademliaId, true, senderPeerDescriptor)
     if (result.dataEntries) {
         return ExternalFindDataResponse.create({ dataEntries: result.dataEntries })
     } else {

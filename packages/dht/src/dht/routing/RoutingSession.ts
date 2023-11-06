@@ -60,7 +60,7 @@ export interface RoutingSessionEvents {
     noCandidatesFound: (sessionId: string) => void
 }
 
-export enum RoutingMode { ROUTE, FORWARD, RECURSIVE_FIND }
+export enum RoutingMode { ROUTE, FORWARD, FIND }
 
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
@@ -158,7 +158,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 ...this.messageToRoute,
                 previousPeer: this.localPeerDescriptor
             })
-        } else if (this.mode === RoutingMode.RECURSIVE_FIND) {
+        } else if (this.mode === RoutingMode.FIND) {
             return contact.getFindRpcRemote().routeFindRequest({
                 ...this.messageToRoute,
                 previousPeer: this.localPeerDescriptor
