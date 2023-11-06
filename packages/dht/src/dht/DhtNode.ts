@@ -3,7 +3,6 @@ import KBucket from 'k-bucket'
 import { EventEmitter } from 'eventemitter3'
 import { SortedContactList } from './contact/SortedContactList'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import {
     ClosestPeersRequest,
@@ -29,8 +28,6 @@ import {
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RandomContactList } from './contact/RandomContactList'
-import { Empty } from '../proto/google/protobuf/empty'
-import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { Any } from '../proto/google/protobuf/any'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
@@ -46,6 +43,7 @@ import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { sample } from 'lodash'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
 import { MarkRequired } from 'ts-essentials'
+import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -232,7 +230,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         this.transport.on('message', (message: Message) => this.handleMessage(message))
 
-        this.bindDefaultServerMethods()
         this.initKBuckets(peerIdFromPeerDescriptor(this.localPeerDescriptor!))
         this.peerDiscovery = new PeerDiscovery({
             rpcCommunicator: this.rpcCommunicator,
@@ -280,6 +277,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.bucket!.closest(id, n)
             }
         })
+        this.bindRpcLocalMethods()
         registerExternalApiRpcMethods(this)
         if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
             && !areEqualPeerDescriptors(this.config.entryPoints[0], this.localPeerDescriptor!)) {
@@ -384,17 +382,23 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.emit('disconnected', peerDescriptor, dicsonnectionType)
     }
 
-    private bindDefaultServerMethods(): void {
+    private bindRpcLocalMethods(): void {
         if (!this.started || this.stopped) {
             return
         }
-        logger.trace(`Binding default DHT RPC methods`)
+        const rpcLocal = new DhtNodeRpcLocal({
+            bucket: this.bucket!,
+            serviceId: this.config.serviceId,
+            peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
+            addNewContact: (contact: PeerDescriptor) => this.addNewContact(contact),
+            removeContact: (contact: PeerDescriptor) => this.removeContact(contact)
+        })
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',
-            (req: ClosestPeersRequest, context) => this.getClosestPeers(req, context))
+            (req: ClosestPeersRequest, context) => rpcLocal.getClosestPeers(req, context))
         this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping',
-            (req: PingRequest, context) => this.ping(req, context))
+            (req: PingRequest, context) => rpcLocal.ping(req, context))
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
-            (req: LeaveNotice, context) => this.leaveNotice(req, context))
+            (req: LeaveNotice, context) => rpcLocal.leaveNotice(req, context))
     }
 
     private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
@@ -421,11 +425,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.config.peerId)
         }
         return this.localPeerDescriptor
-    }
-
-    private getClosestPeerDescriptors(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
-        const closestPeers = this.bucket!.closest(kademliaId, limit)
-        return closestPeers.map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
     }
 
     private onKBucketPing(oldContacts: DhtNodeRpcRemote[], newContact: DhtNodeRpcRemote): void {
@@ -695,36 +694,5 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.connectionManager = undefined
         this.connections.clear()
         this.removeAllListeners()
-    }
-
-    // IDhtNodeRpc implementation
-    private async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
-        this.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
-        const response = {
-            peers: this.getClosestPeerDescriptors(request.kademliaId, this.config.peerDiscoveryQueryBatchSize),
-            requestId: request.requestId
-        }
-        return response
-    }
-
-    // IDhtNodeRpc implementation
-    private async ping(request: PingRequest, context: ServerCallContext): Promise<PingResponse> {
-        logger.trace('received ping request: ' + keyFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!))
-        setImmediate(() => {
-            this.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
-        })
-        const response: PingResponse = {
-            requestId: request.requestId
-        }
-        return response
-    }
-
-    // IDhtNodeRpc implementation
-    private async leaveNotice(request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
-        // TODO check signature??
-        if (request.serviceId === this.config.serviceId) {
-            this.removeContact((context as DhtCallContext).incomingSourceDescriptor!)
-        }
-        return {}
     }
 }
