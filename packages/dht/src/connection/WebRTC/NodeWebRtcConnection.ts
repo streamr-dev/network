@@ -8,7 +8,7 @@ import { IllegalRTCPeerConnectionState } from '../../helpers/errors'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { DisconnectionType } from '../../transport/ITransport'
 import { iceServerAsString } from './iceServerAsString'
-import { IceServer } from './WebRtcConnector'
+import { IceServer } from './WebRtcConnectorRpcLocal'
 import { PortRange } from '../ConnectionManager'
 
 const logger = new Logger(module)

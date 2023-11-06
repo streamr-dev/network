@@ -8,7 +8,7 @@ import { DuplicateDetector } from './DuplicateDetector'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { RemoteDhtNode } from '../RemoteDhtNode'
 import { v4 } from 'uuid'
-import { IRoutingService } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 
 export const createRouteMessageAck = (routedMessage: RouteMessageWrapper, error?: string): RouteMessageAck => {
     const ack: RouteMessageAck = {
@@ -47,7 +47,7 @@ interface IRouterFunc {
     stop(): void
 }
 
-export interface IRouter extends Omit<IRoutingService, 'findRecursively'>, IRouterFunc {}
+export interface IRouter extends Omit<IRouterRpc, 'findRecursively'>, IRouterFunc {}
 
 const logger = new Logger(module)
 
@@ -192,7 +192,7 @@ export class Router implements IRouter {
         this.duplicateRequestDetector.clear()
     }
     
-    // IRoutingService method
+    // IRouterRpc method
     async routeMessage(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
@@ -236,7 +236,7 @@ export class Router implements IRouter {
         }
     }
 
-    // IRoutingService method
+    // IRouterRpc method
     async forwardMessage(forwardMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.stopped) {
             return createRouteMessageAck(forwardMessage, 'forwardMessage() service is not running')

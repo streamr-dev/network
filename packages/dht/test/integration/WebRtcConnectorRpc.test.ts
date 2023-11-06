@@ -1,5 +1,5 @@
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { WebRtcConnectorServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
+import { WebRtcConnectorRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import {
     IceCandidate,
     NodeType,
@@ -10,14 +10,14 @@ import {
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { generateId } from '../utils/utils'
-import { IWebRtcConnectorService } from '../../src/proto/packages/dht/protos/DhtRpc.server'
+import { IWebRtcConnectorRpc } from '../../src/proto/packages/dht/protos/DhtRpc.server'
 import { waitForCondition } from '@streamr/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 describe('WebRTC rpc messages', () => {
     let rpcCommunicator1: RpcCommunicator
     let rpcCommunicator2: RpcCommunicator
-    let client: ProtoRpcClient<WebRtcConnectorServiceClient>
+    let client: ProtoRpcClient<WebRtcConnectorRpcClient>
 
     let requestConnectionCounter: number
     let rtcOfferCounter: number
@@ -36,7 +36,7 @@ describe('WebRTC rpc messages', () => {
         iceCandidateCounter = 0
 
         rpcCommunicator1 = new RpcCommunicator()
-        const serverFunctions: IWebRtcConnectorService = {
+        const serverFunctions: IWebRtcConnectorRpc = {
 
             requestConnection: async (): Promise<Empty> => {
                 requestConnectionCounter += 1
@@ -77,7 +77,7 @@ describe('WebRTC rpc messages', () => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 
-        client = toProtoRpcClient(new WebRtcConnectorServiceClient(rpcCommunicator1.getRpcClientTransport()))
+        client = toProtoRpcClient(new WebRtcConnectorRpcClient(rpcCommunicator1.getRpcClientTransport()))
     })
 
     afterEach(async () => {

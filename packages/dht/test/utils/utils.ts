@@ -19,9 +19,9 @@ import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import {
     IDhtRpcService,
-    IRoutingService,
-    IStoreService,
-    IWebSocketConnectorService
+    IRouterRpc,
+    IStoreRpc,
+    IWebSocketConnectorRpc
 } from '../../src/proto/packages/dht/protos/DhtRpc.server'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
@@ -156,11 +156,11 @@ export const MockDhtRpc: IDhtRpcWithError = {
     }
 }
 
-interface IRouterServiceWithError extends IRoutingService {
+interface IRouterRpcWithError extends IRouterRpc {
     throwRouteMessageError: (request: RouteMessageWrapper) => Promise<RouteMessageAck>
 }
 
-export const MockRoutingService: IRouterServiceWithError = {
+export const mockRouterRpc: IRouterRpcWithError = {
     async routeMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,
@@ -187,12 +187,12 @@ export const MockRoutingService: IRouterServiceWithError = {
     }
 }
 
-interface IStoreServiceWithError extends IStoreService {
+interface IStoreRpcWithError extends IStoreRpc {
     throwStoreDataError: (request: StoreDataRequest) => Promise<StoreDataResponse>
     storeDataErrorString: (request: StoreDataRequest) => Promise<StoreDataResponse>
 }
 
-export const MockStoreService: IStoreServiceWithError = {
+export const mockStoreRpc: IStoreRpcWithError = {
     async storeData(): Promise<StoreDataResponse> {
         return {
             error: ''
@@ -214,7 +214,7 @@ export const MockStoreService: IStoreServiceWithError = {
     }
 }
 
-export const MockWebSocketConnectorRpc: IWebSocketConnectorService = {
+export const mockWebSocketConnectorRpc: IWebSocketConnectorRpc = {
     async requestConnection(): Promise<WebSocketConnectionResponse> {
         const responseConnection: WebSocketConnectionResponse = {
             accepted: true

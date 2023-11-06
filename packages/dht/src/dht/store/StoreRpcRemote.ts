@@ -1,5 +1,5 @@
 import { Remote } from '../contact/Remote'
-import { IStoreServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { IStoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { 
     DeleteDataRequest,
     DeleteDataResponse,
@@ -10,7 +10,7 @@ import {
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
-export class RemoteStore extends Remote<IStoreServiceClient> {
+export class StoreRpcRemote extends Remote<IStoreRpcClient> {
 
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         const options = this.formDhtRpcOptions({

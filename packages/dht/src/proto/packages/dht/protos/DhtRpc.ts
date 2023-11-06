@@ -1208,17 +1208,17 @@ export const DhtRpcService = new ServiceType("dht.DhtRpcService", [
     { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.RoutingService
+ * @generated ServiceType for protobuf service dht.RouterRpc
  */
-export const RoutingService = new ServiceType("dht.RoutingService", [
+export const RouterRpc = new ServiceType("dht.RouterRpc", [
     { name: "routeMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
     { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
     { name: "findRecursively", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.StoreService
+ * @generated ServiceType for protobuf service dht.StoreRpc
  */
-export const StoreService = new ServiceType("dht.StoreService", [
+export const StoreRpc = new ServiceType("dht.StoreRpc", [
     { name: "storeData", options: {}, I: StoreDataRequest, O: StoreDataResponse },
     { name: "migrateData", options: {}, I: MigrateDataRequest, O: MigrateDataResponse },
     { name: "deleteData", options: {}, I: DeleteDataRequest, O: DeleteDataResponse }
@@ -1230,32 +1230,32 @@ export const RecursiveFindSessionService = new ServiceType("dht.RecursiveFindSes
     { name: "sendFindResponse", options: {}, I: FindResponse, O: Empty }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.WebSocketConnectorService
+ * @generated ServiceType for protobuf service dht.WebSocketConnectorRpc
  */
-export const WebSocketConnectorService = new ServiceType("dht.WebSocketConnectorService", [
+export const WebSocketConnectorRpc = new ServiceType("dht.WebSocketConnectorRpc", [
     { name: "requestConnection", options: {}, I: WebSocketConnectionRequest, O: WebSocketConnectionResponse }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.WebRtcConnectorService
+ * @generated ServiceType for protobuf service dht.WebRtcConnectorRpc
  */
-export const WebRtcConnectorService = new ServiceType("dht.WebRtcConnectorService", [
+export const WebRtcConnectorRpc = new ServiceType("dht.WebRtcConnectorRpc", [
     { name: "requestConnection", options: {}, I: WebRtcConnectionRequest, O: Empty },
     { name: "rtcOffer", options: {}, I: RtcOffer, O: Empty },
     { name: "rtcAnswer", options: {}, I: RtcAnswer, O: Empty },
     { name: "iceCandidate", options: {}, I: IceCandidate, O: Empty }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.ConnectionLocker
+ * @generated ServiceType for protobuf service dht.ConnectionLockRpc
  */
-export const ConnectionLocker = new ServiceType("dht.ConnectionLocker", [
+export const ConnectionLockRpc = new ServiceType("dht.ConnectionLockRpc", [
     { name: "lockRequest", options: {}, I: LockRequest, O: LockResponse },
     { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty },
     { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: DisconnectNoticeResponse }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.ExternalApiService
+ * @generated ServiceType for protobuf service dht.ExternalApiRpc
  */
-export const ExternalApiService = new ServiceType("dht.ExternalApiService", [
+export const ExternalApiRpc = new ServiceType("dht.ExternalApiRpc", [
     { name: "findData", options: {}, I: FindDataRequest, O: FindDataResponse },
     { name: "externalStoreData", options: {}, I: ExternalStoreDataRequest, O: ExternalStoreDataResponse }
 ]);
