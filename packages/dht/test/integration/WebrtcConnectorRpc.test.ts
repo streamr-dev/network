@@ -87,7 +87,6 @@ describe('WebRTC rpc messages', () => {
 
     it('send connectionRequest', async () => {
         client.requestConnection({
-            connectionId: 'connectionRequest'
         },
         { targetDescriptor, notification: true }
         )
