@@ -67,20 +67,14 @@ export class RestServer {
     private ownFqdn: string
     private ownIpAddress: string
     private port: number
-    private caCertPath: string
-    private caKeyPath: string
     private certPath: string
     private keyPath: string
 
-    constructor(ownFqdn: string, ownIpAddress: string, port: number, caCertPath: string,
-        caKeyPath: string, certPath: string, keyPath: string,
-        engine: RestInterface) {
+    constructor(ownFqdn: string, ownIpAddress: string, port: number, certPath: string, keyPath: string, engine: RestInterface) {
 
         this.ownFqdn = ownFqdn
         this.ownIpAddress = ownIpAddress
         this.port = port
-        this.caCertPath = filePathToNodeFormat(caCertPath)
-        this.caKeyPath = filePathToNodeFormat(caKeyPath)
         this.certPath = filePathToNodeFormat(certPath)
         this.keyPath = filePathToNodeFormat(keyPath)
         this.engine = engine
@@ -238,23 +232,14 @@ export class RestServer {
 
     // TODO: use async fs methods? Add helper function to avoid code duplication
     private createSelfSignedCertsIfTheyDontExist(): void {
-        if (!fs.existsSync(this.caCertPath) || !fs.existsSync(this.caKeyPath) ||
-            !fs.existsSync(this.certPath) || !fs.existsSync(this.keyPath)) {
+        if (!fs.existsSync(this.certPath) || !fs.existsSync(this.keyPath)) {
             const certs = createSelfSignedCertificate(this.ownFqdn, 1200)
-            if (!fs.existsSync(path.dirname(this.caCertPath))) {
-                fs.mkdirSync(path.dirname(this.caCertPath), { recursive: true })
-            }
-            if (!fs.existsSync(path.dirname(this.caKeyPath))) {
-                fs.mkdirSync(path.dirname(this.caKeyPath), { recursive: true })
-            }
             if (!fs.existsSync(path.dirname(this.certPath))) {
                 fs.mkdirSync(path.dirname(this.certPath), { recursive: true })
             }
             if (!fs.existsSync(path.dirname(this.keyPath))) {
                 fs.mkdirSync(path.dirname(this.keyPath), { recursive: true })
             }
-            fs.writeFileSync(this.caCertPath, certs.caCert, { flag: 'w' })
-            fs.writeFileSync(this.caKeyPath, certs.caKey, { flag: 'w' })
             fs.writeFileSync(this.certPath, certs.serverCert, { flag: 'w' })
             fs.writeFileSync(this.keyPath, certs.serverKey, { flag: 'w' })
         }

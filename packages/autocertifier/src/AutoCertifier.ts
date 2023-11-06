@@ -122,8 +122,6 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
         const acmeDirectoryUrl = validateEnvironmentVariable('AUTOCERTIFIER_ACME_DIRECTORY_URL')
         const hmacKid = validateEnvironmentVariable('AUTOCERTIFIER_HMAC_KID')
         const hmacKey = validateEnvironmentVariable('AUTOCERTIFIER_HMAC_KEY')
-        const restServerCaCertPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_CA_CERT_PATH')
-        const restServerCaKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_CA_KEY_PATH')
         const restServerCertPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_CERT_PATH')
         const restServerKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_KEY_PATH')
 
@@ -154,8 +152,6 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
             ownHostName + '.' + this.domainName,
             ownIpAddress,
             restServerPort,
-            restServerCaCertPath,
-            restServerCaKeyPath,
             restServerCertPath,
             restServerKeyPath,
             this

@@ -30,8 +30,6 @@ describe('RestServer', () => {
             'localhost',
             'localhost',
             9877,
-            dir + '/restServerCaCert.pem',
-            dir + '/restServerCaKey.pem',
             dir + '/restServerCert.pem',
             dir + '/restServerKey.pem', 
             {

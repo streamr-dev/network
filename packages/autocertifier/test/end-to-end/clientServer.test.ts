@@ -73,8 +73,6 @@ describe('clientServer', () => {
             'localhost',
             '127.0.0.1',
             restServerPort,
-            dir + '/restServerCaCert.pem',
-            dir + '/restServerCaKey.pem',
             dir + '/restServerCert.pem',
             dir + '/restServerKey.pem',
             {
