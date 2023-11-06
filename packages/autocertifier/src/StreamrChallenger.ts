@@ -8,7 +8,7 @@ const logger = new Logger(module)
 
 // This is a dummy peer descriptor that is used to connect to the streamr websocket
 // To ensure that the autocertified subdomain is used for the Streamr Network
-const localPeerDescriptor: PeerDescriptor = {
+const LOCAL_PEER_DESCRIPTOR: PeerDescriptor = {
     kademliaId: PeerID.fromString('AutoCertifierServer').value,
     type: NodeType.NODEJS,
 }
@@ -33,7 +33,7 @@ export const runStreamrChallenge = (
         const address = 'wss://' + remotePeerDescriptor.websocket!.host + ':' +
         remotePeerDescriptor.websocket!.port
 
-        const managedConnection = new ManagedConnection(localPeerDescriptor!,
+        const managedConnection = new ManagedConnection(LOCAL_PEER_DESCRIPTOR,
             ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
         managedConnection.setPeerDescriptor(remotePeerDescriptor!)
 
@@ -47,7 +47,7 @@ export const runStreamrChallenge = (
         managedConnection.on('handshakeCompleted', () => {
             socket.off('disconnected', onDisconnected)
             const communicator = new RoutingRpcCommunicator(AUTOCERTIFIER_SERVICE_ID,
-                (msg: Message, _doNotConnect?: boolean): Promise<void> => {
+                (msg: Message): Promise<void> => {
                     logger.info('sending message to peer')
                     return managedConnection.send(Message.toBinary(msg), true)
                 })
