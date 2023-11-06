@@ -24,8 +24,6 @@ export class RemoteWebrtcConnector {
 
     requestConnection(sourceDescriptor: PeerDescriptor, connectionId: string): void {
         const request: WebRtcConnectionRequest = {
-            target: this.peerDescriptor,
-            requester: sourceDescriptor,
             connectionId
         }
         const options: DhtRpcOptions = {
@@ -41,8 +39,6 @@ export class RemoteWebrtcConnector {
 
     sendRtcOffer(sourceDescriptor: PeerDescriptor, description: string, connectionId: string): void {
         const request: RtcOffer = {
-            target: this.peerDescriptor,
-            requester: sourceDescriptor,
             connectionId,
             description
         }
@@ -58,8 +54,6 @@ export class RemoteWebrtcConnector {
 
     sendRtcAnswer(sourceDescriptor: PeerDescriptor, description: string, connectionId: string): void {
         const request: RtcAnswer = {
-            target: this.peerDescriptor,
-            requester: sourceDescriptor,
             connectionId,
             description
         }
@@ -75,8 +69,6 @@ export class RemoteWebrtcConnector {
 
     sendIceCandidate(sourceDescriptor: PeerDescriptor, candidate: string, mid: string, connectionId: string): void {
         const request: IceCandidate = {
-            target: this.peerDescriptor,
-            requester: sourceDescriptor,
             connectionId,
             mid,
             candidate

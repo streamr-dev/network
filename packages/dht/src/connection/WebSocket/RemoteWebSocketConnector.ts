@@ -24,8 +24,6 @@ export class RemoteWebSocketConnector {
     async requestConnection(sourceDescriptor: PeerDescriptor, ip: string, port: number): Promise<boolean> {
         logger.trace(`Requesting WebSocket connection from ${keyFromPeerDescriptor(this.peerDescriptor)}`)
         const request: WebSocketConnectionRequest = {
-            target: this.peerDescriptor,
-            requester: sourceDescriptor,
             ip,
             port
         }
