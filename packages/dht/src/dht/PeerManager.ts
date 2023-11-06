@@ -121,7 +121,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
         if (this.stopped) {
             return
         }
-        if (!this.stopped && !contact.getPeerId().equals(this.config.ownPeerId!)) {
+        if (!contact.getPeerId().equals(this.config.ownPeerId!)) {
             // Important to lock here, before the ping result is known
             this.config.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
             if (this.connections.has(contact.getPeerId().toKey())) {
