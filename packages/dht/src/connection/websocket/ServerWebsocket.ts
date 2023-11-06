@@ -47,7 +47,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         })
         socket.on('close', (reasonCode, description) => {
             if (!this.stopped) {
-                logger.trace(' Peer ' + socket.remoteAddress + ' disconnected.')
+                logger.trace('Peer ' + socket.remoteAddress + ' disconnected.')
                 this.doDisconnect('OTHER', reasonCode, description)
             }
         })
