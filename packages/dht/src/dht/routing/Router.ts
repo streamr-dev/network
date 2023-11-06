@@ -9,6 +9,7 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { ServiceID } from '../../types/ServiceID'
 
 export const createRouteMessageAck = (routedMessage: RouteMessageWrapper, error?: string): RouteMessageAck => {
     const ack: RouteMessageAck = {
@@ -28,7 +29,7 @@ export interface RouterConfig {
     localPeerDescriptor: PeerDescriptor
     connections: Map<PeerIDKey, DhtNodeRpcRemote>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
-    serviceId: string
+    serviceId: ServiceID
     connectionManager?: ConnectionManager
 }
 
@@ -56,7 +57,7 @@ export class Router implements IRouter {
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
     private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
-    private readonly serviceId: string
+    private readonly serviceId: ServiceID
     private readonly connectionManager?: ConnectionManager
     private readonly forwardingTable: Map<string, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
