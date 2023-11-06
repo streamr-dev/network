@@ -403,7 +403,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (connection.isHandshakeCompleted()) {
             this.onConnected(connection)
         } else {
-            connection.once('handshakeCompleted', ()=> {
+            connection.once('handshakeCompleted', () => {
                 this.onConnected(connection)
             })
         }
