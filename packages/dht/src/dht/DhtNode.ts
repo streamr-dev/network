@@ -54,10 +54,6 @@ export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     joinCompleted: () => void
-    newKbucketContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    kbucketContactRemoved: (peerDescriptor: PeerDescriptor) => void
-    newOpenInternetContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    openInternetContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
 }
@@ -127,7 +123,6 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
     const ret: PeerDescriptor = { kademliaId, type: nodeType }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
-        ret.openInternet = true
     }
     return ret
 }
@@ -331,12 +326,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         })
         this.peerManager.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('newContact', peerDescriptor, activeContacts)
-        )
-        this.peerManager.on('openInternetContactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('openInternetContactRemoved', peerDescriptor, activeContacts)
-        )
-        this.peerManager.on('newOpenInternetContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newOpenInternetContact', peerDescriptor, activeContacts)
         )
         this.peerManager.on('randomContactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('randomContactRemoved', peerDescriptor, activeContacts)
@@ -610,13 +599,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private async leaveNotice(request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
         // TODO check signature??
         if (request.serviceId === this.config.serviceId) {
-            this.peerManager!.handlePeerLeaving((context as DhtCallContext).incomingSourceDescriptor!, false)
+            this.peerManager!.handlePeerLeaving((context as DhtCallContext).incomingSourceDescriptor!)
         }
         return {}
     }
 
-    public removeContact(peerDescriptor: PeerDescriptor, removeFromOpenInternetPeers?: boolean): void {
-        this.peerManager!.handlePeerLeaving(peerDescriptor, removeFromOpenInternetPeers)
+    public removeContact(peerDescriptor: PeerDescriptor): void {
+        this.peerManager!.handlePeerLeaving(peerDescriptor)
     }
 }
 

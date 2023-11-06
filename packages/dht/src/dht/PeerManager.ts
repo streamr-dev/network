@@ -28,10 +28,6 @@ export interface PeerManagerConfig {
 export interface PeerManagerEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    newKbucketContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    kbucketContactRemoved: (peerDescriptor: PeerDescriptor) => void
-    newOpenInternetContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    openInternetContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     kBucketEmpty: () => void
@@ -47,7 +43,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
     private _jee: number = 0
     private bucket?: KBucket<RemoteDhtNode>
     private neighborList?: SortedContactList<RemoteDhtNode>
-    private openInternetPeers?: SortedContactList<RemoteDhtNode>
     private randomPeers?: RandomContactList<RemoteDhtNode>
     public readonly connections: Map<PeerIDKey, RemoteDhtNode> = new Map()
     private readonly config: PeerManagerConfig
@@ -90,14 +85,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
         this.neighborList.on('newContact', (newContact: RemoteDhtNode, closestContacts: RemoteDhtNode[]) =>
             this.emit('newContact', newContact.getPeerDescriptor(), closestContacts.map((peer) => peer.getPeerDescriptor()))
         )
-        this.openInternetPeers = new SortedContactList(selfId, this.config.maxNeighborListSize / 2)
-        this.openInternetPeers.on('contactRemoved', (removedContact: RemoteDhtNode, closestContacts: RemoteDhtNode[]) =>
-            this.emit('openInternetContactRemoved', removedContact.getPeerDescriptor(), closestContacts.map((peer) => peer.getPeerDescriptor()))
-        )
-        this.openInternetPeers.on('newContact', (newContact: RemoteDhtNode, closestContacts: RemoteDhtNode[]) =>
-            this.emit('newOpenInternetContact', newContact.getPeerDescriptor(), closestContacts.map((peer) => peer.getPeerDescriptor()))
-        )
-        
         this.randomPeers = new RandomContactList(selfId, this.config.maxNeighborListSize)
         this.randomPeers.on('contactRemoved', (removedContact: RemoteDhtNode, closestContacts: RemoteDhtNode[]) =>
             this.emit('randomContactRemoved', removedContact.getPeerDescriptor(), closestContacts.map((peer) => peer.getPeerDescriptor()))
@@ -125,10 +112,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
         }
         this.config.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
         logger.trace(`Removed contact ${contact.getPeerId().value.toString()}`)
-        this.emit(
-            'kbucketContactRemoved',
-            contact.getPeerDescriptor()
-        )
         if (this.bucket!.count() === 0) {
             this.emit('kBucketEmpty')
         }
@@ -143,21 +126,10 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
             this.config.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
             if (this.connections.has(contact.getPeerId().toKey())) {
                 logger.trace(`Added new contact ${contact.getPeerId().value.toString()}`)
-                this.emit(
-                    'newKbucketContact',
-                    contact.getPeerDescriptor(),
-                    this.neighborList!.getClosestContacts(this.config.peerDiscoveryQueryBatchSize).map((peer) => peer.getPeerDescriptor())
-                )
-            } else {    // open connection by pinging
-               
+            } else {    // open connection by pinging       
                 contact.ping().then((result) => {
                     if (result) {
                         logger.trace(`Added new contact ${contact.getPeerId().value.toString()}`)
-                        this.emit(
-                            'newKbucketContact',
-                            contact.getPeerDescriptor(),
-                            this.neighborList!.getClosestContacts(this.config.peerDiscoveryQueryBatchSize).map((peer) => peer.getPeerDescriptor())
-                        )
                     } else {
                         this.config.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
                         this.removeContact(contact.getPeerDescriptor())
@@ -214,16 +186,16 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
             this.bucket!.remove(peerDescriptor.kademliaId)
 
             if (disconnectionType === 'OUTGOING_GRACEFUL_LEAVE' || disconnectionType === 'INCOMING_GRACEFUL_LEAVE') {
-                this.removeContact(peerDescriptor, true)
+                this.removeContact(peerDescriptor)
             } 
         }
     }
 
-    public handlePeerLeaving(peerDescriptor: PeerDescriptor, removeFromOpenInternetPeers = false): void {
-        this.removeContact(peerDescriptor, removeFromOpenInternetPeers)
+    public handlePeerLeaving(peerDescriptor: PeerDescriptor): void {
+        this.removeContact(peerDescriptor)
     }
 
-    private removeContact(contact: PeerDescriptor, removeFromOpenInternetPeers = false): void {
+    private removeContact(contact: PeerDescriptor): void {
         if (this.stopped) {
             return
         }
@@ -232,9 +204,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
         this.bucket!.remove(peerId.value)
         this.neighborList!.removeContact(peerId)
         this.randomPeers!.removeContact(peerId)
-        if (removeFromOpenInternetPeers) {
-            this.openInternetPeers!.removeContact(peerId)
-        }
     }
 
     public stop(): void {
@@ -244,7 +213,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
         this.bucket!.removeAllListeners()
         this.neighborList!.stop()
         this.randomPeers!.stop()
-        this.openInternetPeers!.stop()
         this.connections.clear()
     }
 
@@ -277,13 +245,11 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
 
     public handlePeerActive(peer: RemoteDhtNode): void {
         this.neighborList!.setActive(peer.getPeerId())
-        this.openInternetPeers!.setActive(peer.getPeerId())
     }
 
     public handlePeerUnresponsive(peer: RemoteDhtNode): void { 
         this.bucket!.remove(peer.getPeerId().value)
         this.neighborList!.removeContact(peer.getPeerId())
-        this.openInternetPeers!.removeContact(peer.getPeerId())
     }
 
     public handleNewPeers(peerDescriptors: PeerDescriptor[], setActive?: boolean): void { 
@@ -297,16 +263,12 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
                 const RemoteDhtNode = this.config.createRemoteDhtNode(contact)
                 if (!this.bucket!.get(contact.kademliaId) && !this.neighborList!.getContact(peerIdFromPeerDescriptor(contact))) {
                     this.neighborList!.addContact(RemoteDhtNode)
-                    if (contact.openInternet) {
-                        this.openInternetPeers!.addContact(RemoteDhtNode)
-                    }
                     this.bucket!.add(RemoteDhtNode)
                 } else {
                     this.randomPeers!.addContact(RemoteDhtNode)
                 }
                 if (setActive) {
                     this.neighborList!.setActive(peerId)
-                    this.openInternetPeers!.setActive(peerId)
                 }
             }
         })

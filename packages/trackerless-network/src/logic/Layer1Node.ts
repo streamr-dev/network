@@ -11,7 +11,7 @@ export interface Layer1Node {
     on<T extends keyof Layer1NodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
     once<T extends keyof Layer1NodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
     off<T extends keyof Layer1NodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
-    removeContact: (peerDescriptor: PeerDescriptor, removeFromOpenInternetPeers?: boolean) => void
+    removeContact: (peerDescriptor: PeerDescriptor) => void
     getClosestContacts: (maxCount?: number) => PeerDescriptor[]
     getNumberOfContacts(): number
     joinDht: (entryPoints: PeerDescriptor[], doRandomJoin?: boolean, retry?: boolean) => Promise<void>
