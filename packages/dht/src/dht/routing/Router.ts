@@ -104,14 +104,14 @@ export class Router implements IRouter {
         }
     }
 
-    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE, excludedPeer?: PeerDescriptor): RouteMessageAck {
+    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RoutingErrors.STOPPED)
         }
         logger.trace(`Routing message ${routedMessage.requestId} from ${keyFromPeerDescriptor(routedMessage.sourcePeer!)} `
             + `to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}`)
         routedMessage.routingPath.push(this.localPeerDescriptor)
-        const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
+        const session = this.createRoutingSession(routedMessage, mode)
         this.addRoutingSession(session)
         try {
             // eslint-disable-next-line promise/catch-or-return
@@ -146,11 +146,7 @@ export class Router implements IRouter {
         return createRouteMessageAck(routedMessage)
     }
 
-    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RoutingSession {
-        const excludedPeers = routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
-        if (excludedPeer) {
-            excludedPeers.push(peerIdFromPeerDescriptor(excludedPeer))
-        }
+    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode): RoutingSession {
         logger.trace(' routing session created with connections: ' + this.connections.size )
         return new RoutingSession(
             this.rpcCommunicator,
@@ -160,7 +156,7 @@ export class Router implements IRouter {
             areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
             undefined,
-            excludedPeers
+            routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
         )
     }
 
