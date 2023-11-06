@@ -313,22 +313,19 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
 
     async rtcOffer(request: RtcOffer, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const receiverPeerDescriptor = (context as DhtCallContext).incomingTargetDescriptor!
-        this.onRtcOffer(senderPeerDescriptor, receiverPeerDescriptor, request.description, request.connectionId)
+        this.onRtcOffer(senderPeerDescriptor, this.localPeerDescriptor!, request.description, request.connectionId)
         return {}
     }
 
     async rtcAnswer(request: RtcAnswer, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const receiverPeerDescriptor = (context as DhtCallContext).incomingTargetDescriptor!
-        this.onRtcAnswer(senderPeerDescriptor, receiverPeerDescriptor, request.description, request.connectionId)
+        this.onRtcAnswer(senderPeerDescriptor, this.localPeerDescriptor!, request.description, request.connectionId)
         return {}
     }
 
     async iceCandidate(request: IceCandidate, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const receiverPeerDescriptor = (context as DhtCallContext).incomingTargetDescriptor!
-        this.onRemoteCandidate(senderPeerDescriptor, receiverPeerDescriptor, request.candidate, request.mid, request.connectionId)
+        this.onRemoteCandidate(senderPeerDescriptor, this.localPeerDescriptor!, request.candidate, request.mid, request.connectionId)
         return {}
     }
 }
