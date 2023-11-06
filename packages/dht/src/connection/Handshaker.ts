@@ -25,10 +25,10 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
         super()
         this.localPeerDescriptor = localPeerDescriptor
         this.connection = connection
-        this.connection.on('data', this.onData)
+        this.connection.on('data', (data: Uint8Array) => this.onData(data))
     }
 
-    private onData = (data: Uint8Array) => {
+    private onData(data: Uint8Array) {
         try {
             const message = Message.fromBinary(data)
             if (message.body.oneofKind === 'handshakeRequest') {
