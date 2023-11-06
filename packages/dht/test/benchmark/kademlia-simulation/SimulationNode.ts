@@ -94,7 +94,7 @@ export class SimulationNode {
         while (true) {
             let oldClosestContactId = this.neighborList.getClosestContactId()
             let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
-            if (uncontacted.length < 1) {
+            if (uncontacted.length === 0) {
                 return
             }
 
@@ -102,7 +102,7 @@ export class SimulationNode {
 
             if (oldClosestContactId.equals(this.neighborList.getClosestContactId())) {
                 uncontacted = this.neighborList.getUncontactedContacts(this.K)
-                if (uncontacted.length < 1) {
+                if (uncontacted.length === 0) {
                     return
                 }
 
@@ -115,7 +115,7 @@ export class SimulationNode {
                         return
                     }
                     uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
-                    if (uncontacted.length < 1) {
+                    if (uncontacted.length === 0) {
                         return
                     }
                 }

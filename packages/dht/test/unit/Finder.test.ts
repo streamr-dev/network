@@ -11,7 +11,7 @@ import {
     createWrappedClosestPeersRequest,
     createFindRequest
 } from '../utils/utils'
-import { RecursiveFinder } from '../../src/dht/find/RecursiveFinder'
+import { Finder } from '../../src/dht/find/Finder'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import { v4 } from 'uuid'
@@ -19,9 +19,9 @@ import { MockRouter } from '../utils/mock/Router'
 import { MockTransport } from '../utils/mock/Transport'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 
-describe('RecursiveFinder', () => {
+describe('Finder', () => {
 
-    let recursiveFinder: RecursiveFinder
+    let finder: Finder
     let connections: Map<PeerIDKey, DhtNodeRpcRemote>
 
     const peerDescriptor1: PeerDescriptor = {
@@ -55,11 +55,11 @@ describe('RecursiveFinder', () => {
 
     beforeEach(() => {
         connections = new Map()
-        recursiveFinder = new RecursiveFinder({
+        finder = new Finder({
             localPeerDescriptor: peerDescriptor1,
             router: new MockRouter(),
             connections,
-            serviceId: 'RecursiveFinder',
+            serviceId: 'Finder',
             localDataStore: new LocalDataStore(),
             sessionTransport: new MockTransport(),
             addContact: (_contact, _setActive) => {},
@@ -69,20 +69,20 @@ describe('RecursiveFinder', () => {
     })
 
     afterEach(() => {
-        recursiveFinder.stop()
+        finder.stop()
     })
 
-    it('RecursiveFinder server', async () => {
-        const res = await recursiveFinder.routeFindRequest(routedMessage)
+    it('Finder server', async () => {
+        const res = await finder.routeFindRequest(routedMessage)
         expect(res.error).toEqual('')
     })
 
-    it('startRecursiveFind with mode Node returns self if no peers', async () => {
-        const res = await recursiveFinder.startRecursiveFind(PeerID.fromString('find').value)
+    it('startFind with mode Node returns self if no peers', async () => {
+        const res = await finder.startFind(PeerID.fromString('find').value)
         expect(areEqualPeerDescriptors(res.closestNodes[0], peerDescriptor1)).toEqual(true)
     })
 
-    it('RecursiveFinder server throws if payload is not FindRequest', async () => {
+    it('Finder server throws if payload is not FindRequest', async () => {
         const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1)
         const badMessage: Message = {
             serviceId: 'unknown',
@@ -95,7 +95,7 @@ describe('RecursiveFinder', () => {
             sourceDescriptor: peerDescriptor1,
             targetDescriptor: peerDescriptor2
         }
-        await expect(recursiveFinder.routeFindRequest({
+        await expect(finder.routeFindRequest({
             message: badMessage,
             requestId: 'REQ',
             routingPath: [],

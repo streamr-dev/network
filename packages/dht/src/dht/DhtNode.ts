@@ -34,7 +34,7 @@ import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { Any } from '../proto/google/protobuf/any'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
-import { RecursiveFinder, RecursiveFindResult } from './find/RecursiveFinder'
+import { Finder, FindResult } from './find/Finder'
 import { StoreRpcLocal } from './store/StoreRpcLocal'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
@@ -137,7 +137,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public router?: Router
     private storeRpcLocal?: StoreRpcLocal
     private localDataStore = new LocalDataStore()
-    private recursiveFinder?: RecursiveFinder
+    private finder?: Finder
     private peerDiscovery?: PeerDiscovery
 
     public connectionManager?: ConnectionManager
@@ -255,7 +255,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             serviceId: this.config.serviceId,
             connectionManager: this.connectionManager
         })
-        this.recursiveFinder = new RecursiveFinder({
+        this.finder = new Finder({
             rpcCommunicator: this.rpcCommunicator,
             router: this.router,
             sessionTransport: this,
@@ -268,7 +268,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         })
         this.storeRpcLocal = new StoreRpcLocal({
             rpcCommunicator: this.rpcCommunicator,
-            recursiveFinder: this.recursiveFinder,
+            finder: this.finder,
             localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
             highestTtl: this.config.storeHighestTtl,
@@ -567,7 +567,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started || this.stopped) {
             return
         }
-        const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints || [] : []
+        const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints ?? [] : []
         await this.router!.send(msg, reachableThrough)
     }
 
@@ -580,8 +580,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         ))
     }
 
-    public async startRecursiveFind(idToFind: Uint8Array, fetchData?: boolean, excludedPeer?: PeerDescriptor): Promise<RecursiveFindResult> {
-        return this.recursiveFinder!.startRecursiveFind(idToFind, fetchData, excludedPeer)
+    public async startFind(idToFind: Uint8Array, fetchData?: boolean, excludedPeer?: PeerDescriptor): Promise<FindResult> {
+        return this.finder!.startFind(idToFind, fetchData, excludedPeer)
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
@@ -605,7 +605,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
         }
-        const result = await this.recursiveFinder!.startRecursiveFind(idToFind, true)
+        const result = await this.finder!.startFind(idToFind, true)
         return result.dataEntries ?? []
     }
 
@@ -622,7 +622,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.config.serviceId,
             toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        return await rpcRemote.findData(idToFind)
+        return await rpcRemote.externalFindData(idToFind)
     }
 
     public getRpcCommunicator(): RoutingRpcCommunicator {
@@ -686,7 +686,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.randomPeers!.stop()
         this.rpcCommunicator!.stop()
         this.router!.stop()
-        this.recursiveFinder!.stop()
+        this.finder!.stop()
         this.peerDiscovery!.stop()
         if (this.connectionManager) {
             await this.connectionManager.stop()

@@ -39,7 +39,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     constructor(params: Params) {
         super()
         this.connectionId = new ConnectionID()
-        this.iceServers = params.iceServers || []
+        this.iceServers = params.iceServers ?? []
     }
 
     public start(isOffering: boolean): void {

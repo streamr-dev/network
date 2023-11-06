@@ -59,7 +59,7 @@ export interface RoutingSessionEvents {
     stopped: (sessionId: string) => void
 }
 
-export enum RoutingMode { ROUTE, FORWARD, RECURSIVE_FIND }
+export enum RoutingMode { ROUTE, FORWARD, FIND }
 
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
@@ -112,7 +112,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.ongoingRequests.delete(peerId.toKey())
         }
         const contacts = this.findMoreContacts()
-        if (contacts.length < 1 && this.ongoingRequests.size < 1) {
+        if (contacts.length === 0 && this.ongoingRequests.size === 0) {
             logger.trace('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
             // TODO should call this.stop() so that we do cleanup? (after the emitFailure call)
             this.stopped = true
@@ -139,11 +139,11 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         this.successfulHopCounter += 1
         const contacts = this.findMoreContacts()
-        if (this.successfulHopCounter >= this.parallelism || contacts.length < 1) {
+        if (this.successfulHopCounter >= this.parallelism || contacts.length === 0) {
             // TODO should call this.stop() so that we do cleanup? (after the routingSucceeded call)
             this.stopped = true
             this.emit('routingSucceeded', this.sessionId)
-        } else if (contacts.length > 0 && this.ongoingRequests.size < 1) {
+        } else if (contacts.length > 0 && this.ongoingRequests.size === 0) {
             this.sendMoreRequests(contacts)
         }
     }
@@ -157,7 +157,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 ...this.messageToRoute,
                 previousPeer: this.localPeerDescriptor
             })
-        } else if (this.mode === RoutingMode.RECURSIVE_FIND) {
+        } else if (this.mode === RoutingMode.FIND) {
             return contact.getFindRpcRemote().routeFindRequest({
                 ...this.messageToRoute,
                 previousPeer: this.localPeerDescriptor
@@ -185,7 +185,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (this.stopped) {
             return
         }
-        if (uncontacted.length < 1) {
+        if (uncontacted.length === 0) {
             this.emitFailure()
             return
         }

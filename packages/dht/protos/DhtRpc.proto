@@ -51,7 +51,7 @@ service ConnectionLockRpc {
 }
 
 service ExternalApiRpc {
-  rpc findData (FindDataRequest) returns (FindDataResponse);
+  rpc externalFindData (ExternalFindDataRequest) returns (ExternalFindDataResponse);
   rpc externalStoreData (ExternalStoreDataRequest) returns (ExternalStoreDataResponse);
 }
 
@@ -209,12 +209,12 @@ message HandshakeResponse {
 // Wraps all messages
 
 enum MessageType {
-  CONNECTIVITY_REQUEST = 0;
-  CONNECTIVITY_RESPONSE = 1;
-  HANDSHAKE_REQUEST = 2;
-  HANDSHAKE_RESPONSE = 3;
-  RPC = 4;
-  RECURSIVE_FIND_REQUEST = 5;
+  RPC = 0;
+  CONNECTIVITY_REQUEST = 1;
+  CONNECTIVITY_RESPONSE = 2;
+  HANDSHAKE_REQUEST = 3;
+  HANDSHAKE_RESPONSE = 4;
+  FIND_REQUEST = 5;
 }
 
 message Message {
@@ -291,11 +291,11 @@ message DisconnectNotice {
 message DisconnectNoticeResponse {
 }
 
-message FindDataRequest {
+message ExternalFindDataRequest {
   bytes kademliaId = 1;
 }
 
-message FindDataResponse {
+message ExternalFindDataResponse {
   repeated DataEntry dataEntries = 1;
   optional string error = 2;
 }
