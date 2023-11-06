@@ -4,14 +4,12 @@ import { RestServer } from '../../src/RestServer'
 import { CertifiedSubdomain } from '@streamr/autocertifier-client'
 import { ApiError } from '@streamr/autocertifier-client'
 import os from 'os'
-import fs from 'fs'
 import { Session } from '@streamr/autocertifier-client'
 import { v4 } from 'uuid'
 
 describe('RestServer', () => {
     let server: RestServer
     const dir = os.tmpdir()
-    let ca: string
 
     const certifiedSubdomain: CertifiedSubdomain = {
         fqdn: 'localhost',
@@ -48,7 +46,6 @@ describe('RestServer', () => {
                 }
             })
         await server.start()
-        ca = fs.readFileSync(dir + '/restServerCaCert.pem', 'utf8')
     })
 
     afterAll(async () => {
@@ -61,7 +58,7 @@ describe('RestServer', () => {
                 url: 'https://localhost:9877/sessions',
                 method: 'POST',
                 json: true,
-                ca
+                rejectUnauthorized: false
             }
 
             request(options, (error: any, response: Response, body: any) => {
@@ -81,7 +78,7 @@ describe('RestServer', () => {
                 json: {
                     streamrWebSocketPort: '1234'
                 },
-                ca
+                rejectUnauthorized: false
             }
 
             request(options, (error: any, response: Response, body: any) => {
@@ -97,7 +94,7 @@ describe('RestServer', () => {
                 url: 'https://localhost:9877/certified-subdomains',
                 method: 'PATCH',
                 json: true,
-                ca
+                rejectUnauthorized: false
             }
 
             request(options, (error: any, response: Response, body: any) => {
@@ -119,7 +116,7 @@ describe('RestServer', () => {
                     streamrWebSocketPort: '1234',
                     token: 'token'
                 },
-                ca
+                rejectUnauthorized: false
             }
 
             request(options, (error: any, response: Response, body: any) => {
@@ -137,7 +134,7 @@ describe('RestServer', () => {
                 json: {
                     token: 'token'
                 },
-                ca
+                rejectUnauthorized: false
             }
 
             request(options, (error: any, response: Response, body: any) => {
@@ -156,7 +153,7 @@ describe('RestServer', () => {
                 json: {
                     streamrWebSocketPort: '1234'
                 },
-                ca
+                rejectUnauthorized: false
             }
 
             request(options, (error: any, response: Response, body: any) => {
