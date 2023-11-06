@@ -21,7 +21,7 @@
         "packages/proto-rpc",
         "packages/autocertifier-client",
         "packages/dht",
-        "packages/autocertifier",
+        "packages/autocertifier-server",
         "packages/trackerless-network",
         "packages/client",
         "packages/broker",

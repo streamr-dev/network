@@ -1,11 +1,11 @@
 {
-  "name": "@streamr/autocertifier",
+  "name": "@streamr/autocertifier-server",
   "version": "100.0.0-pretestnet.0",
-  "description": "Automatic TLS Certificate Manager for Streamr Network",
+  "description": "Server for providing TLS Certificates",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network.git",
-    "directory": "packages/autocertifier"
+    "directory": "packages/autocertifier-server"
   },
   "bin": {
     "autocertifier": "dist/bin/run-auto-certifier.js"
