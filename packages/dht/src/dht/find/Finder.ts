@@ -16,7 +16,7 @@ import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { FindSessionRpcRemote } from './FindSessionRpcRemote'
 import { v4 } from 'uuid'
-import { RecursiveFindSession, RecursiveFindSessionEvents } from './RecursiveFindSession'
+import { FindSession, FindSessionEvents } from './FindSession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
@@ -27,7 +27,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { SortedContactList } from '../contact/SortedContactList'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 
-interface RecursiveFinderConfig {
+interface FinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
     connections: Map<PeerIDKey, DhtNodeRpcRemote>
@@ -39,17 +39,17 @@ interface RecursiveFinderConfig {
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
 }
 
-interface RecursiveFinderFunc {
-    startRecursiveFind(idToFind: Uint8Array, fetchData?: boolean): Promise<RecursiveFindResult>
+interface FinderFunc {
+    startFind(idToFind: Uint8Array, fetchData?: boolean): Promise<FindResult>
 }
 
-export type IRecursiveFinder = IFindRpc & RecursiveFinderFunc
+export type IFinder = IFindRpc & FinderFunc
 
-export interface RecursiveFindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
+export interface FindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
 
 const logger = new Logger(module)
 
-export class RecursiveFinder implements IRecursiveFinder {
+export class Finder implements IFinder {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly sessionTransport: ITransport
@@ -60,10 +60,10 @@ export class RecursiveFinder implements IRecursiveFinder {
     private readonly localDataStore: LocalDataStore
     private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     private readonly isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
-    private ongoingSessions: Map<string, RecursiveFindSession> = new Map()
+    private ongoingSessions: Map<string, FindSession> = new Map()
     private stopped = false
 
-    constructor(config: RecursiveFinderConfig) {
+    constructor(config: FinderConfig) {
         this.rpcCommunicator = config.rpcCommunicator
         this.sessionTransport = config.sessionTransport
         this.connections = config.connections
@@ -77,16 +77,16 @@ export class RecursiveFinder implements IRecursiveFinder {
             (routedMessage: RouteMessageWrapper) => this.routeFindRequest(routedMessage))
     }
 
-    public async startRecursiveFind(
+    public async startFind(
         idToFind: Uint8Array,
         fetchData: boolean = false,
         excludedPeer?: PeerDescriptor
-    ): Promise<RecursiveFindResult> {
+    ): Promise<FindResult> {
         if (this.stopped) {
             return { closestNodes: [] }
         }
         const sessionId = v4()
-        const recursiveFindSession = new RecursiveFindSession({
+        const session = new FindSession({
             serviceId: sessionId,
             transport: this.sessionTransport,
             kademliaIdToFind: idToFind,
@@ -96,20 +96,20 @@ export class RecursiveFinder implements IRecursiveFinder {
         })
         if (this.connections.size === 0) {
             const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
-            recursiveFindSession.doSendFindResponse(
+            session.doSendFindResponse(
                 [this.localPeerDescriptor],
                 [this.localPeerDescriptor],
                 data ? Array.from(data.values()) : [],
                 true
             )
-            return recursiveFindSession.getResults()
+            return session.getResults()
         }
         const routeMessage = this.wrapFindRequest(idToFind, sessionId, fetchData)
-        this.ongoingSessions.set(sessionId, recursiveFindSession)
+        this.ongoingSessions.set(sessionId, session)
         try {
-            await runAndWaitForEvents3<RecursiveFindSessionEvents>(
+            await runAndWaitForEvents3<FindSessionEvents>(
                 [() => this.doRouteFindRequest(routeMessage, excludedPeer)],
-                [[recursiveFindSession, 'findCompleted']],
+                [[session, 'findCompleted']],
                 15000
             )
         } catch (err) {
@@ -117,8 +117,8 @@ export class RecursiveFinder implements IRecursiveFinder {
         }
         this.findAndReportLocalData(idToFind, fetchData, [], this.localPeerDescriptor, sessionId)
         this.ongoingSessions.delete(sessionId)
-        recursiveFindSession.stop()
-        return recursiveFindSession.getResults()
+        session.stop()
+        return session.getResults()
     }
 
     private wrapFindRequest(idToFind: Uint8Array, sessionId: string, fetchData: boolean): RouteMessageWrapper {
@@ -131,7 +131,7 @@ export class RecursiveFinder implements IRecursiveFinder {
             fetchData
         }
         const msg: Message = {
-            messageType: MessageType.RECURSIVE_FIND_REQUEST,
+            messageType: MessageType.FIND_REQUEST,
             messageId: v4(),
             serviceId: this.serviceId,
             body: {
@@ -214,7 +214,7 @@ export class RecursiveFinder implements IRecursiveFinder {
                 closestPeersToDestination, data, true)
             return createRouteMessageAck(routedMessage)
         }
-        const ack = this.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE_FIND, excludedPeer)
+        const ack = this.router.doRouteMessage(routedMessage, RoutingMode.FIND, excludedPeer)
         if (ack.error === RoutingErrors.NO_CANDIDATES_FOUND) {
             logger.trace(`routeFindRequest Node found no candidates`)
             this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
