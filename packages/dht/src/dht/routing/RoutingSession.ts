@@ -115,6 +115,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const contacts = this.findMoreContacts()
         if (contacts.length < 1 && this.ongoingRequests.size < 1) {
             logger.trace('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
+            // TODO should call this.stop() so that we do cleanup? (after the emitFailure call)
             this.stopped = true
             this.emitFailure()
         } else {
@@ -141,6 +142,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.successfulHopCounter += 1
         const contacts = this.findMoreContacts()
         if (this.successfulHopCounter >= this.parallelism || contacts.length < 1) {
+            // TODO should call this.stop() so that we do cleanup? (after the routingSucceeded call)
             this.stopped = true
             this.emit('routingSucceeded', this.sessionId)
         } else if (contacts.length > 0 && this.ongoingRequests.size < 1) {
