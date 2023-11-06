@@ -10,6 +10,5 @@ export class DhtCallContext extends ProtoCallContext implements DhtRpcOptions {
     clientId?: number
     doNotConnect?: boolean 
     //used in incoming calls
-    incomingTargetDescriptor?: PeerDescriptor
     incomingSourceDescriptor?: PeerDescriptor
 }

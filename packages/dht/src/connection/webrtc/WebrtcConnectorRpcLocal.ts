@@ -89,7 +89,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate',
             (req: IceCandidate, context: ServerCallContext) => this.iceCandidate(req, context))
         this.rpcCommunicator.registerRpcNotification(WebrtcConnectionRequest, 'requestConnection',
-            (req: WebrtcConnectionRequest, context: ServerCallContext) => this.requestConnection(req, context))
+            (_req: WebrtcConnectionRequest, context: ServerCallContext) => this.requestConnection(context))
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
@@ -164,7 +164,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         connection.start(offering)
 
         if (!offering) {
-            remoteConnector.requestConnection(connection.connectionId.toString())
+            remoteConnector.requestConnection()
         }
 
         return managedConnection
@@ -295,7 +295,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         const attempts = Array.from(this.ongoingConnectAttempts.values())
         await Promise.allSettled(attempts.map((conn) => conn.close('OTHER')))
 
-        this.rpcCommunicator.stop()
+        this.rpcCommunicator.destroy()
     }
 
     public isOffering(targetPeerDescriptor: PeerDescriptor): boolean {
@@ -305,8 +305,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
     }
 
     // IWebRtcConnector implementation
-    // TODO should we read connectionId from WebrtcConnectionRequest (or remove the field)?
-    async requestConnection(_request: WebrtcConnectionRequest, context: ServerCallContext): Promise<Empty> {
+    async requestConnection(context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         this.onConnectionRequest(senderPeerDescriptor)
         return {}
@@ -314,22 +313,19 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
 
     async rtcOffer(request: RtcOffer, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const receiverPeerDescriptor = (context as DhtCallContext).incomingTargetDescriptor!
-        this.onRtcOffer(senderPeerDescriptor, receiverPeerDescriptor, request.description, request.connectionId)
+        this.onRtcOffer(senderPeerDescriptor, this.localPeerDescriptor!, request.description, request.connectionId)
         return {}
     }
 
     async rtcAnswer(request: RtcAnswer, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const receiverPeerDescriptor = (context as DhtCallContext).incomingTargetDescriptor!
-        this.onRtcAnswer(senderPeerDescriptor, receiverPeerDescriptor, request.description, request.connectionId)
+        this.onRtcAnswer(senderPeerDescriptor, this.localPeerDescriptor!, request.description, request.connectionId)
         return {}
     }
 
     async iceCandidate(request: IceCandidate, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const receiverPeerDescriptor = (context as DhtCallContext).incomingTargetDescriptor!
-        this.onRemoteCandidate(senderPeerDescriptor, receiverPeerDescriptor, request.candidate, request.mid, request.connectionId)
+        this.onRemoteCandidate(senderPeerDescriptor, this.localPeerDescriptor!, request.candidate, request.mid, request.connectionId)
         return {}
     }
 }
