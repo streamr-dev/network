@@ -147,7 +147,7 @@ export class Router implements IRouter {
     }
 
     private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode): RoutingSession {
-        logger.trace(' routing session created with connections: ' + this.connections.size )
+        logger.trace(' routing session created with connections: ' + this.connections.size)
         return new RoutingSession(
             this.rpcCommunicator,
             this.localPeerDescriptor,
