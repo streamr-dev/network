@@ -194,7 +194,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.emitFailure()
             return
         }
-        while ((this.ongoingRequests.size) < this.parallelism && (uncontacted.length > 0) && !this.stopped) {
+        while ((this.ongoingRequests.size < this.parallelism) && (uncontacted.length > 0) && !this.stopped) {
             const nextPeer = uncontacted.shift()
             // eslint-disable-next-line max-len
             logger.trace(`Sending routeMessage request to contact: ${keyFromPeerDescriptor(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
