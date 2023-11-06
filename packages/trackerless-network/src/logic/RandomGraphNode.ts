@@ -30,7 +30,7 @@ import { IInspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
-import { ILayer1 } from './ILayer1'
+import { Layer1Node } from './Layer1Node'
 import { StreamPartID } from '@streamr/protocol'
 
 export interface Events {
@@ -40,7 +40,7 @@ export interface Events {
 
 export interface StrictRandomGraphNodeConfig {
     streamPartId: StreamPartID
-    layer1: ILayer1
+    layer1Node: Layer1Node
     transport: ITransport
     connectionLocker: ConnectionLocker
     ownPeerDescriptor: PeerDescriptor
@@ -86,7 +86,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 || this.config.proxyConnectionRpcLocal?.getConnection(senderId )?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
-                    this.config.layer1.removeContact(contact.getPeerDescriptor(), true)
+                    this.config.layer1Node.removeContact(contact.getPeerDescriptor(), true)
                     this.config.targetNeighbors.remove(contact.getPeerDescriptor())
                     this.config.nearbyNodeView.remove(contact.getPeerDescriptor())
                     this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.streamPartId)
@@ -102,25 +102,25 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.started = true
         this.registerDefaultServerMethods()
         addManagedEventListener<any, any>(
-            this.config.layer1 as any,
+            this.config.layer1Node as any,
             'newContact',
             (_peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.newContact(closestPeers),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
-            this.config.layer1 as any,
+            this.config.layer1Node as any,
             'contactRemoved',
             (_peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.removedContact(closestPeers),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
-            this.config.layer1 as any,
+            this.config.layer1Node as any,
             'newRandomContact',
             (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.newRandomContact(randomPeers),
             this.abortController.signal
         )   
         addManagedEventListener<any, any>(
-            this.config.layer1 as any,
+            this.config.layer1Node as any,
             'randomContactRemoved',
             (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.removedRandomContact(randomPeers),
             this.abortController.signal
@@ -193,7 +193,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
-        for (const descriptor of this.config.layer1.getClosestContacts()) {
+        for (const descriptor of this.config.layer1Node.getClosestContacts()) {
             if (this.config.nearbyNodeView.size() >= this.config.nodeViewSize) {
                 break
             }
@@ -251,7 +251,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     private getNeighborCandidatesFromLayer1(): PeerDescriptor[] {
         const uniqueNodes = new Set<PeerDescriptor>()
-        this.config.layer1.getClosestContacts().forEach((peer: PeerDescriptor) => {
+        this.config.layer1Node.getClosestContacts().forEach((peer: PeerDescriptor) => {
             uniqueNodes.add(peer)
         })
         return Array.from(uniqueNodes)

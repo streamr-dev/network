@@ -9,7 +9,7 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
-import { ILayer1 } from '../../src/logic/ILayer1'
+import { Layer1Node } from '../../src/logic/Layer1Node'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { getTestInterface } from '@streamr/test-utils'
 
@@ -91,7 +91,7 @@ const measureJoiningTime = async () => {
     }, 1000)
     // get random node from network to use as entrypoint
     const randomNode = nodes[Math.floor(Math.random() * nodes.length)]
-    const streamSubscriber = createNetworkNodeWithSimulator(peerDescriptor, simulator, [randomNode.stack.getLayer0DhtNode().getPeerDescriptor()])
+    const streamSubscriber = createNetworkNodeWithSimulator(peerDescriptor, simulator, [randomNode.stack.getLayer0Node().getPeerDescriptor()])
     currentNode = streamSubscriber
     const start = performance.now()
     await streamSubscriber.start()
@@ -134,12 +134,13 @@ run().then(() => {
 }).catch((err) => {
     console.error(err)
     const streamParts = currentNode.stack.getStreamrNode()!.getStreamParts()
-    const foundData = nodes[0].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
+    const foundData = nodes[0].stack.getLayer0Node().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
-    console.log(getTestInterface(currentNode.stack.getLayer0DhtNode() as DhtNode).getKBucketPeers().length)
-    console.log((currentNode.stack.getLayer0DhtNode() as DhtNode).getNumberOfConnections())
-    const streamPartDelivery = currentNode.stack.getStreamrNode().getStreamPartDelivery(streamParts[0])! as { layer1: ILayer1, node: RandomGraphNode }
-    console.log(getTestInterface(streamPartDelivery.layer1 as DhtNode).getKBucketPeers())
+    console.log(getTestInterface(currentNode.stack.getLayer0Node() as DhtNode).getKBucketPeers().length)
+    console.log((currentNode.stack.getLayer0Node() as DhtNode).getNumberOfConnections())
+    // eslint-disable-next-line max-len
+    const streamPartDelivery = currentNode.stack.getStreamrNode().getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: RandomGraphNode }
+    console.log(getTestInterface(streamPartDelivery.layer1Node as DhtNode).getKBucketPeers())
     console.log(streamPartDelivery.node.getTargetNeighborIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {
