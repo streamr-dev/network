@@ -2,6 +2,8 @@
 // @generated from protobuf file "packages/dht/protos/DhtRpc.proto" (package "dht", syntax proto3)
 // tslint:disable
 import { ExternalApiService } from "./DhtRpc";
+import type { ExternalStoreDataResponse } from "./DhtRpc";
+import type { ExternalStoreDataRequest } from "./DhtRpc";
 import type { FindDataResponse } from "./DhtRpc";
 import type { FindDataRequest } from "./DhtRpc";
 import { ConnectionLocker } from "./DhtRpc";
@@ -353,6 +355,10 @@ export interface IExternalApiServiceClient {
      * @generated from protobuf rpc: findData(dht.FindDataRequest) returns (dht.FindDataResponse);
      */
     findData(input: FindDataRequest, options?: RpcOptions): UnaryCall<FindDataRequest, FindDataResponse>;
+    /**
+     * @generated from protobuf rpc: externalStoreData(dht.ExternalStoreDataRequest) returns (dht.ExternalStoreDataResponse);
+     */
+    externalStoreData(input: ExternalStoreDataRequest, options?: RpcOptions): UnaryCall<ExternalStoreDataRequest, ExternalStoreDataResponse>;
 }
 /**
  * @generated from protobuf service dht.ExternalApiService
@@ -369,5 +375,12 @@ export class ExternalApiServiceClient implements IExternalApiServiceClient, Serv
     findData(input: FindDataRequest, options?: RpcOptions): UnaryCall<FindDataRequest, FindDataResponse> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
         return stackIntercept<FindDataRequest, FindDataResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: externalStoreData(dht.ExternalStoreDataRequest) returns (dht.ExternalStoreDataResponse);
+     */
+    externalStoreData(input: ExternalStoreDataRequest, options?: RpcOptions): UnaryCall<ExternalStoreDataRequest, ExternalStoreDataResponse> {
+        const method = this.methods[1], opt = this._transport.mergeOptions(options);
+        return stackIntercept<ExternalStoreDataRequest, ExternalStoreDataResponse>("unary", this._transport, method, opt, input);
     }
 }
