@@ -127,7 +127,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.config = config
         this.onData = this.onData.bind(this)
         this.onIncomingConnection = this.onIncomingConnection.bind(this)
-        this.metricsContext = this.config.metricsContext || new MetricsContext()
+        this.metricsContext = this.config.metricsContext ?? new MetricsContext()
         this.metrics = {
             sendMessagesPerSecond: new RateMetric(),
             sendBytesPerSecond: new RateMetric(),
@@ -246,7 +246,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.state === ConnectionManagerState.STOPPED && !doNotMindStopped) {
             return
         }
-
         const peerDescriptor = message.targetDescriptor!
         if (this.isConnectionToSelf(peerDescriptor)) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
@@ -254,8 +253,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         logger.trace(`Sending message to: ${keyFromPeerDescriptor(peerDescriptor)}`)
         message = {
             ...message,
-            targetDescriptor: message.targetDescriptor || peerDescriptor,
-            sourceDescriptor: message.sourceDescriptor || this.getLocalPeerDescriptor(),
+            sourceDescriptor: this.getLocalPeerDescriptor()
         }
         const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
         let connection = this.connections.get(peerIdKey)

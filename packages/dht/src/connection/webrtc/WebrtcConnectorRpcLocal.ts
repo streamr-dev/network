@@ -75,8 +75,8 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         onIncomingConnection: (connection: ManagedConnection) => boolean
     ) {
         this.config = config
-        this.iceServers = config.iceServers || []
-        this.allowPrivateAddresses = config.allowPrivateAddresses || true
+        this.iceServers = config.iceServers ?? []
+        this.allowPrivateAddresses = config.allowPrivateAddresses ?? true
         this.onIncomingConnection = onIncomingConnection
 
         this.rpcCommunicator = new ListeningRpcCommunicator(WebrtcConnectorRpcLocal.WEBRTC_CONNECTOR_SERVICE_ID, config.transport, {
