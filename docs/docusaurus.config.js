@@ -131,7 +131,7 @@ const config = {
                         items: [
                             {
                                 label: "Quickstart guides",
-                                to: "quickstart-guides/nodejs",
+                                to: "guides/nodejs",
                             },
                             {
                                 label: "Usage",
