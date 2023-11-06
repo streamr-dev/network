@@ -7,8 +7,10 @@ interface CertificateChain {
     serverKey: string
 }
 
+const SAN_TYPE_DNS = 2
+
 export function createSelfSignedCertificate(fqdn: string, validMonths: number): CertificateChain {
-    if (validMonths < 1) {
+    if (validMonths <= 0) {
         throw new Error('validMonths must be greater than 0')
     }
 
@@ -18,7 +20,7 @@ export function createSelfSignedCertificate(fqdn: string, validMonths: number): 
     // Create a new X.509 certificate for the certificate authority
     const caCert = forge.pki.createCertificate()
     caCert.publicKey = caKeys.publicKey
-    caCert.serialNumber = '01'
+    caCert.serialNumber = '01' // Serial number is required but not important for self-signed certificates
     caCert.validity.notBefore = new Date()
     caCert.validity.notAfter = new Date()
     caCert.validity.notAfter.setMonth(caCert.validity.notBefore.getMonth() + validMonths)
@@ -47,7 +49,7 @@ export function createSelfSignedCertificate(fqdn: string, validMonths: number): 
     // Create a new X.509 certificate for the server
     const serverCert = forge.pki.createCertificate()
     serverCert.publicKey = serverKeys.publicKey
-    serverCert.serialNumber = '01'
+    serverCert.serialNumber = '01' // Serial number is required but not important for self-signed certificates
     serverCert.validity.notBefore = new Date()
     serverCert.validity.notAfter = new Date()
     serverCert.validity.notAfter.setFullYear(serverCert.validity.notBefore.getFullYear() + 1)
@@ -64,7 +66,7 @@ export function createSelfSignedCertificate(fqdn: string, validMonths: number): 
     serverCert.setExtensions([
         { name: 'basicConstraints', cA: false },
         { name: 'keyUsage', digitalSignature: true, nonRepudiation: true, keyEncipherment: true, dataEncipherment: true },
-        { name: 'subjectAltName', altNames: [{ type: 2, value: fqdn }] },
+        { name: 'subjectAltName', altNames: [{ type: SAN_TYPE_DNS, value: fqdn }] },
         { name: 'subjectKeyIdentifier' }
     ])
     serverCert.sign(caKeys.privateKey, forge.md.sha256.create())
