@@ -22,9 +22,8 @@ export class WebrtcConnectorRpcRemote extends Remote<IWebrtcConnectorRpcClient> 
         super(localPeerDescriptor, remotePeerDescriptor, 'DUMMY', client)
     }
 
-    requestConnection(connectionId: string): void {
+    requestConnection(): void {
         const request: WebrtcConnectionRequest = {
-            connectionId
         }
         const options = this.formDhtRpcOptions({
             notification: true

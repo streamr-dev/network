@@ -53,7 +53,6 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
         if (message.serviceId == this.ownServiceId && message.body.oneofKind === 'rpcMessage') {
             const context = new DhtCallContext()
             context.incomingSourceDescriptor = message.sourceDescriptor
-            context.incomingTargetDescriptor = message.targetDescriptor
             this.handleIncomingMessage(message.body.rpcMessage, context)
         }
     }

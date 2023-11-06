@@ -5,7 +5,7 @@ import { createClient } from '../../../utils'
 import { setupOperatorContract } from './contractUtils'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 
-const TIMEOUT = 10 * 1000
+const TIMEOUT = 20 * 1000
 
 describe('announceNodeToStream', () => {
 

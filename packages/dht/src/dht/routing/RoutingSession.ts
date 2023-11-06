@@ -61,7 +61,7 @@ export interface RoutingSessionEvents {
     noCandidatesFound: (sessionId: string) => void
 }
 
-export enum RoutingMode { ROUTE, FORWARD, RECURSIVE_FIND }
+export enum RoutingMode { ROUTE, FORWARD, FIND }
 
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
@@ -157,7 +157,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         if (this.mode === RoutingMode.FORWARD) {
             return contact.getRouterRpcRemote().forwardMessage(this.messageToRoute)
-        } else if (this.mode === RoutingMode.RECURSIVE_FIND) {
+        } else if (this.mode === RoutingMode.FIND) {
             return contact.getFindRpcRemote().routeFindRequest(this.messageToRoute)
         } else {
             return contact.getRouterRpcRemote().routeMessage(this.messageToRoute)
