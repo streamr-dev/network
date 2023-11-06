@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import { RemoteDhtNode } from './RemoteDhtNode'
+import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import KBucket from 'k-bucket'
 import { EventEmitter } from 'eventemitter3'
 import { SortedContactList } from './contact/SortedContactList'
@@ -21,7 +21,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
-import { DhtRpcServiceClient, ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { DhtNodeRpcClient, ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
     MetricsContext,
@@ -128,9 +128,9 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
 }
 
 interface IDhtNodeTest {
-    getNeighborList: () => SortedContactList<RemoteDhtNode>
+    getNeighborList: () => SortedContactList<DhtNodeRpcRemote>
     getKBucketPeers: () => PeerDescriptor[]
-    getConnections: () => Map<PeerIDKey, RemoteDhtNode>
+    getConnections: () => Map<PeerIDKey, DhtNodeRpcRemote>
     getBucketSize: () => number
 }
 
@@ -318,7 +318,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connectionManager: this.connectionManager!,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             isLayer0: this.connectionManager ? true : false,
-            createRemoteDhtNode: this.createRemoteDhtNode.bind(this)
+            createDhtNodeRpcRemote: this.createDhtNodeRpcRemote.bind(this)
         })
 
         this.peerManager.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
@@ -400,7 +400,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private getClosestPeerDescriptors(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
         const closestPeers = this.peerManager!.getClosestPeersTo(kademliaId, limit)
-        return closestPeers.map((dhtPeer: RemoteDhtNode) => dhtPeer.getPeerDescriptor())
+        return closestPeers.map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
     }
 
     public getNodeId(): PeerID {
@@ -530,11 +530,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.config.entryPoints || []
     }
 
-    private createRemoteDhtNode(peerDescriptor: PeerDescriptor): RemoteDhtNode {
-        return new RemoteDhtNode(
+    private createDhtNodeRpcRemote(peerDescriptor: PeerDescriptor): DhtNodeRpcRemote {
+        return new DhtNodeRpcRemote(
             this.ownPeerDescriptor!,
             peerDescriptor,
-            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+            toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
             this.config.serviceId
         )
     }
