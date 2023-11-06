@@ -18,7 +18,7 @@ const logger = new Logger(module)
 export interface PeerManagerConfig {
     numberOfNodesPerKBucket: number
     maxNeighborListSize: number
-    getClosestContactsLimit: number
+    peerDiscoveryQueryBatchSize: number
     ownPeerId: PeerID
     connectionManager: ConnectionManager
     isLayer0: boolean
@@ -146,7 +146,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
                 this.emit(
                     'newKbucketContact',
                     contact.getPeerDescriptor(),
-                    this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
+                    this.neighborList!.getClosestContacts(this.config.peerDiscoveryQueryBatchSize).map((peer) => peer.getPeerDescriptor())
                 )
             } else {    // open connection by pinging
                
@@ -156,7 +156,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
                         this.emit(
                             'newKbucketContact',
                             contact.getPeerDescriptor(),
-                            this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
+                            this.neighborList!.getClosestContacts(this.config.peerDiscoveryQueryBatchSize).map((peer) => peer.getPeerDescriptor())
                         )
                     } else {
                         this.config.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())

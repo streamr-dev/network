@@ -68,13 +68,13 @@ export interface DhtNodeOptions {
     maxNeighborListSize?: number
     numberOfNodesPerKBucket?: number
     joinNoProgressLimit?: number
-    getClosestContactsLimit?: number  // TODO better name?
+    peerDiscoveryQueryBatchSize?: number
     dhtJoinTimeout?: number
     metricsContext?: MetricsContext
     storeHighestTtl?: number
     storeMaxTtl?: number
     networkConnectivityTimeout?: number
-    storeNumberOfCopies?: number  // TODO better name?
+    storageRedundancyFactor?: number
 
     transport?: ITransport
     peerDescriptor?: PeerDescriptor
@@ -103,12 +103,12 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
     'numberOfNodesPerKBucket' |
     'joinNoProgressLimit' |
     'dhtJoinTimeout' |
-    'getClosestContactsLimit' |
+    'peerDiscoveryQueryBatchSize' |
     'maxConnections' |
     'storeHighestTtl' |
     'storeMaxTtl' |
     'networkConnectivityTimeout' |
-    'storeNumberOfCopies' |
+    'storageRedundancyFactor' |
     'metricsContext' |
     'peerId'>
 
@@ -179,12 +179,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             numberOfNodesPerKBucket: 8,
             joinNoProgressLimit: 4,
             dhtJoinTimeout: 60000,
-            getClosestContactsLimit: 5,
+            peerDiscoveryQueryBatchSize: 5,
             maxConnections: 80,
             storeHighestTtl: 60000,
             storeMaxTtl: 60000,
             networkConnectivityTimeout: 10000,
-            storeNumberOfCopies: 5,
+            storageRedundancyFactor: 5,
             metricsContext: new MetricsContext(),
             peerId: new UUID().toHex()
         }, conf)
@@ -265,7 +265,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.peerDiscovery = new PeerDiscovery({
             ownPeerDescriptor: this.ownPeerDescriptor!,
             joinNoProgressLimit: this.config.joinNoProgressLimit,
-            getClosestContactsLimit: this.config.getClosestContactsLimit,
+            peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             joinTimeout: this.config.dhtJoinTimeout,
             serviceId: this.config.serviceId,
             parallelism: this.config.joinParallelism,
@@ -301,7 +301,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             serviceId: this.config.serviceId,
             highestTtl: this.config.storeHighestTtl,
             maxTtl: this.config.storeMaxTtl,
-            numberOfCopies: this.config.storeNumberOfCopies,
+            redundancyFactor: this.config.storageRedundancyFactor,
             localDataStore: this.localDataStore,
             dhtNodeEmitter: this,
             getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
@@ -321,7 +321,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             maxNeighborListSize: this.config.maxNeighborListSize,
             ownPeerId: this.ownPeerId!,
             connectionManager: this.connectionManager!,
-            getClosestContactsLimit: this.config.getClosestContactsLimit,
+            peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             isLayer0: this.connectionManager ? true : false,
             createRemoteDhtNode: this.createRemoteDhtNode.bind(this)
         })
@@ -588,7 +588,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
         this.peerManager?.handleNewPeers([(context as DhtCallContext).incomingSourceDescriptor!], true)
         const response = {
-            peers: this.getClosestPeerDescriptors(request.kademliaId, this.config.getClosestContactsLimit),
+            peers: this.getClosestPeerDescriptors(request.kademliaId, this.config.peerDiscoveryQueryBatchSize),
             requestId: request.requestId
         }
         return response

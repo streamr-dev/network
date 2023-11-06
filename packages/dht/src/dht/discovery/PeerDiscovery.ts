@@ -10,7 +10,7 @@ import { createRandomKademliaId } from '../../helpers/kademliaId'
 interface PeerDiscoveryConfig {
     ownPeerDescriptor: PeerDescriptor
     joinNoProgressLimit: number
-    getClosestContactsLimit: number
+    peerDiscoveryQueryBatchSize: number
     serviceId: string
     parallelism: number
     joinTimeout: number
