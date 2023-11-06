@@ -17,7 +17,6 @@ import {
     PeerDescriptor,
     PingRequest,
     PingResponse,
-    FindMode,
     DataEntry,
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
@@ -443,8 +442,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         ))
     }
 
-    public async startRecursiveFind(idToFind: Uint8Array, findMode?: FindMode, excludedPeer?: PeerDescriptor): Promise<RecursiveFindResult> {
-        return this.recursiveFinder!.startRecursiveFind(idToFind, findMode, excludedPeer)
+    public async startRecursiveFind(idToFind: Uint8Array, fetchData?: boolean, excludedPeer?: PeerDescriptor): Promise<RecursiveFindResult> {
+        return this.recursiveFinder!.startRecursiveFind(idToFind, fetchData, excludedPeer)
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
@@ -468,7 +467,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
         }
-        const result = await this.recursiveFinder!.startRecursiveFind(idToFind, FindMode.DATA)
+        const result = await this.recursiveFinder!.startRecursiveFind(idToFind, true)
         return result.dataEntries ?? []
     }
 
