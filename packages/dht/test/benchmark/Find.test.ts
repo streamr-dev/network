@@ -13,7 +13,7 @@ import { getTestInterface } from '@streamr/test-utils'
 
 const logger = new Logger(module)
 
-describe('Recursive find correctness', () => {
+describe('Find correctness', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
@@ -77,10 +77,10 @@ describe('Recursive find correctness', () => {
             + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()
             + ', weakLocked: ' + node.getNumberOfWeakLockedConnections()))
 
-        logger.info('starting recursive find')
+        logger.info('starting find')
         const kademliaIdToFind = Uint8Array.from(dhtIds[9].data)
-        const results = await nodes[159].startRecursiveFind(kademliaIdToFind)
-        logger.info('recursive find over')
+        const results = await nodes[159].startFind(kademliaIdToFind)
+        logger.info('find over')
         expect(results.closestNodes).toBeGreaterThanOrEqual(5)
         expect(PeerID.fromValue(kademliaIdToFind).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))
 

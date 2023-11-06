@@ -638,29 +638,29 @@ export enum RpcResponseError {
  */
 export enum MessageType {
     /**
-     * @generated from protobuf enum value: CONNECTIVITY_REQUEST = 0;
+     * @generated from protobuf enum value: RPC = 0;
      */
-    CONNECTIVITY_REQUEST = 0,
+    RPC = 0,
     /**
-     * @generated from protobuf enum value: CONNECTIVITY_RESPONSE = 1;
+     * @generated from protobuf enum value: CONNECTIVITY_REQUEST = 1;
      */
-    CONNECTIVITY_RESPONSE = 1,
+    CONNECTIVITY_REQUEST = 1,
     /**
-     * @generated from protobuf enum value: HANDSHAKE_REQUEST = 2;
+     * @generated from protobuf enum value: CONNECTIVITY_RESPONSE = 2;
      */
-    HANDSHAKE_REQUEST = 2,
+    CONNECTIVITY_RESPONSE = 2,
     /**
-     * @generated from protobuf enum value: HANDSHAKE_RESPONSE = 3;
+     * @generated from protobuf enum value: HANDSHAKE_REQUEST = 3;
      */
-    HANDSHAKE_RESPONSE = 3,
+    HANDSHAKE_REQUEST = 3,
     /**
-     * @generated from protobuf enum value: RPC = 4;
+     * @generated from protobuf enum value: HANDSHAKE_RESPONSE = 4;
      */
-    RPC = 4,
+    HANDSHAKE_RESPONSE = 4,
     /**
-     * @generated from protobuf enum value: RECURSIVE_FIND_REQUEST = 5;
+     * @generated from protobuf enum value: FIND_REQUEST = 5;
      */
-    RECURSIVE_FIND_REQUEST = 5
+    FIND_REQUEST = 5
 }
 /**
  * @generated from protobuf enum dht.DisconnectMode
