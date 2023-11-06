@@ -60,7 +60,7 @@ describe('NodeList', () => {
         }
     })
 
-    afterEach(async ()=> {
+    afterEach(async () => {
         // eslint-disable-next-line @typescript-eslint/prefer-for-of
         for (let i = 0; i < mockTransports.length; i++) {
             await mockTransports[i].stop()

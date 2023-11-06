@@ -304,7 +304,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    private initPeerManager = () => {
+    private initPeerManager() {
         this.peerManager = new PeerManager({
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
             maxNeighborListSize: this.config.maxNeighborListSize,
@@ -383,7 +383,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    private generatePeerDescriptorCallBack = (connectivityResponse: ConnectivityResponse) => {
+    private generatePeerDescriptorCallBack(connectivityResponse: ConnectivityResponse) {
         if (this.config.peerDescriptor) {
             this.localPeerDescriptor = this.config.peerDescriptor
         } else {
@@ -412,7 +412,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started || this.abortController.signal.aborted) {
             return
         }
-        const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints || [] : []
+        const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints ?? [] : []
         await this.router!.send(msg, reachableThrough)
     }
 
@@ -521,7 +521,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getKnownEntryPoints(): PeerDescriptor[] {
-        return this.config.entryPoints || []
+        return this.config.entryPoints ?? []
     }
 
     private createDhtNodeRpcRemote(peerDescriptor: PeerDescriptor): DhtNodeRpcRemote {

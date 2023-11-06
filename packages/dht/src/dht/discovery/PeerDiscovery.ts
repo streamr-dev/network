@@ -6,12 +6,13 @@ import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { IPeerManager } from '../IPeerManager'
 import { createRandomKademliaId } from '../../helpers/kademliaId'
+import { ServiceID } from '../../types/ServiceID'
 
 interface PeerDiscoveryConfig {
     localPeerDescriptor: PeerDescriptor
     joinNoProgressLimit: number
     peerDiscoveryQueryBatchSize: number
-    serviceId: string
+    serviceId: ServiceID
     parallelism: number
     joinTimeout: number
     connectionManager?: ConnectionManager

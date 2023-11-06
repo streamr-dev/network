@@ -10,6 +10,7 @@ import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { Remote } from './contact/Remote'
 import { PeerID } from '../helpers/PeerID'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { ServiceID } from '../types/ServiceID'
 
 const logger = new Logger(module)
 
@@ -29,7 +30,7 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
         localPeerDescriptor: PeerDescriptor,
         peerDescriptor: PeerDescriptor,
         client: ProtoRpcClient<IDhtNodeRpcClient>,
-        serviceId: string
+        serviceId: ServiceID
     ) {
         super(localPeerDescriptor, peerDescriptor, serviceId, client)
         this.id = this.getPeerId().value

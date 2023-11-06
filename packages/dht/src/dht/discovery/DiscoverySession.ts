@@ -91,7 +91,7 @@ export class DiscoverySession {
         }
         const uncontacted = this.config.peerManager.getClosestPeersTo(this.config.targetId, this.config.parallelism, this.contactedPeers)
 
-        if (uncontacted.length < 1 || this.noProgressCounter >= this.config.noProgressLimit) {
+        if (uncontacted.length === 0 || this.noProgressCounter >= this.config.noProgressLimit) {
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
             return
@@ -113,7 +113,7 @@ export class DiscoverySession {
     }
 
     public async findClosestNodes(timeout: number): Promise<void> {
-        if (this.config.peerManager.getNumberOfPeers(this.contactedPeers) < 1) {
+        if (this.config.peerManager.getNumberOfPeers(this.contactedPeers) === 1) {
             return
         }
         await runAndWaitForEvents3<DiscoverySessionEvents>(

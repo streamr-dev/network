@@ -10,6 +10,7 @@ import { Contact } from '../contact/Contact'
 import { SortedContactList } from '../contact/SortedContactList'
 import { FindResult } from './Finder'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { ServiceID } from '../../types/ServiceID'
 
 export interface FindSessionEvents {
     findCompleted: (results: PeerDescriptor[]) => void
@@ -18,7 +19,7 @@ export interface FindSessionEvents {
 const logger = new Logger(module)
 
 export interface FindSessionConfig {
-    serviceId: string
+    serviceId: ServiceID
     transport: ITransport
     kademliaIdToFind: Uint8Array
     localPeerId: PeerID
@@ -27,7 +28,7 @@ export interface FindSessionConfig {
 }
 
 export class FindSession extends EventEmitter<FindSessionEvents> implements IFindSessionRpc {
-    private readonly serviceId: string
+    private readonly serviceId: ServiceID
     private readonly transport: ITransport
     private readonly kademliaIdToFind: Uint8Array
     private readonly localPeerId: PeerID

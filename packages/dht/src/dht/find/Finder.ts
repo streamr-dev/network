@@ -25,6 +25,7 @@ import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicat
 import { FindSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { SortedContactList } from '../contact/SortedContactList'
+import { ServiceID } from '../../types/ServiceID'
 
 interface FinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -32,7 +33,7 @@ interface FinderConfig {
     connections: Map<PeerIDKey, DhtNodeRpcRemote>
     router: IRouter
     localPeerDescriptor: PeerDescriptor
-    serviceId: string
+    serviceId: ServiceID
     localDataStore: LocalDataStore
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
@@ -55,7 +56,7 @@ export class Finder implements IFinder {
     private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
     private readonly router: IRouter
     private readonly localPeerDescriptor: PeerDescriptor
-    private readonly serviceId: string
+    private readonly serviceId: ServiceID
     private readonly localDataStore: LocalDataStore
     private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     private readonly isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
@@ -176,7 +177,7 @@ export class Finder implements IFinder {
     private sendFindResponse(
         routingPath: PeerDescriptor[],
         targetPeerDescriptor: PeerDescriptor,
-        serviceId: string,
+        serviceId: ServiceID,
         closestNodes: PeerDescriptor[],
         data: Map<PeerIDKey, DataEntry> | undefined,
         noCloserNodesFound: boolean = false
@@ -252,7 +253,7 @@ export class Finder implements IFinder {
         } else if (this.router.isMostLikelyDuplicate(routedMessage.requestId)) {
             return createRouteMessageAck(routedMessage, 'message given to routeFindRequest() service is likely a duplicate')
         }
-        const senderKey = keyFromPeerDescriptor(routedMessage.previousPeer || routedMessage.sourcePeer!)
+        const senderKey = keyFromPeerDescriptor(routedMessage.previousPeer ?? routedMessage.sourcePeer!)
         logger.trace(`Received routeFindRequest call from ${senderKey}`)
         this.addContact(routedMessage.sourcePeer!, true)
         this.router.addToDuplicateDetector(routedMessage.requestId)

@@ -58,8 +58,8 @@ export const createStreamMessage = (
     const messageId: MessageID = {
         streamId: StreamPartIDUtils.getStreamID(streamPartId),
         streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
-        sequenceNumber: sequenceNumber || 0,
-        timestamp: timestamp || Date.now(),
+        sequenceNumber: sequenceNumber ?? 0,
+        timestamp: timestamp ?? Date.now(),
         publisherId: hexToBinary(publisherId),
         messageChainId: 'messageChain0',
     }
@@ -87,7 +87,7 @@ export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'k
 }
 
 export const createMockDeliveryRpcRemote = (remotePeerDescriptor?: PeerDescriptor): DeliveryRpcRemote => {
-    return new DeliveryRpcRemote(createMockPeerDescriptor(), remotePeerDescriptor || createMockPeerDescriptor(), 'mock', {} as any)
+    return new DeliveryRpcRemote(createMockPeerDescriptor(), remotePeerDescriptor ?? createMockPeerDescriptor(), 'mock', {} as any)
 }
 
 export const createMockHandshakeRpcRemote = (): HandshakeRpcRemote => {

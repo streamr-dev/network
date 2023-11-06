@@ -105,7 +105,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         )
     }
 
-    private onRequestFailed = (peerId: PeerID) => {
+    private onRequestFailed(peerId: PeerID) {
         logger.trace('onRequestFailed() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
@@ -114,7 +114,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.ongoingRequests.delete(peerId.toKey())
         }
         const contacts = this.findMoreContacts()
-        if (contacts.length < 1 && this.ongoingRequests.size < 1) {
+        if (contacts.length === 0 && this.ongoingRequests.size === 0) {
             logger.trace('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
             this.stopped = true
             this.emitFailure()
@@ -125,7 +125,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    private emitFailure = () => {
+    private emitFailure() {
         if (this.successfulHopCounter >= 1) {
             this.emit('partialSuccess', this.sessionId)
 
@@ -134,22 +134,22 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    private onRequestSucceeded = () => {
+    private onRequestSucceeded() {
         logger.trace('onRequestSucceeded() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
         }
         this.successfulHopCounter += 1
         const contacts = this.findMoreContacts()
-        if (this.successfulHopCounter >= this.parallelism || contacts.length < 1) {
+        if (this.successfulHopCounter >= this.parallelism || contacts.length === 0) {
             this.stopped = true
             this.emit('routingSucceeded', this.sessionId)
-        } else if (contacts.length > 0 && this.ongoingRequests.size < 1) {
+        } else if (contacts.length > 0 && this.ongoingRequests.size === 0) {
             this.sendMoreRequests(contacts)
         }
     }
 
-    private sendRouteMessageRequest = async (contact: RemoteContact): Promise<boolean> => {
+    private async sendRouteMessageRequest(contact: RemoteContact): Promise<boolean> {
         if (this.stopped) {
             return false
         }
@@ -171,7 +171,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    private findMoreContacts = (): RemoteContact[] => {
+    private findMoreContacts(): RemoteContact[] {
         logger.trace('findMoreContacts() sessionId: ' + this.sessionId)
         // the contents of the connections might have changed between the rounds
         // addContacts() will only add new contacts that were not there yet
@@ -181,12 +181,12 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         return this.contactList.getUncontactedContacts(this.parallelism)
     }
 
-    private sendMoreRequests = (uncontacted: RemoteContact[]) => {
+    private sendMoreRequests(uncontacted: RemoteContact[]) {
         logger.trace('sendMoreRequests() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
         }
-        if (uncontacted.length < 1) {
+        if (uncontacted.length === 0) {
             this.emitFailure()
             return
         }
@@ -221,7 +221,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     public start(): void {
         logger.trace('start() sessionId: ' + this.sessionId)
         const contacts = this.findMoreContacts()
-        if (contacts.length < 1) {
+        if (contacts.length === 0) {
             logger.trace('start() throwing noCandidatesFound sessionId: ' + this.sessionId)
             
             this.stopped = true
