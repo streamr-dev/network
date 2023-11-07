@@ -11,7 +11,7 @@ import {
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { RoutingErrors, IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
-import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { FindSessionRpcRemote } from './FindSessionRpcRemote'
@@ -20,13 +20,13 @@ import { FindSession, FindSessionEvents } from './FindSession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
-import { IFindRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { FindSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { SortedContactList } from '../contact/SortedContactList'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
+import { FindRpcLocal } from './FindRpcLocal'
 
 interface FinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -40,11 +40,9 @@ interface FinderConfig {
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
 }
 
-interface FinderFunc {
+export interface IFinder {
     startFind(idToFind: Uint8Array, fetchData?: boolean): Promise<FindResult>
 }
-
-export type IFinder = IFindRpc & FinderFunc
 
 export interface FindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
 
@@ -59,7 +57,6 @@ export class Finder implements IFinder {
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly serviceId: ServiceID
     private readonly localDataStore: LocalDataStore
-    private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     private readonly isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
     private ongoingSessions: Map<string, FindSession> = new Map()
     private stopped = false
@@ -72,10 +69,29 @@ export class Finder implements IFinder {
         this.localPeerDescriptor = config.localPeerDescriptor
         this.serviceId = config.serviceId
         this.localDataStore = config.localDataStore
-        this.addContact = config.addContact
         this.isPeerCloserToIdThanSelf = config.isPeerCloserToIdThanSelf
-        this.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeFindRequest',
-            (routedMessage: RouteMessageWrapper) => this.routeFindRequest(routedMessage))
+        this.registerLocalRpcMethods(config)
+    }
+
+    private registerLocalRpcMethods(config: FinderConfig) {
+        const rpcLocal = new FindRpcLocal({
+            doRouteFindRequest: (routedMessage: RouteMessageWrapper) => this.doRouteFindRequest(routedMessage),
+            addContact: (contact: PeerDescriptor, setActive?: boolean) => config.addContact(contact, setActive),
+            isMostLikelyDuplicate: (requestId: string) => this.router.isMostLikelyDuplicate(requestId),
+            addToDuplicateDetector: (requestId: string) => this.router.addToDuplicateDetector(requestId)
+        })
+        this.rpcCommunicator.registerRpcMethod(
+            RouteMessageWrapper,
+            RouteMessageAck,
+            'routeFindRequest',
+            async (routedMessage: RouteMessageWrapper) => {
+                if (this.stopped) {
+                    return createRouteMessageAck(routedMessage, 'routeFindRequest() service is not running')
+                } else {
+                    return rpcLocal.routeFindRequest(routedMessage)
+                }
+            }
+        )
     }
 
     public async startFind(
@@ -245,20 +261,6 @@ export class Finder implements IFinder {
         )
         closestPeers.addContacts(connectedPeers)
         return closestPeers.getClosestContacts(limit).map((peer) => peer.getPeerDescriptor())
-    }
-
-    // IFindRpc method
-    async routeFindRequest(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
-        if (this.stopped) {
-            return createRouteMessageAck(routedMessage, 'routeFindRequest() service is not running')
-        } else if (this.router.isMostLikelyDuplicate(routedMessage.requestId)) {
-            return createRouteMessageAck(routedMessage, 'message given to routeFindRequest() service is likely a duplicate')
-        }
-        const senderKey = keyFromPeerDescriptor(routedMessage.previousPeer ?? routedMessage.sourcePeer!)
-        logger.trace(`Received routeFindRequest call from ${senderKey}`)
-        this.addContact(routedMessage.sourcePeer!, true)
-        this.router.addToDuplicateDetector(routedMessage.requestId)
-        return this.doRouteFindRequest(routedMessage)
     }
 
     public stop(): void {
