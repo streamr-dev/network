@@ -15,8 +15,8 @@ export class FindRpcRemote extends Remote<IFindRpcClient> {
             sourcePeer: params.sourcePeer,
             previousPeer: params.previousPeer,
             message: params.message,
-            requestId: params.requestId || v4(),
-            reachableThrough: params.reachableThrough || [],
+            requestId: params.requestId ?? v4(),
+            reachableThrough: params.reachableThrough ?? [],
             routingPath: params.routingPath
         }
         const options = this.formDhtRpcOptions({
@@ -30,7 +30,8 @@ export class FindRpcRemote extends Remote<IFindRpcClient> {
             }
         } catch (err) {
             const fromNode = params.previousPeer ? keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
-            logger.debug(`Failed to send recursiveFind message from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
+            // eslint-disable-next-line max-len
+            logger.debug(`Failed to send routeFindRequest message from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
             return false
         }
         return true

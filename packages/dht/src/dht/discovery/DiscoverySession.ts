@@ -9,6 +9,7 @@ import { DhtNodeRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { SortedContactList } from '../contact/SortedContactList'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { ServiceID } from '../../types/ServiceID'
 
 const logger = new Logger(module)
 
@@ -21,7 +22,7 @@ interface DiscoverySessionConfig {
     neighborList: SortedContactList<DhtNodeRpcRemote>
     targetId: Uint8Array
     localPeerDescriptor: PeerDescriptor
-    serviceId: string
+    serviceId: ServiceID
     rpcCommunicator: RpcCommunicator
     parallelism: number
     noProgressLimit: number
@@ -104,7 +105,7 @@ export class DiscoverySession {
             return
         }
         const uncontacted = this.config.neighborList.getUncontactedContacts(this.config.parallelism)
-        if (uncontacted.length < 1 || this.noProgressCounter >= this.config.noProgressLimit) {
+        if (uncontacted.length === 0 || this.noProgressCounter >= this.config.noProgressLimit) {
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
             return
@@ -126,7 +127,7 @@ export class DiscoverySession {
     }
 
     public async findClosestNodes(timeout: number): Promise<SortedContactList<DhtNodeRpcRemote>> {
-        if (this.config.neighborList.getUncontactedContacts(this.config.parallelism).length < 1) {
+        if (this.config.neighborList.getUncontactedContacts(this.config.parallelism).length === 0) {
             logger.trace('getUncontactedContacts length was 0 in beginning of discovery, this.neighborList.size: '
                 + this.config.neighborList.getSize())
             return this.config.neighborList

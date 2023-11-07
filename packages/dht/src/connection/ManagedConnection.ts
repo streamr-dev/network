@@ -165,7 +165,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         return this.peerDescriptor
     }
 
-    private onHandshakeCompleted = (peerDescriptor: PeerDescriptor) => {
+    private onHandshakeCompleted(peerDescriptor: PeerDescriptor) {
         this.lastUsed = Date.now()
 
         this.setPeerDescriptor(peerDescriptor)
@@ -186,7 +186,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         impl.on('data', (bytes: Uint8Array) => {
             this.lastUsed = Date.now()
-            if (this.listenerCount('managedData') < 1) {
+            if (this.listenerCount('managedData') === 0) {
 
                 this.inputBuffer.push(bytes)
             } else {

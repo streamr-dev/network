@@ -193,7 +193,7 @@ export class StreamrNode extends EventEmitter<Events> {
         }
     }
 
-    private createLayer1Node = (streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): Layer1Node => {
+    private createLayer1Node(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): Layer1Node {
         return new DhtNode({
             transport: this.layer0Node!,
             serviceId: 'layer1::' + streamPartId,
@@ -205,7 +205,7 @@ export class StreamrNode extends EventEmitter<Events> {
         })
     }
 
-    private createRandomGraphNode = (streamPartId: StreamPartID, layer1Node: Layer1Node) => {
+    private createRandomGraphNode(streamPartId: StreamPartID, layer1Node: Layer1Node) {
         return createRandomGraphNode({
             streamPartId,
             transport: this.transport!,

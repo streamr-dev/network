@@ -60,7 +60,7 @@ describe('ConnectionManager', () => {
         await mockConnectorTransport2.start()
     })
 
-    afterAll(async ()=> {
+    afterAll(async () => {
         await mockTransport.stop()
         await mockConnectorTransport1.stop()
         await mockConnectorTransport2.stop()

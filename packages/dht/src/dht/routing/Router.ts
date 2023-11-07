@@ -8,15 +8,8 @@ import { DuplicateDetector } from './DuplicateDetector'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
-import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
-
-export const createRouteMessageAck = (routedMessage: RouteMessageWrapper, error?: string): RouteMessageAck => {
-    const ack: RouteMessageAck = {
-        requestId: routedMessage.requestId,
-        error: error ? error : ''
-    }
-    return ack
-}
+import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
+import { ServiceID } from '../../types/ServiceID'
 
 export enum RoutingErrors {
     NO_CANDIDATES_FOUND = 'No routing candidates found',
@@ -28,7 +21,7 @@ export interface RouterConfig {
     localPeerDescriptor: PeerDescriptor
     connections: Map<PeerIDKey, DhtNodeRpcRemote>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
-    serviceId: string
+    serviceId: ServiceID
     connectionManager?: ConnectionManager
 }
 
@@ -37,7 +30,7 @@ interface ForwardingTableEntry {
     peerDescriptors: PeerDescriptor[]
 }
 
-interface IRouterFunc {
+export interface IRouter {
     doRouteMessage(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RouteMessageAck
     send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void>
     isMostLikelyDuplicate(requestId: string): boolean
@@ -47,17 +40,13 @@ interface IRouterFunc {
     stop(): void
 }
 
-export type IRouter = IRouterRpc & IRouterFunc
-
 const logger = new Logger(module)
 
 export class Router implements IRouter {
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
-    private readonly addContact: (contact: PeerDescriptor, setActive?: boolean) => void
-    private readonly serviceId: string
-    private readonly connectionManager?: ConnectionManager
+    private readonly serviceId: ServiceID
     private readonly forwardingTable: Map<string, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
@@ -67,13 +56,42 @@ export class Router implements IRouter {
         this.rpcCommunicator = config.rpcCommunicator
         this.localPeerDescriptor = config.localPeerDescriptor
         this.connections = config.connections
-        this.addContact = config.addContact
         this.serviceId = config.serviceId
-        this.connectionManager = config.connectionManager
-        this.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'forwardMessage',
-            (forwardMessage: RouteMessageWrapper) => this.forwardMessage(forwardMessage))
-        this.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage',
-            (routedMessage: RouteMessageWrapper) => this.routeMessage(routedMessage))
+        this.registerLocalRpcMethods(config)
+    }
+
+    private registerLocalRpcMethods(config: RouterConfig) {
+        const rpcLocal = new RouterRpcLocal({
+            doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => this.doRouteMessage(routedMessage, mode),
+            addContact: (contact: PeerDescriptor, setActive: boolean) => config.addContact(contact, setActive),
+            setForwardingEntries: (routedMessage: RouteMessageWrapper) => this.setForwardingEntries(routedMessage),
+            duplicateRequestDetector: this.duplicateRequestDetector,
+            localPeerDescriptor: this.localPeerDescriptor,
+            connectionManager: config.connectionManager
+        })
+        this.rpcCommunicator.registerRpcMethod(
+            RouteMessageWrapper,
+            RouteMessageAck,
+            'routeMessage',
+            async (routedMessage: RouteMessageWrapper) => {
+                if (this.stopped) {
+                    return createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
+                }
+                return rpcLocal.routeMessage(routedMessage)
+            }
+        )
+        this.rpcCommunicator.registerRpcMethod(
+            RouteMessageWrapper,
+            RouteMessageAck,
+            'forwardMessage',
+            async (forwardMessage: RouteMessageWrapper) => {
+                if (this.stopped) {
+                    return createRouteMessageAck(forwardMessage, 'forwardMessage() service is not running')
+                }
+                return rpcLocal.forwardMessage(forwardMessage)
+            }
+        )
+
     }
 
     public async send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void> {
@@ -104,23 +122,24 @@ export class Router implements IRouter {
         }
     }
 
-    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE, excludedPeer?: PeerDescriptor): RouteMessageAck {
+    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RoutingErrors.STOPPED)
         }
         logger.trace(`Routing message ${routedMessage.requestId} from ${keyFromPeerDescriptor(routedMessage.sourcePeer!)} `
             + `to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}`)
         routedMessage.routingPath.push(this.localPeerDescriptor)
-        const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
-        this.addRoutingSession(session)
-        try {
+        const session = this.createRoutingSession(routedMessage, mode)
+        const contacts = session.findMoreContacts()
+        if (contacts.length > 0) {
+            this.addRoutingSession(session)
             // eslint-disable-next-line promise/catch-or-return
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
             let eventReceived: Promise<unknown>
             executeSafePromise(async () => {
                 eventReceived = raceEvents3<RoutingSessionEvents>(
                     session,
-                    ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped', 'noCandidatesFound'],
+                    ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped'],
                     null
                 )
             })
@@ -134,24 +153,21 @@ export class Router implements IRouter {
                 session.stop()
                 this.removeRoutingSession(session.sessionId) 
             })
-            session.start()
-        } catch (e) {
+            session.sendMoreRequests(contacts)
+            return createRouteMessageAck(routedMessage)
+        } else {
             if (areEqualPeerDescriptors(routedMessage.sourcePeer!, this.localPeerDescriptor)) {
                 logger.warn(
-                    `Failed to send (routeMessage: ${this.serviceId}) to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}: ${e}`
+                    `Failed to send (routeMessage: ${this.serviceId}) to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}`
                 )
             }
+            logger.trace('noCandidatesFound sessionId: ' + session.sessionId)
             return createRouteMessageAck(routedMessage, RoutingErrors.NO_CANDIDATES_FOUND)
         }
-        return createRouteMessageAck(routedMessage)
     }
 
-    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RoutingSession {
-        const excludedPeers = routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
-        if (excludedPeer) {
-            excludedPeers.push(peerIdFromPeerDescriptor(excludedPeer))
-        }
-        logger.trace(' routing session created with connections: ' + this.connections.size )
+    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode): RoutingSession {
+        logger.trace('routing session created with connections: ' + this.connections.size)
         return new RoutingSession(
             this.rpcCommunicator,
             this.localPeerDescriptor,
@@ -159,8 +175,7 @@ export class Router implements IRouter {
             this.connections,
             areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
-            undefined,
-            excludedPeers
+            routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
         )
     }
 
@@ -192,28 +207,6 @@ export class Router implements IRouter {
         this.forwardingTable.clear()
         this.duplicateRequestDetector.clear()
     }
-    
-    // IRouterRpc method
-    async routeMessage(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
-        if (this.stopped) {
-            return createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
-        } else if (this.duplicateRequestDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
-            logger.trace(`Routing message ${routedMessage.requestId} from ${keyFromPeerDescriptor(routedMessage.sourcePeer!)} `
-                + `to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)} is likely a duplicate`)
-            return createRouteMessageAck(routedMessage, 'message given to routeMessage() service is likely a duplicate')
-        }
-        logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
-        this.addContact(routedMessage.sourcePeer!, true)
-        this.addToDuplicateDetector(routedMessage.requestId)
-        if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
-            logger.trace(`routing message targeted to self ${routedMessage.requestId}`)
-            this.setForwardingEntries(routedMessage)
-            this.connectionManager?.handleMessage(routedMessage.message!)
-            return createRouteMessageAck(routedMessage)
-        } else {
-            return this.doRouteMessage(routedMessage)
-        }
-    }
 
     private setForwardingEntries(routedMessage: RouteMessageWrapper): void {
         const reachableThroughWithoutSelf = routedMessage.reachableThrough.filter((peer) => {
@@ -236,34 +229,4 @@ export class Router implements IRouter {
             this.forwardingTable.set(sourceKey, forwardingEntry)
         }
     }
-
-    // IRouterRpc method
-    async forwardMessage(forwardMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
-        if (this.stopped) {
-            return createRouteMessageAck(forwardMessage, 'forwardMessage() service is not running')
-        } else if (this.duplicateRequestDetector.isMostLikelyDuplicate(forwardMessage.requestId)) {
-            logger.trace(`Forwarding message ${forwardMessage.requestId} from ${keyFromPeerDescriptor(forwardMessage.sourcePeer!)} `
-                + `to ${keyFromPeerDescriptor(forwardMessage.destinationPeer!)} is likely a duplicate`)
-            return createRouteMessageAck(forwardMessage, 'message given to forwardMessage() service is likely a duplicate')
-        }
-        logger.trace(`Processing received forward routeMessage ${forwardMessage.requestId}`)
-        this.addContact(forwardMessage.sourcePeer!, true)
-        this.addToDuplicateDetector(forwardMessage.requestId)
-        if (areEqualPeerDescriptors(this.localPeerDescriptor, forwardMessage.destinationPeer!)) {
-            return this.forwardToDestination(forwardMessage)
-        } else {
-            return this.doRouteMessage(forwardMessage, RoutingMode.FORWARD)
-        }
-    }
-
-    private forwardToDestination(routedMessage: RouteMessageWrapper): RouteMessageAck {
-        logger.trace(`Forwarding found message targeted to self ${routedMessage.requestId}`)
-        const forwardedMessage = routedMessage.message!
-        if (areEqualPeerDescriptors(this.localPeerDescriptor, forwardedMessage.targetDescriptor!)) {
-            this.connectionManager?.handleMessage(forwardedMessage)
-            return createRouteMessageAck(routedMessage)
-        }
-        return this.doRouteMessage({ ...routedMessage, destinationPeer: forwardedMessage.targetDescriptor })
-    }
-
 }
