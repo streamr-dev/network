@@ -165,7 +165,8 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     // IAutoCertifierRpc implementation
-    public async hasSession(request: HasSessionRequest): Promise<HasSessionResponse> {
+    // TODO: could move to the DHT package or move all rpc related logic here from AutoCertifierClientFacade in DHT 
+    async hasSession(request: HasSessionRequest): Promise<HasSessionResponse> {
         logger.trace('hasSession() called ' + this.ongoingSessions.size + ' ongoing sessions')
         if (this.ongoingSessions.has(request.sessionId)) {
             return { sessionId: request.sessionId }
