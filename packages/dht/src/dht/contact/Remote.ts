@@ -12,7 +12,7 @@ const getRpcTimeout = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor
     } else if (connectionType === ConnectionType.WEBSOCKET_SERVER) {
         return 10000
     } else if (connectionType === ConnectionType.WEBRTC) {
-        return 20000
+        return 15000
     }
     return 15000
 }
