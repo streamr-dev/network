@@ -201,7 +201,7 @@ export class StreamrNode extends EventEmitter<Events> {
             peerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             entryPoints,
             numberOfNodesPerKBucket: 4,
-            rpcRequestTimeout: 10000,
+            rpcRequestTimeout: 5000,
             dhtJoinTimeout: 20000
         })
     }
