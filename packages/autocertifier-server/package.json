@@ -8,7 +8,7 @@
     "directory": "packages/autocertifier-server"
   },
   "bin": {
-    "autocertifier": "dist/bin/run-auto-certifier.js"
+    "autocertifier": "dist/bin/run.js"
   },
   "main": "dist/src/exports.js",
   "types": "dist/src/exports.d.ts",

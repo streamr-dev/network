@@ -20,7 +20,7 @@ const validateEnvironmentVariable = (name: string): string | never => {
     return value
 }
 
-export class AutoCertifier implements RestInterface, ChallengeManager {
+export class AutoCertifierServer implements RestInterface, ChallengeManager {
 
     private domainName?: string
     private dnsServer?: DnsServer
