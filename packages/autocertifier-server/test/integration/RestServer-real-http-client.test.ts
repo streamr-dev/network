@@ -3,13 +3,12 @@ import { Response } from 'request'
 import { RestServer } from '../../src/RestServer'
 import { CertifiedSubdomain } from '@streamr/autocertifier-client'
 import { ApiError } from '@streamr/autocertifier-client'
-import os from 'os'
 import { Session } from '@streamr/autocertifier-client'
 import { v4 } from 'uuid'
+import path from 'path'
 
 describe('RestServer', () => {
     let server: RestServer
-    const dir = os.tmpdir()
 
     const certifiedSubdomain: CertifiedSubdomain = {
         fqdn: 'localhost',
@@ -23,13 +22,11 @@ describe('RestServer', () => {
     const sessionId = v4()
 
     beforeAll(async () => {
-
         server = new RestServer(
             'localhost',
-            'localhost',
             9877,
-            dir + '/restServerCert.pem',
-            dir + '/restServerKey.pem', 
+            path.join(__dirname, '../utils/self-signed-certs/certificate.pem'),
+            path.join(__dirname, '../utils/self-signed-certs/key.pem'),
             {
                 async createSession(): Promise<Session> {
                     return { id: sessionId }

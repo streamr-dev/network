@@ -149,7 +149,6 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
         logger.info('certificate creator is running')
 
         this.restServer = new RestServer(
-            ownHostName + '.' + this.domainName,
             ownIpAddress,
             restServerPort,
             restServerCertPath,

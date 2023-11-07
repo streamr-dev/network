@@ -5,9 +5,8 @@ import { Err, FailedToExtractIpAddress, SteamrWebSocketPortMissing, TokenMissing
 import bodyParser from 'body-parser'
 import * as https from 'https'
 import * as fs from 'fs'
-import * as path from 'path'
 import { filePathToNodeFormat } from '@streamr/utils'
-import { CreateCertifiedSubdomainRequest, createSelfSignedCertificate, UpdateIpAndPortRequest } from '@streamr/autocertifier-client'
+import { CreateCertifiedSubdomainRequest, UpdateIpAndPortRequest } from '@streamr/autocertifier-client'
 
 const logger = new Logger(module)
 
@@ -64,15 +63,12 @@ export class RestServer {
     private server?: ServerType
     private engine: RestInterface
 
-    private ownFqdn: string
     private ownIpAddress: string
     private port: number
     private certPath: string
     private keyPath: string
 
-    constructor(ownFqdn: string, ownIpAddress: string, port: number, certPath: string, keyPath: string, engine: RestInterface) {
-
-        this.ownFqdn = ownFqdn
+    constructor(ownIpAddress: string, port: number, certPath: string, keyPath: string, engine: RestInterface) {
         this.ownIpAddress = ownIpAddress
         this.port = port
         this.certPath = filePathToNodeFormat(certPath)
@@ -82,8 +78,6 @@ export class RestServer {
 
     public async start(): Promise<void> {
         return new Promise<void>((resolve, _reject) => {
-
-            this.createSelfSignedCertsIfTheyDontExist()
 
             const app = express()
             app.use(bodyParser.json())
@@ -227,21 +221,6 @@ export class RestServer {
             sendResponse(res)
         } catch (err) {
             sendError(res, err)
-        }
-    }
-
-    // TODO: use async fs methods? Add helper function to avoid code duplication
-    private createSelfSignedCertsIfTheyDontExist(): void {
-        if (!fs.existsSync(this.certPath) || !fs.existsSync(this.keyPath)) {
-            const certs = createSelfSignedCertificate(this.ownFqdn, 1200)
-            if (!fs.existsSync(path.dirname(this.certPath))) {
-                fs.mkdirSync(path.dirname(this.certPath), { recursive: true })
-            }
-            if (!fs.existsSync(path.dirname(this.keyPath))) {
-                fs.mkdirSync(path.dirname(this.keyPath), { recursive: true })
-            }
-            fs.writeFileSync(this.certPath, certs.serverCert, { flag: 'w' })
-            fs.writeFileSync(this.keyPath, certs.serverKey, { flag: 'w' })
         }
     }
 
