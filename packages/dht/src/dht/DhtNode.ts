@@ -247,7 +247,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             serviceId: this.config.serviceId,
             parallelism: this.config.joinParallelism,
             addContact: this.addNewContact.bind(this),
-            connectionManager: this.connectionManager
+            connectionManager: this.connectionManager,
+            rpcRequestTimeout: this.config.rpcRequestTimeout
         })
         this.router = new Router({
             rpcCommunicator: this.rpcCommunicator,
@@ -280,7 +281,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             dhtNodeEmitter: this,
             getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
                 return this.bucket!.closest(id, n)
-            }
+            },
+            rpcRequestTimeout: this.config.rpcRequestTimeout
         })
         this.bindRpcLocalMethods()
         if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
@@ -312,7 +314,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                     this.localPeerDescriptor!,
                     removedContact.getPeerDescriptor(),
                     toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
-                    this.config.serviceId
+                    this.config.serviceId,
+                    this.config.rpcRequestTimeout
                 )
             )
         })
@@ -330,7 +333,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 this.localPeerDescriptor!,
                 peer,
                 toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
-                this.config.serviceId
+                this.config.serviceId,
+                this.config.rpcRequestTimeout
             )
             if (areEqualPeerDescriptors(peer, this.localPeerDescriptor!)) {
                 logger.error('own peerdescriptor added to connections in initKBucket')
@@ -356,7 +360,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.localPeerDescriptor!,
             peerDescriptor,
             toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
-            this.config.serviceId
+            this.config.serviceId,
+            this.config.rpcRequestTimeout
         )
         if (!this.connections.has(PeerID.fromValue(rpcRemote.id).toKey())) {
             this.connections.set(PeerID.fromValue(rpcRemote.id).toKey(), rpcRemote)
@@ -553,7 +558,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 this.localPeerDescriptor!,
                 contact,
                 toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
-                this.config.serviceId
+                this.config.serviceId,
+                this.config.rpcRequestTimeout
             )
             if (!this.bucket!.get(contact.kademliaId) && !this.neighborList!.getContact(peerIdFromPeerDescriptor(contact))) {
                 this.neighborList!.addContact(rpcRemote)

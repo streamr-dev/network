@@ -23,6 +23,8 @@ export interface RouterConfig {
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     serviceId: ServiceID
     connectionManager?: ConnectionManager
+    rpcRequestTimeout?: number
+
 }
 
 interface ForwardingTableEntry {

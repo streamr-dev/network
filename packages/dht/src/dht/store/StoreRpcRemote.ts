@@ -13,9 +13,7 @@ import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 export class StoreRpcRemote extends Remote<IStoreRpcClient> {
 
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
-        const options = this.formDhtRpcOptions({
-            timeout: 10000
-        })
+        const options = this.formDhtRpcOptions()
         try {
             return await this.getClient().storeData(request, options)
         } catch (err) {
@@ -28,9 +26,7 @@ export class StoreRpcRemote extends Remote<IStoreRpcClient> {
     }
 
     async deleteData(request: DeleteDataRequest): Promise<DeleteDataResponse> {
-        const options = this.formDhtRpcOptions({
-            timeout: 10000
-        })
+        const options = this.formDhtRpcOptions()
         try {
             return await this.getClient().deleteData(request, options)
         } catch (err) {
@@ -42,7 +38,7 @@ export class StoreRpcRemote extends Remote<IStoreRpcClient> {
 
     async migrateData(request: MigrateDataRequest, doNotConnect: boolean = false): Promise<MigrateDataResponse> {
         const options = this.formDhtRpcOptions({
-            timeout: 10000,
+            timeout: 5000,
             doNotConnect
         })
         return this.getClient().migrateData(request, options)

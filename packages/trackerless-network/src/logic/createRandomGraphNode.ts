@@ -71,13 +71,14 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         nearbyNodeView,
         randomNodeView,
         targetNeighbors,
-        maxNeighborCount: numOfTargetNeighbors
+        maxNeighborCount: numOfTargetNeighbors,
+        rpcRequestTimeout: config.rpcRequestTimeout,
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
         targetNeighbors,
         nearbyNodeView,
         doFindNeighbors: (excludedIds) => handshaker.attemptHandshakesOnContacts(excludedIds),
-        minCount: numOfTargetNeighbors
+        minCount: numOfTargetNeighbors,
     })
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
         targetNeighbors,

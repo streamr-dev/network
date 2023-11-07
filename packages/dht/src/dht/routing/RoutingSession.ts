@@ -28,13 +28,15 @@ class RemoteContact extends Contact {
             localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
-            toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport())),
+            5000
         )
         this.findRpcRemote = new FindRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
-            toProtoRpcClient(new FindRpcClient(rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new FindRpcClient(rpcCommunicator.getRpcClientTransport())),
+            5000
         )
     }
 
