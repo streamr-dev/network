@@ -29,11 +29,11 @@ export function createSelfSignedCertificate(fqdn: string, validMonths: number): 
     // TODO: add better values for the certificate?
     const attrs = [
         { name: 'commonName', value: fqdn },
-        { name: 'countryName', value: 'US' },
-        { shortName: 'ST', value: 'California' },
-        { name: 'localityName', value: 'San Francisco' },
-        { name: 'organizationName', value: 'My Company' },
-        { shortName: 'OU', value: 'My CA' }
+        { name: 'countryName', value: '-' },
+        { shortName: 'ST', value: '-' },
+        { name: 'localityName', value: '-' },
+        { name: 'organizationName', value: '-' },
+        { shortName: 'OU', value: '-' }
     ]
     caCert.setSubject(attrs)
     caCert.setIssuer(attrs)
@@ -54,15 +54,7 @@ export function createSelfSignedCertificate(fqdn: string, validMonths: number): 
     serverCert.validity.notBefore = new Date()
     serverCert.validity.notAfter = new Date()
     serverCert.validity.notAfter.setFullYear(serverCert.validity.notBefore.getFullYear() + 1)
-    const serverAttrs = [
-        { name: 'commonName', value: fqdn },
-        { name: 'countryName', value: 'US' },
-        { shortName: 'ST', value: 'California' },
-        { name: 'localityName', value: 'San Francisco' },
-        { name: 'organizationName', value: 'My Company' },
-        { shortName: 'OU', value: 'My Server' }
-    ]
-    serverCert.setSubject(serverAttrs)
+    serverCert.setSubject(attrs)
     serverCert.setIssuer(caCert.subject.attributes)
     serverCert.setExtensions([
         { name: 'basicConstraints', cA: false },
