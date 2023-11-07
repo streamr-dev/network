@@ -15,6 +15,10 @@ import {
     PingRequest,
     PingResponse,
     DataEntry,
+    ExternalFindDataRequest,
+    ExternalFindDataResponse,
+    ExternalStoreDataRequest,
+    ExternalStoreDataResponse,
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
@@ -36,7 +40,6 @@ import { StoreRpcLocal } from './store/StoreRpcLocal'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/webrtc/WebrtcConnectorRpcLocal'
-import { registerExternalApiRpcMethods } from './registerExternalApiRpcMethods'
 import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
 import { UUID } from '../helpers/UUID'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
@@ -44,6 +47,8 @@ import { sample } from 'lodash'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
 import { MarkRequired } from 'ts-essentials'
 import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -278,7 +283,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
         })
         this.bindRpcLocalMethods()
-        registerExternalApiRpcMethods(this)
         if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
             && !areEqualPeerDescriptors(this.config.entryPoints[0], this.localPeerDescriptor!)) {
             this.connectToEntryPoint(this.config.entryPoints[0])
@@ -386,7 +390,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started || this.stopped) {
             return
         }
-        const rpcLocal = new DhtNodeRpcLocal({
+        const dhtNodeRpcLocal = new DhtNodeRpcLocal({
             bucket: this.bucket!,
             serviceId: this.config.serviceId,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
@@ -394,11 +398,31 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             removeContact: (contact: PeerDescriptor) => this.removeContact(contact)
         })
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',
-            (req: ClosestPeersRequest, context) => rpcLocal.getClosestPeers(req, context))
+            (req: ClosestPeersRequest, context) => dhtNodeRpcLocal.getClosestPeers(req, context))
         this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping',
-            (req: PingRequest, context) => rpcLocal.ping(req, context))
+            (req: PingRequest, context) => dhtNodeRpcLocal.ping(req, context))
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
-            (req: LeaveNotice, context) => rpcLocal.leaveNotice(req, context))
+            (req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(req, context))
+        const externalApiRpcLocal = new ExternalApiRpcLocal({
+            startFind: (idToFind: Uint8Array, fetchData: boolean, excludedPeer: PeerDescriptor) => {
+                return this.startFind(idToFind, fetchData, excludedPeer)
+            },
+            storeDataToDht: (key: Uint8Array, data: Any) => this.storeDataToDht(key, data)
+        })
+        this.rpcCommunicator!.registerRpcMethod(
+            ExternalFindDataRequest,
+            ExternalFindDataResponse,
+            'externalFindData', 
+            (req: ExternalFindDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalFindData(req, context),
+            { timeout: 10000 }
+        )
+        this.rpcCommunicator!.registerRpcMethod(
+            ExternalStoreDataRequest,
+            ExternalStoreDataResponse,
+            'externalStoreData',
+            (req: ExternalStoreDataRequest) => externalApiRpcLocal.externalStoreData(req),
+            { timeout: 10000 }
+        )
     }
 
     private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
@@ -622,10 +646,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         return await rpcRemote.externalFindData(idToFind)
-    }
-
-    public getRpcCommunicator(): RoutingRpcCommunicator {
-        return this.rpcCommunicator!
     }
 
     public getTransport(): ITransport {
