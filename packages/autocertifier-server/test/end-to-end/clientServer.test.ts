@@ -92,7 +92,7 @@ describe('clientServer', () => {
                 async createNewCertificateForSubdomain(): Promise<CertifiedSubdomain> {
                     return certifiedSubdomain
                 },
-                async updateSubdomainIpAndPort() {
+                async updateSubdomainIp() {
                     // do nothing
                 }
             })

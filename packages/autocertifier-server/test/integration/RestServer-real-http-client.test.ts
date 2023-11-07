@@ -41,7 +41,7 @@ describe('RestServer', () => {
 
                     return certifiedSubdomain
                 },
-                async updateSubdomainIpAndPort() {
+                async updateSubdomainIp() {
                     // do nothing
                 }
             })

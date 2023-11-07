@@ -70,7 +70,7 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
         logger.info('creating new certificate for ' + subdomain + ' and ' + ipAddress + ':' + port)
 
         // This will throw if the token is incorrect
-        await this.updateSubdomainIpAndPort(subdomain, ipAddress, port, streamrWebSocketPort, sessionId, token)
+        await this.updateSubdomainIp(subdomain, ipAddress, port, streamrWebSocketPort, sessionId, token)
         const fqdn = subdomain + '.' + this.domainName
         const certificate = await this.certificateCreator!.createCertificate(fqdn)
         return {
@@ -81,7 +81,7 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
         }
     }
 
-    public async updateSubdomainIpAndPort(
+    public async updateSubdomainIp(
         subdomain: string,
         ipAddress: string,
         port: string,
@@ -94,7 +94,7 @@ export class AutoCertifier implements RestInterface, ChallengeManager {
 
         // this will throw if the client cannot answer the challenge of getting sessionId 
         await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
-        await this.database!.updateSubdomainIpAndPort(subdomain, ipAddress, port, token)
+        await this.database!.updateSubdomainIp(subdomain, ipAddress, port, token)
     }
 
     // ChallengeManager implementation

@@ -15,7 +15,7 @@ export class Database {
     private createSubdomainStatement?: Statement
     private getSubdomainStatement?: Statement
     private getSubdomainWithTokenStatement?: Statement
-    private updateSubdomainIpAndPortStatement?: Statement
+    private updateSubdomainIpStatement?: Statement
     private getSubdomainAcmeChallengeStatement?: Statement
     private updateSubdomainAcmeChallengeStatement?: Statement
     private databaseFilePath: string
@@ -59,14 +59,14 @@ export class Database {
         return ret
     }
 
-    public async updateSubdomainIpAndPort(subdomain: string, ip: string, port: string, token: string): Promise<void> {
+    public async updateSubdomainIp(subdomain: string, ip: string, port: string, token: string): Promise<void> {
         try {
             await this.getSubdomainWithToken(subdomain, token)
         } catch (e) {
             throw new InvalidSubdomainOrToken('Invalid subdomain or token ' + subdomain, e)
         }
         try {
-            await this.updateSubdomainIpAndPortStatement!.run(ip, port, subdomain, token)
+            await this.updateSubdomainIpStatement!.run(ip, port, subdomain, token)
         } catch (e) {
             throw new DatabaseError('Failed to update subdomain ' + subdomain, e)
         }
@@ -98,7 +98,7 @@ export class Database {
         this.createSubdomainStatement = await this.db.prepare("INSERT INTO subdomains (subdomainName, ip, port, token) VALUES (?, ?, ?, ?)")
         this.getSubdomainStatement = await this.db.prepare("SELECT * FROM subdomains WHERE subdomainName = ?")
         this.getSubdomainWithTokenStatement = await this.db.prepare("SELECT * FROM subdomains WHERE subdomainName = ? AND token = ?")
-        this.updateSubdomainIpAndPortStatement = await this.db.prepare("UPDATE subdomains SET ip = ?, port = ? WHERE subdomainName = ? AND token = ?")
+        this.updateSubdomainIpStatement = await this.db.prepare("UPDATE subdomains SET ip = ?, port = ? WHERE subdomainName = ? AND token = ?")
         this.getSubdomainAcmeChallengeStatement = await this.db.prepare("SELECT acmeChallenge FROM subdomains WHERE subdomainName = ?")
         this.updateSubdomainAcmeChallengeStatement = await this.db.prepare("UPDATE subdomains SET acmeChallenge = ? WHERE subdomainName = ?")
 
@@ -115,8 +115,8 @@ export class Database {
         if (this.getSubdomainWithTokenStatement) {
             await this.getSubdomainWithTokenStatement.finalize()
         }
-        if (this.updateSubdomainIpAndPortStatement) {
-            await this.updateSubdomainIpAndPortStatement.finalize()
+        if (this.updateSubdomainIpStatement) {
+            await this.updateSubdomainIpStatement.finalize()
         }
         if (this.getSubdomainAcmeChallengeStatement) {
             await this.getSubdomainAcmeChallengeStatement.finalize()
@@ -152,6 +152,7 @@ export interface Subdomain {
     // TODO: could be called just name / label?
     subdomainName: string
     ip: string
+    // TODO: the port should not be stored
     port: string
     token: string
     acmeChallenge?: string

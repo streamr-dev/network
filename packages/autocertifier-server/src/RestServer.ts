@@ -103,7 +103,7 @@ export class RestServer {
             app.patch('/certified-subdomains/:subdomain', this.createNewCertificateForExistingSubdomain)
 
             // update subdomain ip and port
-            app.put('/certified-subdomains/:subdomain/ip', this.updateSubdomainIpAndPort)
+            app.put('/certified-subdomains/:subdomain/ip', this.updateSubdomainIp)
 
             const options = {
                 key: fs.readFileSync(this.keyPath),
@@ -191,7 +191,7 @@ export class RestServer {
         }
     }
 
-    private updateSubdomainIpAndPort = async (req: express.Request, res: express.Response): Promise<void> => {
+    private updateSubdomainIp = async (req: express.Request, res: express.Response): Promise<void> => {
         const subdomain = req.params.subdomain
         const body = req.body as UpdateIpAndPortRequest
 
@@ -216,12 +216,12 @@ export class RestServer {
             sendError(res, err)
             return
         }
-        logger.debug('updateSubdomainIpAndPort() '
+        logger.debug('updateSubdomainIp() '
             + 'subdomain: ' + subdomain + ', ip: ' + ipAndPort.ip
             + ', port: ' + ipAndPort.port + ', streamrWebSocketPort: ' + streamrWebSocketPort
             + ', sessionId: ' + ' ' + sessionId + ', token: ' + token)
         try {
-            await this.engine.updateSubdomainIpAndPort(subdomain, ipAndPort.ip,
+            await this.engine.updateSubdomainIp(subdomain, ipAndPort.ip,
                 ipAndPort.port, streamrWebSocketPort, sessionId, token)
 
             sendResponse(res)

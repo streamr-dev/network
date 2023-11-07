@@ -12,6 +12,6 @@ export interface RestInterface {
     createNewCertificateForSubdomain(subdomain: string, ipAddress: string, port: string, 
         streamrWebSocketPort: string, sessionId: string, token: string): Promise<CertifiedSubdomain>
     
-    updateSubdomainIpAndPort(subdomain: string, ipAddress: string, port: string, 
+    updateSubdomainIp(subdomain: string, ipAddress: string, port: string, 
         streamrWebSocketPort: string, sessionId: string, token: string): Promise<void>
 }

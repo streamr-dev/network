@@ -29,7 +29,8 @@ describe('Database', () => {
         })
     })
 
-    describe('updateSubdomainIpAndPort()', () => {
+    describe('updateSubdomainIp()', () => {
+        // TODO: remove storing port in the data base
         it('should update the IP and port of an existing subdomain', async () => {
             const subdomain: Subdomain = {
                 subdomainName: 'example.com',
@@ -43,7 +44,7 @@ describe('Database', () => {
             const newIp = '192.168.0.1'
             const newPort = '80'
 
-            await db.updateSubdomainIpAndPort(subdomain.subdomainName, newIp, newPort, subdomain.token)
+            await db.updateSubdomainIp(subdomain.subdomainName, newIp, newPort, subdomain.token)
 
             const result = await db.getSubdomain(subdomain.subdomainName)
 
@@ -64,7 +65,7 @@ describe('Database', () => {
             const newIp = '192.168.0.1'
             const newPort = '80'
 
-            await expect(db.updateSubdomainIpAndPort(
+            await expect(db.updateSubdomainIp(
                 subdomain.subdomainName, newIp, newPort, 'wrongToken')).rejects.toThrow()
         })
     })
