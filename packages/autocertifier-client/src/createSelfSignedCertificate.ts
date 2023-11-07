@@ -9,6 +9,7 @@ interface CertificateChain {
 
 const SAN_TYPE_DNS = 2
 
+// TODO: move to DHT? might need in tests for autocertifier-client
 export function createSelfSignedCertificate(fqdn: string, validMonths: number): CertificateChain {
     if (validMonths <= 0) {
         throw new Error('validMonths must be greater than 0')
