@@ -11,7 +11,7 @@ import * as forge from 'node-forge'
 import { Logger } from '@streamr/utils'
 
 interface AutoCertifierClientEvents {
-    updatedSubdomain: (domain: CertifiedSubdomain) => void
+    updatedCertificate: (domain: CertifiedSubdomain) => void
 }
 
 export type HasSession = (request: HasSessionRequest, context: ServerCallContext) => Promise<HasSessionResponse>
@@ -65,7 +65,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             // TODO: most of the time the ip should not change. Calling this is important for whenever it does.
             await this.updateSubdomainIp()
             this.scheduleCertificateUpdate(sub.expirationTimestamp)
-            this.emit('updatedSubdomain', sub.subdomain)
+            this.emit('updatedCertificate', sub.subdomain)
         }
     }
 
@@ -126,27 +126,28 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         const expirationTimestamp = certObj.validity.notAfter.getTime()
         this.scheduleCertificateUpdate(expirationTimestamp)
 
-        this.emit('updatedSubdomain', certifiedSubdomain)
+        this.emit('updatedCertificate', certifiedSubdomain)
     }
 
     private updateCertificate = async (): Promise<void> => {
         const sessionId = await this.restClient.createSession()
         this.ongoingSessions.add(sessionId)
 
-        const oldSubdomain = JSON.parse(fs.readFileSync(this.subdomainFilePath, 'utf8')) as CertifiedSubdomain
-        const certifiedSubdomain = await this.restClient.updateCertificate(oldSubdomain.subdomain,
-            this.streamrWebSocketPort, oldSubdomain.token, sessionId)
+        const oldCertifiedSubdomain = JSON.parse(fs.readFileSync(this.subdomainFilePath, 'utf8')) as CertifiedSubdomain
+        const updatedCertifiedSubdomain = await this.restClient.updateCertificate(oldCertifiedSubdomain.subdomain,
+            this.streamrWebSocketPort, oldCertifiedSubdomain.token, sessionId)
 
         this.ongoingSessions.delete(sessionId)
 
         // TODO: use async fs methods?
-        fs.writeFileSync(this.subdomainFilePath, JSON.stringify(certifiedSubdomain))
-        const certObj = forge.pki.certificateFromPem(certifiedSubdomain.certificate.cert)
+        fs.writeFileSync(this.subdomainFilePath, JSON.stringify(updatedCertifiedSubdomain))
+        const certObj = forge.pki.certificateFromPem(updatedCertifiedSubdomain.certificate.cert)
 
         const expirationTimestamp = certObj.validity.notAfter.getTime()
         this.scheduleCertificateUpdate(expirationTimestamp)
 
-        this.emit('updatedSubdomain', certifiedSubdomain)
+        // TODO: if the certificate was not updated there's no need to emit the event. Could compare certificates?
+        this.emit('updatedCertificate', updatedCertifiedSubdomain)
     }
 
     // This method should be called whenever the IP address or port of the node changes

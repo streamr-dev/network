@@ -4,12 +4,12 @@ import { MockTransport } from '../utils/mock/Transport'
 
 class MockAutoCertifierClient extends EventEmitter {
     start = async () => {
-        this.emit('updatedSubdomain', {})
+        this.emit('updatedCertificate', {})
     }
     // eslint-disable-next-line class-methods-use-this
     stop = () => {}
     emitUpdateSubdomain = () => {
-        this.emit('updatedSubdomain', {})
+        this.emit('updatedCertificate', {})
     }
 }
 

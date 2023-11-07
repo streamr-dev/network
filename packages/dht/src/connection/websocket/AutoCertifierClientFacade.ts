@@ -71,14 +71,14 @@ export class AutoCertifierClientFacade {
     }
 
     async start(): Promise<void> {
-        this.autoCertifierClient.on('updatedSubdomain', (subdomain: CertifiedSubdomain) => {
+        this.autoCertifierClient.on('updatedCertificate', (subdomain: CertifiedSubdomain) => {
             logger.trace(`Updating certificate for WSS server`)
             this.setHost(subdomain.fqdn)
             this.updateCertificate(subdomain.certificate)
             logger.trace(`Updated certificate for WSS server`)
         })
         await Promise.all([
-            waitForEvent3(this.autoCertifierClient as any, 'updatedSubdomain', START_TIMEOUT),
+            waitForEvent3(this.autoCertifierClient as any, 'updatedCertificate', START_TIMEOUT),
             this.autoCertifierClient.start()
         ])
     }
