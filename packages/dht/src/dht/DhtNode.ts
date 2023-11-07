@@ -16,6 +16,10 @@ import {
     PingRequest,
     PingResponse,
     DataEntry,
+    ExternalFindDataRequest,
+    ExternalFindDataResponse,
+    ExternalStoreDataRequest,
+    ExternalStoreDataResponse,
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
@@ -36,7 +40,6 @@ import { StoreRpcLocal } from './store/StoreRpcLocal'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/webrtc/WebrtcConnectorRpcLocal'
-import { registerExternalApiRpcMethods } from './registerExternalApiRpcMethods'
 import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
 import { PeerManager } from './PeerManager'
 import { UUID } from '../helpers/UUID'
@@ -45,6 +48,8 @@ import { sample } from 'lodash'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
 import { MarkRequired } from 'ts-essentials'
 import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
+import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -295,7 +300,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
         })
         this.bindRpcLocalMethods()
-        registerExternalApiRpcMethods(this)
         if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0
             && !areEqualPeerDescriptors(this.config.entryPoints[0], this.localPeerDescriptor!)) {
             this.connectToEntryPoint(this.config.entryPoints[0])
@@ -368,7 +372,28 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             (req: PingRequest, context) => rpcLocal.ping(req, context))
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
             (req: LeaveNotice, context) => rpcLocal.leaveNotice(req, context))
+        const externalApiRpcLocal = new ExternalApiRpcLocal({
+            startFind: (idToFind: Uint8Array, fetchData: boolean, excludedPeer: PeerDescriptor) => {
+                return this.startFind(idToFind, fetchData, excludedPeer)
+            },
+            storeDataToDht: (key: Uint8Array, data: Any) => this.storeDataToDht(key, data)
+        })
+        this.rpcCommunicator!.registerRpcMethod(
+            ExternalFindDataRequest,
+            ExternalFindDataResponse,
+            'externalFindData', 
+            (req: ExternalFindDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalFindData(req, context),
+            { timeout: 10000 }
+        )
+        this.rpcCommunicator!.registerRpcMethod(
+            ExternalStoreDataRequest,
+            ExternalStoreDataResponse,
+            'externalStoreData',
+            (req: ExternalStoreDataRequest) => externalApiRpcLocal.externalStoreData(req),
+            { timeout: 10000 }
+        )
     }
+
     private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
         const distance1 = KBucket.distance(peer1.kademliaId, compareToId.value)
         const distance2 = KBucket.distance(this.localPeerDescriptor!.kademliaId, compareToId.value)
