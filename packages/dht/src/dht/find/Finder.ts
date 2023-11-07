@@ -9,7 +9,7 @@ import {
     RouteMessageWrapper
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { createRouteMessageAck, RoutingErrors, IRouter } from '../routing/Router'
+import { RoutingErrors, IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
@@ -26,6 +26,7 @@ import { FindSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.cli
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { SortedContactList } from '../contact/SortedContactList'
 import { getPreviousPeer } from '../routing/getPreviousPeer'
+import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 
 interface FinderConfig {
