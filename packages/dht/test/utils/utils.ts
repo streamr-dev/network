@@ -30,7 +30,6 @@ import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { wait, waitForCondition } from '@streamr/utils'
-import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 
 export const generateId = (stringId: string): Uint8Array => {
@@ -276,8 +275,4 @@ async function waitReadyForTesting(connectionManager: ConnectionManager, limit: 
             throw Error(`ConnectionManager has more than ${limit}`)
         }
     }
-}
-
-export function createMockRoutingRpcCommunicator(): RoutingRpcCommunicator {
-    return new RoutingRpcCommunicator('router', async (_msg, _doNotConnect) => {})
 }
