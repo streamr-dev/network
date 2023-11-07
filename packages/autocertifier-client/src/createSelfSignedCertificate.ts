@@ -26,7 +26,6 @@ export function createSelfSignedCertificate(fqdn: string, validMonths: number): 
     caCert.validity.notAfter = new Date()
     caCert.validity.notAfter.setMonth(caCert.validity.notBefore.getMonth() + validMonths)
 
-    // TODO: add better values for the certificate?
     const attrs = [
         { name: 'commonName', value: fqdn },
         { name: 'countryName', value: '-' },
