@@ -55,7 +55,7 @@ export const runStreamrChallenge = (
                 communicator.handleMessageFromPeer(Message.fromBinary(msg))
             })
             const rpcClient = toProtoRpcClient(new AutoCertifierRpcClient(communicator.getRpcClientTransport()))
-            rpcClient.getSessionId({ sessionId: sessionId }).then(() => {
+            rpcClient.hasSession({ sessionId }).then(() => {
                 resolve()
                 return
             }).catch((e) => {

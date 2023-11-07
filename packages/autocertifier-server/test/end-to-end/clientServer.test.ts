@@ -16,9 +16,9 @@ import {
     Session,
     AutoCertifierClient,
     createSelfSignedCertificate,
-    SessionIdRequest,
-    SessionIdResponse,
-    GetSessionId
+    HasSessionRequest,
+    HasSessionResponse,
+    HasSession
 } from '@streamr/autocertifier-client'
 import { v4 } from 'uuid'
 import { Logger } from '@streamr/utils'
@@ -137,11 +137,11 @@ describe('clientServer', () => {
             subdomainPath,
             streamrWebSocketPort,
             autoCertifierUrl,
-            (serviceId: string, rpcMethodName: string, method: GetSessionId) => {
+            (serviceId: string, rpcMethodName: string, method: HasSession) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
                 clientRpcCommunicator.registerRpcMethod(
-                    SessionIdRequest,
-                    SessionIdResponse,
+                    HasSessionRequest,
+                    HasSessionResponse,
                     rpcMethodName,
                     method
                 )
@@ -164,11 +164,11 @@ describe('clientServer', () => {
             subdomainPath,
             streamrWebSocketPort,
             autoCertifierUrl,
-            (serviceId: string, rpcMethodName: string, method: GetSessionId) => {
+            (serviceId: string, rpcMethodName: string, method: HasSession) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
                 clientRpcCommunicator.registerRpcMethod(
-                    SessionIdRequest,
-                    SessionIdResponse,
+                    HasSessionRequest,
+                    HasSessionResponse,
                     rpcMethodName,
                     method
                 )

@@ -4,55 +4,44 @@
 import { ServiceType } from "@protobuf-ts/runtime-rpc";
 import { MessageType } from "@protobuf-ts/runtime";
 /**
- * @generated from protobuf message SessionIdRequest
+ * @generated from protobuf message HasSessionRequest
  */
-export interface SessionIdRequest {
+export interface HasSessionRequest {
     /**
      * @generated from protobuf field: string sessionId = 1;
      */
     sessionId: string;
 }
 /**
- * @generated from protobuf message SessionIdResponse
+ * @generated from protobuf message HasSessionResponse
  */
-export interface SessionIdResponse {
-    /**
-     * @generated from protobuf field: optional string error = 1;
-     */
-    error?: string;
-    /**
-     * @generated from protobuf field: optional string sessionId = 2;
-     */
-    sessionId?: string;
+export interface HasSessionResponse {
 }
 // @generated message type with reflection information, may provide speed optimized methods
-class SessionIdRequest$Type extends MessageType<SessionIdRequest> {
+class HasSessionRequest$Type extends MessageType<HasSessionRequest> {
     constructor() {
-        super("SessionIdRequest", [
+        super("HasSessionRequest", [
             { no: 1, name: "sessionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message SessionIdRequest
+ * @generated MessageType for protobuf message HasSessionRequest
  */
-export const SessionIdRequest = new SessionIdRequest$Type();
+export const HasSessionRequest = new HasSessionRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class SessionIdResponse$Type extends MessageType<SessionIdResponse> {
+class HasSessionResponse$Type extends MessageType<HasSessionResponse> {
     constructor() {
-        super("SessionIdResponse", [
-            { no: 1, name: "error", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "sessionId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
-        ]);
+        super("HasSessionResponse", []);
     }
 }
 /**
- * @generated MessageType for protobuf message SessionIdResponse
+ * @generated MessageType for protobuf message HasSessionResponse
  */
-export const SessionIdResponse = new SessionIdResponse$Type();
+export const HasSessionResponse = new HasSessionResponse$Type();
 /**
  * @generated ServiceType for protobuf service AutoCertifierRpc
  */
 export const AutoCertifierRpc = new ServiceType("AutoCertifierRpc", [
-    { name: "getSessionId", options: {}, I: SessionIdRequest, O: SessionIdResponse }
+    { name: "hasSession", options: {}, I: HasSessionRequest, O: HasSessionResponse }
 ]);

@@ -1,4 +1,4 @@
-import { AUTOCERTIFIER_SERVICE_ID, SessionIdRequest, SessionIdResponse } from '@streamr/autocertifier-client'
+import { AUTOCERTIFIER_SERVICE_ID, HasSessionRequest, HasSessionResponse } from '@streamr/autocertifier-client'
 import { runStreamrChallenge } from '../../src/StreamrChallenger'
 import { 
     ConnectionManager,
@@ -30,7 +30,7 @@ describe('StreamrChallenger', () => {
         }
     }
     const sessionId = 'sessionId'
-    const rpcMethod = async (): Promise<SessionIdResponse> => {
+    const rpcMethod = async (): Promise<HasSessionResponse> => {
         return {
             sessionId
         }
@@ -55,7 +55,7 @@ describe('StreamrChallenger', () => {
         })
         await challengedClientTransport.start()
         challengedClient = new ListeningRpcCommunicator(AUTOCERTIFIER_SERVICE_ID, challengedClientTransport)
-        challengedClient.registerRpcMethod(SessionIdRequest, SessionIdResponse, 'getSessionId', rpcMethod)
+        challengedClient.registerRpcMethod(HasSessionRequest, HasSessionResponse, 'hasSession', rpcMethod)
     })
 
     afterEach(async () => {

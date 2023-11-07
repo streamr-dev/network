@@ -1,6 +1,6 @@
 import { EventEmitter } from 'eventemitter3'
 import { IAutoCertifierRpc } from './proto/packages/autocertifier-client/protos/AutoCertifier.server'
-import { SessionIdRequest, SessionIdResponse } from './proto/packages/autocertifier-client/protos/AutoCertifier'
+import { HasSessionRequest, HasSessionResponse } from './proto/packages/autocertifier-client/protos/AutoCertifier'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { filePathToNodeFormat } from '@streamr/utils'
 import { RestClient } from './RestClient'
@@ -14,7 +14,7 @@ interface AutoCertifierClientEvents {
     updatedSubdomain: (domain: CertifiedSubdomain) => void
 }
 
-export type GetSessionId = (request: SessionIdRequest, context: ServerCallContext) => Promise<SessionIdResponse>
+export type HasSession = (request: HasSessionRequest, context: ServerCallContext) => Promise<HasSessionResponse>
 
 const logger = new Logger(module)
 
@@ -37,7 +37,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         registerRpcMethod: (
             serviceId: string,
             rpcMethodName: string,
-            method: GetSessionId
+            method: HasSession
         ) => void
     ) {
         super()
@@ -45,7 +45,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         this.restClient = new RestClient(restApiUrl)
         this.subdomainFilePath = filePathToNodeFormat(subdomainFilePath)
         this.streamrWebSocketPort = streamrWebSocketPort
-        registerRpcMethod(AUTOCERTIFIER_SERVICE_ID, 'getSessionId', this.getSessionId.bind(this))
+        registerRpcMethod(AUTOCERTIFIER_SERVICE_ID, 'hasSession', this.hasSession.bind(this))
     }
 
     public async start(): Promise<void> {
@@ -62,6 +62,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         if (Date.now() >= sub.expirationTimestamp - ONE_DAY) {
             await this.updateCertificate()
         } else {
+            // TODO: most of the time the ip should not change. Calling this is important for whenever it does.
             await this.updateSubdomainIpAndPort()
             this.scheduleCertificateUpdate(sub.expirationTimestamp)
             this.emit('updatedSubdomain', sub.subdomain)
@@ -164,12 +165,12 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     // IAutoCertifierRpc implementation
-    public async getSessionId(request: SessionIdRequest, _context: ServerCallContext): Promise<SessionIdResponse> {
-        logger.info('getSessionId() called ' + this.ongoingSessions.size + ' ongoing sessions')
+    public async hasSession(request: HasSessionRequest, _context: ServerCallContext): Promise<HasSessionResponse> {
+        logger.trace('hasSession() called ' + this.ongoingSessions.size + ' ongoing sessions')
         if (this.ongoingSessions.has(request.sessionId)) {
             return { sessionId: request.sessionId }
         } else {
-            return { error: 'client has no such ongoing session' }
+            throw `Session not found ${request.sessionId}`
         }
     }
 }

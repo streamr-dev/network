@@ -1,15 +1,13 @@
 syntax = "proto3";
 option optimize_for = CODE_SIZE;
 
-message SessionIdRequest {
+message HasSessionRequest {
     string sessionId = 1;
 }
 
-message SessionIdResponse {
-    optional string error = 1;
-    optional string sessionId = 2;
+message HasSessionResponse {
 }
 
 service AutoCertifierRpc {
-    rpc getSessionId (SessionIdRequest) returns (SessionIdResponse);
+    rpc hasSession (HasSessionRequest) returns (HasSessionResponse);
 }

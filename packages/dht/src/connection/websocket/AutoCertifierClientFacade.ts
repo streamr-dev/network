@@ -1,11 +1,11 @@
 import {
     AutoCertifierClient,
-    SessionIdRequest,
-    SessionIdResponse, 
+    HasSessionRequest,
+    HasSessionResponse, 
     CertifiedSubdomain,
     Certificate,
     AUTOCERTIFIER_SERVICE_ID,
-    GetSessionId
+    HasSession
 } from '@streamr/autocertifier-client'
 import { ListeningRpcCommunicator } from '../../exports'
 import { Logger, waitForEvent3 } from '@streamr/utils'
@@ -22,10 +22,10 @@ const defaultAutoCertifierClientFactory = (
     filePath,
     wsServerPort,
     autoCertifierUrl, 
-    (_serviceId: string, rpcMethodName: string, method: GetSessionId) => {
+    (_serviceId: string, rpcMethodName: string, method: HasSession) => {
         autoCertifierRpcCommunicator.registerRpcMethod(
-            SessionIdRequest,
-            SessionIdResponse,
+            HasSessionRequest,
+            HasSessionResponse,
             rpcMethodName,
             method
         )                       

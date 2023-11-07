@@ -5,8 +5,8 @@ import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { AutoCertifierRpc } from "./AutoCertifier";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
-import type { SessionIdResponse } from "./AutoCertifier";
-import type { SessionIdRequest } from "./AutoCertifier";
+import type { HasSessionResponse } from "./AutoCertifier";
+import type { HasSessionRequest } from "./AutoCertifier";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
@@ -14,9 +14,9 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
  */
 export interface IAutoCertifierRpcClient {
     /**
-     * @generated from protobuf rpc: getSessionId(SessionIdRequest) returns (SessionIdResponse);
+     * @generated from protobuf rpc: hasSession(HasSessionRequest) returns (HasSessionResponse);
      */
-    getSessionId(input: SessionIdRequest, options?: RpcOptions): UnaryCall<SessionIdRequest, SessionIdResponse>;
+    hasSession(input: HasSessionRequest, options?: RpcOptions): UnaryCall<HasSessionRequest, HasSessionResponse>;
 }
 /**
  * @generated from protobuf service AutoCertifierRpc
@@ -28,10 +28,10 @@ export class AutoCertifierRpcClient implements IAutoCertifierRpcClient, ServiceI
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: getSessionId(SessionIdRequest) returns (SessionIdResponse);
+     * @generated from protobuf rpc: hasSession(HasSessionRequest) returns (HasSessionResponse);
      */
-    getSessionId(input: SessionIdRequest, options?: RpcOptions): UnaryCall<SessionIdRequest, SessionIdResponse> {
+    hasSession(input: HasSessionRequest, options?: RpcOptions): UnaryCall<HasSessionRequest, HasSessionResponse> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<SessionIdRequest, SessionIdResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<HasSessionRequest, HasSessionResponse>("unary", this._transport, method, opt, input);
     }
 }

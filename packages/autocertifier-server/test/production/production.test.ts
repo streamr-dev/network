@@ -8,7 +8,7 @@ import {
     SimulatorTransport,
     DefaultConnectorFacade
 } from '@streamr/dht'
-import { AutoCertifierClient, SessionIdRequest, SessionIdResponse } from '@streamr/autocertifier-client'
+import { AutoCertifierClient, HasSessionRequest, HasSessionResponse } from '@streamr/autocertifier-client'
 import os from 'os'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'
@@ -83,8 +83,8 @@ describe('production', () => {
             restServerUrl, (serviceId, rpcMethodName, method) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
                 clientRpcCommunicator.registerRpcMethod(
-                    SessionIdRequest,
-                    SessionIdResponse,
+                    HasSessionRequest,
+                    HasSessionResponse,
                     rpcMethodName,
                     method
                 )
@@ -111,8 +111,8 @@ describe('production', () => {
             restServerUrl, (serviceId, rpcMethodName, method) => {
                 clientRpcCommunicator = new ListeningRpcCommunicator(serviceId, clientConnectionManager)
                 clientRpcCommunicator.registerRpcMethod(
-                    SessionIdRequest,
-                    SessionIdResponse,
+                    HasSessionRequest,
+                    HasSessionResponse,
                     rpcMethodName,
                     method
                 )
