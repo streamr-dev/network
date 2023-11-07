@@ -96,7 +96,7 @@ Create a new subdomain and certificate.
 
 The request body must be a JSON object with the following properties:
 
-- `streamrWebSocketPort` (required): The port number for the Streamr WebSocket server.
+- `streamrWebSocketPort` (required): The port of your Streamr Node's WebSocket server.
 
 #### Response Body
 
@@ -118,7 +118,7 @@ Get a new certificate for an existing subdomain.
 
 The request body must be a JSON object with the following properties:
 
-- `streamrWebSocketPort` (required): The port number for the Streamr WebSocket server.
+- `streamrWebSocketPort` (required): The port of your Streamr Node's WebSocket server.
 - `token` (required): The authentication token for the subdomain.
 
 #### Response Body
@@ -140,7 +140,7 @@ Update the IP address and port number for an existing subdomain.
 
 The request body must be a JSON object with the following properties:
 
-- `streamrWebSocketPort` (required): The port number for the Streamr WebSocket server.
+- `streamrWebSocketPort` (required): The port of your Streamr Node's WebSocket server.
 - `token` (required): The authentication token for the subdomain.
 
 #### Response Body
