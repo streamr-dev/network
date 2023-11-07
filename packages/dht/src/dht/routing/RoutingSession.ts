@@ -154,12 +154,16 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (this.stopped) {
             return false
         }
+        const msg = {
+            ...this.messageToRoute,
+            routingPath: this.messageToRoute.routingPath.concat([this.localPeerDescriptor])
+        }
         if (this.mode === RoutingMode.FORWARD) {
-            return contact.getRouterRpcRemote().forwardMessage(this.messageToRoute)
+            return contact.getRouterRpcRemote().forwardMessage(msg)
         } else if (this.mode === RoutingMode.FIND) {
-            return contact.getFindRpcRemote().routeFindRequest(this.messageToRoute)
+            return contact.getFindRpcRemote().routeFindRequest(msg)
         } else {
-            return contact.getRouterRpcRemote().routeMessage(this.messageToRoute)
+            return contact.getRouterRpcRemote().routeMessage(msg)
         }
     }
 
