@@ -7,7 +7,7 @@ import {
     AUTOCERTIFIER_SERVICE_ID,
     HasSession
 } from '@streamr/autocertifier-client'
-import { ListeningRpcCommunicator } from '../../exports'
+import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Logger, waitForEvent3 } from '@streamr/utils'
 import { ITransport } from '../../transport/ITransport' 
 
