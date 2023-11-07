@@ -63,7 +63,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             await this.updateCertificate()
         } else {
             // TODO: most of the time the ip should not change. Calling this is important for whenever it does.
-            await this.updateSubdomainIpAndPort()
+            await this.updateSubdomainIp()
             this.scheduleCertificateUpdate(sub.expirationTimestamp)
             this.emit('updatedSubdomain', sub.subdomain)
         }
@@ -111,7 +111,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         this.ongoingSessions.add(sessionId)
 
         try {
-            certifiedSubdomain = await this.restClient.createNewSubdomainAndCertificate(this.streamrWebSocketPort, sessionId)
+            certifiedSubdomain = await this.restClient.createSubdomainAndCertificate(this.streamrWebSocketPort, sessionId)
         } finally {
             this.ongoingSessions.delete(sessionId)
         }
@@ -150,22 +150,22 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     // This method should be called whenever the IP address or port of the node changes
-    public updateSubdomainIpAndPort = async (): Promise<void> => {
+    public updateSubdomainIp = async (): Promise<void> => {
         if (!fs.existsSync(this.subdomainFilePath)) {
-            logger.warn('updateSubdomainIpAndPort() called while subdomain file does not exist')
+            logger.warn('updateSubdomainIp() called while subdomain file does not exist')
             return
         }
         // TODO: use async fs methods?
         const oldSubdomain = JSON.parse(fs.readFileSync(this.subdomainFilePath, 'utf8')) as CertifiedSubdomain
-        logger.info('updateSubdomainIpAndPort() called for ' + JSON.stringify(oldSubdomain))
+        logger.info('updateSubdomainIp() called for ' + JSON.stringify(oldSubdomain))
         const sessionId = await this.restClient.createSession()
         this.ongoingSessions.add(sessionId)
-        await this.restClient.updateSubdomainIpAndPort(oldSubdomain.subdomain, this.streamrWebSocketPort, sessionId, oldSubdomain.token)
+        await this.restClient.updateSubdomainIp(oldSubdomain.subdomain, this.streamrWebSocketPort, sessionId, oldSubdomain.token)
         this.ongoingSessions.delete(sessionId)
     }
 
     // IAutoCertifierRpc implementation
-    public async hasSession(request: HasSessionRequest, _context: ServerCallContext): Promise<HasSessionResponse> {
+    public async hasSession(request: HasSessionRequest): Promise<HasSessionResponse> {
         logger.trace('hasSession() called ' + this.ongoingSessions.size + ' ongoing sessions')
         if (this.ongoingSessions.has(request.sessionId)) {
             return { sessionId: request.sessionId }

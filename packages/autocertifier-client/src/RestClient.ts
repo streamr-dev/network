@@ -18,6 +18,9 @@ export class RestClient {
         this.baseUrl = baseUrl
     }
 
+    // TODO: can be removed. 
+    // If the client creates the session we don't need to explicitly create a sessionId on the server side.
+    // The server can run challanges based on a sessionId generated in each request.
     public async createSession(): Promise<string> {
         const url = this.baseUrl + '/sessions'
         try {
@@ -29,7 +32,7 @@ export class RestClient {
         }
     }
 
-    public async createNewSubdomainAndCertificate(streamrWebSocketPort: number, sessionId: string): Promise<CertifiedSubdomain> {
+    public async createSubdomainAndCertificate(streamrWebSocketPort: number, sessionId: string): Promise<CertifiedSubdomain> {
         const url = this.baseUrl + '/certified-subdomains'
         const body: CreateCertifiedSubdomainRequest = {
             streamrWebSocketPort,
@@ -50,8 +53,8 @@ export class RestClient {
         return response
     }
 
-    public async updateSubdomainIpAndPort(subdomain: string, streamrWebSocketPort: number, sessionId: string, token: string): Promise<void> {
-        logger.debug('updateSubdomainIpAndPort() subdomain: ' + subdomain + ', streamrWebSocketPort:  ' + streamrWebSocketPort
+    public async updateSubdomainIp(subdomain: string, streamrWebSocketPort: number, sessionId: string, token: string): Promise<void> {
+        logger.debug('updateSubdomainIp() subdomain: ' + subdomain + ', streamrWebSocketPort:  ' + streamrWebSocketPort
             + ', sessionId: ' + sessionId + ', token: ' + token)
         const url = this.baseUrl + '/certified-subdomains/' + encodeURIComponent(subdomain) + '/ip'
         const body: UpdateIpAndPortRequest = {
