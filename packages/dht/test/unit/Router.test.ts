@@ -4,29 +4,7 @@ import { Router } from '../../src/dht/routing/Router'
 import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
 import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createWrappedClosestPeersRequest } from '../utils/utils'
-
-class FakeRpcCommunicator {
-
-    private readonly listeners: Map<string, (...args: any[]) => Promise<unknown>> = new Map()
-
-    registerRpcMethod(_requestClass: any, _returnClass: any, methodName: string, callback: (...args: any[]) => Promise<unknown>) {
-        this.listeners.set(methodName, callback)
-    }
-    
-    async callRpcMethod(methodName: string, ...args: any[]): Promise<unknown> {
-        const listener = this.listeners.get(methodName)
-        if (listener !== undefined) {
-            return listener(...args)
-        } else {
-            throw new Error(`no registered callbacks for ${methodName}`)
-        }
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getRpcClientTransport(): any {
-        return {}
-    }
-}
+import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 
 describe('Router', () => {
     let router: Router
