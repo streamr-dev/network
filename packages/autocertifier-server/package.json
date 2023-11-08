@@ -23,7 +23,6 @@
     "test": "jest test/unit test/integration",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
-    "test-production": "jest test/production",
     "start": "node dist/src/main.js"
   },
   "dependencies": {
