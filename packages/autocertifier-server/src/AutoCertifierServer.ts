@@ -156,7 +156,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
 
     // ChallengeManager implementation
     // eslint-disable-next-line class-methods-use-this
-    public async deleteChallenge(_name: string): Promise<void> {
+    public async deleteChallenge(): Promise<void> {
         // TODO: Should this function do something?
         // TODO: we could add logging here to see if this is actually called ever
     }

@@ -1,4 +1,4 @@
 export interface ChallengeManager {
-    createChallenge(name: string, value: string): Promise<void>
-    deleteChallenge(name: string): Promise<void>
+    createChallenge(fqdn: string, value: string): Promise<void>
+    deleteChallenge(fqdn: string): Promise<void>
 }

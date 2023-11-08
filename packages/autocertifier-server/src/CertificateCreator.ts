@@ -9,6 +9,9 @@ import { Challenge } from 'acme-client/types/rfc8555'
 
 const logger = new Logger(module)
 
+// https://letsencrypt.org/docs/challenge-types/#dns-01-challenge
+const DNS_01_CHALLENGE = 'dns-01'
+
 export class CertificateCreator {
 
     private accountPrivateKey?: Buffer
@@ -59,7 +62,7 @@ export class CertificateCreator {
                 csr,
                 email: 'autocertifier@streamr.network',
                 termsOfServiceAgreed: true,
-                challengePriority: ['dns-01'],
+                challengePriority: [DNS_01_CHALLENGE],
                 challengeCreateFn: async (authz: acme.Authorization, _challenge: Challenge, keyAuthorization: string) => {
                     await this.challengeManager.createChallenge(authz.identifier.value, keyAuthorization)
                 },
