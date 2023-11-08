@@ -43,8 +43,10 @@ interface AutoCertifierClientFacadeConfig {
     subdomainFilePath: string
     transport: ITransport
     wsServerPort: number
+    // TODO: setHost and updateCertificate could be passed in a single onCertificateUpdated function.
     setHost: (host: string) => void
     updateCertificate: (certificate: Certificate) => void
+    // TOD: could just pass the client?
     createClientFactory?: () => IAutoCertifierClient
 }
 
@@ -72,10 +74,9 @@ export class AutoCertifierClientFacade {
 
     async start(): Promise<void> {
         this.autoCertifierClient.on('updatedCertificate', (subdomain: CertifiedSubdomain) => {
-            logger.trace(`Updating certificate for WSS server`)
             this.setHost(subdomain.fqdn)
             this.updateCertificate(subdomain.certificate)
-            logger.trace(`Updated certificate for WSS server`)
+            logger.trace(`Updated certificate`)
         })
         await Promise.all([
             waitForEvent3(this.autoCertifierClient as any, 'updatedCertificate', START_TIMEOUT),

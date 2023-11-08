@@ -93,38 +93,28 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         // TODO: generate a PeerDescriptor in a single function. Requires changes to the createOwnPeerDescriptor
         // function in the config. Currently it's given by the DhtNode and it sets the PeerDescriptor for the
         // DhtNode in each call. 
-        const selfSigned = (!this.config.tlsCertificate && this.config.websocketServerEnableTls === true)
-        const connectivityResponse = await this.websocketConnector.checkConnectivity(selfSigned)
+        // LocalPeerDescriptor could be stored in one place and passed from there to the connectors
+        const temporarilySelfSigned = (!this.config.tlsCertificate && this.config.websocketServerEnableTls === true)
+        const connectivityResponse = await this.websocketConnector.checkConnectivity(temporarilySelfSigned)
         let localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
-        this.localPeerDescriptor = localPeerDescriptor
         this.websocketConnector.setLocalPeerDescriptor(localPeerDescriptor)
         if (localPeerDescriptor.websocket && !this.config.tlsCertificate && this.config.websocketServerEnableTls) {
             try {
-                localPeerDescriptor = await this.autoCertify()
+                await this.websocketConnector!.autoCertify()
+                const connectivityResponse = await this.websocketConnector!.checkConnectivity(false)
+                localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
+                if (localPeerDescriptor.websocket === undefined) {
+                    logger.warn('ConnectivityCheck failed after autocertification, disabling websocket server connectivity')
+                }
+                this.websocketConnector!.setLocalPeerDescriptor(localPeerDescriptor)
             } catch (err) {
                 connectivityResponse.websocket = undefined
                 localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
-                this.localPeerDescriptor = localPeerDescriptor
                 logger.warn('Failed to autocertify, disabling websocket server connectivity')
             }
         }
+        this.localPeerDescriptor = localPeerDescriptor
         this.webrtcConnector.setLocalPeerDescriptor(localPeerDescriptor)
-    }
-
-    private async autoCertify(): Promise<PeerDescriptor> {
-        await this.websocketConnector!.autoCertify()
-        const connectivityResponse = await this.websocketConnector!.checkConnectivity(false)
-        if (connectivityResponse.websocket) {
-            const localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
-            this.localPeerDescriptor = localPeerDescriptor
-            this.websocketConnector!.setLocalPeerDescriptor(localPeerDescriptor)
-            return localPeerDescriptor
-        } else {
-            logger.warn('ConnectivityCheck failed after autocertification, disabling websocket server connectivity')
-            const localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
-            this.localPeerDescriptor = localPeerDescriptor
-            return localPeerDescriptor
-        }
     }
 
     createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {

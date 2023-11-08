@@ -50,7 +50,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         const ports = range(this.portRange.min, this.portRange.max + 1)
         for (const port of ports) {
             try {
-                await asAbortable(this.startServer(port, this.enableTls, this.tlsCertificate), this.abortController.signal)
+                await asAbortable(this.startServer(port, this.enableTls), this.abortController.signal)
                 return port
             } catch (err) {
                 if (err.originalError?.code === 'EADDRINUSE') {
@@ -63,17 +63,19 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         throw new WebsocketServerStartError(`Failed to start WebSocket server on any port in range: ${this.portRange.min}-${this.portRange.min}`)
     }
 
-    private startServer(port: number, tls: boolean, tlsCertificate?: TlsCertificate): Promise<void> {
+    // If tlsCertificate has been given the tls boolean is ignored
+    // TODO: could be simplified?
+    private startServer(port: number, tls: boolean): Promise<void> {
         const requestListener = (request: IncomingMessage, response: ServerResponse<IncomingMessage>) => {
             logger.trace('Received request for ' + request.url)
             response.writeHead(404)
             response.end()
         }
         return new Promise((resolve, reject) => {
-            if (tlsCertificate) {
+            if (this.tlsCertificate) {
                 this.httpServer = createHttpsServer({
-                    key: fs.readFileSync(tlsCertificate.privateKeyFileName),
-                    cert: fs.readFileSync(tlsCertificate.certFileName)
+                    key: fs.readFileSync(this.tlsCertificate.privateKeyFileName),
+                    cert: fs.readFileSync(this.tlsCertificate.certFileName)
                 }, requestListener)
             } else if (!tls) {
                 this.httpServer = createHttpServer(requestListener)
