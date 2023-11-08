@@ -18,6 +18,7 @@ export enum ErrorCode {
 export class Err extends Error {
 
     readonly code: ErrorCode
+    // TODO: could remove httpStatus since we already have a higher level error?
     readonly httpStatus: HttpStatus
     readonly originalError?: Error | string
 

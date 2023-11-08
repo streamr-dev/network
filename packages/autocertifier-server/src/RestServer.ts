@@ -32,7 +32,7 @@ const sendResponse = (res: express.Response, data?: object) => {
     }
 }
 
-const extractIpAndPort = (req: express.Request): { ip: string, port: string } | undefined => {
+const parseIpAndPort = (req: express.Request): { ip: string, port: string } | undefined => {
     // take x-forwarded for into account
     const remoteIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress
     const remotePort = req.headers['x-forwarded-port'] || req.socket.remotePort
@@ -133,7 +133,7 @@ export class RestServer {
             return
         }
         const streamrWebSocketPort = body.streamrWebSocketPort + ''
-        const ipAndPort = extractIpAndPort(req)
+        const ipAndPort = parseIpAndPort(req)
         if (!ipAndPort) {
             const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
             sendError(res, err)
@@ -168,7 +168,7 @@ export class RestServer {
         }
         const token = body.token
         const sessionId = body.sessionId
-        const ipAndPort = extractIpAndPort(req)
+        const ipAndPort = parseIpAndPort(req)
         if (!ipAndPort) {
             const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
             sendError(res, err)
@@ -204,7 +204,7 @@ export class RestServer {
         const token = body.token
         const sessionId = body.sessionId
         
-        const ipAndPort = extractIpAndPort(req)
+        const ipAndPort = parseIpAndPort(req)
         if (!ipAndPort) {
             const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
             sendError(res, err)
