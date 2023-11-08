@@ -29,12 +29,12 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
 
     private updateTimeout?: NodeJS.Timeout
     private readonly restClient: RestClient
-    private readonly subdomainFilePath: string
+    private readonly configFile: string
     private readonly streamrWebSocketPort: number
     private readonly ongoingSessions: Set<string> = new Set()
 
     constructor(
-        subdomainFilePath: string,
+        configFile: string,
         streamrWebSocketPort: number,
         restApiUrl: string,
         registerRpcMethod: (
@@ -46,13 +46,13 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         super()
 
         this.restClient = new RestClient(restApiUrl)
-        this.subdomainFilePath = filePathToNodeFormat(subdomainFilePath)
+        this.configFile = filePathToNodeFormat(configFile)
         this.streamrWebSocketPort = streamrWebSocketPort
         registerRpcMethod(SERVICE_ID, 'hasSession', this.hasSession.bind(this))
     }
 
     public async start(): Promise<void> {
-        if (!fs.existsSync(this.subdomainFilePath)) {
+        if (!fs.existsSync(this.configFile)) {
             await this.createCertificate()
         } else {
             await this.ensureCertificateValidity()
@@ -60,24 +60,23 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     private async ensureCertificateValidity(): Promise<void> {
-        const sub = this.loadSubdomainFromDisk()
-
-        if (Date.now() >= sub.expirationTimestamp - ONE_DAY) {
+        const certificate = this.loadCertificateFromDisk()
+        const certObj = forge.pki.certificateFromPem(certificate.certificate)
+        const expirationTimestamp = certObj.validity.notAfter.getTime()
+        if (Date.now() >= expirationTimestamp - ONE_DAY) {
             await this.updateCertificate()
         } else {
             // TODO: most of the time the ip should not change. Calling this is important for whenever it does.
             // should avoid calling this.updateSubDomainIp in scheduled calls if certificate is not expiring.
             await this.updateSubdomainIp()
-            this.scheduleCertificateUpdate(sub.expirationTimestamp)
-            this.emit('updatedCertificate', sub.subdomain)
+            this.scheduleCertificateUpdate(expirationTimestamp)
+            this.emit('updatedCertificate', certificate)
         }
     }
 
-    private loadSubdomainFromDisk(): { subdomain: CertifiedSubdomain, expirationTimestamp: number } {
-        const subdomain = JSON.parse(fs.readFileSync(this.subdomainFilePath, 'utf8')) as CertifiedSubdomain
-        const certObj = forge.pki.certificateFromPem(subdomain.certificate.cert)
-        const expirationTimestamp = certObj.validity.notAfter.getTime()
-        return { subdomain, expirationTimestamp }
+    private loadCertificateFromDisk(): CertifiedSubdomain {
+        const certificate = JSON.parse(fs.readFileSync(this.configFile, 'utf8')) as CertifiedSubdomain
+        return certificate
     }
 
     public stop(): void {
@@ -119,13 +118,13 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         } finally {
             this.ongoingSessions.delete(sessionId)
         }
-        const dir = path.dirname(this.subdomainFilePath)
+        const dir = path.dirname(this.configFile)
         // TODO: use async fs methods?
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true })
         }
-        fs.writeFileSync(this.subdomainFilePath, JSON.stringify(certifiedSubdomain))
-        const certObj = forge.pki.certificateFromPem(certifiedSubdomain.certificate.cert)
+        fs.writeFileSync(this.configFile, JSON.stringify(certifiedSubdomain))
+        const certObj = forge.pki.certificateFromPem(certifiedSubdomain.certificate)
 
         const expirationTimestamp = certObj.validity.notAfter.getTime()
         this.scheduleCertificateUpdate(expirationTimestamp)
@@ -137,15 +136,15 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         const sessionId = await this.restClient.createSession()
         this.ongoingSessions.add(sessionId)
 
-        const oldCertifiedSubdomain = JSON.parse(fs.readFileSync(this.subdomainFilePath, 'utf8')) as CertifiedSubdomain
-        const updatedCertifiedSubdomain = await this.restClient.updateCertificate(oldCertifiedSubdomain.subdomain,
-            this.streamrWebSocketPort, oldCertifiedSubdomain.token, sessionId)
+        const oldCertifiedSubdomain = JSON.parse(fs.readFileSync(this.configFile, 'utf8')) as CertifiedSubdomain
+        const updatedCertifiedSubdomain = await this.restClient.updateCertificate(oldCertifiedSubdomain.fqdn.split('.')[0],
+            this.streamrWebSocketPort, oldCertifiedSubdomain.authenticationToken, sessionId)
 
         this.ongoingSessions.delete(sessionId)
 
         // TODO: use async fs methods?
-        fs.writeFileSync(this.subdomainFilePath, JSON.stringify(updatedCertifiedSubdomain))
-        const certObj = forge.pki.certificateFromPem(updatedCertifiedSubdomain.certificate.cert)
+        fs.writeFileSync(this.configFile, JSON.stringify(updatedCertifiedSubdomain))
+        const certObj = forge.pki.certificateFromPem(updatedCertifiedSubdomain.certificate)
 
         const expirationTimestamp = certObj.validity.notAfter.getTime()
         this.scheduleCertificateUpdate(expirationTimestamp)
@@ -156,16 +155,21 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
 
     // This method should be called whenever the IP address or port of the node changes
     public updateSubdomainIp = async (): Promise<void> => {
-        if (!fs.existsSync(this.subdomainFilePath)) {
+        if (!fs.existsSync(this.configFile)) {
             logger.warn('updateSubdomainIp() called while subdomain file does not exist')
             return
         }
         // TODO: use async fs methods?
-        const oldSubdomain = JSON.parse(fs.readFileSync(this.subdomainFilePath, 'utf8')) as CertifiedSubdomain
+        const oldSubdomain = JSON.parse(fs.readFileSync(this.configFile, 'utf8')) as CertifiedSubdomain
         logger.info('updateSubdomainIp() called for ' + JSON.stringify(oldSubdomain))
         const sessionId = await this.restClient.createSession()
         this.ongoingSessions.add(sessionId)
-        await this.restClient.updateSubdomainIp(oldSubdomain.subdomain, this.streamrWebSocketPort, sessionId, oldSubdomain.token)
+        await this.restClient.updateSubdomainIp(
+            oldSubdomain.fqdn.split('.')[0],
+            this.streamrWebSocketPort,
+            sessionId,
+            oldSubdomain.authenticationToken
+        )
         this.ongoingSessions.delete(sessionId)
     }
 

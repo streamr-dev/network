@@ -3,7 +3,6 @@ import * as acme from 'acme-client'
 import fs from 'fs'
 import path from 'path'
 import { ChallengeManager } from './ChallengeManager'
-import { Certificate } from '@streamr/autocertifier-client'
 import { filePathToNodeFormat } from '@streamr/utils'
 import { Challenge } from 'acme-client/types/rfc8555'
 
@@ -11,6 +10,11 @@ const logger = new Logger(module)
 
 // https://letsencrypt.org/docs/challenge-types/#dns-01-challenge
 const DNS_01_CHALLENGE = 'dns-01'
+
+interface CertificateAndKey {
+    certificate: string
+    privateKey: string
+}
 
 export class CertificateCreator {
 
@@ -35,7 +39,7 @@ export class CertificateCreator {
         this.accountPrivateKeyPath = filePathToNodeFormat(privateKeyPath)
     }
 
-    public async createCertificate(fqdn: string): Promise<Certificate> {
+    public async createCertificate(fqdn: string): Promise<CertificateAndKey> {
         logger.info(`Creating certificate for ${fqdn}`)
 
         const wasNewKeyCreated = await this.createPrivateKey()
@@ -74,7 +78,7 @@ export class CertificateCreator {
             logger.error('Failed to create certificate: ' + e.message)
             throw e
         }
-        return { cert: cert.toString(), key: key.toString() }
+        return { certificate: cert.toString(), privateKey: key.toString() }
     }
 
     // TODO: should this funcion just reject if private key is not found?

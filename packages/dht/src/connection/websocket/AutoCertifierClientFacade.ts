@@ -3,7 +3,6 @@ import {
     HasSessionRequest,
     HasSessionResponse, 
     CertifiedSubdomain,
-    Certificate,
     SERVICE_ID as AUTO_CERTIFIER_SERVICE_ID,
     HasSession
 } from '@streamr/autocertifier-client'
@@ -14,12 +13,12 @@ import { ITransport } from '../../transport/ITransport'
 const START_TIMEOUT = 60 * 1000
 
 const defaultAutoCertifierClientFactory = (
-    filePath: string,
+    configFile: string,
     autoCertifierUrl: string,
     autoCertifierRpcCommunicator: ListeningRpcCommunicator,
     wsServerPort: number
 ) => new AutoCertifierClient(
-    filePath,
+    configFile,
     wsServerPort,
     autoCertifierUrl, 
     (_serviceId: string, rpcMethodName: string, method: HasSession) => {
@@ -40,12 +39,12 @@ export interface IAutoCertifierClient {
 
 interface AutoCertifierClientFacadeConfig {
     url: string
-    subdomainFilePath: string
+    configFile: string
     transport: ITransport
     wsServerPort: number
     // TODO: setHost and updateCertificate could be passed in a single onCertificateUpdated function.
     setHost: (host: string) => void
-    updateCertificate: (certificate: Certificate) => void
+    updateCertificate: (certificate: string, privateKey: string) => void
     // TOD: could just pass the client?
     createClientFactory?: () => IAutoCertifierClient
 }
@@ -57,7 +56,7 @@ export class AutoCertifierClientFacade {
     private autoCertifierClient: IAutoCertifierClient
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly setHost: (host: string) => void
-    private readonly updateCertificate: (certificate: Certificate) => void
+    private readonly updateCertificate: (certificate: string, privateKey: string) => void
 
     constructor(config: AutoCertifierClientFacadeConfig) {
         this.setHost = config.setHost
@@ -65,7 +64,7 @@ export class AutoCertifierClientFacade {
         this.rpcCommunicator = new ListeningRpcCommunicator(AUTO_CERTIFIER_SERVICE_ID, config.transport)
         this.autoCertifierClient = config.createClientFactory ? config.createClientFactory() 
             : defaultAutoCertifierClientFactory(
-                config.subdomainFilePath,
+                config.configFile,
                 config.url,
                 this.rpcCommunicator,
                 config.wsServerPort
@@ -75,7 +74,7 @@ export class AutoCertifierClientFacade {
     async start(): Promise<void> {
         this.autoCertifierClient.on('updatedCertificate', (subdomain: CertifiedSubdomain) => {
             this.setHost(subdomain.fqdn)
-            this.updateCertificate(subdomain.certificate)
+            this.updateCertificate(subdomain.certificate, subdomain.privateKey)
             logger.trace(`Updated certificate`)
         })
         await Promise.all([

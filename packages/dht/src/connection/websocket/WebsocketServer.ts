@@ -5,7 +5,7 @@ import { server as WsServer } from 'websocket'
 import { ServerWebsocket } from './ServerWebsocket'
 import { ConnectionSourceEvents } from '../IConnectionSource'
 import { Logger, asAbortable } from '@streamr/utils'
-import { Certificate, createSelfSignedCertificate } from '@streamr/autocertifier-client' 
+import { createSelfSignedCertificate } from '@streamr/autocertifier-client' 
 import { WebsocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
@@ -125,8 +125,11 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         })
     }
 
-    public updateCertificate(certificate: Certificate): void {
-        (this.httpServer! as HttpsServer).setSecureContext(certificate)
+    public updateCertificate(cert: string, key: string): void {
+        (this.httpServer! as HttpsServer).setSecureContext({
+            cert,
+            key
+        })
     }
 
     public stop(): Promise<void> {

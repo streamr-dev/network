@@ -41,7 +41,7 @@ export interface DefaultConnectorFacadeConfig {
     tlsCertificate?: TlsCertificate
     websocketServerEnableTls?: boolean
     autoCertifierUrl?: string
-    autoCertifiedSubdomainFilePath?: string
+    autoCertifierConfigFile?: string
     createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) => PeerDescriptor
 }
 
@@ -73,7 +73,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             tlsCertificate: this.config.tlsCertificate,
             serverEnableTls: this.config.websocketServerEnableTls!,
             autoCertifierUrl: this.config.autoCertifierUrl!,
-            autoCertifiedSubdomainFilePath: this.config.autoCertifiedSubdomainFilePath!,
+            autoCertifierConfigFile: this.config.autoCertifierConfigFile!,
             autoCertifierTransport,
             maxMessageSize: this.config.maxMessageSize
         })

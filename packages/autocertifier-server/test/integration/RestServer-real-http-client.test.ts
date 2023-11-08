@@ -12,12 +12,9 @@ describe('RestServer', () => {
 
     const certifiedSubdomain: CertifiedSubdomain = {
         fqdn: 'localhost',
-        subdomain: 'fwefwafeaw',
-        token: 'token',
-        certificate: {
-            cert: 'certificate',
-            key: 'key'
-        }
+        authenticationToken: 'token',
+        certificate: 'certificate',
+        privateKey: 'key'
     }
     const sessionId = v4()
 

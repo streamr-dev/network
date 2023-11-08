@@ -27,7 +27,7 @@ describe('AutoCertifierClientFacade', () => {
         updateCertificate = jest.fn()
         client = new AutoCertifierClientFacade({
             url: '',
-            subdomainFilePath: '',
+            configFile: '',
             transport: new MockTransport(),
             wsServerPort: 0,
             setHost,

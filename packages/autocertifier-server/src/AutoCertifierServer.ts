@@ -97,15 +97,15 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
         
         const subdomain = v4()
-        const token = v4()
-        await this.database!.createSubdomain(subdomain, ipAddress, port, token)
+        const authenticationToken = v4()
+        await this.database!.createSubdomain(subdomain, ipAddress, port, authenticationToken)
         const fqdn = subdomain + '.' + this.domainName
         const certificate = await this.certificateCreator!.createCertificate(fqdn)
         return {
-            subdomain,
             fqdn,
-            token,
-            certificate
+            authenticationToken,
+            certificate: certificate.certificate,
+            privateKey: certificate.privateKey
         }
     }
 
@@ -115,20 +115,20 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         port: string,
         streamrWebSocketPort: string,
         sessionId: string,
-        token: string
+        authenticationToken: string
     ): Promise<CertifiedSubdomain> {
 
         logger.info('creating new certificate for ' + subdomain + ' and ' + ipAddress + ':' + port)
 
-        // This will throw if the token is incorrect
-        await this.updateSubdomainIp(subdomain, ipAddress, port, streamrWebSocketPort, sessionId, token)
+        // This will throw if the authenticationToken is incorrect
+        await this.updateSubdomainIp(subdomain, ipAddress, port, streamrWebSocketPort, sessionId, authenticationToken)
         const fqdn = subdomain + '.' + this.domainName
         const certificate = await this.certificateCreator!.createCertificate(fqdn)
         return {
-            subdomain,
             fqdn,
-            token,
-            certificate
+            authenticationToken,
+            certificate: certificate.certificate,
+            privateKey: certificate.privateKey
         }
     }
 
@@ -138,14 +138,14 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         port: string,
         streamrWebSocketPort: string,
         sessionId: string,
-        token: string
+        authenticationToken: string
     ): Promise<void> {
 
         logger.info('updating subdomain ip and port for ' + subdomain + ' to ' + ipAddress + ':' + port)
 
         // this will throw if the client cannot answer the challenge of getting sessionId 
         await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
-        await this.database!.updateSubdomainIp(subdomain, ipAddress, port, token)
+        await this.database!.updateSubdomainIp(subdomain, ipAddress, port, authenticationToken)
     }
 
     // ChallengeManager implementation

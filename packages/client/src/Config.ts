@@ -133,7 +133,7 @@ export interface ControlLayerConfig {
      * File path to the autocertified subdomain file. The file contains the autocertified subdomain name
      * and it's TLS certificate.
      */
-    autoCertifiedSubdomainFilePath?: string
+    autoCertifierConfigFile?: string
 
     /**
      * If the node is running a WS server, this option can be used to disable TLS autocertification to

@@ -27,7 +27,6 @@ import { ParsedUrlQuery } from 'querystring'
 import { range, sample } from 'lodash'
 import { WebsocketServerStartError } from '../../helpers/errors'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
-import { Certificate } from '@streamr/autocertifier-client'
 import { isPrivateIPv4 } from '../../helpers/AddressTools'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
@@ -51,8 +50,8 @@ interface WebsocketConnectorRpcLocalConfig {
     onIncomingConnection: (connection: ManagedConnection) => boolean
     autoCertifierTransport: ITransport
     autoCertifierUrl: string
+    autoCertifierConfigFile: string
     serverEnableTls: boolean
-    autoCertifiedSubdomainFilePath: string
     portRange?: PortRange
     maxMessageSize?: number
     host?: string
@@ -71,7 +70,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
     private onIncomingConnection: (connection: ManagedConnection) => boolean
     private readonly autoCertifierTransport: ITransport
     private readonly autoCertifierUrl: string
-    private readonly autoCertifiedSubdomainFilePath: string
+    private readonly autoCertifierConfigFile: string
     private host?: string
     private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
@@ -96,7 +95,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
         this.tlsCertificate = config.tlsCertificate
         this.autoCertifierTransport = config.autoCertifierTransport
         this.autoCertifierUrl = config.autoCertifierUrl
-        this.autoCertifiedSubdomainFilePath = config.autoCertifiedSubdomainFilePath
+        this.autoCertifierConfigFile = config.autoCertifierConfigFile
         this.serverEnableTls = config.serverEnableTls
 
         this.canConnectFunction = config.canConnect.bind(this)
@@ -188,12 +187,12 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
 
     public async autoCertify(): Promise<void> {
         this.autoCertifierClient = new AutoCertifierClientFacade({
-            subdomainFilePath: this.autoCertifiedSubdomainFilePath,
+            configFile: this.autoCertifierConfigFile,
             transport: this.autoCertifierTransport,
             url: this.autoCertifierUrl,
             wsServerPort: this.selectedPort!,
             setHost: (hostName: string) => this.setHost(hostName),
-            updateCertificate: (certificate: Certificate) => this.websocketServer!.updateCertificate(certificate)
+            updateCertificate: (certificate: string, privateKey: string) => this.websocketServer!.updateCertificate(certificate, privateKey)
         })
         logger.trace(`AutoCertifying subdomain...`)
         await this.autoCertifierClient!.start()
