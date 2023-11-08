@@ -342,7 +342,7 @@ describe('ConnectionManager', () => {
         })
 
         await connectionManager1.start()
-        expect(connectionManager1.getLocalPeerDescriptor().websocket).toEqual(undefined)
+        expect(connectionManager1.getLocalPeerDescriptor().websocket!.tls).toEqual(false)
         await connectionManager1.stop()
     })
 })

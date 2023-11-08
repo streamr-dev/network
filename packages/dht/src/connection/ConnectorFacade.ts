@@ -62,7 +62,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         autoCertifierTransport: ITransport
     ): Promise<void> {
         logger.trace(`Creating WebsocketConnectorRpcLocal`)
-        this.websocketConnector = new WebsocketConnectorRpcLocal({
+        const webSocketConnectorConfig = {
             transport: this.config.transport!,
             // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
             canConnect: (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),
@@ -76,7 +76,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             autoCertifierConfigFile: this.config.autoCertifierConfigFile!,
             autoCertifierTransport,
             maxMessageSize: this.config.maxMessageSize
-        })
+        }
+        this.websocketConnector = new WebsocketConnectorRpcLocal(webSocketConnectorConfig)
         logger.trace(`Creating WebRtcConnectorRpcLocal`)
         this.webrtcConnector = new WebrtcConnectorRpcLocal({
             transport: this.config.transport!,
@@ -106,14 +107,21 @@ export class DefaultConnectorFacade implements ConnectorFacade {
                 localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
                 this.localPeerDescriptor = localPeerDescriptor
                 if (localPeerDescriptor.websocket === undefined) {
-                    logger.warn('ConnectivityCheck failed after autocertification, disabling websocket server connectivity')
+                    logger.warn('ConnectivityCheck failed after autocertification, websocket server connectivity disabled')
                 }
                 this.websocketConnector!.setLocalPeerDescriptor(localPeerDescriptor)
             } catch (err) {
-                connectivityResponse.websocket = undefined
+                logger.warn('Failed to autocertify, disabling websocket server TLS')
+                await this.websocketConnector.destroy()
+                this.websocketConnector = new WebsocketConnectorRpcLocal({
+                    ...webSocketConnectorConfig,
+                    serverEnableTls: false,
+                })
+                await this.websocketConnector.start()
+                const connectivityResponse = await this.websocketConnector.checkConnectivity(false)
                 localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
                 this.localPeerDescriptor = localPeerDescriptor
-                logger.warn('Failed to autocertify, disabling websocket server connectivity')
+                this.websocketConnector.setLocalPeerDescriptor(localPeerDescriptor)
             }
         }
         this.webrtcConnector.setLocalPeerDescriptor(localPeerDescriptor)
