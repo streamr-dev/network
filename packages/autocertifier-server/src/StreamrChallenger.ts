@@ -60,6 +60,8 @@ export const runStreamrChallenge = (
                 return
             }).catch((e) => {
                 reject(e)
+            }).finally(() => {
+                communicator.stop()
             })
         })
 
