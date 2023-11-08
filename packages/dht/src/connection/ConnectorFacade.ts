@@ -97,12 +97,14 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         const temporarilySelfSigned = (!this.config.tlsCertificate && this.config.websocketServerEnableTls === true)
         const connectivityResponse = await this.websocketConnector.checkConnectivity(temporarilySelfSigned)
         let localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
+        this.localPeerDescriptor = localPeerDescriptor
         this.websocketConnector.setLocalPeerDescriptor(localPeerDescriptor)
         if (localPeerDescriptor.websocket && !this.config.tlsCertificate && this.config.websocketServerEnableTls) {
             try {
                 await this.websocketConnector!.autoCertify()
                 const connectivityResponse = await this.websocketConnector!.checkConnectivity(false)
                 localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
+                this.localPeerDescriptor = localPeerDescriptor
                 if (localPeerDescriptor.websocket === undefined) {
                     logger.warn('ConnectivityCheck failed after autocertification, disabling websocket server connectivity')
                 }
@@ -110,10 +112,10 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             } catch (err) {
                 connectivityResponse.websocket = undefined
                 localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
+                this.localPeerDescriptor = localPeerDescriptor
                 logger.warn('Failed to autocertify, disabling websocket server connectivity')
             }
         }
-        this.localPeerDescriptor = localPeerDescriptor
         this.webrtcConnector.setLocalPeerDescriptor(localPeerDescriptor)
     }
 
