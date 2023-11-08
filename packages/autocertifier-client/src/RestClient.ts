@@ -12,7 +12,7 @@ const logger = new Logger(module)
 // TODO: use a non-deprecated HTTP client that support async/await instead of request
 export class RestClient {
 
-    private baseUrl: string
+    private readonly baseUrl: string
 
     constructor(baseUrl: string) {
         this.baseUrl = baseUrl

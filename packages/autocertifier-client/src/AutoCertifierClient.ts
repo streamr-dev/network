@@ -22,6 +22,9 @@ export const AUTOCERTIFIER_SERVICE_ID = 'system/auto-certificer'
 const ONE_DAY = 1000 * 60 * 60 * 24
 const MAX_INT_32 = 2147483647
 
+// TODO: remove code duplication regarding ongoingSessions management
+// TODO: add logging and make logging consistent
+// TODO: validate CertifiedSubdomain when read from file and when received from server
 export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents> implements IAutoCertifierRpc {
 
     private updateTimeout?: NodeJS.Timeout

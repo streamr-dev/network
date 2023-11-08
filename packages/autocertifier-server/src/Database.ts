@@ -148,8 +148,9 @@ export class Database {
     }
 }
 
+// TODO: name could imply database record
 export interface Subdomain {
-    // TODO: could be called just name / label?
+    // TODO: could be called just name / label? or a precise name
     subdomainName: string
     ip: string
     // TODO: the port should not be stored

@@ -8,8 +8,5 @@
   "include": [
     "src/**/*",
     "test/**/*"
-  ],
-  "exclude": [
-    "src/connection/WebRTC/NodeWebRtcConnection.ts"
   ]
 }

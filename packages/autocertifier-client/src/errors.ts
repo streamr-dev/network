@@ -14,11 +14,12 @@ export enum ErrorCode {
     SERVER_ERROR = 'SERVER_ERROR'
 }
 
+// TODO: fix name, probably only used by server?
 export class Err extends Error {
 
-    public code: ErrorCode
-    public httpStatus: HttpStatus
-    public originalError?: Error | string
+    readonly code: ErrorCode
+    readonly httpStatus: HttpStatus
+    readonly originalError?: Error | string
 
     constructor(code: ErrorCode, httpStatus: HttpStatus, message?: string, originalError?: Error | string) {
         super(message)
@@ -28,14 +29,14 @@ export class Err extends Error {
     }
 
     public toApiError(): ApiError {
-        const ret: ApiError = {
+        return {
             code: this.code,
             message: this.message
         }
-        return ret
     }
 }
 
+// TODO: many of these errors are used from 'autocertifier-server' and not in this package, should be moved there
 export class UnspecifiedError extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.UNSPECIFIED_ERROR, HttpStatus.INTERNAL_SERVER_ERROR, message, originalError) } }
 export class FailedToExtractIpAddress extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.FAILED_TO_EXTRACT_IP_ADDRESS, HttpStatus.INTERNAL_SERVER_ERROR, message, originalError) } }
 export class TokenMissing extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.TOKEN_MISSING, HttpStatus.BAD_REQUEST, message, originalError) } }
@@ -48,4 +49,3 @@ export class ServerError extends Err {
         super(ErrorCode.SERVER_ERROR, originalError.httpStatus, originalError.message, originalError) 
     } 
 }
-

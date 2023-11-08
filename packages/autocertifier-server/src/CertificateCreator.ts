@@ -78,6 +78,8 @@ export class CertificateCreator {
     private createPrivateKey = async (): Promise<boolean> => {
         try {
             // try to read private key from file
+            // TODO: would it be bad to generate a new key every time the software is started? Is there a reason to store
+            // the key and re-use it?
             this.accountPrivateKey = fs.readFileSync(this.accountPrivateKeyPath)
         } catch (err) {
             if (err.code === 'ENOENT') {

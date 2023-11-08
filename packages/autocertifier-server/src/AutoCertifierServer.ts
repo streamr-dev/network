@@ -14,7 +14,7 @@ const logger = new Logger(module)
 
 const validateEnvironmentVariable = (name: string): string | never => {
     const value = process.env[name]
-    if (!value) {
+    if (value === undefined) {
         throw new Error(`${name} environment variable is not set`)
     }
     return value
@@ -27,6 +27,57 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
     private restServer?: RestServer
     private database?: Database
     private certificateCreator?: CertificateCreator
+
+    public async start(): Promise<void> {
+        // TODO: considering env name prefix AUTO_CERTIFIER for consistent naming
+        this.domainName = validateEnvironmentVariable('AUTOCERTIFIER_DOMAIN_NAME')
+        // the dns server will answer to NS queries with
+        // AUTOCERTIFIER_OWN_HOSTNAME.AUTOCERTIFIER_DOMAIN_NAME
+        const ownHostName = validateEnvironmentVariable('AUTOCERTIFIER_OWN_HOSTNAME')
+        const ownIpAddress = validateEnvironmentVariable('AUTOCERTIFIER_OWN_IP_ADDRESS')
+        // TODO: validate that parseInt actually integers
+        const dnsServerPort = parseInt(validateEnvironmentVariable('AUTOCERTIFIER_DNS_SERVER_PORT'))
+        const restServerPort = parseInt(validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_PORT'))
+        const databaseFilePath = validateEnvironmentVariable('AUTOCERTIFIER_DATABASE_FILE_PATH')
+        const accountPrivateKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_ACCOUNT_PRIVATE_KEY_PATH')
+        const acmeDirectoryUrl = validateEnvironmentVariable('AUTOCERTIFIER_ACME_DIRECTORY_URL')
+        const hmacKid = validateEnvironmentVariable('AUTOCERTIFIER_HMAC_KID')
+        const hmacKey = validateEnvironmentVariable('AUTOCERTIFIER_HMAC_KEY')
+        const restServerCertPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_CERT_PATH')
+        const restServerKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_KEY_PATH')
+
+        this.database = new Database(databaseFilePath)
+        await this.database.start()
+        logger.info('database is running on file ' + databaseFilePath)
+
+        this.dnsServer = new DnsServer(
+            this.domainName,
+            ownHostName,
+            dnsServerPort,
+            ownIpAddress,
+            this.database
+        )
+        await this.dnsServer.start()
+        logger.info('dns server is running for domain ' + this.domainName + ' on port ' + dnsServerPort)
+
+        this.certificateCreator = new CertificateCreator(
+            acmeDirectoryUrl,
+            hmacKid,
+            hmacKey,
+            accountPrivateKeyPath,
+            this
+        )
+        logger.info('certificate creator is running')
+
+        this.restServer = new RestServer(
+            ownIpAddress,
+            restServerPort,
+            restServerCertPath,
+            restServerKeyPath,
+            this
+        )
+        await this.restServer.start()
+    }
 
     // eslint-disable-next-line class-methods-use-this
     public async createSession(): Promise<Session> {
@@ -50,7 +101,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         await this.database!.createSubdomain(subdomain, ipAddress, port, token)
         const fqdn = subdomain + '.' + this.domainName
         const certificate = await this.certificateCreator!.createCertificate(fqdn)
-        return { 
+        return {
             subdomain,
             fqdn,
             token,
@@ -107,55 +158,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
     // eslint-disable-next-line class-methods-use-this
     public async deleteChallenge(_name: string): Promise<void> {
         // TODO: Should this function do something?
-    }
-
-    public async start(): Promise<void> {
-        this.domainName = validateEnvironmentVariable('AUTOCERTIFIER_DOMAIN_NAME')
-        // the dns server will answer to NS queries with 
-        // AUTOCERTIFIER_OWN_HOSTNAME.AUTOCERTIFIER_DOMAIN_NAME 
-        const ownHostName = validateEnvironmentVariable('AUTOCERTIFIER_OWN_HOSTNAME')
-        const ownIpAddress = validateEnvironmentVariable('AUTOCERTIFIER_OWN_IP_ADDRESS')
-        const dnsServerPort = parseInt(validateEnvironmentVariable('AUTOCERTIFIER_DNS_SERVER_PORT'))
-        const restServerPort = parseInt(validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_PORT'))
-        const databaseFilePath = validateEnvironmentVariable('AUTOCERTIFIER_DATABASE_FILE_PATH')
-        const accountPrivateKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_ACCOUNT_PRIVATE_KEY_PATH')
-        const acmeDirectoryUrl = validateEnvironmentVariable('AUTOCERTIFIER_ACME_DIRECTORY_URL')
-        const hmacKid = validateEnvironmentVariable('AUTOCERTIFIER_HMAC_KID')
-        const hmacKey = validateEnvironmentVariable('AUTOCERTIFIER_HMAC_KEY')
-        const restServerCertPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_CERT_PATH')
-        const restServerKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_KEY_PATH')
-
-        this.database = new Database(databaseFilePath)
-        await this.database.start()
-        logger.info('database is running on file ' + databaseFilePath)
-
-        this.dnsServer = new DnsServer(
-            this.domainName,
-            ownHostName,
-            dnsServerPort,
-            ownIpAddress,
-            this.database
-        )
-        await this.dnsServer.start()
-        logger.info('dns server is running for domain ' + this.domainName + ' on port ' + dnsServerPort)
-
-        this.certificateCreator = new CertificateCreator(
-            acmeDirectoryUrl,
-            hmacKid,
-            hmacKey,
-            accountPrivateKeyPath,
-            this
-        )
-        logger.info('certificate creator is running')
-
-        this.restServer = new RestServer(
-            ownIpAddress,
-            restServerPort,
-            restServerCertPath,
-            restServerKeyPath,
-            this
-        )
-        await this.restServer.start()
+        // TODO: we could add logging here to see if this is actually called ever
     }
 
     public async stop(): Promise<void> {
@@ -164,4 +167,3 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         await this.database!.stop()
     }
 }
-

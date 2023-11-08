@@ -5,4 +5,5 @@ const main = async () => {
     await autoCertifierServer.start()
 }
 
+// TODO: catch handling
 main()
