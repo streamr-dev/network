@@ -239,10 +239,12 @@ There can be plenty of output from npm. If the installation fails with an error,
 The wizard asks if you would like it to display your Ethereum private key. From here, you should copy-paste it to a safe place! You can also find it later in the configuration file, which is saved by default to `.streamr/config/default.json` under your home directory.
 
 ### Step 2b: Update the node config file
-Replace the node config file (typically located at `.streamr/config/default.json`) contents with the Mumbai environment [testnet config](./become-an-operator.md#mumbai-testing-environment-node-config) using a text editor. If you previously generated a node signing key then you can keep using that `privateKey` but the file schema must match what's in the [testnet config](./become-an-operator.md#mumbai-testing-environment-node-config).
+If you want to become an Operator in the testnet, you need to manually modify the node config file to include your Operator contract address.
+
+Find the config file generated in step 2a and take a backup copy. Then replace the config file with the Mumbai environment [testnet config](./become-an-operator.md#mumbai-testing-environment-node-config) using a text editor. Replace YOUR_OPERATOR_CONTRACT_ADDRESS with your newly deployed Operator contract's address (find it on the Operator page, there's a "Copy address" button next to it), and NODE_PRIVATE_KEY with the private key in your automatically generated backup. If you previously generated a node signing key then you can also keep using that `privateKey`.
 
 ### Step 3: Start the Streamr node
-If you're running a node to become an Operator, then you should first perform the [Step 3 of becoming an Operator](https://docs.streamr.network/guides/become-an-operator/#step-3-pair-your-node-with-your-operator-contract) to add your Operator contract address into the node config before starting your node.
+If you want to become an Operator in the testnet, then you must first perform the [Step 3 of becoming an Operator](https://docs.streamr.network/guides/become-an-operator/#step-3-pair-your-node-with-your-operator-contract) to pair your nodes with your Operator contract before starting your node.
 
 -   Run `streamr-broker` to start the node! You should start to see logging similar to this:
 
@@ -254,10 +256,10 @@ INFO [2023-10-31T17:42:33.152] (MaintainTopologyHelp): Starting
 ```
 
 ## The Network Explorer
-The Network Explorer is not yet supporting the 1.0 network. Your node will not appear on the map.
+The Network Explorer does not yet support the 1.0 testnet network. If you set up your node as an Operator in the testnet, your node will not appear on the map.
 
 ## Earning with your Streamr node
-If you have your node up an running, you are more than half way towards becoming an Streamr node Operator, capabale of earning tokens by joining [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md). Head to the [Streamr node Operator](../streamr-network/network-roles/operators.md) page for more information.
+If you have your node up an running, you are more than half way towards becoming an Streamr node Operator, capable of earning tokens by joining [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md). Head to the [Streamr node Operator](../streamr-network/network-roles/operators.md) page for more information.
 
 ## WebSocket connectivity
 If you're running the node with Docker, then the above guided tutorial will handle the port mapping (`-p 32200:32200`). However, you must also remember to open port `32200` for **external** TCP traffic. Opening ports is environment specific, if you're in a Linux based system, [this guide may be helpful](https://www.digitalocean.com/community/tutorials/opening-a-port-on-linux).
@@ -286,14 +288,14 @@ Ask for help on our [Discord](https://discord.gg/gZAm8P7hK8)! There are many hel
 Also, [ChatGPT](https://chat.openai.com) is a handy resource for debugging networking and Docker related issues.
 
 ### RPC issues
-Your node may have issues if the RPC connection is flaky. The RPC is the connection to the Blockchain. 
+Your node may have issues if the RPC connection is flaky. The RPC is the connection to the Blockchain.
 
 [Operators](../streamr-network/network-roles/operators.md) may choose to replace their RPC endpoint address by updating their [node config file](./become-an-operator#mumbai-testing-environment-node-config).
 
 ### Diagnostics
 For extra logging on your Streamr node, add the `LOG_LEVEL` environmental variable to your run script.
 
-For example, 
+For example,
 ```shell
 sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -e LOG_LEVEL=trace -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-pretestnet.0
 ```
