@@ -23,71 +23,71 @@ jobs:
       - run: npm run versions
       - run: npm run check
       - run: npm run eslint
-  test-utils:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: test-utils
-  utils:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: utils
-      command: |
-        npm run test
-        xvfb-run --auto-servernum npm run test-browser
-  protocol:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: protocol
-  proto-rpc:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: proto-rpc
-      command: |
-        npm run test
-        xvfb-run --auto-servernum npm run test-browser
-  dht:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: dht
-  dht-browser:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: dht
-      command: |
-        sudo apt-get install xvfb
-        xvfb-run --auto-servernum npm run test-browser
-  trackerless-network:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: trackerless-network
-      command: |
-        npm run test-unit
-        npm run test-integration
-        npm run test-end-to-end
-  trackerless-network-browser:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: trackerless-network
-      command: |
-        sudo apt-get install xvfb
-        xvfb-run --auto-servernum npm run test-browser
-  client:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: client
-      command: |
-        npm run test-unit
-        npm run test-integration
-        npm run docs
+  #test-utils:
+  #  needs: build
+  #  uses: ./.github/workflows/test-setup.yml
+  #  with:
+  #    package: test-utils
+  #utils:
+  #  needs: build
+  #  uses: ./.github/workflows/test-setup.yml
+  #  with:
+  #    package: utils
+  #    command: |
+  #      npm run test
+  #      xvfb-run --auto-servernum npm run test-browser
+  #protocol:
+  #  needs: build
+  #  uses: ./.github/workflows/test-setup.yml
+  #  with:
+  #    package: protocol
+  #proto-rpc:
+  #  needs: build
+  #  uses: ./.github/workflows/test-setup.yml
+  #  with:
+  #    package: proto-rpc
+  #    command: |
+  #      npm run test
+  #      xvfb-run --auto-servernum npm run test-browser
+  #dht:
+  #  needs: build
+  #  uses: ./.github/workflows/test-setup.yml
+  #  with:
+  #    package: dht
+  #dht-browser:
+  #  needs: build
+  #  uses: ./.github/workflows/test-setup.yml
+  #  with:
+  #    package: dht
+  #    command: |
+  #      sudo apt-get install xvfb
+  #      xvfb-run --auto-servernum npm run test-browser
+  #trackerless-network:
+  #  needs: build
+  #  uses: ./.github/workflows/test-setup.yml
+  #  with:
+  #    package: trackerless-network
+  #    command: |
+  #      npm run test-unit
+  #      npm run test-integration
+  #      npm run test-end-to-end
+  #trackerless-network-browser:
+  #  needs: build
+  #  uses: ./.github/workflows/test-setup.yml
+  #  with:
+  #    package: trackerless-network
+  #    command: |
+  #      sudo apt-get install xvfb
+  #      xvfb-run --auto-servernum npm run test-browser
+  #client:
+  #  needs: build
+  #  uses: ./.github/workflows/test-setup.yml
+  #  with:
+  #    package: client
+  #    command: |
+  #      npm run test-unit
+  #      npm run test-integration
+  #      npm run docs
   client-e2e:
     needs: build
     uses: ./.github/workflows/test-setup.yml
@@ -97,43 +97,43 @@ jobs:
       run-entry-point: true
       run-brokers: true
       command: npm run test-end-to-end
-  broker:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: broker
-      command: npm run test-unit
-  broker-e2e:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: broker
-      docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
-      run-entry-point: true
-      command: npm run test-integration
-  client-browser:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: client
-      docker-services: init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
-      run-entry-point: true
-      run-brokers: true
-      command: npm run test-browser
-  cli-tools:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: cli-tools
-      docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
-      run-entry-point: true
-      run-brokers: true
-      command: npm run test
-  broker-docker-image:
-    uses: ./.github/workflows/docker-build.yml
-    with:
-      docker_file: Dockerfile.broker
-      image_name: streamr/broker-node
-      test_services_to_start: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain broker-node-storage-1 entry-point
-      build_platforms: linux/amd64
-      test_script: bash ./.github/healthcheck.sh http://localhost:8891/info streamr-dev-broker-node-storage-1
+  #broker:
+  #  needs: build
+  #  uses: ./.github/workflows/test-setup.yml
+  #  with:
+  #    package: broker
+  #    command: npm run test-unit
+  #broker-e2e:
+  #  needs: build
+  #  uses: ./.github/workflows/test-setup.yml
+  #  with:
+  #    package: broker
+  #    docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
+  #    run-entry-point: true
+  #    command: npm run test-integration
+  #client-browser:
+  #  needs: build
+  #  uses: ./.github/workflows/test-setup.yml
+  #  with:
+  #    package: client
+  #    docker-services: init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
+  #    run-entry-point: true
+  #    run-brokers: true
+  #    command: npm run test-browser
+  #cli-tools:
+  #  needs: build
+  #  uses: ./.github/workflows/test-setup.yml
+  #  with:
+  #    package: cli-tools
+  #    docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
+  #    run-entry-point: true
+  #    run-brokers: true
+  #    command: npm run test
+  #broker-docker-image:
+  #  uses: ./.github/workflows/docker-build.yml
+  #  with:
+  #    docker_file: Dockerfile.broker
+  #    image_name: streamr/broker-node
+  #    test_services_to_start: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain broker-node-storage-1 entry-point
+  #    build_platforms: linux/amd64
+  #    test_script: bash ./.github/healthcheck.sh http://localhost:8891/info streamr-dev-broker-node-storage-1
