@@ -88,7 +88,7 @@ The base URL for the API is `http://{ip}:{port}`, where `{ip}` is the IP address
 
 The API provides the following endpoints:
 
-### `PATCH /certified-subdomains`
+### `PATCH /certificates`
 
 Create a new subdomain and certificate.
 
@@ -106,7 +106,7 @@ The response body is a JSON object with the following properties:
 - `token`: The authentication token for managing the new subdomain.
 - `certificate`: The certificate for the new subdomain.
 
-### `PATCH /certified-subdomains/:subdomain`
+### `PATCH /certificates/:subdomain`
 
 Get a new certificate for an existing subdomain.
 
@@ -128,7 +128,7 @@ The response body is a JSON object with the following properties:
 - `subdomain`: The name of the subdomain.
 - `certificate`: The new certificate for the subdomain.
 
-### `PUT /certified-subdomains/:subdomain/ip`
+### `PUT /certificates/:subdomain/ip`
 
 Update the IP address and port number for an existing subdomain.
 

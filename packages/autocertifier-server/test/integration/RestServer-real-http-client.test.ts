@@ -64,10 +64,10 @@ describe('RestServer', () => {
         })
     })
 
-    describe('PATCH /certified-subdomains', () => {
+    describe('PATCH /certificates', () => {
         it('should return a certified subdomain', (done) => {
             const options = {
-                url: 'https://localhost:9877/certified-subdomains',
+                url: 'https://localhost:9877/certificates',
                 method: 'PATCH',
                 json: {
                     streamrWebSocketPort: '1234'
@@ -85,7 +85,7 @@ describe('RestServer', () => {
 
         it('should return an error if streamrWebSocketPort is missing', (done) => {
             const options = {
-                url: 'https://localhost:9877/certified-subdomains',
+                url: 'https://localhost:9877/certificates',
                 method: 'PATCH',
                 json: true,
                 rejectUnauthorized: false
@@ -101,10 +101,10 @@ describe('RestServer', () => {
         })
     })
 
-    describe('PUT /certified-subdomains/:subdomain/ip', () => {
+    describe('PUT /certificates/:subdomain/ip', () => {
         it('should update the subdomain IP and port', (done) => {
             const options = {
-                url: 'https://localhost:9877/certified-subdomains/test/ip',
+                url: 'https://localhost:9877/certificates/test/ip',
                 method: 'PUT',
                 json: {
                     streamrWebSocketPort: '1234',
@@ -123,7 +123,7 @@ describe('RestServer', () => {
 
         it('should return an error if streamrWebSocketPort is missing', (done) => {
             const options = {
-                url: 'https://localhost:9877/certified-subdomains/test/ip',
+                url: 'https://localhost:9877/certificates/test/ip',
                 method: 'PUT',
                 json: {
                     token: 'token'
@@ -142,7 +142,7 @@ describe('RestServer', () => {
 
         it('should return an error if token is missing', (done) => {
             const options = {
-                url: 'https://localhost:9877/certified-subdomains/test/ip',
+                url: 'https://localhost:9877/certificates/test/ip',
                 method: 'PUT',
                 json: {
                     streamrWebSocketPort: '1234'
