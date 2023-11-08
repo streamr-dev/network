@@ -55,17 +55,18 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         if (!fs.existsSync(this.subdomainFilePath)) {
             await this.createCertificate()
         } else {
-            await this.checkSubdomainValidity()
+            await this.ensureCertificateValidity()
         }
     }
 
-    private async checkSubdomainValidity(): Promise<void> {
+    private async ensureCertificateValidity(): Promise<void> {
         const sub = this.loadSubdomainFromDisk()
 
         if (Date.now() >= sub.expirationTimestamp - ONE_DAY) {
             await this.updateCertificate()
         } else {
             // TODO: most of the time the ip should not change. Calling this is important for whenever it does.
+            // should avoid calling this.updateSubDomainIp in scheduled calls if certificate is not expiring.
             await this.updateSubdomainIp()
             this.scheduleCertificateUpdate(sub.expirationTimestamp)
             this.emit('updatedCertificate', sub.subdomain)
@@ -104,7 +105,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
 
         logger.info(updateIn + ' milliseconds until certificate update')
         // TODO: use tooling from @streamr/utils to set the timeout with an abortController.
-        this.updateTimeout = setTimeout(this.checkSubdomainValidity, updateIn)
+        this.updateTimeout = setTimeout(this.ensureCertificateValidity, updateIn)
     }
 
     private createCertificate = async (): Promise<void> => {
