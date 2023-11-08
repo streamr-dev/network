@@ -1,4 +1,4 @@
-// TODO: server stuff, shouldn't be in this package
+// TODO: server stuff, shouldn't be in this package or remove completely as these are standard numbers
 export enum HttpStatus {
     OK = 200,
     CREATED = 201,
