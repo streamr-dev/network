@@ -113,7 +113,7 @@ export class DiscoverySession {
     }
 
     public async findClosestNodes(timeout: number): Promise<void> {
-        if (this.config.peerManager.getNumberOfPeers(this.contactedPeers) === 1) {
+        if (this.config.peerManager.getNumberOfPeers(this.contactedPeers) === 0) {
             return
         }
         await runAndWaitForEvents3<DiscoverySessionEvents>(

@@ -261,12 +261,15 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
             if (!peerId.equals(this.config.ownPeerId!)) {
                 logger.trace(`Adding new contact ${contact.kademliaId.toString()}`)
                 const DhtNodeRpcRemote = this.config.createDhtNodeRpcRemote(contact)
-                if (!this.bucket!.get(contact.kademliaId) && !this.neighborList!.getContact(peerIdFromPeerDescriptor(contact))) {
-                    this.neighborList!.addContact(DhtNodeRpcRemote)
-                    this.bucket!.add(DhtNodeRpcRemote)
-                } else {
+                if (this.bucket!.get(contact.kademliaId) || this.neighborList!.getContact(peerIdFromPeerDescriptor(contact))) {
                     this.randomPeers!.addContact(DhtNodeRpcRemote)
                 }
+                if (!this.bucket!.get(contact.kademliaId) ) {
+                    this.bucket!.add(DhtNodeRpcRemote)
+                } 
+                if (!this.neighborList!.getContact(peerIdFromPeerDescriptor(contact))) {
+                    this.neighborList!.addContact(DhtNodeRpcRemote)
+                } 
                 if (setActive) {
                     this.neighborList!.setActive(peerId)
                 }
