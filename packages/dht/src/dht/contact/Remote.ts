@@ -5,16 +5,20 @@ import { ServiceID } from '../../types/ServiceID'
 import { ConnectionType } from '../../connection/IConnection'
 import { expectedConnectionType } from '../../helpers/Connectivity'
 
+const WEBRTC_TIMEOUT = 15000
+const WEBSOCKET_SERVER_TIMEOUT = 10000
+const WEBSOCKET_CLIENT_TIMEOUT = 5000
+
 const getRpcTimeout = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: PeerDescriptor): number => {
     const connectionType = expectedConnectionType(localPeerDescriptor, remotePeerDescriptor)
     if (connectionType === ConnectionType.WEBSOCKET_CLIENT) {
-        return 5000
+        return WEBSOCKET_CLIENT_TIMEOUT
     } else if (connectionType === ConnectionType.WEBSOCKET_SERVER) {
-        return 10000
+        return WEBSOCKET_SERVER_TIMEOUT
     } else if (connectionType === ConnectionType.WEBRTC) {
-        return 15000
+        return WEBRTC_TIMEOUT
     }
-    return 15000
+    return WEBRTC_TIMEOUT
 }
 
 export abstract class Remote<T> {

@@ -54,12 +54,16 @@ describe('Connectivity helpers', () => {
         expect(expectedConnectionType(browserPeerDescriptor, tlsServerPeerDescriptor)).toBe(ConnectionType.WEBSOCKET_CLIENT)
     })
 
+    it('tls server to browser', () => {
+        expect(expectedConnectionType(tlsServerPeerDescriptor, browserPeerDescriptor)).toBe(ConnectionType.WEBSOCKET_SERVER)
+    })
+
     it('browser to no tls server', () => {
         expect(expectedConnectionType(browserPeerDescriptor, noTlsServerPeerDescriptor)).toBe(ConnectionType.WEBRTC)
     })
 
-    it('tls server to browser', () => {
-        expect(expectedConnectionType(tlsServerPeerDescriptor, browserPeerDescriptor)).toBe(ConnectionType.WEBSOCKET_SERVER)
+    it('no tls server to browser', () => {
+        expect(expectedConnectionType(noTlsServerPeerDescriptor, browserPeerDescriptor)).toBe(ConnectionType.WEBRTC)
     })
 
 })
