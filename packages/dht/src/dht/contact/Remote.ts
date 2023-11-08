@@ -5,9 +5,9 @@ import { ServiceID } from '../../types/ServiceID'
 import { ConnectionType } from '../../connection/IConnection'
 import { expectedConnectionType } from '../../helpers/Connectivity'
 
-const WEBRTC_TIMEOUT = 15000
-const WEBSOCKET_SERVER_TIMEOUT = 10000
 const WEBSOCKET_CLIENT_TIMEOUT = 5000
+const WEBSOCKET_SERVER_TIMEOUT = 7500
+const WEBRTC_TIMEOUT = 15000
 
 const getRpcTimeout = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: PeerDescriptor): number => {
     const connectionType = expectedConnectionType(localPeerDescriptor, remotePeerDescriptor)
