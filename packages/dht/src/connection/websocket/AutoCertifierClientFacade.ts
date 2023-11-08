@@ -4,7 +4,7 @@ import {
     HasSessionResponse, 
     CertifiedSubdomain,
     Certificate,
-    AUTOCERTIFIER_SERVICE_ID,
+    SERVICE_ID as AUTO_CERTIFIER_SERVICE_ID,
     HasSession
 } from '@streamr/autocertifier-client'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
@@ -62,7 +62,7 @@ export class AutoCertifierClientFacade {
     constructor(config: AutoCertifierClientFacadeConfig) {
         this.setHost = config.setHost
         this.updateCertificate = config.updateCertificate
-        this.rpcCommunicator = new ListeningRpcCommunicator(AUTOCERTIFIER_SERVICE_ID, config.transport)
+        this.rpcCommunicator = new ListeningRpcCommunicator(AUTO_CERTIFIER_SERVICE_ID, config.transport)
         this.autoCertifierClient = config.createClientFactory ? config.createClientFactory() 
             : defaultAutoCertifierClientFactory(
                 config.subdomainFilePath,

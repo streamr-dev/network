@@ -1,4 +1,4 @@
-import { AUTOCERTIFIER_SERVICE_ID, HasSessionRequest, HasSessionResponse } from '@streamr/autocertifier-client'
+import { SERVICE_ID, HasSessionRequest, HasSessionResponse } from '@streamr/autocertifier-client'
 import { runStreamrChallenge } from '../../src/StreamrChallenger'
 import { 
     ConnectionManager,
@@ -54,7 +54,7 @@ describe('StreamrChallenger', () => {
             metricsContext: new MetricsContext()
         })
         await challengedClientTransport.start()
-        challengedClient = new ListeningRpcCommunicator(AUTOCERTIFIER_SERVICE_ID, challengedClientTransport)
+        challengedClient = new ListeningRpcCommunicator(SERVICE_ID, challengedClientTransport)
         challengedClient.registerRpcMethod(HasSessionRequest, HasSessionResponse, 'hasSession', rpcMethod)
     })
 

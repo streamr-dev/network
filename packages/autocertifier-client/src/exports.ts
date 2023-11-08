@@ -1,4 +1,4 @@
-export { AutoCertifierClient, AUTOCERTIFIER_SERVICE_ID, HasSession } from './AutoCertifierClient'
+export { AutoCertifierClient, SERVICE_ID, HasSession } from './AutoCertifierClient'
 export { CertifiedSubdomain } from './data/CertifiedSubdomain'
 export { Session } from './data/Session'
 export { Certificate } from './data/Certificate'

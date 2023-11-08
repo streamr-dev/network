@@ -18,7 +18,7 @@ export type HasSession = (request: HasSessionRequest, context: ServerCallContext
 
 const logger = new Logger(module)
 
-export const AUTOCERTIFIER_SERVICE_ID = 'system/auto-certificer'
+export const SERVICE_ID = 'system/auto-certificer'
 const ONE_DAY = 1000 * 60 * 60 * 24
 const MAX_INT_32 = 2147483647
 
@@ -48,7 +48,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         this.restClient = new RestClient(restApiUrl)
         this.subdomainFilePath = filePathToNodeFormat(subdomainFilePath)
         this.streamrWebSocketPort = streamrWebSocketPort
-        registerRpcMethod(AUTOCERTIFIER_SERVICE_ID, 'hasSession', this.hasSession.bind(this))
+        registerRpcMethod(SERVICE_ID, 'hasSession', this.hasSession.bind(this))
     }
 
     public async start(): Promise<void> {

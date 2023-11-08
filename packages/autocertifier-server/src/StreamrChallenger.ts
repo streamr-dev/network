@@ -2,7 +2,7 @@ import { Message, NodeType, PeerDescriptor, PeerID, ClientWebsocket, ManagedConn
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { ConnectionType } from '@streamr/dht'
-import { FailedToConnectToStreamrWebSocket, AutoCertifierRpcClient, AUTOCERTIFIER_SERVICE_ID } from '@streamr/autocertifier-client'
+import { FailedToConnectToStreamrWebSocket, AutoCertifierRpcClient, SERVICE_ID } from '@streamr/autocertifier-client'
 
 const logger = new Logger(module)
 
@@ -46,7 +46,7 @@ export const runStreamrChallenge = (
 
         managedConnection.on('handshakeCompleted', () => {
             socket.off('disconnected', onDisconnected)
-            const communicator = new RoutingRpcCommunicator(AUTOCERTIFIER_SERVICE_ID,
+            const communicator = new RoutingRpcCommunicator(SERVICE_ID,
                 (msg: Message): Promise<void> => {
                     logger.info('sending message to peer')
                     return managedConnection.send(Message.toBinary(msg), true)
