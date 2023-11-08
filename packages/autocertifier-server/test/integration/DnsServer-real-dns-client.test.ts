@@ -27,7 +27,7 @@ afterAll(async () => {
 })
 
 describe('DnsServer', () => {
-    describe('handleNormalQuery', () => {
+    describe('handleAQuery', () => {
         it('should return the IP address for a valid subdomain', async () => {
             const ipAddress = await promisify(dns.resolve4)('www.example.com')
             expect(ipAddress).toEqual(['1.2.3.4'])

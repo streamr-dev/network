@@ -15,6 +15,8 @@ export const NXDOMAIN = 3
 // TODO: there is appears to be a general problem with typing in this class. Seems that the DNS2 library does
 // not provide proper typing for many fields and response types. Alternativel we should just simply send all
 // responses as the DnsResponse type instead of unknown
+// TODO: which DNS query types should we support? A query is the most important one and it works.
+// However the others do not appear to work as intended at least based on DNS queries.
 export class DnsServer {
 
     private server?: any
@@ -149,7 +151,7 @@ export class DnsServer {
     ): Promise<void> => {
 
         const name = mixedCaseName.toLowerCase()
-        logger.info('handleNormalQuery() ' + name)
+        logger.info('handleAQuery() ' + name)
 
         const parts = name.split('.')
 
@@ -169,11 +171,11 @@ export class DnsServer {
             try {
                 subdomainRecord = await this.db.getSubdomain(subdomain)
             } catch (e) {
-                logger.error('handleNormalQuery exception')
+                logger.error('handleAQuery exception')
             }
 
             if (!subdomainRecord) {
-                logger.info('handleNormalQuery() not found: ' + name)
+                logger.info('handleAQuery() not found: ' + name)
                 // @ts-ignore private field
                 response.header.rcode = NXDOMAIN
                 return send(response)

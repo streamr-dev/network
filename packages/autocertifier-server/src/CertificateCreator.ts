@@ -59,7 +59,7 @@ export class CertificateCreator {
             commonName: fqdn
         })
        
-        logger.debug('Creating certificate using client.auto')
+        logger.debug('Creating certificate')
         let cert: string
         try {
             cert = await client.auto({
