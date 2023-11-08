@@ -192,7 +192,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 descriptor,
                 this.config.streamPartId,
                 toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
-                this.config.rpcRequestTimeout,
+                this.config.rpcRequestTimeout
             )
         ))
         for (const descriptor of this.config.layer1Node.getKBucketPeers()) {
