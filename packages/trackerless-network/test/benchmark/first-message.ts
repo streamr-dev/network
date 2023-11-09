@@ -1,7 +1,16 @@
 /* eslint-disable no-console */
 
 import { DhtNode, LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
-import { ContentType, MessageID, StreamMessage, StreamMessageType, StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { 
+    ContentType,
+    MessageID,
+    StreamMessage,
+    StreamMessageType,
+    StreamPartID,
+    StreamPartIDUtils,
+    toStreamID,
+    toStreamPartID
+} from '@streamr/protocol'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import fs from 'fs'
 import { PeerDescriptor } from '@streamr/dht'
