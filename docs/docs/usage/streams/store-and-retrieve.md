@@ -34,7 +34,7 @@ const storageNodes = stream.getStorageNodes();
 
 ## Working with Lit Protocol
 
-To enable Lit, add this encryption object to the Streamr client constructor:
+To enable Lit, add this encryption object to the Streamr constructor:
 
 ```ts
 new StreamrClient({
@@ -48,13 +48,13 @@ new StreamrClient({
 
 As the Streamr Network deals with real-time messages, publishers are often constantly online. However, it may happen that the publisher has disappeared since publishing the data, making those messages inaccessible to subscribers who have yet to receive the key. This is a consequence of the data publisher being in full control of who can access their data on the Network. If this liveness requirement is disruptive to your use case, there is an opportunity to connect with the Lit protocol.
 
-The [Lit Protocol](https://litprotocol.com) is a decentralized key management network powered by threshold cryptography. The Streamr JS client can be configured to use Lit to manage stream key management.
+The [Lit Protocol](https://litprotocol.com) is a decentralized key management network powered by threshold cryptography. The Streamr SDK can be configured to use Lit to manage stream key management.
 
 :::info Good to know:
 
 - Lit must be enabled for both the publisher(s) and subscriber(s)
-- Enabling and using Lit is a client constructor parameter. It is not specific to any stream.
-- If Lit fails for any reason, the client will fallback to the native Streamr key exchange mechanism.
+- Enabling and using Lit is a Streamr SDK constructor parameter. It is not specific to any stream.
+- If Lit fails for any reason, the Streamr SDK will fallback to the native Streamr key exchange mechanism.
 
 :::
 

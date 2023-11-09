@@ -11,7 +11,7 @@ import { INeighborFinder } from './NeighborFinder'
 import { StreamPartID } from '@streamr/protocol'
 
 interface NeighborUpdateRpcLocalConfig {
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
@@ -35,12 +35,12 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
             const newPeerDescriptors = message.neighborDescriptors
                 .filter((peerDescriptor) => {
                     const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-                    const ownNodeId = getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)
+                    const ownNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
                     return nodeId !== ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
                 })
             newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
                 new DeliveryRpcRemote(
-                    this.config.ownPeerDescriptor,
+                    this.config.localPeerDescriptor,
                     peerDescriptor,
                     this.config.streamPartId,
                     toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))

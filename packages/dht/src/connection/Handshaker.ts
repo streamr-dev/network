@@ -15,23 +15,20 @@ interface HandshakerEvents {
 export class Handshaker extends EventEmitter<HandshakerEvents> {
 
     private static readonly HANDSHAKER_SERVICE_ID = 'system/handshaker'
-    private ownPeerDescriptor: PeerDescriptor
-    private protocolVersion: string
+    private localPeerDescriptor: PeerDescriptor
     private connection: IConnection
 
     constructor(
-        ownPeerDescriptor: PeerDescriptor,
-        protocolVersion: string, 
+        localPeerDescriptor: PeerDescriptor,
         connection: IConnection
     ) {
         super()
-        this.ownPeerDescriptor = ownPeerDescriptor
-        this.protocolVersion = protocolVersion
+        this.localPeerDescriptor = localPeerDescriptor
         this.connection = connection
-        this.connection.on('data', this.onData)
+        this.connection.on('data', (data: Uint8Array) => this.onData(data))
     }
 
-    private onData = (data: Uint8Array) => {
+    private onData(data: Uint8Array) {
         try {
             const message = Message.fromBinary(data)
             if (message.body.oneofKind === 'handshakeRequest') {
@@ -56,9 +53,8 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
 
     public sendHandshakeRequest(): void {
         const outgoingHandshake: HandshakeRequest = {
-            sourceId: this.ownPeerDescriptor.kademliaId,
-            protocolVersion: this.protocolVersion,
-            peerDescriptor: this.ownPeerDescriptor
+            sourceId: this.localPeerDescriptor.kademliaId,
+            peerDescriptor: this.localPeerDescriptor
         }
         const msg: Message = {
             serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
@@ -75,9 +71,8 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
 
     public sendHandshakeResponse(error?: string): void {
         const outgoingHandshakeResponse: HandshakeResponse = {
-            sourceId: this.ownPeerDescriptor.kademliaId,
-            protocolVersion: this.protocolVersion,
-            peerDescriptor: this.ownPeerDescriptor
+            sourceId: this.localPeerDescriptor.kademliaId,
+            peerDescriptor: this.localPeerDescriptor
         }
         if (error) {
             outgoingHandshakeResponse.responseError = error

@@ -30,6 +30,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly pruneIntervalInMs: number
     private readonly heartbeatIntervalInMs: number
     private readonly latencyExtraInMs: number
+    private readonly warmupPeriodInMs: number
     private readonly latestHeartbeats = new Map<NodeID, Heartbeat>()
     private readonly abortController = new AbortController()
     private readonly ready = new Gate(false)
@@ -41,6 +42,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         pruneAgeInMs: number,
         pruneIntervalInMs: number,
         latencyExtraInMs: number,
+        warmupPeriodInMs: number,
         timeProvider = Date.now
     ): CreateOperatorFleetStateFn {
         return (coordinationStreamId) => new OperatorFleetState(
@@ -50,6 +52,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
             pruneAgeInMs,
             pruneIntervalInMs,
             latencyExtraInMs,
+            warmupPeriodInMs,
             timeProvider
         )
     }
@@ -61,6 +64,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         pruneAgeInMs: number,
         pruneIntervalInMs: number,
         latencyExtraInMs: number,
+        warmupPeriodInMs: number,
         timeProvider = Date.now
     ) {
         super()
@@ -71,13 +75,21 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         this.pruneIntervalInMs = pruneIntervalInMs
         this.heartbeatIntervalInMs = heartbeatIntervalInMs
         this.latencyExtraInMs = latencyExtraInMs
+        this.warmupPeriodInMs = warmupPeriodInMs
     }
 
     async start(): Promise<void> {
         if (this.subscription !== undefined) {
             throw new Error('already started')
         }
+        const startTime = this.timeProvider()
         this.subscription = await this.streamrClient.subscribe(this.coordinationStreamId, (rawContent) => {
+            // Ignore messages during warmup period. This is needed because network nodes may propagate old stream messages
+            // from cache.
+            if ((this.timeProvider() - startTime) < this.warmupPeriodInMs) { // TODO: write test
+                return
+            }
+
             let message: HeartbeatMessage
             try {
                 message = HeartbeatMessageSchema.parse(rawContent)

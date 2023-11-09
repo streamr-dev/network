@@ -9,7 +9,7 @@ import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
 interface InspectorConfig {
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     rpcCommunicator: RpcCommunicator
     connectionLocker: ConnectionLocker
@@ -32,14 +32,14 @@ export class Inspector implements IInspector {
     private readonly sessions: Map<NodeID, InspectSession> = new Map()
     private readonly streamPartId: StreamPartID
     private readonly client: ProtoRpcClient<TemporaryConnectionRpcClient>
-    private readonly ownPeerDescriptor: PeerDescriptor
+    private readonly localPeerDescriptor: PeerDescriptor
     private readonly connectionLocker: ConnectionLocker
     private readonly inspectionTimeout: number
     private readonly openInspectConnection: (peerDescriptor: PeerDescriptor, lockId: string) => Promise<void>
 
     constructor(config: InspectorConfig) {
         this.streamPartId = config.streamPartId
-        this.ownPeerDescriptor = config.ownPeerDescriptor
+        this.localPeerDescriptor = config.localPeerDescriptor
         this.client = toProtoRpcClient(new TemporaryConnectionRpcClient(config.rpcCommunicator.getRpcClientTransport()))
         this.connectionLocker = config.connectionLocker
         this.inspectionTimeout = config.inspectionTimeout ?? DEFAULT_TIMEOUT
@@ -47,7 +47,7 @@ export class Inspector implements IInspector {
     }
 
     async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: string): Promise<void> {
-        const rpcRemote = new TemporaryConnectionRpcRemote(this.ownPeerDescriptor, peerDescriptor, this.streamPartId, this.client)
+        const rpcRemote = new TemporaryConnectionRpcRemote(this.localPeerDescriptor, peerDescriptor, this.streamPartId, this.client)
         await rpcRemote.openConnection()
         this.connectionLocker.lockConnection(peerDescriptor, lockId)
     }

@@ -43,8 +43,8 @@ export const retry = async <T>(task: () => Promise<T>, description: string, abor
 }
 
 interface ProxyClientConfig {
-    P2PTransport: ITransport
-    ownPeerDescriptor: PeerDescriptor
+    transport: ITransport
+    localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     connectionLocker: ConnectionLocker
     minPropagationTargets?: number // TODO could be required option if we apply all defaults somewhere at higher level
@@ -76,10 +76,10 @@ export class ProxyClient extends EventEmitter {
     constructor(config: ProxyClientConfig) {
         super()
         this.config = config
-        this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(config.streamPartId), config.P2PTransport)
-        this.targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor), 1000)
+        this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(config.streamPartId), config.transport)
+        this.targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor), 1000)
         this.deliveryRpcLocal = new DeliveryRpcLocal({
-            ownPeerDescriptor: this.config.ownPeerDescriptor,
+            localPeerDescriptor: this.config.localPeerDescriptor,
             streamPartId: this.config.streamPartId,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
@@ -90,7 +90,7 @@ export class ProxyClient extends EventEmitter {
                 }
             },
             rpcCommunicator: this.rpcCommunicator,
-            markForInspection: (_senderId: NodeID, _messageId: MessageID) => {}
+            markForInspection: () => {}
         })
         this.propagation = new Propagation({
             minPropagationTargets: config.minPropagationTargets ?? 2,
@@ -150,7 +150,7 @@ export class ProxyClient extends EventEmitter {
 
     private getInvalidConnections(): NodeID[] {
         return Array.from(this.connections.keys()).filter((id) => {
-            return !this.definition!.nodes.has(id )
+            return !this.definition!.nodes.has(id)
                 || this.definition!.direction !== this.connections.get(id)
         })
     }
@@ -167,13 +167,13 @@ export class ProxyClient extends EventEmitter {
     private async attemptConnection(nodeId: NodeID, direction: ProxyDirection, userId: EthereumAddress): Promise<void> {
         const peerDescriptor = this.definition!.nodes.get(nodeId)!
         const client = toProtoRpcClient(new ProxyConnectionRpcClient(this.rpcCommunicator.getRpcClientTransport()))
-        const rpcRemote = new ProxyConnectionRpcRemote(this.config.ownPeerDescriptor, peerDescriptor, this.config.streamPartId, client)
+        const rpcRemote = new ProxyConnectionRpcRemote(this.config.localPeerDescriptor, peerDescriptor, this.config.streamPartId, client)
         const accepted = await rpcRemote.requestConnection(direction, userId)
         if (accepted) {
             this.config.connectionLocker.lockConnection(peerDescriptor, SERVICE_ID)
             this.connections.set(nodeId, direction)
             const remote = new DeliveryRpcRemote(
-                this.config.ownPeerDescriptor,
+                this.config.localPeerDescriptor,
                 peerDescriptor,
                 this.config.streamPartId,
                 toProtoRpcClient(new DeliveryRpcClient(this.rpcCommunicator.getRpcClientTransport()))
@@ -241,7 +241,7 @@ export class ProxyClient extends EventEmitter {
     async start(): Promise<void> {
         this.registerDefaultServerMethods()
         addManagedEventListener<any, any>(
-            this.config.P2PTransport as any,
+            this.config.transport as any,
             'disconnected',
             (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor),
             this.abortController.signal
@@ -254,7 +254,7 @@ export class ProxyClient extends EventEmitter {
             remote.leaveStreamPartNotice()
         })
         this.targetNeighbors.stop()
-        this.rpcCommunicator.stop()
+        this.rpcCommunicator.destroy()
         this.connections.clear()
         this.abortController.abort()
     }

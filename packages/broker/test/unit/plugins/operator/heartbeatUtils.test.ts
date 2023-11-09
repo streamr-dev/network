@@ -9,8 +9,7 @@ describe('heartbeatUtils', () => {
                 port: 31313,
                 host: '127.0.0.1',
                 tls: false
-            },
-            openInternet: false,
+            }
         })
         expect(() => HeartbeatMessageSchema.parse(msg)).not.toThrowError()
     })

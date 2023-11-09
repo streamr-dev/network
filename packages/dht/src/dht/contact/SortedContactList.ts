@@ -4,7 +4,7 @@ import { ContactList, ContactState } from './ContactList'
 
 export class SortedContactList<C extends { getPeerId: () => PeerID }> extends ContactList<C> {
 
-    private allowOwnPeerId: boolean
+    private allowLocalPeerId: boolean
     private peerIdDistanceLimit?: PeerID
     private excludedPeerIDs?: PeerID[]
 
@@ -12,13 +12,13 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Co
         ownId: PeerID,
         maxSize: number,
         defaultContactQueryLimit?: number,
-        allowOwnPeerId = false,
+        allowLocalPeerId = false,
         peerIdDistanceLimit?: PeerID,
         excludedPeerIDs?: PeerID[]
     ) {
         super(ownId, maxSize, defaultContactQueryLimit)
         this.compareIds = this.compareIds.bind(this)
-        this.allowOwnPeerId = allowOwnPeerId
+        this.allowLocalPeerId = allowLocalPeerId
         this.peerIdDistanceLimit = peerIdDistanceLimit
         this.excludedPeerIDs = excludedPeerIDs
     }
@@ -37,7 +37,7 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Co
             return
         }
         
-        if ((!this.allowOwnPeerId && this.ownId.equals(contact.getPeerId())) ||
+        if ((!this.allowLocalPeerId && this.ownId.equals(contact.getPeerId())) ||
             (this.peerIdDistanceLimit !== undefined && this.compareIds(this.peerIdDistanceLimit, contact.getPeerId()) < 0)) {
             return
         }

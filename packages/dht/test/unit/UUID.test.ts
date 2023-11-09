@@ -32,7 +32,7 @@ describe('UUID', () => {
     })
 
     it('Throws if incorrect string is given as uuid string parameter', () => {
-        expect(()=> {new UUID('äå%')}).toThrow(TypeError)
+        expect(() => {new UUID('äå%')}).toThrow(TypeError)
     })
 
     it('Uses passed UUID as id', () => {

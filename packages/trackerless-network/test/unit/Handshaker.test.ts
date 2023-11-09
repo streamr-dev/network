@@ -21,9 +21,10 @@ describe('Handshaker', () => {
     let simulator: Simulator
     let simulatorTransport: SimulatorTransport
     
-    beforeEach(() => {
+    beforeEach(async () => {
         simulator = new Simulator()
         simulatorTransport = new SimulatorTransport(peerDescriptor, simulator)
+        await simulatorTransport.start()
         const rpcCommunicator = new ListeningRpcCommunicator(streamPartId, simulatorTransport)
 
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
@@ -32,7 +33,7 @@ describe('Handshaker', () => {
         randomNodeView = new NodeList(nodeId, 20)
 
         handshaker = new Handshaker({
-            ownPeerDescriptor: peerDescriptor,
+            localPeerDescriptor: peerDescriptor,
             streamPartId,
             connectionLocker: mockConnectionLocker,
             targetNeighbors,

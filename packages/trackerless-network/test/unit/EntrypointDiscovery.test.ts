@@ -1,12 +1,11 @@
-import { PeerDescriptor, isSamePeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, areEqualPeerDescriptors } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { wait } from '@streamr/utils'
 import { range } from 'lodash'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { EntryPointDiscovery } from '../../src/logic/EntryPointDiscovery'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { MockLayer1 } from '../utils/mock/MockLayer1'
+import { MockLayer1Node } from '../utils/mock/MockLayer1Node'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
@@ -38,22 +37,22 @@ describe('EntryPointDiscovery', () => {
         deleted: true
     }
 
-    const fakeGetEntryPointData = async (_key: Uint8Array): Promise<DataEntry[]> => {
+    const fakeGetEntryPointData = async (): Promise<DataEntry[]> => {
         return [fakeData, fakeDeletedData]
     }
 
-    const fakeStoreEntryPointData = async (_key: Uint8Array, _data: Any): Promise<PeerDescriptor[]> => {
+    const fakeStoreEntryPointData = async (): Promise<PeerDescriptor[]> => {
         storeCalled++
         return [peerDescriptor]
     }
 
-    const fakeEmptyGetEntryPointData = async (_key: Uint8Array): Promise<DataEntry[]> => {
+    const fakeEmptyGetEntryPointData = async (): Promise<DataEntry[]> => {
         return []
     }
 
-    const fakeDeleteEntryPointData = async (_key: Uint8Array): Promise<void> => {}
+    const fakeDeleteEntryPointData = async (): Promise<void> => {}
 
-    const addNodesToStreamPart = (layer1: MockLayer1, count: number) => {
+    const addNodesToStreamPart = (layer1: MockLayer1Node, count: number) => {
         range(count).forEach(() => {
             layer1.addNewRandomPeerToKBucket()
             layer1.addNewRandomPeerToKBucket()
@@ -62,24 +61,24 @@ describe('EntryPointDiscovery', () => {
         })
     } 
 
-    let layer1: MockLayer1
+    let layer1Node: MockLayer1Node
 
     beforeEach(() => {
         storeCalled = 0
-        layer1 = new MockLayer1(getNodeIdFromPeerDescriptor(peerDescriptor))
+        layer1Node = new MockLayer1Node()
         entryPointDiscoveryWithData = new EntryPointDiscovery({
-            ownPeerDescriptor: peerDescriptor,
+            localPeerDescriptor: peerDescriptor,
             streamPartId: STREAM_PART_ID,
-            layer1,
+            layer1Node,
             getEntryPointData: fakeGetEntryPointData,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
             storeInterval: 2000
         })
         entryPointDiscoveryWithoutData = new EntryPointDiscovery({
-            ownPeerDescriptor: peerDescriptor,
+            localPeerDescriptor: peerDescriptor,
             streamPartId: STREAM_PART_ID,
-            layer1,
+            layer1Node,
             getEntryPointData: fakeEmptyGetEntryPointData,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
@@ -100,14 +99,14 @@ describe('EntryPointDiscovery', () => {
     it('discoverEntryPointsFromDht does not have known entrypoints', async () => {
         const res = await entryPointDiscoveryWithData.discoverEntryPointsFromDht(0)
         expect(res.discoveredEntryPoints.length).toBe(1)
-        expect(isSamePeerDescriptor(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)
+        expect(areEqualPeerDescriptors(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)
     })
 
     it('discoverEntryPointsfromDht on an empty stream', async () => {
         const res = await entryPointDiscoveryWithoutData.discoverEntryPointsFromDht(0)
         expect(res.entryPointsFromDht).toEqual(true)
         expect(res.discoveredEntryPoints.length).toBe(1)
-        expect(isSamePeerDescriptor(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)  // ownPeerDescriptor
+        expect(areEqualPeerDescriptors(res.discoveredEntryPoints[0], peerDescriptor)).toBe(true)  // localPeerDescriptor
     })
 
     it('store on empty stream', async () => {
@@ -116,7 +115,7 @@ describe('EntryPointDiscovery', () => {
     })
 
     it('store on stream without saturated entrypoint count', async () => {
-        addNodesToStreamPart(layer1, 4)
+        addNodesToStreamPart(layer1Node, 4)
         await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(0)
         expect(storeCalled).toEqual(1)
     })

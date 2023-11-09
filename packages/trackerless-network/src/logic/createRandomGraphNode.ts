@@ -25,10 +25,10 @@ type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     }
 
 const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
-    const ownNodeId = getNodeIdFromPeerDescriptor(config.ownPeerDescriptor)
+    const ownNodeId = getNodeIdFromPeerDescriptor(config.localPeerDescriptor)
     const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(
         formStreamPartDeliveryServiceId(config.streamPartId),
-        config.P2PTransport
+        config.transport
     )
     const numOfTargetNeighbors = config.numOfTargetNeighbors ?? 4
     const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
@@ -42,10 +42,10 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const temporaryConnectionRpcLocal = new TemporaryConnectionRpcLocal({
         streamPartId: config.streamPartId,
         rpcCommunicator,
-        ownPeerDescriptor: config.ownPeerDescriptor
+        localPeerDescriptor: config.localPeerDescriptor
     })
     const proxyConnectionRpcLocal = acceptProxyConnections ? new ProxyConnectionRpcLocal({
-        ownPeerDescriptor: config.ownPeerDescriptor,
+        localPeerDescriptor: config.localPeerDescriptor,
         streamPartId: config.streamPartId,
         rpcCommunicator
     }) : undefined
@@ -64,7 +64,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         }
     })
     const handshaker = config.handshaker ?? new Handshaker({
-        ownPeerDescriptor: config.ownPeerDescriptor,
+        localPeerDescriptor: config.localPeerDescriptor,
         streamPartId: config.streamPartId,
         connectionLocker: config.connectionLocker,
         rpcCommunicator,
@@ -82,14 +82,14 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
         targetNeighbors,
         nearbyNodeView,
-        ownPeerDescriptor: config.ownPeerDescriptor,
+        localPeerDescriptor: config.localPeerDescriptor,
         neighborFinder,
         streamPartId: config.streamPartId,
         rpcCommunicator,
         neighborUpdateInterval
     })
     const inspector = config.inspector ?? new Inspector({
-        ownPeerDescriptor: config.ownPeerDescriptor,
+        localPeerDescriptor: config.localPeerDescriptor,
         rpcCommunicator,
         streamPartId: config.streamPartId,
         connectionLocker: config.connectionLocker

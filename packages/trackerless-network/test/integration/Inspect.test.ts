@@ -24,12 +24,13 @@ describe('inspect', () => {
     let publishInterval: NodeJS.Timeout
 
     const initiateNode = async (peerDescriptor: PeerDescriptor, simulator: Simulator): Promise<NetworkStack> => {
-        const transportLayer = new SimulatorTransport(peerDescriptor, simulator)
+        const transport = new SimulatorTransport(peerDescriptor, simulator)
+        await transport.start()
         const node = new NetworkStack({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor,
-                transportLayer
+                transport
             }
         })
         await node.start()
@@ -81,7 +82,7 @@ describe('inspect', () => {
         }, 200)
 
         for (const node of inspectedNodes) {
-            const result = await inspectorNode.getStreamrNode().inspect(node.getLayer0DhtNode().getPeerDescriptor(), streamPartId)
+            const result = await inspectorNode.getStreamrNode().inspect(node.getLayer0Node().getLocalPeerDescriptor(), streamPartId)
             expect(result).toEqual(true)
         }
     }, 25000)

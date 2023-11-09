@@ -3,21 +3,18 @@ sidebar_position: 1
 ---
 
 # How to use
+The Streamr SDK, is the main TypeScript library for interacting with the Streamr Network. It should be installed as part of your application where possible. The SDK is also used inside the Streamr node and the Streamr CLI tool.
 
-The Streamr Client, i.e. the Light node is the main JS client for interacting with the Streamr Network. It should be installed as part of your application where possible. The Client is also used inside the Streamr Broker and CLI tools.
-
-<!-- TODO explainer on what the client is, and how it fits into the network. API ref and so on. Link to Streams section. -->
+<!-- TODO explainer on what the SDK is, and how it fits into the network. API ref and so on. Link to Streams section. -->
 
 ## Setup
-
-The client is available on [npm](https://www.npmjs.com/package/streamr-client) and can be installed simply by:
+The SDK is available on [npm](https://www.npmjs.com/package/streamr-client) and can be installed simply by:
 
 ```
 npm install streamr-client
 ```
 
 ### Importing streamr-client
-
 To use with react please see [streamr-client-react](https://github.com/streamr-dev/streamr-client-react)
 
 If using TypeScript you can import the library with:
@@ -35,11 +32,9 @@ const { StreamrClient } = require('streamr-client');
 ### Environments and frameworks
 
 #### NodeJS
-
 NodeJS `16.13.x` is the minimum required version. NodeJS `18.13.x`, NPM `8.x` and later versions are recommended.
 
 #### Browser (Website/WebApps)
-
 For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
 
 ```html
@@ -47,12 +42,10 @@ For usage in the browser include the latest build, e.g. by including a `<script>
 ```
 
 #### Browser extension
-
-Due to the stricter security rules inside browser extensions you must use the web build version of the Streamr Client.
+Due to the stricter security rules inside browser extensions you must use the web build version of the Streamr SDK.
 
 #### React Native
-
-We are actively working on React Native compatibility but currently the Streamr JavaScript Client is not compatible with React Native. To connect, pull or push data into the Streamr Network, use the [Broker integration pattern](https://streamr.network/docs/streamr-network/connecting-applications).
+We are actively working on React Native compatibility but currently the Streamr SDK is not compatible with React Native. To connect, pull or push data into the Streamr Network, use the [Streamr node integration pattern](../connect-apps-and-iot/streamr-node-interface.md).
 
 ## Troubleshooting
 
@@ -61,7 +54,6 @@ When on mac, you might run into the problem of not having **cmake** and/or **ope
 Follow these steps to solve these problems:
 
 ### cmake is not installed on mac:
-
 Open your terminal and run
 
 ```shell
