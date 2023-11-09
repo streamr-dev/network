@@ -87,6 +87,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
             }
         }
         this.connection.send(Message.toBinary(msg))
-        logger.trace('handshake request sent')
+        logger.trace('handshake response sent')
     }
 }

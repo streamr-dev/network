@@ -41,8 +41,14 @@ export class SimulatorConnector {
 
         const connection = new SimulatorConnection(this.localPeerDescriptor, targetPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, this.simulator)
 
-        const managedConnection = new ManagedConnection(this.localPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, connection, undefined)
-        managedConnection.setPeerDescriptor(targetPeerDescriptor)
+        const managedConnection = new ManagedConnection(
+            this.localPeerDescriptor,
+            ConnectionType.SIMULATOR_CLIENT,
+            connection,
+            undefined,
+            targetPeerDescriptor
+        )
+        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
         this.connectingConnections.set(peerKey, managedConnection)
         connection.once('disconnected', () => {
@@ -74,7 +80,7 @@ export class SimulatorConnector {
         logger.trace('connected')
 
         managedConnection.once('handshakeRequest', () => {
-            logger.trace(keyFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming handshake request')
+            logger.info(keyFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming handshake request')
             logger.trace('incoming handshake request')
 
             if (this.onIncomingConnection(managedConnection)) {

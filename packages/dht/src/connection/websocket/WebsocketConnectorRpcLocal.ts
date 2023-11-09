@@ -200,7 +200,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
                 undefined,
                 targetPeerDescriptor
             )
-            managedConnection.setPeerDescriptor(targetPeerDescriptor)
+            managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
             this.connectingConnections.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
 
@@ -237,7 +237,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
             targetPeerDescriptor
         )
         managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor)))
-        managedConnection.setPeerDescriptor(targetPeerDescriptor)
+        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
         this.ongoingConnectRequests.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
         return managedConnection
     }
@@ -267,7 +267,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
                 targetPeerDescriptor
             )
 
-            managedConnection.setPeerDescriptor(sourcePeerDescriptor)
+            managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
 
             if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 managedConnection.rejectHandshake(HandshakeError.INVALID_PRESUMED_PEER_DESCRIPTOR)
