@@ -12,7 +12,7 @@ The 1.0 testnets will be launched with the technical parameters set out in: [SIP
 
 ### How to participate & earn
 1. [Become a node Operator](../guides/become-an-operator.md)
-2. Stake your [Operator](../streamr-network/network-roles/operators.md) on [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md), or,
+2. Stake your [Operator](../streamr-network/network-roles/operators.md) on [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md), and/or,
 3. [Delegate](../streamr-network/network-roles/delegators.md) your `DATA` tokens onto other Operators
 
 ## Schedules

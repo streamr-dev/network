@@ -1,3 +1,7 @@
+---
+sidebar_position: 2
+---
+
 # Stream Sponsorships
 Stream Sponsorships are smart contracts for managing a stream of earnings distributed among a set of Operators. Those Operators run nodes which join the sponsored stream and help to relay the traffic inside it. [Sponsors](../network-roles/sponsors.md) create and fund stream Sponsorships and staked [Operators](../network-roles/operators.md) earn from them. 
 

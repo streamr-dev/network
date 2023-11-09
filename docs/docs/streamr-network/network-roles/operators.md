@@ -35,6 +35,8 @@ The Operator plugin interfaces with the Network and the Operator contract, which
 
 The Operator plugin will automatically validate that other Operators are doing work in the Sponsorship by conducting randomized spot tests, raising flags when appropriate, and voting on flags raised by other Operators that are also validating work on the Network.
 
+![image](@site/static/img/operator-sponsorship-relational-diagram.png)
+
 ### Operator heartbeat
 To observe your Operator's heartbeat, paste in your Operator contract address into [streams search](https://mumbai.streamr.network/hub/streams) and select the coordination stream, then "Live data". If your node is connectable then there will be a "websocket entry" inside the peer descriptor heartbeats. Be patient, it may require a browser refresh, also note Firefox is currently not working- please use Chrome.
 
@@ -56,17 +58,19 @@ The Node Operator contract parameters
 The Operator factory contract is referenced in the [project contract registry].
 
 ### Operator maintenance
-Operator uncollected earnings limit: 5%
-Operators continuously earn rewards from sponsorships on every block. For the operator’s total value to be correctly reflected on-chain, those earnings must be periodically collected to limit the error between the recorded on-chain value and the ‘real-time’ value of the operator, which constantly changes due to uncollected earnings accumulating.
+#### Operator uncollected earnings limit
+Operators continuously earn rewards from Sponsorships on every block. For the Operator’s total value to be correctly reflected on-chain, those earnings must be periodically collected to limit the error between the recorded on-chain value and the ‘real-time’ value of the Operator, which constantly changes due to uncollected earnings accumulating.
 
-Normally, the node software handles this earnings collection and maintenance of operator value automatically. The operator is responsible for ensuring that this happens by ensuring their nodes are running and the wallets of their nodes have enough MATIC to pay gas for transactions.
-If the amount of uncollected earnings exceed the operator’s recorded value by more than 5%, any entity can demonstrate to the operator smart contract that the values are outside acceptable limits. The party providing such proof (a ‘fisherman’) is rewarded, and the operator who violated this margin loses a portion of their uncollected earnings. This mechanism helps maintain the accuracy and integrity of the on-chain value, protecting the interests of participants in the protocol.
-Fisherman’s reward: 25%
-If it is demonstrated that an operator’s uncollected earnings exceed the above margin, the ‘fisherman’ providing the proof is entitled to a share of the operator's uncollected earnings that were included in the proof.
+Normally, the node software handles this earnings collection and maintenance of Operator value automatically. The Operator is responsible for ensuring that this happens by ensuring their nodes are running and the wallets of their nodes have enough `MATIC` to pay gas for transactions.
 
-Importantly, only the operator who violated the error margin loses a portion of their earnings. This mechanism ensures that the consequences of inactivity are borne by the responsible operator.
+The uncollected earnings limit has been set to 5% and this value is subject to change by Streamr DAO governance vote.
 
-![image](@site/static/img/operator-sponsorship-relational-diagram.png)
+#### Fisherman’s reward
+If the amount of uncollected earnings exceed the Operator’s recorded value by more than the uncollected earnings limit (5%), any entity can demonstrate to the Operator smart contract that the values are outside acceptable limits. The party providing such proof (a ‘fisherman’) is rewarded, and the Operator who violated this margin loses a portion of their uncollected earnings. This mechanism helps maintain the accuracy and integrity of the on-chain value, protecting the interests of participants in the protocol.
+
+If it is demonstrated that an Operator’s uncollected earnings exceed the above margin, the ‘fisherman’ providing the proof is entitled to a share of the operator's uncollected earnings that were included in the proof. Importantly, only the Operator who violated the error margin loses a portion of their earnings. This mechanism ensures that the consequences of inactivity are borne by the responsible Operator.
+
+This reward is set to 25% and this value is subject to change by Streamr DAO governance vote.
 
 ### Network validation
 Streamr nodes are also the validators in the Streamr Network. They inspect and validate that other nodes in the same [sponsored stream] are doing the work
@@ -81,10 +85,8 @@ How to earn DATA tokens by being an Operator
 ### Operator risks
 Operators promise to deliver, but what happens if they break that promise? Well, they will lose some of their staked DATA tokens in a process that’s commonly referred to as “slashing”. Delegators are also at risk of losing value if they delegate to unreliable Operators.
 
-Under the hood, Operators are running an [Operator plugin](#the-operator-plugin) on their Streamr Nodes. This plugin is continuously validating other nodes’ activity on the Streamr Network, and based on their findings they can raise flags, and vote on flags if selected as voters through a random selection. Operators that are found to have violated protocol rules are slashed, meaning that they lose some fraction of their committed stake. Operators are the ones that vote to kick other Operators out of Sponsorships.
+Under the hood, Operators are running an [Operator plugin](#the-operator-plugin) on their Streamr Nodes. This plugin is continuously validating other nodes’ activity on the Streamr Network, and based on their findings they can raise flags, and vote on flags if selected as voters through a random selection. Operators that are found to have violated protocol rules are slashed, meaning that they lose some fraction of their committed stake.
 
 While the above processes and roles may seem quite straightforward, one of the key challenges is preventing Operators that don’t actually do the work (of joining the stream’s topology and relaying messages to connected peers) from earning tokens from Sponsorships.
 
 Since Operators place a stake on Sponsorships, their stake can be slashed for not doing the work. All Operators' nodes validate other Operators' nodes by carrying out inspections (i.e. spot checks) to ensure that everyone is doing the work appropriately. If someone is suspected of misbehavior, they are flagged to the Sponsorship smart contract by the inspecting node. The smart contract selects random Operators from the Network to run their own inspection on the flagged Operator and vote whether the flagging was valid. If the flag is deemed valid, the flagged Operator is slashed and the flagger is rewarded. If the flag is invalid, the flagger is punished instead.
-
-If the Operator is slashed they will be kicked out of the Sponsorship.

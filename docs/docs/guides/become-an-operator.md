@@ -52,7 +52,15 @@ To pair your node(s) with your Operator contract, you must make them aware about
 - Your **Operator address** (found near the top of your Operator page in the Streamr Hub).
 - Your **node wallet**, which consists of an Ethereum private key and address. You might already have created one with the config wizard when setting up the node. Alternatively, you can use any method, such as create a new account in Metamask and export the private key, or use [vanity-eth](https://vanity-eth.tk/).
 
+![image](@site/static/img/operator-address.png)
+
+**Add your Operator's node addresses**
+
 First, scroll down on your Operator page and find the "Operator's node addresses" section. Click the "Add node address" button, paste in the **address** of your **node wallet** (not its private key!), click the button in the dialog and then don't forget to click the Save button.
+
+![image](@site/static/img/node-addresses.png)
+
+**Update your noode's configuration file**
 
 Then, update your node's config file. For Mumbai pre-testnet, copy and paste [this config snippet](#mumbai-testing-environment-node-config). In that snippet:
 - Replace `"YOUR_OPERATOR_CONTRACT_ADDRESS"` with your **Operator address** (keep the quotes).
@@ -84,6 +92,8 @@ The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your O
 You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 ## Mumbai testing environment node config
+This is the template you can use to override and replace the contents of your config file with.
+
 ```json
 {
     "client": {
@@ -145,6 +155,13 @@ You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumb
     }
 }
 ```
+
+## Troubleshooting
+**Failed to publish to stream... Cause: You don't have permission to publish to this stream...**
+
+This happens if you have not added your [node address to your Operator](#step-3-pair-your-node-with-your-operator-contract). Please complete this step and restart your node.
+
+Also make sure to check the [Streamr node troubleshooting section](./how-to-run-streamr-node#troubleshooting).
 
 ## Safety
 Your tokens are at risk by participating in these testnets - [the risks are real](../streamr-network/network-roles/operators#operator-risks).
