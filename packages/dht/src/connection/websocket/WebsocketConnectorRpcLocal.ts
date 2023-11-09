@@ -193,7 +193,13 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
 
             const url = connectivityMethodToWebsocketUrl(targetPeerDescriptor.websocket!)
 
-            const managedConnection = new ManagedConnection(this.localPeerDescriptor!, ConnectionType.WEBSOCKET_CLIENT, socket, undefined, targetPeerDescriptor)
+            const managedConnection = new ManagedConnection(
+                this.localPeerDescriptor!,
+                ConnectionType.WEBSOCKET_CLIENT,
+                socket,
+                undefined,
+                targetPeerDescriptor
+            )
             managedConnection.setPeerDescriptor(targetPeerDescriptor)
 
             this.connectingConnections.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
@@ -240,7 +246,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
         sourcePeerDescriptor: PeerDescriptor, 
         serverWebsocket: IConnection,
         targetPeerDescriptor?: PeerDescriptor
-        ) {
+    ) {
         const peerId = peerIdFromPeerDescriptor(sourcePeerDescriptor)
 
         if (this.ongoingConnectRequests.has(peerId.toKey())) {
@@ -253,7 +259,13 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
                 this.ongoingConnectRequests.delete(peerId.toKey())
             }
         } else {
-            const managedConnection = new ManagedConnection(this.localPeerDescriptor!, ConnectionType.WEBSOCKET_SERVER, undefined, serverWebsocket, targetPeerDescriptor)
+            const managedConnection = new ManagedConnection(
+                this.localPeerDescriptor!,
+                ConnectionType.WEBSOCKET_SERVER,
+                undefined,
+                serverWebsocket,
+                targetPeerDescriptor
+            )
 
             managedConnection.setPeerDescriptor(sourcePeerDescriptor)
 

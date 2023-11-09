@@ -47,7 +47,6 @@ export class ManagedConnection extends EventEmitter<Events> {
     private localPeerDescriptor: PeerDescriptor
     protected outgoingConnection?: IConnection
     protected incomingConnection?: IConnection
-    private readonly remotePeerDescriptor?: PeerDescriptor
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
@@ -65,7 +64,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.incomingConnection = incomingConnection
         this.connectionType = connectionType
         this.connectionId = new ConnectionID()
-        this.remotePeerDescriptor = remotePeerDescriptor
     
         this.onDisconnected = this.onDisconnected.bind(this)
 
