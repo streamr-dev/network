@@ -80,8 +80,7 @@ export class SimulatorConnector {
         logger.trace('connected')
 
         managedConnection.once('handshakeRequest', () => {
-            logger.info(keyFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming handshake request')
-            logger.trace('incoming handshake request')
+            logger.trace(keyFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming handshake request')
 
             if (this.onIncomingConnection(managedConnection)) {
                 logger.trace(keyFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' calling acceptHandshake')
