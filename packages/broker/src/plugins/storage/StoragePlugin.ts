@@ -65,7 +65,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         const node = await this.streamrClient!.getNode()
         node.removeMessageListener(this.messageListener!)
         this.storageConfig!.getStreamParts().forEach((streamPart) => {
-            node.unsubscribe(streamPart)
+            node.leave(streamPart)
         })
         await this.cassandra!.close()
         this.storageConfig!.destroy()
@@ -102,7 +102,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             {
                 onStreamPartAdded: async (streamPart) => {
                     try {
-                        await node.subscribeAndWaitForJoin(streamPart) // best-effort, can time out
+                        await node.join(streamPart, { minCount: 1, timeout: 5000 }) // best-effort, can time out
                     } catch (_e) {
                         // no-op
                     }
@@ -121,7 +121,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                     }
                 },
                 onStreamPartRemoved: (streamPart) => {
-                    node.unsubscribe(streamPart)
+                    node.leave(streamPart)
                 }
             }
         )

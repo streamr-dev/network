@@ -1,10 +1,9 @@
-import { LatencyType, NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { NetworkStack } from '../../src/NetworkStack'
-import { range } from 'lodash'
-import { createRandomNodeId, createStreamMessage } from '../utils/utils'
-import { hexToBinary } from '@streamr/utils'
+import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { range } from 'lodash'
+import { NetworkStack } from '../../src/NetworkStack'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('inspect', () => {
 
@@ -13,15 +12,8 @@ describe('inspect', () => {
     const streamPartId = StreamPartIDUtils.parse('stream#0')
     let sequenceNumber: number
 
-    const publisherDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
-    }
-
-    const inspectorPeerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS,
-    }
+    const publisherDescriptor = createMockPeerDescriptor()
+    const inspectorPeerDescriptor = createMockPeerDescriptor()
 
     const inspectedNodeCount = 12
 
@@ -32,12 +24,13 @@ describe('inspect', () => {
     let publishInterval: NodeJS.Timeout
 
     const initiateNode = async (peerDescriptor: PeerDescriptor, simulator: Simulator): Promise<NetworkStack> => {
-        const transportLayer = new SimulatorTransport(peerDescriptor, simulator)
+        const transport = new SimulatorTransport(peerDescriptor, simulator)
+        await transport.start()
         const node = new NetworkStack({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor,
-                transportLayer
+                transport
             }
         })
         await node.start()
@@ -53,17 +46,14 @@ describe('inspect', () => {
 
         inspectedNodes = []
         await Promise.all(range(inspectedNodeCount).map(async () => {
-            const peerDescriptor: PeerDescriptor = {
-                kademliaId: hexToBinary(createRandomNodeId()),
-                type: NodeType.NODEJS
-            }
+            const peerDescriptor = createMockPeerDescriptor()
             const node = await initiateNode(peerDescriptor, simulator)
             inspectedNodes.push(node)
         }))
         await Promise.all([
-            publisherNode.getStreamrNode().waitForJoinAndSubscribe(streamPartId, 5000, 4),
-            inspectorNode.getStreamrNode().waitForJoinAndSubscribe(streamPartId, 5000, 4),
-            ...inspectedNodes.map((node) => node.getStreamrNode().waitForJoinAndSubscribe(streamPartId, 5000, 4))
+            publisherNode.joinStreamPart(streamPartId, { minCount: 4, timeout: 15000 }),
+            inspectorNode.joinStreamPart(streamPartId, { minCount: 4, timeout: 15000 }),
+            ...inspectedNodes.map((node) => node.joinStreamPart(streamPartId, { minCount: 4, timeout: 15000 }))
         ])
         sequenceNumber = 0
     }, 30000)
@@ -87,12 +77,12 @@ describe('inspect', () => {
                 123123,
                 sequenceNumber
             )
-            publisherNode.getStreamrNode().publishToStream(msg)
+            publisherNode.getStreamrNode().broadcast(msg)
             sequenceNumber += 1
         }, 200)
 
         for (const node of inspectedNodes) {
-            const result = await inspectorNode.getStreamrNode().inspect(node.getLayer0DhtNode().getPeerDescriptor(), streamPartId)
+            const result = await inspectorNode.getStreamrNode().inspect(node.getLayer0Node().getLocalPeerDescriptor(), streamPartId)
             expect(result).toEqual(true)
         }
     }, 25000)

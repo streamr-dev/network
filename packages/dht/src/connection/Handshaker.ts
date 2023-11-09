@@ -7,7 +7,7 @@ import { IConnection } from './IConnection'
 const logger = new Logger(module)
 
 interface HandshakerEvents {
-    handshakeRequest: (sourcePeerDescriptor: PeerDescriptor, presumedPeerDescriptor?: PeerDescriptor) => void
+    handshakeRequest: (sourcePeerDescriptor: PeerDescriptor, targetDescriptor?: PeerDescriptor) => void
     handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
     handshakeFailed: (error?: HandshakeError) => void
 }
@@ -15,29 +15,26 @@ interface HandshakerEvents {
 export class Handshaker extends EventEmitter<HandshakerEvents> {
 
     private static readonly HANDSHAKER_SERVICE_ID = 'system/handshaker'
-    private ownPeerDescriptor: PeerDescriptor
-    private protocolVersion: string
+    private localPeerDescriptor: PeerDescriptor
     private connection: IConnection
 
     constructor(
-        ownPeerDescriptor: PeerDescriptor,
-        protocolVersion: string, 
+        localPeerDescriptor: PeerDescriptor,
         connection: IConnection
     ) {
         super()
-        this.ownPeerDescriptor = ownPeerDescriptor
-        this.protocolVersion = protocolVersion
+        this.localPeerDescriptor = localPeerDescriptor
         this.connection = connection
-        this.connection.on('data', this.onData)
+        this.connection.on('data', (data: Uint8Array) => this.onData(data))
     }
 
-    private onData = (data: Uint8Array) => {
+    private onData(data: Uint8Array) {
         try {
             const message = Message.fromBinary(data)
             if (message.body.oneofKind === 'handshakeRequest') {
                 logger.trace('handshake request received')
                 const handshake = message.body.handshakeRequest
-                this.emit('handshakeRequest', handshake.sourcePeerDescriptor!, handshake.presumedPeerDescriptor)
+                this.emit('handshakeRequest', handshake.sourcePeerDescriptor!, handshake.targetPeerDescriptor)
             }
             if (message.body.oneofKind === 'handshakeResponse') {
                 logger.trace('handshake response received')
@@ -49,16 +46,15 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 }
             }
         } catch (err) {
-            logger.trace(`Invalid data received: ${err}`)
+            logger.error('error while parsing handshake message', err)
         }
         
     }
 
-    public sendHandshakeRequest(presumedPeerDescriptor?: PeerDescriptor): void {
+    public sendHandshakeRequest(remotePeerDescriptor?: PeerDescriptor): void {
         const outgoingHandshake: HandshakeRequest = {
-            sourcePeerDescriptor: this.ownPeerDescriptor,
-            presumedPeerDescriptor,
-            protocolVersion: this.protocolVersion
+            sourcePeerDescriptor: this.localPeerDescriptor,
+            targetPeerDescriptor: remotePeerDescriptor
         }
         const msg: Message = {
             serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
@@ -75,9 +71,8 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
 
     public sendHandshakeResponse(error?: HandshakeError): void {
         const outgoingHandshakeResponse: HandshakeResponse = {
-            sourceId: this.ownPeerDescriptor.kademliaId,
-            protocolVersion: this.protocolVersion,
-            peerDescriptor: this.ownPeerDescriptor
+            sourceId: this.localPeerDescriptor.kademliaId,
+            peerDescriptor: this.localPeerDescriptor
         }
         if (error) {
             outgoingHandshakeResponse.responseError = error

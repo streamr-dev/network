@@ -6,9 +6,9 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 import "packages/dht/protos/DhtRpc.proto";
 
-service NetworkRpc {
-  rpc sendData (StreamMessage) returns (google.protobuf.Empty);
-  rpc leaveStreamNotice (LeaveStreamNotice) returns (google.protobuf.Empty);
+service DeliveryRpc {
+  rpc sendStreamMessage (StreamMessage) returns (google.protobuf.Empty);
+  rpc leaveStreamPartNotice (LeaveStreamPartNotice) returns (google.protobuf.Empty);
 }
 
 service ProxyConnectionRpc {
@@ -16,7 +16,7 @@ service ProxyConnectionRpc {
 }
 
 service HandshakeRpc {
-  rpc handshake (StreamHandshakeRequest) returns (StreamHandshakeResponse);
+  rpc handshake (StreamPartHandshakeRequest) returns (StreamPartHandshakeResponse);
   rpc interleaveNotice (InterleaveNotice) returns (google.protobuf.Empty);
 }
 
@@ -89,62 +89,46 @@ message GroupKey {
   bytes data = 2;
 }
 
-message StreamHandshakeRequest {
-  string randomGraphId = 1;
-  bytes senderId = 2;
-  string requestId = 3;
-  optional bytes concurrentHandshakeTargetId = 4;
-  repeated bytes neighborIds = 5;
-  // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  dht.PeerDescriptor senderDescriptor = 6;
-  optional bytes interleaveSourceId = 7;
+message StreamPartHandshakeRequest {
+  string streamPartId = 1;
+  string requestId = 2;
+  optional bytes concurrentHandshakeTargetId = 3;
+  repeated bytes neighborIds = 4;
+  optional bytes interleaveSourceId = 5;
 }
 
-message StreamHandshakeResponse {
+message StreamPartHandshakeResponse {
   bool accepted = 1;
   string requestId = 2;
   optional dht.PeerDescriptor interleaveTargetDescriptor = 3;
 }
 
 message InterleaveNotice {
-  bytes senderId = 1;
-  string randomGraphId = 2;
+  string streamPartId = 1;
   // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  dht.PeerDescriptor interleaveTargetDescriptor = 3;
+  dht.PeerDescriptor interleaveTargetDescriptor = 2;
 }
 
-message LeaveStreamNotice {
-  string randomGraphId = 1;
-  bytes senderId = 2;
+message LeaveStreamPartNotice {
+  string streamPartId = 1;
 }
 
 message NeighborUpdate {
-  bytes senderId = 1; // TODO: remove redundant info NET-1028
-  string randomGraphId = 2;
-  bool removeMe = 3;
-  repeated dht.PeerDescriptor neighborDescriptors = 4;
+  string streamPartId = 1;
+  bool removeMe = 2;
+  repeated dht.PeerDescriptor neighborDescriptors = 3;
 }
 
 message ProxyConnectionRequest {
-  bytes senderId = 1; // TODO: remove redundant info NET-1028
-  string streamId = 2;
-  uint32 streamPartition = 3; 
-  ProxyDirection direction = 4;
-  bytes userId = 5;
-  // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  dht.PeerDescriptor senderDescriptor = 6;
+  ProxyDirection direction = 1;
+  bytes userId = 2;
 }
 
 message ProxyConnectionResponse {
-  bytes senderId = 1; // TODO: remove redundant info NET-1028
-  string streamId = 2;
-  uint32 streamPartition = 3;
-  ProxyDirection direction = 4;  
-  bool accepted = 5;
+  bool accepted = 1;
 }
 
 message TemporaryConnectionRequest {
-  bytes senderId = 1;
 }
 
 message TemporaryConnectionResponse {

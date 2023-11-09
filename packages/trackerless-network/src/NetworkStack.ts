@@ -1,38 +1,10 @@
-import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor } from '@streamr/dht'
+import { ConnectionManager, DhtNode, DhtNodeOptions, areEqualPeerDescriptors } from '@streamr/dht'
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
-import { MetricsContext, waitForEvent3 } from '@streamr/utils'
+import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { StreamPartID } from '@streamr/protocol'
-
-interface ReadinessEvents {
-    done: () => void
-}
-
-class ReadinessListener {
-
-    private readonly emitter = new EventEmitter<ReadinessEvents>()
-    private readonly networkStack: NetworkStack
-    private readonly dhtNode: DhtNode
-
-    constructor(networkStack: NetworkStack, dhtNode: DhtNode) {
-        this.networkStack = networkStack
-        this.dhtNode = dhtNode
-        this.networkStack.on('stopped', this.onDone)
-        this.dhtNode.on('connected', this.onDone)
-    }
-
-    private onDone = () => {
-        this.networkStack.off('stopped', this.onDone)
-        this.dhtNode.off('connected', this.onDone)
-        this.emitter.emit('done')
-    }
-
-    public async waitUntilReady(timeout: number): Promise<void> {
-        if (this.dhtNode.getNumberOfConnections() === 0) {
-            await waitForEvent3<ReadinessEvents>(this.emitter, 'done', timeout)
-        }
-    }
-}
+import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
+import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { Layer0Node } from './logic/Layer0Node'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
@@ -44,11 +16,9 @@ export interface NetworkStackEvents {
     stopped: () => void
 }
 
-const DEFAULT_FIRST_CONNECTION_TIMEOUT = 5000
-
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
-    private layer0DhtNode?: DhtNode
+    private layer0Node?: Layer0Node
     private streamrNode?: StreamrNode
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
@@ -57,66 +27,78 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         super()
         this.options = options
         this.metricsContext = options.metricsContext ?? new MetricsContext()
-        this.layer0DhtNode = new DhtNode({
+        this.layer0Node = new DhtNode({
             ...options.layer0,
             metricsContext: this.metricsContext
         })
         this.streamrNode = new StreamrNode({
             ...options.networkNode,
-            nodeName: options.networkNode?.nodeName ?? options.layer0?.nodeName,
             metricsContext: this.metricsContext
         })
     }
 
+    async joinStreamPart(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
+        if (this.getStreamrNode().isProxiedStreamPart(streamPartId)) {
+            throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
+        }
+        await this.ensureConnectedToControlLayer()
+        this.getStreamrNode().joinStreamPart(streamPartId)
+        if (neighborRequirement !== undefined) {
+            await waitForCondition(() => {
+                return this.getStreamrNode().getNeighbors(streamPartId).length >= neighborRequirement.minCount
+            }, neighborRequirement.timeout)
+        }
+    }
+
+    async broadcast(msg: StreamMessage): Promise<void> {
+        const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
+        if (this.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.messageType === StreamMessageType.MESSAGE)) {
+            throw new Error(`Cannot broadcast to ${streamPartId} as proxy subscribe connections have been set`)
+        }
+        // TODO could combine these two calls to isProxiedStreamPart?
+        if (!this.streamrNode!.isProxiedStreamPart(streamPartId)) {
+            await this.ensureConnectedToControlLayer()
+        }
+        this.getStreamrNode().broadcast(msg)
+    }
+
     async start(doJoin = true): Promise<void> {
-        await this.layer0DhtNode!.start()
-        const connectionManager = this.layer0DhtNode!.getTransport() as ConnectionManager
+        await this.layer0Node!.start()
+        const connectionManager = this.layer0Node!.getTransport() as ConnectionManager
         if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
-            isSamePeerDescriptor(entryPoint, this.layer0DhtNode!.getPeerDescriptor())
+            areEqualPeerDescriptors(entryPoint, this.layer0Node!.getLocalPeerDescriptor())
         ))) {
-            await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
+            await this.layer0Node?.joinDht(this.options.layer0.entryPoints)
         } else {
             if (doJoin) {
-                await this.joinDht()
+                // in practice there aren't be existing connections and therefore this always connects
+                await this.ensureConnectedToControlLayer()
             }
         }
-        await this.streamrNode?.start(this.layer0DhtNode!, connectionManager, connectionManager)
+        await this.streamrNode?.start(this.layer0Node!, connectionManager, connectionManager)
     }
 
-    private async joinDht(): Promise<void> {
-        setImmediate(async () => {
-            if (this.options.layer0?.entryPoints !== undefined) {
-                // TODO should catch possible rejection?
-                await this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints)
-            }
-        })
-        await this.waitForFirstConnection()
-    }
-
-    private async waitForFirstConnection(): Promise<void> {
-        const readinessListener = new ReadinessListener(this, this.layer0DhtNode!)
-        const timeout = this.options.networkNode?.firstConnectionTimeout ?? DEFAULT_FIRST_CONNECTION_TIMEOUT
-        await readinessListener.waitUntilReady(timeout)
-    }
-
-    async joinLayer0IfRequired(streamPartId: StreamPartID): Promise<void> {
-        if (this.streamrNode!.isProxiedStreamPart(streamPartId)) {
-            return
-        }
+    private async ensureConnectedToControlLayer(): Promise<void> {
         // TODO we could wrap joinDht with pOnce and call it here (no else-if needed in that case)
-        if (!this.layer0DhtNode!.hasJoined()) {
-            await this.joinDht()
-        } else if (this.layer0DhtNode!.getNumberOfConnections() < 1) {
-            await this.waitForFirstConnection()
+        if (!this.layer0Node!.hasJoined()) {
+            setImmediate(async () => {
+                if (this.options.layer0?.entryPoints !== undefined) {
+                    // TODO should catch possible rejection?
+                    // the question mark is there to avoid problems when stop() is called before start()
+                    // -> TODO change to exlamation mark if we don't support that (and remove NetworkStackStoppedDuringStart.test)
+                    await this.layer0Node?.joinDht(this.options.layer0.entryPoints)
+                }
+            })
         }
+        await this.layer0Node!.waitForNetworkConnectivity()
     }
 
     getStreamrNode(): StreamrNode {
         return this.streamrNode!
     }
 
-    getLayer0DhtNode(): DhtNode {
-        return this.layer0DhtNode!
+    getLayer0Node(): Layer0Node {
+        return this.layer0Node!
     }
 
     getMetricsContext(): MetricsContext {
@@ -126,7 +108,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     async stop(): Promise<void> {
         await this.streamrNode!.destroy()
         this.streamrNode = undefined
-        this.layer0DhtNode = undefined
+        this.layer0Node = undefined
         this.emit('stopped')
     }
 

@@ -1,6 +1,6 @@
 import { Client } from 'cassandra-driver'
 import { waitForStreamToEnd } from '@streamr/test-utils'
-import { toEthereumAddress, waitForEvent, waitForCondition, hexToBinary } from '@streamr/utils'
+import { toEthereumAddress, waitForEvent, waitForCondition, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { Readable, PassThrough } from 'stream'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
@@ -17,9 +17,9 @@ const MOCK_MSG_CHAIN_ID = 'msgChainId'
 const createMockMessage = (i: number) => {
     return new StreamMessage({
         messageId: new MessageID(toStreamID(MOCK_STREAM_ID), 0, i, 0, MOCK_PUBLISHER_ID, MOCK_MSG_CHAIN_ID),
-        content: {
+        content: utf8ToBinary(JSON.stringify({
             value: i
-        },
+        })),
         signature: hexToBinary('0x1234')
     })
 }
@@ -31,8 +31,8 @@ const REQUEST_TYPE_FROM = 'requestFrom'
 const REQUEST_TYPE_RANGE = 'requestRange'
 
 const streamToContentValues = async (resultStream: Readable) => {
-    const messages: StreamMessage<{ value: any }>[] = (await waitForStreamToEnd(resultStream)) as StreamMessage<{ value: any }>[]
-    return messages.map((message) => message.getParsedContent().value)
+    const messages: StreamMessage[] = (await waitForStreamToEnd(resultStream)) as StreamMessage[]
+    return messages.map((message) => (message.getParsedContent() as any).value)
 }
 
 class ProxyClient {

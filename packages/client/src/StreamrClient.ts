@@ -9,7 +9,7 @@ import merge from 'lodash/merge'
 import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata } from '../src/publish/Publisher'
-import { Authentication, AuthenticationInjectionToken, createAuthentication } from './Authentication'
+import { Authentication, AuthenticationInjectionToken, SignerWithProvider, createAuthentication } from './Authentication'
 import {
     ConfigInjectionToken,
     NetworkPeerDescriptor,
@@ -46,7 +46,6 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
-import { Signer } from '@ethersproject/abstract-signer'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -550,7 +549,7 @@ export class StreamrClient {
     /**
      * Gets the Signer associated with the current {@link StreamrClient} instance.
      */
-    getSigner(): Promise<Signer> {
+    getSigner(): Promise<SignerWithProvider> {
         return this.authentication.getStreamRegistryChainSigner()
     }
 
@@ -574,17 +573,19 @@ export class StreamrClient {
 
     async inspect(node: NetworkPeerDescriptor, streamDefinition: StreamDefinition): Promise<boolean> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        // TODO: right now if the node is not joined to the stream partition, the below will return false instantly.
+        // It would be better if it actually joined the stream partition for us (and maybe left when we are done?).
         return this.node.inspect(node, streamPartId)
     }
 
     async setProxies(
         streamDefinition: StreamDefinition,
-        proxyNodes: NetworkPeerDescriptor[],
+        nodes: NetworkPeerDescriptor[],
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.setProxies(streamPartId, proxyNodes, direction, connectionCount)
+        await this.node.setProxies(streamPartId, nodes, direction, connectionCount)
     }
 
     /**

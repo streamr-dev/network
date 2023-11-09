@@ -1,5 +1,5 @@
 import { Logger } from '@streamr/utils'
-import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
@@ -52,8 +52,7 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
         entryPointDescriptor = {
             kademliaId: layer0EntryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
-            nodeName: layer0EntryPointId
+            type: NodeType.NODEJS
         }
 
         await layer0EntryPoint.joinDht([entryPointDescriptor])

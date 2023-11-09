@@ -11,7 +11,6 @@ export const HeartbeatMessageSchema = z.object({
             port: z.number(),
             tls: z.boolean()
         })),
-        openInternet: z.optional(z.boolean()),
         region: z.optional(z.number())
     })
 })

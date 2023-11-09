@@ -1,12 +1,12 @@
 import { MockProxy, mock } from 'jest-mock-extended'
 import { NetworkNodeType, NodeID, StreamrClient } from 'streamr-client'
-import { AnnounceNodeToContractHelper } from '../../../../src/plugins/operator/AnnounceNodeToContractHelper'
 import { announceNodeToContract } from '../../../../src/plugins/operator/announceNodeToContract'
+import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 const NODE_ID = '0x1111' as NodeID
 
-const createHelper = (timestampOfLastHeartbeat: number | undefined): MockProxy<AnnounceNodeToContractHelper> => {
-    const helper = mock<AnnounceNodeToContractHelper>()
+const createHelper = (timestampOfLastHeartbeat: number | undefined): MockProxy<ContractFacade> => {
+    const helper = mock<ContractFacade>()
     helper.getTimestampOfLastHeartbeat.mockImplementation(async () => {
         return timestampOfLastHeartbeat
     })

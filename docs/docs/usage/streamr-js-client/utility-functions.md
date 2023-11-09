@@ -3,7 +3,7 @@ sidebar_position: 2
 ---
 
 # Utility functions
-The Streamr client contains a handful of extra convenience functions to make developing on Streamr a little easier!
+The Streamr SDK contains a handful of extra convenience functions to make developing on Streamr a little easier!
 
 ## Authentication
 The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum account, returning an object with fields address and privateKey.
@@ -12,7 +12,7 @@ The static function `StreamrClient.generateEthereumAccount()` generates a new Et
 const { address, privateKey } = StreamrClient.generateEthereumAccount()
 ```
 
-Retrieve the client's address with the async call,
+Retrieve the address with the async call,
 
 ```ts
 const address = await streamr.getAddress()

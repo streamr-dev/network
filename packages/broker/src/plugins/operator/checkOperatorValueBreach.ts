@@ -1,22 +1,28 @@
 import { Logger } from '@streamr/utils'
-import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
+import { ContractFacade } from './ContractFacade'
 
 const logger = new Logger(module)
 
 export const checkOperatorValueBreach = async (
-    helper: MaintainOperatorValueHelper
+    contractFacade: ContractFacade,
+    minSponsorshipEarningsInWithdraw: number,
+    maxSponsorshipsInWithdraw: number
 ): Promise<void> => {
-    const targetOperatorAddress = await helper.getRandomOperator()
+    const targetOperatorAddress = await contractFacade.getRandomOperator()
     if (targetOperatorAddress === undefined) {
         logger.info('No operators found')
         return
     }
     logger.info('Check earnings', { targetOperatorAddress })
-    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await helper.getEarningsOf(targetOperatorAddress)
+    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await contractFacade.getEarningsOf(
+        targetOperatorAddress,
+        minSponsorshipEarningsInWithdraw,
+        maxSponsorshipsInWithdraw
+    )
     logger.trace(` -> is ${sumDataWei} > ${maxAllowedEarningsDataWei}?`)
     if (sumDataWei > maxAllowedEarningsDataWei) {
         logger.info('Withdraw earnings from sponsorships (target operator value in breach)',
             { targetOperatorAddress, sponsorshipAddresses, sumDataWei, maxAllowedEarningsDataWei })
-        await helper.triggerWithdraw(targetOperatorAddress, sponsorshipAddresses)
+        await contractFacade.triggerWithdraw(targetOperatorAddress, sponsorshipAddresses)
     }
 }

@@ -8,13 +8,14 @@ import {
     StreamMessage,
     StreamMessageType
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
+import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
-import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
+import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { NodeID } from '../../src/identifiers'
+import { Layer1Node } from '../../src/logic/Layer1Node'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -23,27 +24,28 @@ export const mockConnectionLocker: ConnectionLocker = {
     weakUnlockConnection: () => {}
 }
 
-export const createMockRandomGraphNodeAndDhtNode = (
-    ownPeerDescriptor: PeerDescriptor,
+export const createMockRandomGraphNodeAndDhtNode = async (
+    localPeerDescriptor: PeerDescriptor,
     entryPointDescriptor: PeerDescriptor,
-    randomGraphId: string,
+    streamPartId: StreamPartID,
     simulator: Simulator
-): [ DhtNode, RandomGraphNode ] => {
-    const mockCm = new SimulatorTransport(ownPeerDescriptor, simulator)
-    const dhtNode = new DhtNode({
-        transportLayer: mockCm,
-        peerDescriptor: ownPeerDescriptor,
+): Promise<[ Layer1Node, RandomGraphNode ]> => {
+    const mockCm = new SimulatorTransport(localPeerDescriptor, simulator)
+    await mockCm.start()
+    const layer1Node = new DhtNode({
+        transport: mockCm,
+        peerDescriptor: localPeerDescriptor,
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor]
     })
     const randomGraphNode = createRandomGraphNode({
-        randomGraphId,
-        P2PTransport: mockCm,
-        layer1: dhtNode,
+        streamPartId,
+        transport: mockCm,
+        layer1Node,
         connectionLocker: mockCm,
-        ownPeerDescriptor
+        localPeerDescriptor
     })
-    return [dhtNode, randomGraphNode]
+    return [layer1Node, randomGraphNode]
 }
 
 export const createStreamMessage = (
@@ -56,8 +58,8 @@ export const createStreamMessage = (
     const messageId: MessageID = {
         streamId: StreamPartIDUtils.getStreamID(streamPartId),
         streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
-        sequenceNumber: sequenceNumber || 0,
-        timestamp: timestamp || Date.now(),
+        sequenceNumber: sequenceNumber ?? 0,
+        timestamp: timestamp ?? Date.now(),
         publisherId: hexToBinary(publisherId),
         messageChainId: 'messageChain0',
     }
@@ -76,23 +78,28 @@ export const createRandomNodeId = (): NodeID => {
     return randomBytes(10).toString('hex') as NodeID
 }
 
-export const createMockRemoteNode = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
-    const mockPeerDescriptor: PeerDescriptor = {
+export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'kademliaId' | 'type'>): PeerDescriptor => {
+    return {
+        ...opts,
         kademliaId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS
     }
-    return new RemoteRandomGraphNode(peerDescriptor || mockPeerDescriptor, 'mock', {} as any)
 }
 
-export const createMockRemoteHandshaker = (): RemoteHandshaker => {
-    const mockPeerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
-    return new RemoteHandshaker(mockPeerDescriptor, 'mock', {
-        handshake: async () => {},
-        interleaveNotice: async () => {}
-    } as any)
+export const createMockDeliveryRpcRemote = (remotePeerDescriptor?: PeerDescriptor): DeliveryRpcRemote => {
+    return new DeliveryRpcRemote(createMockPeerDescriptor(), remotePeerDescriptor ?? createMockPeerDescriptor(), 'mock', {} as any)
+}
+
+export const createMockHandshakeRpcRemote = (): HandshakeRpcRemote => {
+    return new HandshakeRpcRemote(
+        createMockPeerDescriptor(),
+        createMockPeerDescriptor(), 
+        'mock',
+        {
+            handshake: async () => {},
+            interleaveNotice: async () => {}
+        } as any
+    )
 }
 
 export const createNetworkNodeWithSimulator = (
@@ -105,7 +112,7 @@ export const createNetworkNodeWithSimulator = (
         layer0: {
             peerDescriptor,
             entryPoints,
-            transportLayer: transport,
+            transport,
             maxConnections: 25,
             storeHighestTtl: 120000,
             storeMaxTtl: 120000

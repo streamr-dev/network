@@ -19,21 +19,16 @@ export interface NetworkNodeStub {
     getNodeId: () => NodeID
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
-    subscribe: (streamPartId: StreamPartID) => Promise<void>
-    subscribeAndWaitForJoin: (streamPart: StreamPartID, timeout?: number) => Promise<number>
-    waitForJoinAndPublish: (msg: StreamMessage, timeout?: number) => Promise<number>
-    unsubscribe: (streamPartId: StreamPartID) => void
-    publish: (streamMessage: StreamMessage) => Promise<void>
+    join: (streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }) => Promise<void>
+    leave: (streamPartId: StreamPartID) => void
+    broadcast: (streamMessage: StreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
-    getNeighbors: () => string[]
-    getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>
+    getNeighbors: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>
     getPeerDescriptor: () => PeerDescriptor
     getMetricsContext: () => MetricsContext
     getDiagnosticInfo: () => Record<string, unknown>
     hasStreamPart: (streamPartId: StreamPartID) => boolean
     inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean>
-    /** @internal */
-    hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: NodeID, direction: ProxyDirection) => boolean
     /** @internal */
     start: (doJoin?: boolean) => Promise<void>
     /** @internal */
@@ -41,11 +36,12 @@ export interface NetworkNodeStub {
     /** @internal */
     setProxies: (
         streamPartId: StreamPartID,
-        peerDescriptors: PeerDescriptor[],
+        nodes: PeerDescriptor[],
         direction: ProxyDirection,
         userId: EthereumAddress,
         connectionCount?: number
     ) => Promise<void>
+    isProxiedStreamPart(streamPartId: StreamPartID): boolean
     setStreamPartEntryPoints: (streamPartId: StreamPartID, peerDescriptors: PeerDescriptor[]) => void
 }
 
@@ -100,13 +96,13 @@ export class NetworkNodeFacade {
 
     private async getNetworkOptions(): Promise<NetworkOptions> {
         const entryPoints = this.getEntryPoints()
-        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ? 
+        const localPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ? 
             peerDescriptorTranslator(this.config.network.controlLayer.peerDescriptor) : undefined
         return {
             layer0: {
                 ...this.config.network.controlLayer,
                 entryPoints,
-                peerDescriptor: ownPeerDescriptor
+                peerDescriptor: localPeerDescriptor
             },
             networkNode: this.config.network.node,
             metricsContext: new MetricsContext()
@@ -191,10 +187,10 @@ export class NetworkNodeFacade {
             // use .then instead of async/await so
             // this.cachedNode.publish call can be sync
             return this.startNodeTask().then((node) =>
-                node.publish(streamMessage)
+                node.broadcast(streamMessage)
             )
         }
-        return this.cachedNode!.publish(streamMessage)
+        return this.cachedNode!.broadcast(streamMessage)
     }
 
     async inspect(node: NetworkPeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
@@ -207,14 +203,14 @@ export class NetworkNodeFacade {
 
     async setProxies(
         streamPartId: StreamPartID,
-        proxyNodes: NetworkPeerDescriptor[],
+        nodes: NetworkPeerDescriptor[],
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask(false)
         }
-        const peerDescriptors = proxyNodes.map(peerDescriptorTranslator)
+        const peerDescriptors = nodes.map(peerDescriptorTranslator)
         await this.cachedNode!.setProxies(
             streamPartId,
             peerDescriptors,
