@@ -254,7 +254,7 @@ export class ProxyClient extends EventEmitter {
             remote.leaveStreamPartNotice()
         })
         this.targetNeighbors.stop()
-        this.rpcCommunicator.destroy()
+        this.rpcCommunicator.stop()
         this.connections.clear()
         this.abortController.abort()
     }

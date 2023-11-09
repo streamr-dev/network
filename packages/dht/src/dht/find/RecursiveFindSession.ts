@@ -172,7 +172,6 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
             clearTimeout(this.reportFindCompletedTimeout)
             this.reportFindCompletedTimeout = undefined
         }
-        this.rpcCommunicator.destroy()
         this.emit('findCompleted', [])
     }
 }
