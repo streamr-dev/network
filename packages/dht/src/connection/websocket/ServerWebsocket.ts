@@ -3,6 +3,7 @@ import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../
 import { connection as WsConnection } from 'websocket'
 import { Logger } from '@streamr/utils'
 import { Url } from 'url'
+import { DisconnectionType } from '../../transport/ITransport'
 
 const logger = new Logger(module)
 
@@ -61,7 +62,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.stopped = true
         this.socket?.removeAllListeners()
         this.socket = undefined
-        const disconnectionType = reasonCode === GOING_AWAY ? 'INCOMING_GRACEFUL_DISCONNECT' : 'OTHER' 
+        const disconnectionType = reasonCode === GOING_AWAY ? 'INCOMING_GRACEFUL_LEAVE' : 'OTHER' 
         this.emit('disconnected', disconnectionType, reasonCode, description)
     }
 
@@ -81,9 +82,9 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
 
     }
 
-    public async close(): Promise<void> {
+    public async close(disconnectionType: DisconnectionType): Promise<void> {
         if (!this.stopped) {
-            this.socket?.close()
+            this.socket?.close(disconnectionType === 'INCOMING_GRACEFUL_LEAVE' ? GOING_AWAY : undefined)
         } else {
             logger.error('Tried to close a stopped connection')
         }

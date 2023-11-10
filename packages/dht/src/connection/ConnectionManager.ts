@@ -216,7 +216,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             } else {
                 logger.trace('handshake of connection not completed, force-closing')
                 const eventReceived = waitForEvent3<ManagedConnectionEvents>(peer, 'disconnected', 2000)
-                peer.close('OTHER')
+                peer.close('OUTGOING_GRACEFUL_LEAVE')
                 try {
                     await eventReceived
                     logger.trace('resolving after receiving disconnected event from non-handshaked connection')
@@ -526,7 +526,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             })
                 .catch((e) => {
                     logger.trace('force-closing connection after timeout ' + e)
-                    connection.close('OTHER')
+                    connection.close('OUTGOING_GRACEFUL_LEAVE')
                 })
                 .finally(() => {
                     logger.trace('resolving after receiving disconnected event')
