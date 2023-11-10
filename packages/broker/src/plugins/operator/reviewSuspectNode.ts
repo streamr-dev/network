@@ -1,18 +1,12 @@
-import {
-    composeAbortSignals,
-    EthereumAddress,
-    Logger,
-    randomString,
-    scheduleAtInterval,
-    setAbortableTimeout, wait
-} from '@streamr/utils'
+import { EthereumAddress, Logger, setAbortableTimeout } from '@streamr/utils'
 import { ContractFacade } from './ContractFacade'
 import { StreamrClient } from 'streamr-client'
 import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { toStreamPartID } from '@streamr/protocol'
-import { formCoordinationStreamId } from './formCoordinationStreamId'
-import { findNodesForTargetGivenFleetState, inspectTarget } from './inspectionUtils'
 import random from 'lodash/random'
+import { inspectOverTime } from './inspectOverTime'
+
+const logger = new Logger(module)
 
 export interface ReviewProcessOpts {
     sponsorshipAddress: EthereumAddress
@@ -29,6 +23,7 @@ export interface ReviewProcessOpts {
         endTime: number
     }
     inspectionIntervalInMs: number
+    maxInspections: number
     abortSignal: AbortSignal
 }
 
@@ -44,89 +39,36 @@ export const reviewSuspectNode = async ({
     heartbeatTimeoutInMs,
     votingPeriod,
     inspectionIntervalInMs,
-    abortSignal: userAbortSignal
+    maxInspections,
+    abortSignal
 }: ReviewProcessOpts): Promise<void> => {
-    const logger = new Logger(module, { id: randomString(6) })
-    const inspectionResults = new Array<boolean>()
-
-    logger.info('Start handling of inspection request', {
-        sponsorshipAddress,
-        targetOperator,
-        partition,
-        votingPeriod,
-        inspectionIntervalInMs
-    })
-    const streamId = await contractFacade.getStreamId(sponsorshipAddress)
-    const target = {
-        sponsorshipAddress: sponsorshipAddress,
-        operatorAddress: targetOperator,
-        streamPart: toStreamPartID(streamId, partition),
+    if (Date.now() + maxSleepTime > votingPeriod.startTime) {
+        throw new Error('Max sleep time overlaps with voting period')
     }
-    logger.info('Establish target', { target })
-
-    const fleetState = createOperatorFleetState(formCoordinationStreamId(targetOperator))
-    await fleetState.start()
-    logger.info('Waiting for fleet state')
-    await Promise.race([
-        fleetState.waitUntilReady(),
-        wait(heartbeatTimeoutInMs, userAbortSignal)
-    ])
-    logger.info('Wait done for fleet state')
-
-    const abortController = new AbortController()
-    const abortSignal = composeAbortSignals(userAbortSignal, abortController.signal)
-    abortSignal.addEventListener('abort', async () => {
-        await fleetState.destroy()
+    const streamId = await contractFacade.getStreamId(sponsorshipAddress)
+    // random sleep time to make sure multiple instances of voters don't all inspect at the same time
+    const sleepTimeInMsBeforeFirstInspection = random(maxSleepTime)
+    const result = inspectOverTime({
+        target: {
+            sponsorshipAddress: sponsorshipAddress,
+            operatorAddress: targetOperator,
+            streamPart: toStreamPartID(streamId, partition),
+        },
+        streamrClient,
+        createOperatorFleetState,
+        getRedundancyFactor,
+        sleepTimeInMsBeforeFirstInspection,
+        heartbeatTimeoutInMs,
+        inspectionIntervalInMs,
+        maxInspections,
+        abortSignal
     })
 
-    // TODO: check that maxSleepTime doesn't exceed votingPeriod
-
-    // random sleep time to make sure multiple instances of voters don't all inspect at the same time
-    const sleepTimeInMs = random(maxSleepTime)
-    logger.info('Sleep', { sleepTimeInMs })
-    await wait(sleepTimeInMs, abortSignal)
-
-    // inspection
-    await scheduleAtInterval(async () => {
-        logger.info('Inspecting target', {
-            target,
-            attemptNo: inspectionResults.length + 1
-        })
-        const onlineNodeDescriptors = await findNodesForTargetGivenFleetState(
-            target,
-            fleetState,
-            getRedundancyFactor
-        )
-        const pass = await inspectTarget({
-            target,
-            targetPeerDescriptors: onlineNodeDescriptors,
-            streamrClient,
-            abortSignal
-        })
-        logger.info('Inspected target', {
-            target,
-            attemptNo: inspectionResults.length + 1,
-            pass,
-            inspectionResults
-        })
-        inspectionResults.push(pass)
-    }, inspectionIntervalInMs, true, abortSignal)
-
-    // voting
     const timeUntilVoteInMs = ((votingPeriod.startTime + votingPeriod.endTime) / 2) - Date.now()
+    logger.debug('Schedule voting on flag', { timeUntilVoteInMs })
     setAbortableTimeout(async () => {
-        try {
-            const passCount = inspectionResults.filter((pass) => pass).length
-            const kick = passCount <= inspectionResults.length / 2
-            logger.info('Vote on inspection request', {
-                target,
-                passCount,
-                totalInspections: inspectionResults.length,
-                kick
-            })
-            await contractFacade.voteOnFlag(target.sponsorshipAddress, target.operatorAddress, kick)
-        } finally {
-            abortController.abort()
-        }
+        const kick = !result.getResultsImmediately()
+        logger.info('Vote on flag', { sponsorshipAddress, targetOperator, kick })
+        await contractFacade.voteOnFlag(sponsorshipAddress, targetOperator, kick)
     }, timeUntilVoteInMs, abortSignal)
 }

@@ -13,6 +13,11 @@ import { ContractFacade } from './ContractFacade'
 
 const logger = new Logger(module)
 
+export type FindTargetFn = typeof findTarget
+export type FindNodesForTargetFn = typeof findNodesForTarget
+export type FindNodesForTargetGivenFleetStateFn = typeof findNodesForTargetGivenFleetState
+export type InspectTargetFn = typeof inspectTarget
+
 export interface Target {
     sponsorshipAddress: EthereumAddress
     operatorAddress: EthereumAddress

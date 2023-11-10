@@ -2,15 +2,12 @@ import { EthereumAddress, Logger } from '@streamr/utils'
 import { StreamPartAssignments } from './StreamPartAssignments'
 import { StreamrClient } from 'streamr-client'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { findNodesForTarget, findTarget, inspectTarget } from './inspectionUtils'
+import { findTarget } from './inspectionUtils'
 import { ContractFacade } from './ContractFacade'
 import { CreateOperatorFleetStateFn } from './OperatorFleetState'
+import { inspectOverTime } from './inspectOverTime'
 
 const logger = new Logger(module)
-
-export type FindTargetFn = typeof findTarget
-export type FindNodesForTargetFn = typeof findNodesForTarget
-export type InspectTargetFn = typeof inspectTarget
 
 export async function inspectRandomNode(
     operatorContractAddress: EthereumAddress,
@@ -22,8 +19,6 @@ export async function inspectRandomNode(
     createOperatorFleetState: CreateOperatorFleetStateFn,
     abortSignal: AbortSignal,
     findTargetFn = findTarget,
-    findNodesForTargetFn = findNodesForTarget,
-    inspectTargetFn = inspectTarget
 ): Promise<void> {
     logger.info('Select a random operator to inspect')
 
@@ -31,22 +26,21 @@ export async function inspectRandomNode(
     if (target === undefined) {
         return
     }
+    logger.debug('Target established', { target })
 
-    const onlineNodeDescriptors = await findNodesForTargetFn(
+    const result = inspectOverTime({
         target,
-        getRedundancyFactor,
-        createOperatorFleetState,
-        heartbeatTimeoutInMs,
-        abortSignal
-    )
-
-    const pass = await inspectTargetFn({
-        target,
-        targetPeerDescriptors: onlineNodeDescriptors,
         streamrClient,
+        createOperatorFleetState,
+        getRedundancyFactor,
+        sleepTimeInMsBeforeFirstInspection: 0,
+        heartbeatTimeoutInMs,
+        inspectionIntervalInMs: 2 * 60 * 1000,
+        maxInspections: 3,
         abortSignal
     })
 
+    const pass = await result.waitForResults()
     if (!pass) {
         logger.info('Raise flag', { target })
         await contractFacade.flag(
@@ -54,5 +48,7 @@ export async function inspectRandomNode(
             target.operatorAddress,
             StreamPartIDUtils.getStreamPartition(target.streamPart)
         )
+    } else {
+        logger.debug('Inspection passed (not raising flag)', { target })
     }
 }

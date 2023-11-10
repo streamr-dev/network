@@ -17,6 +17,9 @@ import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { inspectRandomNode } from './inspectRandomNode'
 import { ContractFacade } from './ContractFacade'
 import { reviewSuspectNode } from './reviewSuspectNode'
+import { inspectOverTime } from './inspectOverTime'
+import { toStreamPartID } from '@streamr/protocol'
+import random from 'lodash/random'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -210,6 +213,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                 endTime: votingPeriodEndTimestamp
                             },
                             inspectionIntervalInMs: 8 * 60 * 1000,
+                            maxInspections: 10,
                             abortSignal: this.abortController.signal
                         })
                     }
