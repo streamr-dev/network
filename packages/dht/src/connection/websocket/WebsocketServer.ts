@@ -96,6 +96,9 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
 
                 this.emit('connected', new ServerWebsocket(connection, request.resourceURL))
             })
+            /*this.wsServer.on('close', (connection: any) => {
+                logger.info(connection)
+            })*/
             this.httpServer.once('error', (err: Error) => {
                 reject(new WebsocketServerStartError('Starting Websocket server failed', err))
             })

@@ -108,6 +108,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     async stop(): Promise<void> {
         await this.streamrNode!.destroy()
         this.streamrNode = undefined
+        this.layer0Node?.stop()
         this.layer0Node = undefined
         this.emit('stopped')
     }
