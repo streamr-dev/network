@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3'
-import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
+import { IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
 import { connection as WsConnection } from 'websocket'
 import { Logger } from '@streamr/utils'
 import { DisconnectionType } from '../../transport/ITransport'
@@ -21,7 +21,6 @@ enum MessageType {
 export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements IConnection {
 
     public readonly connectionId: ConnectionID
-    public readonly connectionType = ConnectionType.WEBSOCKET_SERVER
     public readonly resourceURL: Url
     private socket?: WsConnection
     private stopped = false

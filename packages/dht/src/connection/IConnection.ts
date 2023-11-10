@@ -8,14 +8,6 @@ export interface ConnectionEvents {
     error: (name: string) => void
 }
 
-export enum ConnectionType {
-    WEBSOCKET_SERVER = 'websocket-server',
-    WEBSOCKET_CLIENT = 'websocket-client',
-    WEBRTC = 'webrtc',
-    SIMULATOR_SERVER = 'simulator-server',
-    SIMULATOR_CLIENT = 'simulator-client',
-}
-
 export type ConnectionIDKey = string & { readonly __brand: 'connectionIDKey' } // Nominal typing 
 
 export class ConnectionID extends UUID {

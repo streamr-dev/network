@@ -1,5 +1,5 @@
 import { IWebrtcConnection, WebrtcConnectionEvents } from './IWebrtcConnection'
-import { ConnectionType, IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
+import { IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import EventEmitter from 'eventemitter3'
 import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
@@ -57,7 +57,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     private remoteDescriptionSet = false
     private connectingTimeoutRef?: NodeJS.Timeout
 
-    public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
     private readonly iceServers: IceServer[]
     private readonly _bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use (NET-938)
     private readonly bufferThresholdLow: number

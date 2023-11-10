@@ -1,5 +1,5 @@
 import { ClientWebsocket } from './ClientWebsocket'
-import { IConnection, ConnectionType } from '../IConnection'
+import { IConnection } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { WebsocketConnectorRpcRemote } from './WebsocketConnectorRpcRemote'
@@ -192,7 +192,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
 
             const url = connectivityMethodToWebsocketUrl(targetPeerDescriptor.websocket!)
 
-            const managedConnection = new ManagedConnection(this.localPeerDescriptor!, ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
+            const managedConnection = new ManagedConnection(this.localPeerDescriptor!, socket, undefined)
             managedConnection.setPeerDescriptor(targetPeerDescriptor)
 
             this.connectingConnections.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
@@ -222,7 +222,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
             )
             remoteConnector.requestConnection(localPeerDescriptor.websocket!.host, localPeerDescriptor.websocket!.port)
         })
-        const managedConnection = new ManagedConnection(this.localPeerDescriptor!, ConnectionType.WEBSOCKET_SERVER)
+        const managedConnection = new ManagedConnection(this.localPeerDescriptor!)
         managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor)))
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
         this.ongoingConnectRequests.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
@@ -239,7 +239,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
             ongoingConnectReguest.acceptHandshake()
             this.ongoingConnectRequests.delete(peerId.toKey())
         } else {
-            const managedConnection = new ManagedConnection(this.localPeerDescriptor!, ConnectionType.WEBSOCKET_SERVER, undefined, serverWebsocket)
+            const managedConnection = new ManagedConnection(this.localPeerDescriptor!, undefined, serverWebsocket)
 
             managedConnection.setPeerDescriptor(peerDescriptor)
 

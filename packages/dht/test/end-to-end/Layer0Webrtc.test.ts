@@ -1,6 +1,5 @@
 import { areEqualBinaries, waitForEvent3 } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { ConnectionType } from '../../src/connection/IConnection'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -66,10 +65,6 @@ describe('Layer0 with WebRTC connections', () => {
 
         expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getLocalPeerDescriptor())).toEqual(true)
         expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getLocalPeerDescriptor())).toEqual(true)
-        expect((node1.getTransport() as ConnectionManager).getConnection(node2.getLocalPeerDescriptor())!.connectionType)
-            .toEqual(ConnectionType.WEBRTC)
-        expect((node2.getTransport() as ConnectionManager).getConnection(node1.getLocalPeerDescriptor())!.connectionType)
-            .toEqual(ConnectionType.WEBRTC)
 
     }, 60000)
 
@@ -83,9 +78,5 @@ describe('Layer0 with WebRTC connections', () => {
 
         expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getLocalPeerDescriptor())).toEqual(true)
         expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getLocalPeerDescriptor())).toEqual(true)
-        expect((node1.getTransport() as ConnectionManager).getConnection(node2.getLocalPeerDescriptor())!.connectionType)
-            .toEqual(ConnectionType.WEBRTC)
-        expect((node2.getTransport() as ConnectionManager).getConnection(node1.getLocalPeerDescriptor())!.connectionType)
-            .toEqual(ConnectionType.WEBRTC)
     })
 })

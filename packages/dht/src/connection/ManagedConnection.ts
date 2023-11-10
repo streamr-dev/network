@@ -1,4 +1,4 @@
-import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from './IConnection'
+import { ConnectionEvents, ConnectionID, IConnection } from './IConnection'
 import * as Err from '../helpers/errors'
 import { Handshaker } from './Handshaker'
 import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
@@ -31,7 +31,6 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     public connectionId: ConnectionID
     private peerDescriptor?: PeerDescriptor
-    public connectionType: ConnectionType
 
     private handshaker?: Handshaker
     private handshakeCompleted = false
@@ -50,7 +49,6 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
-        connectionType: ConnectionType,
         outgoingConnection?: IConnection,
         incomingConnection?: IConnection,
     ) {
@@ -61,12 +59,11 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.localPeerDescriptor = localPeerDescriptor
         this.outgoingConnection = outgoingConnection
         this.incomingConnection = incomingConnection
-        this.connectionType = connectionType
         this.connectionId = new ConnectionID()
 
         this.onDisconnected = this.onDisconnected.bind(this)
 
-        logger.trace('creating ManagedConnection of type: ' + connectionType)
+        logger.trace('creating ManagedConnection')
         if (incomingConnection && outgoingConnection) {
             throw new Err.IllegalArguments('Managed connection constructor only accepts either an incoming connection OR a outgoing connection')
         }

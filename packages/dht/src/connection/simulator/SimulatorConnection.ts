@@ -1,4 +1,4 @@
-import { ConnectionType, IConnection } from '../IConnection'
+import { IConnection } from '../IConnection'
 import { Simulator } from './Simulator'
 import { Message, PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Connection } from '../Connection'
@@ -19,15 +19,13 @@ export class SimulatorConnection extends Connection implements IConnection {
     constructor(
         localPeerDescriptor: PeerDescriptor,
         targetPeerDescriptor: PeerDescriptor,
-        connectionType: ConnectionType,
         simulator: Simulator
     ) {
-        super(connectionType)
+        super()
 
         this.localPeerDescriptor = localPeerDescriptor
         this.setPeerDescriptor(targetPeerDescriptor)
         this.targetPeerDescriptor = targetPeerDescriptor
-        this.connectionType = connectionType
         this.simulator = simulator
 
         this.send = this.send.bind(this)

@@ -1,4 +1,4 @@
-import { IConnection, ConnectionID, ConnectionType, ConnectionEvents } from '../IConnection'
+import { IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
 import { w3cwebsocket as Websocket, ICloseEvent, IMessageEvent } from 'websocket'
 import EventEmitter from 'eventemitter3'
 import { Logger } from '@streamr/utils'
@@ -11,7 +11,6 @@ const BINARY_TYPE = 'arraybuffer'
 export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements IConnection {
     public readonly connectionId: ConnectionID
     private socket?: Websocket
-    public connectionType = ConnectionType.WEBSOCKET_CLIENT
 
     private destroyed = false
 

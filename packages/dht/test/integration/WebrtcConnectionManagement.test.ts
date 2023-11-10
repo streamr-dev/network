@@ -3,7 +3,6 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../../src/helpers/PeerID'
-import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
@@ -78,9 +77,6 @@ describe('WebRTC Connection Management', () => {
 
         manager2.on('message', (message: Message) => {
             expect(message.messageId).toEqual('mockerer')
-            expect(manager1.getConnection(peerDescriptor2)!.connectionType).toEqual(ConnectionType.WEBRTC)
-            expect(manager2.getConnection(peerDescriptor1)!.connectionType).toEqual(ConnectionType.WEBRTC)
-
             done()
         })
         dummyMessage.targetDescriptor = peerDescriptor2
@@ -101,9 +97,6 @@ describe('WebRTC Connection Management', () => {
         }
         manager1.on('message', (message: Message) => {
             expect(message.messageId).toEqual('mockerer')
-            expect(manager1.getConnection(peerDescriptor2)!.connectionType).toEqual(ConnectionType.WEBRTC)
-            expect(manager2.getConnection(peerDescriptor1)!.connectionType).toEqual(ConnectionType.WEBRTC)
-
             done()
         })
         dummyMessage.targetDescriptor = peerDescriptor1

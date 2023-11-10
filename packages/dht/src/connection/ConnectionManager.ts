@@ -364,7 +364,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private onConnected(connection: ManagedConnection) {
         const peerDescriptor = connection.getPeerDescriptor()!
         this.emit('connected', peerDescriptor)
-        logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' onConnected() ' + connection.connectionType)
+        logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' onConnected()')
         this.onConnectionCountChange()
     }
 

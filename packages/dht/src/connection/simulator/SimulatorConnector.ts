@@ -1,5 +1,3 @@
-import { ConnectionType } from '../IConnection'
-
 import {
     PeerDescriptor,
 } from '../../proto/packages/dht/protos/DhtRpc'
@@ -38,9 +36,9 @@ export class SimulatorConnector {
             return existingConnection
         }
 
-        const connection = new SimulatorConnection(this.localPeerDescriptor, targetPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, this.simulator)
+        const connection = new SimulatorConnection(this.localPeerDescriptor, targetPeerDescriptor, this.simulator)
 
-        const managedConnection = new ManagedConnection(this.localPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, connection, undefined)
+        const managedConnection = new ManagedConnection(this.localPeerDescriptor, connection, undefined)
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
 
         this.connectingConnections.set(peerKey, managedConnection)
@@ -66,9 +64,9 @@ export class SimulatorConnector {
             return
         }
         const connection = new SimulatorConnection(this.localPeerDescriptor,
-            sourceConnection.localPeerDescriptor, ConnectionType.SIMULATOR_SERVER, this.simulator)
+            sourceConnection.localPeerDescriptor, this.simulator)
 
-        const managedConnection = new ManagedConnection(this.localPeerDescriptor, ConnectionType.SIMULATOR_SERVER, undefined, connection)
+        const managedConnection = new ManagedConnection(this.localPeerDescriptor, undefined, connection)
 
         logger.trace('connected')
 

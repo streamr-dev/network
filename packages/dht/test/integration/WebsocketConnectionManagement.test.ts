@@ -3,7 +3,6 @@
 import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
-import { ConnectionType } from '../../src/connection/IConnection'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/exports'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -90,9 +89,6 @@ describe('Websocket Connection Management', () => {
         }
         noWsServerManager.on('message', (message: Message) => {
             expect(message.messageId).toEqual('mockerer')
-            expect(wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_SERVER)
-            expect(noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_CLIENT)
-
             done()
         })
 
@@ -111,15 +107,8 @@ describe('Websocket Connection Management', () => {
             targetDescriptor: wsServerConnectorPeerDescriptor
         }
         await noWsServerManager.send(dummyMessage)
-        await waitForCondition(
-            () => {
-                return (!!wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)
-                    && wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_SERVER)
-            }
-        )
-        await waitForCondition(
-            () => noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_CLIENT
-        )
+        await waitForCondition(() => (wsServerManager.getConnection(noWsServerConnectorPeerDescriptor) !== undefined))
+        await waitForCondition(() => (noWsServerManager.getConnection(wsServerConnectorPeerDescriptor) !== undefined))
     })
 
     it('Connecting to self throws', async () => {
