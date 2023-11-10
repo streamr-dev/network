@@ -75,7 +75,7 @@ export interface SponsorshipResult {
 export class ContractFacade {
 
     private readonly operatorContract: Operator
-    private readonly theGraphClient: TheGraphClient
+    readonly theGraphClient: TheGraphClient
     private readonly config: OperatorServiceConfig
 
     // for tests

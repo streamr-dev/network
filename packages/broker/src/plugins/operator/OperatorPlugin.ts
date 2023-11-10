@@ -17,6 +17,7 @@ import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { inspectRandomNode } from './inspectRandomNode'
 import { ContractFacade } from './ContractFacade'
 import { reviewSuspectNode } from './reviewSuspectNode'
+import { closeExpiredFlags } from './closeExpiredFlags'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -41,6 +42,10 @@ export interface OperatorPluginConfig {
     }
     inspectRandomNode: {
         intervalInMs: number
+    }
+    closeExpiredFlags: {
+        intervalInMs: number
+        maxFlagAge: number
     }
 }
 
@@ -182,6 +187,18 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     logger.error('Encountered error while inspecting random node', { err })
                 }
             }, this.pluginConfig.inspectRandomNode.intervalInMs, false, this.abortController.signal)
+
+            await scheduleAtInterval(async () => {
+                try {
+                    await closeExpiredFlags(
+                        this.pluginConfig.closeExpiredFlags.maxFlagAge,
+                        serviceConfig,
+                        contractFacade
+                    )
+                } catch (err) {
+                    logger.error('Encountered error while closing expired flags', { err })
+                }
+            }, this.pluginConfig.closeExpiredFlags.intervalInMs, false, this.abortController.signal)
 
             contractFacade.addReviewRequestListener(async (
                 sponsorshipAddress,
