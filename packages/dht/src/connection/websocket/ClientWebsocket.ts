@@ -2,10 +2,10 @@ import { IConnection, ConnectionID, ConnectionType, ConnectionEvents } from '../
 import { w3cwebsocket as Websocket, ICloseEvent, IMessageEvent } from 'websocket'
 import EventEmitter from 'eventemitter3'
 import { Logger } from '@streamr/utils'
-import { DisconnectionType } from '../../transport/ITransport'
 
 const logger = new Logger(module)
 
+const GOING_AWAY = 1001
 const BINARY_TYPE = 'arraybuffer'
 
 export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements IConnection {
@@ -44,7 +44,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
             this.socket.onclose = (event: ICloseEvent) => {
                 if (!this.destroyed) {
                     logger.trace('Websocket Closed')
-                    this.doDisconnect('OTHER', event.code, event.reason)
+                    this.doDisconnect(event.code, event.reason)
                 }
             }
 
@@ -62,11 +62,11 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
         }
     }
 
-    private doDisconnect(disconnectionType: DisconnectionType, code?: number, reason?: string) {
+    private doDisconnect(code?: number, reason?: string) {
         this.destroyed = true
         this.stopListening()
         this.socket = undefined
-
+        const disconnectionType = code === GOING_AWAY ? 'INCOMING_GRACEFUL_DISCONNECT' : 'OTHER'
         this.emit('disconnected', disconnectionType, code, reason)
         this.removeAllListeners()
     }

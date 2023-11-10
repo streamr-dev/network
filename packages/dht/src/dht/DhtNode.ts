@@ -368,22 +368,22 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.emit('connected', peerDescriptor)
     }
 
-    private onTransportDisconnected(peerDescriptor: PeerDescriptor, dicsonnectionType: DisconnectionType): void {
+    private onTransportDisconnected(peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType): void {
         logger.trace('disconnected: ' + keyFromPeerDescriptor(peerDescriptor))
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
         // only remove from bucket if we are on layer 0
         if (this.connectionManager) {
             this.bucket!.remove(peerDescriptor.kademliaId)
 
-            if (dicsonnectionType === 'OUTGOING_GRACEFUL_LEAVE' || dicsonnectionType === 'INCOMING_GRACEFUL_LEAVE') {
-                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
+            if (disconnectionType === 'OUTGOING_GRACEFUL_LEAVE' || disconnectionType === 'INCOMING_GRACEFUL_LEAVE') {
+                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with type ' + disconnectionType)
                 this.removeContact(peerDescriptor)
             } else {
-                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
+                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with type ' + disconnectionType)
             }
         }
 
-        this.emit('disconnected', peerDescriptor, dicsonnectionType)
+        this.emit('disconnected', peerDescriptor, disconnectionType)
     }
 
     private bindRpcLocalMethods(): void {
@@ -698,6 +698,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.entryPointDisconnectTimeout) {
             clearTimeout(this.entryPointDisconnectTimeout)
         }
+        this.connections.forEach((remote: DhtNodeRpcRemote) => remote.leaveNotice())
         this.bucket!.toArray().forEach((rpcRemote: DhtNodeRpcRemote) => this.bucket!.remove(rpcRemote.id))
         this.bucket!.removeAllListeners()
         this.localDataStore.clear()

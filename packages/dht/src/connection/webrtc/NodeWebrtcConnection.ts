@@ -120,7 +120,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
                 this.connection.setRemoteDescription(description, type as DescriptionType)
                 this.remoteDescriptionSet = true
             } catch (err) {
-                logger.warn(`Failed to set remote descriptor for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
+                logger.debug(`Failed to set remote descriptor for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
             }
         } else {
             this.doClose('OTHER', `Tried to set description for non-existent connection`)
@@ -134,10 +134,10 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
                     logger.trace(`Setting remote candidate for peer: ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
                     this.connection.addRemoteCandidate(candidate, mid)
                 } catch (err) {
-                    logger.warn(`Failed to set remote candidate for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
-                    this.doClose('OTHER')
+                    logger.debug(`Failed to set remote candidate for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
                 }
             } else {
+                // TODO: should queue candidates until remote description is set?
                 this.doClose('OTHER', `Tried to set candidate before description`)
             }
         } else {
@@ -150,7 +150,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
             try {
                 this.dataChannel!.sendMessageBinary(data as Buffer)
             } catch (err) {
-                logger.warn('Failed to send binary message to ' + keyFromPeerDescriptor(this.remotePeerDescriptor) + err)
+                logger.debug('Failed to send binary message to ' + keyFromPeerDescriptor(this.remotePeerDescriptor) + err)
             }
         }
     }
@@ -180,7 +180,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
                     logger.trace('closing datachannel')
                     this.dataChannel.close()
                 } catch (e) {
-                    logger.warn('dc.close() errored: %s', e)
+                    logger.trace('dc.close() errored: %s', e)
                 }
             }
             
@@ -188,7 +188,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
                 try {
                     this.connection.close()
                 } catch (e) {
-                    logger.warn('conn.close() errored: %s', e)
+                    logger.trace('conn.close() errored: %s', e)
                 }
             }
         }

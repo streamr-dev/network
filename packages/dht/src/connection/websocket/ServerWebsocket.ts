@@ -2,7 +2,6 @@ import EventEmitter from 'eventemitter3'
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
 import { connection as WsConnection } from 'websocket'
 import { Logger } from '@streamr/utils'
-import { DisconnectionType } from '../../transport/ITransport'
 import { Url } from 'url'
 
 const logger = new Logger(module)
@@ -11,6 +10,7 @@ const logger = new Logger(module)
 // It is used to make Karma/Electron tests to use the NodeJS
 // implementation of Buffer instead of the browser polyfill
 
+const GOING_AWAY = 1001
 declare let NodeJsBuffer: BufferConstructor
 
 enum MessageType {
@@ -45,7 +45,9 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         })
         socket.on('close', (reasonCode, description) => {
             logger.trace('Peer ' + socket.remoteAddress + ' disconnected.')
-            this.doDisconnect('OTHER', reasonCode, description)
+            // logger.info(`Peer ${socket.remoteAddress} disconnected. ${reasonCode} ${description}`)
+            
+            this.doDisconnect(reasonCode, description)
         })
 
         socket.on('error', (error) => {
@@ -55,11 +57,11 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.socket = socket
     }
 
-    private doDisconnect(disconnectionType: DisconnectionType, reasonCode: number, description: string): void {
+    private doDisconnect(reasonCode: number, description: string): void {
         this.stopped = true
         this.socket?.removeAllListeners()
         this.socket = undefined
-
+        const disconnectionType = reasonCode === GOING_AWAY ? 'INCOMING_GRACEFUL_DISCONNECT' : 'OTHER' 
         this.emit('disconnected', disconnectionType, reasonCode, description)
     }
 
