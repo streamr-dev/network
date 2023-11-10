@@ -698,8 +698,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.entryPointDisconnectTimeout) {
             clearTimeout(this.entryPointDisconnectTimeout)
         }
-        this.connections.forEach((remote: DhtNodeRpcRemote) => remote.leaveNotice())
-        this.bucket!.toArray().forEach((rpcRemote: DhtNodeRpcRemote) => this.bucket!.remove(rpcRemote.id))
+        this.bucket!.toArray().forEach((rpcRemote: DhtNodeRpcRemote) => { 
+            rpcRemote.leaveNotice()
+            this.bucket!.remove(rpcRemote.id)
+        })
         this.bucket!.removeAllListeners()
         this.localDataStore.clear()
         this.neighborList!.stop()
