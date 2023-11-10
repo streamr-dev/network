@@ -463,10 +463,6 @@ export interface WebsocketConnectionResponse {
      * @generated from protobuf field: bool accepted = 1;
      */
     accepted: boolean;
-    /**
-     * @generated from protobuf field: optional string reason = 2;
-     */
-    reason?: string;
 }
 /**
  * WebRTC
@@ -1029,8 +1025,7 @@ export const WebsocketConnectionRequest = new WebsocketConnectionRequest$Type();
 class WebsocketConnectionResponse$Type extends MessageType$<WebsocketConnectionResponse> {
     constructor() {
         super("dht.WebsocketConnectionResponse", [
-            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "reason", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }

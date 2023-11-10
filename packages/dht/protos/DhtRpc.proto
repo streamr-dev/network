@@ -241,7 +241,6 @@ message WebsocketConnectionRequest {
 
 message WebsocketConnectionResponse {
   bool accepted = 1;
-  optional string reason = 2;
 }
 
 // WebRTC
