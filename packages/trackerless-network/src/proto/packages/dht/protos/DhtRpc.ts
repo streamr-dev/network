@@ -454,14 +454,6 @@ export interface Message {
  * @generated from protobuf message dht.WebsocketConnectionRequest
  */
 export interface WebsocketConnectionRequest {
-    /**
-     * @generated from protobuf field: string ip = 1;
-     */
-    ip: string;
-    /**
-     * @generated from protobuf field: uint32 port = 2;
-     */
-    port: number;
 }
 /**
  * @generated from protobuf message dht.WebsocketConnectionResponse
@@ -1026,10 +1018,7 @@ export const Message = new Message$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class WebsocketConnectionRequest$Type extends MessageType$<WebsocketConnectionRequest> {
     constructor() {
-        super("dht.WebsocketConnectionRequest", [
-            { no: 1, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
-        ]);
+        super("dht.WebsocketConnectionRequest", []);
     }
 }
 /**

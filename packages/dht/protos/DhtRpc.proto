@@ -237,8 +237,6 @@ message Message {
 
 // WebSocket
 message WebsocketConnectionRequest {
-  string ip = 1;
-  uint32 port = 2;
 }
 
 message WebsocketConnectionResponse {

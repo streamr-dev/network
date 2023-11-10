@@ -44,7 +44,7 @@ const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
 interface WebsocketConnectorRpcLocalConfig {
     transport: ITransport
-    canConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
+    canConnect: (peerDescriptor: PeerDescriptor) => boolean
     onIncomingConnection: (connection: ManagedConnection) => boolean
     portRange?: PortRange
     maxMessageSize?: number
@@ -57,7 +57,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
 
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
+    private readonly canConnectFunction: (peerDescriptor: PeerDescriptor) => boolean
     private readonly websocketServer?: WebsocketServer
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
@@ -270,9 +270,9 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
     }
 
     // IWebsocketConnectorRpc implementation
-    public async requestConnection(request: WebsocketConnectionRequest, context: ServerCallContext): Promise<WebsocketConnectionResponse> {
+    public async requestConnection(_request: WebsocketConnectionRequest, context: ServerCallContext): Promise<WebsocketConnectionResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        if (!this.destroyed && this.canConnectFunction(senderPeerDescriptor, request.ip, request.port)) {
+        if (!this.destroyed && this.canConnectFunction(senderPeerDescriptor)) {
             setImmediate(() => {
                 if (this.destroyed) {
                     return
