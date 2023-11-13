@@ -163,9 +163,7 @@ export class WebrtcConnector {
         this.ongoingConnectAttempts.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
 
         const delFunc = () => {
-            if (this.ongoingConnectAttempts.has(peerKey)) {
-                this.ongoingConnectAttempts.delete(peerKey)
-            }
+            this.ongoingConnectAttempts.delete(peerKey)
             connection.off('disconnected', delFunc)
             managedConnection.off('handshakeCompleted', delFunc)
         }
