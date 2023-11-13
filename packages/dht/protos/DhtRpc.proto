@@ -236,13 +236,10 @@ message Message {
 
 // WebSocket
 message WebsocketConnectionRequest {
-  string ip = 1;
-  uint32 port = 2;
 }
 
 message WebsocketConnectionResponse {
   bool accepted = 1;
-  optional string reason = 2;
 }
 
 // WebRTC
