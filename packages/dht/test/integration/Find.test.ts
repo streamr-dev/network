@@ -10,7 +10,7 @@ describe('Find correctness', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
-    const simulator = new Simulator(LatencyType.RANDOM)
+    const simulator = new Simulator(LatencyType.REAL)
     const NUM_NODES = 100
     const K = 2
 

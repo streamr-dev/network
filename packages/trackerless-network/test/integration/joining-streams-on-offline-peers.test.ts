@@ -42,7 +42,7 @@ describe('Joining stream parts on offline nodes', () => {
     let simulator: Simulator
 
     beforeEach(async () => {
-        simulator = new Simulator(LatencyType.RANDOM)
+        simulator = new Simulator(LatencyType.REAL)
         const entryPointTransport = new SimulatorTransport(entryPointPeerDescriptor, simulator)
         entryPoint = new NetworkStack({
             layer0: {

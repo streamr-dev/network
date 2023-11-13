@@ -10,7 +10,7 @@ describe('Storing data in DHT', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
-    const simulator = new Simulator(LatencyType.RANDOM)
+    const simulator = new Simulator(LatencyType.REAL)
     const NUM_NODES = 100
     const MAX_CONNECTIONS = 20
     const K = 4

@@ -1,7 +1,7 @@
 import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
-import { Simulator } from '../../src/connection/simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -44,7 +44,7 @@ describe('SimultaneousConnections', () => {
     }
 
     beforeEach(async () => {
-        simulator = new Simulator()
+        simulator = new Simulator(LatencyType.REAL)
         simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         await simulatorTransport1.start()
         simulatorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)

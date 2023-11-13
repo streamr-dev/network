@@ -43,7 +43,7 @@ describe('stream without default entrypoints', () => {
 
     beforeEach(async () => {
         Simulator.useFakeTimers()
-        const simulator = new Simulator(LatencyType.RANDOM)
+        const simulator = new Simulator(LatencyType.REAL)
         nodes = []
         numOfReceivedMessages = 0
         const entryPointTransport = new SimulatorTransport(entryPointPeerDescriptor, simulator)
