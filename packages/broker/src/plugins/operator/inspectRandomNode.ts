@@ -1,4 +1,4 @@
-import { EthereumAddress, Logger } from '@streamr/utils'
+import { EthereumAddress, Logger, randomString } from '@streamr/utils'
 import { StreamPartAssignments } from './StreamPartAssignments'
 import { StreamrClient } from 'streamr-client'
 import { StreamPartIDUtils } from '@streamr/protocol'
@@ -6,8 +6,6 @@ import { findTarget } from './inspectionUtils'
 import { ContractFacade } from './ContractFacade'
 import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { inspectOverTime } from './inspectOverTime'
-
-const logger = new Logger(module)
 
 export async function inspectRandomNode(
     operatorContractAddress: EthereumAddress,
@@ -20,28 +18,32 @@ export async function inspectRandomNode(
     abortSignal: AbortSignal,
     findTargetFn = findTarget,
 ): Promise<void> {
+    const traceId = randomString(6)
+    const logger = new Logger(module, { traceId })
     logger.info('Select a random operator to inspect')
 
-    const target = await findTargetFn(operatorContractAddress, contractFacade, assignments)
+    const target = await findTargetFn(operatorContractAddress, contractFacade, assignments, logger)
     if (target === undefined) {
         return
     }
     logger.debug('Target established', { target })
 
-    const result = inspectOverTime({
+    const consumeResults = inspectOverTime({
         target,
         streamrClient,
         createOperatorFleetState,
         getRedundancyFactor,
         sleepTimeInMsBeforeFirstInspection: 0,
         heartbeatTimeoutInMs,
-        inspectionIntervalInMs: 2 * 60 * 1000,
-        maxInspections: 3,
-        abortSignal
+        inspectionIntervalInMs: 8 * 60 * 1000,
+        maxInspections: 10,
+        waitUntilPassOrDone: true,
+        abortSignal,
+        traceId
     })
 
-    const pass = await result.waitForResults()
-    if (!pass) {
+    const results = await consumeResults()
+    if (!results.some((pass) => pass)) {
         logger.info('Raise flag', { target })
         await contractFacade.flag(
             target.sponsorshipAddress,
@@ -49,6 +51,6 @@ export async function inspectRandomNode(
             StreamPartIDUtils.getStreamPartition(target.streamPart)
         )
     } else {
-        logger.debug('Inspection passed (not raising flag)', { target })
+        logger.info('Not raising flag', { target })
     }
 }
