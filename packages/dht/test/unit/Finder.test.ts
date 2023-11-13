@@ -3,11 +3,11 @@ import {
     MessageType,
     NodeType,
     PeerDescriptor,
+    RouteMessageAck,
     RouteMessageWrapper
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
 import {
-    createMockRoutingRpcCommunicator,
     createWrappedClosestPeersRequest,
     createFindRequest
 } from '../utils/utils'
@@ -18,6 +18,7 @@ import { v4 } from 'uuid'
 import { MockRouter } from '../utils/mock/Router'
 import { MockTransport } from '../utils/mock/Transport'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 
 describe('Finder', () => {
 
@@ -52,6 +53,7 @@ describe('Finder', () => {
         destinationPeer: peerDescriptor1,
         sourcePeer: peerDescriptor2
     }
+    const rpcCommunicator = new FakeRpcCommunicator()
 
     beforeEach(() => {
         connections = new Map()
@@ -64,7 +66,7 @@ describe('Finder', () => {
             sessionTransport: new MockTransport(),
             addContact: (_contact, _setActive) => {},
             isPeerCloserToIdThanSelf: (_peer1, _compareToId) => true,
-            rpcCommunicator: createMockRoutingRpcCommunicator()
+            rpcCommunicator: rpcCommunicator as any
         })
     })
 
@@ -73,7 +75,7 @@ describe('Finder', () => {
     })
 
     it('Finder server', async () => {
-        const res = await finder.routeFindRequest(routedMessage)
+        const res = await rpcCommunicator.callRpcMethod('routeFindRequest', routedMessage) as RouteMessageAck
         expect(res.error).toEqual('')
     })
 
@@ -95,7 +97,7 @@ describe('Finder', () => {
             sourceDescriptor: peerDescriptor1,
             targetDescriptor: peerDescriptor2
         }
-        await expect(finder.routeFindRequest({
+        await expect(() => rpcCommunicator.callRpcMethod('routeFindRequest', {
             message: badMessage,
             requestId: 'REQ',
             routingPath: [],
