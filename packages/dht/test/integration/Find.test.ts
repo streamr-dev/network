@@ -19,10 +19,7 @@ describe('Find correctness', () => {
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, undefined, K)
         nodes.push(entryPoint)
-        entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS
-        }
+        entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
             const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, 20, 60000)

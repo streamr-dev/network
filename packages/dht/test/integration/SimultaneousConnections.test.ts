@@ -44,7 +44,7 @@ describe('SimultaneousConnections', () => {
     }
 
     beforeEach(async () => {
-        simulator = new Simulator(LatencyType.REAL)
+        simulator = new Simulator()
         simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         await simulatorTransport1.start()
         simulatorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)

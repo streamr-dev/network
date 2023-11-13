@@ -1,4 +1,4 @@
-import { LatencyType, NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { LatencyType, NodeType, PeerDescriptor, Simulator, SimulatorTransport, getRandomRegion } from '@streamr/dht'
 import {
     MessageID,
     MessageRef,
@@ -21,7 +21,8 @@ describe('stream without default entrypoints', () => {
     let numOfReceivedMessages: number
     const entryPointPeerDescriptor: PeerDescriptor = {
         kademliaId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
 
     const streamMessage = new StreamMessage({
