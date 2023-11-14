@@ -66,9 +66,9 @@ export class ConnectionLockRpcLocal implements IConnectionLockRpc {
         logger.trace(keyOrUnknownFromPeerDescriptor(senderPeerDescriptor) + ' received gracefulDisconnect notice')
 
         if (disconnectNotice.disconnectMode === DisconnectMode.LEAVING) {
-            this.config.closeConnection(senderPeerDescriptor, 'INCOMING_GRACEFUL_LEAVE', 'graceful leave notified')
+            this.config.closeConnection(senderPeerDescriptor, 'GRACEFUL_LEAVE', 'graceful leave notified')
         } else {
-            this.config.closeConnection(senderPeerDescriptor, 'INCOMING_GRACEFUL_DISCONNECT', 'graceful disconnect notified')
+            this.config.closeConnection(senderPeerDescriptor, 'GRACEFUL_DISCONNECT', 'graceful disconnect notified')
         }
         return {}
     }

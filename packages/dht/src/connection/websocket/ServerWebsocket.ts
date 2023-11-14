@@ -60,7 +60,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.stopped = true
         this.socket?.removeAllListeners()
         this.socket = undefined
-        const disconnectionType = reasonCode === GOING_AWAY ? 'INCOMING_GRACEFUL_LEAVE' : 'OTHER' 
+        const disconnectionType = reasonCode === GOING_AWAY ? 'GRACEFUL_LEAVE' : 'OTHER' 
         this.emit('disconnected', disconnectionType, reasonCode, description)
     }
 
@@ -82,7 +82,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
 
     public async close(disconnectionType: DisconnectionType): Promise<void> {
         if (!this.stopped) {
-            this.socket?.close(disconnectionType === 'INCOMING_GRACEFUL_LEAVE' ? GOING_AWAY : undefined)
+            this.socket?.close(disconnectionType === 'GRACEFUL_LEAVE' ? GOING_AWAY : undefined)
         } else {
             logger.error('Tried to close a stopped connection')
         }

@@ -1,7 +1,6 @@
 import { Message, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 
-export type DisconnectionType = 'OUTGOING_GRACEFUL_DISCONNECT' | 'OUTGOING_GRACEFUL_LEAVE' |
-    'INCOMING_GRACEFUL_DISCONNECT' | 'INCOMING_GRACEFUL_LEAVE' | 'OTHER'
+export type DisconnectionType = 'GRACEFUL_LEAVE' | 'GRACEFUL_DISCONNECT' | 'OTHER'
 
 export interface TransportEvents {
     disconnected: (peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType) => void

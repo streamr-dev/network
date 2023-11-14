@@ -375,7 +375,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.connectionManager) {
             this.bucket!.remove(peerDescriptor.kademliaId)
 
-            if (disconnectionType === 'OUTGOING_GRACEFUL_LEAVE' || disconnectionType === 'INCOMING_GRACEFUL_LEAVE') {
+            if (disconnectionType === 'GRACEFUL_LEAVE') {
                 logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with type ' + disconnectionType)
                 this.removeContact(peerDescriptor)
             } else {
