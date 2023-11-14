@@ -10,7 +10,7 @@ import { ClientWebsocket } from './websocket/ClientWebsocket'
 import { v4 } from 'uuid'
 import { NatType } from './ConnectionManager'
 import { ServerWebsocket } from './websocket/ServerWebsocket'
-import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnectorRpcLocal'
+import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
 
 const logger = new Logger(module)
 
