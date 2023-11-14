@@ -72,6 +72,16 @@ export interface SponsorshipResult {
     operatorCount: number
 }
 
+export interface Flag {
+    id: string
+    target: {
+        id: string
+    }
+    sponsorship: {
+        id: string
+    }
+}
+
 export class ContractFacade {
 
     private readonly operatorContract: Operator
@@ -169,6 +179,39 @@ export class ContractFacade {
             })
         }
         return results
+    }
+
+    async getExpiredRelevantFlags(sponsorships: EthereumAddress[], maxFlagAgeSec: number): Promise<Flag[]> {
+        const maxFlagStartTime = Math.floor(Date.now() / 1000) - maxFlagAgeSec
+        const createQuery = (lastId: string, pageSize: number) => {
+            return {
+                query: `
+                    {
+                    flags(
+                      where: { 
+                        flaggingTimestamp_lt: ${maxFlagStartTime},
+                        result: "voting",
+                        sponsorship_in: ${sponsorships}
+                    ) {
+                        target {
+                            id
+                        }
+                        sponsorship {
+                            id
+                        }
+                    }
+                }`
+            }
+        }
+        const parseItems = (response: { data?: { flags: Flag[] } }): Flag[] => {
+            return response.data?.flags ?? []
+        }
+        const flagsResults = this.theGraphClient.queryEntities<Flag>(createQuery, parseItems)
+        const flags: Flag[] = []
+        for await (const flag of flagsResults) {
+            flags.push(flag)
+        }
+        return flags
     }
 
     async getOperatorsInSponsorship(sponsorshipAddress: EthereumAddress): Promise<EthereumAddress[]> {
