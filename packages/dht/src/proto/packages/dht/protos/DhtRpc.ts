@@ -284,19 +284,15 @@ export interface RouteMessageWrapper {
      */
     destinationPeer?: PeerDescriptor;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor previousPeer = 4;
-     */
-    previousPeer?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: dht.Message message = 5;
+     * @generated from protobuf field: dht.Message message = 4;
      */
     message?: Message;
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor reachableThrough = 6;
+     * @generated from protobuf field: repeated dht.PeerDescriptor reachableThrough = 5;
      */
     reachableThrough: PeerDescriptor[];
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 7;
+     * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 6;
      */
     routingPath: PeerDescriptor[];
 }
@@ -458,14 +454,6 @@ export interface Message {
  * @generated from protobuf message dht.WebsocketConnectionRequest
  */
 export interface WebsocketConnectionRequest {
-    /**
-     * @generated from protobuf field: string ip = 1;
-     */
-    ip: string;
-    /**
-     * @generated from protobuf field: uint32 port = 2;
-     */
-    port: number;
 }
 /**
  * @generated from protobuf message dht.WebsocketConnectionResponse
@@ -475,10 +463,6 @@ export interface WebsocketConnectionResponse {
      * @generated from protobuf field: bool accepted = 1;
      */
     accepted: boolean;
-    /**
-     * @generated from protobuf field: optional string reason = 2;
-     */
-    reason?: string;
 }
 /**
  * WebRTC
@@ -926,10 +910,9 @@ class RouteMessageWrapper$Type extends MessageType$<RouteMessageWrapper> {
             { no: 1, name: "sourcePeer", kind: "message", T: () => PeerDescriptor },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "destinationPeer", kind: "message", T: () => PeerDescriptor },
-            { no: 4, name: "previousPeer", kind: "message", T: () => PeerDescriptor },
-            { no: 5, name: "message", kind: "message", T: () => Message },
-            { no: 6, name: "reachableThrough", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
-            { no: 7, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+            { no: 4, name: "message", kind: "message", T: () => Message },
+            { no: 5, name: "reachableThrough", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 6, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }
@@ -1031,10 +1014,7 @@ export const Message = new Message$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class WebsocketConnectionRequest$Type extends MessageType$<WebsocketConnectionRequest> {
     constructor() {
-        super("dht.WebsocketConnectionRequest", [
-            { no: 1, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
-        ]);
+        super("dht.WebsocketConnectionRequest", []);
     }
 }
 /**
@@ -1045,8 +1025,7 @@ export const WebsocketConnectionRequest = new WebsocketConnectionRequest$Type();
 class WebsocketConnectionResponse$Type extends MessageType$<WebsocketConnectionResponse> {
     constructor() {
         super("dht.WebsocketConnectionResponse", [
-            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "reason", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
