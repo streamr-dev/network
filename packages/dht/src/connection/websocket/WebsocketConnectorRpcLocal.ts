@@ -26,10 +26,6 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         if (this.config.canConnect(senderPeerDescriptor)) {
             setImmediate(() => {
-                /* TODO is this needed?
-                if (this.destroyed) {
-                    return
-                }*/
                 const connection = this.config.connect(senderPeerDescriptor)
                 this.config.onIncomingConnection(connection)
             })
