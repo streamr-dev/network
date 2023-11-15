@@ -2,7 +2,7 @@ import { wait } from './wait'
 
 export const retry = async <T>(
     task: () => Promise<T>,
-    onFailure: (message: string, error: any) => void,
+    onRetryableFailure: (message: string, error: any) => void,
     description: string,
     maxCount: number,
     delay: number,
@@ -14,7 +14,7 @@ export const retry = async <T>(
         } catch (err: any) {
             if (i < (maxCount - 1)) {
                 const message = `${description} failed, retrying in ${delay} ms`
-                onFailure(message, err)
+                onRetryableFailure(message, err)
             }
         }
         await wait(delay)
