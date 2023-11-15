@@ -74,7 +74,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
                 this.socket.sendBytes(Buffer.from(data))
             }
         } else {
-            logger.error('Tried to call send() on a stopped socket')
+            logger.debug('Tried to call send() on a stopped socket')
         }
 
     }
@@ -83,7 +83,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         if (!this.stopped) {
             this.socket?.close()
         } else {
-            logger.error('Tried to close a stopped connection')
+            logger.debug('Tried to close a stopped connection')
         }
     }
 
@@ -97,7 +97,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
             }
             this.stopped = true
         } else {
-            logger.error('Tried to destroy() a stopped connection')
+            logger.debug('Tried to destroy() a stopped connection')
         }
     }
 

@@ -170,10 +170,9 @@ message RouteMessageWrapper {
   PeerDescriptor sourcePeer = 1;
   string requestId = 2;
   PeerDescriptor destinationPeer = 3;
-  PeerDescriptor previousPeer = 4;
-  Message message = 5;
-  repeated PeerDescriptor reachableThrough = 6;
-  repeated PeerDescriptor routingPath = 7;
+  Message message = 4;
+  repeated PeerDescriptor reachableThrough = 5;
+  repeated PeerDescriptor routingPath = 6;
 }
 
 message RouteMessageAck {
@@ -242,13 +241,10 @@ message Message {
 
 // WebSocket
 message WebsocketConnectionRequest {
-  string ip = 1;
-  uint32 port = 2;
 }
 
 message WebsocketConnectionResponse {
   bool accepted = 1;
-  optional string reason = 2;
 }
 
 // WebRTC
