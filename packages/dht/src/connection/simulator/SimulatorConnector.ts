@@ -92,7 +92,7 @@ export class SimulatorConnector {
         this.stopped = true
         const conns = Array.from(this.connectingConnections.values())
         await Promise.allSettled(conns.map((conn) =>
-            conn.close('OTHER')
+            conn.close(false)
         ))
     }
 }

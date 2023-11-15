@@ -36,14 +36,16 @@ export const createMockRandomGraphNodeAndDhtNode = async (
         transport: mockCm,
         peerDescriptor: localPeerDescriptor,
         numberOfNodesPerKBucket: 4,
-        entryPoints: [entryPointDescriptor]
+        entryPoints: [entryPointDescriptor],
+        rpcRequestTimeout: 5000
     })
     const randomGraphNode = createRandomGraphNode({
         streamPartId,
         transport: mockCm,
         layer1Node,
         connectionLocker: mockCm,
-        localPeerDescriptor
+        localPeerDescriptor,
+        rpcRequestTimeout: 5000
     })
     return [layer1Node, randomGraphNode]
 }

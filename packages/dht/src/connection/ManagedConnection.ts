@@ -6,7 +6,6 @@ import { Logger, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } fr
 import EventEmitter from 'eventemitter3'
 import { PeerIDKey } from '../helpers/PeerID'
 import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
-import { DisconnectionType } from '../transport/ITransport'
 import { keyOrUnknownFromPeerDescriptor } from './ConnectionManager'
 
 export interface ManagedConnectionEvents {
@@ -212,13 +211,13 @@ export class ManagedConnection extends EventEmitter<Events> {
         impl.on('disconnected', this.onDisconnected)
     }
 
-    private onDisconnected(disconnectionType: DisconnectionType): void {
-        logger.trace(keyOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' onDisconnected() ' + disconnectionType)
+    private onDisconnected(gracefulLeave: boolean): void {
+        logger.trace(keyOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' onDisconnected() ' + gracefulLeave)
         if (this.bufferSentbyOtherConnection) {
             return
         }
         this.emit('internal_disconnected')
-        this.doDisconnect(disconnectionType)
+        this.doDisconnect(gracefulLeave)
     }
 
     async send(data: Uint8Array, doNotConnect = false): Promise<void> {
@@ -251,14 +250,14 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             if (result.winnerName === 'internal_disconnected') {
                 this.doNotEmitDisconnected = false
-                this.doDisconnect('OTHER')
+                this.doDisconnect(false)
             } else if (result.winnerName === 'handshakeFailed') {
                 logger.trace(keyOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' handshakeFailed received')
 
                 if (this.bufferSentbyOtherConnection) {
                     logger.trace('bufferSentByOtherConnection already true')
                     this.doNotEmitDisconnected = false
-                    this.doDisconnect('OTHER')
+                    this.doDisconnect(false)
                 } else {
                     let result2: RunAndRaceEventsReturnType<Events>
 
@@ -273,7 +272,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                     if (result2.winnerName === 'bufferSentByOtherConnection') {
                         logger.trace('bufferSentByOtherConnection received')
                         this.doNotEmitDisconnected = false
-                        this.doDisconnect('OTHER')
+                        this.doDisconnect(false)
                     } else if (result2.winnerName === 'closing') {
                         logger.trace('bufferSentByOtherConnection not received, instead received a closing event')
                     } else if (result2.winnerName === 'disconnected') {
@@ -327,19 +326,19 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.handshaker!.sendHandshakeResponse(error)
     }
 
-    private doDisconnect(disconnectionType: DisconnectionType) {
+    private doDisconnect(gracefulLeave: boolean) {
         logger.trace(keyOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' doDisconnect() emitting')
 
         if (!this.doNotEmitDisconnected) {
             logger.trace(keyOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' emitting disconnected')
-            this.emit('disconnected', disconnectionType)
+            this.emit('disconnected', gracefulLeave)
         } else {
             // eslint-disable-next-line max-len
             logger.trace(keyOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' not emitting disconnected because doNotEmitDisconnected flag is set')
         }
     }
 
-    public async close(disconnectionType: DisconnectionType): Promise<void> {
+    public async close(gracefulLeave: boolean): Promise<void> {
         if (this.replacedByOtherConnection) {
             logger.trace('close() called on replaced connection')
         }
@@ -347,13 +346,13 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.emit('closing')
         this.doNotEmitDisconnected = false
         if (this.implementation) {
-            await this.implementation?.close(disconnectionType)
+            await this.implementation?.close(gracefulLeave)
         } else if (this.outgoingConnection) {
-            await this.outgoingConnection?.close(disconnectionType)
+            await this.outgoingConnection?.close(gracefulLeave)
         } else if (this.incomingConnection) {
-            await this.incomingConnection?.close(disconnectionType)
+            await this.incomingConnection?.close(gracefulLeave)
         } else {
-            this.doDisconnect(disconnectionType)
+            this.doDisconnect(gracefulLeave)
         }
     }
 

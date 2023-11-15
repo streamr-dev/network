@@ -7,7 +7,6 @@ import {
     ConnectivityMethod,
     ConnectivityResponse,
     HandshakeError,
-    NodeType,
     PeerDescriptor,
     WebsocketConnectionRequest,
     WebsocketConnectionResponse
@@ -26,19 +25,14 @@ import { Handshaker } from '../Handshaker'
 import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
 import { range, sample } from 'lodash'
-import { isPrivateIPv4 } from '../../helpers/AddressTools'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
+import { expectedConnectionType } from '../../helpers/Connectivity'
 
 const logger = new Logger(module)
 
 export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod): string => {
     return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
-}
-
-const canOpenConnectionFromBrowser = (websocketServer: ConnectivityMethod) => {
-    const hasPrivateAddress = ((websocketServer.host === 'localhost') || isPrivateIPv4(websocketServer.host))
-    return websocketServer.tls || hasPrivateAddress
 }
 
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
@@ -170,13 +164,8 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
     }
 
     public isPossibleToFormConnection(targetPeerDescriptor: PeerDescriptor): boolean {
-        if (this.localPeerDescriptor!.websocket !== undefined) {
-            return (targetPeerDescriptor.type !== NodeType.BROWSER) || canOpenConnectionFromBrowser(this.localPeerDescriptor!.websocket)
-        } else if (targetPeerDescriptor.websocket !== undefined) {
-            return (this.localPeerDescriptor!.type !== NodeType.BROWSER) || canOpenConnectionFromBrowser(targetPeerDescriptor.websocket)
-        } else {
-            return false
-        }
+        const connectionType = expectedConnectionType(this.localPeerDescriptor!, targetPeerDescriptor)
+        return (connectionType === ConnectionType.WEBSOCKET_CLIENT || connectionType === ConnectionType.WEBSOCKET_SERVER)
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
@@ -288,10 +277,10 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
         this.rpcCommunicator.destroy()
 
         const requests = Array.from(this.ongoingConnectRequests.values())
-        await Promise.allSettled(requests.map((conn) => conn.close('OTHER')))
+        await Promise.allSettled(requests.map((conn) => conn.close(false)))
 
         const attempts = Array.from(this.connectingConnections.values())
-        await Promise.allSettled(attempts.map((conn) => conn.close('OTHER')))
+        await Promise.allSettled(attempts.map((conn) => conn.close(false)))
         this.connectivityChecker?.destroy()
         await this.websocketServer?.stop()
     }
