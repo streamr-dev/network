@@ -6,7 +6,7 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from '@streamr/network-contracts'
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts'
 import { fastPrivateKey } from '@streamr/test-utils'
-import { Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
+import { Logger, TheGraphClient, toEthereumAddress, retry } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { range } from 'lodash'
@@ -201,13 +201,21 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
     const token = (opts?.chainConfig !== undefined)
         ? new Contract(opts.chainConfig.contracts.DATA, tokenABI, adminWallet) as unknown as TestToken
         : getTokenContract().connect(adminWallet)
-    await (await token.mint(newWallet.address, parseEther('1000000'), {
-        nonce: await adminWallet.getTransactionCount()
-    })).wait()
-    await (await adminWallet.sendTransaction({
-        to: newWallet.address,
-        value: parseEther('1')
-    })).wait()
+    await retry(
+        async () => {
+            await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
+            await (await adminWallet.sendTransaction({
+                to: newWallet.address,
+                value: parseEther('1')
+            })).wait()
+        },
+        (message: string, error: any) => {
+            logger.debug(message, { error })
+        },
+        'Token minting',
+        10,
+        100
+    )
     return newWallet.connect(provider)
 }
 
