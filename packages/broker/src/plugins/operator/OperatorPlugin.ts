@@ -17,9 +17,6 @@ import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { inspectRandomNode } from './inspectRandomNode'
 import { ContractFacade } from './ContractFacade'
 import { reviewSuspectNode } from './reviewSuspectNode'
-import { inspectOverTime } from './inspectOverTime'
-import { toStreamPartID } from '@streamr/protocol'
-import random from 'lodash/random'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
