@@ -200,9 +200,8 @@ message HandshakeRequest {
 }
 
 message HandshakeResponse {
-  bytes sourceId = 1;
-  PeerDescriptor peerDescriptor = 2;
-  optional HandshakeError responseError = 3;
+  PeerDescriptor sourcePeerDescriptor = 1;
+  optional HandshakeError error = 2;
 }
 
 enum HandshakeError {

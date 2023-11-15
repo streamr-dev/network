@@ -363,17 +363,13 @@ export interface HandshakeRequest {
  */
 export interface HandshakeResponse {
     /**
-     * @generated from protobuf field: bytes sourceId = 1;
+     * @generated from protobuf field: dht.PeerDescriptor sourcePeerDescriptor = 1;
      */
-    sourceId: Uint8Array;
+    sourcePeerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
+     * @generated from protobuf field: optional dht.HandshakeError error = 2;
      */
-    peerDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: optional dht.HandshakeError responseError = 3;
-     */
-    responseError?: HandshakeError;
+    error?: HandshakeError;
 }
 /**
  * @generated from protobuf message dht.Message
@@ -987,9 +983,8 @@ export const HandshakeRequest = new HandshakeRequest$Type();
 class HandshakeResponse$Type extends MessageType$<HandshakeResponse> {
     constructor() {
         super("dht.HandshakeResponse", [
-            { no: 1, name: "sourceId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "responseError", kind: "enum", opt: true, T: () => ["dht.HandshakeError", HandshakeError] }
+            { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "error", kind: "enum", opt: true, T: () => ["dht.HandshakeError", HandshakeError] }
         ]);
     }
 }

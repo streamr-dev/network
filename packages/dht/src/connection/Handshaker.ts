@@ -39,10 +39,10 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
             if (message.body.oneofKind === 'handshakeResponse') {
                 logger.trace('handshake response received')
                 const handshake = message.body.handshakeResponse
-                if (handshake.responseError) {
-                    this.emit('handshakeFailed', handshake.responseError)
+                if (handshake.error) {
+                    this.emit('handshakeFailed', handshake.error)
                 } else {
-                    this.emit('handshakeCompleted', handshake.peerDescriptor!)
+                    this.emit('handshakeCompleted', handshake.sourcePeerDescriptor!)
                 }
             }
         } catch (err) {
@@ -71,11 +71,8 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
 
     public sendHandshakeResponse(error?: HandshakeError): void {
         const outgoingHandshakeResponse: HandshakeResponse = {
-            sourceId: this.localPeerDescriptor.kademliaId,
-            peerDescriptor: this.localPeerDescriptor
-        }
-        if (error) {
-            outgoingHandshakeResponse.responseError = error
+            sourcePeerDescriptor: this.localPeerDescriptor,
+            error
         }
         const msg: Message = {
             serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
