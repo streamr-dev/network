@@ -332,7 +332,7 @@ describe('ConnectionManager', () => {
         await connectionManager1.stop()
     })
 
-    it('Cannot send to a WebSocketServer if kademlia do not match', async () => {
+    it('Cannot send to a WebSocketServer if kademliaIds do not match', async () => {
 
         const peerDescriptor1 = {
             kademliaId: createRandomKademliaId(),
