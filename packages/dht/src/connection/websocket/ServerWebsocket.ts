@@ -3,6 +3,7 @@ import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../
 import { connection as WsConnection } from 'websocket'
 import { Logger } from '@streamr/utils'
 import { Url } from 'url'
+import { GOING_AWAY } from './ClientWebsocket'
 
 const logger = new Logger(module)
 
@@ -10,7 +11,6 @@ const logger = new Logger(module)
 // It is used to make Karma/Electron tests to use the NodeJS
 // implementation of Buffer instead of the browser polyfill
 
-const GOING_AWAY = 1001
 declare let NodeJsBuffer: BufferConstructor
 
 enum MessageType {
@@ -59,7 +59,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.stopped = true
         this.socket?.removeAllListeners()
         this.socket = undefined
-        const gracefulLeave = reasonCode === GOING_AWAY ? true : false 
+        const gracefulLeave = reasonCode === GOING_AWAY
         this.emit('disconnected', gracefulLeave, reasonCode, description)
     }
 

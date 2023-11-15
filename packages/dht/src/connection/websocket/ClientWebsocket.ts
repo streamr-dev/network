@@ -5,7 +5,10 @@ import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-const GOING_AWAY = 1001
+// https://kapeli.com/cheat_sheets/WebSocket_Status_Codes.docset/Contents/Resources/Documents/index
+// Browsers send this automatically when closing a tab
+export const GOING_AWAY = 1001
+
 const BINARY_TYPE = 'arraybuffer'
 
 export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements IConnection {
@@ -66,7 +69,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.destroyed = true
         this.stopListening()
         this.socket = undefined
-        const gracefulLeave = code === GOING_AWAY ? true : false
+        const gracefulLeave = code === GOING_AWAY
         this.emit('disconnected', gracefulLeave, code, reason)
         this.removeAllListeners()
     }
