@@ -376,6 +376,7 @@ describe('ConnectionManager', () => {
             messageType: MessageType.RPC,
             messageId: '1',
             targetDescriptor: {
+                // This is not the correct kademliaId of peerDescriptor2
                 kademliaId: new Uint8Array([1, 2, 3, 4]),
                 type: NodeType.NODEJS,
                 websocket: peerDescriptor2.websocket
