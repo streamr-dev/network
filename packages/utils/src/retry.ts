@@ -15,9 +15,9 @@ export const retry = async <T>(
             if (i < (maxCount - 1)) {
                 const message = `${description} failed, retrying in ${delay} ms`
                 onRetryableFailure(message, err)
+                await wait(delay)
             }
         }
-        await wait(delay)
     }
     throw new Error(`${description} failed after ${maxCount} attempts`)
 }
