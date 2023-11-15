@@ -3,7 +3,6 @@ import EventEmitter from 'eventemitter3'
 import { ICloseEvent, IMessageEvent, w3cwebsocket as Websocket } from 'websocket'
 import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from '../IConnection'
 
-
 const logger = new Logger(module)
 
 // https://kapeli.com/cheat_sheets/WebSocket_Status_Codes.docset/Contents/Resources/Documents/index
