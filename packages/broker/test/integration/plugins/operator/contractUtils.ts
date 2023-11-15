@@ -203,9 +203,7 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
         : getTokenContract().connect(adminWallet)
     await retry(
         async () => {
-            await (await token.mint(newWallet.address, parseEther('1000000'), {
-                nonce: await adminWallet.getTransactionCount()
-            })).wait()
+            await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
             await (await adminWallet.sendTransaction({
                 to: newWallet.address,
                 value: parseEther('1')
