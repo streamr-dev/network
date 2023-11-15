@@ -36,7 +36,7 @@ export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod): string
 
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
-interface WebsocketConnectorConfig {
+export interface WebsocketConnectorConfig {
     transport: ITransport
     canConnect: (peerDescriptor: PeerDescriptor) => boolean
     onIncomingConnection: (connection: ManagedConnection) => boolean

@@ -9,7 +9,7 @@ import { ManagedConnection } from './ManagedConnection'
 import { Simulator } from './simulator/Simulator'
 import { SimulatorConnector } from './simulator/SimulatorConnector'
 import { IceServer, WebrtcConnector } from './webrtc/WebrtcConnector'
-import { WebsocketConnector } from './websocket/WebsocketConnector'
+import { WebsocketConnector, WebsocketConnectorConfig } from './websocket/WebsocketConnector'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
@@ -106,25 +106,36 @@ export class DefaultConnectorFacade implements ConnectorFacade {
                 const connectivityResponse = await this.websocketConnector!.checkConnectivity(false)
                 localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
                 this.localPeerDescriptor = localPeerDescriptor
-                if (localPeerDescriptor.websocket === undefined) {
-                    logger.warn('ConnectivityCheck failed after autocertification, websocket server connectivity disabled')
-                }
                 this.websocketConnector!.setLocalPeerDescriptor(localPeerDescriptor)
+                if (localPeerDescriptor.websocket === undefined) {
+                    logger.warn('ConnectivityCheck failed after autocertification, disabling websocket server TLS')
+                    await this.restartWebsocketConnector({
+                        ...webSocketConnectorConfig,
+                        serverEnableTls: false
+                    })
+                }
             } catch (err) {
                 logger.warn('Failed to autocertify, disabling websocket server TLS')
-                await this.websocketConnector.destroy()
-                this.websocketConnector = new WebsocketConnector({
+                await this.restartWebsocketConnector({
                     ...webSocketConnectorConfig,
-                    serverEnableTls: false,
+                    serverEnableTls: false
                 })
-                await this.websocketConnector.start()
-                const connectivityResponse = await this.websocketConnector.checkConnectivity(false)
-                localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
-                this.localPeerDescriptor = localPeerDescriptor
-                this.websocketConnector.setLocalPeerDescriptor(localPeerDescriptor)
             }
         }
         this.webrtcConnector.setLocalPeerDescriptor(localPeerDescriptor)
+    }
+    
+    async restartWebsocketConnector(webSocketConnectorConfig: WebsocketConnectorConfig): Promise<void> {
+        await this.websocketConnector!.destroy()
+        this.websocketConnector = new WebsocketConnector({
+            ...webSocketConnectorConfig,
+            serverEnableTls: false,
+        })
+        await this.websocketConnector.start()
+        const connectivityResponse = await this.websocketConnector.checkConnectivity(false)
+        const localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
+        this.localPeerDescriptor = localPeerDescriptor
+        this.websocketConnector.setLocalPeerDescriptor(localPeerDescriptor)
     }
 
     createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
