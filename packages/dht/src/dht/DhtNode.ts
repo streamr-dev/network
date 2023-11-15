@@ -21,7 +21,7 @@ import {
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
 } from '../proto/packages/dht/protos/DhtRpc'
-import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
+import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { DhtNodeRpcClient, ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
@@ -346,9 +346,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.peerManager!.handleConnected(peerDescriptor)
             this.emit('connected', peerDescriptor)
         })
-        this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, disonnectionType: DisconnectionType) => {
-            this.peerManager?.handleDisconnected(peerDescriptor, disonnectionType)
-            this.emit('disconnected', peerDescriptor, disonnectionType)
+        this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
+            this.peerManager?.handleDisconnected(peerDescriptor, gracefulLeave)
+            this.emit('disconnected', peerDescriptor, gracefulLeave)
         })
         this.transport!.getAllConnectionPeerDescriptors().map((peerDescriptor) => {
             this.peerManager!.handleConnected(peerDescriptor)

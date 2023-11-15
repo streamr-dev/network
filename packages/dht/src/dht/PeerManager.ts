@@ -11,7 +11,6 @@ import { Logger } from '@streamr/utils'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import EventEmitter from 'eventemitter3'
-import { DisconnectionType } from '../transport/ITransport'
 
 const logger = new Logger(module)
 
@@ -178,14 +177,12 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
         }
     }
 
-    public handleDisconnected(peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType): void {
+    public handleDisconnected(peerDescriptor: PeerDescriptor, gracefulLeave: boolean): void {
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
-        
         // only remove from bucket if we are on layer 0
         if (this.config.isLayer0) {
             this.bucket!.remove(peerDescriptor.kademliaId)
-
-            if (disconnectionType === 'OUTGOING_GRACEFUL_LEAVE' || disconnectionType === 'INCOMING_GRACEFUL_LEAVE') {
+            if (gracefulLeave) {
                 this.removeContact(peerDescriptor)
             } 
         }
@@ -208,8 +205,10 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
 
     public stop(): void {
         this.stopped = true
-
-        this.bucket!.toArray().map((DhtNodeRpcRemote: DhtNodeRpcRemote) => this.bucket!.remove(DhtNodeRpcRemote.id))
+        this.bucket!.toArray().forEach((rpcRemote: DhtNodeRpcRemote) => { 
+            rpcRemote.leaveNotice()
+            this.bucket!.remove(rpcRemote.id)
+        })
         this.bucket!.removeAllListeners()
         this.neighborList!.stop()
         this.randomPeers!.stop()
