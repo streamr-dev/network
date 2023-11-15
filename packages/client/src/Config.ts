@@ -123,6 +123,24 @@ export interface ControlLayerConfig {
      * is not formed within this time, the client's network node will throw an error.
      */
     networkConnectivityTimeout?: number
+
+    /**
+     * URL of the autocertifier service used to obtain TLS certificates and subdomain names for the WS server.
+     */
+    autoCertifierUrl?: string
+
+    /**
+     * File path to the autocertified subdomain file. The file contains the autocertified subdomain name
+     * and it's TLS certificate.
+     */
+    autoCertifierConfigFile?: string
+
+    /**
+     * If the node is running a WS server, this option can be used to disable TLS autocertification to
+     * run the server without TLS. This will speed up the starting time of the network node 
+     * (especially when starting the node for the first time on a new machine).
+     */
+    websocketServerEnableTls?: boolean
 }
 
 export interface NetworkNodeConfig {

@@ -17,13 +17,21 @@ describe('Websocket IConnection Requests', () => {
 
     beforeEach(async () => {
 
-        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
+        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor, websocketServerEnableTls: false })
         await epDhtNode.start()
 
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ websocketPortRange: { min: 10022, max: 10022 }, entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ 
+            websocketPortRange: { min: 10022, max: 10022 },
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
+        node2 = new DhtNode({ 
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
+
         await node1.start()
         await node2.start()
     })

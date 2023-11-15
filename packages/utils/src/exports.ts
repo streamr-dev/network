@@ -39,6 +39,7 @@ import { TheGraphClient, GraphQLQuery, FetchResponse } from './TheGraphClient'
 import { Heap } from './Heap'
 import { executeSafePromise } from './executeSafePromise'
 import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries } from './binaryUtils'
+import { filePathToNodeFormat } from './filePathToNodeFormat'
 import { retry } from './retry'
 
 export {
@@ -92,6 +93,7 @@ export {
     hexToBinary,
     utf8ToBinary,
     areEqualBinaries,
+    filePathToNodeFormat,
     retry
 }
 

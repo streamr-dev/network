@@ -204,6 +204,18 @@
                         "networkConnectivityTimeout": {
                             "type": "number",
                             "default": 10000
+                        },
+                        "websocketServerEnableTls": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "autoCertifierUrl": {
+                            "type": "string",
+                            "default": "https://ns1.streamr-nodes.xyz:59833"
+                        },
+                        "autoCertifierConfigFile": {
+                            "type": "string",
+                            "default": "~/.streamr/certificate.json"
                         }
                     },
                     "default": {}

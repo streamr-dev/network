@@ -26,7 +26,8 @@ import { ParsedUrlQuery } from 'querystring'
 import { range, sample } from 'lodash'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { expectedConnectionType } from '../../helpers/Connectivity'
-
+import { WebsocketServerStartError } from '../../helpers/errors'
+import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 const logger = new Logger(module)
 
 export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod): string => {
@@ -44,6 +45,10 @@ interface WebsocketConnectorConfig {
     host?: string
     entrypoints?: PeerDescriptor[]
     tlsCertificate?: TlsCertificate
+    autoCertifierTransport: ITransport
+    autoCertifierUrl: string
+    autoCertifierConfigFile: string
+    serverEnableTls: boolean
 }
 
 export class WebsocketConnector {
@@ -57,6 +62,11 @@ export class WebsocketConnector {
     private host?: string
     private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
+    private readonly autoCertifierTransport: ITransport
+    private readonly autoCertifierUrl: string
+    private readonly autoCertifierConfigFile: string
+    private readonly serverEnableTls: boolean
+    private autoCertifierClient?: AutoCertifierClientFacade
     private selectedPort?: number
     private localPeerDescriptor?: PeerDescriptor
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
@@ -66,12 +76,17 @@ export class WebsocketConnector {
         this.websocketServer = config.portRange ? new WebsocketServer({
             portRange: config.portRange!,
             tlsCertificate: config.tlsCertificate,
-            maxMessageSize: config.maxMessageSize
+            maxMessageSize: config.maxMessageSize,
+            enableTls: config.serverEnableTls
         }) : undefined
         this.onIncomingConnection = config.onIncomingConnection
         this.host = config.host
         this.entrypoints = config.entrypoints
         this.tlsCertificate = config.tlsCertificate
+        this.autoCertifierTransport = config.autoCertifierTransport
+        this.autoCertifierUrl = config.autoCertifierUrl
+        this.autoCertifierConfigFile = config.autoCertifierConfigFile
+        this.serverEnableTls = config.serverEnableTls
         this.rpcCommunicator = new ListeningRpcCommunicator(WebsocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000
         })
@@ -106,6 +121,25 @@ export class WebsocketConnector {
         })
     }
 
+    public async autoCertify(): Promise<void> {
+        this.autoCertifierClient = new AutoCertifierClientFacade({
+            configFile: this.autoCertifierConfigFile,
+            transport: this.autoCertifierTransport,
+            url: this.autoCertifierUrl,
+            wsServerPort: this.selectedPort!,
+            setHost: (hostName: string) => this.setHost(hostName),
+            updateCertificate: (certificate: string, privateKey: string) => this.websocketServer!.updateCertificate(certificate, privateKey)
+        })
+        logger.trace(`AutoCertifying subdomain...`)
+        await this.autoCertifierClient!.start()
+    }
+
+    private setHost(hostName: string): void {
+        logger.trace(`Setting host name to ${hostName}`)
+        this.host = hostName
+        this.connectivityChecker!.setHost(hostName)
+    }
+
     public async start(): Promise<void> {
         if (!this.abortController.signal.aborted && this.websocketServer) {
             this.websocketServer.on('connected', (connection: IConnection) => {
@@ -128,11 +162,11 @@ export class WebsocketConnector {
             })
             const port = await this.websocketServer.start()
             this.selectedPort = port
-            this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.tlsCertificate !== undefined, this.host)
+            this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.serverEnableTls, this.host)
         }
     }
 
-    public async checkConnectivity(): Promise<ConnectivityResponse> {
+    public async checkConnectivity(selfSigned: boolean): Promise<ConnectivityResponse> {
         // TODO: this could throw if the server is not running
         const noServerConnectivityResponse: ConnectivityResponse = {
             host: '127.0.0.1',
@@ -156,8 +190,8 @@ export class WebsocketConnector {
                         }
                         return preconfiguredConnectivityResponse
                     } else {
-                        // Do real connectivity checking
-                        return await this.connectivityChecker!.sendConnectivityRequest(entryPoint)
+                        // Do real connectivity checking     
+                        return await this.connectivityChecker!.sendConnectivityRequest(entryPoint, selfSigned)
                     }
                 }
             } catch (err) {
@@ -169,7 +203,7 @@ export class WebsocketConnector {
                 }
             }
         }
-        throw Error(`Failed to connect to the entrypoints after ${ENTRY_POINT_CONNECTION_ATTEMPTS} attempts`)
+        throw new WebsocketServerStartError(`Failed to connect to the entrypoints after ${ENTRY_POINT_CONNECTION_ATTEMPTS} attempts`)
     }
 
     public isPossibleToFormConnection(targetPeerDescriptor: PeerDescriptor): boolean {

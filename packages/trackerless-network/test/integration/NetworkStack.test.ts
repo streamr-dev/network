@@ -21,13 +21,15 @@ describe('NetworkStack', () => {
         stack1 = new NetworkStack({
             layer0: {
                 peerDescriptor: epDescriptor,
-                entryPoints: [epDescriptor]
+                entryPoints: [epDescriptor],
+                websocketServerEnableTls: false
             }
         })
         stack2 = new NetworkStack({
             layer0: {
                 websocketPortRange: { min: 32223, max: 32223 },
-                entryPoints: [epDescriptor]
+                entryPoints: [epDescriptor],
+                websocketServerEnableTls: false
             }
         })
 

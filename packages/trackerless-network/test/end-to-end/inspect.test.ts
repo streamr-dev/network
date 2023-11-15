@@ -59,21 +59,24 @@ describe('inspect', () => {
         publisherNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
-                peerDescriptor: publisherDescriptor
+                peerDescriptor: publisherDescriptor,
+                websocketServerEnableTls: false
             }
         })
 
         inspectedNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
-                peerDescriptor: inspectedDescriptor
+                peerDescriptor: inspectedDescriptor,
+                websocketServerEnableTls: false
             }
         })
 
         inspectorNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
-                peerDescriptor: inspectorDescriptor
+                peerDescriptor: inspectorDescriptor,
+                websocketServerEnableTls: false
             }
         })
 

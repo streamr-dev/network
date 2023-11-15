@@ -50,7 +50,11 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                     'fs': false,
                     'module': false,
                     'net': false,
-                    'timers': require.resolve('timers-browserify')
+                    'timers': require.resolve('timers-browserify'),
+                    'os': false,
+                    'querystring': false,
+                    'zlib': require.resolve('browserify-zlib'),
+                    'tls': false
                 }
             },
             output: {
