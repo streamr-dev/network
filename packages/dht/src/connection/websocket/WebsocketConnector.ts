@@ -66,7 +66,7 @@ export class WebsocketConnector {
     private selectedPort?: number
     private localPeerDescriptor?: PeerDescriptor
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
-    private destroyed = false
+    private abortController = new AbortController()
 
     constructor(config: WebsocketConnectorConfig) {
         this.websocketServer = config.portRange ? new WebsocketServer({
@@ -88,14 +88,15 @@ export class WebsocketConnector {
         const rpcLocal = new WebsocketConnectorRpcLocal({
             canConnect: (peerDescriptor: PeerDescriptor) => config.canConnect(peerDescriptor),
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
-            onIncomingConnection: (connection: ManagedConnection) => config.onIncomingConnection(connection)
+            onIncomingConnection: (connection: ManagedConnection) => config.onIncomingConnection(connection),
+            abortSignal: this.abortController.signal
         })
         this.rpcCommunicator.registerRpcMethod(
             WebsocketConnectionRequest,
             WebsocketConnectionResponse,
             'requestConnection',
             async (req: WebsocketConnectionRequest, context: ServerCallContext) => {
-                if (!this.destroyed) {
+                if (!this.abortController.signal.aborted) {
                     return rpcLocal.requestConnection(req, context)
                 } else {
                     return { accepted: false }
@@ -112,7 +113,7 @@ export class WebsocketConnector {
     }
 
     public async start(): Promise<void> {
-        if (!this.destroyed && this.websocketServer) {
+        if (!this.abortController.signal.aborted && this.websocketServer) {
             this.websocketServer.on('connected', (connection: IConnection) => {
 
                 const serverSocket = connection as unknown as ServerWebsocket
@@ -143,7 +144,7 @@ export class WebsocketConnector {
             host: '127.0.0.1',
             natType: NatType.UNKNOWN
         }
-        if (this.destroyed) {
+        if (this.abortController.signal.aborted) {
             return noServerConnectivityResponse
         }
         for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS)) {
@@ -266,7 +267,7 @@ export class WebsocketConnector {
     }
 
     public async destroy(): Promise<void> {
-        this.destroyed = true
+        this.abortController.abort()
         this.rpcCommunicator.destroy()
 
         const requests = Array.from(this.ongoingConnectRequests.values())

@@ -12,6 +12,7 @@ interface WebsocketConnectorRpcLocalConfig {
     canConnect: (peerDescriptor: PeerDescriptor) => boolean
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection
     onIncomingConnection: (connection: ManagedConnection) => boolean
+    abortSignal: AbortSignal
 }
 
 export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
@@ -26,6 +27,9 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         if (this.config.canConnect(senderPeerDescriptor)) {
             setImmediate(() => {
+                if (this.config.abortSignal.aborted) {
+                    return
+                }
                 const connection = this.config.connect(senderPeerDescriptor)
                 this.config.onIncomingConnection(connection)
             })
