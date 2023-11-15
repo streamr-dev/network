@@ -1,6 +1,7 @@
 import { IDhtNodeRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     ClosestPeersRequest,
+    LeaveNotice,
     PeerDescriptor,
     PingRequest
 } from '../proto/packages/dht/protos/DhtRpc'
@@ -30,9 +31,10 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
         localPeerDescriptor: PeerDescriptor,
         peerDescriptor: PeerDescriptor,
         client: ProtoRpcClient<IDhtNodeRpcClient>,
-        serviceId: ServiceID
+        serviceId: ServiceID,
+        rpcRequestTimeout?: number
     ) {
-        super(localPeerDescriptor, peerDescriptor, serviceId, client)
+        super(localPeerDescriptor, peerDescriptor, serviceId, client, rpcRequestTimeout)
         this.id = this.getPeerId().value
         this.vectorClock = DhtNodeRpcRemote.counter++
     }
@@ -57,9 +59,7 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
         const request: PingRequest = {
             requestId: v4()
         }
-        const options = this.formDhtRpcOptions({
-            timeout: 10000
-        })
+        const options = this.formDhtRpcOptions()
         try {
             const pong = await this.getClient().ping(request, options)
             if (pong.requestId === request.requestId) {
@@ -71,8 +71,6 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
         return false
     }
 
-    /*
-    TODO remove or start using this method in NET-1131 
     leaveNotice(): void {
         logger.trace(`Sending leaveNotice on ${this.getServiceId()} from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: LeaveNotice = {
@@ -84,7 +82,7 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
         this.getClient().leaveNotice(request, options).catch((e) => {
             logger.trace('Failed to send leaveNotice' + e)
         })
-    }*/
+    }
 
     getPeerId(): PeerID {
         return peerIdFromPeerDescriptor(this.getPeerDescriptor())

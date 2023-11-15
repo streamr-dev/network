@@ -19,9 +19,7 @@ export class FindRpcRemote extends Remote<IFindRpcClient> {
             reachableThrough: params.reachableThrough ?? [],
             routingPath: params.routingPath
         }
-        const options = this.formDhtRpcOptions({
-            timeout: 10000
-        })
+        const options = this.formDhtRpcOptions()
         try {
             const ack = await this.getClient().routeFindRequest(message, options)
             if (ack.error.length > 0) {

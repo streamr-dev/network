@@ -20,7 +20,7 @@ import {
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
 } from '../proto/packages/dht/protos/DhtRpc'
-import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
+import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { DhtNodeRpcClient, ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
@@ -247,7 +247,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             serviceId: this.config.serviceId,
             parallelism: this.config.joinParallelism,
             addContact: this.addNewContact.bind(this),
-            connectionManager: this.connectionManager
+            connectionManager: this.connectionManager,
+            rpcRequestTimeout: this.config.rpcRequestTimeout
         })
         this.router = new Router({
             rpcCommunicator: this.rpcCommunicator,
@@ -280,7 +281,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             dhtNodeEmitter: this,
             getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
                 return this.bucket!.closest(id, n)
-            }
+            },
+            rpcRequestTimeout: this.config.rpcRequestTimeout
         })
         this.bindRpcLocalMethods()
         if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
@@ -312,7 +314,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                     this.localPeerDescriptor!,
                     removedContact.getPeerDescriptor(),
                     toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
-                    this.config.serviceId
+                    this.config.serviceId,
+                    this.config.rpcRequestTimeout
                 )
             )
         })
@@ -321,8 +324,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         )
         this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => this.onTransportConnected(peerDescriptor))
 
-        this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, disonnectionType: DisconnectionType) => {
-            this.onTransportDisconnected(peerDescriptor, disonnectionType)
+        this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
+            this.onTransportDisconnected(peerDescriptor, gracefulLeave)
         })
 
         this.transport!.getAllConnectionPeerDescriptors().forEach((peer) => {
@@ -330,7 +333,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 this.localPeerDescriptor!,
                 peer,
                 toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
-                this.config.serviceId
+                this.config.serviceId,
+                this.config.rpcRequestTimeout
             )
             if (areEqualPeerDescriptors(peer, this.localPeerDescriptor!)) {
                 logger.error('own peerdescriptor added to connections in initKBucket')
@@ -356,7 +360,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.localPeerDescriptor!,
             peerDescriptor,
             toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
-            this.config.serviceId
+            this.config.serviceId,
+            this.config.rpcRequestTimeout
         )
         if (!this.connections.has(PeerID.fromValue(rpcRemote.id).toKey())) {
             this.connections.set(PeerID.fromValue(rpcRemote.id).toKey(), rpcRemote)
@@ -368,22 +373,22 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.emit('connected', peerDescriptor)
     }
 
-    private onTransportDisconnected(peerDescriptor: PeerDescriptor, dicsonnectionType: DisconnectionType): void {
+    private onTransportDisconnected(peerDescriptor: PeerDescriptor, gracefulLeave: boolean): void {
         logger.trace('disconnected: ' + keyFromPeerDescriptor(peerDescriptor))
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
         // only remove from bucket if we are on layer 0
         if (this.connectionManager) {
             this.bucket!.remove(peerDescriptor.kademliaId)
 
-            if (dicsonnectionType === 'OUTGOING_GRACEFUL_LEAVE' || dicsonnectionType === 'INCOMING_GRACEFUL_LEAVE') {
-                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
+            if (gracefulLeave === true) {
+                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
                 this.removeContact(peerDescriptor)
             } else {
-                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
+                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
             }
         }
 
-        this.emit('disconnected', peerDescriptor, dicsonnectionType)
+        this.emit('disconnected', peerDescriptor, gracefulLeave)
     }
 
     private bindRpcLocalMethods(): void {
@@ -553,7 +558,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 this.localPeerDescriptor!,
                 contact,
                 toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
-                this.config.serviceId
+                this.config.serviceId,
+                this.config.rpcRequestTimeout
             )
             if (!this.bucket!.get(contact.kademliaId) && !this.neighborList!.getContact(peerIdFromPeerDescriptor(contact))) {
                 this.neighborList!.addContact(rpcRemote)
@@ -698,7 +704,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.entryPointDisconnectTimeout) {
             clearTimeout(this.entryPointDisconnectTimeout)
         }
-        this.bucket!.toArray().forEach((rpcRemote: DhtNodeRpcRemote) => this.bucket!.remove(rpcRemote.id))
+        this.bucket!.toArray().forEach((rpcRemote: DhtNodeRpcRemote) => { 
+            rpcRemote.leaveNotice()
+            this.bucket!.remove(rpcRemote.id)
+        })
         this.bucket!.removeAllListeners()
         this.localDataStore.clear()
         this.neighborList!.stop()

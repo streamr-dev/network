@@ -1,4 +1,4 @@
-import { Remote } from '@streamr/dht'
+import { Remote, EXISTING_CONNECTION_TIMEOUT } from '@streamr/dht'
 import { EthereumAddress, Logger, hexToBinary } from '@streamr/utils'
 import { ProxyConnectionRequest, ProxyDirection } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -13,7 +13,7 @@ export class ProxyConnectionRpcRemote extends Remote<IProxyConnectionRpcClient> 
             userId: hexToBinary(userId)
         }
         const options = this.formDhtRpcOptions({
-            timeout: 5000
+            timeout: EXISTING_CONNECTION_TIMEOUT
         })
         try {
             const res = await this.getClient().requestConnection(request, options)

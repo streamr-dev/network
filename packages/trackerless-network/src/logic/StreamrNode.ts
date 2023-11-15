@@ -2,7 +2,8 @@ import {
     ConnectionLocker,
     DhtNode,
     ITransport,
-    PeerDescriptor
+    PeerDescriptor,
+    EXISTING_CONNECTION_TIMEOUT
 } from '@streamr/dht'
 import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import {
@@ -55,6 +56,7 @@ export interface StreamrNodeConfig {
     streamPartitionNumOfNeighbors?: number
     streamPartitionMinPropagationTargets?: number
     acceptProxyConnections?: boolean
+    rpcRequestTimeout?: number
 }
 
 // TODO rename class?
@@ -200,7 +202,7 @@ export class StreamrNode extends EventEmitter<Events> {
             peerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             entryPoints,
             numberOfNodesPerKBucket: 4,
-            rpcRequestTimeout: 5000,
+            rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
             dhtJoinTimeout: 20000
         })
     }
@@ -214,7 +216,8 @@ export class StreamrNode extends EventEmitter<Events> {
             localPeerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
             numOfTargetNeighbors: this.config.streamPartitionNumOfNeighbors,
-            acceptProxyConnections: this.config.acceptProxyConnections
+            acceptProxyConnections: this.config.acceptProxyConnections,
+            rpcRequestTimeout: this.config.rpcRequestTimeout
         })
     }
 
@@ -317,3 +320,10 @@ export class StreamrNode extends EventEmitter<Events> {
         process.exit()
     })
 })
+
+declare let window: any
+if (typeof window === 'object') {
+    window.addEventListener('unload', async () => {
+        await cleanUp()
+    })
+}
