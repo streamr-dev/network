@@ -354,13 +354,13 @@ export interface ConnectivityResponse {
  */
 export interface HandshakeRequest {
     /**
-     * @generated from protobuf field: bytes sourceId = 1;
+     * @generated from protobuf field: dht.PeerDescriptor sourcePeerDescriptor = 1;
      */
-    sourceId: Uint8Array;
+    sourcePeerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
+     * @generated from protobuf field: optional dht.PeerDescriptor targetPeerDescriptor = 2;
      */
-    peerDescriptor?: PeerDescriptor;
+    targetPeerDescriptor?: PeerDescriptor;
 }
 /**
  * @generated from protobuf message dht.HandshakeResponse
@@ -375,9 +375,9 @@ export interface HandshakeResponse {
      */
     peerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: optional string responseError = 3;
+     * @generated from protobuf field: optional dht.HandshakeError responseError = 3;
      */
-    responseError?: string;
+    responseError?: HandshakeError;
 }
 /**
  * @generated from protobuf message dht.Message
@@ -630,6 +630,19 @@ export enum RpcResponseError {
      * @generated from protobuf enum value: UNKNOWN_RPC_METHOD = 3;
      */
     UNKNOWN_RPC_METHOD = 3
+}
+/**
+ * @generated from protobuf enum dht.HandshakeError
+ */
+export enum HandshakeError {
+    /**
+     * @generated from protobuf enum value: DUPLICATE_CONNECTION = 0;
+     */
+    DUPLICATE_CONNECTION = 0,
+    /**
+     * @generated from protobuf enum value: INVALID_TARGET_PEER_DESCRIPTOR = 1;
+     */
+    INVALID_TARGET_PEER_DESCRIPTOR = 1
 }
 // Wraps all messages
 
@@ -978,8 +991,8 @@ export const ConnectivityResponse = new ConnectivityResponse$Type();
 class HandshakeRequest$Type extends MessageType$<HandshakeRequest> {
     constructor() {
         super("dht.HandshakeRequest", [
-            { no: 1, name: "sourceId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "targetPeerDescriptor", kind: "message", T: () => PeerDescriptor }
         ]);
     }
 }
@@ -993,7 +1006,7 @@ class HandshakeResponse$Type extends MessageType$<HandshakeResponse> {
         super("dht.HandshakeResponse", [
             { no: 1, name: "sourceId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "responseError", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 3, name: "responseError", kind: "enum", opt: true, T: () => ["dht.HandshakeError", HandshakeError] }
         ]);
     }
 }

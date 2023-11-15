@@ -253,7 +253,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
             const ongoingConnectReguest = this.ongoingConnectRequests.get(peerId.toKey())!
             ongoingConnectReguest.attachImplementation(serverWebsocket)
             if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
-                ongoingConnectReguest.rejectHandshake(HandshakeError.INVALID_PRESUMED_PEER_DESCRIPTOR)
+                ongoingConnectReguest.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
             } else {
                 ongoingConnectReguest.acceptHandshake()
                 this.ongoingConnectRequests.delete(peerId.toKey())
@@ -270,7 +270,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
             managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
 
             if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
-                managedConnection.rejectHandshake(HandshakeError.INVALID_PRESUMED_PEER_DESCRIPTOR)
+                managedConnection.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
             } else if (this.onIncomingConnection(managedConnection)) {
                 managedConnection.acceptHandshake()
             } else {

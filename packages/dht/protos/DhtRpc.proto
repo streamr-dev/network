@@ -208,7 +208,7 @@ message HandshakeResponse {
 
 enum HandshakeError {
   DUPLICATE_CONNECTION = 0;
-  INVALID_PRESUMED_PEER_DESCRIPTOR = 1;
+  INVALID_TARGET_PEER_DESCRIPTOR = 1;
 }
 
 // Wraps all messages

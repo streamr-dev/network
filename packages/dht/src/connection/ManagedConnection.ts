@@ -53,7 +53,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         connectionType: ConnectionType,
         outgoingConnection?: IConnection,
         incomingConnection?: IConnection,
-        presumedRemotePeerDescriptor?: PeerDescriptor,
+        targetPeerDescriptor?: PeerDescriptor
     ) {
         super()
 
@@ -64,7 +64,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.incomingConnection = incomingConnection
         this.connectionType = connectionType
         this.connectionId = new ConnectionID()
-    
+
         this.onDisconnected = this.onDisconnected.bind(this)
 
         logger.trace('creating ManagedConnection of type: ' + connectionType)
@@ -76,7 +76,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.handshaker = new Handshaker(this.localPeerDescriptor, outgoingConnection)
 
             this.handshaker.once('handshakeFailed', (errorMessage) => {
-                if (errorMessage === HandshakeError.INVALID_PRESUMED_PEER_DESCRIPTOR) {
+                if (errorMessage === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR) {
                     this.destroy()
                 } else {
                     logger.trace(keyOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' handshakeFailed: ' + errorMessage)
@@ -93,7 +93,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             })
 
             outgoingConnection.once('connected', () => {
-                this.handshaker!.sendHandshakeRequest(presumedRemotePeerDescriptor)
+                this.handshaker!.sendHandshakeRequest(targetPeerDescriptor)
                 this.emit('connected')
             })
             outgoingConnection.once('disconnected', this.onDisconnected)
