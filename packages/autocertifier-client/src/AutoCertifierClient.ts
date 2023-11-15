@@ -161,7 +161,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         }
         // TODO: use async fs methods?
         const oldSubdomain = JSON.parse(fs.readFileSync(this.configFile, 'utf8')) as CertifiedSubdomain
-        logger.info('updateSubdomainIp() called for ' + JSON.stringify(oldSubdomain))
+        logger.info('updateSubdomainIp() called for ' + oldSubdomain.fqdn)
         const sessionId = await this.restClient.createSession()
         this.ongoingSessions.add(sessionId)
         await this.restClient.updateSubdomainIp(
