@@ -41,13 +41,7 @@ export class SimulatorConnector {
 
         const connection = new SimulatorConnection(this.localPeerDescriptor, targetPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, this.simulator)
 
-        const managedConnection = new ManagedConnection(
-            this.localPeerDescriptor,
-            ConnectionType.SIMULATOR_CLIENT,
-            connection,
-            undefined,
-            targetPeerDescriptor
-        )
+        const managedConnection = new ManagedConnection(this.localPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, connection, undefined)
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
         this.connectingConnections.set(peerKey, managedConnection)
