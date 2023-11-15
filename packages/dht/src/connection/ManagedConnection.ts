@@ -75,11 +75,11 @@ export class ManagedConnection extends EventEmitter<Events> {
         if (outgoingConnection) {
             this.handshaker = new Handshaker(this.localPeerDescriptor, outgoingConnection)
 
-            this.handshaker.once('handshakeFailed', (errorMessage) => {
-                if (errorMessage === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR) {
+            this.handshaker.once('handshakeFailed', (error) => {
+                if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR) {
                     this.destroy()
                 } else {
-                    logger.trace(keyOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' handshakeFailed: ' + errorMessage)
+                    logger.trace(keyOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' handshakeFailed: ' + error)
                     this.emit('handshakeFailed')
                 }
             })
@@ -323,8 +323,8 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.onHandshakeCompleted(this.remotePeerDescriptor!)
     }
 
-    public rejectHandshake(errorMessage: HandshakeError): void {
-        this.handshaker!.sendHandshakeResponse(errorMessage)
+    public rejectHandshake(error: HandshakeError): void {
+        this.handshaker!.sendHandshakeResponse(error)
     }
 
     private doDisconnect(disconnectionType: DisconnectionType) {

@@ -7,8 +7,8 @@ import { IConnection } from './IConnection'
 const logger = new Logger(module)
 
 interface HandshakerEvents {
-    handshakeRequest: (sourcePeerDescriptor: PeerDescriptor, targetDescriptor?: PeerDescriptor) => void
-    handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
+    handshakeRequest: (source: PeerDescriptor, target?: PeerDescriptor) => void
+    handshakeCompleted: (remote: PeerDescriptor) => void
     handshakeFailed: (error?: HandshakeError) => void
 }
 
