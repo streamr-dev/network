@@ -22,6 +22,7 @@ interface PeerDiscoveryConfig {
     joinTimeout: number
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     connectionManager?: ConnectionManager
+    rpcRequestTimeout?: number
 }
 
 const logger = new Logger(module)
