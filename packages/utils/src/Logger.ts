@@ -73,7 +73,7 @@ function wrappedMethodCall(
 }
 
 export class Logger {
-    static NAME_LENGTH = 20
+    static NAME_LENGTH = 25
 
     private readonly logger: pino.Logger
     fatal: (msg: string, metadata?: Record<string, unknown>) => void
