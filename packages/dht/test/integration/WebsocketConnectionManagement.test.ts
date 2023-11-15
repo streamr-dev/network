@@ -142,5 +142,4 @@ describe('Websocket Connection Management', () => {
             .rejects
             .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
     })
-
 })
