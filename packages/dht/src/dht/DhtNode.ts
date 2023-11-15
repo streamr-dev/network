@@ -20,7 +20,7 @@ import {
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
 } from '../proto/packages/dht/protos/DhtRpc'
-import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
+import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { DhtNodeRpcClient, ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
@@ -321,8 +321,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         )
         this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => this.onTransportConnected(peerDescriptor))
 
-        this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, disonnectionType: DisconnectionType) => {
-            this.onTransportDisconnected(peerDescriptor, disonnectionType)
+        this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
+            this.onTransportDisconnected(peerDescriptor, gracefulLeave)
         })
 
         this.transport!.getAllConnectionPeerDescriptors().forEach((peer) => {
@@ -368,22 +368,22 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.emit('connected', peerDescriptor)
     }
 
-    private onTransportDisconnected(peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType): void {
+    private onTransportDisconnected(peerDescriptor: PeerDescriptor, gracefulLeave: boolean): void {
         logger.trace('disconnected: ' + keyFromPeerDescriptor(peerDescriptor))
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
         // only remove from bucket if we are on layer 0
         if (this.connectionManager) {
             this.bucket!.remove(peerDescriptor.kademliaId)
 
-            if (disconnectionType === 'GRACEFUL_LEAVE') {
-                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with type ' + disconnectionType)
+            if (gracefulLeave === true) {
+                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
                 this.removeContact(peerDescriptor)
             } else {
-                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with type ' + disconnectionType)
+                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
             }
         }
 
-        this.emit('disconnected', peerDescriptor, disconnectionType)
+        this.emit('disconnected', peerDescriptor, gracefulLeave)
     }
 
     private bindRpcLocalMethods(): void {

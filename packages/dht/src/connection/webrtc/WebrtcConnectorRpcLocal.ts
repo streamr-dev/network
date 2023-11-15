@@ -293,7 +293,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         this.stopped = true
 
         const attempts = Array.from(this.ongoingConnectAttempts.values())
-        await Promise.allSettled(attempts.map((conn) => conn.close('OTHER')))
+        await Promise.allSettled(attempts.map((conn) => conn.close(false)))
 
         this.rpcCommunicator.destroy()
     }
