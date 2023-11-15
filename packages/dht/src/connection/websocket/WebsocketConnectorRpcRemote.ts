@@ -30,12 +30,6 @@ export class WebsocketConnectorRpcRemote extends Remote<IWebsocketConnectorRpcCl
         const options = this.formDhtRpcOptions()
         try {
             const res = await this.getClient().requestConnection(request, options)
-            
-            if (res.reason) {
-                logger.debug('WebsocketConnectionRequest Rejected', {
-                    stack: new Err.WebsocketConnectionRequestRejected(res.reason).stack
-                })
-            }
             return res.accepted
         } catch (err) {
             logger.debug(new Err.WebsocketConnectionRequestRejected('WebsocketConnectionRequest rejected', err).stack!)

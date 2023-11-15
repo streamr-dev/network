@@ -77,7 +77,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
                 logger.trace(`Sending data with size ${data.byteLength}`)
                 this.socket?.send(data.buffer)
             } else {
-                logger.warn('Tried to send data on a non-open connection')
+                logger.debug('Tried to send data on a non-open connection')
             }
         } else {
             logger.debug('Tried to send() on stopped connection')

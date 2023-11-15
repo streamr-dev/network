@@ -130,7 +130,6 @@ export class Router implements IRouter {
         }
         logger.trace(`Routing message ${routedMessage.requestId} from ${keyFromPeerDescriptor(routedMessage.sourcePeer!)} `
             + `to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}`)
-        routedMessage.routingPath.push(this.localPeerDescriptor)
         const session = this.createRoutingSession(routedMessage, mode)
         const contacts = session.findMoreContacts()
         if (contacts.length > 0) {

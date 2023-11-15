@@ -42,8 +42,8 @@
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@types/lodash": "^4.14.200",
-    "@types/uuid": "^9.0.6",
+    "@types/lodash": "^4.14.201",
+    "@types/uuid": "^9.0.7",
     "@types/yallist": "^4.0.1",
     "commander": "^11.1.0",
     "expect": "^29.6.2",

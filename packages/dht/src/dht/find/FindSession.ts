@@ -1,9 +1,6 @@
-import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DataEntry, PeerDescriptor, FindResponse } from '../../proto/packages/dht/protos/DhtRpc'
-import { IFindSessionRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
-import { Empty } from '../../proto/google/protobuf/empty'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Contact } from '../contact/Contact'
@@ -11,12 +8,11 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { FindResult } from './Finder'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
+import { FindSessionRpcLocal } from './FindSessionRpcLocal'
 
 export interface FindSessionEvents {
     findCompleted: (results: PeerDescriptor[]) => void
 }
-
-const logger = new Logger(module)
 
 export interface FindSessionConfig {
     serviceId: ServiceID
@@ -27,7 +23,7 @@ export interface FindSessionConfig {
     fetchData: boolean
 }
 
-export class FindSession extends EventEmitter<FindSessionEvents> implements IFindSessionRpc {
+export class FindSession extends EventEmitter<FindSessionEvents> {
     private readonly serviceId: ServiceID
     private readonly transport: ITransport
     private readonly kademliaIdToFind: Uint8Array
@@ -55,8 +51,17 @@ export class FindSession extends EventEmitter<FindSessionEvents> implements IFin
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
             rpcRequestTimeout: 15000
         })
+        this.registerLocalRpcMethods()
+    }
+
+    private registerLocalRpcMethods() {
+        const rpcLocal = new FindSessionRpcLocal({
+            doSendFindResponse: (routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound?: boolean) => {
+                this.doSendFindResponse(routingPath, nodes, dataEntries, noCloserNodesFound)
+            }
+        })
         this.rpcCommunicator.registerRpcNotification(FindResponse, 'sendFindResponse',
-            (req: FindResponse) => this.sendFindResponse(req))
+            (req: FindResponse) => rpcLocal.sendFindResponse(req))
     }
 
     private isFindCompleted(): boolean {
@@ -155,12 +160,6 @@ export class FindSession extends EventEmitter<FindSessionEvents> implements IFin
                 }, 4000)
             }
         }
-    }
-
-    public async sendFindResponse(report: FindResponse): Promise<Empty> {
-        logger.trace('FindResponse arrived: ' + JSON.stringify(report))
-        this.doSendFindResponse(report.routingPath, report.closestConnectedPeers, report.dataEntries, report.noCloserNodesFound)
-        return {}
     }
 
     public getResults = (): FindResult => ({

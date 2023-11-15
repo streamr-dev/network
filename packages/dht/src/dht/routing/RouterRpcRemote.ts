@@ -8,6 +8,7 @@ import {
 import { IRouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Remote } from '../contact/Remote'
 import { Logger } from '@streamr/utils'
+import { getPreviousPeer } from './getPreviousPeer'
 
 const logger = new Logger(module)
 
@@ -17,7 +18,6 @@ export class RouterRpcRemote extends Remote<IRouterRpcClient> {
         const message: RouteMessageWrapper = {
             destinationPeer: params.destinationPeer,
             sourcePeer: params.sourcePeer,
-            previousPeer: params.previousPeer,
             message: params.message,
             requestId: params.requestId ?? v4(),
             reachableThrough: params.reachableThrough ?? [],
@@ -36,8 +36,10 @@ export class RouterRpcRemote extends Remote<IRouterRpcClient> {
                 return false
             }
         } catch (err) {
-            const fromNode = params.previousPeer ?
-                peerIdFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
+            const previousPeer = getPreviousPeer(params)
+            const fromNode = previousPeer
+                ? peerIdFromPeerDescriptor(previousPeer)
+                : keyFromPeerDescriptor(params.sourcePeer!)
             logger.trace(`Failed to send routeMessage from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
             return false
         }
@@ -48,7 +50,6 @@ export class RouterRpcRemote extends Remote<IRouterRpcClient> {
         const message: RouteMessageWrapper = {
             destinationPeer: params.destinationPeer,
             sourcePeer: params.sourcePeer,
-            previousPeer: params.previousPeer,
             message: params.message,
             requestId: params.requestId ?? v4(),
             reachableThrough: params.reachableThrough ?? [],
@@ -61,9 +62,10 @@ export class RouterRpcRemote extends Remote<IRouterRpcClient> {
                 return false
             }
         } catch (err) {
-            const fromNode = params.previousPeer ?
-                keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
-
+            const previousPeer = getPreviousPeer(params)
+            const fromNode = previousPeer
+                ? keyFromPeerDescriptor(previousPeer)
+                : keyFromPeerDescriptor(params.sourcePeer!)
             logger.trace(
                 `Failed to send forwardMessage from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`
             )
