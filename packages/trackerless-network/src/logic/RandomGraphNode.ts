@@ -57,6 +57,7 @@ export interface StrictRandomGraphNodeConfig {
     inspector: IInspector
     temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
+    rpcRequestTimeout?: number
 }
 
 const logger = new Logger(module)
@@ -190,7 +191,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.localPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
+                this.config.rpcRequestTimeout
             )
         ))
         for (const descriptor of this.config.layer1Node.getClosestContacts()) {
@@ -202,7 +204,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
                     this.config.localPeerDescriptor,
                     descriptor,
                     this.config.streamPartId,
-                    toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                    toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
+                    this.config.rpcRequestTimeout
+
                 )
             )
         }
@@ -217,7 +221,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.localPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
+                this.config.rpcRequestTimeout
             )
         ))
         if (this.config.targetNeighbors.size() < this.config.numOfTargetNeighbors) {
@@ -235,7 +240,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.localPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
+                this.config.rpcRequestTimeout
             )
         ))
     }

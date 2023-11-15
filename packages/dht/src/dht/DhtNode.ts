@@ -260,7 +260,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             joinTimeout: this.config.dhtJoinTimeout,
             serviceId: this.config.serviceId,
             parallelism: this.config.joinParallelism,
-            peerManager: this.peerManager!
+            peerManager: this.peerManager!,
         })
         this.router = new Router({
             rpcCommunicator: this.rpcCommunicator!,
@@ -297,7 +297,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             dhtNodeEmitter: this,
             getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
                 return this.peerManager!.getClosestPeersTo(id, n)
-            }
+            },
+            rpcRequestTimeout: this.config.rpcRequestTimeout
         })
         this.bindRpcLocalMethods()
         if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0
@@ -552,7 +553,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.localPeerDescriptor!,
             peerDescriptor,
             toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
-            this.config.serviceId
+            this.config.serviceId,
+            this.config.rpcRequestTimeout
         )
     }
 
