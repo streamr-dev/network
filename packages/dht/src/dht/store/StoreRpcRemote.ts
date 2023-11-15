@@ -1,4 +1,4 @@
-import { Remote } from '../contact/Remote'
+import { EXISTING_CONNECTION_TIMEOUT, Remote } from '../contact/Remote'
 import { IStoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { 
     DeleteDataRequest,
@@ -38,7 +38,7 @@ export class StoreRpcRemote extends Remote<IStoreRpcClient> {
 
     async migrateData(request: MigrateDataRequest, doNotConnect: boolean = false): Promise<MigrateDataResponse> {
         const options = this.formDhtRpcOptions({
-            timeout: 5000,
+            timeout: EXISTING_CONNECTION_TIMEOUT,
             doNotConnect
         })
         return this.getClient().migrateData(request, options)

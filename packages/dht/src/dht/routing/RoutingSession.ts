@@ -12,6 +12,7 @@ import { FindRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Contact } from '../contact/Contact'
 import { FindRpcRemote } from './FindRpcRemote'
+import { EXISTING_CONNECTION_TIMEOUT } from '../contact/Remote'
 
 const logger = new Logger(module)
 
@@ -29,14 +30,14 @@ class RemoteContact extends Contact {
             peer.getPeerDescriptor(),
             peer.getServiceId(),
             toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport())),
-            5000
+            EXISTING_CONNECTION_TIMEOUT
         )
         this.findRpcRemote = new FindRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
             toProtoRpcClient(new FindRpcClient(rpcCommunicator.getRpcClientTransport())),
-            5000
+            EXISTING_CONNECTION_TIMEOUT
         )
     }
 
