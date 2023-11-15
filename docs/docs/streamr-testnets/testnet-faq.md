@@ -3,4 +3,230 @@ sidebar_position: 2
 ---
 
 # Testnet FAQs
-Coming soon!
+## General
+#### What are the differences between the Brubeck network and the 1.0 network?
+In the old Brubeck network, people would cram multiple Streamr nodes into the cheapest possible VMs to optimize earnings vs. costs, but that only made sense because the nodes weren't doing much in terms of actual work. Now the nodes will be doing actual work by relaying data in the streams that the node Operator stakes on, and this has a few consequences:
+- One node per VM is now the only pattern that makes sense really - there's nothing to gain (but redundancy to lose) by running multiple nodes on the same VM
+- The VMs should have a bit more punch to be able to handle the data traffic that the Operator signs up for. Whereas in Brubeck you could run on tiny VMs, now it's better to run 'medium' size VMs with, say, 8 GB of RAM and 2-4 cores.
+- There's no more artificial staking cap like you could stake only 20k DATA per node in Brubeck. So in the big picture, people will be running less nodes, but bigger nodes.
+- The Operator can get slashed if other nodes notice that a particular Operator's nodes are not online or are not doing the work. There's built-in redundancy and load balancing which defends against slashing, but it will get the Operator slashed if for example all of their nodes go down for a longish while such as 30-60 minutes.
+- Somewhat related to the above point, the nodes should have a public IP address for the most reliable connectivity, so that other nodes can easily connect to them to verify they are online.
+
+#### Are there any worries that current node operators that have > 5-10 nodes may amalgamate them and thereby provide a little less strength to the network as a whole? 
+From the 'network strength' perspective (interpreted to mean from the decentralization and security perspective), it might actually be a net positive change. Example: If I had a stream and wanted to incentivize node operators to relay and secure it, for my money I'd rather get 100 independent operators, with 2 nodes each working on my stream (for a total of 200 nodes), rather than just 200 whatever nodes, out of which 100% might be run by the same person in the same data center, which wouldn't offer much improvement in terms of decentralization or robustness. 
+
+So, it's not wrong to think that more nodes in a stream is better, but it's an oversimplification that completely ignores any quality aspect. The goal in 1.0 is to give sponsors what they pay for, which is essentially robustness and security for their stream, and those are achieved through a sufficient amount of decentralized nodes doing the work.
+
+## Technical
+#### What are the hardware requirements for running nodes?
+The main resources demanded of Streamr nodes are bandwidth and CPU. Memory usage is moderate and there's no storage requirement since the node doesn't write anything to disk. Generally speaking, a medium size VM with 8GB of RAM, 3-4 virtual cores, and ideally 1Gbps bandwidth is a safe choice, though you may get by with much lower specs as well. An idle Raspberry Pi may also be used as a Streamr node. 
+
+These requirements are approximate and they depend on the demands of each stream Sponsorship that the Operator chooses to join. Sponsorship earnings stack, and so do the requirements on the node to service each sponsored stream.
+
+#### Should I run multiple nodes?
+Running a fleet of nodes with a redundancy factor greater than one is recommended incase one of your nodes has an outage while servicing a stream. Ideally each node would run on separate physical hardware or in a separate geographical location. It isn’t useful to run multiple nodes on the same device or virtual machine (VM).
+
+Nodes will be doing real work on real streams, and the amount one can stake/earn is not directly limited by the number of nodes. Still of course, more nodes can do more work and that potentially allows you to earn more, so the relationship is more indirect.
+
+Learn more about [node redundancy](../streamr-network/network-roles/operators#node-redundancy-factor).
+
+#### Failed to publish to stream... Cause: You don't have permission to publish to this (coordination) stream
+If you see an error like this:
+`WARN [2023-10-31T10:19:06.979] (announceNodeToStream): Unable to publish to coordination stream`
+Then it is likely that you have not added your [node address to your Operator](../guides/become-an-operator#step-3-pair-your-node-with-your-operator-contract). Complete this step and restart your node.
+
+#### My node appears to not be running and/or are not reachable on the Streamr Hub
+Firstly, it's best to check on your node using the Chrome browser. Other browsers, such as Firefox, are known to have connectivity issues.
+
+The Operator status checks involve a peer-to-peer connection between your browser and your node. This means that a connection needs to be formed from the network that you're browsing in, to the network that your node is running on. This means that if you are browsing from inside a heavily controlled public WiFi hotspot for example, then it may show as a problem with your node, when in fact it may be a problem with the network you are in.
+
+Next you should check the logs of your node? Are there any suspicious logs? Warnings about **WebRTC private address probing** are normal and expected. Warnings such as **Failed to publish to stream** indicate a problem with the configuration of your node- follow the steps closely inside the [Become an Operator guide](../guides/become-an-operator.md)
+
+If your node is running but is unreachable then there may be a WebSocket port connectivity issue. Ensure that you have opened the port, as described in the how to [run a stream node guide](../guides/how-to-run-streamr-node#websocket-connectivity). There are various online resources available for port forwarding on the Internet.
+
+#### Is there a way to monitor performance of my nodes?
+At the moment we're leaving this opportunity available for the community to create tooling to help Operators manage their fleet of nodes.
+
+You will have to monitor that your nodes aren't exhausted by the work you sign up for (by staking on sponsorships)
+It's quite straight forward to build tooling for the day-to-day tasks of node operators, and while the core Streamr devs will help cover the basics, we warmly welcome people in the community to help create useful tooling!
+
+#### Can I perform maintenance on my nodes (leading to downtime) without being slashed?
+Node operators are able to configure a Redundancy Factor parameter, which controls how many of your nodes are doing overlapping work. For example if you run 5 nodes and set the Redundancy Factor to 2, then each item of work (relaying a stream-partition) will be done by two out of of those 5 nodes. Then, even if one node fails, you'll still be doing the promised work with the one healthy node - plus within a minute or so, one of the previously uninvolved nodes will automatically pick up the task and now you will again have 2 (out of 4) nodes doing the work for redundancy.
+
+#### What ports need to be opened?
+TCP traffic on port `32200`. 
+
+Usage of this port is new in 1.0. Operator nodes doing work for incentives need to have this port open. Other ports are open only if particular plugins used for data integration (mqtt etc.) are enabled.
+
+#### Is there a way to specify a port, or port range, instead of using the default port 32200?
+Yes. Add this `controlLayer` section to your node config and change the port to something in your acceptable range. 
+
+For example,
+```json
+"client": { 
+    "network": { 
+        "controlLayer": { 
+            "websocketPortRange": { 
+                "min": 16100, 
+                "max": 16100 
+            } 
+        } 
+    } 
+}
+```
+
+#### Will there be a GUI to "control" the node from a "distance" or do i have to do "things" directly on the node? I run a Raspberry Pi (rpi3b+) without a GUI that I control with putty.
+You'll need to update the node's config file at the beginning. That's the main thing. Then, keep it healthy and connectable. 
+
+The Streamr Hub is the UI provided by Streamr that will allow you to make transactions that "control" your node. For example, you'll use the Hub to make transactions that join you to stream Sponsorships. Your node will be watching the blockchain and responding to your transaction by joining that stream topology and it will start relaying data on its own.
+
+#### How many nodes can I run from a single IP address?
+As many as you want. There’s no restriction.
+
+#### Are Sponsorships for individual stream partitions?
+No, the sponsoring is for ALL partitions in the stream. The partitions get load balanced to your fleet of operator nodes with the chosen redundancy factor. So for example with a redundancy factor of 2, a particular partition would be picked up by two different nodes in the fleet.
+
+#### Can I run multiple nodes with the same private key?
+Yes. 
+
+#### Can we share private key for 25 nodes? In this case will the Operator recognize 1 node or 25 nodes?
+Node addresses do not equal nodes. In other words, yes, you can share private keys among all your nodes.
+
+#### Is there any benefit to having two or more node addresses added to the Operator and managing MATIC balance on multiple wallets instead of having a single node address for all nodes in my fleet?
+It is perhaps easier to debug if something goes wrong but there's no other benefits to having multiple addresses for each of your fleet nodes.
+
+#### As an Operator, can I generate the node signing key in memory?
+No. The node signing key must be known and persist so that it can be paired with the Operator Contract.
+
+#### Which address do I need to fund?
+You need to fund your node address(es) with a small amount of `MATIC` tokens.
+
+### Troubleshooting common issues
+#### Issue:
+I’m receiving the following warning message. 
+
+`WARN [2023-11-10T13:20:25.166] (announceNodeToStream): Unable to publish to coordination stream {"streamId":"0x8862ad44a02def6ed8c7325d9e973d0b6747be46/operator/coordination","reason":"Failed to publish to stream 0x8862ad44a02def6ed8c7325d9e973d0b6747be46/operator/coordination. Cause: You don't have permission to publish to this stream. Using address: 0x7d1a19ddd33da670e2c89b227de323e0e52241c7"}`
+
+**Explanation:**
+Node has not been added to Operator node addresses under the operator contract on the hub. 
+
+**Solution:**
+Add given nodes public key to operator node addresses.
+
+#### Issue:
+I’m receiving the following warning message.
+
+```JSON
+INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version 100.0.0-pretestnet.3
+Error: call revert exception [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="metadata()", data="0x", errorArgs=null, errorName=null, errorSignature=null, reason=null, code=CALL_EXCEPTION, version=abi/5.7.0)
+```
+
+**Explanation:**
+Operator address given in broker configuration is not an actual operator address.
+
+**Solution:**
+Recheck operator address from the hub & reconfigure your node to use the correct operator address.
+
+**Issue:**
+I’m receiving the following warning message.
+
+```JSON
+WARN [2023-11-10T10:01:42.418] (NodeWebRtcConnection): Failed to set remote descriptor for peer 0a3849076d8a43b19b876fbc6eba935f
+WARN [2023-11-10T10:01:42.421] (NodeWebRtcConnection): Failed to set remote candidate for peer 0a3849076d8a43b19b876fbc6eba935f
+WARN [2023-11-10T10:01:42.622] (NodeWebRtcConnection): Failed to set remote candidate for peer 0a3849076d8a43b19b876fbc6eba935f
+WARN [2023-11-10T10:01:42.867] (NodeWebRtcConnection): Failed to set remote candidate for peer 0a3849076d8a43b19b876fbc6eba935f
+```
+
+**Explanation:**
+Connectivity issue. 
+
+**Solution:**
+Port 32200 or configured port for streamr-broker is not open. Check your firewall/docker/router configuration that the port 32200 is open and/or traffic is forwarded through this port.
+
+#### Issue: 
+I’m receiving the following warning message.
+
+```JSON
+<WARN [2023-11-12T09:20:41.677] (OperatorPlugin      ): Encountered error
+    err: {
+      "type": "TimeoutError",
+      "message": "The Graph did not synchronize to block 42303755 (timed out after 60000 ms)",
+      "stack":
+          Error: The Graph did not synchronize to block 42303755 (timed out after 60000 ms)
+              at Timeout.<anonymous> (C:\Users\jarno\AppData\Roaming\nvm\v18.16.0\node_modules\streamr-broker\node_modules\@streamr\utils\dist\src\withTimeout.js:20:24)
+              at listOnTimeout (node:internal/timers:569:17)
+              at process.processTimers (node:internal/timers:512:7)
+      "code": "TimeoutError"
+    }
+```
+
+**Explanation:**
+Could not synchronize with thegraph blockchain indexing service.
+
+**Solution:**
+This is likely to only be an issue on the pretestnet environment where The Graph support is limited. Check that your internet connection is active and try to restart the Streamr node. If this doesn’t help, try again in a while, The Graph service may be updating.
+
+## Staking on, and earning from Sponsorships
+#### Will my rewards automatically be sent to my wallet?
+No, you will need to periodically check and claim your uncollected earnings from the Operator(s) that you have staked/delegated on.
+
+#### Does staking mean holding tokens on a beneficiary address?
+You'll be staking into a smart contract rather than holding tokens on a beneficiary address. The Operator Contract is synonymous to your beneficiary address.
+
+#### Will I automatically be unstaked from Sponsorships once they run out of tokens?
+No. You must manually unstake your Operator.
+
+#### How is Operator funding (self-delegating) and not collecting earnings a bad thing for others?
+Anyone getting to 'buy' Operator shares too cheap harms the other parties involved. 
+Here's an example where the Operator self-delegates while there's a relatively large amount of pending earnings:
+
+**Operator self-delegates with pending earnings**:
+- Operator self-delegated (funds) 10k DATA (Operator on-chain value: 10k, 100% owned by Operator)
+- Delegator delegates 10k DATA to Operator (Operator on-chain value: 20k, 50% owned by Operator, 50% by Delegator)
+- Operator works on some Sponsorship(s) for a while, say now there's 1k DATA in uncollected earnings (Operator on-chain value: 20k, "realtime" value: 21k)
+- The value of Operator's 50% share is 10.5k, and the Delegator's 50% is also worth 10.5k, including a projected share of the uncollected earnings. All is still well.
+- Now the Operator self-delegates 20k more (Operator on-chain value: 40k, 75% owned by Operator, 25% by Delegator, and "realtime" value 41k)
+- Now the Operator collects the earnings (Operator on-chain value 41k, 75% owned by Operator, 25% by Delegator, no more pending earnings)
+- The value of the Operator's position is now 30.75k and the Delegator's is 10.25k.
+
+So by (self-)delegating while there were lots of uncollected earnings, the Operator was able to grab a larger share of the earnings and the Delegator's value dropped from a projected 10.5k to a realized 10.25k.
+
+So as you can see, if the Operator valuation is not correct, it can lead to money-grabbing opportunities either for the Operator or Delegators. Someone gets to "trade with yesterday's prices", and since it's zero-sum, the other side loses. That's why there is a penalty for the Operator if they don't maintain it properly.
+
+*Note this example was simplified and did not include an Operator's cut or protocol fee.
+
+For more, see [Operator maintenance](../streamr-network/network-roles/operators#operator-maintenance).
+
+#### As an Operator can I always withdraw tokens from my Operator?
+It depends. If you're staked on Sponsorships with minimum stake periods then you'll need to wait for those periods to elapse or pay the 5k DATA early withdrawal penalty. Once unstaked from all Sponsorships and if there is no undelegation que to fulfill then you will be able to withdraw tokens from your Operator.
+
+#### Why are some Sponsorships inactive/not-paying?
+Sponsorships each have their own starting criteria, for example, all Sponsorships require at least 1 Operator to join them before they can start to pay out. If there are zero Operators in the Sponsorship then the Sponsorship is inactive.
+
+#### What is the minimum staking/delegation amount?
+The global minimum is set to 5k DATA. This value could be changed in the future by governance vote.
+
+## Delegation
+#### As a Delegator can I always withdraw tokens from the Operators that I have delegated to?
+Eventually, yes. If there's not enough available balance on the Operator you have delegated on then your withdrawal gets entered into the delegation que. When the Operator has an available balance, your tokens will be withdrawn. This will take at maximum 30 days and will happen automatically with no further action required.
+
+## Slashing
+#### How and when does slashing occurs? When exactly will operators be slashed?
+There are two kinds of slashing events that Operators need to pay attention to. These are "Normal slashing" and "False flag" slashing. The short answer is that normal slashing occurs when nodes are caught being offline or unreachable when they should be online and doing work. It's a similar story for false flag voting, though the penalties are smaller. 
+
+Operator's nodes contain an inspection routine which connects to a target Operator's nodes and checks whether they are relaying data in a given stream. These inspections are validating if the other nodes are doing the promised work. 
+
+Operators will regularly spot check each other with this mechanism. If the inspection fails, Operators raise a flag to the Sponsorship smart contract. A number of random other Operators are selected as reviewers. The reviewers then also inspect the flagged operator for the flagged stream(-partition), and based on their findings they vote via the smart contract on whether to kick (flag was valid) or not to kick (flag was invalid) the flagged operator. If the majority vote is to kick, the flagged operator is slashed. This is described on the Hub as a "Normal slashing" event.
+
+The spot checks are random so there's no hard-and-fast rule such as "be offline for two hours and get slashed". It rather depends on whether you're caught being offline or not. After flagging, there is a review period of one hour. During this hour, the nodes selected as reviewers will make up their minds about the flagged operator, who could come back online during that time. The longer the downtime the more likely it is that the operator will get flagged and slashed.
+
+#### How do I avoid getting slashed?
+Running reliable and reachable nodes with good redundancy is the best defense against slashing.
+
+Most operators would set a redundancy Factor parameter to a number more than 1, which means that you have multiple nodes doing the same work. You'd only get slashed if all of them are offline when you're being inspected by the majority of flag reviewers. A higher redundancy factor therefore protects from slashing.
+
+#### What happens to the slashed tokens?
+Slashed tokens are moved to the project treasury controlled by Streamr DAO governance. 
+
+#### What happens when the Sponsorship is exhausted of tokens, am I still on the hook for slashing penalties until I leave the Sponsorship?
+Yes. If you are staked on the Sponsorship, you must do the work (contribute to the stream) and you're subject to slashing if you don't. Sponsorships that you have joined can get topped up so they may activate to start paying out once a sponsor funds the Sponsorship. You must unstake to remove this staking risk. Unstaking does not happen automatically.

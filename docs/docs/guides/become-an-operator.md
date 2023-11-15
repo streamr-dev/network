@@ -10,6 +10,10 @@ sidebar_position: 5
 - Stake `DATA` tokens on your Operator and give your nodes some `MATIC`
 - Join Sponsorships through your Operator that will earn you DATA tokens.
 
+:::info Important
+- There are known connectivity issues using browsers such as Firefox. For example, your node connectivity status may report incorrectly. We strongly recommend for you to use the Chrome desktop browser.
+:::
+
 ## Migrating from Brubeck
 If you’ve been running a Streamr node in the past you might be familiar with a two step process– run some software and stake some tokens, i.e. a software step and a blockchain step. Behind the scenes, the Streamr core team would validate user’s stake and transfer tokens to node runner wallets at the end of each month. This has worked, but it's been highly centralized. With the introduction of stream Sponsorships, Operators, Sponsors and Delegators we now have everything we need for a peer to peer decentralized and market based incentivization on Streamr. The most important role is the Operator, so let's learn how to become one.
 
@@ -17,7 +21,7 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 - You can run ~~up to 5 nodes per IP address~~ any number of nodes from the same IP address, although one node per machine is recommended
 - Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships at any time
 - You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
-- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `100.0.0-pretestnet.2`. The `latest` tag still points to the previous milestone (Brubeck) software.
+- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `100.0.0-pretestnet.3`. The `latest` tag still points to the previous milestone (Brubeck) software.
 - There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
 :::
 
@@ -92,7 +96,7 @@ The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your O
 You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 ## Mumbai testing environment node config
-This is the template you can use to override and replace the contents of your config file with.
+Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/default.json). 
 
 ```json
 {

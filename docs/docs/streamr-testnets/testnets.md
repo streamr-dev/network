@@ -15,6 +15,9 @@ The 1.0 testnets will be launched with the technical parameters set out in: [SIP
 2. Stake your [Operator](../streamr-network/network-roles/operators.md) on [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md), and/or,
 3. [Delegate](../streamr-network/network-roles/delegators.md) your `DATA` tokens onto other Operators
 
+## Current node software version
+Use node version: `100.0.0-pretestnet.3`. Do not use the `latest` tag release.
+
 ## Schedules
 Keep a close eye on this page as these dates may change based on the findings of each testnet.
 
@@ -45,7 +48,9 @@ The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your O
 You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 ### Bounty prizes
-Watch this space for updates.
+We're offering DATA prizes for quality contributions to the following categories:
+- On-chain metric dashboards
+- Fine grained monitoring tools such as email notifications
 
 ### Safety
 Your tokens are at risk by participating in these testnets - [the risks are real](../streamr-network/network-roles/operators#operator-risks).

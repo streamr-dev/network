@@ -3,8 +3,10 @@ sidebar_position: 4
 ---
 
 # Node inspection
+Operator's nodes contain an inspection routine which connects to a target operator's nodes and checks whether they are relaying data in a given stream to validate that the inspected node is doing the promised work. If the inspection fails, operators raise a flag to the Sponsorship smart contract. A number of random Operators are selected as reviewers. The reviewers then also inspect the flagged operator for the flagged stream(-partition), and based on their findings they vote via the smart contract on whether to kick (flag was valid) or not to kick (flag was invalid) the flagged operator. If the majority vote is to kick, the flagged operator is slashed.
+
 ## Flagging
-Flagging is the umbrella term used for the node inspection layer on the Streamr Network. Node inspections by flag-voting provide a degree of economic protection for sponsors when they pay for nodes to relay traffic on their selected stream inside the decentralized network.
+The nodes form a subjective opinion of whether someone's doing the work correctly or not, and act accordingly. There are incentives to flag and vote honestly, and disincentives for flagging and voting dishonestly. Flagging is the umbrella term used for the node inspection layer on the Streamr Network. Node inspections by flag-voting provide a degree of economic protection for sponsors when they pay for nodes to relay traffic on their selected stream inside the decentralized network.
 
 ### Flag stake
 The flag stake is the amount that operators must put at risk to flag another operator for potential protocol violations. In this case, operators are required to place 500 DATA at stake to initiate a flag against another operator if they suspect a violation. It's important to note that if the flag is ultimately deemed invalid, the operator who initiated the flag will lose the flag stake. Automated spot checks conducted by the node software flag potential violations independently, ensuring protocol integrity.
