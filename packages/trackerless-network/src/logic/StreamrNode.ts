@@ -317,3 +317,10 @@ export class StreamrNode extends EventEmitter<Events> {
         process.exit()
     })
 })
+
+declare let window: any
+if (typeof window === 'object') {
+    window.addEventListener('unload', async () => {
+        await cleanUp()
+    })
+}

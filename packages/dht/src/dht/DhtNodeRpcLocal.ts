@@ -60,7 +60,9 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
 
     async leaveNotice(_request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
         // TODO check signature??
-        this.config.removeContact((context as DhtCallContext).incomingSourceDescriptor!)
+        const sender = (context as DhtCallContext).incomingSourceDescriptor!
+        logger.trace('received leave notice: ' + keyFromPeerDescriptor(sender))
+        this.config.removeContact(sender)
         return {}
     }
 }

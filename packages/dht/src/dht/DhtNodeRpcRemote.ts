@@ -1,6 +1,7 @@
 import { IDhtNodeRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     ClosestPeersRequest,
+    LeaveNotice,
     PeerDescriptor,
     PingRequest
 } from '../proto/packages/dht/protos/DhtRpc'
@@ -71,8 +72,6 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
         return false
     }
 
-    /*
-    TODO remove or start using this method in NET-1131 
     leaveNotice(): void {
         logger.trace(`Sending leaveNotice on ${this.getServiceId()} from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: LeaveNotice = {
@@ -84,7 +83,7 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
         this.getClient().leaveNotice(request, options).catch((e) => {
             logger.trace('Failed to send leaveNotice' + e)
         })
-    }*/
+    }
 
     getPeerId(): PeerID {
         return peerIdFromPeerDescriptor(this.getPeerDescriptor())
