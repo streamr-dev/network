@@ -24,7 +24,7 @@ import {
     UnlockRequest
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
+import { ITransport, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ConnectionLockHandler, LockID } from './ConnectionLockHandler'
 import { ConnectorFacade } from './ConnectorFacade'
@@ -145,8 +145,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const lockRpcLocal = new ConnectionLockRpcLocal({
             addRemoteLocked: (id: PeerIDKey, serviceId: string) => this.locks.addRemoteLocked(id, serviceId),
             removeRemoteLocked: (id: PeerIDKey, serviceId: string) => this.locks.removeRemoteLocked(id, serviceId),
-            closeConnection: (peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType, reason?: string) => {
-                this.closeConnection(peerDescriptor, disconnectionType, reason)
+            closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => {
+                this.closeConnection(peerDescriptor, gracefulLeave, reason)
             },
             getLocalPeerDescriptor: () => this.getLocalPeerDescriptor()
         })
@@ -218,7 +218,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             } else {
                 logger.trace('handshake of connection not completed, force-closing')
                 const eventReceived = waitForEvent3<ManagedConnectionEvents>(peer, 'disconnected', 2000)
-                peer.close('OTHER')
+                peer.close(true)
                 try {
                     await eventReceived
                     logger.trace('resolving after receiving disconnected event from non-handshaked connection')
@@ -370,8 +370,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.onConnectionCountChange()
     }
 
-    private onDisconnected(connection: ManagedConnection, disconnectionType: DisconnectionType) {
-        logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) + ' onDisconnected() ' + disconnectionType)
+    private onDisconnected(connection: ManagedConnection, gracefulLeave: boolean) {
+        logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) + ' onDisconnected() gracefulLeave: ' + gracefulLeave)
 
         const peerIdKey = keyFromPeerDescriptor(connection.getPeerDescriptor()!)
         const storedConnection = this.connections.get(peerIdKey)
@@ -379,8 +379,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.locks.clearAllLocks(peerIdKey)
             this.connections.delete(peerIdKey)
             logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
-                + ' deleted connection in onDisconnected() ' + disconnectionType)
-            this.emit('disconnected', connection.getPeerDescriptor()!, disconnectionType)
+                + ' deleted connection in onDisconnected() gracefulLeave: ' + gracefulLeave)
+            this.emit('disconnected', connection.getPeerDescriptor()!, gracefulLeave)
             this.onConnectionCountChange()
         } else {
             logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
@@ -403,8 +403,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return false
         }
         connection.on('managedData', this.onData)
-        connection.on('disconnected', (disconnectionType: DisconnectionType) => {
-            this.onDisconnected(connection, disconnectionType)
+        connection.on('disconnected', (gracefulLeave: boolean) => {
+            this.onDisconnected(connection, gracefulLeave)
         })
         this.emit('newConnection', connection)
         if (connection.isHandshakeCompleted()) {
@@ -448,17 +448,17 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return true
     }
 
-    private async closeConnection(peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType, reason?: string): Promise<void> {
+    private async closeConnection(peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string): Promise<void> {
         logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'closeConnection() ' + reason)
         const id = keyFromPeerDescriptor(peerDescriptor)
         this.locks.clearAllLocks(id)
         if (this.connections.has(id)) {
             const connectionToClose = this.connections.get(id)!
-            await connectionToClose.close(disconnectionType)
+            await connectionToClose.close(gracefulLeave)
 
         } else {
             logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'closeConnection() this.connections did not have the id')
-            this.emit('disconnected', peerDescriptor, 'OTHER')
+            this.emit('disconnected', peerDescriptor, false)
         }
     }
 
@@ -528,7 +528,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             })
                 .catch((e) => {
                     logger.trace('force-closing connection after timeout ' + e)
-                    connection.close('OTHER')
+                    connection.close(true)
                 })
                 .finally(() => {
                     logger.trace('resolving after receiving disconnected event')

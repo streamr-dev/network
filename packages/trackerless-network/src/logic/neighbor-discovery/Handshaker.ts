@@ -27,6 +27,7 @@ interface HandshakerConfig {
     randomNodeView: NodeList
     rpcCommunicator: RpcCommunicator
     maxNeighborCount: number
+    rpcRequestTimeout?: number
 }
 
 const logger = new Logger(module)
@@ -144,7 +145,8 @@ export class Handshaker implements IHandshaker {
             this.config.localPeerDescriptor,
             target,
             this.config.streamPartId,
-            this.client
+            this.client,
+            this.config.rpcRequestTimeout
         )
         const targetNodeId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
         this.ongoingHandshakes.add(targetNodeId)
@@ -162,7 +164,13 @@ export class Handshaker implements IHandshaker {
     }
 
     private createRpcRemote(targetPeerDescriptor: PeerDescriptor): HandshakeRpcRemote {
-        return new HandshakeRpcRemote(this.config.localPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
+        return new HandshakeRpcRemote(
+            this.config.localPeerDescriptor,
+            targetPeerDescriptor,
+            this.config.streamPartId,
+            this.client,
+            this.config.rpcRequestTimeout
+        )
     }
 
     private createDeliveryRpcRemote(targetPeerDescriptor: PeerDescriptor): DeliveryRpcRemote {
@@ -170,7 +178,8 @@ export class Handshaker implements IHandshaker {
             this.config.localPeerDescriptor,
             targetPeerDescriptor,
             this.config.streamPartId,
-            toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
+            this.config.rpcRequestTimeout
         )
     }
 

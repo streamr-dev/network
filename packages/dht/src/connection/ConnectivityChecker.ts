@@ -65,11 +65,11 @@ export class ConnectivityChecker {
         const responseAwaiter = () => {
             return new Promise((resolve: (res: ConnectivityResponse) => void, reject) => {
                 const timeoutId = setTimeout(() => {
-                    outgoingConnection.close('OTHER')
+                    outgoingConnection.close(false)
                     reject(new Err.ConnectivityResponseTimeout('timeout'))
                 }, ConnectivityChecker.CONNECTIVITY_CHECKER_TIMEOUT)
                 const listener = (bytes: Uint8Array) => {
-                    outgoingConnection.close('OTHER')
+                    outgoingConnection.close(false)
                     try {
                         const message: Message = Message.fromBinary(bytes)
                         if (message.body.oneofKind === 'connectivityResponse') {
@@ -154,7 +154,7 @@ export class ConnectivityChecker {
             }
         }
         if (outgoingConnection) {
-            outgoingConnection.close('OTHER')
+            outgoingConnection.close(false)
             logger.trace('Connectivity test produced positive result, communicating reply to the requester ' + host + ':' + connectivityRequest.port)
             connectivityResponseMessage = {
                 host,

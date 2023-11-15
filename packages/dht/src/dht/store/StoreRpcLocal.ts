@@ -34,6 +34,7 @@ interface DataStoreConfig {
     redundancyFactor: number
     dhtNodeEmitter: EventEmitter<Events>
     getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
+    rpcRequestTimeout?: number
 }
 
 const logger = new Logger(module)
@@ -50,6 +51,7 @@ export class StoreRpcLocal implements IStoreRpc {
     private readonly redundancyFactor: number
     private readonly dhtNodeEmitter: EventEmitter<Events>
     private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
+    private readonly rpcRequestTimeout?: number
 
     constructor(config: DataStoreConfig) {
         this.rpcCommunicator = config.rpcCommunicator
@@ -61,6 +63,7 @@ export class StoreRpcLocal implements IStoreRpc {
         this.highestTtl = config.highestTtl
         this.redundancyFactor = config.redundancyFactor
         this.dhtNodeEmitter = config.dhtNodeEmitter
+        this.rpcRequestTimeout = config.rpcRequestTimeout
         this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
         this.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
             (request: StoreDataRequest, context: ServerCallContext) => this.storeData(request, context))
@@ -132,7 +135,8 @@ export class StoreRpcLocal implements IStoreRpc {
             this.localPeerDescriptor,
             contact,
             this.serviceId,
-            toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport())),
+            this.rpcRequestTimeout
         )
         try {
             const response = await rpcRemote.migrateData({ dataEntry }, doNotConnect)
@@ -170,7 +174,8 @@ export class StoreRpcLocal implements IStoreRpc {
                 this.localPeerDescriptor,
                 closestNodes[i],
                 this.serviceId,
-                toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport())),
+                this.rpcRequestTimeout
             )
             try {
                 const response = await rpcRemote.storeData({ kademliaId: key, data, ttl, storerTime })
@@ -211,7 +216,8 @@ export class StoreRpcLocal implements IStoreRpc {
                 this.localPeerDescriptor,
                 closestNodes[i],
                 this.serviceId,
-                toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport())),
+                this.rpcRequestTimeout
             )
             try {
                 const response = await rpcRemote.deleteData({ kademliaId: key })

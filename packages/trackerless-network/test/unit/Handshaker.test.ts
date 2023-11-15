@@ -40,7 +40,8 @@ describe('Handshaker', () => {
             nearbyNodeView,
             randomNodeView,
             rpcCommunicator,
-            maxNeighborCount
+            maxNeighborCount,
+            rpcRequestTimeout: 5000
         })
     })
 

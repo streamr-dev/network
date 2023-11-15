@@ -1,10 +1,14 @@
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { ICloseEvent, IMessageEvent, w3cwebsocket as Websocket } from 'websocket'
-import { DisconnectionType } from '../../transport/ITransport'
 import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from '../IConnection'
 
+
 const logger = new Logger(module)
+
+// https://kapeli.com/cheat_sheets/WebSocket_Status_Codes.docset/Contents/Resources/Documents/index
+// Browsers send this automatically when closing a tab
+export const GOING_AWAY = 1001
 
 const BINARY_TYPE = 'arraybuffer'
 
@@ -43,7 +47,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
             this.socket.onclose = (event: ICloseEvent) => {
                 if (!this.destroyed) {
                     logger.trace('Websocket Closed')
-                    this.doDisconnect('OTHER', event.code, event.reason)
+                    this.doDisconnect(event.code, event.reason)
                 }
             }
 
@@ -61,12 +65,12 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
         }
     }
 
-    private doDisconnect(disconnectionType: DisconnectionType, code?: number, reason?: string) {
+    private doDisconnect(code?: number, reason?: string) {
         this.destroyed = true
         this.stopListening()
         this.socket = undefined
-
-        this.emit('disconnected', disconnectionType, code, reason)
+        const gracefulLeave = code === GOING_AWAY
+        this.emit('disconnected', gracefulLeave, code, reason)
         this.removeAllListeners()
     }
 
@@ -76,17 +80,17 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
                 logger.trace(`Sending data with size ${data.byteLength}`)
                 this.socket?.send(data.buffer)
             } else {
-                logger.warn('Tried to send data on a non-open connection')
+                logger.debug('Tried to send data on a non-open connection')
             }
         } else {
             logger.debug('Tried to send() on stopped connection')
         }
     }
 
-    public async close(): Promise<void> {
+    public async close(gracefulLeave: boolean): Promise<void> {
         if (!this.destroyed) {
             logger.trace(`Closing socket for connection ${this.connectionId.toString()}`)
-            this.socket?.close()
+            this.socket?.close(gracefulLeave === true ? GOING_AWAY : undefined)
         } else {
             logger.debug('Tried to close() a stopped connection')
         }

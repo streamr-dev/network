@@ -27,6 +27,7 @@ interface DiscoverySessionConfig {
     parallelism: number
     noProgressLimit: number
     newContactListener?: (rpcRemote: DhtNodeRpcRemote) => void
+    rpcRequestTimeout?: number
 }
 
 export class DiscoverySession {
@@ -53,7 +54,8 @@ export class DiscoverySession {
                     this.config.localPeerDescriptor,
                     contact,
                     toProtoRpcClient(new DhtNodeRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
-                    this.config.serviceId
+                    this.config.serviceId,
+                    this.config.rpcRequestTimeout
                 )
                 if (this.config.newContactListener) {
                     this.config.newContactListener(rpcRemote)
