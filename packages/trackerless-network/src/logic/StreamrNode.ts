@@ -2,7 +2,8 @@ import {
     ConnectionLocker,
     DhtNode,
     ITransport,
-    PeerDescriptor
+    PeerDescriptor,
+    EXISTING_CONNECTION_TIMEOUT
 } from '@streamr/dht'
 import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import {
@@ -201,7 +202,7 @@ export class StreamrNode extends EventEmitter<Events> {
             peerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             entryPoints,
             numberOfNodesPerKBucket: 4,
-            rpcRequestTimeout: 5000,
+            rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
             dhtJoinTimeout: 20000
         })
     }
