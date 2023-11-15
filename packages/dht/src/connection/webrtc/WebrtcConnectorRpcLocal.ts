@@ -3,10 +3,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
 import { PeerIDKey } from '../../helpers/PeerID'
-import {
-    areEqualPeerDescriptors,
-    keyFromPeerDescriptor
-} from '../../helpers/peerIdFromPeerDescriptor'
+import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Empty } from '../../proto/google/protobuf/empty'
 import {
     IceCandidate,
@@ -56,11 +53,6 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
 
     async rtcOffer(request: RtcOffer, context: ServerCallContext): Promise<Empty> {
         const remotePeer = (context as DhtCallContext).incomingSourceDescriptor!
-        const targetPeer = this.config.getLocalPeerDescriptor()
-        // TODO remove redundant check?
-        if (!areEqualPeerDescriptors(targetPeer, this.config.getLocalPeerDescriptor())) {
-            return {}
-        }
         const peerKey = keyFromPeerDescriptor(remotePeer)
         let managedConnection = this.config.ongoingConnectAttempts.get(peerKey)
         let connection = managedConnection?.getWebrtcConnection()
@@ -100,11 +92,6 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
 
     async rtcAnswer(request: RtcAnswer, context: ServerCallContext): Promise<Empty> {
         const remotePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const targetPeerDescriptor = this.config.getLocalPeerDescriptor()
-        // TODO remove redundant check?
-        if (!areEqualPeerDescriptors(targetPeerDescriptor, this.config.getLocalPeerDescriptor())) {
-            return {}
-        }
         const peerKey = keyFromPeerDescriptor(remotePeerDescriptor)
         const connection = this.config.ongoingConnectAttempts.get(peerKey)?.getWebrtcConnection()
         if (!connection) {
@@ -119,11 +106,6 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
 
     async iceCandidate(request: IceCandidate, context: ServerCallContext): Promise<Empty> {
         const remotePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const targetPeerDescriptor = this.config.getLocalPeerDescriptor()
-        // TODO remove redundant check?
-        if (!areEqualPeerDescriptors(targetPeerDescriptor, this.config.getLocalPeerDescriptor())) {
-            return {}
-        }
         const peerKey = keyFromPeerDescriptor(remotePeerDescriptor)
         const connection = this.config.ongoingConnectAttempts.get(peerKey)?.getWebrtcConnection()
 

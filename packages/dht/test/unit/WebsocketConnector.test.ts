@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { WebsocketConnectorRpcLocal } from '../../src/connection/websocket/WebsocketConnectorRpcLocal'
+import { WebsocketConnector } from '../../src/connection/websocket/WebsocketConnector'
 import { ConnectivityMethod, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import crypto from 'crypto'
 import { MockTransport } from '../utils/mock/Transport'
@@ -12,11 +12,11 @@ const createMockPeerDescriptor = (nodeType: NodeType, websocket?: ConnectivityMe
     }
 }
 
-describe('WebsocketConnectorRpcLocal', () => {
+describe('WebsocketConnector', () => {
 
     describe('isPossibleToFormConnection', () => {
 
-        const connector = new WebsocketConnectorRpcLocal({
+        const connector = new WebsocketConnector({
             transport: new MockTransport(),
             canConnect: () => {}
         } as any)

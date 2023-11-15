@@ -9,7 +9,7 @@ import { ManagedConnection } from './ManagedConnection'
 import { Simulator } from './simulator/Simulator'
 import { SimulatorConnector } from './simulator/SimulatorConnector'
 import { IceServer, WebrtcConnector } from './webrtc/WebrtcConnector'
-import { WebsocketConnectorRpcLocal } from './websocket/WebsocketConnectorRpcLocal'
+import { WebsocketConnector } from './websocket/WebsocketConnector'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
@@ -49,7 +49,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     private readonly config: DefaultConnectorFacadeConfig
     private localPeerDescriptor?: PeerDescriptor
-    private websocketConnector?: WebsocketConnectorRpcLocal
+    private websocketConnector?: WebsocketConnector
     private webrtcConnector?: WebrtcConnector
 
     constructor(config: DefaultConnectorFacadeConfig) {
@@ -77,7 +77,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             autoCertifierTransport,
             maxMessageSize: this.config.maxMessageSize
         }
-        this.websocketConnector = new WebsocketConnectorRpcLocal(webSocketConnectorConfig)
+        this.websocketConnector = new WebsocketConnector(webSocketConnectorConfig)
         logger.trace(`Creating WebRtcConnectorRpcLocal`)
         this.webrtcConnector = new WebrtcConnector({
             transport: this.config.transport!,
@@ -113,7 +113,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             } catch (err) {
                 logger.warn('Failed to autocertify, disabling websocket server TLS')
                 await this.websocketConnector.destroy()
-                this.websocketConnector = new WebsocketConnectorRpcLocal({
+                this.websocketConnector = new WebsocketConnector({
                     ...webSocketConnectorConfig,
                     serverEnableTls: false,
                 })
