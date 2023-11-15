@@ -24,6 +24,7 @@ import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicat
 import { FindSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { SortedContactList } from '../contact/SortedContactList'
+import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 import { FindRpcLocal } from './FindRpcLocal'
@@ -241,7 +242,7 @@ export class Finder implements IFinder {
         } else {
             const noCloserContactsFound = (
                 closestPeersToDestination.length > 0
-                && routedMessage.previousPeer
+                && getPreviousPeer(routedMessage)
                 && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
             )
             this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,

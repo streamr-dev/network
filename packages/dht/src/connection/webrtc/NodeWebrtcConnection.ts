@@ -7,7 +7,7 @@ import { Logger } from '@streamr/utils'
 import { IllegalRtcPeerConnectionState } from '../../helpers/errors'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { iceServerAsString } from './iceServerAsString'
-import { IceServer } from './WebrtcConnectorRpcLocal'
+import { IceServer } from './WebrtcConnector'
 import { PortRange } from '../ConnectionManager'
 
 const logger = new Logger(module)
