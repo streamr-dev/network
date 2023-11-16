@@ -5,12 +5,12 @@ import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice, Disconnec
 
 import * as Err from '../helpers/errors'
 import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
-import { Remote } from '../dht/contact/Remote'
+import { RpcRemote } from '../dht/contact/RpcRemote'
 import { LockID } from './ConnectionLockHandler'
 
 const logger = new Logger(module)
 
-export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
+export class ConnectionLockRpcRemote extends RpcRemote<IConnectionLockRpcClient> {
 
     constructor(
         localPeerDescriptor: PeerDescriptor,

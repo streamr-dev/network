@@ -12,7 +12,7 @@ import { FindRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Contact } from '../contact/Contact'
 import { FindRpcRemote } from './FindRpcRemote'
-import { EXISTING_CONNECTION_TIMEOUT } from '../contact/Remote'
+import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 
 const logger = new Logger(module)
