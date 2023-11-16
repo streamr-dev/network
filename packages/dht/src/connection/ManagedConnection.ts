@@ -92,6 +92,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             })
             outgoingConnection.once('disconnected', this.onDisconnected)
             outgoingConnection.once('error', (error) => {
+                this.doNotEmitDisconnected = false
                 this.emit('error', error)
             })
 
@@ -105,6 +106,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
                 incomingConnection.on('disconnected', this.onDisconnected)
                 incomingConnection.once('error', (error) => {
+                    this.doNotEmitDisconnected = false
                     this.emit('error', error)
                 })
             }
@@ -238,15 +240,13 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             try {
                 result = await runAndRaceEvents3<Events>([() => { this.outputBuffer.push(data) }], this, ['handshakeCompleted', 'handshakeFailed',
-                    'bufferSentByOtherConnection', 'closing', 'internal_disconnected', 'error'], 15000)
+                    'bufferSentByOtherConnection', 'closing', 'internal_disconnected'], 15000)
             } catch (e) {
                 logger.debug(`Connection to ${keyOrUnknownFromPeerDescriptor(this.peerDescriptor)} timed out`)
                 throw e
             }
 
-            if (result.winnerName === 'error') {
-                throw new Error(`Error while attempiting to send message over connection type ${this.connectionType}`)
-            } else if (result.winnerName === 'internal_disconnected') {
+            if (result.winnerName === 'internal_disconnected') {
                 this.doNotEmitDisconnected = false
                 this.doDisconnect(false)
                 throw new Error(`Disconnected opening connection of type ${this.connectionType}`)
