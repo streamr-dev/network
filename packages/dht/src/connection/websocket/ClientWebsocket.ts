@@ -1,7 +1,10 @@
+/* eslint-disable no-console */
+
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { ICloseEvent, IMessageEvent, w3cwebsocket as Websocket } from 'websocket'
 import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from '../IConnection'
+import { ManagedConnection } from '../ManagedConnection'
 
 const logger = new Logger(module)
 
@@ -17,6 +20,11 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
 
     private destroyed = false
+
+    // extra fields for increased logging
+    private managedConnection?: ManagedConnection
+    private disconnectStackTrace?: string
+    private destroyStackTrace?: string
 
     constructor() {
         super()
@@ -65,6 +73,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     private doDisconnect(code?: number, reason?: string) {
+        this.disconnectStackTrace = new Error().stack + '\n --- END OF STACK TRACE -- \n'
         this.destroyed = true
         this.stopListening()
         this.socket = undefined
@@ -82,7 +91,8 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
                 logger.debug('Tried to send data on a non-open connection')
             }
         } else {
-            logger.debug('Tried to send() on stopped connection')
+            console.log('Tried to send() on stopped connection')
+            console.log(this.toString())
         }
     }
 
@@ -91,7 +101,8 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
             logger.trace(`Closing socket for connection ${this.connectionId.toString()}`)
             this.socket?.close(gracefulLeave === true ? GOING_AWAY : undefined)
         } else {
-            logger.debug('Tried to close() a stopped connection')
+            console.log('Tried to close() a stopped connection')
+            console.log(this.toString())
         }
     }
 
@@ -112,9 +123,26 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
                 this.socket.close()
                 this.socket = undefined
             }
+            this.destroyStackTrace = new Error().stack
             this.destroyed = true
         } else {
-            logger.debug('Tried to destroy() a stopped connection')
+            console.log('Tried to destroy() a stopped connection')
+            console.log(this.toString())
         }
+    }
+
+    public setManagedConnection(managedConnection: ManagedConnection): void {
+        this.managedConnection = managedConnection
+    }
+
+    public toString(): string {
+        const ret = 'ClientWebsocket \n' 
+            + ' connectionId: ' + this.connectionId.toString() + '\n'
+            + ', conectionType: ' + this.connectionType + '\n'
+            + ', destroyed: ' + this.destroyed + '\n'
+            + ', disconnectStackTrace: ' + this.disconnectStackTrace + '\n'
+            + ', destroyStackTrace: ' + this.destroyStackTrace + '\n'
+            + ', managedConnection: ' + this.managedConnection?.toString() + '\n'
+        return ret
     }
 }

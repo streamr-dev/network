@@ -5,6 +5,7 @@ import { Connection } from '../Connection'
 import { Logger } from '@streamr/utils'
 import { protoToString } from '../../helpers/protoToString'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { ManagedConnection } from '../ManagedConnection'
 
 const logger = new Logger(module)
 
@@ -14,6 +15,7 @@ export class SimulatorConnection extends Connection implements IConnection {
     public localPeerDescriptor: PeerDescriptor
     private targetPeerDescriptor: PeerDescriptor
     private simulator: Simulator
+    private managedConnection?: ManagedConnection
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
@@ -135,5 +137,8 @@ export class SimulatorConnection extends Connection implements IConnection {
 
         this.emit('disconnected', gracefulLeave)
 
+    }
+    public setManagedConnection(managedConnection: ManagedConnection): void {    
+        this.managedConnection = managedConnection
     }
 }

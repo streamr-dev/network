@@ -1,4 +1,5 @@
 import { UUID } from '../helpers/UUID'
+import { ManagedConnection } from './ManagedConnection'
 
 export interface ConnectionEvents {
     data: (bytes: Uint8Array) => void
@@ -43,4 +44,5 @@ export interface IConnection {
     send(data: Uint8Array): void
     close(gracefulLeave: boolean): Promise<void>
     destroy(): void
+    setManagedConnection(managedConnection: ManagedConnection): void
 }

@@ -9,6 +9,7 @@ import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { iceServerAsString } from './iceServerAsString'
 import { IceServer } from './WebrtcConnector'
 import { PortRange } from '../ConnectionManager'
+import { ManagedConnection } from '../ManagedConnection'
 
 const logger = new Logger(module)
 
@@ -65,6 +66,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     private readonly portRange?: PortRange
     private readonly maxMessageSize?: number
     private closed = false
+    private managedConnection?: ManagedConnection
 
     constructor(params: Params) {
         super()
@@ -259,5 +261,9 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
 
     public setConnectionId(connectionID: string): void {
         this.connectionId = new ConnectionID(connectionID)
+    }
+
+    public setManagedConnection(managedConnection: ManagedConnection): void {    
+        this.managedConnection = managedConnection
     }
 }

@@ -4,6 +4,7 @@ import { connection as WsConnection } from 'websocket'
 import { Logger } from '@streamr/utils'
 import { Url } from 'url'
 import { GOING_AWAY } from './ClientWebsocket'
+import { ManagedConnection } from '../ManagedConnection'
 
 const logger = new Logger(module)
 
@@ -25,6 +26,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
     public readonly resourceURL: Url
     private socket?: WsConnection
     private stopped = false
+    private managedConnection?: ManagedConnection
 
     constructor(socket: WsConnection, resourceURL: Url) {
         super()
@@ -108,5 +110,9 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
             logger.error('Tried to get the remoteAddress of a stopped connection')
             return ''
         }
+    }
+
+    public setManagedConnection(managedConnection: ManagedConnection): void {    
+        this.setManagedConnection = managedConnection
     }
 }

@@ -71,6 +71,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
 
         if (outgoingConnection) {
+            outgoingConnection.setManagedConnection(this)
             this.handshaker = new Handshaker(this.localPeerDescriptor, outgoingConnection)
 
             this.handshaker.once('handshakeFailed', (errorMessage) => {
@@ -80,7 +81,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             this.handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
                 logger.trace('handshake completed for outgoing connection '
-                    + ', ' + keyOrUnknownFromPeerDescriptor(this.peerDescriptor) 
+                    + ', ' + keyOrUnknownFromPeerDescriptor(this.peerDescriptor)
                     + ' outputBuffer.length: ' + this.outputBuffer.length)
                 this.attachImplementation(outgoingConnection)
                 this.onHandshakeCompleted(peerDescriptor)
@@ -94,6 +95,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         } else {
             if (incomingConnection) {
+                incomingConnection.setManagedConnection(this)
                 this.handshaker = new Handshaker(this.localPeerDescriptor, incomingConnection)
                 this.handshaker.on('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
                     this.setPeerDescriptor(peerDescriptor)
@@ -181,6 +183,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     public attachImplementation(impl: IConnection): void {
         logger.trace('attachImplementation()')
+        impl.setManagedConnection(this)
         this.implementation = impl
 
         impl.on('data', (bytes: Uint8Array) => {
@@ -374,6 +377,31 @@ export class ManagedConnection extends EventEmitter<Events> {
     stealOutputBuffer(): Uint8Array[] {
         const ret = this.outputBuffer
         this.outputBuffer = []
+        return ret
+    }
+
+    public toString(): string {
+        const ret = 'ManagedConnection \n'
+            + 'connectionId: ' + this.connectionId.toString() + '\n'
+            + 'peerDescriptor: ' + JSON.stringify(this.peerDescriptor) + '\n'
+            + 'connectionType: ' + this.connectionType + '\n'
+            + 'handshakeCompleted: ' + this.handshakeCompleted + '\n'
+            + 'stopped: ' + this.stopped + '\n'
+            + 'offeredAsIncoming: ' + this.offeredAsIncoming + '\n'
+            + 'rejectedAsIncoming: ' + this.rejectedAsIncoming + '\n'
+            + 'bufferSentbyOtherConnection: ' + this.bufferSentbyOtherConnection + '\n'
+            + 'closing: ' + this.closing + '\n'
+            + 'replacedByOtherConnection: ' + this.replacedByOtherConnection + '\n'
+            + 'localPeerDescriptor: ' + JSON.stringify(this.localPeerDescriptor) + '\n'
+            + 'hasOutgoingConnection: ' + (this.outgoingConnection ? 'true' : 'false') + '\n'
+            + 'hasIncomingConnection: ' + (this.incomingConnection ? 'true' : 'false') + '\n'
+            + 'hasImplementation: ' + (this.implementation ? 'true' : 'false') + '\n'
+            + 'outputBuffer.length: ' + this.outputBuffer.length + '\n'
+            + 'inputBuffer.length: ' + this.inputBuffer.length + '\n'
+            + 'lastUsed: ' + this.lastUsed + '\n'
+            + 'hasHandshaker: ' + (this.handshaker ? 'true' : 'false') + '\n'
+            + 'doNotEmitDisconnected: ' + this.doNotEmitDisconnected + '\n'
+
         return ret
     }
 }
