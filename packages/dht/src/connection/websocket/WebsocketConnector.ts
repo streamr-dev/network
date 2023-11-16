@@ -28,6 +28,8 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { expectedConnectionType } from '../../helpers/Connectivity'
 import { WebsocketServerStartError } from '../../helpers/errors'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
+import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
+
 const logger = new Logger(module)
 
 export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod): string => {
@@ -143,14 +145,13 @@ export class WebsocketConnector {
     public async start(): Promise<void> {
         if (!this.abortController.signal.aborted && this.websocketServer) {
             this.websocketServer.on('connected', (connection: IConnection) => {
-
                 const serverSocket = connection as unknown as ServerWebsocket
                 if (serverSocket.resourceURL &&
                     serverSocket.resourceURL.query) {
                     const query = serverSocket.resourceURL.query as unknown as ParsedUrlQuery
                     if (query.connectivityRequest) {
                         logger.trace('Received connectivity request connection from ' + serverSocket.getRemoteAddress())
-                        this.connectivityChecker!.listenToIncomingConnectivityRequests(serverSocket)
+                        attachConnectivityRequestHandler(serverSocket)
                     } else if (query.connectivityProbe) {
                         logger.trace('Received connectivity probe connection from ' + serverSocket.getRemoteAddress())
                     } else {
@@ -190,7 +191,7 @@ export class WebsocketConnector {
                         }
                         return preconfiguredConnectivityResponse
                     } else {
-                        // Do real connectivity checking     
+                        // Do real connectivity checking
                         return await this.connectivityChecker!.sendConnectivityRequest(entryPoint, selfSigned)
                     }
                 }
