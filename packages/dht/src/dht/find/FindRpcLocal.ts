@@ -3,6 +3,7 @@ import { PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../prot
 import { IFindRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
+import { getPreviousPeer } from '../routing/getPreviousPeer'
 
 const logger = new Logger(module)
 
@@ -25,7 +26,7 @@ export class FindRpcLocal implements IFindRpc {
         if (this.config.isMostLikelyDuplicate(routedMessage.requestId)) {
             return createRouteMessageAck(routedMessage, 'message given to routeFindRequest() service is likely a duplicate')
         }
-        const senderKey = keyFromPeerDescriptor(routedMessage.previousPeer ?? routedMessage.sourcePeer!)
+        const senderKey = keyFromPeerDescriptor(getPreviousPeer(routedMessage) ?? routedMessage.sourcePeer!)
         logger.trace(`Received routeFindRequest call from ${senderKey}`)
         this.config.addContact(routedMessage.sourcePeer!, true)
         this.config.addToDuplicateDetector(routedMessage.requestId)

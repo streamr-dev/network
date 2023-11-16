@@ -21,7 +21,6 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
         this.setOutgoingMessageListener((msg: RpcMessage, _requestId: string, callContext?: DhtCallContext) => {
             let targetDescriptor: PeerDescriptor
             // rpc call message
-
             if (callContext!.targetDescriptor) {
                 targetDescriptor = callContext!.targetDescriptor!
             } else { // rpc reply message

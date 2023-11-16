@@ -62,7 +62,8 @@ export const createMockConnectionDhtNode = async (
         transport: mockConnectionManager,
         numberOfNodesPerKBucket,
         maxConnections: maxConnections,
-        dhtJoinTimeout
+        dhtJoinTimeout,
+        rpcRequestTimeout: 5000
     })
     await node.start()
     return node
@@ -81,7 +82,8 @@ export const createMockConnectionLayer1Node = async (
     }
     const node = new DhtNode({
         peerDescriptor: descriptor, transport: layer0Node,
-        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket
+        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket,
+        rpcRequestTimeout: 10000
     })
     await node.start()
     return node
