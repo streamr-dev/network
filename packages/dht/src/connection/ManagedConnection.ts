@@ -91,6 +91,9 @@ export class ManagedConnection extends EventEmitter<Events> {
                 this.emit('connected')
             })
             outgoingConnection.once('disconnected', this.onDisconnected)
+            outgoingConnection.once('error', (error) => {
+                this.emit('error', error)
+            })
 
         } else {
             if (incomingConnection) {
@@ -101,7 +104,9 @@ export class ManagedConnection extends EventEmitter<Events> {
                 })
 
                 incomingConnection.on('disconnected', this.onDisconnected)
-
+                incomingConnection.once('error', (error) => {
+                    this.emit('error', error)
+                })
             }
         }
     }
@@ -192,10 +197,6 @@ export class ManagedConnection extends EventEmitter<Events> {
                 this.emit('managedData', bytes, this.getPeerDescriptor()!)
             }
         })
-
-        impl.on('error', (name: string) => {
-            this.emit('error', name)
-        })
         impl.on('connected', () => {
             this.lastUsed = Date.now()
             logger.trace('connected emitted')
@@ -237,13 +238,16 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             try {
                 result = await runAndRaceEvents3<Events>([() => { this.outputBuffer.push(data) }], this, ['handshakeCompleted', 'handshakeFailed',
-                    'bufferSentByOtherConnection', 'closing', 'internal_disconnected'], 15000)
+                    'bufferSentByOtherConnection', 'closing', 'internal_disconnected', 'error'], 15000)
             } catch (e) {
                 logger.debug(`Connection to ${keyOrUnknownFromPeerDescriptor(this.peerDescriptor)} timed out`)
                 throw e
             }
 
-            if (result.winnerName === 'internal_disconnected') {
+            if (result.winnerName === 'error') {
+                this.doNotEmitDisconnected = false
+                this.doDisconnect(false)
+            } else if (result.winnerName === 'internal_disconnected') {
                 this.doNotEmitDisconnected = false
                 this.doDisconnect(false)
             } else if (result.winnerName === 'handshakeFailed') {
