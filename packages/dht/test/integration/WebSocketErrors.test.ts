@@ -32,7 +32,7 @@ describe('WebSocketErrors', () => {
         type: NodeType.NODEJS,
         websocket: {
             host: '127.0.0.1',
-            port: 12223,
+            port: 13323,
             tls: false
         }
     }
@@ -55,7 +55,7 @@ describe('WebSocketErrors', () => {
         const config1 = createConfig(wsServerConnectorPeerDescriptor, {
             transport: connectorTransport1,
             websocketHost: '127.0.0.1',
-            websocketPortRange: { min: 12223, max: 12223 }
+            websocketPortRange: { min: 13323, max: 13323 }
         })
         const config2 = createConfig(noWsServerConnectorPeerDescriptor, {
             transport: connectorTransport2
