@@ -143,6 +143,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
             + ', disconnectStackTrace: ' + this.disconnectStackTrace + '\n'
             + ', destroyStackTrace: ' + this.destroyStackTrace + '\n'
             + ', managedConnection: ' + this.managedConnection?.toString() + '\n'
+            + ', currentStackTrace: ' + new Error().stack + '\n'
         return ret
     }
 }
