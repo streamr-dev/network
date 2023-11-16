@@ -39,7 +39,7 @@ const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 interface WebsocketConnectorConfig {
     transport: ITransport
     canConnect: (peerDescriptor: PeerDescriptor) => boolean
-    onIncomingConnection: (connection: ManagedConnection) => boolean
+    onNewConnection: (connection: ManagedConnection) => boolean
     portRange?: PortRange
     maxMessageSize?: number
     host?: string
@@ -58,7 +58,7 @@ export class WebsocketConnector {
     private readonly websocketServer?: WebsocketServer
     private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
-    private onIncomingConnection: (connection: ManagedConnection) => boolean
+    private onNewConnection: (connection: ManagedConnection) => boolean
     private host?: string
     private readonly entrypoints?: PeerDescriptor[]
     private readonly tlsCertificate?: TlsCertificate
@@ -79,7 +79,7 @@ export class WebsocketConnector {
             maxMessageSize: config.maxMessageSize,
             enableTls: config.serverEnableTls
         }) : undefined
-        this.onIncomingConnection = config.onIncomingConnection
+        this.onNewConnection = config.onNewConnection
         this.host = config.host
         this.entrypoints = config.entrypoints
         this.tlsCertificate = config.tlsCertificate
@@ -97,7 +97,7 @@ export class WebsocketConnector {
         const rpcLocal = new WebsocketConnectorRpcLocal({
             canConnect: (peerDescriptor: PeerDescriptor) => config.canConnect(peerDescriptor),
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
-            onIncomingConnection: (connection: ManagedConnection) => config.onIncomingConnection(connection),
+            onNewConnection: (connection: ManagedConnection) => config.onNewConnection(connection),
             abortSignal: this.abortController.signal
         })
         this.rpcCommunicator.registerRpcMethod(
@@ -276,7 +276,7 @@ export class WebsocketConnector {
 
             managedConnection.setPeerDescriptor(peerDescriptor)
 
-            if (this.onIncomingConnection(managedConnection)) {
+            if (this.onNewConnection(managedConnection)) {
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake('Duplicate connection')
