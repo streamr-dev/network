@@ -66,7 +66,8 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
     }
     const msg: Message = {
         serviceId: ConnectivityChecker.CONNECTIVITY_CHECKER_SERVICE_ID,
-        messageType: MessageType.CONNECTIVITY_RESPONSE, messageId: v4(),
+        messageType: MessageType.CONNECTIVITY_RESPONSE,
+        messageId: v4(),
         body: {
             oneofKind: 'connectivityResponse',
             connectivityResponse: connectivityResponseMessage!
