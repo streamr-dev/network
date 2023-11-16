@@ -13,18 +13,18 @@ import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector
 const logger = new Logger(module)
 
 export const attachConnectivityRequestHandler = (connectionToListenTo: ServerWebsocket): void => {
-    connectionToListenTo.on('data', (data: Uint8Array) => {
+    connectionToListenTo.on('data', async (data: Uint8Array) => {
         logger.trace('server received data')
         try {
             const message = Message.fromBinary(data)
             if (message.body.oneofKind === 'connectivityRequest') {
                 logger.trace('ConnectivityRequest received: ' + JSON.stringify(Message.toJson(message)))
-                handleIncomingConnectivityRequest(connectionToListenTo, message.body.connectivityRequest).then(() => {
+                try {
+                    await handleIncomingConnectivityRequest(connectionToListenTo, message.body.connectivityRequest)
                     logger.trace('handleIncomingConnectivityRequest ok')
-                    return
-                }).catch((e) => {
-                    logger.error('handleIncomingConnectivityRequest' + e)
-                })
+                } catch (e) {
+                    logger.error('handleIncomingConnectivityRequest', { error: e })
+                }
             }
         } catch (err) {
             logger.trace(`Could not parse message: ${err}`)
