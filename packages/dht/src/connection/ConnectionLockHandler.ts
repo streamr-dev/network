@@ -9,6 +9,8 @@ export class ConnectionLockHandler {
 
     private localLocks: Map<PeerIDKey, Set<LockID>> = new Map()
     private remoteLocks: Map<PeerIDKey, Set<LockID>> = new Map()
+    // TODO: remove weakLocks use localLocks instead. When opening weakLocks from the ConnectioManager,
+    // simply do not send lock requests.
     private weakLocks: Set<PeerIDKey> = new Set()
 
     public getNumberOfLocalLockedConnections(): number {

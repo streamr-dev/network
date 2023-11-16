@@ -2,7 +2,6 @@ import EventEmitter from 'eventemitter3'
 import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from './IWebrtcConnection'
 import { IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
 import { Logger } from '@streamr/utils'
-import { DisconnectionType } from '../../transport/ITransport'
 import { IceServer } from './WebrtcConnectorRpcLocal'
 
 const logger = new Logger(module)
@@ -134,17 +133,17 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
     // IConnection implementation
     
-    public async close(disconnectionType: DisconnectionType, reason?: string): Promise<void> {
-        this.doClose(disconnectionType, reason)
+    public async close(gracefulLeave: boolean, reason?: string): Promise<void> {
+        this.doClose(gracefulLeave, reason)
     }
     
-    private doClose(disconnectionType: DisconnectionType, reason?: string): void {
+    private doClose(gracefulLeave: boolean, reason?: string): void {
         if (!this.closed) {
             this.closed = true
             this.lastState = 'closed'
 
             this.stopListening()
-            this.emit('disconnected', disconnectionType, undefined, reason)
+            this.emit('disconnected', gracefulLeave, undefined, reason)
             
             this.removeAllListeners()
 
@@ -172,7 +171,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
     public destroy(): void {
         this.removeAllListeners()
-        this.doClose('OTHER')
+        this.doClose(false)
     }
 
     public send(data: Uint8Array): void {
@@ -191,7 +190,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
         dataChannel.onclose = () => {
             logger.trace('dc.onClosed')
-            this.doClose('OTHER')
+            this.doClose(false)
         }
 
         dataChannel.onerror = (err) => {

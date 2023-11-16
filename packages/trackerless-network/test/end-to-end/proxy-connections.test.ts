@@ -57,6 +57,7 @@ describe('Proxy connections', () => {
             layer0: {
                 entryPoints: [proxyNodeDescriptor1],
                 peerDescriptor: proxyNodeDescriptor1,
+                websocketServerEnableTls: false
             },
             networkNode: {
                 acceptProxyConnections: true
@@ -69,6 +70,7 @@ describe('Proxy connections', () => {
             layer0: {
                 entryPoints: [proxyNodeDescriptor1],
                 peerDescriptor: proxyNodeDescriptor2,
+                websocketServerEnableTls: false
             },
             networkNode: {
                 acceptProxyConnections: true

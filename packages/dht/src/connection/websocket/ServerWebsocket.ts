@@ -2,8 +2,8 @@ import EventEmitter from 'eventemitter3'
 import { IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
 import { connection as WsConnection } from 'websocket'
 import { Logger } from '@streamr/utils'
-import { DisconnectionType } from '../../transport/ITransport'
 import { Url } from 'url'
+import { GOING_AWAY } from './ClientWebsocket'
 
 const logger = new Logger(module)
 
@@ -43,8 +43,8 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
             }
         })
         socket.on('close', (reasonCode, description) => {
-            logger.trace('Peer ' + socket.remoteAddress + ' disconnected.')
-            this.doDisconnect('OTHER', reasonCode, description)
+            logger.trace('Peer ' + socket.remoteAddress + ' disconnected.')            
+            this.doDisconnect(reasonCode, description)
         })
 
         socket.on('error', (error) => {
@@ -54,12 +54,12 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.socket = socket
     }
 
-    private doDisconnect(disconnectionType: DisconnectionType, reasonCode: number, description: string): void {
+    private doDisconnect(reasonCode: number, description: string): void {
         this.stopped = true
         this.socket?.removeAllListeners()
         this.socket = undefined
-
-        this.emit('disconnected', disconnectionType, reasonCode, description)
+        const gracefulLeave = reasonCode === GOING_AWAY
+        this.emit('disconnected', gracefulLeave, reasonCode, description)
     }
 
     public send(data: Uint8Array): void {
@@ -73,16 +73,16 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
                 this.socket.sendBytes(Buffer.from(data))
             }
         } else {
-            logger.error('Tried to call send() on a stopped socket')
+            logger.debug('Tried to call send() on a stopped socket')
         }
 
     }
 
-    public async close(): Promise<void> {
+    public async close(gracefulLeave: boolean): Promise<void> {
         if (!this.stopped) {
-            this.socket?.close()
+            this.socket?.close(gracefulLeave === true ? GOING_AWAY : undefined)
         } else {
-            logger.error('Tried to close a stopped connection')
+            logger.debug('Tried to close a stopped connection')
         }
     }
 
@@ -96,7 +96,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
             }
             this.stopped = true
         } else {
-            logger.error('Tried to destroy() a stopped connection')
+            logger.debug('Tried to destroy() a stopped connection')
         }
     }
 

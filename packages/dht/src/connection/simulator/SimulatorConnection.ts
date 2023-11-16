@@ -4,7 +4,6 @@ import { Message, PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Connection } from '../Connection'
 import { Logger } from '@streamr/utils'
 import { protoToString } from '../../helpers/protoToString'
-import { DisconnectionType } from '../../transport/ITransport'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
@@ -49,7 +48,7 @@ export class SimulatorConnection extends Connection implements IConnection {
         }
     }
 
-    public async close(disconnectionType: DisconnectionType): Promise<void> {
+    public async close(gracefulLeave: boolean): Promise<void> {
         logger.trace(keyFromPeerDescriptor(this.localPeerDescriptor) + ', ' + keyFromPeerDescriptor(this.targetPeerDescriptor) + ' close()')
 
         if (!this.stopped) {
@@ -69,7 +68,7 @@ export class SimulatorConnection extends Connection implements IConnection {
             } finally {
                 logger.trace(keyFromPeerDescriptor(this.localPeerDescriptor) + ', ' + keyFromPeerDescriptor(this.targetPeerDescriptor) +
                     ' calling this.doDisconnect')
-                this.doDisconnect(disconnectionType)
+                this.doDisconnect(gracefulLeave)
             }
 
         } else {
@@ -85,7 +84,7 @@ export class SimulatorConnection extends Connection implements IConnection {
             this.simulator.connect(this, this.targetPeerDescriptor, (error?: string) => {
                 if (error) {
                     logger.trace(error)
-                    this.doDisconnect('OTHER')
+                    this.doDisconnect(false)
                 } else {
                     this.emit('connected')
                 }
@@ -109,7 +108,7 @@ export class SimulatorConnection extends Connection implements IConnection {
         if (!this.stopped) {
             logger.trace(keyFromPeerDescriptor(this.localPeerDescriptor) + ' handleIncomingDisconnection()')
             this.stopped = true
-            this.doDisconnect('OTHER')
+            this.doDisconnect(false)
         } else {
             logger.trace('tried to call handleIncomingDisconnection() a stopped connection')
         }
@@ -119,20 +118,20 @@ export class SimulatorConnection extends Connection implements IConnection {
         if (!this.stopped) {
             logger.trace(keyFromPeerDescriptor(this.localPeerDescriptor) + ' destroy()')
             this.removeAllListeners()
-            this.close('OTHER').catch((_e) => { })
+            this.close(false).catch((_e) => { })
         } else {
             logger.trace(keyFromPeerDescriptor(this.localPeerDescriptor) + ' tried to call destroy() a stopped connection')
         }
     }
 
-    private doDisconnect(disconnectionType: DisconnectionType) {
+    private doDisconnect(gracefulLeave: boolean) {
         logger.trace(keyFromPeerDescriptor(this.localPeerDescriptor) + ' doDisconnect()')
         this.stopped = true
 
         logger.trace(keyFromPeerDescriptor(this.localPeerDescriptor) + ', '
             + keyFromPeerDescriptor(this.targetPeerDescriptor) + ' doDisconnect emitting')
 
-        this.emit('disconnected', disconnectionType)
+        this.emit('disconnected', gracefulLeave)
 
     }
 }

@@ -21,14 +21,14 @@ export class MaintainTopologyService {
         const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         let subscription: Subscription
         try {
-            logger.info(`Join stream partition ${streamPartId}`)
+            logger.info('Join stream partition', { streamPartId })
             subscription = await this.streamrClient.subscribe({
                 id,
                 partition,
                 raw: true
             }, () => {})
         } catch (err) {
-            logger.warn(`Failed to join stream partition ${streamPartId}`, { reason: err?.reason })
+            logger.warn('Failed to join stream partition', { streamPartId, reason: err?.reason })
             return
         }
         this.subscriptions.set(streamPartId, subscription)
@@ -38,10 +38,10 @@ export class MaintainTopologyService {
         const subscription = this.subscriptions.get(streamPartId)
         this.subscriptions.delete(streamPartId)
         try {
-            logger.info(`Leave stream partition ${streamPartId}`)
+            logger.info('Leave stream partition', { streamPartId })
             await subscription?.unsubscribe()
         } catch (err) {
-            logger.warn(`Failed to leave stream partition ${streamPartId}`, { reason: err?.reason })
+            logger.warn('Failed to leave stream partition', { streamPartId, reason: err?.reason })
         }
     })
 
