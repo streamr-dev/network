@@ -113,6 +113,6 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public setManagedConnection(managedConnection: ManagedConnection): void {    
-        this.setManagedConnection = managedConnection
+        this.managedConnection = managedConnection
     }
 }
