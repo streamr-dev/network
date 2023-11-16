@@ -33,9 +33,6 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: ServerWeb
 }
 
 const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, connectivityRequest: ConnectivityRequest): Promise<void> => {
-    /*TODO removeif (this.destroyed) {
-        return
-    }*/
     let outgoingConnection: IConnection | undefined
     let connectivityResponseMessage: ConnectivityResponse | undefined
     const host = connectivityRequest.host ?? connection.getRemoteAddress()
