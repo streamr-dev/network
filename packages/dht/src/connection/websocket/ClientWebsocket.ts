@@ -24,7 +24,9 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
     // extra fields for increased logging
     private managedConnection?: ManagedConnection
     private disconnectStackTrace?: string
+    private disconnectState?: string
     private destroyStackTrace?: string
+    private destroyState?: string
 
     constructor() {
         super()
@@ -74,6 +76,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
 
     private doDisconnect(code?: number, reason?: string) {
         this.disconnectStackTrace = new Error().stack + '\n --- END OF STACK TRACE -- \n'
+        this.disconnectState = '\n***********************\n' + this.toString() + '\n***********************\n'
         this.destroyed = true
         this.stopListening()
         this.socket = undefined
@@ -124,6 +127,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
                 this.socket = undefined
             }
             this.destroyStackTrace = new Error().stack
+            this.destroyState = '\n***********************\n' + this.toString() + '\n***********************\n'
             this.destroyed = true
         } else {
             logger.fatal('Tried to destroy() a stopped connection')
@@ -141,7 +145,9 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
             + ', conectionType: ' + this.connectionType + '\n'
             + ', destroyed: ' + this.destroyed + '\n'
             + ', disconnectStackTrace: ' + this.disconnectStackTrace + '\n'
+            + ', disconnectState: ' + this.disconnectState + '\n'
             + ', destroyStackTrace: ' + this.destroyStackTrace + '\n'
+            + ', destroyState: ' + this.destroyState + '\n'
             + ', managedConnection: ' + this.managedConnection?.toString() + '\n'
             + ', currentStackTrace: ' + new Error().stack + '\n'
         return ret
