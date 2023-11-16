@@ -91,8 +91,8 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
                 logger.debug('Tried to send data on a non-open connection')
             }
         } else {
-            console.log('Tried to send() on stopped connection')
-            console.log(this.toString())
+            logger.fatal('Tried to send() on stopped connection')
+            logger.fatal(this.toString())
         }
     }
 
@@ -101,8 +101,8 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
             logger.trace(`Closing socket for connection ${this.connectionId.toString()}`)
             this.socket?.close(gracefulLeave === true ? GOING_AWAY : undefined)
         } else {
-            console.log('Tried to close() a stopped connection')
-            console.log(this.toString())
+            logger.fatal('Tried to close() a stopped connection')
+            logger.fatal(this.toString())
         }
     }
 
@@ -126,8 +126,8 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
             this.destroyStackTrace = new Error().stack
             this.destroyed = true
         } else {
-            console.log('Tried to destroy() a stopped connection')
-            console.log(this.toString())
+            logger.fatal('Tried to destroy() a stopped connection')
+            logger.fatal(this.toString())
         }
     }
 
