@@ -722,8 +722,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.router!.stop()
         this.finder!.stop()
         this.peerDiscovery!.stop()
-        if (this.connectionManager) {
-            await this.connectionManager.stop()
+        if (this.config.transport === undefined) {
+            // if the transport was not given in config, the instance was created in start() and 
+            // this component is responsible for stopping it
+            await this.transport!.stop()
         }
         this.transport = undefined
         this.connectionManager = undefined
