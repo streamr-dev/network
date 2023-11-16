@@ -245,8 +245,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             }
 
             if (result.winnerName === 'error') {
-                this.doNotEmitDisconnected = false
-                throw new Error(`Error while attempiting to send message ovre connection type ${this.connectionType}`)
+                throw new Error(`Error while attempiting to send message over connection type ${this.connectionType}`)
             } else if (result.winnerName === 'internal_disconnected') {
                 this.doNotEmitDisconnected = false
                 this.doDisconnect(false)
