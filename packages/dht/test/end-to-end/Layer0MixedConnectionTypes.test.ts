@@ -22,15 +22,33 @@ describe('Layer0MixedConnectionTypes', () => {
     const websocketPortRange = { min: 11222, max: 11223 }
     beforeEach(async () => {
 
-        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 2 })
+        epDhtNode = new DhtNode({ 
+            peerDescriptor: epPeerDescriptor,
+            numberOfNodesPerKBucket: 2,
+            websocketServerEnableTls: false
+        })
         await epDhtNode.start()
 
         await epDhtNode.joinDht([epPeerDescriptor])
-        node1 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
-        node3 = new DhtNode({ entryPoints: [epPeerDescriptor] })
-        node4 = new DhtNode({ entryPoints: [epPeerDescriptor] })
-        node5 = new DhtNode({ entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ 
+            websocketPortRange,
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
+        node2 = new DhtNode({ 
+            websocketPortRange,
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
+        node3 = new DhtNode({ 
+            entryPoints: [epPeerDescriptor]
+        })
+        node4 = new DhtNode({ 
+            entryPoints: [epPeerDescriptor]
+        })
+        node5 = new DhtNode({
+            entryPoints: [epPeerDescriptor]
+        })
 
         await Promise.all([
             node1.start(),

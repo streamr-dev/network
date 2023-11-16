@@ -125,6 +125,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         super()
         this.config = config
         this.onData = this.onData.bind(this)
+        this.send = this.send.bind(this)
         this.onIncomingConnection = this.onIncomingConnection.bind(this)
         this.metricsContext = this.config.metricsContext ?? new MetricsContext()
         this.metrics = {
@@ -185,7 +186,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         logger.trace(`Starting ConnectionManager...`)
         await this.connectorFacade.start(
             (connection: ManagedConnection) => this.onIncomingConnection(connection),
-            (peerDescriptor: PeerDescriptor) => this.canConnect(peerDescriptor)
+            (peerDescriptor: PeerDescriptor) => this.canConnect(peerDescriptor),
+            this
         )
         // Garbage collection of connections
         this.disconnectorIntervalRef = setInterval(() => {

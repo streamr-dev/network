@@ -26,7 +26,8 @@ describe('memory leak', () => {
                 min: entryPointDescriptor.websocket.port,
                 max: entryPointDescriptor.websocket.port
             },
-            entryPoints: [entryPointDescriptor]
+            entryPoints: [entryPointDescriptor],
+            websocketServerEnableTls: false
         })
         await entryPoint.start()
         await entryPoint.joinDht([entryPointDescriptor])

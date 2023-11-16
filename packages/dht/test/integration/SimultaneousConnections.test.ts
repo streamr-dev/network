@@ -118,12 +118,14 @@ describe('SimultaneousConnections', () => {
             connectionManager1 = createConnectionManager(wsPeer1, {
                 transport: simulatorTransport1,
                 websocketPortRange,
-                entryPoints: [wsPeer1]
+                entryPoints: [wsPeer1],
+                websocketServerEnableTls: false
             })
             connectionManager2 = createConnectionManager(wsPeer2, {
                 transport: simulatorTransport2,
                 websocketPortRange,
-                entryPoints: [wsPeer1]
+                entryPoints: [wsPeer1],
+                websocketServerEnableTls: false
             })
             await connectionManager1.start()
             await connectionManager2.start()
@@ -193,7 +195,8 @@ describe('SimultaneousConnections', () => {
             connectionManager1 = createConnectionManager(wsPeer1, {
                 transport: simulatorTransport1,
                 websocketPortRange: { min: 43432, max: 43432 },
-                entryPoints: [wsPeer1]
+                entryPoints: [wsPeer1],
+                websocketServerEnableTls: false
             })
             connectionManager2 = createConnectionManager(wsPeer2, {
                 transport: simulatorTransport2

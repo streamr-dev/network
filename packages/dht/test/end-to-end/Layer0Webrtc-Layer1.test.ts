@@ -31,7 +31,7 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
     beforeEach(async () => {
 
-        layer0EntryPoint = new DhtNode({ peerDescriptor: entrypointDescriptor })
+        layer0EntryPoint = new DhtNode({ peerDescriptor: entrypointDescriptor, websocketServerEnableTls: false })
 
         const layer0Node1Id = '11'
         layer0Node1 = new DhtNode({

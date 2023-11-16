@@ -21,7 +21,8 @@ export const CONFIG_TEST: StreamrClientConfig = {
                 max: 32800
             },
             iceServers: [],
-            webrtcAllowPrivateAddresses: true
+            webrtcAllowPrivateAddresses: true,
+            websocketServerEnableTls: false
         }
     },
     contracts: {

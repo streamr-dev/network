@@ -78,6 +78,7 @@ export interface DhtNodeOptions {
     entryPoints?: PeerDescriptor[]
     websocketHost?: string
     websocketPortRange?: PortRange
+    websocketServerEnableTls?: boolean
     peerId?: string
 
     rpcRequestTimeout?: number
@@ -91,6 +92,8 @@ export interface DhtNodeOptions {
     maxConnections?: number
     tlsCertificate?: TlsCertificate
     externalIp?: string
+    autoCertifierUrl?: string
+    autoCertifierConfigFile?: string
 }
 
 type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions, 
@@ -214,8 +217,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 webrtcPortRange: this.config.webrtcPortRange,
                 maxMessageSize: this.config.maxMessageSize,
+                websocketServerEnableTls: this.config.websocketServerEnableTls,
                 tlsCertificate: this.config.tlsCertificate,
                 externalIp: this.config.externalIp,
+                autoCertifierUrl: this.config.autoCertifierUrl,
+                autoCertifierConfigFile: this.config.autoCertifierConfigFile,
                 createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server

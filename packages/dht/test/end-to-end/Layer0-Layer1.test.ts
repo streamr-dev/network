@@ -26,12 +26,20 @@ describe('Layer0-Layer1', () => {
 
     beforeEach(async () => {
 
-        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
+        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor, websocketServerEnableTls: false })
         await epDhtNode.start()
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ 
+            websocketPortRange, 
+            entryPoints: [epPeerDescriptor], 
+            websocketServerEnableTls: false
+        })
+        node2 = new DhtNode({ 
+            websocketPortRange,
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
 
         await node1.start()
         await node2.start()
