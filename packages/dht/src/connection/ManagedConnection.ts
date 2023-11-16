@@ -246,7 +246,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             if (result.winnerName === 'error') {
                 this.doNotEmitDisconnected = false
-                this.doDisconnect(false)
+                // this.doDisconnect(false)
                 throw new Error(`Could not open connection of type ${this.connectionType}`)
             } else if (result.winnerName === 'internal_disconnected') {
                 this.doNotEmitDisconnected = false
