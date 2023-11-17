@@ -44,6 +44,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     private bufferSentbyOtherConnection = false
     private closing = false
     public replacedByOtherConnection = false
+    private firstSend = true
     private localPeerDescriptor: PeerDescriptor
     protected outgoingConnection?: IConnection
     protected incomingConnection?: IConnection
@@ -251,7 +252,6 @@ export class ManagedConnection extends EventEmitter<Events> {
             } catch (e) {
                 logger.debug(`Connection to ${keyOrUnknownFromPeerDescriptor(this.peerDescriptor)} timed out`)
                 this.doNotEmitDisconnected = false
-                this.doDisconnect(false)
                 throw e
             }
 
@@ -282,7 +282,6 @@ export class ManagedConnection extends EventEmitter<Events> {
                     if (result2.winnerName === 'bufferSentByOtherConnection') {
                         logger.trace('bufferSentByOtherConnection received')
                         this.doNotEmitDisconnected = false
-                        this.doDisconnect(false)
                     } else if (result2.winnerName === 'closing') {
                         logger.trace('bufferSentByOtherConnection not received, instead received a closing event')
                     } else if (result2.winnerName === 'disconnected') {
