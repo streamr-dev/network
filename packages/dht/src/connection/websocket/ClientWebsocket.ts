@@ -105,6 +105,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public destroy(): void {
+        logger.trace('destroy() a connection')
         if (!this.destroyed) {
             this.removeAllListeners()
             if (this.socket) {

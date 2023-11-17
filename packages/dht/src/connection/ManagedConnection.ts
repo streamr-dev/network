@@ -39,7 +39,6 @@ export class ManagedConnection extends EventEmitter<Events> {
     private lastUsed: number = Date.now()
     private stopped = false
     public offeredAsIncoming = false
-    public rejectedAsIncoming = false
     private bufferSentbyOtherConnection = false
     private closing = false
     public replacedByOtherConnection = false
@@ -254,7 +253,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                 this.doDisconnect(false)
                 throw new Error(`Disconnected opening connection of type ${this.connectionType}`)
             } else if (result.winnerName === 'handshakeFailed') {
-                logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' handshakeFailed received')
+                logger.debug(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' handshakeFailed received')
 
                 if (this.bufferSentbyOtherConnection) {
                     logger.trace('bufferSentByOtherConnection already true')
