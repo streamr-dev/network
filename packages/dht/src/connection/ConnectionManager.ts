@@ -536,13 +536,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 })
         })
 
-        this.doGracefullyDisconnectAsync(targetDescriptor, disconnectMode)
-            .then(() => { return })
-            .catch((e) => {
-                logger.error(e)
-            })
-
-        await promise
+        await Promise.all([
+            promise,
+            this.doGracefullyDisconnectAsync(targetDescriptor, disconnectMode)
+        ])
     }
 
     private async doGracefullyDisconnectAsync(targetDescriptor: PeerDescriptor, disconnectMode: DisconnectMode): Promise<void> {
