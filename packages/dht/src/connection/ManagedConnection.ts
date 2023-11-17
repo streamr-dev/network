@@ -247,13 +247,11 @@ export class ManagedConnection extends EventEmitter<Events> {
             } catch (e) {
                 logger.debug(`Connection to ${keyOrUnknownFromPeerDescriptor(this.peerDescriptor)} timed out`)
                 this.doNotEmitDisconnected = false
-                this.doDisconnect(false)
                 throw e
             }
 
             if (result.winnerName === 'internal_disconnected') {
                 this.doNotEmitDisconnected = false
-                this.doDisconnect(false)
                 throw new Error(`Disconnected opening connection of type ${this.connectionType}`)
             } else if (result.winnerName === 'handshakeFailed') {
                 logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' handshakeFailed received')
