@@ -8,7 +8,7 @@ import { ManagedConnection } from '../ManagedConnection'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'
-import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -31,7 +31,7 @@ export class SimulatorConnector {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        logger.trace('connect() ' + keyFromPeerDescriptor(targetPeerDescriptor))
+        logger.trace('connect() ' + getNodeIdFromPeerDescriptor(targetPeerDescriptor))
         const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(peerKey)
         if (existingConnection) {
@@ -61,7 +61,7 @@ export class SimulatorConnector {
     }
 
     public handleIncomingConnection(sourceConnection: SimulatorConnection): void {
-        logger.trace(keyFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming connection, stopped: ' + this.stopped)
+        logger.trace(getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming connection, stopped: ' + this.stopped)
         if (this.stopped) {
             return
         }
@@ -73,11 +73,11 @@ export class SimulatorConnector {
         logger.trace('connected')
 
         managedConnection.once('handshakeRequest', () => {
-            logger.trace(keyFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming handshake request')
+            logger.trace(getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming handshake request')
             logger.trace('incoming handshake request')
 
             if (this.onIncomingConnection(managedConnection)) {
-                logger.trace(keyFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' calling acceptHandshake')
+                logger.trace(getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' calling acceptHandshake')
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake('Duplicate connection')

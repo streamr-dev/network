@@ -33,7 +33,7 @@ import {
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RandomContactList } from './contact/RandomContactList'
 import { Any } from '../proto/google/protobuf/any'
-import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
 import { Finder, FindResult } from './find/Finder'
 import { StoreRpcLocal } from './store/StoreRpcLocal'
@@ -375,22 +375,22 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         } else {
             logger.trace('new connection not set to connections, there is already a connection with the peer ID')
         }
-        logger.trace('connected: ' + keyFromPeerDescriptor(peerDescriptor) + ' ' + this.connections.size)
+        logger.trace('connected: ' + getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + this.connections.size)
         this.emit('connected', peerDescriptor)
     }
 
     private onTransportDisconnected(peerDescriptor: PeerDescriptor, gracefulLeave: boolean): void {
-        logger.trace('disconnected: ' + keyFromPeerDescriptor(peerDescriptor))
+        logger.trace('disconnected: ' + getNodeIdFromPeerDescriptor(peerDescriptor))
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
         // only remove from bucket if we are on layer 0
         if (this.connectionManager) {
             this.bucket!.remove(peerDescriptor.kademliaId)
 
             if (gracefulLeave === true) {
-                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
+                logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
                 this.removeContact(peerDescriptor)
             } else {
-                logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
+                logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
             }
         }
 
@@ -444,11 +444,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private handleMessage(message: Message): void {
         if (message.serviceId === this.config.serviceId) {
-            logger.trace('callig this.handleMessageFromPeer ' + keyFromPeerDescriptor(message.sourceDescriptor!)
+            logger.trace('callig this.handleMessageFromPeer ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!)
                 + ' ' + message.serviceId + ' ' + message.messageId)
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
-            logger.trace('emit "message" ' + keyFromPeerDescriptor(message.sourceDescriptor!) + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('emit "message" ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!) + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
     }
@@ -479,7 +479,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             return
         }
         this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
-        logger.trace(`Removed contact ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
+        logger.trace(`Removed contact ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
         if (this.bucket!.count() === 0
             && !this.peerDiscovery!.isJoinOngoing()
             && this.config.entryPoints
@@ -501,14 +501,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             // Important to lock here, before the ping result is known
             this.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
             if (this.connections.has(contact.getPeerId().toKey())) {
-                logger.trace(`Added new contact ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
+                logger.trace(`Added new contact ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
             } else {    // open connection by pinging
-                logger.trace('starting ping ' + keyFromPeerDescriptor(contact.getPeerDescriptor()))
+                logger.trace('starting ping ' + getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
                 contact.ping().then((result) => {
                     if (result) {
-                        logger.trace(`Added new contact ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
+                        logger.trace(`Added new contact ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
                     } else {
-                        logger.trace('ping failed ' + keyFromPeerDescriptor(contact.getPeerDescriptor()))
+                        logger.trace('ping failed ' + getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
                         this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
                         this.removeContact(contact.getPeerDescriptor())
                         this.addClosestContactToBucket()
@@ -559,7 +559,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             return
         }
         if (!areEqualPeerDescriptors(contact, this.localPeerDescriptor!)) {
-            logger.trace(`Adding new contact ${keyFromPeerDescriptor(contact)}`)
+            logger.trace(`Adding new contact ${getNodeIdFromPeerDescriptor(contact)}`)
             const rpcRemote = new DhtNodeRpcRemote(
                 this.localPeerDescriptor!,
                 contact,
@@ -591,7 +591,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started || this.stopped) {
             return
         }
-        logger.trace(`Removing contact ${keyFromPeerDescriptor(contact)}`)
+        logger.trace(`Removing contact ${getNodeIdFromPeerDescriptor(contact)}`)
         const peerId = peerIdFromPeerDescriptor(contact)
         this.bucket!.remove(peerId.value)
         this.neighborList!.removeContact(peerId)
