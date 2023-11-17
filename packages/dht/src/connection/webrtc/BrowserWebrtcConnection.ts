@@ -3,6 +3,7 @@ import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from './IWe
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
 import { Logger } from '@streamr/utils'
 import { IceServer } from './WebrtcConnectorRpcLocal'
+import { ManagedConnection } from '../ManagedConnection'
 
 const logger = new Logger(module)
 
@@ -34,6 +35,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     private makingOffer = false
     private isOffering = false
     private closed = false
+    private managedConnection?: ManagedConnection
 
     constructor(params: Params) {
         super()
@@ -233,5 +235,9 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
     public setConnectionId(connectionID: string): void {
         this.connectionId = new ConnectionID(connectionID)
+    }
+
+    public setManagedConnection(managedConnection: ManagedConnection): void {    
+        this.managedConnection = managedConnection
     }
 }
