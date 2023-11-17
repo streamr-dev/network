@@ -1,5 +1,10 @@
 import { Message, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import {
+    areEqualPeerDescriptors,
+    getNodeIdFromPeerDescriptor,
+    keyFromPeerDescriptor,
+    peerIdFromPeerDescriptor
+} from '../../helpers/peerIdFromPeerDescriptor'
 import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'

@@ -328,7 +328,8 @@ export class ManagedConnection extends EventEmitter<Events> {
             logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' emitting disconnected')
             this.emit('disconnected', gracefulLeave)
         } else {
-            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' not emitting disconnected because doNotEmitDisconnected flag is set')
+            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.peerDescriptor)
+                + ' not emitting disconnected because doNotEmitDisconnected flag is set')
         }
     }
 

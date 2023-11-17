@@ -337,7 +337,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (message.serviceId === INTERNAL_SERVICE_ID) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
-            logger.trace('emit "message" ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!) + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('emit "message" ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!) 
+                + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
     }

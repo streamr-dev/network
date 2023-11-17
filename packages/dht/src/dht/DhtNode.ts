@@ -33,7 +33,12 @@ import {
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { RandomContactList } from './contact/RandomContactList'
 import { Any } from '../proto/google/protobuf/any'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import {
+    areEqualPeerDescriptors,
+    getNodeIdFromPeerDescriptor,
+    keyFromPeerDescriptor,
+    peerIdFromPeerDescriptor
+} from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
 import { Finder, FindResult } from './find/Finder'
 import { StoreRpcLocal } from './store/StoreRpcLocal'
@@ -448,7 +453,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 + ' ' + message.serviceId + ' ' + message.messageId)
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
-            logger.trace('emit "message" ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!) + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('emit "message" ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!)
+                + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
     }

@@ -51,7 +51,8 @@ export class SimulatorConnection extends Connection implements IConnection {
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {
-        logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ', ' + getNodeIdFromPeerDescriptor(this.targetPeerDescriptor) + ' close()')
+        logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
+            + ', ' + getNodeIdFromPeerDescriptor(this.targetPeerDescriptor) + ' close()')
 
         if (!this.stopped) {
             logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ', '
