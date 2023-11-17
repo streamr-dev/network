@@ -1,10 +1,5 @@
-import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
-import { Sponsorship, sponsorshipABI } from '@streamr/network-contracts'
-import { Contract } from '@ethersproject/contracts'
-import { randomBytes } from '@ethersproject/random'
+import { EthereumAddress, Logger } from '@streamr/utils'
 import { ContractFacade, SponsorshipResult } from './ContractFacade'
-import { OperatorServiceConfig } from './OperatorPlugin'
-import { log } from 'console'
 
 const logger = new Logger(module)
 
