@@ -45,17 +45,6 @@ The redundancy factor sets the amount of duplicated work when running a fleet of
 
 ### Owner’s cut
 The Operator’s cut is the percentage taken by the Operator from all earnings. This percentage can not be changed later. The remainder percentage is shared among all Delegators, including the Operator's own stake (if the Operator has self-delegated).
-Redundancy factor
-The redundancy factor sets the amount of duplicated work when running a fleet of multiple nodes. Doing redundant work protects against slashing in case some of your nodes experience failures.
-
-For example, setting this to 1 means that no duplication of work occurs (the feature is off), and setting it to 2 means that each stream assignment will be worked on by 2 nodes in your fleet.
-
-The Streamr node Operator to Streamr node connection
-A pairing process needs to happen.
-The easiest way to deploy the Operator contract is with the Streamr Hub UI.
-
-The Node Operator contract parameters
-The Operator factory contract is referenced in the [project contract registry].
 
 ### Operator maintenance
 #### Operator uncollected earnings limit
