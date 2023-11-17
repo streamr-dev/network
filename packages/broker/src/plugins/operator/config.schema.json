@@ -127,8 +127,26 @@
           "default": 900000
         }
       }
+    },
+    "closeExpiredFlags": {
+      "type": "object",
+      "description": "Close expired flags settings",
+      "additionalProperties": false,
+      "default": {},
+      "properties": {
+        "intervalInMs": {
+          "type": "integer",
+          "description": "How often to run (in milliseconds)",
+          "minimum": 0,
+          "default": 600000
+        },
+        "maxFlagAgeInS": {
+          "type": "integer",
+          "description": "The maximum age (in seconds) of a flag before it is expired",
+          "minimum": 0,
+          "default": 86400
+        }
+      }
     }
-    ....
-    
   }
 }

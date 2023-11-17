@@ -74,6 +74,7 @@ export interface SponsorshipResult {
 
 export interface Flag {
     id: string
+    flaggingTimestamp: number
     target: {
         id: string
     }
@@ -181,18 +182,25 @@ export class ContractFacade {
         return results
     }
 
+    // id_gt: "${lastId}", first: ${pageSize},
+    // flaggingTimestamp_lt: "${maxFlagStartTime}",
+    // result_in: ["waiting", "voting"],
+    // sponsorship_in: ${JSON.stringify(sponsorships)}
+
     async getExpiredRelevantFlags(sponsorships: EthereumAddress[], maxFlagAgeSec: number): Promise<Flag[]> {
         const maxFlagStartTime = Math.floor(Date.now() / 1000) - maxFlagAgeSec
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
-                    {
-                    flags(
-                      where: { 
+                {
+                    flags (where : {
+                        id_gt: "${lastId}",
                         flaggingTimestamp_lt: ${maxFlagStartTime},
-                        result: "voting",
-                        sponsorship_in: ${sponsorships}
-                    ) {
+                        result_in: ["waiting", "voting"],
+                        sponsorship_in: ${JSON.stringify(sponsorships)}
+                    }, first: ${pageSize}) {
+                        id
+                        flaggingTimestamp
                         target {
                             id
                         }
@@ -203,8 +211,8 @@ export class ContractFacade {
                 }`
             }
         }
-        const parseItems = (response: { data?: { flags: Flag[] } }): Flag[] => {
-            return response.data?.flags ?? []
+        const parseItems = (response: { flags: Flag[] }): Flag[] => {
+            return response.flags ?? []
         }
         const flagsResults = this.theGraphClient.queryEntities<Flag>(createQuery, parseItems)
         const flags: Flag[] = []
