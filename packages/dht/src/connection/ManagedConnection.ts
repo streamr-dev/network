@@ -43,7 +43,6 @@ export class ManagedConnection extends EventEmitter<Events> {
     private bufferSentbyOtherConnection = false
     private closing = false
     public replacedByOtherConnection = false
-    private firstSend = true
     private localPeerDescriptor: PeerDescriptor
     protected outgoingConnection?: IConnection
     protected incomingConnection?: IConnection
@@ -233,10 +232,8 @@ export class ManagedConnection extends EventEmitter<Events> {
             logger.trace('adding data to outputBuffer')
 
             let result: RunAndRaceEventsReturnType<Events>
-            if (this.firstSend) {
-                this.doNotEmitDisconnected = true
-                this.firstSend = false
-            }
+
+            this.doNotEmitDisconnected = true
 
             try {
                 result = await runAndRaceEvents3<Events>([() => { this.outputBuffer.push(data) }], this, ['handshakeCompleted', 'handshakeFailed',
