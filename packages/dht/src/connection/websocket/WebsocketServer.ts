@@ -3,15 +3,14 @@ import { createServer as createHttpsServer, Server as HttpsServer } from 'https'
 import EventEmitter from 'eventemitter3'
 import { server as WsServer } from 'websocket'
 import { ServerWebsocket } from './ServerWebsocket'
-import {
-    ConnectionSourceEvents
-} from '../IConnectionSource'
-
+import { ConnectionSourceEvents } from '../IConnectionSource'
 import { Logger, asAbortable } from '@streamr/utils'
+import { createSelfSignedCertificate } from '@streamr/autocertifier-client' 
 import { WebsocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
 import fs from 'fs'
+import { UUID } from '../../helpers/UUID'
 
 const logger = new Logger(module)
 
@@ -24,6 +23,7 @@ declare class NodeJsWsServer extends WsServer { }
 
 interface WebsocketServerConfig {
     portRange: PortRange
+    enableTls: boolean
     tlsCertificate?: TlsCertificate
     maxMessageSize?: number
 }
@@ -35,11 +35,13 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
     private readonly abortController = new AbortController()
     private readonly portRange: PortRange
     private readonly tlsCertificate?: TlsCertificate
+    private readonly enableTls: boolean
     private readonly maxMessageSize: number
 
     constructor(config: WebsocketServerConfig) {
         super()
         this.portRange = config.portRange
+        this.enableTls = config.enableTls
         this.tlsCertificate = config.tlsCertificate
         this.maxMessageSize = config.maxMessageSize ?? 1048576
     }
@@ -48,7 +50,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         const ports = range(this.portRange.min, this.portRange.max + 1)
         for (const port of ports) {
             try {
-                await asAbortable(this.startServer(port, this.tlsCertificate), this.abortController.signal)
+                await asAbortable(this.startServer(port, this.enableTls), this.abortController.signal)
                 return port
             } catch (err) {
                 if (err.originalError?.code === 'EADDRINUSE') {
@@ -61,20 +63,29 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         throw new WebsocketServerStartError(`Failed to start WebSocket server on any port in range: ${this.portRange.min}-${this.portRange.min}`)
     }
 
-    private startServer(port: number, tlsCertificate?: TlsCertificate): Promise<void> {
+    // If tlsCertificate has been given the tls boolean is ignored
+    // TODO: could be simplified?
+    private startServer(port: number, tls: boolean): Promise<void> {
         const requestListener = (request: IncomingMessage, response: ServerResponse<IncomingMessage>) => {
             logger.trace('Received request for ' + request.url)
             response.writeHead(404)
             response.end()
         }
         return new Promise((resolve, reject) => {
-            this.httpServer = tlsCertificate ? 
-                createHttpsServer({
-                    key: fs.readFileSync(tlsCertificate.privateKeyFileName),
-                    cert: fs.readFileSync(tlsCertificate.certFileName)
+            if (this.tlsCertificate) {
+                this.httpServer = createHttpsServer({
+                    key: fs.readFileSync(this.tlsCertificate.privateKeyFileName),
+                    cert: fs.readFileSync(this.tlsCertificate.certFileName)
                 }, requestListener)
-                : 
-                createHttpServer(requestListener)
+            } else if (!tls) {
+                this.httpServer = createHttpServer(requestListener)
+            } else {
+                const certificate = createSelfSignedCertificate('streamr-self-signed-' + new UUID().toString(), 1000)
+                this.httpServer = createHttpsServer({
+                    key: certificate.serverKey,
+                    cert: certificate.serverCert
+                }, requestListener)
+            }
 
             function originIsAllowed() {
                 return true
@@ -111,6 +122,13 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
             } catch (e) {
                 reject(new WebsocketServerStartError('Websocket server threw an exception', e))
             }
+        })
+    }
+
+    public updateCertificate(cert: string, key: string): void {
+        (this.httpServer! as HttpsServer).setSecureContext({
+            cert,
+            key
         })
     }
 

@@ -43,6 +43,7 @@ describe('ConnectionManager', () => {
         return new ConnectionManager({
             createConnectorFacade: () => new DefaultConnectorFacade({
                 createLocalPeerDescriptor,
+                websocketServerEnableTls: false,
                 ...opts
             }),
             metricsContext: new MetricsContext()
@@ -70,7 +71,7 @@ describe('ConnectionManager', () => {
         const connectionManager = createConnectionManager({
             transport: mockTransport,
             websocketHost: '127.0.0.1',
-            websocketPortRange: { min: 9991, max: 9991 },
+            websocketPortRange: { min: 9991, max: 9991 }
         })
 
         await connectionManager.start()
@@ -191,6 +192,7 @@ describe('ConnectionManager', () => {
         const connectionManager2 = createConnectionManager({
             transport: mockConnectorTransport2,
             websocketPortRange: { min: 9999, max: 9999 },
+            websocketServerEnableTls: false,
             entryPoints: [
                 connectionManager1.getLocalPeerDescriptor()
             ]
@@ -327,6 +329,20 @@ describe('ConnectionManager', () => {
             .rejects
             .toThrow('Cannot send to self')
         
+        await connectionManager1.stop()
+    })
+
+    it('Failed autocertification', async () => {
+        const connectionManager1 = createConnectionManager({
+            transport: mockTransport,
+            websocketHost: '127.0.0.1',
+            autoCertifierUrl: 'https://localhost:12333',
+            websocketServerEnableTls: true,
+            websocketPortRange: { min: 10003, max: 10003 }
+        })
+
+        await connectionManager1.start()
+        expect(connectionManager1.getLocalPeerDescriptor().websocket!.tls).toEqual(false)
         await connectionManager1.stop()
     })
 })

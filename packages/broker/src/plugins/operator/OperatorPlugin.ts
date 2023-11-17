@@ -72,9 +72,9 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
 
         const redundancyFactor = await fetchRedundancyFactor(serviceConfig)
         if (redundancyFactor === undefined) {
-            throw new Error('Failed to retrieve redundancy factor')
+            throw new Error('Failed to fetch my redundancy factor')
         }
-        logger.info('Fetched redundancy factor', { redundancyFactor })
+        logger.info('Fetched my redundancy factor', { redundancyFactor })
 
         const contractFacade = ContractFacade.createInstance(serviceConfig)
         const maintainTopologyHelper = new MaintainTopologyHelper(serviceConfig)
@@ -227,6 +227,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                 endTime: votingPeriodEndTimestamp
                             },
                             inspectionIntervalInMs: 8 * 60 * 1000,
+                            maxInspections: 10,
                             abortSignal: this.abortController.signal
                         })
                     }

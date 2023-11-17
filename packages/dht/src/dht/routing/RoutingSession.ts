@@ -12,6 +12,8 @@ import { FindRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Contact } from '../contact/Contact'
 import { FindRpcRemote } from './FindRpcRemote'
+import { EXISTING_CONNECTION_TIMEOUT } from '../contact/Remote'
+import { getPreviousPeer } from './getPreviousPeer'
 
 const logger = new Logger(module)
 
@@ -28,13 +30,15 @@ class RemoteContact extends Contact {
             localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
-            toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport())),
+            EXISTING_CONNECTION_TIMEOUT
         )
         this.findRpcRemote = new FindRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
-            toProtoRpcClient(new FindRpcClient(rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new FindRpcClient(rpcCommunicator.getRpcClientTransport())),
+            EXISTING_CONNECTION_TIMEOUT
         )
     }
 
@@ -92,7 +96,8 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.connections = connections
         this.parallelism = parallelism
         this.mode = mode
-        const previousId = messageToRoute.previousPeer ? PeerID.fromValue(messageToRoute.previousPeer.kademliaId) : undefined
+        const previousPeer = getPreviousPeer(messageToRoute)
+        const previousId = previousPeer ? PeerID.fromValue(previousPeer.kademliaId) : undefined
         this.contactList = new SortedContactList(
             PeerID.fromValue(this.messageToRoute.destinationPeer!.kademliaId),
             10000,
@@ -152,21 +157,16 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (this.stopped) {
             return false
         }
+        const msg = {
+            ...this.messageToRoute,
+            routingPath: this.messageToRoute.routingPath.concat([this.localPeerDescriptor])
+        }
         if (this.mode === RoutingMode.FORWARD) {
-            return contact.getRouterRpcRemote().forwardMessage({
-                ...this.messageToRoute,
-                previousPeer: this.localPeerDescriptor
-            })
+            return contact.getRouterRpcRemote().forwardMessage(msg)
         } else if (this.mode === RoutingMode.FIND) {
-            return contact.getFindRpcRemote().routeFindRequest({
-                ...this.messageToRoute,
-                previousPeer: this.localPeerDescriptor
-            })
+            return contact.getFindRpcRemote().routeFindRequest(msg)
         } else {
-            return contact.getRouterRpcRemote().routeMessage({
-                ...this.messageToRoute,
-                previousPeer: this.localPeerDescriptor
-            })
+            return contact.getRouterRpcRemote().routeMessage(msg)
         }
     }
 

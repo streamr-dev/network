@@ -13,13 +13,15 @@ describe('NetworkStack can be stopped during start', () => {
         entryPoint = new NetworkStack({
             layer0: {
                 peerDescriptor: epDescriptor,
-                entryPoints: [epDescriptor]
+                entryPoints: [epDescriptor],
+                websocketServerEnableTls: false
             }
         })
         node = new NetworkStack({
             layer0: {
                 peerDescriptor: createMockPeerDescriptor(),
-                entryPoints: [epDescriptor]
+                entryPoints: [epDescriptor],
+                websocketServerEnableTls: false
             }
         })
         await entryPoint.start()

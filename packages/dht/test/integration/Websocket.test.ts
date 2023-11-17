@@ -10,7 +10,8 @@ const logger = new Logger(module)
 describe('Websocket', () => {
 
     const websocketServer = new WebsocketServer({
-        portRange: { min: 9999, max: 9999 }
+        portRange: { min: 9977, max: 9977 },
+        enableTls: false
     })
     const clientWebsocket = new ClientWebsocket()
 
@@ -57,7 +58,7 @@ describe('Websocket', () => {
             })
         })
 
-        clientWebsocket.connect('ws://127.0.0.1:9999')
+        clientWebsocket.connect('ws://127.0.0.1:9977')
     })
 
     afterAll(async () => {

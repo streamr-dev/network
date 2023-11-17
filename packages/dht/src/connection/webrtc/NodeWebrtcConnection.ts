@@ -6,9 +6,8 @@ import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'n
 import { Logger } from '@streamr/utils'
 import { IllegalRtcPeerConnectionState } from '../../helpers/errors'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { DisconnectionType } from '../../transport/ITransport'
 import { iceServerAsString } from './iceServerAsString'
-import { IceServer } from './WebrtcConnectorRpcLocal'
+import { IceServer } from './WebrtcConnector'
 import { PortRange } from '../ConnectionManager'
 
 const logger = new Logger(module)
@@ -93,7 +92,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
 
         this.connectingTimeoutRef = setTimeout(() => {
             logger.trace('connectingTimeout, this.closed === ' + this.closed)
-            this.doClose('OTHER')
+            this.doClose(false)
         }, this.connectingTimeout)
 
         this.connection.onStateChange((state: string) => this.onStateChange(state))
@@ -120,10 +119,10 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
                 this.connection.setRemoteDescription(description, type as DescriptionType)
                 this.remoteDescriptionSet = true
             } catch (err) {
-                logger.warn(`Failed to set remote descriptor for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
+                logger.debug(`Failed to set remote descriptor for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
             }
         } else {
-            this.doClose('OTHER', `Tried to set description for non-existent connection`)
+            this.doClose(false, `Tried to set description for non-existent connection`)
         }
     }
 
@@ -134,14 +133,14 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
                     logger.trace(`Setting remote candidate for peer: ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
                     this.connection.addRemoteCandidate(candidate, mid)
                 } catch (err) {
-                    logger.warn(`Failed to set remote candidate for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
-                    this.doClose('OTHER')
+                    logger.debug(`Failed to set remote candidate for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
                 }
             } else {
-                this.doClose('OTHER', `Tried to set candidate before description`)
+                // TODO: should queue candidates until remote description is set?
+                this.doClose(false, `Tried to set candidate before description`)
             }
         } else {
-            this.doClose('OTHER', `Tried to set candidate for non-existent connection`)
+            this.doClose(false, `Tried to set candidate for non-existent connection`)
         }
     }
 
@@ -150,16 +149,16 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
             try {
                 this.dataChannel!.sendMessageBinary(data as Buffer)
             } catch (err) {
-                logger.warn('Failed to send binary message to ' + keyFromPeerDescriptor(this.remotePeerDescriptor) + err)
+                logger.debug('Failed to send binary message to ' + keyFromPeerDescriptor(this.remotePeerDescriptor) + err)
             }
         }
     }
 
-    public async close(disconnectionType: DisconnectionType, reason?: string): Promise<void> {
-        this.doClose(disconnectionType, reason)
+    public async close(gracefulLeave: boolean, reason?: string): Promise<void> {
+        this.doClose(gracefulLeave, reason)
     }
 
-    private doClose(disconnectionType: DisconnectionType, reason?: string): void {
+    private doClose(gracefulLeave: boolean, reason?: string): void {
         if (!this.closed) {
             logger.trace(
                 `Closing Node WebRTC Connection to ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`
@@ -168,7 +167,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
 
             this.closed = true
             
-            this.emit('disconnected', disconnectionType, undefined, reason)
+            this.emit('disconnected', gracefulLeave, undefined, reason)
             this.removeAllListeners()
             
             if (this.connectingTimeoutRef) {
@@ -180,7 +179,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
                     logger.trace('closing datachannel')
                     this.dataChannel.close()
                 } catch (e) {
-                    logger.warn('dc.close() errored: %s', e)
+                    logger.trace('dc.close() errored: %s', e)
                 }
             }
             
@@ -188,7 +187,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
                 try {
                     this.connection.close()
                 } catch (e) {
-                    logger.warn('conn.close() errored: %s', e)
+                    logger.trace('conn.close() errored: %s', e)
                 }
             }
         }
@@ -196,7 +195,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
 
     public destroy(): void {
         this.removeAllListeners()
-        this.doClose('OTHER')
+        this.doClose(false)
     }
 
     private onDataChannel(dataChannel: DataChannel): void {
@@ -213,7 +212,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
 
         dataChannel.onClosed(() => {
             logger.trace(`dc.closed`)
-            this.doClose('OTHER', 'DataChannel closed')
+            this.doClose(false, 'DataChannel closed')
         })
 
         dataChannel.onError((err) => logger.error('error', { err }))
@@ -249,7 +248,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
             || state === RtcPeerConnectionStateEnum.disconnected
             || state === RtcPeerConnectionStateEnum.failed
         ) {
-            this.doClose('OTHER')
+            this.doClose(false)
         }
         
     }
