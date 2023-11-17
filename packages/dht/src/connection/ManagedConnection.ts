@@ -34,6 +34,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     private handshaker?: Handshaker
     private handshakeCompleted = false
+    private doNotEmitDisconnected = false
 
     private lastUsed: number = Date.now()
     private stopped = false
@@ -92,6 +93,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             })
             outgoingConnection.once('disconnected', this.onDisconnected)
             outgoingConnection.once('error', (error) => {
+                this.doNotEmitDisconnected = false
                 this.emit('error', error)
             })
 
@@ -105,6 +107,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
                 incomingConnection.on('disconnected', this.onDisconnected)
                 incomingConnection.once('error', (error) => {
+                    this.doNotEmitDisconnected = false
                     this.emit('error', error)
                 })
             }
@@ -234,6 +237,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             let result: RunAndRaceEventsReturnType<Events>
             if (this.firstSend) {
+                this.doNotEmitDisconnected = true
                 this.firstSend = false
             }
 
@@ -246,6 +250,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             }
 
             if (result.winnerName === 'internal_disconnected') {
+                this.doNotEmitDisconnected = false
                 this.doDisconnect(false)
                 throw new Error(`Disconnected opening connection of type ${this.connectionType}`)
             } else if (result.winnerName === 'handshakeFailed') {
@@ -253,6 +258,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
                 if (this.bufferSentbyOtherConnection) {
                     logger.trace('bufferSentByOtherConnection already true')
+                    this.doNotEmitDisconnected = false
                     this.doDisconnect(false)
                 } else {
                     let result2: RunAndRaceEventsReturnType<Events>
@@ -267,6 +273,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                     }
                     if (result2.winnerName === 'bufferSentByOtherConnection') {
                         logger.trace('bufferSentByOtherConnection received')
+                        this.doNotEmitDisconnected = false
                         this.doDisconnect(false)
                     } else if (result2.winnerName === 'closing') {
                         logger.trace('bufferSentByOtherConnection not received, instead received a closing event')
@@ -274,6 +281,8 @@ export class ManagedConnection extends EventEmitter<Events> {
                         logger.trace('disconnected while in raceEvents3')
                     }
                 }
+            } else {
+                this.doNotEmitDisconnected = false
             }
         }
     }
@@ -322,7 +331,12 @@ export class ManagedConnection extends EventEmitter<Events> {
     private doDisconnect(gracefulLeave: boolean) {
         logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' doDisconnect() emitting')
 
-        this.emit('disconnected', gracefulLeave)
+        if (!this.doNotEmitDisconnected) {
+            logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' emitting disconnected')
+            this.emit('disconnected', gracefulLeave)
+        } else {
+            logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' not emitting disconnected because doNotEmitDisconnected flag is set')
+        }
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {
@@ -331,6 +345,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
         this.closing = true
         this.emit('closing')
+        this.doNotEmitDisconnected = false
         if (this.implementation) {
             await this.implementation?.close(gracefulLeave)
         } else if (this.outgoingConnection) {
