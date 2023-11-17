@@ -80,9 +80,8 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     }
 
     public start(isOffering: boolean): void {
-        logger.trace(`Staring new connection for peer: ${getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)}`)
         const peerIdKey = keyFromPeerDescriptor(this.remotePeerDescriptor)
-        logger.trace(`Staring new connection for peer: ${getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)} offering: ${isOffering}`)
+        logger.trace(`Starting new connection for peer ${getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)}`, { isOffering })
         this.connection = new PeerConnection(peerIdKey, {
             iceServers: this.iceServers.map(iceServerAsString),
             maxMessageSize: this.maxMessageSize,
