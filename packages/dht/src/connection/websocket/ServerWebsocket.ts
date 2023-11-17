@@ -87,6 +87,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         }
     }
 
+    // TODO could rename to "closeSilently?"
     public destroy(): void {
         if (!this.stopped) {
             this.removeAllListeners()
