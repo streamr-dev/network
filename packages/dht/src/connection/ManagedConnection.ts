@@ -240,7 +240,6 @@ export class ManagedConnection extends EventEmitter<Events> {
                 this.doNotEmitDisconnected = true
                 this.firstSend = false
             }
-
             try {
                 result = await runAndRaceEvents3<Events>([() => { this.outputBuffer.push(data) }], this, ['handshakeCompleted', 'handshakeFailed',
                     'bufferSentByOtherConnection', 'closing', 'internal_disconnected'], 15000)
@@ -252,6 +251,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             if (result.winnerName === 'internal_disconnected') {
                 this.doNotEmitDisconnected = false
+                this.doDisconnect(false)
                 throw new Error(`Disconnected opening connection of type ${this.connectionType}`)
             } else if (result.winnerName === 'handshakeFailed') {
                 logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' handshakeFailed received')
