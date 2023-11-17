@@ -1,7 +1,7 @@
-import { IConnection, ConnectionID, ConnectionType, ConnectionEvents } from '../IConnection'
-import { w3cwebsocket as Websocket, ICloseEvent, IMessageEvent } from 'websocket'
-import EventEmitter from 'eventemitter3'
 import { Logger } from '@streamr/utils'
+import EventEmitter from 'eventemitter3'
+import { ICloseEvent, IMessageEvent, w3cwebsocket as Websocket } from 'websocket'
+import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from '../IConnection'
 
 const logger = new Logger(module)
 
@@ -23,14 +23,13 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.connectionId = new ConnectionID()
     }
 
-    public connect(address: string): void {
+    public connect(address: string, selfSigned?: boolean): void {
         if (!this.destroyed) {
-            this.socket = new Websocket(address)
+            this.socket = new Websocket(address, undefined, undefined, undefined, { rejectUnauthorized: !selfSigned })
             this.socket.binaryType = BINARY_TYPE
-
             this.socket.onerror = (error: Error) => {
                 if (!this.destroyed) {
-                    logger.trace('WebSocket Client error: ' + error)
+                    logger.trace('WebSocket Client error: ' + error?.message, { error })
                     this.emit('error', error.name)
                 }
             }
@@ -106,6 +105,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public destroy(): void {
+        logger.trace('destroy() a connection')
         if (!this.destroyed) {
             this.removeAllListeners()
             if (this.socket) {

@@ -12,7 +12,8 @@ describe('Config', () => {
             client: {
                 network: {
                     controlLayer: {
-                        entryPoints: CONFIG_TEST.network!.controlLayer!.entryPoints
+                        entryPoints: CONFIG_TEST.network!.controlLayer!.entryPoints,
+                        websocketServerEnableTls: false
                     }
                 }
             }

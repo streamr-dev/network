@@ -22,6 +22,7 @@ interface Heartbeat {
 
 export type CreateOperatorFleetStateFn = (coordinationStreamId: StreamID) => OperatorFleetState
 
+// TODO: add abortSignal support
 export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly streamrClient: StreamrClient
     private readonly coordinationStreamId: StreamID

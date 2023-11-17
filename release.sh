@@ -23,7 +23,15 @@ cd packages/proto-rpc
 npm publish --access public --tag $NPM_TAG
 cd ../..
 
+cd packages/autocertifier-client
+npm publish --access public --tag $NPM_TAG
+cd ../..
+
 cd packages/dht
+npm publish --access public --tag $NPM_TAG
+cd ../..
+
+cd packages/autocertifier-server
 npm publish --access public --tag $NPM_TAG
 cd ../..
 

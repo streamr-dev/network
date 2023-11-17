@@ -67,23 +67,23 @@ export class WebrtcConnector {
 
     constructor(
         config: WebrtcConnectorConfig,
-        onIncomingConnection: (connection: ManagedConnection) => boolean
+        onNewConnection: (connection: ManagedConnection) => boolean
     ) {
         this.config = config
         this.iceServers = config.iceServers ?? []
         this.rpcCommunicator = new ListeningRpcCommunicator(WebrtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000
         })
-        this.registerLocalRpcMethods(config, onIncomingConnection)
+        this.registerLocalRpcMethods(config, onNewConnection)
     }
 
     private registerLocalRpcMethods(
         config: WebrtcConnectorConfig,
-        onIncomingConnection: (connection: ManagedConnection) => boolean
+        onNewConnection: (connection: ManagedConnection) => boolean
     ) {
         const localRpc = new WebrtcConnectorRpcLocal({
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
-            onIncomingConnection,
+            onNewConnection,
             ongoingConnectAttempts: this.ongoingConnectAttempts,
             rpcCommunicator: this.rpcCommunicator,
             getLocalPeerDescriptor: () => this.localPeerDescriptor!,

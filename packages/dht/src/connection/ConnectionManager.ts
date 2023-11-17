@@ -66,10 +66,6 @@ enum ConnectionManagerState {
     STOPPED = 'stopped'
 }
 
-interface ConnectionManagerEvents {
-    newConnection: (connection: ManagedConnection) => void
-}
-
 export interface ConnectionLocker {
     lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void
     unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void
@@ -86,8 +82,6 @@ export interface TlsCertificate {
     privateKeyFileName: string
     certFileName: string
 }
-
-export type Events = TransportEvents & ConnectionManagerEvents
 
 const INTERNAL_SERVICE_ID = 'system/connection-manager'
 
@@ -108,7 +102,7 @@ export const keyOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescriptor | 
     }
 }
 
-export class ConnectionManager extends EventEmitter<Events> implements ITransport, ConnectionLocker {
+export class ConnectionManager extends EventEmitter<TransportEvents> implements ITransport, ConnectionLocker {
 
     private config: ConnectionManagerConfig
     private readonly metricsContext: MetricsContext
@@ -125,7 +119,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         super()
         this.config = config
         this.onData = this.onData.bind(this)
-        this.onIncomingConnection = this.onIncomingConnection.bind(this)
+        this.send = this.send.bind(this)
+        this.onNewConnection = this.onNewConnection.bind(this)
         this.metricsContext = this.config.metricsContext ?? new MetricsContext()
         this.metrics = {
             sendMessagesPerSecond: new RateMetric(),
@@ -184,8 +179,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.state = ConnectionManagerState.RUNNING
         logger.trace(`Starting ConnectionManager...`)
         await this.connectorFacade.start(
-            (connection: ManagedConnection) => this.onIncomingConnection(connection),
-            (peerDescriptor: PeerDescriptor) => this.canConnect(peerDescriptor)
+            (connection: ManagedConnection) => this.onNewConnection(connection),
+            (peerDescriptor: PeerDescriptor) => this.canConnect(peerDescriptor),
+            this
         )
         // Garbage collection of connections
         this.disconnectorIntervalRef = setInterval(() => {
@@ -266,7 +262,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         let connection = this.connections.get(peerIdKey)
         if (!connection && !doNotConnect) {
             connection = this.connectorFacade.createConnection(peerDescriptor)
-            this.onIncomingConnection(connection)
+            this.onNewConnection(connection)
         } else if (!connection) {
             throw new Err.SendFailed('No connection to target, doNotConnect flag is true')
         }
@@ -391,20 +387,19 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     }
 
-    private onIncomingConnection(connection: ManagedConnection): boolean {
+    private onNewConnection(connection: ManagedConnection): boolean {
         if (this.state === ConnectionManagerState.STOPPED) {
             return false
         }
-        logger.trace('onIncomingConnection()')
+        logger.trace('onNewConnection()')
         connection.offeredAsIncoming = true
-        if (!this.acceptIncomingConnection(connection)) {
+        if (!this.acceptNewConnection(connection)) {
             return false
         }
         connection.on('managedData', this.onData)
         connection.on('disconnected', (gracefulLeave: boolean) => {
             this.onDisconnected(connection, gracefulLeave)
         })
-        this.emit('newConnection', connection)
         if (connection.isHandshakeCompleted()) {
             this.onConnected(connection)
         } else {
@@ -415,7 +410,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return true
     }
 
-    private acceptIncomingConnection(newConnection: ManagedConnection): boolean {
+    private acceptNewConnection(newConnection: ManagedConnection): boolean {
         logger.trace(keyFromPeerDescriptor(newConnection.getPeerDescriptor()!) + ' acceptIncomingConnection()')
         const newPeerID = peerIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         const peerIdKey = keyFromPeerDescriptor(newConnection.getPeerDescriptor()!)
@@ -435,7 +430,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 oldConnection.reportBufferSentByOtherConnection()
                 oldConnection.replacedByOtherConnection = true
             } else {
-                newConnection.rejectedAsIncoming = true
                 return false
             }
         }

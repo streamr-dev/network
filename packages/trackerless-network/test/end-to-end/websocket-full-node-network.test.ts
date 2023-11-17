@@ -26,6 +26,7 @@ describe('Full node network with WebSocket connections only', () => {
             layer0: {
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: epPeerDescriptor,
+                websocketServerEnableTls: false
             }
         })
         await entryPoint.start()
@@ -37,7 +38,8 @@ describe('Full node network with WebSocket connections only', () => {
                 layer0: {
                     entryPoints: [epPeerDescriptor],
                     websocketPortRange: { min: 15556 + i, max: 15556 + i },
-                    numberOfNodesPerKBucket: 4
+                    numberOfNodesPerKBucket: 4,
+                    websocketServerEnableTls: false
                 }
             })
             nodes.push(node)

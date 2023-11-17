@@ -25,7 +25,10 @@ describe('Layer1 Scale', () => {
     const websocketPortRange = { min: 62200, max: 62200 + NUM_OF_NODES }
 
     beforeEach(async () => {
-        epLayer0Node = new DhtNode({ peerDescriptor: epPeerDescriptor })
+        epLayer0Node = new DhtNode({
+            peerDescriptor: epPeerDescriptor,
+            websocketServerEnableTls: false
+        })
         await epLayer0Node.start()
         await epLayer0Node.joinDht([epPeerDescriptor])
 
@@ -38,8 +41,9 @@ describe('Layer1 Scale', () => {
 
         for (let i = 0; i < NUM_OF_NODES; i++) {
             const node = new DhtNode({ 
-                websocketPortRange, 
+                websocketPortRange,
                 entryPoints: [epPeerDescriptor],
+                websocketServerEnableTls: false,
                 numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
             })
             await node.start()
@@ -59,7 +63,7 @@ describe('Layer1 Scale', () => {
 
         await Promise.all(layer1Nodes.map((node) => node.joinDht([epPeerDescriptor])))
 
-    }, 60000)
+    }, 120000)
 
     afterEach(async () => {
         await Promise.all(layer1Nodes.map((node) => node.stop()))

@@ -12,7 +12,9 @@ PKG_DIRS="utils
 test-utils
 protocol
 proto-rpc
+autocertifier-client
 dht
+autocertifier-server
 trackerless-network
 client
 cli-tools
@@ -22,7 +24,9 @@ PKG_NAMES="@streamr/utils
 @streamr/test-utils
 @streamr/protocol
 @streamr/proto-rpc
+@streamr/autocertifier-client
 @streamr/dht
+@streamr/autocertifier-server
 @streamr/trackerless-network
 streamr-client
 @streamr/cli-tools
