@@ -100,7 +100,7 @@ describe('Increased logging', () => {
 
         const managedConnection = noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)
         managedConnection!.destroy()
-        await managedConnection!.send(Message.toBinary(dummyMessage), true)
+        await expect(managedConnection!.send(Message.toBinary(dummyMessage), true)).rejects.toThrow()
     })
 
 })
