@@ -246,6 +246,8 @@ export class ManagedConnection extends EventEmitter<Events> {
                     'bufferSentByOtherConnection', 'closing', 'internal_disconnected'], 15000)
             } catch (e) {
                 logger.debug(`Connection to ${keyOrUnknownFromPeerDescriptor(this.peerDescriptor)} timed out`)
+                this.doNotEmitDisconnected = false
+                this.doDisconnect(false)
                 throw e
             }
 
@@ -267,6 +269,8 @@ export class ManagedConnection extends EventEmitter<Events> {
                         result2 = await raceEvents3<Events>(this,
                             ['bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
                     } catch (ex) {
+                        this.doNotEmitDisconnected = false
+                        this.doDisconnect(false)
                         logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor)
                             + ' Exception from raceEvents3 while waiting bufferSentByOtherConnection or closing ' + ex)
                         throw ex
