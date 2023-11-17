@@ -35,6 +35,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     private handshaker?: Handshaker
     private handshakeCompleted = false
     private doNotEmitDisconnected = false
+    private firstSend = true
 
     private lastUsed: number = Date.now()
     private stopped = false
@@ -228,6 +229,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         if (this.closing) {
             return
         }
+
         this.lastUsed = Date.now()
 
         if (doNotConnect && !this.implementation) {
@@ -238,8 +240,10 @@ export class ManagedConnection extends EventEmitter<Events> {
             logger.trace('adding data to outputBuffer')
 
             let result: RunAndRaceEventsReturnType<Events>
-
-            this.doNotEmitDisconnected = true
+            if (this.firstSend) {
+                this.doNotEmitDisconnected = true
+                this.firstSend = false
+            }
 
             try {
                 result = await runAndRaceEvents3<Events>([() => { this.outputBuffer.push(data) }], this, ['handshakeCompleted', 'handshakeFailed',
