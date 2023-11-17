@@ -15,7 +15,7 @@ export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
     getLocalPeerDescriptor: () => PeerDescriptor | undefined
     start: (
-        onIncomingConnection: (connection: ManagedConnection) => boolean,
+        onNewConnection: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean,
         autoCertifierTransport: ITransport
     ) => Promise<void>
@@ -57,7 +57,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     }
 
     async start(
-        onIncomingConnection: (connection: ManagedConnection) => boolean,
+        onNewConnection: (connection: ManagedConnection) => boolean,
         canConnect: (peerDescriptor: PeerDescriptor) => boolean,
         autoCertifierTransport: ITransport
     ): Promise<void> {
@@ -66,7 +66,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             transport: this.config.transport!,
             // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
             canConnect: (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),
-            onIncomingConnection,
+            onNewConnection,
             portRange: this.config.websocketPortRange,
             host: this.config.websocketHost,
             entrypoints: this.config.entryPoints,
@@ -89,7 +89,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             externalIp: this.config.externalIp,
             portRange: this.config.webrtcPortRange,
             maxMessageSize: this.config.maxMessageSize
-        }, onIncomingConnection)
+        }, onNewConnection)
         await this.websocketConnector.start()
         // TODO: generate a PeerDescriptor in a single function. Requires changes to the createOwnPeerDescriptor
         // function in the config. Currently it's given by the DhtNode and it sets the PeerDescriptor for the
@@ -167,12 +167,12 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
         this.simulator = simulator
     }
 
-    async start(onIncomingConnection: (connection: ManagedConnection) => boolean): Promise<void> {
+    async start(onNewConnection: (connection: ManagedConnection) => boolean): Promise<void> {
         logger.trace(`Creating SimulatorConnector`)
         this.simulatorConnector = new SimulatorConnector(
             this.localPeerDescriptor,
             this.simulator,
-            onIncomingConnection
+            onNewConnection
         )
         this.simulator.addConnector(this.simulatorConnector)
     }
