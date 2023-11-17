@@ -101,9 +101,9 @@ const INTERNAL_SERVICE_ID = 'system/connection-manager'
 // - if we create stricter types for incoming messages (message.sourceDescriptor or
 //   disconnectNotice.peerDescriptor)
 // - if ManagedConnection#peerDescriptor is never undefined
-export const keyOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescriptor | undefined): string => { 
+export const getNodeIdOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescriptor | undefined): string => { 
     if (peerDescriptor !== undefined) {
-        return keyFromPeerDescriptor(peerDescriptor)
+        return getNodeIdFromPeerDescriptor(peerDescriptor)
     } else {
         return 'unknown'
     }
@@ -166,7 +166,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const disconnectionCandidates = new SortedContactList<Contact>(peerIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 100000)
         this.connections.forEach((connection) => {
             if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
-                logger.trace('disconnecting in timeout interval: ' + keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
+                logger.trace('disconnecting in timeout interval: ' + getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
                 disconnectionCandidates.addContact(new Contact(connection.getPeerDescriptor()!))
             }
         })
@@ -372,22 +372,22 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private onDisconnected(connection: ManagedConnection, gracefulLeave: boolean) {
-        logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) + ' onDisconnected() gracefulLeave: ' + gracefulLeave)
+        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) + ' onDisconnected() gracefulLeave: ' + gracefulLeave)
 
         const peerIdKey = keyFromPeerDescriptor(connection.getPeerDescriptor()!)
         const storedConnection = this.connections.get(peerIdKey)
         if (storedConnection && storedConnection.connectionId.equals(connection.connectionId)) {
             this.locks.clearAllLocks(peerIdKey)
             this.connections.delete(peerIdKey)
-            logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
+            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
                 + ' deleted connection in onDisconnected() gracefulLeave: ' + gracefulLeave)
             this.emit('disconnected', connection.getPeerDescriptor()!, gracefulLeave)
             this.onConnectionCountChange()
         } else {
-            logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
+            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
                 + ' onDisconnected() did nothing, no such connection in connectionManager')
             if (storedConnection) {
-                logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
+                logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
                 + ' connectionIds do not match ' + storedConnection.connectionId + ' ' + connection.connectionId)
             }
         }
@@ -424,7 +424,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const peerIdKey = keyFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         if (this.connections.has(peerIdKey)) {
             if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.getLocalPeerDescriptor()))) {
-                logger.trace(keyOrUnknownFromPeerDescriptor(newConnection.getPeerDescriptor())
+                logger.trace(getNodeIdOrUnknownFromPeerDescriptor(newConnection.getPeerDescriptor())
                     + ' acceptIncomingConnection() replace current connection')
                 // replace the current connection
                 const oldConnection = this.connections.get(newPeerID.toKey())!

@@ -6,7 +6,7 @@ import { Logger, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } fr
 import EventEmitter from 'eventemitter3'
 import { PeerIDKey } from '../helpers/PeerID'
 import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
-import { keyOrUnknownFromPeerDescriptor } from './ConnectionManager'
+import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
@@ -74,13 +74,13 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.handshaker = new Handshaker(this.localPeerDescriptor, outgoingConnection)
 
             this.handshaker.once('handshakeFailed', (errorMessage) => {
-                logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' handshakeFailed: ' + errorMessage)
+                logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' handshakeFailed: ' + errorMessage)
                 this.emit('handshakeFailed')
             })
 
             this.handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
                 logger.trace('handshake completed for outgoing connection '
-                    + ', ' + keyOrUnknownFromPeerDescriptor(this.peerDescriptor) 
+                    + ', ' + getNodeIdOrUnknownFromPeerDescriptor(this.peerDescriptor) 
                     + ' outputBuffer.length: ' + this.outputBuffer.length)
                 this.attachImplementation(outgoingConnection)
                 this.onHandshakeCompleted(peerDescriptor)
@@ -207,7 +207,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     private onDisconnected(gracefulLeave: boolean): void {
-        logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' onDisconnected() ' + gracefulLeave)
+        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' onDisconnected() ' + gracefulLeave)
         if (this.bufferSentbyOtherConnection) {
             return
         }
@@ -239,7 +239,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                 result = await runAndRaceEvents3<Events>([() => { this.outputBuffer.push(data) }], this, ['handshakeCompleted', 'handshakeFailed',
                     'bufferSentByOtherConnection', 'closing', 'internal_disconnected'], 15000)
             } catch (e) {
-                logger.debug(`Connection to ${keyOrUnknownFromPeerDescriptor(this.peerDescriptor)} timed out`)
+                logger.debug(`Connection to ${getNodeIdOrUnknownFromPeerDescriptor(this.peerDescriptor)} timed out`)
                 throw e
             }
 
@@ -247,7 +247,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                 this.doNotEmitDisconnected = false
                 this.doDisconnect(false)
             } else if (result.winnerName === 'handshakeFailed') {
-                logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' handshakeFailed received')
+                logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' handshakeFailed received')
 
                 if (this.bufferSentbyOtherConnection) {
                     logger.trace('bufferSentByOtherConnection already true')
@@ -260,7 +260,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                         result2 = await raceEvents3<Events>(this,
                             ['bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
                     } catch (ex) {
-                        logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor)
+                        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.peerDescriptor)
                             + ' Exception from raceEvents3 while waiting bufferSentByOtherConnection or closing ' + ex)
                         throw ex
                     }
@@ -291,7 +291,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public reportBufferSentByOtherConnection(): void {
-        logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' reportBufferSentByOtherConnection')
+        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' reportBufferSentByOtherConnection')
         if (this.handshaker) {
             this.handshaker.removeAllListeners()
         }
@@ -322,13 +322,13 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     private doDisconnect(gracefulLeave: boolean) {
-        logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' doDisconnect() emitting')
+        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' doDisconnect() emitting')
 
         if (!this.doNotEmitDisconnected) {
-            logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' emitting disconnected')
+            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' emitting disconnected')
             this.emit('disconnected', gracefulLeave)
         } else {
-            logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' not emitting disconnected because doNotEmitDisconnected flag is set')
+            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' not emitting disconnected because doNotEmitDisconnected flag is set')
         }
     }
 
