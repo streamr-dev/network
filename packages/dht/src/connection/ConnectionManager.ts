@@ -388,7 +388,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.emit('disconnected', connection.getPeerDescriptor()!, gracefulLeave)
             this.onConnectionCountChange()
         } else {
-            logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
+            logger.debug(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
                 + ' onDisconnected() did nothing, no such connection in connectionManager')
             if (storedConnection) {
                 logger.debug(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
