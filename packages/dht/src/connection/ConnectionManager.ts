@@ -399,6 +399,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         logger.trace('onIncomingConnection()')
         connection.offeredAsIncoming = true
+        if (connection.disconnected) {
+            logger.fatal('ALREADY DISCONNECTED')
+            this.onDisconnected(connection, false)
+            return false
+        }
         if (!this.acceptIncomingConnection(connection)) {
             return false
         }

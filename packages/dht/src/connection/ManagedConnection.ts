@@ -15,7 +15,6 @@ export interface ManagedConnectionEvents {
     handshakeFailed: () => void
     bufferSentByOtherConnection: () => void
     closing: () => void
-    internal_disconnected: () => void
 }
 
 interface OutpuBufferEvents {
@@ -42,6 +41,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     private handshaker?: Handshaker
     private handshakeCompleted = false
+    public disconnected = false
 
     private lastUsed: number = Date.now()
     private stopped = false
@@ -221,7 +221,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             return
         }
         this.outputBufferEmitter.emit('bufferSendingFailed')
-        this.emit('internal_disconnected')
+        this.disconnected = true
         this.emit('disconnected', gracefulLeave)
     }
 
