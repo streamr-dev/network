@@ -95,7 +95,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                 this.handshaker!.sendHandshakeRequest()
                 this.emit('connected')
             })
-            outgoingConnection.once('disconnected', this.onDisconnected)
+            outgoingConnection.on('disconnected', this.onDisconnected)
             outgoingConnection.once('error', (error) => {
                 this.doNotEmitDisconnected = false
                 this.emit('error', error)
