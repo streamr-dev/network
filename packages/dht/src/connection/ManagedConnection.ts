@@ -34,6 +34,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     private handshaker?: Handshaker
     private handshakeCompleted = false
+    private handshakeFailed = false
     private doNotEmitDisconnected = false
     private firstSend = true
 
@@ -78,6 +79,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             this.handshaker.once('handshakeFailed', (errorMessage) => {
                 logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' handshakeFailed: ' + errorMessage)
+                this.handshakeFailed = true
                 this.emit('handshakeFailed')
             })
 
@@ -398,6 +400,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             + 'peerDescriptor: ' + JSON.stringify(this.peerDescriptor) + '\n'
             + 'connectionType: ' + this.connectionType + '\n'
             + 'handshakeCompleted: ' + this.handshakeCompleted + '\n'
+            + 'handshakeFailed: ' + this.handshakeCompleted + '\n'
             + 'stopped: ' + this.stopped + '\n'
             + 'offeredAsIncoming: ' + this.offeredAsIncoming + '\n'
             + 'rejectedAsIncoming: ' + this.rejectedAsIncoming + '\n'
