@@ -43,6 +43,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     public rejectedAsIncoming = false
     private bufferSentbyOtherConnection = false
     private closing = false
+    public disconnected = false
     public replacedByOtherConnection = false
     private localPeerDescriptor: PeerDescriptor
     protected outgoingConnection?: IConnection
@@ -339,6 +340,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         if (!this.doNotEmitDisconnected) {
             logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' emitting disconnected')
+            this.disconnected = true
             this.emit('disconnected', gracefulLeave)
         } else {
             logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' not emitting disconnected because doNotEmitDisconnected flag is set')

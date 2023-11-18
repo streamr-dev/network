@@ -402,6 +402,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (!this.acceptIncomingConnection(connection)) {
             return false
         }
+        if (connection.disconnected) {
+            logger.fatal(`DISCONNECTED BEFORE EVENT LISTENER SET`)
+            this.onDisconnected(connection, false)
+        }
         connection.on('managedData', this.onData)
         connection.on('disconnected', (gracefulLeave: boolean) => {
             this.onDisconnected(connection, gracefulLeave)
