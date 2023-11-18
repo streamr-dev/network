@@ -340,7 +340,8 @@ export class ManagedConnection extends EventEmitter<Events> {
     private doDisconnect(gracefulLeave: boolean) {
         logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' doDisconnect() emitting')
 
-        if (!this.doNotEmitDisconnected) {
+        if (!this.doNotEmitDisconnected 
+            || (this.outgoingConnection !== undefined && !this.handshakeFailed && !this.handshakeCompleted)) {
             logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' emitting disconnected')
             this.disconnected = true
             this.emit('disconnected', gracefulLeave)
