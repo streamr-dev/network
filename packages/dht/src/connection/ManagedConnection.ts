@@ -417,6 +417,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             + 'lastUsed: ' + this.lastUsed + '\n'
             + 'hasHandshaker: ' + (this.handshaker ? 'true' : 'false') + '\n'
             + 'doNotEmitDisconnected: ' + this.doNotEmitDisconnected + '\n'
+            + 'disconnected: ' + this.disconnected + '\n'
 
         return ret
     }
