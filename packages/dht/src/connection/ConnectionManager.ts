@@ -165,7 +165,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const disconnectionCandidates = new SortedContactList<Contact>(peerIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 100000)
         this.connections.forEach((connection) => {
             if (connection.disconnected) {
-                logger.debug(`Cleaning disconnected to ${keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())} connection from state`)
+                logger.debug(`Cleaning disconnected connection to ${keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())} from state`)
                 this.onDisconnected(connection, false)
                 return
             }
@@ -391,7 +391,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
                 + ' onDisconnected() did nothing, no such connection in connectionManager')
             if (storedConnection) {
-                logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
+                logger.debug(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
                 + ' connectionIds do not match ' + storedConnection.connectionId + ' ' + connection.connectionId)
             }
         }
