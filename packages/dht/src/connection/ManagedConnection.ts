@@ -368,6 +368,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             + 'inputBuffer.length: ' + this.inputBuffer.length + '\n'
             + 'lastUsed: ' + this.lastUsed + '\n'
             + 'hasHandshaker: ' + (this.handshaker ? 'true' : 'false') + '\n'
+            + 'disconnected' + (this.disconnected ? 'true' : 'false') + '\n'
 
         return ret
     }
