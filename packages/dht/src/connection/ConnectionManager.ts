@@ -393,6 +393,10 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }
         logger.trace('onNewConnection()')
         connection.offeredAsIncoming = true
+        if (connection.disconnected) {
+            this.onDisconnected(connection, false)
+            return false
+        }
         if (!this.acceptNewConnection(connection)) {
             return false
         }

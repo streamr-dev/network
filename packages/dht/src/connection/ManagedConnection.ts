@@ -38,6 +38,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     private lastUsed: number = Date.now()
     private stopped = false
+    public disconnected = false
     public offeredAsIncoming = false
     private bufferSentbyOtherConnection = false
     private closing = false
@@ -92,7 +93,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             })
             outgoingConnection.once('disconnected', this.onDisconnected)
             outgoingConnection.once('error', (error) => {
-                this.emitDisconnected = false
+                this.emitDisconnected = true
                 this.emit('error', error)
             })
 
@@ -106,7 +107,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
                 incomingConnection.on('disconnected', this.onDisconnected)
                 incomingConnection.once('error', (error) => {
-                    this.emitDisconnected = false
+                    this.emitDisconnected = true
                     this.emit('error', error)
                 })
             }
@@ -332,8 +333,9 @@ export class ManagedConnection extends EventEmitter<Events> {
     private doDisconnect(gracefulLeave: boolean) {
         logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' doDisconnect() emitting')
 
-        if (!this.emitDisconnected) {
+        if (this.emitDisconnected) {
             logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' emitting disconnected')
+            this.disconnected = true
             this.emit('disconnected', gracefulLeave)
         } else {
             logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' not emitting disconnected because emitDisconnected flag is false')
@@ -346,7 +348,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
         this.closing = true
         this.emit('closing')
-        this.emitDisconnected = false
+        this.emitDisconnected = true
         if (this.implementation) {
             await this.implementation?.close(gracefulLeave)
         } else if (this.outgoingConnection) {
