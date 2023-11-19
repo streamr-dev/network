@@ -163,10 +163,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         const disconnectionCandidates = new SortedContactList<Contact>(peerIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 100000)
-        this.connections.forEach((connection) => {
+        this.connections.forEach((connection, key) => {
             if (connection.disconnected) {
-                logger.debug(`Cleaning disconnected connection to ${keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())} from state`)
-                this.onDisconnected(connection, false)
+                logger.debug(`Cleaning disconnected connection to ${keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())} ${key}  from state`)
+                this.onDisconnected(connection, false, key)
                 return
             }
             if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
@@ -375,10 +375,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.onConnectionCountChange()
     }
 
-    private onDisconnected(connection: ManagedConnection, gracefulLeave: boolean) {
+    private onDisconnected(connection: ManagedConnection, gracefulLeave: boolean, mapKey?: PeerIDKey) {
         logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) + ' onDisconnected() gracefulLeave: ' + gracefulLeave)
 
-        const peerIdKey = keyFromPeerDescriptor(connection.getPeerDescriptor()!)
+        const peerIdKey = mapKey ?? keyFromPeerDescriptor(connection.getPeerDescriptor()!)
         const storedConnection = this.connections.get(peerIdKey)
         if (storedConnection && storedConnection.connectionId.equals(connection.connectionId)) {
             this.locks.clearAllLocks(peerIdKey)
