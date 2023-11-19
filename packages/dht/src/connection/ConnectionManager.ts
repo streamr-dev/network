@@ -390,10 +390,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         } else {
             logger.debug(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
                 + ' onDisconnected() did nothing, no such connection in connectionManager')
+            Array.from(this.connections.keys()).filter((key) => key === peerIdKey).forEach((key) => {
+                logger.fatal(peerIdKey +' DUPLICATE CONNECTION? ' + key)
+            })
             if (storedConnection) {
-                Array.from(this.connections.keys()).filter((key) => key === peerIdKey).forEach((key) => {
-                    logger.fatal(peerIdKey +' DUPLICATE CONNECTION? ' + key)
-                })
                 logger.debug(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
                 + ' connectionIds do not match ' + storedConnection.connectionId + ' ' + connection.connectionId)
             }
