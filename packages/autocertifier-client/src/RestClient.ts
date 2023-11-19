@@ -44,7 +44,13 @@ export class RestClient {
         return response
     }
 
-    public async updateCertificate(subdomain: string, streamrWebSocketPort: number, nodeId: string, sessionId: string, token: string): Promise<CertifiedSubdomain> {
+    public async updateCertificate(
+        subdomain: string,
+        streamrWebSocketPort: number,
+        nodeId: string,
+        sessionId: string,
+        token: string
+    ): Promise<CertifiedSubdomain> {
         const url = this.baseUrl + '/certificates/' + encodeURIComponent(subdomain)
         const body: UpdateIpAndPortRequest = {
             token,

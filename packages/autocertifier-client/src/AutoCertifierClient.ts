@@ -117,7 +117,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         this.ongoingSessions.add(sessionId)
 
         try {
-            certifiedSubdomain = await this.restClient.createSubdomainAndCertificate(this.streamrWebSocketPort,  this.getOwnNodeId(), sessionId)
+            certifiedSubdomain = await this.restClient.createSubdomainAndCertificate(this.streamrWebSocketPort, this.getOwnNodeId(), sessionId)
         } finally {
             this.ongoingSessions.delete(sessionId)
         }

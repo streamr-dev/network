@@ -6,7 +6,6 @@ import {
     ListeningRpcCommunicator,
     NodeType,
     PeerDescriptor,
-    PeerID,
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'

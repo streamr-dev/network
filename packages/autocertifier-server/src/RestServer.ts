@@ -1,7 +1,14 @@
 import express from 'express'
 import { RestInterface } from './RestInterface'
 import { Logger } from '@streamr/utils'
-import { Err, FailedToExtractIpAddress, SteamrWebSocketPortMissing, TokenMissing, UnspecifiedError, NodeIdMissing } from '@streamr/autocertifier-client'
+import { 
+    Err,
+    FailedToExtractIpAddress,
+    SteamrWebSocketPortMissing,
+    TokenMissing,
+    UnspecifiedError,
+    NodeIdMissing
+} from '@streamr/autocertifier-client'
 import bodyParser from 'body-parser'
 import * as https from 'https'
 import * as fs from 'fs'
@@ -171,7 +178,7 @@ export class RestServer {
             return
         }
         const streamrWebSocketPort = body.streamrWebSocketPort + ''
-        if (!body.nodeId|| !isHex(body.nodeId)) {
+        if (!body.nodeId || !isHex(body.nodeId)) {
             const err = new NodeIdMissing('Streamr node ID not given')
             sendError(res, err)
             return
