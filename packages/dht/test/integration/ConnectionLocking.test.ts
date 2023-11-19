@@ -6,6 +6,7 @@ import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTran
 import { ITransport } from '../../src/exports'
 import { PeerID } from '../../src/helpers/PeerID'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { getRandomRegion } from '../../dist/src/connection/simulator/pings'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
@@ -21,11 +22,13 @@ describe('Connection Locking', () => {
 
     const mockPeerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('mock1').value,
-        type: NodeType.NODEJS
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
     const mockPeerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('mock2').value,
-        type: NodeType.NODEJS
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
 
     let mockConnectorTransport1: ConnectionManager

@@ -304,10 +304,12 @@ export class WebsocketConnector {
 
             if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 managedConnection.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
+                managedConnection.destroy()
             } else if (this.onNewConnection(managedConnection)) {
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake(HandshakeError.DUPLICATE_CONNECTION)
+                managedConnection.destroy()
             }
         }
     }

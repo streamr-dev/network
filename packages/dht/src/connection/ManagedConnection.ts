@@ -75,7 +75,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             this.handshaker.once('handshakeFailed', (error) => {
                 if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR) {
-                    this.destroy()
+                    this.close(false)
                 } else {
                     logger.trace(keyOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' handshakeFailed: ' + error)
                     this.emit('handshakeFailed')

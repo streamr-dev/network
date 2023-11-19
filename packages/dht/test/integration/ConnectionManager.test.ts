@@ -403,7 +403,7 @@ describe('ConnectionManager', () => {
             websocketHost: '127.0.0.1',
             autoCertifierUrl: 'https://localhost:12333',
             websocketServerEnableTls: true,
-            websocketPortRange: { min: 10003, max: 10003 }
+            websocketPortRange: { min: 10004, max: 10004 }
         })
 
         await connectionManager1.start()
