@@ -11,7 +11,8 @@ export enum ErrorCode {
     DATABASE_ERROR = 'DATABASE_ERROR',
     INVALID_SUBDOMAIN_OR_TOKEN = 'INVALID_SUBDOMAIN_OR_TOKEN',
     FAILED_TO_CONNECT_TO_STREAMR_WEBSOCKET = 'FAILED_TO_CONNECT_TO_STREAMR_WEBSOCKET',
-    SERVER_ERROR = 'SERVER_ERROR'
+    SERVER_ERROR = 'SERVER_ERROR',
+    NODE_ID_MISSING = 'NODE_ID_MISSING'
 }
 
 // TODO: fix name, probably only used by server?
@@ -42,6 +43,7 @@ export class UnspecifiedError extends Err { constructor(message?: string, origin
 export class FailedToExtractIpAddress extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.FAILED_TO_EXTRACT_IP_ADDRESS, HttpStatus.INTERNAL_SERVER_ERROR, message, originalError) } }
 export class TokenMissing extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.TOKEN_MISSING, HttpStatus.BAD_REQUEST, message, originalError) } }
 export class SteamrWebSocketPortMissing extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.STREAMR_WEBSOCKET_PORT_MISSING, HttpStatus.BAD_REQUEST, message, originalError) } }
+export class NodeIdMissing extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.NODE_ID_MISSING, HttpStatus.BAD_REQUEST, message, originalError) } }
 export class DatabaseError extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.DATABASE_ERROR, HttpStatus.INTERNAL_SERVER_ERROR, message, originalError) } }
 export class InvalidSubdomainOrToken extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.INVALID_SUBDOMAIN_OR_TOKEN, HttpStatus.UNAUTHORIZED, message, originalError) } }
 export class FailedToConnectToStreamrWebSocket extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.FAILED_TO_CONNECT_TO_STREAMR_WEBSOCKET, HttpStatus.INTERNAL_SERVER_ERROR, message, originalError) } }

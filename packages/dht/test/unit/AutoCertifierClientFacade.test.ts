@@ -32,7 +32,8 @@ describe('AutoCertifierClientFacade', () => {
             wsServerPort: 0,
             setHost,
             updateCertificate,
-            createClientFactory: mockClientFactory
+            createClientFactory: mockClientFactory,
+            getOwnNodeId: () => 'eeeeee'
         })
     }) 
 
