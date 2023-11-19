@@ -388,11 +388,10 @@ describe('ConnectionManager', () => {
                 rpcMessage: RpcMessage.create()
             } 
         }
-        await connectionManager1.send(msg)      
-        
-        await expect(waitForEvent3<any>(connectionManager2, 'message'))
+        await expect(connectionManager1.send(msg))      
             .rejects
             .toThrow()
+        
         await connectionManager1.stop()
         await connectionManager2.stop()
     }, 10000)
