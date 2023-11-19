@@ -327,6 +327,10 @@ export interface ConnectivityRequest {
      * @generated from protobuf field: optional string host = 3;
      */
     host?: string;
+    /**
+     * @generated from protobuf field: bool selfSigned = 4;
+     */
+    selfSigned: boolean;
 }
 /**
  * @generated from protobuf message dht.ConnectivityResponse
@@ -616,13 +620,19 @@ export enum RpcResponseError {
  */
 export enum HandshakeError {
     /**
-     * @generated from protobuf enum value: DUPLICATE_CONNECTION = 0;
+     * avoid  javascript 0 comparison
+     *
+     * @generated from protobuf enum value: OTHER = 0;
      */
-    DUPLICATE_CONNECTION = 0,
+    OTHER = 0,
     /**
-     * @generated from protobuf enum value: INVALID_TARGET_PEER_DESCRIPTOR = 1;
+     * @generated from protobuf enum value: DUPLICATE_CONNECTION = 1;
      */
-    INVALID_TARGET_PEER_DESCRIPTOR = 1
+    DUPLICATE_CONNECTION = 1,
+    /**
+     * @generated from protobuf enum value: INVALID_TARGET_PEER_DESCRIPTOR = 2;
+     */
+    INVALID_TARGET_PEER_DESCRIPTOR = 2
 }
 // Wraps all messages
 
@@ -944,7 +954,8 @@ class ConnectivityRequest$Type extends MessageType$<ConnectivityRequest> {
         super("dht.ConnectivityRequest", [
             { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 2, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 3, name: "host", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 3, name: "host", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "selfSigned", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }

@@ -206,8 +206,10 @@ message HandshakeResponse {
 }
 
 enum HandshakeError {
-  DUPLICATE_CONNECTION = 0;
-  INVALID_TARGET_PEER_DESCRIPTOR = 1;
+  // avoid  javascript 0 comparison
+  OTHER = 0;
+  DUPLICATE_CONNECTION = 1;
+  INVALID_TARGET_PEER_DESCRIPTOR = 2;
 }
 
 // Wraps all messages
