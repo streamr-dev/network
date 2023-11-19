@@ -70,7 +70,8 @@ describe('RestServer', () => {
                 url: 'https://localhost:9877/certificates',
                 method: 'PATCH',
                 json: {
-                    streamrWebSocketPort: '1234'
+                    streamrWebSocketPort: '1234',
+                    nodeId: 'e1'
                 },
                 rejectUnauthorized: false
             }
@@ -108,7 +109,8 @@ describe('RestServer', () => {
                 method: 'PUT',
                 json: {
                     streamrWebSocketPort: '1234',
-                    token: 'token'
+                    token: 'token',
+                    nodeId: 'e1'
                 },
                 rejectUnauthorized: false
             }
@@ -126,7 +128,8 @@ describe('RestServer', () => {
                 url: 'https://localhost:9877/certificates/test/ip',
                 method: 'PUT',
                 json: {
-                    token: 'token'
+                    token: 'token',
+                    nodeId: 'e1'
                 },
                 rejectUnauthorized: false
             }
@@ -145,7 +148,8 @@ describe('RestServer', () => {
                 url: 'https://localhost:9877/certificates/test/ip',
                 method: 'PUT',
                 json: {
-                    streamrWebSocketPort: '1234'
+                    streamrWebSocketPort: '1234',
+                    nodeId: 'e1'
                 },
                 rejectUnauthorized: false
             }
@@ -157,6 +161,47 @@ describe('RestServer', () => {
                 expect(responseBody.code).toEqual('TOKEN_MISSING')
                 done()
             })
+        })
+    })
+
+    it('should return an error if nodeId is missing', (done) => {
+        const options = {
+            url: 'https://localhost:9877/certificates/test/ip',
+            method: 'PUT',
+            json: {
+                streamrWebSocketPort: '1234',
+                token: 'token'
+            },
+            rejectUnauthorized: false
+        }
+
+        request(options, (error: any, response: Response, body: any) => {
+            expect(error).toBeFalsy()
+            expect(response.statusCode).toEqual(400)
+            const responseBody = body as ApiError
+            expect(responseBody.code).toEqual('NODE_ID_MISSING')
+            done()
+        })
+    })
+
+    it('should return an error if nodeId is not hex', (done) => {
+        const options = {
+            url: 'https://localhost:9877/certificates/test/ip',
+            method: 'PUT',
+            json: {
+                streamrWebSocketPort: '1234',
+                token: 'token',
+                nodeId: 'tttt'
+            },
+            rejectUnauthorized: false
+        }
+
+        request(options, (error: any, response: Response, body: any) => {
+            expect(error).toBeFalsy()
+            expect(response.statusCode).toEqual(400)
+            const responseBody = body as ApiError
+            expect(responseBody.code).toEqual('NODE_ID_MISSING')
+            done()
         })
     })
 })

@@ -1,6 +1,6 @@
 import { Message, NodeType, PeerDescriptor, PeerID, ClientWebsocket, ManagedConnection, RoutingRpcCommunicator } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { Logger } from '@streamr/utils'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { ConnectionType } from '@streamr/dht'
 import { FailedToConnectToStreamrWebSocket, AutoCertifierRpcClient, SERVICE_ID } from '@streamr/autocertifier-client'
 
@@ -17,11 +17,12 @@ const LOCAL_PEER_DESCRIPTOR: PeerDescriptor = {
 export const runStreamrChallenge = (
     streamrWebSocketIp: string,
     streamrWebSocketPort: string,
-    sessionId: string
+    sessionId: string,
+    nodeId: string
 ): Promise<void> => {
     return new Promise((resolve, reject) => {
         const remotePeerDescriptor: PeerDescriptor = {
-            kademliaId: PeerID.fromString('AutoCertifierClient').value, // TODO: should use real kademlia id
+            kademliaId: hexToBinary(nodeId),
             type: NodeType.NODEJS,
             websocket: {
                 host: streamrWebSocketIp,

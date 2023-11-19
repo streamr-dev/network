@@ -1,7 +1,7 @@
 import express from 'express'
 import { RestInterface } from './RestInterface'
 import { Logger } from '@streamr/utils'
-import { Err, FailedToExtractIpAddress, SteamrWebSocketPortMissing, TokenMissing, UnspecifiedError } from '@streamr/autocertifier-client'
+import { Err, FailedToExtractIpAddress, SteamrWebSocketPortMissing, TokenMissing, UnspecifiedError, NodeIdMissing } from '@streamr/autocertifier-client'
 import bodyParser from 'body-parser'
 import * as https from 'https'
 import * as fs from 'fs'
@@ -12,6 +12,10 @@ const logger = new Logger(module)
 
 type ExpressType = ReturnType<typeof express>
 type ServerType = ReturnType<ExpressType['listen']>
+
+const isHex = (str: string): boolean => {
+    return /^[0-9a-fA-F]+$/.test(str)
+}
 
 const sendError = (res: express.Response, err: any) => {
     if (err instanceof Err) {
@@ -133,6 +137,12 @@ export class RestServer {
             return
         }
         const streamrWebSocketPort = body.streamrWebSocketPort + ''
+        if (!body.nodeId || !isHex(body.nodeId)) {
+            const err = new NodeIdMissing('Streamr node ID not given')
+            sendError(res, err)
+            return
+        }
+        const nodeId = body.nodeId
         const ipAndPort = parseIpAndPort(req)
         if (!ipAndPort) {
             const err = new FailedToExtractIpAddress('Failed to extract IP address from request')
@@ -142,7 +152,7 @@ export class RestServer {
         const sessionId = body.sessionId
         try {
             const certifiedSubdomain = await this.engine.createNewSubdomainAndCertificate(
-                ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId
+                ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId, nodeId
             )
             sendResponse(res, certifiedSubdomain)
         } catch (err) {
@@ -161,6 +171,12 @@ export class RestServer {
             return
         }
         const streamrWebSocketPort = body.streamrWebSocketPort + ''
+        if (!body.nodeId|| !isHex(body.nodeId)) {
+            const err = new NodeIdMissing('Streamr node ID not given')
+            sendError(res, err)
+            return
+        }
+        const nodeId = body.nodeId
         if (!body || !body.token) {
             const err = new TokenMissing('Token not given')
             sendError(res, err)
@@ -176,7 +192,7 @@ export class RestServer {
         }
         try {
             const certifiedSubdomain = await this.engine.createNewCertificateForSubdomain(subdomain,
-                ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId, token)
+                ipAndPort.ip, ipAndPort.port, streamrWebSocketPort, sessionId, token, nodeId)
 
             sendResponse(res, certifiedSubdomain)
         } catch (err) {
@@ -195,7 +211,12 @@ export class RestServer {
             return
         }
         const streamrWebSocketPort = req.body.streamrWebSocketPort + ''
-
+        if (!body.nodeId || !isHex(body.nodeId)) {
+            const err = new NodeIdMissing('Streamr node ID not given')
+            sendError(res, err)
+            return
+        }
+        const nodeId = body.nodeId
         if (!body || !body.token) {
             const err = new TokenMissing('Token not given')
             sendError(res, err)
@@ -216,7 +237,7 @@ export class RestServer {
             + ', sessionId: ' + ' ' + sessionId + ', token: ' + token)
         try {
             await this.engine.updateSubdomainIp(subdomain, ipAndPort.ip,
-                ipAndPort.port, streamrWebSocketPort, sessionId, token)
+                ipAndPort.port, streamrWebSocketPort, sessionId, token, nodeId)
 
             sendResponse(res)
         } catch (err) {
