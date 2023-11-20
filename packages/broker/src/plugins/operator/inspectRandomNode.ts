@@ -43,14 +43,21 @@ export async function inspectRandomNode(
     })
 
     const results = await consumeResults()
-    if (!results.some((pass) => pass)) {
-        logger.info('Raise flag', { target })
-        await contractFacade.flag(
-            target.sponsorshipAddress,
-            target.operatorAddress,
-            StreamPartIDUtils.getStreamPartition(target.streamPart)
-        )
-    } else {
+    if (results.some((pass) => pass)) {
         logger.info('Not raising flag', { target })
+        return
     }
+
+    const flagAlreadyRaised = await contractFacade.hasOpenFlag(target.operatorAddress, target.sponsorshipAddress)
+    if (flagAlreadyRaised) {
+        logger.info('Not raising flag (target already has open flag)', { target })
+        return
+    }
+
+    logger.info('Raise flag', { target })
+    await contractFacade.flag(
+        target.sponsorshipAddress,
+        target.operatorAddress,
+        StreamPartIDUtils.getStreamPartition(target.streamPart)
+    )
 }
