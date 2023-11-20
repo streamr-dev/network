@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto'
-import { ConnectionLocker, DhtNode, NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { ConnectionLocker, DhtNode, NodeType, PeerDescriptor, Simulator, SimulatorTransport, getRandomRegion } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import {
     ContentType,
@@ -84,7 +84,8 @@ export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'k
     return {
         ...opts,
         kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
 }
 

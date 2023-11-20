@@ -1,11 +1,12 @@
 import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
-import { Simulator } from '../../src/connection/simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { ITransport } from '../../src/exports'
 import { PeerID } from '../../src/helpers/PeerID'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { getRandomRegion } from '../../dist/src/connection/simulator/pings'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
@@ -21,11 +22,13 @@ describe('Connection Locking', () => {
 
     const mockPeerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString('mock1').value,
-        type: NodeType.NODEJS
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
     const mockPeerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('mock2').value,
-        type: NodeType.NODEJS
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
 
     let mockConnectorTransport1: ConnectionManager
@@ -37,7 +40,7 @@ describe('Connection Locking', () => {
     let simulator: Simulator
 
     beforeEach(async () => {
-        simulator = new Simulator()
+        simulator = new Simulator(LatencyType.REAL)
         mockConnectorTransport1 = new SimulatorTransport(mockPeerDescriptor1, simulator)
         await mockConnectorTransport1.start()
         mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
