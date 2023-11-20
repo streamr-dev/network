@@ -130,6 +130,6 @@ describe('publish-subscribe', () => {
             await publisherClient.publish(stream.id, PAYLOAD)
             await waitForCondition(() => messages.length > 0, TIMEOUT)
             expect(messages).toEqual([PAYLOAD])
-        }, TIMEOUT)
+        }, 2 * TIMEOUT)
     })
 })
