@@ -1,7 +1,7 @@
 import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
-import { Simulator } from '../../src/connection/simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { ITransport } from '../../src/exports'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -40,7 +40,7 @@ describe('Connection Locking', () => {
     let simulator: Simulator
 
     beforeEach(async () => {
-        simulator = new Simulator()
+        simulator = new Simulator(LatencyType.REAL)
         mockConnectorTransport1 = new SimulatorTransport(mockPeerDescriptor1, simulator)
         await mockConnectorTransport1.start()
         mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
