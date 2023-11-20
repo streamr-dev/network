@@ -147,7 +147,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         logger.info('updating subdomain ip and port for ' + subdomain + ' to ' + ipAddress + ':' + port)
 
         // this will throw if the client cannot answer the challenge of getting sessionId
-        // or the nodeId of the 
+        // or the nodeId of the requestor is invalid
         await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId, nodeId)
         await this.database!.updateSubdomainIp(subdomain, ipAddress, port, authenticationToken)
     }
