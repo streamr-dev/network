@@ -4,11 +4,12 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { createPeerDescriptor } from '../../src/dht/DhtNode'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { Logger, MetricsContext } from '@streamr/utils'
+import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/exports'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 import { MarkOptional } from 'ts-essentials'
 import { createRandomKademliaId } from '../../src/helpers/kademliaId'
+import { TransportEvents } from '../../src/transport/ITransport'
 
 const logger = new Logger(module)
 
@@ -388,9 +389,13 @@ describe('ConnectionManager', () => {
                 rpcMessage: RpcMessage.create()
             } 
         }
-        await expect(connectionManager1.send(msg))      
-            .rejects
-            .toThrow()
+        await Promise.all([
+            waitForEvent3<TransportEvents>(connectionManager1, 'disconnected'),
+            expect(connectionManager1.send(msg))      
+                .rejects
+                .toThrow()
+        ])
+        
         
         await connectionManager1.stop()
         await connectionManager2.stop()
