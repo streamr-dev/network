@@ -46,7 +46,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
             return {}
         }
         const managedConnection = this.config.connect(targetPeerDescriptor)
-        managedConnection.setPeerDescriptor(targetPeerDescriptor)
+        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
         this.config.onNewConnection(managedConnection)
         return {}
     }
@@ -60,7 +60,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         if (!managedConnection) {
             connection = new NodeWebrtcConnection({ remotePeerDescriptor: remotePeer })
             managedConnection = new ManagedWebrtcConnection(this.config.getLocalPeerDescriptor(), undefined, connection)
-            managedConnection.setPeerDescriptor(remotePeer)
+            managedConnection.setRemotePeerDescriptor(remotePeer)
             this.config.ongoingConnectAttempts.set(peerKey, managedConnection)
             this.config.onNewConnection(managedConnection)
             const remoteConnector = new WebrtcConnectorRpcRemote(

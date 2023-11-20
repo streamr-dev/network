@@ -39,7 +39,7 @@ describe('inspect', () => {
 
     beforeEach(async () => {
         Simulator.useFakeTimers()
-        simulator = new Simulator(LatencyType.RANDOM)
+        simulator = new Simulator(LatencyType.REAL)
 
         publisherNode = await initiateNode(publisherDescriptor, simulator)
         inspectorNode = await initiateNode(inspectorPeerDescriptor, simulator)

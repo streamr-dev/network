@@ -17,6 +17,7 @@ import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     areEqualPeerDescriptors,
+    getNodeIdFromPeerDescriptor,
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
@@ -132,7 +133,7 @@ export class WebrtcConnector {
             throw new Err.CannotConnectToSelf('Cannot open WebRTC Connection to self')
         }
 
-        logger.trace(`Opening WebRTC connection to ${keyFromPeerDescriptor(targetPeerDescriptor)}`)
+        logger.trace(`Opening WebRTC connection to ${getNodeIdFromPeerDescriptor(targetPeerDescriptor)}`)
 
         const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.ongoingConnectAttempts.get(peerKey)
@@ -158,7 +159,7 @@ export class WebrtcConnector {
             managedConnection = new ManagedWebrtcConnection(this.localPeerDescriptor!, undefined, connection)
         }
 
-        managedConnection.setPeerDescriptor(targetPeerDescriptor)
+        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
         this.ongoingConnectAttempts.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
 

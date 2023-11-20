@@ -80,15 +80,24 @@
                             "items": {
                                 "$ref": "#/definitions/peerDescriptor"
                             },
-                            "default": [{
-                                "id": "aaaaaaaaaa",
-                                "type": "nodejs",
-                                "websocket": {
-                                    "host": "127.0.0.1",
-                                    "port": 40401,
-                                    "tls": true
+                            "default": [
+                                {
+                                    "id": "eee1",
+                                    "websocket": {
+                                        "host": "polygon-entrypoint-1.streamr.network",
+                                        "port": 40401,
+                                        "tls": true
+                                    }
+                                },
+                                {
+                                    "id": "eee2",
+                                    "websocket": {
+                                        "host": "polygon-entrypoint-2.streamr.network",
+                                        "port": 40401,
+                                        "tls": true
+                                    }
                                 }
-                            }]
+                            ]
                         },
                         "websocketPortRange": {
                             "$ref": "#/definitions/portRange",
@@ -319,7 +328,7 @@
                 "theGraphUrl": {
                     "type": "string",
                     "format": "uri",
-                    "default": "https://api.thegraph.com/subgraphs/name/streamr-dev/streams"
+                    "default": "https://gateway-arbitrum.network.thegraph.com/api/dd0022f5d4d06f3bd55e0c757912fb7d/subgraphs/id/EGWFdhhiWypDuz22Uy7b3F69E9MEkyfU9iAQMttkH5Rj"
                 },
                 "maxConcurrentCalls": {
                     "type": "number",
