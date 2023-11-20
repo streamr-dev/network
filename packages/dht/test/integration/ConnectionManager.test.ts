@@ -4,9 +4,12 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { createPeerDescriptor } from '../../src/dht/DhtNode'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { Logger, MetricsContext } from '@streamr/utils'
+import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/exports'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
+import { MarkOptional } from 'ts-essentials'
+import { createRandomKademliaId } from '../../src/helpers/kademliaId'
+import { TransportEvents } from '../../src/transport/ITransport'
 
 const logger = new Logger(module)
 
@@ -39,7 +42,7 @@ describe('ConnectionManager', () => {
 
     let createLocalPeerDescriptor: jest.Mock<PeerDescriptor, [ConnectivityResponse]>
 
-    const createConnectionManager = (opts: Omit<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
+    const createConnectionManager = (opts: MarkOptional<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
         return new ConnectionManager({
             createConnectorFacade: () => new DefaultConnectorFacade({
                 createLocalPeerDescriptor,
@@ -183,7 +186,7 @@ describe('ConnectionManager', () => {
         const connectionManager1 = createConnectionManager({ 
             transport: mockConnectorTransport1,
             websocketHost: '127.0.0.1',
-            websocketPortRange: { min: 9997, max: 9997 }
+            websocketPortRange: { min: 9997, max: 9997 },
         })
 
         await connectionManager1.start()
@@ -332,13 +335,78 @@ describe('ConnectionManager', () => {
         await connectionManager1.stop()
     })
 
+    it('Cannot send to a WebSocketServer if kademliaIds do not match', async () => {
+
+        const peerDescriptor1 = {
+            kademliaId: createRandomKademliaId(),
+            type: NodeType.NODEJS,
+            websocket: {
+                host: '127.0.0.1',
+                port: 10002,
+                tls: false
+            }
+        }
+
+        const peerDescriptor2 = {
+            kademliaId: createRandomKademliaId(),
+            type: NodeType.NODEJS,
+            websocket: {
+                host: '127.0.0.1',
+                port: 10003,
+                tls: false
+            }
+        }
+        const connectionManager1 = createConnectionManager({
+            transport: mockTransport,
+            websocketHost: '127.0.0.1',
+            websocketPortRange: { min: 10002, max: 10002 },
+            createLocalPeerDescriptor: () => peerDescriptor1 
+        })
+
+        await connectionManager1.start()
+
+        const connectionManager2 = createConnectionManager({
+            transport: mockTransport,
+            websocketHost: '127.0.0.1',
+            websocketPortRange: { min: 10003, max: 10003 },
+            createLocalPeerDescriptor: () => peerDescriptor2
+        })
+
+        await connectionManager2.start()
+
+        const msg: Message = {
+            serviceId,
+            messageType: MessageType.RPC,
+            messageId: '1',
+            targetDescriptor: {
+                // This is not the correct kademliaId of peerDescriptor2
+                kademliaId: new Uint8Array([1, 2, 3, 4]),
+                type: NodeType.NODEJS,
+                websocket: peerDescriptor2.websocket
+            },
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            } 
+        }
+        await Promise.all([
+            waitForEvent3<TransportEvents>(connectionManager1, 'disconnected'),
+            expect(connectionManager1.send(msg))      
+                .rejects
+                .toThrow()
+        ])
+        
+        await connectionManager1.stop()
+        await connectionManager2.stop()
+    }, 10000)
+
     it('Failed autocertification', async () => {
         const connectionManager1 = createConnectionManager({
             transport: mockTransport,
             websocketHost: '127.0.0.1',
             autoCertifierUrl: 'https://localhost:12333',
             websocketServerEnableTls: true,
-            websocketPortRange: { min: 10003, max: 10003 }
+            websocketPortRange: { min: 10004, max: 10004 }
         })
 
         await connectionManager1.start()

@@ -1,6 +1,6 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
@@ -10,7 +10,7 @@ describe('Find correctness', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
-    const simulator = new Simulator(LatencyType.RANDOM)
+    const simulator = new Simulator(LatencyType.REAL)
     const NUM_NODES = 100
     const K = 2
 
@@ -19,10 +19,7 @@ describe('Find correctness', () => {
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, undefined, K)
         nodes.push(entryPoint)
-        entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS
-        }
+        entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
             const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, 20, 60000)

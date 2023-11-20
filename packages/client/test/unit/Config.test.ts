@@ -104,7 +104,7 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.controlLayer.entryPoints![0].id).toEqual('aaaaaaaaaa')
+            expect(clientOverrides.network.controlLayer.entryPoints![0].id).toEqual('eee1')
         })
 
         it('can override entryPoints', () => {

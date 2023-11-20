@@ -57,14 +57,20 @@ export const createMockConnectionDhtNode = async (
     }
     const mockConnectionManager = new SimulatorTransport(peerDescriptor, simulator)
     await mockConnectionManager.start()
-    const node = new DhtNode({
+    const opts = {
         peerDescriptor: peerDescriptor,
         transport: mockConnectionManager,
         numberOfNodesPerKBucket,
         maxConnections: maxConnections,
         dhtJoinTimeout,
         rpcRequestTimeout: 5000
-    })
+    }
+    const node = new class extends DhtNode {
+        async stop(): Promise<void> {
+            await super.stop()
+            await mockConnectionManager.stop()
+        }
+    }(opts)
     await node.start()
     return node
 }

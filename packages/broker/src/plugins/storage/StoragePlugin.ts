@@ -1,5 +1,5 @@
 import { StreamMessage, StreamMessageType } from '@streamr/protocol'
-import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
+import { EthereumAddress, Logger, MetricsContext, executeSafePromise } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Stream, StreamrClient, formStorageNodeAssignmentStreamId } from 'streamr-client'
 import { ApiPluginConfig, Plugin } from '../../Plugin'
@@ -64,9 +64,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     async stop(): Promise<void> {
         const node = await this.streamrClient!.getNode()
         node.removeMessageListener(this.messageListener!)
-        this.storageConfig!.getStreamParts().forEach((streamPart) => {
-            node.leave(streamPart)
-        })
+        await Promise.all(Array.from(this.storageConfig!.getStreamParts()).map((streamPart) => node.leave(streamPart)))
         await this.cassandra!.close()
         this.storageConfig!.destroy()
     }
@@ -121,7 +119,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                     }
                 },
                 onStreamPartRemoved: (streamPart) => {
-                    node.leave(streamPart)
+                    executeSafePromise(() => node.leave(streamPart))
                 }
             }
         )

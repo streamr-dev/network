@@ -2,7 +2,7 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
-import { areEqualPeerDescriptors, keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
@@ -11,7 +11,7 @@ describe('Scaling down a Dht network', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
-    const simulator = new Simulator(LatencyType.RANDOM)
+    const simulator = new Simulator(LatencyType.REAL)
     const NUM_NODES = 80
     const MAX_CONNECTIONS = 15
     const K = 2
@@ -54,8 +54,8 @@ describe('Scaling down a Dht network', () => {
             const nodeIsCleaned = nodes.every((node) =>
                 node.getAllConnectionPeerDescriptors().every((peer) => {
                     if (areEqualPeerDescriptors(peer, stoppingPeerDescriptor)) {
-                        logger.error(keyFromPeerDescriptor(node.getLocalPeerDescriptor()) + ', ' 
-                            + keyFromPeerDescriptor(stoppingPeerDescriptor) + ' cleaning up failed')
+                        logger.error(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + ', ' 
+                            + getNodeIdFromPeerDescriptor(stoppingPeerDescriptor) + ' cleaning up failed')
                     }
                     return !areEqualPeerDescriptors(peer, stoppingPeerDescriptor)
                 })

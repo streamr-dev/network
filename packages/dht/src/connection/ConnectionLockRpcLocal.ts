@@ -17,7 +17,7 @@ import {
 import { IConnectionLockRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { PeerIDKey } from '../helpers/PeerID'
-import { keyOrUnknownFromPeerDescriptor } from './ConnectionManager'
+import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
 import { LockID } from './ConnectionLockHandler'
 
 interface ConnectionLockRpcLocalConfig {
@@ -62,7 +62,7 @@ export class ConnectionLockRpcLocal implements IConnectionLockRpc {
 
     async gracefulDisconnect(disconnectNotice: DisconnectNotice, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        logger.trace(keyOrUnknownFromPeerDescriptor(senderPeerDescriptor) + ' received gracefulDisconnect notice')
+        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(senderPeerDescriptor) + ' received gracefulDisconnect notice')
 
         if (disconnectNotice.disconnectMode === DisconnectMode.LEAVING) {
             this.config.closeConnection(senderPeerDescriptor, true, 'graceful leave notified')
