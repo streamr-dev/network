@@ -1,4 +1,5 @@
 import {
+    HandshakeError,
     PeerDescriptor,
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
@@ -39,7 +40,7 @@ export class SimulatorConnector {
         const connection = new SimulatorConnection(this.localPeerDescriptor, targetPeerDescriptor, this.simulator)
 
         const managedConnection = new ManagedConnection(this.localPeerDescriptor, connection, undefined)
-        managedConnection.setPeerDescriptor(targetPeerDescriptor)
+        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
         this.connectingConnections.set(peerKey, managedConnection)
         connection.once('disconnected', () => {
@@ -72,14 +73,12 @@ export class SimulatorConnector {
 
         managedConnection.once('handshakeRequest', () => {
             logger.trace(keyFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming handshake request')
-            logger.trace('incoming handshake request')
 
             if (this.onNewConnection(managedConnection)) {
                 logger.trace(keyFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' calling acceptHandshake')
                 managedConnection.acceptHandshake()
             } else {
-                managedConnection.rejectHandshake('Duplicate connection')
-                managedConnection.destroy()
+                managedConnection.rejectHandshake(HandshakeError.DUPLICATE_CONNECTION)
             }
         })
 

@@ -11,7 +11,7 @@ describe('Scaling down a Dht network', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
-    const simulator = new Simulator(LatencyType.RANDOM)
+    const simulator = new Simulator(LatencyType.REAL)
     const NUM_NODES = 80
     const MAX_CONNECTIONS = 15
     const K = 2

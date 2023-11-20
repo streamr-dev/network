@@ -196,14 +196,18 @@ message ConnectivityResponse {
 }
 
 message HandshakeRequest {
-  bytes sourceId = 1;
-  PeerDescriptor peerDescriptor = 2;
+  PeerDescriptor sourcePeerDescriptor = 1;
+  optional PeerDescriptor targetPeerDescriptor = 2;
 }
 
 message HandshakeResponse {
-  bytes sourceId = 1;
-  PeerDescriptor peerDescriptor = 2;
-  optional string responseError = 3;
+  PeerDescriptor sourcePeerDescriptor = 1;
+  optional HandshakeError error = 2;
+}
+
+enum HandshakeError {
+  DUPLICATE_CONNECTION = 0;
+  INVALID_TARGET_PEER_DESCRIPTOR = 1;
 }
 
 // Wraps all messages
