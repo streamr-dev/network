@@ -83,7 +83,7 @@ export async function findTarget(
     const flagAlreadyRaised = await contractFacade.hasOpenFlag(targetOperatorAddress, targetSponsorship.sponsorshipAddress)
     if (flagAlreadyRaised) {
         logger.info('Skip inspection (target already has open flag)', { targetSponsorship, targetOperatorAddress })
-        return
+        return undefined
     }
 
     return {
