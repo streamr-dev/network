@@ -17,7 +17,7 @@ const defaultAutoCertifierClientFactory = (
     autoCertifierUrl: string,
     autoCertifierRpcCommunicator: ListeningRpcCommunicator,
     wsServerPort: number,
-    getLocalPeerId: () => string
+    getLocalNodeId: () => string
 ) => new AutoCertifierClient(
     configFile,
     wsServerPort,
@@ -30,7 +30,7 @@ const defaultAutoCertifierClientFactory = (
             method
         )                       
     },
-    getLocalPeerId
+    getLocalNodeId
 )
 
 export interface IAutoCertifierClient {
@@ -49,7 +49,7 @@ interface AutoCertifierClientFacadeConfig {
     updateCertificate: (certificate: string, privateKey: string) => void
     // TOD: could just pass the client?
     createClientFactory?: () => IAutoCertifierClient
-    getLocalPeerId: () => string
+    getLocalNodeId: () => string
 }
 
 const logger = new Logger(module)
@@ -71,7 +71,7 @@ export class AutoCertifierClientFacade {
                 config.url,
                 this.rpcCommunicator,
                 config.wsServerPort,
-                config.getLocalPeerId
+                config.getLocalNodeId
             )
     }
 

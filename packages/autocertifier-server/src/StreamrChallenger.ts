@@ -18,11 +18,11 @@ export const runStreamrChallenge = (
     streamrWebSocketIp: string,
     streamrWebSocketPort: string,
     sessionId: string,
-    peerId: string
+    nodeId: string
 ): Promise<void> => {
     return new Promise((resolve, reject) => {
         const remotePeerDescriptor: PeerDescriptor = {
-            kademliaId: hexToBinary(peerId),
+            kademliaId: hexToBinary(nodeId),
             type: NodeType.NODEJS,
             websocket: {
                 host: streamrWebSocketIp,

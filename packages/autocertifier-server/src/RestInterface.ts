@@ -7,11 +7,11 @@ export interface RestInterface {
     createSession(): Promise<Session>
     
     createNewSubdomainAndCertificate(ipAddress: string, port: string, streamrWebSocketPort: string, 
-        sessionId: string, peerId: string): Promise<CertifiedSubdomain>
+        sessionId: string, nodeId: string): Promise<CertifiedSubdomain>
     
     createNewCertificateForSubdomain(subdomain: string, ipAddress: string, port: string, 
-        streamrWebSocketPort: string, sessionId: string, token: string, peerId: string): Promise<CertifiedSubdomain>
+        streamrWebSocketPort: string, sessionId: string, token: string, nodeId: string): Promise<CertifiedSubdomain>
     
     updateSubdomainIp(subdomain: string, ipAddress: string, port: string, 
-        streamrWebSocketPort: string, sessionId: string, token: string, peerId: string): Promise<void>
+        streamrWebSocketPort: string, sessionId: string, token: string, nodeId: string): Promise<void>
 }

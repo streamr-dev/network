@@ -2,6 +2,6 @@
 export interface UpdateIpAndPortRequest {
     token: string
     sessionId: string
-    peerId: string
+    nodeId: string
     streamrWebSocketPort: number
 }

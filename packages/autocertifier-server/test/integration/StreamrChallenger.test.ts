@@ -19,9 +19,9 @@ describe('StreamrChallenger', () => {
     let simulator: Simulator
     let mockTransport: SimulatorTransport
 
-    const peerId = 'ddd1'
+    const nodeId = 'ddd1'
     const mockPeerDescriptor1: PeerDescriptor = {
-        kademliaId: hexToBinary(peerId),
+        kademliaId: hexToBinary(nodeId),
         type: NodeType.NODEJS,
         websocket: {
             host: '127.0.0.1',
@@ -65,7 +65,7 @@ describe('StreamrChallenger', () => {
     })
 
     it('Happy path', async () => {
-        await runStreamrChallenge('127.0.0.1', '12323', sessionId, peerId)
+        await runStreamrChallenge('127.0.0.1', '12323', sessionId, nodeId)
     })
 
 })

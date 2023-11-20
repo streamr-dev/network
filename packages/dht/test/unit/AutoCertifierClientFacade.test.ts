@@ -33,7 +33,7 @@ describe('AutoCertifierClientFacade', () => {
             setHost,
             updateCertificate,
             createClientFactory: mockClientFactory,
-            getLocalPeerId: () => 'eeeeee'
+            getLocalNodeId: () => 'eeeeee'
         })
     }) 
 

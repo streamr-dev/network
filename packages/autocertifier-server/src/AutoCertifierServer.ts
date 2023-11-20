@@ -90,12 +90,12 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         port: string,
         streamrWebSocketPort: string,
         sessionId: string,
-        peerId: string
+        nodeId: string
     ): Promise<CertifiedSubdomain> {
         logger.trace('Creating new subdomain and certificate for ' + ipAddress + ':' + port)
 
         // this will throw if the client cannot answer the challenge of getting sessionId 
-        await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId, peerId)
+        await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId, nodeId)
         
         const subdomain = v4()
         const authenticationToken = v4()
@@ -117,13 +117,13 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         streamrWebSocketPort: string,
         sessionId: string,
         authenticationToken: string,
-        peerId: string
+        nodeId: string
     ): Promise<CertifiedSubdomain> {
 
         logger.info('creating new certificate for ' + subdomain + ' and ' + ipAddress + ':' + port)
 
         // This will throw if the authenticationToken is incorrect
-        await this.updateSubdomainIp(subdomain, ipAddress, port, streamrWebSocketPort, sessionId, authenticationToken, peerId)
+        await this.updateSubdomainIp(subdomain, ipAddress, port, streamrWebSocketPort, sessionId, authenticationToken, nodeId)
         const fqdn = subdomain + '.' + this.domainName
         const certificate = await this.certificateCreator!.createCertificate(fqdn)
         return {
@@ -141,14 +141,14 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         streamrWebSocketPort: string,
         sessionId: string,
         authenticationToken: string,
-        peerId: string
+        nodeId: string
     ): Promise<void> {
 
         logger.info('updating subdomain ip and port for ' + subdomain + ' to ' + ipAddress + ':' + port)
 
         // this will throw if the client cannot answer the challenge of getting sessionId
-        // or the peerId of the 
-        await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId, peerId)
+        // or the nodeId of the 
+        await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId, nodeId)
         await this.database!.updateSubdomainIp(subdomain, ipAddress, port, authenticationToken)
     }
 

@@ -1,6 +1,6 @@
 export interface CreateCertifiedSubdomainRequest {
     streamrWebSocketPort: number
     sessionId: string
-    peerId: string
+    nodeId: string
     streamrWebSocketCaCert?: string
 }
