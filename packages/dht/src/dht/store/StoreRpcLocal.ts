@@ -10,7 +10,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IFinder } from '../find/Finder'
-import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
@@ -224,7 +224,7 @@ export class StoreRpcLocal implements IStoreRpc {
                 if (response.deleted) {
                     logger.trace('remote.deleteData() returned success')
                 } else {
-                    logger.trace('could not delete data from ' + keyFromPeerDescriptor(closestNodes[i]))
+                    logger.trace('could not delete data from ' + getNodeIdFromPeerDescriptor(closestNodes[i]))
                 }
                 successfulNodes.push(closestNodes[i])
             } catch (e) {

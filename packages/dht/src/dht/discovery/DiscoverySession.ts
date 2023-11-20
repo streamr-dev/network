@@ -8,7 +8,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { SortedContactList } from '../contact/SortedContactList'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
-import { areEqualPeerDescriptors, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
 
 const logger = new Logger(module)
@@ -71,7 +71,7 @@ export class DiscoverySession {
         if (this.stopped) {
             return []
         }
-        logger.trace(`Getting closest peers from contact: ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
+        logger.trace(`Getting closest peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
         this.outgoingClosestPeersRequestsCounter++
         this.config.neighborList.setContacted(contact.getPeerId())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)
