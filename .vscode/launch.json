@@ -15,9 +15,9 @@
             "env": { "DEBUG": "*" },
             "console": "internalConsole", 
             "outputCapture": "std",
-            "args": ["packages/broker/configs/development-1.env.json"],
+            //"args": ["packages/broker/configs/development-1.env.json"],
             "outFiles": [
-                "${workspaceFolder}/**/*.js"
+                "${workspaceFolder}/packages/broker/*.js"
             ]
         }
     ]

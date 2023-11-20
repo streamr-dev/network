@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid'
 import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
 import * as MqttConfigSchema from '../plugins/mqtt/config.schema.json'
 import * as BrokerConfigSchema from './config.schema.json'
+import * as SRTPluginConfigSchema from '../plugins/srt/config.schema.json'
 import { getDefaultFile } from './config'
 import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../config/migration'
 import { generateMnemonicFromAddress } from '../helpers/generateMnemonicFromAddress'
@@ -48,13 +49,15 @@ const generateApiKey = (): string => {
 export const DEFAULT_CONFIG_PORTS: Record<string, number> = {
     WS: WebsocketConfigSchema.properties.port.default,
     MQTT: MqttConfigSchema.properties.port.default,
-    HTTP: BrokerConfigSchema.properties.httpServer.properties.port.default
+    HTTP: BrokerConfigSchema.properties.httpServer.properties.port.default,
+    SRT: SRTPluginConfigSchema.properties.port.default,
 }
 
 const PLUGIN_NAMES: Record<string, string> = {
     WS: 'websocket',
     MQTT: 'mqtt',
-    HTTP: 'http'
+    HTTP: 'http',
+    SRT: 'srt'
 }
 
 const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
