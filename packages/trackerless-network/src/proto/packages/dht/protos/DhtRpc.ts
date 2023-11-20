@@ -327,6 +327,10 @@ export interface ConnectivityRequest {
      * @generated from protobuf field: optional string host = 3;
      */
     host?: string;
+    /**
+     * @generated from protobuf field: bool selfSigned = 4;
+     */
+    selfSigned: boolean;
 }
 /**
  * @generated from protobuf message dht.ConnectivityResponse
@@ -350,30 +354,26 @@ export interface ConnectivityResponse {
  */
 export interface HandshakeRequest {
     /**
-     * @generated from protobuf field: bytes sourceId = 1;
+     * @generated from protobuf field: dht.PeerDescriptor sourcePeerDescriptor = 1;
      */
-    sourceId: Uint8Array;
+    sourcePeerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
+     * @generated from protobuf field: optional dht.PeerDescriptor targetPeerDescriptor = 2;
      */
-    peerDescriptor?: PeerDescriptor;
+    targetPeerDescriptor?: PeerDescriptor;
 }
 /**
  * @generated from protobuf message dht.HandshakeResponse
  */
 export interface HandshakeResponse {
     /**
-     * @generated from protobuf field: bytes sourceId = 1;
+     * @generated from protobuf field: dht.PeerDescriptor sourcePeerDescriptor = 1;
      */
-    sourceId: Uint8Array;
+    sourcePeerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
+     * @generated from protobuf field: optional dht.HandshakeError error = 2;
      */
-    peerDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: optional string responseError = 3;
-     */
-    responseError?: string;
+    error?: HandshakeError;
 }
 /**
  * @generated from protobuf message dht.Message
@@ -614,6 +614,19 @@ export enum RpcResponseError {
      * @generated from protobuf enum value: UNKNOWN_RPC_METHOD = 3;
      */
     UNKNOWN_RPC_METHOD = 3
+}
+/**
+ * @generated from protobuf enum dht.HandshakeError
+ */
+export enum HandshakeError {
+    /**
+     * @generated from protobuf enum value: DUPLICATE_CONNECTION = 0;
+     */
+    DUPLICATE_CONNECTION = 0,
+    /**
+     * @generated from protobuf enum value: INVALID_TARGET_PEER_DESCRIPTOR = 1;
+     */
+    INVALID_TARGET_PEER_DESCRIPTOR = 1
 }
 // Wraps all messages
 
@@ -935,7 +948,8 @@ class ConnectivityRequest$Type extends MessageType$<ConnectivityRequest> {
         super("dht.ConnectivityRequest", [
             { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 2, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 3, name: "host", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 3, name: "host", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "selfSigned", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -961,8 +975,8 @@ export const ConnectivityResponse = new ConnectivityResponse$Type();
 class HandshakeRequest$Type extends MessageType$<HandshakeRequest> {
     constructor() {
         super("dht.HandshakeRequest", [
-            { no: 1, name: "sourceId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "targetPeerDescriptor", kind: "message", T: () => PeerDescriptor }
         ]);
     }
 }
@@ -974,9 +988,8 @@ export const HandshakeRequest = new HandshakeRequest$Type();
 class HandshakeResponse$Type extends MessageType$<HandshakeResponse> {
     constructor() {
         super("dht.HandshakeResponse", [
-            { no: 1, name: "sourceId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "responseError", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "error", kind: "enum", opt: true, T: () => ["dht.HandshakeError", HandshakeError] }
         ]);
     }
 }

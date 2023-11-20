@@ -80,6 +80,8 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {
+        this.emit('disconnected', gracefulLeave, undefined, 'close() called')
+        this.removeAllListeners()
         if (!this.stopped) {
             this.socket?.close(gracefulLeave === true ? GOING_AWAY : undefined)
         } else {

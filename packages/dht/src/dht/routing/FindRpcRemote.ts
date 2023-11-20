@@ -1,6 +1,6 @@
 import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
-import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Remote } from '../contact/Remote'
 import { Logger } from '@streamr/utils'
 import { IFindRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
@@ -29,10 +29,10 @@ export class FindRpcRemote extends Remote<IFindRpcClient> {
         } catch (err) {
             const previousPeer = getPreviousPeer(params)
             const fromNode = previousPeer
-                ? keyFromPeerDescriptor(previousPeer)
-                : keyFromPeerDescriptor(params.sourcePeer!)
+                ? getNodeIdFromPeerDescriptor(previousPeer)
+                : getNodeIdFromPeerDescriptor(params.sourcePeer!)
             // eslint-disable-next-line max-len
-            logger.debug(`Failed to send routeFindRequest message from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
+            logger.debug(`Failed to send routeFindRequest message from ${fromNode} to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
             return false
         }
         return true
