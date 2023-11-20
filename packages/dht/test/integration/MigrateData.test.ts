@@ -159,7 +159,8 @@ describe('Migrating data from node to node in DHT', () => {
 
         const successfulStorers = await nodes[randomIndex].storeDataToDht(dataKey.value, data)
 
-        logger.info('data successfully stored to ' + successfulStorers + ' nodes')
+        logger.info('data successfully stored to ' 
+            + successfulStorers.map((peerDescriptor) => getNodeIdFromPeerDescriptor(peerDescriptor)).join() + ' nodes')
 
         const randomIndices = []
         for (let i = 0; i < nodes.length; i++) {
