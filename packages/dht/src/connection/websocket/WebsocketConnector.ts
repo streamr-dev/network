@@ -33,8 +33,10 @@ import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
 
 const logger = new Logger(module)
 
-export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod): string => {
-    return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
+export type Action = 'connectivityRequest' | 'connectivityProbe'
+
+export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod, action?: Action): string => {
+    return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port + ((action !== undefined) ? '?action=' + action : '')
 }
 
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
@@ -147,17 +149,13 @@ export class WebsocketConnector {
         if (!this.abortController.signal.aborted && this.websocketServer) {
             this.websocketServer.on('connected', (connection: IConnection) => {
                 const serverSocket = connection as unknown as ServerWebsocket
-                if (serverSocket.resourceURL &&
-                    serverSocket.resourceURL.query) {
-                    const query = serverSocket.resourceURL.query as unknown as ParsedUrlQuery
-                    if (query.connectivityRequest) {
-                        logger.trace('Received connectivity request connection from ' + serverSocket.getRemoteAddress())
-                        attachConnectivityRequestHandler(serverSocket)
-                    } else if (query.connectivityProbe) {
-                        logger.trace('Received connectivity probe connection from ' + serverSocket.getRemoteAddress())
-                    } else {
-                        this.attachHandshaker(connection)
-                    }
+                const query = serverSocket.resourceURL.query as unknown as (ParsedUrlQuery | null)
+                const action = query?.action as (Action | undefined)
+                logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.getRemoteAddress() })
+                if (action === 'connectivityRequest') {
+                    attachConnectivityRequestHandler(serverSocket)
+                } else if (action === 'connectivityProbe') {
+                    // no-op
                 } else {
                     this.attachHandshaker(connection)
                 }
@@ -269,7 +267,7 @@ export class WebsocketConnector {
             undefined,
             undefined,
             targetPeerDescriptor
-        )        
+        )
         managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor)))
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
         this.ongoingConnectRequests.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
@@ -277,7 +275,7 @@ export class WebsocketConnector {
     }
 
     private onServerSocketHandshakeRequest(
-        sourcePeerDescriptor: PeerDescriptor, 
+        sourcePeerDescriptor: PeerDescriptor,
         serverWebsocket: IConnection,
         targetPeerDescriptor?: PeerDescriptor
     ) {

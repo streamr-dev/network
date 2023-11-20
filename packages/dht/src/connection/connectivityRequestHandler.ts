@@ -5,7 +5,7 @@ import {
     Message, MessageType
 } from '../proto/packages/dht/protos/DhtRpc'
 import { NatType } from './ConnectionManager'
-import { ConnectionMode, ConnectivityChecker, connectAsync } from './ConnectivityChecker'
+import { ConnectivityChecker, connectAsync } from './ConnectivityChecker'
 import { IConnection } from './IConnection'
 import { ServerWebsocket } from './websocket/ServerWebsocket'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
@@ -42,10 +42,10 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
             port: connectivityRequest.port,
             tls: connectivityRequest.tls
         }
-        logger.trace(`Attempting Connectivity Check to ${connectivityMethodToWebsocketUrl(wsServerInfo)}`)
+        const url = connectivityMethodToWebsocketUrl(wsServerInfo, 'connectivityProbe')
+        logger.trace(`Attempting Connectivity Check to ${url}`)
         outgoingConnection = await connectAsync({
-            wsServerInfo,
-            mode: ConnectionMode.PROBE,
+            url,
             selfSigned: connectivityRequest.selfSigned
         })
     } catch (err) {
