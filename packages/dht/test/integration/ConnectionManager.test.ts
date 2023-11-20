@@ -396,7 +396,6 @@ describe('ConnectionManager', () => {
                 .toThrow()
         ])
         
-        
         await connectionManager1.stop()
         await connectionManager2.stop()
     }, 10000)
