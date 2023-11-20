@@ -1,0 +1,32 @@
+{
+    "$id": "config.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "description": "SRT plugin configuration",
+    "additionalProperties": false,
+    "properties": {
+        "port": {
+            "type": "integer",
+            "description": "Port to start plugin on",
+            "default": 1234
+        },
+        "ip": {
+            "type": "string",
+            "description": "IP to start plugin on",
+            "default": "0.0.0.0"
+        },
+        "payloadMetadata": {
+            "type": "boolean",
+            "description": "The format of payloads: payload is wrapped as { content, metadata } or is a plain content JSON",
+            "default": false
+        },
+        "streamId": {
+            "type": "string",
+            "description": "Stream Id",
+            "default": "0x9df242563572223fce4e1aa9870c0710abcfe257/video-stream"
+        },
+        "apiAuthentication": {
+            "$ref": "definitions.schema.json#/definitions/apiAuthenticationOverride"
+        }
+    }
+}
