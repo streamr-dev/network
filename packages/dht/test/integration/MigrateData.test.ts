@@ -112,9 +112,9 @@ describe('Migrating data from node to node in DHT', () => {
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
-            nodes.map((node) => {
+            nodes.map(async (node) => {
                 if (keyFromPeerDescriptor(node.getLocalPeerDescriptor()) != '0') {
-                    node.joinDht([entrypointDescriptor])
+                    await node.joinDht([entrypointDescriptor])
                 }
             })
         )
@@ -148,11 +148,7 @@ describe('Migrating data from node to node in DHT', () => {
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
-        await Promise.all(
-            nodes.map((node) => {
-                node.joinDht([entrypointDescriptor])
-            })
-        )
+        await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
 
         logger.info('completed ' + NUM_NODES + ' nodes joining layer0 DHT')
 
