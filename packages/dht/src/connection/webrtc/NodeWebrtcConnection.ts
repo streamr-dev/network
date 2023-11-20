@@ -5,7 +5,7 @@ import EventEmitter from 'eventemitter3'
 import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
 import { Logger } from '@streamr/utils'
 import { IllegalRtcPeerConnectionState } from '../../helpers/errors'
-import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { iceServerAsString } from './iceServerAsString'
 import { IceServer } from './WebrtcConnector'
 import { PortRange } from '../ConnectionManager'
@@ -80,9 +80,8 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     }
 
     public start(isOffering: boolean): void {
-        logger.trace(`Staring new connection for peer: ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
         const peerIdKey = keyFromPeerDescriptor(this.remotePeerDescriptor)
-        logger.trace(`Staring new connection for peer: ${peerIdKey} offering: ${isOffering}`)
+        logger.trace(`Starting new connection for peer ${getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)}`, { isOffering })
         this.connection = new PeerConnection(peerIdKey, {
             iceServers: this.iceServers.map(iceServerAsString),
             maxMessageSize: this.maxMessageSize,
@@ -115,11 +114,11 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     public async setRemoteDescription(description: string, type: string): Promise<void> {
         if (this.connection) {
             try {
-                logger.trace(`Setting remote descriptor for peer: ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
+                logger.trace(`Setting remote descriptor for peer: ${getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)}`)
                 this.connection.setRemoteDescription(description, type as DescriptionType)
                 this.remoteDescriptionSet = true
             } catch (err) {
-                logger.debug(`Failed to set remote descriptor for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
+                logger.debug(`Failed to set remote descriptor for peer ${getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)}`)
             }
         } else {
             this.doClose(false, `Tried to set description for non-existent connection`)
@@ -130,10 +129,10 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         if (this.connection) {
             if (this.remoteDescriptionSet) {
                 try {
-                    logger.trace(`Setting remote candidate for peer: ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
+                    logger.trace(`Setting remote candidate for peer: ${getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)}`)
                     this.connection.addRemoteCandidate(candidate, mid)
                 } catch (err) {
-                    logger.debug(`Failed to set remote candidate for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
+                    logger.debug(`Failed to set remote candidate for peer ${getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)}`)
                 }
             } else {
                 // TODO: should queue candidates until remote description is set?
@@ -149,7 +148,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
             try {
                 this.dataChannel!.sendMessageBinary(data as Buffer)
             } catch (err) {
-                logger.debug('Failed to send binary message to ' + keyFromPeerDescriptor(this.remotePeerDescriptor) + err)
+                logger.debug('Failed to send binary message to ' + getNodeIdFromPeerDescriptor(this.remotePeerDescriptor) + err)
             }
         }
     }
@@ -161,7 +160,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     private doClose(gracefulLeave: boolean, reason?: string): void {
         if (!this.closed) {
             logger.trace(
-                `Closing Node WebRTC Connection to ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`
+                `Closing Node WebRTC Connection to ${getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)}`
                 + `${reason ? `, reason: ${reason}` : ''}`
             )
 
@@ -232,7 +231,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
             clearTimeout(this.connectingTimeoutRef)
         }
         this.dataChannel = dataChannel
-        logger.trace(`DataChannel opened for peer ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`)
+        logger.trace(`DataChannel opened for peer ${getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)}`)
         this.emit('connected')
     }
 
