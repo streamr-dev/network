@@ -33,11 +33,7 @@ describe('Migrating data from node to node in DHT', () => {
     }
 
     const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
-    /*
-    const getRandomNode = () => {
-        return nodes[Math.floor(Math.random() * nodes.length)]
-    }
-    */
+
     beforeEach(async () => {
         nodes = []
         const entryPointId = '0'
@@ -79,13 +75,9 @@ describe('Migrating data from node to node in DHT', () => {
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
         // calculate offline which node is closest to the data
-
         const sortedList = new SortedContactList<Contact>(dataKey, 10000)
 
-        nodes.forEach((node) => {
-            sortedList.addContact(new Contact(node.getLocalPeerDescriptor())
-            )
-        })
+        nodes.forEach((node) => sortedList.addContact(new Contact(node.getLocalPeerDescriptor())))
 
         const closest = sortedList.getAllContacts()
 
@@ -138,7 +130,6 @@ describe('Migrating data from node to node in DHT', () => {
             let hasDataMarker = ''
 
             // @ts-expect-error private field
-
             if (node.localDataStore.getEntry(dataKey)) {
                 hasDataMarker = '<-'
             }
