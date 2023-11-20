@@ -31,8 +31,10 @@ import { WebsocketServerStartError } from '../../helpers/errors'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 const logger = new Logger(module)
 
-export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod): string => {
-    return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port
+export type Action = 'connectivityRequest' | 'connectivityProbe'
+
+export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod, action?: Action): string => {
+    return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port + ((action !== undefined) ? '?action=' + action : '')
 }
 
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
@@ -144,19 +146,14 @@ export class WebsocketConnector {
     public async start(): Promise<void> {
         if (!this.abortController.signal.aborted && this.websocketServer) {
             this.websocketServer.on('connected', (connection: IConnection) => {
-
                 const serverSocket = connection as unknown as ServerWebsocket
-                if (serverSocket.resourceURL &&
-                    serverSocket.resourceURL.query) {
-                    const query = serverSocket.resourceURL.query as unknown as ParsedUrlQuery
-                    if (query.connectivityRequest) {
-                        logger.trace('Received connectivity request connection from ' + serverSocket.getRemoteAddress())
-                        this.connectivityChecker!.listenToIncomingConnectivityRequests(serverSocket)
-                    } else if (query.connectivityProbe) {
-                        logger.trace('Received connectivity probe connection from ' + serverSocket.getRemoteAddress())
-                    } else {
-                        this.attachHandshaker(connection)
-                    }
+                const query = serverSocket.resourceURL.query as unknown as (ParsedUrlQuery | null)
+                const action = query?.action as (Action | undefined)
+                logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.getRemoteAddress() })
+                if (action === 'connectivityRequest') {
+                    this.connectivityChecker!.listenToIncomingConnectivityRequests(serverSocket)
+                } else if (action === 'connectivityProbe') {
+                    // no-op
                 } else {
                     this.attachHandshaker(connection)
                 }
@@ -191,7 +188,7 @@ export class WebsocketConnector {
                         }
                         return preconfiguredConnectivityResponse
                     } else {
-                        // Do real connectivity checking     
+                        // Do real connectivity checking
                         return await this.connectivityChecker!.sendConnectivityRequest(entryPoint, selfSigned)
                     }
                 }
