@@ -130,7 +130,7 @@ export class WebsocketConnector {
             wsServerPort: this.selectedPort!,
             setHost: (hostName: string) => this.setHost(hostName),
             updateCertificate: (certificate: string, privateKey: string) => this.websocketServer!.updateCertificate(certificate, privateKey),
-            getOwnPeerId: () => binaryToHex(this.localPeerDescriptor!.kademliaId),
+            getLocalPeerId: () => binaryToHex(this.localPeerDescriptor!.kademliaId),
         })
         logger.trace(`AutoCertifying subdomain...`)
         await this.autoCertifierClient!.start()
