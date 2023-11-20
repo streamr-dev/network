@@ -20,7 +20,7 @@ export interface NetworkNodeStub {
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
     join: (streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }) => Promise<void>
-    leave: (streamPartId: StreamPartID) => void
+    leave: (streamPartId: StreamPartID) => Promise<void>
     broadcast: (streamMessage: StreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
     getNeighbors: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>

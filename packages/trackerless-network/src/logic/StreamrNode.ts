@@ -27,7 +27,7 @@ import { ProxyClient } from './proxy/ProxyClient'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
-    stop: () => void
+    stop: () => Promise<void>
 } & ({ 
     proxied: false
     layer1Node: Layer1Node
@@ -102,7 +102,7 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         logger.trace('Destroying StreamrNode...')
         this.destroyed = true
-        this.streamParts.forEach((streamPart) => streamPart.stop())
+        await Promise.all(Array.from(this.streamParts.values()).map((streamPart) => streamPart.stop()))
         this.streamParts.clear()
         this.removeAllListeners()
         this.layer0Node = undefined
@@ -118,10 +118,10 @@ export class StreamrNode extends EventEmitter<Events> {
         this.metrics.broadcastBytesPerSecond.record(msg.content.length)
     }
 
-    leaveStreamPart(streamPartId: StreamPartID): void {
+    async leaveStreamPart(streamPartId: StreamPartID): Promise<void> {
         const streamPart = this.streamParts.get(streamPartId)
         if (streamPart) {
-            streamPart.stop()
+            await streamPart.stop()
             this.streamParts.delete(streamPartId)
         }
     }
@@ -153,10 +153,10 @@ export class StreamrNode extends EventEmitter<Events> {
             node,
             entryPointDiscovery,
             broadcast: (msg: StreamMessage) => node.broadcast(msg),
-            stop: () => {
-                entryPointDiscovery.destroy()
+            stop: async () => {
+                await entryPointDiscovery.destroy()
                 node.stop()
-                layer1Node.stop()
+                await layer1Node.stop()
             }
         }
         this.streamParts.set(streamPartId, streamPart)
@@ -240,7 +240,7 @@ export class StreamrNode extends EventEmitter<Events> {
                     proxied: true,
                     client,
                     broadcast: (msg: StreamMessage) => client.broadcast(msg),
-                    stop: () => client.stop()
+                    stop: async () => client.stop()
                 })
                 client.on('message', (message: StreamMessage) => {
                     this.emit('newMessage', message)
@@ -249,7 +249,7 @@ export class StreamrNode extends EventEmitter<Events> {
             }
             await client.setProxies(nodes, direction, userId, connectionCount)
         } else {
-            this.streamParts.get(streamPartId)?.stop()
+            await this.streamParts.get(streamPartId)?.stop()
             this.streamParts.delete(streamPartId)
         }
     }

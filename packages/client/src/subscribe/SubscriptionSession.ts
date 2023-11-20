@@ -112,7 +112,7 @@ export class SubscriptionSession {
         this.pipeline.return()
         this.pipeline.onError.end(new Error('done'))
         node.removeMessageListener(this.onMessageInput)
-        node.leave(this.streamPartId)
+        await node.leave(this.streamPartId)
     }
 
     updateNodeSubscriptions = (() => {
