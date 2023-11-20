@@ -66,7 +66,7 @@ describe('OperatorPlugin', () => {
         expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
         await subscriber.destroy()
         await publisher.destroy()
-    }, 60 * 1000)
+    }, 30 * 1000)
 
     it('invalid configuration', async () => {
         await expect(async () => {

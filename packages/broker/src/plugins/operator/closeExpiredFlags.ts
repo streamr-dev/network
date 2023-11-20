@@ -4,13 +4,13 @@ import { ContractFacade, SponsorshipResult } from './ContractFacade'
 const logger = new Logger(module)
 
 export const closeExpiredFlags = async (
-    flagLifetime: number,
+    maxFlagAgeSec: number,
     operatorContractAddress: EthereumAddress,
     contractFacade: ContractFacade
 ): Promise<void> => {
     logger.info('running closeExpiredFlags')
 
-    const minFlagStartTime = Math.floor(Date.now() / 1000) - flagLifetime
+    const minFlagStartTime = Math.floor(Date.now() / 1000) - maxFlagAgeSec
 
     const sponsorships = (await contractFacade.getSponsorshipsOfOperator(operatorContractAddress))
         .map((sponsorship: SponsorshipResult) => sponsorship.sponsorshipAddress)
@@ -19,7 +19,7 @@ export const closeExpiredFlags = async (
         return
     }
     logger.info(`found ${sponsorships.length} sponsorships`)
-    const flags = await contractFacade.getExpiredRelevantFlags(sponsorships, flagLifetime)
+    const flags = await contractFacade.getExpiredFlags(sponsorships, maxFlagAgeSec)
     logger.info(`found ${flags.length} flags`)
     for (const flag of flags) {
         const operatorAddress = flag.target.id

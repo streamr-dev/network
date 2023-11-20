@@ -15,7 +15,7 @@ contractFacadeMock.getSponsorshipsOfOperator.mockImplementation(async () => {
         } as SponsorshipResult
     ]
 })
-contractFacadeMock.getExpiredRelevantFlags.mockImplementation(async () => {
+contractFacadeMock.getExpiredFlags.mockImplementation(async () => {
     return [
         {
             id: testAddress,

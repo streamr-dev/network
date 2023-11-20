@@ -86,7 +86,7 @@ export interface Flag {
 export class ContractFacade {
 
     private readonly operatorContract: Operator
-    readonly theGraphClient: TheGraphClient
+    private readonly theGraphClient: TheGraphClient
     private readonly config: OperatorServiceConfig
 
     // for tests
@@ -182,7 +182,7 @@ export class ContractFacade {
         return results
     }
 
-    async getExpiredRelevantFlags(sponsorships: EthereumAddress[], maxFlagAgeSec: number): Promise<Flag[]> {
+    async getExpiredFlags(sponsorships: EthereumAddress[], maxFlagAgeSec: number): Promise<Flag[]> {
         const maxFlagStartTime = Math.floor(Date.now() / 1000) - maxFlagAgeSec
         const createQuery = (lastId: string, pageSize: number) => {
             return {
@@ -209,9 +209,9 @@ export class ContractFacade {
         const parseItems = (response: { flags: Flag[] }): Flag[] => {
             return response.flags ?? []
         }
-        const flagsResults = this.theGraphClient.queryEntities<Flag>(createQuery, parseItems)
+        const flagEntities = this.theGraphClient.queryEntities<Flag>(createQuery, parseItems)
         const flags: Flag[] = []
-        for await (const flag of flagsResults) {
+        for await (const flag of flagEntities) {
             flags.push(flag)
         }
         return flags
