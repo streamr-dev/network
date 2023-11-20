@@ -181,7 +181,7 @@ describe('Proxy connections', () => {
             PROXIED_NODE_USER_ID
         )
         expect(proxiedNode.hasStreamPart(STREAM_PART_ID)).toBe(true)
-        proxyNode1.leave(STREAM_PART_ID)
+        await proxyNode1.leave(STREAM_PART_ID)
         await waitForCondition(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE))
         expect(hasConnectionFromProxy(proxyNode1)).toBe(false)
         proxyNode1.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
