@@ -8,26 +8,22 @@ export const closeExpiredFlags = async (
     operatorContractAddress: EthereumAddress,
     contractFacade: ContractFacade
 ): Promise<void> => {
-    logger.info('running closeExpiredFlags')
-
-    const minFlagStartTime = Math.floor(Date.now() / 1000) - maxFlagAgeSec
+    logger.info('Start')
 
     const sponsorships = (await contractFacade.getSponsorshipsOfOperator(operatorContractAddress))
         .map((sponsorship: SponsorshipResult) => sponsorship.sponsorshipAddress)
+    logger.debug(`Found ${sponsorships.length} sponsorships`)
     if (sponsorships.length === 0) {
-        logger.info('no sponsorships found')
         return
     }
-    logger.info(`found ${sponsorships.length} sponsorships`)
     const flags = await contractFacade.getExpiredFlags(sponsorships, maxFlagAgeSec)
-    logger.info(`found ${flags.length} flags`)
+    logger.debug(`found ${flags.length} expired flags to close`)
     for (const flag of flags) {
         const operatorAddress = flag.target.id
         const sponsorship = flag.sponsorship.id
-        if (flag.flaggingTimestamp < minFlagStartTime) {
-            // voteOnFlag calls on expired flags will close the flag, ignoring the vote data
-            // also anyone can clal this function
-            await contractFacade.voteOnFlag(sponsorship, operatorAddress, false)
-        }
+        // voteOnFlag is not used to vote here but to close the expired flag. The vote data gets ignored.
+        // Anyone can call this function at this point.
+        logger.info('Closing expired flag', { flag })
+        await contractFacade.voteOnFlag(sponsorship, operatorAddress, false)
     }
 }
