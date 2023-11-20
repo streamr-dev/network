@@ -1,7 +1,14 @@
 import { Provider } from '@ethersproject/providers'
 import { Operator, Sponsorship, operatorABI, sponsorshipABI } from '@streamr/network-contracts'
 import { StreamID, ensureValidStreamPartitionIndex, toStreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger, TheGraphClient, addManagedEventListener, toEthereumAddress } from '@streamr/utils'
+import {
+    EthereumAddress,
+    Logger,
+    TheGraphClient,
+    addManagedEventListener,
+    toEthereumAddress,
+    collect
+} from '@streamr/utils'
 import { Contract } from 'ethers'
 import sample from 'lodash/sample'
 import fetch from 'node-fetch'
@@ -325,6 +332,33 @@ export class ContractFacade {
         }
         this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
         return this.theGraphClient.queryEntities<{ id: string, sponsorship: { id: string, stream: { id: string } } }>(createQuery, parseItems)
+    }
+
+    async hasOpenFlag(operatorAddress: EthereumAddress, sponsorshipAddress: EthereumAddress): Promise<boolean> {
+        const createQuery = () => {
+            return {
+                query: `
+                    {
+                        flags(where: {
+                            sponsorship: "${sponsorshipAddress}",
+                            target: "${operatorAddress}",
+                            result_in: ["waiting", "voting"]
+                        }) {
+                            id
+                        }
+                    }
+                    `
+            }
+        }
+        const queryResult = this.theGraphClient.queryEntities<{ id: string }>(createQuery)
+
+        const flags = await collect(queryResult, 1)
+        if (flags.length > 0) {
+            logger.debug('Found open flag', { flag: flags[0] })
+            return true
+        } else {
+            return false
+        }
     }
 
     addReviewRequestListener(listener: ReviewRequestListener, abortSignal: AbortSignal): void {

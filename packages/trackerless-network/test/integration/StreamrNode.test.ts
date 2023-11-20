@@ -136,7 +136,7 @@ describe('StreamrNode', () => {
             waitForCondition(() => node1.getNeighbors(STREAM_PART_ID).length === 1),
             waitForCondition(() => node2.getNeighbors(STREAM_PART_ID).length === 1)
         ])
-        node2.leaveStreamPart(STREAM_PART_ID)
+        await node2.leaveStreamPart(STREAM_PART_ID)
         await waitForCondition(() => node1.getNeighbors(STREAM_PART_ID).length === 0)
     })
 

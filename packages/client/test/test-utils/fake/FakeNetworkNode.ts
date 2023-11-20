@@ -42,7 +42,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         this.subscriptions.add(streamPartId)
     }
 
-    leave(streamPartId: StreamPartID): void {
+    async leave(streamPartId: StreamPartID): Promise<void> {
         this.subscriptions.delete(streamPartId)
     }
 
