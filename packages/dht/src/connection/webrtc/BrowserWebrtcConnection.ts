@@ -2,7 +2,7 @@ import EventEmitter from 'eventemitter3'
 import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from './IWebrtcConnection'
 import { IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
 import { Logger } from '@streamr/utils'
-import { IceServer } from './WebrtcConnectorRpcLocal'
+import { IceServer } from './WebrtcConnector'
 
 const logger = new Logger(module)
 
@@ -20,7 +20,7 @@ interface Params {
 
 export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrtcConnection, IConnection {
 
-    public readonly connectionId: ConnectionID
+    public connectionId: ConnectionID
 
     // We need to keep track of connection state ourselves because
     // RTCPeerConnection.connectionState is not supported on Firefox

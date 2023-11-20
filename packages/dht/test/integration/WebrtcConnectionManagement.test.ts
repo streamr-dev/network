@@ -193,7 +193,7 @@ describe('WebRTC Connection Management', () => {
 
         msg.targetDescriptor = peerDescriptor2
         manager1.send(msg).catch((e) => {
-            expect(e.code).toEqual('CONNECTION_FAILED')
+            expect(e.code).toEqual('SEND_FAILED')
         })
 
         // @ts-expect-error private field
