@@ -183,6 +183,7 @@ export class ContractFacade {
             id: string
             operator: {
                 id: string
+                flagsTargeted: Array<{ id: string }>
             }
         }
         const createQuery = (lastId: string, pageSize: number) => {
@@ -194,6 +195,12 @@ export class ContractFacade {
                                 id
                                 operator {
                                     id
+                                    flagsTargeted(where: {
+                                        sponsorship: "${sponsorshipAddress}",
+                                        result_in: ["waiting", "voting"]
+                                    }) {
+                                        id
+                                    }
                                 }
                             }
                         }
@@ -207,7 +214,9 @@ export class ContractFacade {
         const queryResult = this.theGraphClient.queryEntities<Stake>(createQuery, parseItems)
         const operatorIds: EthereumAddress[] = []
         for await (const stake of queryResult) {
-            operatorIds.push(toEthereumAddress(stake.operator.id))
+            if (stake.operator.flagsTargeted.length === 0) {
+                operatorIds.push(toEthereumAddress(stake.operator.id))
+            }
         }
         return operatorIds
     }
