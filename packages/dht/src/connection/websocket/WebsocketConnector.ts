@@ -283,12 +283,13 @@ export class WebsocketConnector {
         const peerId = peerIdFromPeerDescriptor(sourcePeerDescriptor)
 
         if (this.ongoingConnectRequests.has(peerId.toKey())) {
-            const ongoingConnectReguest = this.ongoingConnectRequests.get(peerId.toKey())!
-            ongoingConnectReguest.attachImplementation(serverWebsocket)
+            const ongoingConnectRequest = this.ongoingConnectRequests.get(peerId.toKey())!
+            ongoingConnectRequest.attachImplementation(serverWebsocket)
             if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
-                ongoingConnectReguest.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
+                ongoingConnectRequest.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
+                ongoingConnectRequest.destroy()
             } else {
-                ongoingConnectReguest.acceptHandshake()
+                ongoingConnectRequest.acceptHandshake()
                 this.ongoingConnectRequests.delete(peerId.toKey())
             }
         } else {
