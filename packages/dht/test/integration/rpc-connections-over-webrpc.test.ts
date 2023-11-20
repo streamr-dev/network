@@ -22,7 +22,7 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport:
     })
 }
 
-describe('RPC errors', () => {
+describe('RPC connections over WebRTC', () => {
 
     let manager1: ConnectionManager
     let manager2: ConnectionManager
