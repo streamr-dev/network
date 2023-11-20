@@ -620,19 +620,13 @@ export enum RpcResponseError {
  */
 export enum HandshakeError {
     /**
-     * avoid  javascript 0 comparison
-     *
-     * @generated from protobuf enum value: OTHER = 0;
+     * @generated from protobuf enum value: DUPLICATE_CONNECTION = 0;
      */
-    OTHER = 0,
+    DUPLICATE_CONNECTION = 0,
     /**
-     * @generated from protobuf enum value: DUPLICATE_CONNECTION = 1;
+     * @generated from protobuf enum value: INVALID_TARGET_PEER_DESCRIPTOR = 1;
      */
-    DUPLICATE_CONNECTION = 1,
-    /**
-     * @generated from protobuf enum value: INVALID_TARGET_PEER_DESCRIPTOR = 2;
-     */
-    INVALID_TARGET_PEER_DESCRIPTOR = 2
+    INVALID_TARGET_PEER_DESCRIPTOR = 1
 }
 // Wraps all messages
 

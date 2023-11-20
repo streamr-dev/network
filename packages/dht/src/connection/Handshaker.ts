@@ -39,7 +39,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
             if (message.body.oneofKind === 'handshakeResponse') {
                 logger.trace('handshake response received')
                 const handshake = message.body.handshakeResponse
-                if (handshake.error) {
+                if (handshake.error !== undefined) {
                     this.emit('handshakeFailed', handshake.error)
                 } else {
                     this.emit('handshakeCompleted', handshake.sourcePeerDescriptor!)
