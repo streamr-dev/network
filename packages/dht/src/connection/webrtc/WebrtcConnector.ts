@@ -158,7 +158,7 @@ export class WebrtcConnector {
             managedConnection = new ManagedWebrtcConnection(this.localPeerDescriptor!, undefined, connection)
         }
 
-        managedConnection.setPeerDescriptor(targetPeerDescriptor)
+        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
         this.ongoingConnectAttempts.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
 
