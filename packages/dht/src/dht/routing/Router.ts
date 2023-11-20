@@ -115,7 +115,11 @@ export class Router implements IRouter {
                 reachableThrough,
                 routingPath: []
             }
-            this.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
+            const ack = this.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
+            if (ack.error) {
+                logger.debug('Could not forward message with error ' + ack.error)
+                throw new Error('Could not forward message with error ' + ack.error)
+            }
         } else {
             const routedMessage: RouteMessageWrapper = {
                 message: msg,
@@ -125,7 +129,11 @@ export class Router implements IRouter {
                 reachableThrough,
                 routingPath: []
             }
-            this.doRouteMessage(routedMessage, RoutingMode.ROUTE)
+            const ack = this.doRouteMessage(routedMessage, RoutingMode.ROUTE)
+            if (ack.error) {
+                logger.debug('Could not route message with error ' + ack.error)
+                throw new Error('Could not route message with error ' + ack.error)
+            }
         }
     }
 
@@ -162,11 +170,6 @@ export class Router implements IRouter {
             session.sendMoreRequests(contacts)
             return createRouteMessageAck(routedMessage)
         } else {
-            if (areEqualPeerDescriptors(routedMessage.sourcePeer!, this.localPeerDescriptor)) {
-                logger.debug(
-                    `Failed to send (routeMessage: ${this.serviceId}) to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`
-                )
-            }
             logger.trace('noCandidatesFound sessionId: ' + session.sessionId)
             return createRouteMessageAck(routedMessage, RoutingErrors.NO_CANDIDATES_FOUND)
         }
