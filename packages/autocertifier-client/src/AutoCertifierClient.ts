@@ -32,7 +32,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     private readonly configFile: string
     private readonly streamrWebSocketPort: number
     private readonly ongoingSessions: Set<string> = new Set()
-    private readonly getOwnNodeId: () => string
+    private readonly getOwnPeerId: () => string
 
     constructor(
         configFile: string,
@@ -43,7 +43,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
             rpcMethodName: string,
             method: HasSession
         ) => void,
-        getOwnNodeId: () => string
+        getOwnPeerId: () => string
     ) {
         super()
 
@@ -51,7 +51,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         this.configFile = filePathToNodeFormat(configFile)
         this.streamrWebSocketPort = streamrWebSocketPort
         registerRpcMethod(SERVICE_ID, 'hasSession', this.hasSession.bind(this))
-        this.getOwnNodeId = getOwnNodeId
+        this.getOwnPeerId = getOwnPeerId
     }
 
     public async start(): Promise<void> {
@@ -117,7 +117,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         this.ongoingSessions.add(sessionId)
 
         try {
-            certifiedSubdomain = await this.restClient.createSubdomainAndCertificate(this.streamrWebSocketPort, this.getOwnNodeId(), sessionId)
+            certifiedSubdomain = await this.restClient.createSubdomainAndCertificate(this.streamrWebSocketPort, this.getOwnPeerId(), sessionId)
         } finally {
             this.ongoingSessions.delete(sessionId)
         }
@@ -141,7 +141,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
 
         const oldCertifiedSubdomain = JSON.parse(fs.readFileSync(this.configFile, 'utf8')) as CertifiedSubdomain
         const updatedCertifiedSubdomain = await this.restClient.updateCertificate(oldCertifiedSubdomain.fqdn.split('.')[0],
-            this.streamrWebSocketPort, this.getOwnNodeId(), oldCertifiedSubdomain.authenticationToken, sessionId)
+            this.streamrWebSocketPort, this.getOwnPeerId(), oldCertifiedSubdomain.authenticationToken, sessionId)
 
         this.ongoingSessions.delete(sessionId)
 
@@ -170,7 +170,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         await this.restClient.updateSubdomainIp(
             oldSubdomain.fqdn.split('.')[0],
             this.streamrWebSocketPort,
-            this.getOwnNodeId(),
+            this.getOwnPeerId(),
             sessionId,
             oldSubdomain.authenticationToken
         )

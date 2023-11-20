@@ -32,11 +32,11 @@ export class RestClient {
         }
     }
 
-    public async createSubdomainAndCertificate(streamrWebSocketPort: number, nodeId: string, sessionId: string): Promise<CertifiedSubdomain> {
+    public async createSubdomainAndCertificate(streamrWebSocketPort: number, peerId: string, sessionId: string): Promise<CertifiedSubdomain> {
         const url = this.baseUrl + '/certificates'
         const body: CreateCertifiedSubdomainRequest = {
             streamrWebSocketPort,
-            nodeId,
+            peerId: peerId,
             sessionId
             
         }
@@ -47,7 +47,7 @@ export class RestClient {
     public async updateCertificate(
         subdomain: string,
         streamrWebSocketPort: number,
-        nodeId: string,
+        peerId: string,
         sessionId: string,
         token: string
     ): Promise<CertifiedSubdomain> {
@@ -56,13 +56,13 @@ export class RestClient {
             token,
             sessionId,
             streamrWebSocketPort,
-            nodeId
+            peerId
         }
         const response = await this.patch<CertifiedSubdomain>(url, body)
         return response
     }
 
-    public async updateSubdomainIp(subdomain: string, streamrWebSocketPort: number, nodeId: string, sessionId: string, token: string): Promise<void> {
+    public async updateSubdomainIp(subdomain: string, streamrWebSocketPort: number, peerId: string, sessionId: string, token: string): Promise<void> {
         logger.debug('updateSubdomainIp() subdomain: ' + subdomain + ', streamrWebSocketPort:  ' + streamrWebSocketPort
             + ', sessionId: ' + sessionId + ', token: ' + token)
         const url = this.baseUrl + '/certificates/' + encodeURIComponent(subdomain) + '/ip'
@@ -70,7 +70,7 @@ export class RestClient {
             token,
             sessionId,
             streamrWebSocketPort,
-            nodeId
+            peerId
         }
         await this.put<any>(url, body)
     }
