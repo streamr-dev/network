@@ -7,12 +7,14 @@ export class ManagedWebrtcConnection extends ManagedConnection {
 
     constructor(localPeerDescriptor: PeerDescriptor,
         connectingConnection?: NodeWebrtcConnection,
-        connectedConnection?: NodeWebrtcConnection) {
+        connectedConnection?: NodeWebrtcConnection
+    ) {
         super(
             localPeerDescriptor,
             ConnectionType.WEBRTC,
             connectingConnection,
-            connectedConnection)
+            connectedConnection
+        )
     }
 
     public getWebrtcConnection(): NodeWebrtcConnection {
