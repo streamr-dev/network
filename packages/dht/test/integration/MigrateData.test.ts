@@ -169,8 +169,7 @@ describe('Migrating data from node to node in DHT', () => {
         for (let i = 0; i < nodes.length; i++) {
             randomIndices.push(i)
         }
-
-        console.error(randomIndices)
+        logger.info('Random indices: ' + randomIndices.map((i) => i.toString()).join())
         while (randomIndices.length > 1) {
             const index = Math.floor(Math.random() * randomIndices.length)
             const nodeIndex = randomIndices[index]
