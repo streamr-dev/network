@@ -65,7 +65,6 @@ export async function setupOperatorContract(
                 adminKey: opts?.adminKey
             }))
         }
-        // nodeWallets.push(operatorWallet)
         await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
     }
     const operatorConfig = {

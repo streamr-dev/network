@@ -182,11 +182,6 @@ export class ContractFacade {
         return results
     }
 
-    // id_gt: "${lastId}", first: ${pageSize},
-    // flaggingTimestamp_lt: "${maxFlagStartTime}",
-    // result_in: ["waiting", "voting"],
-    // sponsorship_in: ${JSON.stringify(sponsorships)}
-
     async getExpiredRelevantFlags(sponsorships: EthereumAddress[], maxFlagAgeSec: number): Promise<Flag[]> {
         const maxFlagStartTime = Math.floor(Date.now() / 1000) - maxFlagAgeSec
         const createQuery = (lastId: string, pageSize: number) => {
