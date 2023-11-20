@@ -1,5 +1,10 @@
 import { Message, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
-import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import {
+    areEqualPeerDescriptors,
+    getNodeIdFromPeerDescriptor,
+    keyFromPeerDescriptor,
+    peerIdFromPeerDescriptor
+} from '../../helpers/peerIdFromPeerDescriptor'
 import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
@@ -128,8 +133,8 @@ export class Router implements IRouter {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RoutingErrors.STOPPED)
         }
-        logger.trace(`Routing message ${routedMessage.requestId} from ${keyFromPeerDescriptor(routedMessage.sourcePeer!)} `
-            + `to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}`)
+        logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
+            + `to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`)
         const session = this.createRoutingSession(routedMessage, mode)
         const contacts = session.findMoreContacts()
         if (contacts.length > 0) {
@@ -159,7 +164,7 @@ export class Router implements IRouter {
         } else {
             if (areEqualPeerDescriptors(routedMessage.sourcePeer!, this.localPeerDescriptor)) {
                 logger.debug(
-                    `Failed to send (routeMessage: ${this.serviceId}) to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}`
+                    `Failed to send (routeMessage: ${this.serviceId}) to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`
                 )
             }
             logger.trace('noCandidatesFound sessionId: ' + session.sessionId)

@@ -1,8 +1,14 @@
+import { binaryToHex } from '@streamr/utils'
 import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from './PeerID'
 
 export const peerIdFromPeerDescriptor = (peerDescriptor: PeerDescriptor): PeerID => {
     return PeerID.fromValue(peerDescriptor.kademliaId)
+}
+
+// TODO could move getNodeIdFromPeerDescriptor (and NodeID) from trackerless-network
+export const getNodeIdFromPeerDescriptor = (peerDescriptor: PeerDescriptor): string => {
+    return binaryToHex(peerDescriptor.kademliaId)
 }
 
 export const keyFromPeerDescriptor = (peerDescriptor: PeerDescriptor): PeerIDKey => {
