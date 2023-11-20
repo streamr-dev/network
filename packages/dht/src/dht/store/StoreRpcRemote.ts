@@ -8,7 +8,7 @@ import {
     StoreDataRequest,
     StoreDataResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 export class StoreRpcRemote extends RpcRemote<IStoreRpcClient> {
 
@@ -17,8 +17,8 @@ export class StoreRpcRemote extends RpcRemote<IStoreRpcClient> {
         try {
             return await this.getClient().storeData(request, options)
         } catch (err) {
-            const to = keyFromPeerDescriptor(this.getPeerDescriptor())
-            const from = keyFromPeerDescriptor(this.getLocalPeerDescriptor())
+            const to = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
+            const from = getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor())
             throw Error(
                 `Could not store data to ${to} from ${from} ${err}`
             )
@@ -31,7 +31,7 @@ export class StoreRpcRemote extends RpcRemote<IStoreRpcClient> {
             return await this.getClient().deleteData(request, options)
         } catch (err) {
             throw Error(
-                `Could not call delete data to ${keyFromPeerDescriptor(this.getPeerDescriptor())} ${err}`
+                `Could not call delete data to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} ${err}`
             )
         }
     }

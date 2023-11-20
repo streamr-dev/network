@@ -2,9 +2,8 @@ import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { IConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice, DisconnectMode } from '../proto/packages/dht/protos/DhtRpc'
-
 import * as Err from '../helpers/errors'
-import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { RpcRemote } from '../dht/contact/RpcRemote'
 import { LockID } from './ConnectionLockHandler'
 
@@ -21,7 +20,7 @@ export class ConnectionLockRpcRemote extends RpcRemote<IConnectionLockRpcClient>
     }
 
     public async lockRequest(lockId: LockID): Promise<boolean> {
-        logger.trace(`Requesting locked connection to ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Requesting locked connection to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: LockRequest = {
             lockId
         }
@@ -36,7 +35,7 @@ export class ConnectionLockRpcRemote extends RpcRemote<IConnectionLockRpcClient>
     }
 
     public unlockRequest(lockId: LockID): void {
-        logger.trace(`Requesting connection to be unlocked from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Requesting connection to be unlocked from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: UnlockRequest = {
             lockId
         }
@@ -49,7 +48,7 @@ export class ConnectionLockRpcRemote extends RpcRemote<IConnectionLockRpcClient>
     }
 
     public async gracefulDisconnect(disconnectMode: DisconnectMode): Promise<void> {
-        logger.trace(`Notifying a graceful disconnect to ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Notifying a graceful disconnect to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: DisconnectNotice = {
             disconnectMode
         }

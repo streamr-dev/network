@@ -1,6 +1,6 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
@@ -10,7 +10,7 @@ describe('Storing data in DHT', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
-    const simulator = new Simulator(LatencyType.RANDOM)
+    const simulator = new Simulator(LatencyType.REAL)
     const NUM_NODES = 5
     const MAX_CONNECTIONS = 5
     const K = 4
@@ -27,10 +27,7 @@ describe('Storing data in DHT', () => {
             undefined, K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
-        entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS
-        }
+        entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`

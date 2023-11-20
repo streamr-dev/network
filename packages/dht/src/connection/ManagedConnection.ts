@@ -1,45 +1,55 @@
 import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from './IConnection'
 import * as Err from '../helpers/errors'
 import { Handshaker } from './Handshaker'
-import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
-import { Logger, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
+import { HandshakeError, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { PeerIDKey } from '../helpers/PeerID'
 import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
-import { keyOrUnknownFromPeerDescriptor } from './ConnectionManager'
+import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
-    handshakeRequest: (peerDescriptor: PeerDescriptor) => void
+    handshakeRequest: (source: PeerDescriptor, target?: PeerDescriptor) => void
     handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
     handshakeFailed: () => void
     bufferSentByOtherConnection: () => void
     closing: () => void
-    internal_disconnected: () => void
+}
+
+interface OutpuBufferEvents {
+    bufferSent: () => void
+    bufferSendingFailed: () => void
+}
+
+interface OutpuBufferEvents {
+    bufferSent: () => void
+    bufferSendingFailed: () => void
 }
 
 const logger = new Logger(module)
 
 export type Events = ManagedConnectionEvents & ConnectionEvents
+
 export class ManagedConnection extends EventEmitter<Events> {
 
     private implementation?: IConnection
 
+    private outputBufferEmitter = new EventEmitter<OutpuBufferEvents>()
     private outputBuffer: Uint8Array[] = []
+
     private inputBuffer: Uint8Array[] = []
 
     public connectionId: ConnectionID
-    private peerDescriptor?: PeerDescriptor
+    private remotePeerDescriptor?: PeerDescriptor
     public connectionType: ConnectionType
 
     private handshaker?: Handshaker
     private handshakeCompleted = false
-    private doNotEmitDisconnected = false
 
     private lastUsed: number = Date.now()
     private stopped = false
     public offeredAsIncoming = false
-    public rejectedAsIncoming = false
     private bufferSentbyOtherConnection = false
     private closing = false
     public replacedByOtherConnection = false
@@ -52,10 +62,9 @@ export class ManagedConnection extends EventEmitter<Events> {
         connectionType: ConnectionType,
         outgoingConnection?: IConnection,
         incomingConnection?: IConnection,
+        targetPeerDescriptor?: PeerDescriptor
     ) {
         super()
-
-        this.send = this.send.bind(this)
 
         this.localPeerDescriptor = localPeerDescriptor
         this.outgoingConnection = outgoingConnection
@@ -63,6 +72,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.connectionType = connectionType
         this.connectionId = new ConnectionID()
 
+        this.send = this.send.bind(this)
         this.onDisconnected = this.onDisconnected.bind(this)
 
         logger.trace('creating ManagedConnection of type: ' + connectionType)
@@ -73,21 +83,25 @@ export class ManagedConnection extends EventEmitter<Events> {
         if (outgoingConnection) {
             this.handshaker = new Handshaker(this.localPeerDescriptor, outgoingConnection)
 
-            this.handshaker.once('handshakeFailed', (errorMessage) => {
-                logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' handshakeFailed: ' + errorMessage)
-                this.emit('handshakeFailed')
+            this.handshaker.once('handshakeFailed', (error) => {
+                if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR) {
+                    this.close(false)
+                } else {
+                    logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' handshakeFailed: ' + error)
+                    this.emit('handshakeFailed')
+                }
             })
 
             this.handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
                 logger.trace('handshake completed for outgoing connection '
-                    + ', ' + keyOrUnknownFromPeerDescriptor(this.peerDescriptor) 
+                    + ', ' + getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) 
                     + ' outputBuffer.length: ' + this.outputBuffer.length)
                 this.attachImplementation(outgoingConnection)
                 this.onHandshakeCompleted(peerDescriptor)
             })
 
             outgoingConnection.once('connected', () => {
-                this.handshaker!.sendHandshakeRequest()
+                this.handshaker!.sendHandshakeRequest(targetPeerDescriptor)
                 this.emit('connected')
             })
             outgoingConnection.once('disconnected', this.onDisconnected)
@@ -95,9 +109,9 @@ export class ManagedConnection extends EventEmitter<Events> {
         } else {
             if (incomingConnection) {
                 this.handshaker = new Handshaker(this.localPeerDescriptor, incomingConnection)
-                this.handshaker.on('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
-                    this.setPeerDescriptor(peerDescriptor)
-                    this.emit('handshakeRequest', peerDescriptor)
+                this.handshaker.on('handshakeRequest', (sourcePeerDescriptor: PeerDescriptor, targetPeerDescriptor?: PeerDescriptor) => {
+                    this.setRemotePeerDescriptor(sourcePeerDescriptor)
+                    this.emit('handshakeRequest', sourcePeerDescriptor, targetPeerDescriptor)
                 })
 
                 incomingConnection.on('disconnected', this.onDisconnected)
@@ -149,32 +163,32 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public get peerIdKey(): PeerIDKey {
-        return keyFromPeerDescriptor(this.peerDescriptor!)
+        return keyFromPeerDescriptor(this.remotePeerDescriptor!)
     }
 
     public getLastUsed(): number {
         return this.lastUsed
     }
 
-    public setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
-        this.peerDescriptor = peerDescriptor
+    public setRemotePeerDescriptor(peerDescriptor: PeerDescriptor): void {
+        this.remotePeerDescriptor = peerDescriptor
     }
 
     public getPeerDescriptor(): PeerDescriptor | undefined {
-        return this.peerDescriptor
+        return this.remotePeerDescriptor
     }
 
     private onHandshakeCompleted(peerDescriptor: PeerDescriptor) {
         this.lastUsed = Date.now()
 
-        this.setPeerDescriptor(peerDescriptor)
+        this.setRemotePeerDescriptor(peerDescriptor)
         this.handshakeCompleted = true
 
         while (this.outputBuffer.length > 0) {
             logger.trace('emptying outputBuffer')
             this.implementation!.send(this.outputBuffer.shift()!)
         }
-
+        this.outputBufferEmitter.emit('bufferSent')
         logger.trace('emitting handshake_completed')
         this.emit('handshakeCompleted', peerDescriptor)
     }
@@ -186,7 +200,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         impl.on('data', (bytes: Uint8Array) => {
             this.lastUsed = Date.now()
             if (this.listenerCount('managedData') === 0) {
-
                 this.inputBuffer.push(bytes)
             } else {
                 this.emit('managedData', bytes, this.getPeerDescriptor()!)
@@ -202,25 +215,26 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.emit('connected')
         })
 
+        //ensure that we have subscribed to the event only once
         impl.off('disconnected', this.onDisconnected)
         impl.on('disconnected', this.onDisconnected)
     }
 
     private onDisconnected(gracefulLeave: boolean): void {
-        logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' onDisconnected() ' + gracefulLeave)
+        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' onDisconnected() ' + gracefulLeave)
         if (this.bufferSentbyOtherConnection) {
             return
         }
-        this.emit('internal_disconnected')
-        this.doDisconnect(gracefulLeave)
+        this.outputBufferEmitter.emit('bufferSendingFailed')
+        this.emit('disconnected', gracefulLeave)
     }
 
     async send(data: Uint8Array, doNotConnect = false): Promise<void> {
         if (this.stopped) {
-            return
+            throw new Err.SendFailed('ManagedConnection is stopped')
         }
         if (this.closing) {
-            return
+            throw new Err.SendFailed('ManagedConnection is closing')
         }
         this.lastUsed = Date.now()
 
@@ -231,52 +245,20 @@ export class ManagedConnection extends EventEmitter<Events> {
         } else {
             logger.trace('adding data to outputBuffer')
 
-            let result: RunAndRaceEventsReturnType<Events>
-
-            this.doNotEmitDisconnected = true
+            let result: RunAndRaceEventsReturnType<OutpuBufferEvents>
 
             try {
-                result = await runAndRaceEvents3<Events>([() => { this.outputBuffer.push(data) }], this, ['handshakeCompleted', 'handshakeFailed',
-                    'bufferSentByOtherConnection', 'closing', 'internal_disconnected'], 15000)
+                result = await runAndRaceEvents3<OutpuBufferEvents>([() => { this.outputBuffer.push(data) }],
+                    this.outputBufferEmitter, ['bufferSent', 'bufferSendingFailed'], 15000)
             } catch (e) {
-                logger.debug(`Connection to ${keyOrUnknownFromPeerDescriptor(this.peerDescriptor)} timed out`)
-                throw e
+                logger.debug(`Connection to ${getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor)} timed out`)
+                throw new Err.SendFailed('Sending buffer timed out')
             }
 
-            if (result.winnerName === 'internal_disconnected') {
-                this.doNotEmitDisconnected = false
-                this.doDisconnect(false)
-            } else if (result.winnerName === 'handshakeFailed') {
-                logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' handshakeFailed received')
-
-                if (this.bufferSentbyOtherConnection) {
-                    logger.trace('bufferSentByOtherConnection already true')
-                    this.doNotEmitDisconnected = false
-                    this.doDisconnect(false)
-                } else {
-                    let result2: RunAndRaceEventsReturnType<Events>
-
-                    try {
-                        result2 = await raceEvents3<Events>(this,
-                            ['bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
-                    } catch (ex) {
-                        logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor)
-                            + ' Exception from raceEvents3 while waiting bufferSentByOtherConnection or closing ' + ex)
-                        throw ex
-                    }
-                    if (result2.winnerName === 'bufferSentByOtherConnection') {
-                        logger.trace('bufferSentByOtherConnection received')
-                        this.doNotEmitDisconnected = false
-                        this.doDisconnect(false)
-                    } else if (result2.winnerName === 'closing') {
-                        logger.trace('bufferSentByOtherConnection not received, instead received a closing event')
-                    } else if (result2.winnerName === 'disconnected') {
-                        logger.trace('disconnected while in raceEvents3')
-                    }
-                }
-            } else {
-                this.doNotEmitDisconnected = false
+            if (result.winnerName === 'bufferSendingFailed') {
+                throw new Err.SendFailed('Sending buffer failed')
             }
+            // buffer was sent successfully, return normally
         }
     }
 
@@ -291,12 +273,13 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public reportBufferSentByOtherConnection(): void {
-        logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' reportBufferSentByOtherConnection')
+        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' reportBufferSentByOtherConnection')
         if (this.handshaker) {
             this.handshaker.removeAllListeners()
         }
         logger.trace('bufferSentByOtherConnection reported')
         this.bufferSentbyOtherConnection = true
+        this.outputBufferEmitter.emit('bufferSent')
         this.emit('bufferSentByOtherConnection')
     }
 
@@ -314,22 +297,12 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.attachImplementation(this.incomingConnection!)
         }
 
-        this.onHandshakeCompleted(this.peerDescriptor!)
+        this.onHandshakeCompleted(this.remotePeerDescriptor!)
     }
 
-    public rejectHandshake(errorMessage: string): void {
-        this.handshaker!.sendHandshakeResponse(errorMessage)
-    }
-
-    private doDisconnect(gracefulLeave: boolean) {
-        logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' doDisconnect() emitting')
-
-        if (!this.doNotEmitDisconnected) {
-            logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' emitting disconnected')
-            this.emit('disconnected', gracefulLeave)
-        } else {
-            logger.trace(keyOrUnknownFromPeerDescriptor(this.peerDescriptor) + ' not emitting disconnected because doNotEmitDisconnected flag is set')
-        }
+    public rejectHandshake(error: HandshakeError): void {
+        this.handshaker!.sendHandshakeResponse(error)
+        this.destroy()
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {
@@ -337,8 +310,10 @@ export class ManagedConnection extends EventEmitter<Events> {
             logger.trace('close() called on replaced connection')
         }
         this.closing = true
+        
+        this.outputBufferEmitter.emit('bufferSendingFailed')
         this.emit('closing')
-        this.doNotEmitDisconnected = false
+       
         if (this.implementation) {
             await this.implementation?.close(gracefulLeave)
         } else if (this.outgoingConnection) {
@@ -346,12 +321,13 @@ export class ManagedConnection extends EventEmitter<Events> {
         } else if (this.incomingConnection) {
             await this.incomingConnection?.close(gracefulLeave)
         } else {
-            this.doDisconnect(gracefulLeave)
+            this.emit('disconnected', gracefulLeave)
         }
     }
 
     public destroy(): void {
         this.closing = true
+        
         this.emit('closing')
         if (!this.stopped) {
             this.stopped = true

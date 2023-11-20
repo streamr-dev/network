@@ -87,6 +87,8 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {
+        this.emit('disconnected', gracefulLeave, undefined, 'close() called')
+        this.removeAllListeners()
         if (!this.destroyed) {
             logger.trace(`Closing socket for connection ${this.connectionId.toString()}`)
             this.socket?.close(gracefulLeave === true ? GOING_AWAY : undefined)
@@ -105,6 +107,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public destroy(): void {
+        logger.trace('destroy() a connection')
         if (!this.destroyed) {
             this.removeAllListeners()
             if (this.socket) {

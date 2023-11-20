@@ -6,7 +6,7 @@ import { IWebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/Dh
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { RpcRemote } from '../../dht/contact/RpcRemote'
 
 const logger = new Logger(module)
@@ -22,7 +22,7 @@ export class WebsocketConnectorRpcRemote extends RpcRemote<IWebsocketConnectorRp
     }
 
     async requestConnection(ip: string, port: number): Promise<boolean> {
-        logger.trace(`Requesting WebSocket connection from ${keyFromPeerDescriptor(this.getLocalPeerDescriptor())}`)
+        logger.trace(`Requesting WebSocket connection from ${getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor())}`)
         const request: WebsocketConnectionRequest = {
             ip,
             port

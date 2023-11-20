@@ -2,8 +2,7 @@ import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
 import {
     areEqualPeerDescriptors,
-    keyFromPeerDescriptor,
-    peerIdFromPeerDescriptor
+    getNodeIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
 import { IRouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from '../contact/RpcRemote'
@@ -38,9 +37,9 @@ export class RouterRpcRemote extends RpcRemote<IRouterRpcClient> {
         } catch (err) {
             const previousPeer = getPreviousPeer(params)
             const fromNode = previousPeer
-                ? peerIdFromPeerDescriptor(previousPeer)
-                : keyFromPeerDescriptor(params.sourcePeer!)
-            logger.trace(`Failed to send routeMessage from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
+                ? getNodeIdFromPeerDescriptor(previousPeer)
+                : getNodeIdFromPeerDescriptor(params.sourcePeer!)
+            logger.trace(`Failed to send routeMessage from ${fromNode} to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
             return false
         }
         return true
@@ -64,10 +63,10 @@ export class RouterRpcRemote extends RpcRemote<IRouterRpcClient> {
         } catch (err) {
             const previousPeer = getPreviousPeer(params)
             const fromNode = previousPeer
-                ? keyFromPeerDescriptor(previousPeer)
-                : keyFromPeerDescriptor(params.sourcePeer!)
+                ? getNodeIdFromPeerDescriptor(previousPeer)
+                : getNodeIdFromPeerDescriptor(params.sourcePeer!)
             logger.trace(
-                `Failed to send forwardMessage from ${fromNode} to ${keyFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`
+                `Failed to send forwardMessage from ${fromNode} to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`
             )
             return false
         }

@@ -24,7 +24,7 @@ const logger = new Logger(module)
 
 interface WebrtcConnectorRpcLocalConfig {
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection 
-    onIncomingConnection: (connection: ManagedConnection) => boolean
+    onNewConnection: (connection: ManagedConnection) => boolean
     // TODO pass accessor methods instead of passing a mutable entity
     ongoingConnectAttempts: Map<PeerIDKey, ManagedWebrtcConnection>
     rpcCommunicator: ListeningRpcCommunicator
@@ -46,8 +46,8 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
             return {}
         }
         const managedConnection = this.config.connect(targetPeerDescriptor)
-        managedConnection.setPeerDescriptor(targetPeerDescriptor)
-        this.config.onIncomingConnection(managedConnection)
+        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
+        this.config.onNewConnection(managedConnection)
         return {}
     }
 
@@ -60,9 +60,9 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         if (!managedConnection) {
             connection = new NodeWebrtcConnection({ remotePeerDescriptor: remotePeer })
             managedConnection = new ManagedWebrtcConnection(this.config.getLocalPeerDescriptor(), undefined, connection)
-            managedConnection.setPeerDescriptor(remotePeer)
+            managedConnection.setRemotePeerDescriptor(remotePeer)
             this.config.ongoingConnectAttempts.set(peerKey, managedConnection)
-            this.config.onIncomingConnection(managedConnection)
+            this.config.onNewConnection(managedConnection)
             const remoteConnector = new WebrtcConnectorRpcRemote(
                 this.config.getLocalPeerDescriptor(),
                 remotePeer,
