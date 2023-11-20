@@ -158,7 +158,7 @@ export class Router implements IRouter {
             return createRouteMessageAck(routedMessage)
         } else {
             if (areEqualPeerDescriptors(routedMessage.sourcePeer!, this.localPeerDescriptor)) {
-                logger.warn(
+                logger.debug(
                     `Failed to send (routeMessage: ${this.serviceId}) to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}`
                 )
             }
