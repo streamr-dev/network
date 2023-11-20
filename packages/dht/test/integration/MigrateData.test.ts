@@ -11,10 +11,14 @@ import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescr
 import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
+import crypto from 'crypto'
 
 const logger = new Logger(module)
 
 jest.setTimeout(60000)
+
+const DATA_KEY = PeerID.fromString('3232323e12r31r3')
+const DATA_VALUE = Any.pack({ kademliaId: crypto.randomBytes(10), type: NodeType.NODEJS, }, PeerDescriptor)
 
 describe('Migrating data from node to node in DHT', () => {
     let entryPoint: DhtNode
@@ -71,11 +75,8 @@ describe('Migrating data from node to node in DHT', () => {
     })
 
     it('Data migrates to the closest node no matter where it is stored', async () => {
-        const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
-
         // calculate offline which node is closest to the data
-        const sortedList = new SortedContactList<Contact>(dataKey, 10000)
+        const sortedList = new SortedContactList<Contact>(DATA_KEY, 10000)
 
         nodes.forEach((node) => sortedList.addContact(new Contact(node.getLocalPeerDescriptor())))
 
@@ -91,7 +92,7 @@ describe('Migrating data from node to node in DHT', () => {
         await nodes[0].joinDht([entrypointDescriptor])
 
         logger.info('storing data to node 0')
-        const successfulStorers = await nodes[0].storeDataToDht(dataKey.value, data)
+        const successfulStorers = await nodes[0].storeDataToDht(DATA_KEY.value, DATA_VALUE)
         expect(successfulStorers.length).toBe(1)
         logger.info('data successfully stored to node 0')
 
@@ -102,7 +103,7 @@ describe('Migrating data from node to node in DHT', () => {
             let hasDataMarker = ''
             
             // @ts-expect-error private field
-            if (node.localDataStore.getEntry(dataKey)) {
+            if (node.localDataStore.getEntry(DATA_KEY)) {
                 hasDataMarker = '<-'
             }
 
@@ -130,7 +131,7 @@ describe('Migrating data from node to node in DHT', () => {
             let hasDataMarker = ''
 
             // @ts-expect-error private field
-            if (node.localDataStore.getEntry(dataKey)) {
+            if (node.localDataStore.getEntry(DATA_KEY)) {
                 hasDataMarker = '<-'
             }
 
@@ -140,13 +141,10 @@ describe('Migrating data from node to node in DHT', () => {
         const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().kademliaId).toKey())!
 
         // @ts-expect-error private field
-        expect(closestNode.localDataStore.getEntry(dataKey)).toBeTruthy()
+        expect(closestNode.localDataStore.getEntry(DATA_KEY)).toBeTruthy()
     }, 180000)
 
     it('Data migrates to the last remaining node if all other nodes leave gracefully', async () => {
-        const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
-
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
 
@@ -157,7 +155,7 @@ describe('Migrating data from node to node in DHT', () => {
         const randomIndex = Math.floor(Math.random() * nodes.length)
         logger.info('storing data to a random node: ' + randomIndex)
 
-        const successfulStorers = await nodes[randomIndex].storeDataToDht(dataKey.value, data)
+        const successfulStorers = await nodes[randomIndex].storeDataToDht(DATA_KEY.value, DATA_VALUE)
 
         logger.info('data successfully stored to ' 
             + successfulStorers.map((peerDescriptor) => getNodeIdFromPeerDescriptor(peerDescriptor)).join() + ' nodes')
@@ -174,7 +172,7 @@ describe('Migrating data from node to node in DHT', () => {
 
             logger.info('Stopping node ' + nodeIndex + ' ' +
                 // @ts-expect-error private field
-                (nodes[nodeIndex].localDataStore.getEntry(dataKey) ? ', has data' : ' does not have data'))
+                (nodes[nodeIndex].localDataStore.getEntry(DATA_KEY) ? ', has data' : ' does not have data'))
 
             await nodes[nodeIndex].stop()
         }
@@ -182,10 +180,10 @@ describe('Migrating data from node to node in DHT', () => {
         logger.info('after random graceful leaving, node ' + randomIndices[0] + ' is left')
 
         // @ts-expect-error private field
-        logger.info('data of ' + randomIndices[0] + ' was ' + nodes[randomIndices[0]].localDataStore.getEntry(dataKey))
+        logger.info('data of ' + randomIndices[0] + ' was ' + nodes[randomIndices[0]].localDataStore.getEntry(DATA_KEY))
 
         // @ts-expect-error private field
-        expect(nodes[randomIndices[0]].localDataStore.getEntry(dataKey)).toBeTruthy()
+        expect(nodes[randomIndices[0]].localDataStore.getEntry(DATA_KEY)).toBeTruthy()
 
     }, 180000)
 })
