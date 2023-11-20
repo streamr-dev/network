@@ -117,7 +117,7 @@ Add given nodes public key to operator node addresses.
 I’m receiving the following warning message.
 
 ```JSON
-INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version 100.0.0-pretestnet.3
+INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version 100.0.0-pretestnet.4
 Error: call revert exception [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="metadata()", data="0x", errorArgs=null, errorName=null, errorSignature=null, reason=null, code=CALL_EXCEPTION, version=abi/5.7.0)
 ```
 
