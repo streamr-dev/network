@@ -183,25 +183,5 @@ describe('RestServer', () => {
             done()
         })
     })
-
-    it('should return an error if peerId is not hex', (done) => {
-        const options = {
-            url: 'https://localhost:9877/certificates/test/ip',
-            method: 'PUT',
-            json: {
-                streamrWebSocketPort: '1234',
-                token: 'token',
-                peerId: 'tttt'
-            },
-            rejectUnauthorized: false
-        }
-
-        request(options, (error: any, response: Response, body: any) => {
-            expect(error).toBeFalsy()
-            expect(response.statusCode).toEqual(400)
-            const responseBody = body as ApiError
-            expect(responseBody.code).toEqual('PEER_ID_MISSING')
-            done()
-        })
-    })
+    
 })

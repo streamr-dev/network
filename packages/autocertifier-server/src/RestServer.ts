@@ -20,10 +20,6 @@ const logger = new Logger(module)
 type ExpressType = ReturnType<typeof express>
 type ServerType = ReturnType<ExpressType['listen']>
 
-const isHex = (str: string): boolean => {
-    return /^[0-9a-fA-F]+$/.test(str)
-}
-
 const sendError = (res: express.Response, err: any) => {
     if (err instanceof Err) {
         logger.error('Error ' + JSON.stringify(err))
@@ -144,7 +140,7 @@ export class RestServer {
             return
         }
         const streamrWebSocketPort = body.streamrWebSocketPort + ''
-        if (!body.peerId || !isHex(body.peerId)) {
+        if (!body.peerId) {
             const err = new PeerIdMissing('Streamr node ID not given')
             sendError(res, err)
             return
@@ -178,7 +174,7 @@ export class RestServer {
             return
         }
         const streamrWebSocketPort = body.streamrWebSocketPort + ''
-        if (!body.peerId || !isHex(body.peerId)) {
+        if (!body.peerId ) {
             const err = new PeerIdMissing('Streamr node ID not given')
             sendError(res, err)
             return
@@ -218,7 +214,7 @@ export class RestServer {
             return
         }
         const streamrWebSocketPort = req.body.streamrWebSocketPort + ''
-        if (!body.peerId || !isHex(body.peerId)) {
+        if (!body.peerId) {
             const err = new PeerIdMissing('Streamr node ID not given')
             sendError(res, err)
             return
