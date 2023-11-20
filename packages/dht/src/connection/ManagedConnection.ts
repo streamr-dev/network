@@ -302,6 +302,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     public rejectHandshake(error: HandshakeError): void {
         this.handshaker!.sendHandshakeResponse(error)
+        this.destroy()
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {

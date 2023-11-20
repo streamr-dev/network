@@ -81,7 +81,6 @@ export class SimulatorConnector {
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake(HandshakeError.DUPLICATE_CONNECTION)
-                managedConnection.destroy()
             }
         })
 
