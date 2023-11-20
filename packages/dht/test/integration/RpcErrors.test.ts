@@ -117,6 +117,9 @@ describe('RPC errors', () => {
     }, 60000)
 
     /*
+    
+    TODO enable these tests (NET-1177)
+
     it.only('Throws a client-side exception if WebRTC connection fails', async () => {
 
         const request: PingRequest = {
