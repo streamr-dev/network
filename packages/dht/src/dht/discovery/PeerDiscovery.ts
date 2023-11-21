@@ -9,6 +9,8 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { createRandomKademliaId } from '../../helpers/kademliaId'
 import { ServiceID } from '../../types/ServiceID'
+import { DhtNodeRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 interface PeerDiscoveryConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -78,7 +80,14 @@ export class PeerDiscovery {
             rpcCommunicator: this.config.rpcCommunicator,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
-            newContactListener: (newPeer: DhtNodeRpcRemote) => this.config.addContact(newPeer.getPeerDescriptor())
+            newContactListener: (newPeer: DhtNodeRpcRemote) => this.config.addContact(newPeer.getPeerDescriptor()),
+            createRpcRemote: (peerDescriptor: PeerDescriptor) => new DhtNodeRpcRemote(
+                this.config.localPeerDescriptor,
+                peerDescriptor,
+                toProtoRpcClient(new DhtNodeRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
+                this.config.serviceId,
+                this.config.rpcRequestTimeout
+            )
         }
         return new DiscoverySession(sessionOptions)
     }

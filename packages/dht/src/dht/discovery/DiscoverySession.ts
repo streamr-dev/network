@@ -1,15 +1,12 @@
-import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import KBucket from 'k-bucket'
 import { v4 } from 'uuid'
 import { PeerID } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { DhtNodeRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { SortedContactList } from '../contact/SortedContactList'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { ServiceID } from '../../types/ServiceID'
 
 const logger = new Logger(module)
 
@@ -23,13 +20,12 @@ interface DiscoverySessionConfig {
     neighborList: SortedContactList<DhtNodeRpcRemote>
     targetId: Uint8Array
     localPeerDescriptor: PeerDescriptor
-    serviceId: ServiceID
-    rpcCommunicator: RpcCommunicator
     parallelism: number
     noProgressLimit: number
     // TODO rename to onNewContact and make required (and move the end of the list)
     newContactListener?: (rpcRemote: DhtNodeRpcRemote) => void
     rpcRequestTimeout?: number
+    createRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
 }
 
 export class DiscoverySession {
@@ -54,13 +50,7 @@ export class DiscoverySession {
         }
         contacts.forEach((contact) => {
             if (!areEqualPeerDescriptors(contact, this.config.localPeerDescriptor)) {
-                const rpcRemote = new DhtNodeRpcRemote(
-                    this.config.localPeerDescriptor,
-                    contact,
-                    toProtoRpcClient(new DhtNodeRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
-                    this.config.serviceId,
-                    this.config.rpcRequestTimeout
-                )
+                const rpcRemote = this.config.createRpcRemote(contact)
                 if (this.config.newContactListener) {
                     this.config.newContactListener(rpcRemote)
                 }
