@@ -5,7 +5,7 @@ import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { IPeerManager } from '../IPeerManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
-import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -46,7 +46,7 @@ export class DiscoverySession {
         if (this.stopped) {
             return []
         }
-        logger.trace(`Getting closest peers from contact: ${keyFromPeerDescriptor(contact.getPeerDescriptor())}`)
+        logger.trace(`Getting closest peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
         this.outgoingClosestPeersRequestsCounter++
 
         this.contactedPeers.add(contact.getPeerId().toKey())

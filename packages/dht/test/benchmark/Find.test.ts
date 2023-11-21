@@ -6,7 +6,7 @@ import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
 import { PeerID } from '../../src/helpers/PeerID'
-import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger, wait } from '@streamr/utils'
 import { debugVars } from '../../src/helpers/debugHelpers'
 import { getTestInterface } from '@streamr/test-utils'
@@ -71,7 +71,7 @@ describe('Find correctness', () => {
         debugVars['waiting'] = false
         logger.info('waiting over')
 
-        nodes.forEach((node) => logger.info(keyFromPeerDescriptor(node.getLocalPeerDescriptor()) + ': connections:' +
+        nodes.forEach((node) => logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + ': connections:' +
             node.getNumberOfConnections() + ', kbucket: ' + getTestInterface(getTestInterface(node).getPeerManager()).getKBucketSize()
             + ', localLocked: ' + node.getNumberOfLocalLockedConnections()
             + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()

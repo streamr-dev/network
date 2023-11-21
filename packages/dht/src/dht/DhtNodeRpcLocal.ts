@@ -1,6 +1,6 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
-import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Empty } from '../proto/google/protobuf/empty'
 import {
     ClosestPeersRequest,
@@ -47,7 +47,7 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     }
 
     async ping(request: PingRequest, context: ServerCallContext): Promise<PingResponse> {
-        logger.trace('received ping request: ' + keyFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!))
+        logger.trace('received ping request: ' + getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!))
         setImmediate(() => {
             this.config.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
         })
@@ -60,7 +60,7 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     async leaveNotice(_request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
         // TODO check signature??
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
-        logger.trace('received leave notice: ' + keyFromPeerDescriptor(sender))
+        logger.trace('received leave notice: ' + getNodeIdFromPeerDescriptor(sender))
         this.config.removeContact(sender)
         return {}
     }

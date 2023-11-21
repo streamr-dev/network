@@ -1,6 +1,6 @@
 import { Logger } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
-import { areEqualPeerDescriptors, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DuplicateDetector } from './DuplicateDetector'
@@ -35,8 +35,8 @@ export class RouterRpcLocal implements IRouterRpc {
 
     async routeMessage(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.config.duplicateRequestDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
-            logger.trace(`Routing message ${routedMessage.requestId} from ${keyFromPeerDescriptor(routedMessage.sourcePeer!)} `
-                + `to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)} is likely a duplicate`)
+            logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
+                + `to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)} is likely a duplicate`)
             return createRouteMessageAck(routedMessage, 'message given to routeMessage() service is likely a duplicate')
         }
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
@@ -54,8 +54,8 @@ export class RouterRpcLocal implements IRouterRpc {
 
     async forwardMessage(forwardMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.config.duplicateRequestDetector.isMostLikelyDuplicate(forwardMessage.requestId)) {
-            logger.trace(`Forwarding message ${forwardMessage.requestId} from ${keyFromPeerDescriptor(forwardMessage.sourcePeer!)} `
-                + `to ${keyFromPeerDescriptor(forwardMessage.destinationPeer!)} is likely a duplicate`)
+            logger.trace(`Forwarding message ${forwardMessage.requestId} from ${getNodeIdFromPeerDescriptor(forwardMessage.sourcePeer!)} `
+                + `to ${getNodeIdFromPeerDescriptor(forwardMessage.destinationPeer!)} is likely a duplicate`)
             return createRouteMessageAck(forwardMessage, 'message given to forwardMessage() service is likely a duplicate')
         }
         logger.trace(`Processing received forward routeMessage ${forwardMessage.requestId}`)

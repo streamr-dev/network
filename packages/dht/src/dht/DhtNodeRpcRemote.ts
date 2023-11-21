@@ -10,7 +10,7 @@ import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { Remote } from './contact/Remote'
 import { PeerID } from '../helpers/PeerID'
-import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../types/ServiceID'
 
 const logger = new Logger(module)
@@ -40,7 +40,7 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
     }
 
     async getClosestPeers(kademliaId: Uint8Array): Promise<PeerDescriptor[]> {
-        logger.trace(`Requesting getClosestPeers on ${this.getServiceId()} from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Requesting getClosestPeers on ${this.getServiceId()} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: ClosestPeersRequest = {
             kademliaId,
             requestId: v4()
@@ -57,7 +57,7 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
     }
 
     async ping(): Promise<boolean> {
-        logger.trace(`Requesting ping on ${this.getServiceId()} from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Requesting ping on ${this.getServiceId()} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: PingRequest = {
             requestId: v4()
         }
@@ -68,13 +68,13 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
                 return true
             }
         } catch (err) {
-            logger.trace(`ping failed on ${this.getServiceId()} to ${keyFromPeerDescriptor(this.getPeerDescriptor())}: ${err}`)
+            logger.trace(`ping failed on ${this.getServiceId()} to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}: ${err}`)
         }
         return false
     }
 
     leaveNotice(): void {
-        logger.trace(`Sending leaveNotice on ${this.getServiceId()} from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Sending leaveNotice on ${this.getServiceId()} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: LeaveNotice = {
             serviceId: this.getServiceId()
         }
