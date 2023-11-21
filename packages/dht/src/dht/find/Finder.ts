@@ -117,7 +117,7 @@ export class Finder implements IFinder {
             session.doSendFindResponse(
                 [this.localPeerDescriptor],
                 [this.localPeerDescriptor],
-                data ? Array.from(data.values()) : [],
+                Array.from(data.values()),
                 true
             )
             return session.getResults()
