@@ -78,10 +78,12 @@ message ExternalStoreDataResponse {
 }
 
 message ReplicateDataRequest {
+  // TODO rename to "entry"
   DataEntry dataEntry = 1;
 }
   
 message ReplicateDataResponse {
+  // TODO is this optional, could be error code?
   string error = 1;
 }
 
