@@ -23,7 +23,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.connectionId = new ConnectionID()
     }
 
-    public connect(address: string, selfSigned?: boolean): void {
+    public connect(address: string, selfSigned = false): void {
         if (!this.destroyed) {
             this.socket = new Websocket(address, undefined, undefined, undefined, { rejectUnauthorized: !selfSigned })
             this.socket.binaryType = BINARY_TYPE
