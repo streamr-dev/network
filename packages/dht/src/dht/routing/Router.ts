@@ -162,7 +162,7 @@ export class Router implements IRouter {
                     `Failed to send (routeMessage: ${this.serviceId}) to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`
                 )
             }
-            logger.trace('no targets sessionId: ' + session.sessionId)
+            logger.trace('no targets', { sessionId: session.sessionId })
             return createRouteMessageAck(routedMessage, RouteMessageError.NO_TARGETS)
         }
     }
