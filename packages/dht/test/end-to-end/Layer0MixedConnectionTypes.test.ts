@@ -1,7 +1,8 @@
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { waitForEvent3 } from '@streamr/utils'
-import { ConnectionManager, Events as ConnectionManagerEvents } from '../../src/connection/ConnectionManager'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { TransportEvents } from '../../src/transport/ITransport'
 import { getTestInterface } from '@streamr/test-utils'
 
 describe('Layer0MixedConnectionTypes', () => {
@@ -75,8 +76,8 @@ describe('Layer0MixedConnectionTypes', () => {
     it('2 non-server peers join first', async () => {
 
         const promise = Promise.all([
-            waitForEvent3<ConnectionManagerEvents>((node3.getTransport() as ConnectionManager), 'newConnection'),
-            waitForEvent3<ConnectionManagerEvents>((node4.getTransport() as ConnectionManager), 'newConnection'),
+            waitForEvent3<TransportEvents>((node3.getTransport() as ConnectionManager), 'connected'),
+            waitForEvent3<TransportEvents>((node4.getTransport() as ConnectionManager), 'connected'),
         ])
 
         node3.joinDht([epPeerDescriptor])
