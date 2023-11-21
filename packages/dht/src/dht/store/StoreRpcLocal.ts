@@ -139,7 +139,7 @@ export class StoreRpcLocal implements IStoreRpc {
             this.rpcRequestTimeout
         )
         try {
-            const response = await rpcRemote.replicateData({ dataEntry }, doNotConnect)
+            const response = await rpcRemote.replicateData({ entry: dataEntry }, doNotConnect)
             if (response.error) {
                 logger.trace('replicateData() returned error: ' + response.error)
             }
@@ -268,12 +268,12 @@ export class StoreRpcLocal implements IStoreRpc {
     // RPC service implementation
     public async replicateData(request: ReplicateDataRequest, context: ServerCallContext): Promise<ReplicateDataResponse> {
         logger.trace('server-side replicateData()')
-        const dataEntry = request.dataEntry!
+        const dataEntry = request.entry!
 
         const wasStored = this.localDataStore.storeEntry(dataEntry)
         
         if (wasStored) {
-            this.replicateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.dataEntry!)
+            this.replicateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.entry!)
         }
         if (!this.selfIsOneOfClosestPeers(dataEntry.kademliaId)) {
             this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.kademliaId))

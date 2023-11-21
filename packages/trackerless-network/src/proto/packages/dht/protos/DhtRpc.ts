@@ -66,11 +66,9 @@ export interface ExternalStoreDataResponse {
  */
 export interface ReplicateDataRequest {
     /**
-     * TODO rename to "entry"
-     *
-     * @generated from protobuf field: dht.DataEntry dataEntry = 1;
+     * @generated from protobuf field: dht.DataEntry entry = 1;
      */
-    dataEntry?: DataEntry;
+    entry?: DataEntry;
 }
 /**
  * @generated from protobuf message dht.ReplicateDataResponse
@@ -732,7 +730,7 @@ export const ExternalStoreDataResponse = new ExternalStoreDataResponse$Type();
 class ReplicateDataRequest$Type extends MessageType$<ReplicateDataRequest> {
     constructor() {
         super("dht.ReplicateDataRequest", [
-            { no: 1, name: "dataEntry", kind: "message", T: () => DataEntry }
+            { no: 1, name: "entry", kind: "message", T: () => DataEntry }
         ]);
     }
 }
