@@ -542,7 +542,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private getClosestActiveContactNotInBucket(): DhtNodeRpcRemote | undefined {
         for (const contactId of this.neighborList!.getContactIds()) {
             if (!this.bucket!.get(contactId.value) && this.neighborList!.isActive(contactId)) {
-                return this.neighborList!.getContact(contactId).contact
+                return this.neighborList!.getContact(contactId)!.contact
             }
         }
         return undefined
