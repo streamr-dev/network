@@ -19,6 +19,7 @@ interface DiscoverySessionEvents {
 
 interface DiscoverySessionConfig {
     bucket: KBucket<DhtNodeRpcRemote>
+    // TODO these are not neighbors, rename e.g. to knownNodes? 
     neighborList: SortedContactList<DhtNodeRpcRemote>
     targetId: Uint8Array
     localPeerDescriptor: PeerDescriptor
@@ -26,15 +27,18 @@ interface DiscoverySessionConfig {
     rpcCommunicator: RpcCommunicator
     parallelism: number
     noProgressLimit: number
+    // TODO rename to onNewContact and make required (and move the end of the list)
     newContactListener?: (rpcRemote: DhtNodeRpcRemote) => void
     rpcRequestTimeout?: number
 }
 
 export class DiscoverySession {
+    // TODO rename to id
     public readonly sessionId = v4()
-
     private stopped = false
+    // TODO could we use a Gate to check if we have completed? 
     private emitter = new EventEmitter<DiscoverySessionEvents>()
+    // TODO delete obsolete field
     private outgoingClosestPeersRequestsCounter = 0
     private noProgressCounter = 0
     private ongoingClosestPeersRequests: Set<string> = new Set()
