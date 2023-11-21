@@ -22,7 +22,7 @@ export class FindRpcRemote extends Remote<IFindRpcClient> {
         const options = this.formDhtRpcOptions()
         try {
             const ack = await this.getClient().routeFindRequest(message, options)
-            if (ack.error.length > 0) {
+            if (ack.error !== undefined) {
                 logger.debug('Next hop responded with error ' + ack.error)
                 return false
             }

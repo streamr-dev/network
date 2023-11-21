@@ -1,4 +1,4 @@
-import { Message, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import {
     areEqualPeerDescriptors,
     getNodeIdFromPeerDescriptor,
@@ -15,11 +15,6 @@ import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
-
-export enum RoutingErrors {
-    NO_CANDIDATES_FOUND = 'No routing candidates found',
-    STOPPED = 'DhtNode Stopped'
-}
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -82,7 +77,7 @@ export class Router implements IRouter {
             'routeMessage',
             async (routedMessage: RouteMessageWrapper) => {
                 if (this.stopped) {
-                    return createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
+                    return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
                 }
                 return rpcLocal.routeMessage(routedMessage)
             }
@@ -93,7 +88,7 @@ export class Router implements IRouter {
             'forwardMessage',
             async (forwardMessage: RouteMessageWrapper) => {
                 if (this.stopped) {
-                    return createRouteMessageAck(forwardMessage, 'forwardMessage() service is not running')
+                    return createRouteMessageAck(forwardMessage, RouteMessageError.STOPPED)
                 }
                 return rpcLocal.forwardMessage(forwardMessage)
             }
@@ -131,7 +126,7 @@ export class Router implements IRouter {
 
     public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE): RouteMessageAck {
         if (this.stopped) {
-            return createRouteMessageAck(routedMessage, RoutingErrors.STOPPED)
+            return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
         logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
             + `to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`)
@@ -167,8 +162,8 @@ export class Router implements IRouter {
                     `Failed to send (routeMessage: ${this.serviceId}) to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`
                 )
             }
-            logger.trace('noCandidatesFound sessionId: ' + session.sessionId)
-            return createRouteMessageAck(routedMessage, RoutingErrors.NO_CANDIDATES_FOUND)
+            logger.trace('no targets sessionId: ' + session.sessionId)
+            return createRouteMessageAck(routedMessage, RouteMessageError.NO_TARGETS)
         }
     }
 

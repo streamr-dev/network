@@ -305,9 +305,9 @@ export interface RouteMessageAck {
      */
     requestId: string;
     /**
-     * @generated from protobuf field: string error = 2;
+     * @generated from protobuf field: optional dht.RouteMessageError error = 2;
      */
-    error: string;
+    error?: RouteMessageError;
 }
 // Correspond to the MessageType Enum
 
@@ -616,6 +616,23 @@ export enum RpcResponseError {
     UNKNOWN_RPC_METHOD = 3
 }
 /**
+ * @generated from protobuf enum dht.RouteMessageError
+ */
+export enum RouteMessageError {
+    /**
+     * @generated from protobuf enum value: NO_TARGETS = 0;
+     */
+    NO_TARGETS = 0,
+    /**
+     * @generated from protobuf enum value: DUPLICATE = 1;
+     */
+    DUPLICATE = 1,
+    /**
+     * @generated from protobuf enum value: STOPPED = 2;
+     */
+    STOPPED = 2
+}
+/**
  * @generated from protobuf enum dht.HandshakeError
  */
 export enum HandshakeError {
@@ -836,7 +853,7 @@ class FindResponse$Type extends MessageType$<FindResponse> {
         super("dht.FindResponse", [
             { no: 1, name: "closestConnectedPeers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 2, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
-            { no: 3, name: "noCloserNodesFound", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "noCloserNodesFound", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 4, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
@@ -934,7 +951,7 @@ class RouteMessageAck$Type extends MessageType$<RouteMessageAck> {
     constructor() {
         super("dht.RouteMessageAck", [
             { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "error", kind: "enum", opt: true, T: () => ["dht.RouteMessageError", RouteMessageError] }
         ]);
     }
 }

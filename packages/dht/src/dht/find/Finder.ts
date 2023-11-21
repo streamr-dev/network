@@ -6,10 +6,11 @@ import {
     PeerDescriptor,
     FindRequest,
     RouteMessageAck,
-    RouteMessageWrapper
+    RouteMessageWrapper,
+    RouteMessageError
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { RoutingErrors, IRouter } from '../routing/Router'
+import { IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { areEqualPeerDescriptors, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
@@ -87,7 +88,7 @@ export class Finder implements IFinder {
             'routeFindRequest',
             async (routedMessage: RouteMessageWrapper) => {
                 if (this.stopped) {
-                    return createRouteMessageAck(routedMessage, 'routeFindRequest() service is not running')
+                    return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
                 } else {
                     return rpcLocal.routeFindRequest(routedMessage)
                 }
@@ -221,7 +222,7 @@ export class Finder implements IFinder {
 
     private doRouteFindRequest(routedMessage: RouteMessageWrapper, excludedPeer?: PeerDescriptor): RouteMessageAck {
         if (this.stopped) {
-            return createRouteMessageAck(routedMessage, 'DhtNode Stopped')
+            return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
         const idToFind = peerIdFromPeerDescriptor(routedMessage.destinationPeer!)
         const msg = routedMessage.message
@@ -234,7 +235,7 @@ export class Finder implements IFinder {
             return createRouteMessageAck(routedMessage)
         }
         const ack = this.router.doRouteMessage(routedMessage, RoutingMode.FIND, excludedPeer)
-        if (ack.error === RoutingErrors.NO_CANDIDATES_FOUND) {
+        if (ack.error === RouteMessageError.NO_TARGETS) {
             logger.trace(`routeFindRequest Node found no candidates`)
             this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
                 closestPeersToDestination, data, true)
