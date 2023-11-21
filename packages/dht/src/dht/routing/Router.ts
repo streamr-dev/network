@@ -117,8 +117,9 @@ export class Router implements IRouter {
             }
             const ack = this.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
             if (ack.error) {
-                logger.debug('Could not forward message with error ' + ack.error)
-                throw new Error('Could not forward message with error ' + ack.error)
+                const error = 'Could not forward message with error ' + ack.error
+                logger.debug(error)
+                throw new Error(error)
             }
         } else {
             const routedMessage: RouteMessageWrapper = {
@@ -131,8 +132,9 @@ export class Router implements IRouter {
             }
             const ack = this.doRouteMessage(routedMessage, RoutingMode.ROUTE)
             if (ack.error) {
-                logger.debug('Could not route message with error ' + ack.error)
-                throw new Error('Could not route message with error ' + ack.error)
+                const error = 'Could not route message with error ' + ack.error
+                logger.debug(error)
+                throw new Error(error)
             }
         }
     }
