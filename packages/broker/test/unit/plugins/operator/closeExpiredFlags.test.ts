@@ -1,11 +1,11 @@
 import { closeExpiredFlags } from '../../../../src/plugins/operator/closeExpiredFlags'
 import { ContractFacade, SponsorshipResult } from '../../../../src/plugins/operator/ContractFacade'
 import { mock } from 'jest-mock-extended'
-import { toEthereumAddress } from '@streamr/utils'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
-const sponsorshipAddress = toEthereumAddress('0xb85ea99a770d3d79d03855045cad830ef028a024')
-const operatorAddress = toEthereumAddress('0x9b9dA31a92fA066A193fc78aE55Ee3eafa865aC7')
-const targetAddress = toEthereumAddress('0x3b9dA31a92fA066A193fc78aE55Ee3eafa865aC7')
+const sponsorshipAddress = randomEthereumAddress()
+const operatorAddress = randomEthereumAddress()
+const targetAddress = randomEthereumAddress()
 
 const contractFacadeMock = mock<ContractFacade>()
 contractFacadeMock.getSponsorshipsOfOperator.mockImplementation(async () => {
@@ -20,7 +20,7 @@ contractFacadeMock.getSponsorshipsOfOperator.mockImplementation(async () => {
 contractFacadeMock.getExpiredFlags.mockImplementation(async () => {
     return [
         {
-            id: 'flagid',
+            id: 'flagId',
             target: {
                 id: targetAddress
             },
@@ -38,9 +38,8 @@ describe('closeExpiredFlags', () => {
 
     test('closes expired flags', async () => {
         await closeExpiredFlags(flagLifetime, operatorAddress, contractFacadeMock)
-        expect(contractFacadeMock.voteOnFlag).toHaveBeenCalledTimes(1)
-        expect(contractFacadeMock.voteOnFlag).toHaveBeenCalledTimes(1)
+        expect(contractFacadeMock.closeFlag).toHaveBeenCalledTimes(1)
         // 3rd boolean param is ignored in actual usage
-        expect(contractFacadeMock.voteOnFlag).toHaveBeenCalledWith(sponsorshipAddress, targetAddress, false)
+        expect(contractFacadeMock.closeFlag).toHaveBeenCalledWith(sponsorshipAddress, targetAddress)
     })
 })

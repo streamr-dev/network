@@ -21,9 +21,7 @@ export const closeExpiredFlags = async (
     for (const flag of flags) {
         const operatorAddress = flag.target.id
         const sponsorship = flag.sponsorship.id
-        // voteOnFlag is not used to vote here but to close the expired flag. The vote data gets ignored.
-        // Anyone can call this function at this point.
         logger.info('Closing expired flag', { flag })
-        await contractFacade.voteOnFlag(sponsorship, operatorAddress, false)
+        await contractFacade.closeFlag(sponsorship, operatorAddress)
     }
 }

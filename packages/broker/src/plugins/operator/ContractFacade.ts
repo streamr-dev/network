@@ -206,10 +206,7 @@ export class ContractFacade {
                 }`
             }
         }
-        const parseItems = (response: { flags: Flag[] }): Flag[] => {
-            return response.flags ?? []
-        }
-        const flagEntities = this.theGraphClient.queryEntities<Flag>(createQuery, parseItems)
+        const flagEntities = this.theGraphClient.queryEntities<Flag>(createQuery)
         const flags: Flag[] = []
         for await (const flag of flagEntities) {
             flags.push(flag)
@@ -425,6 +422,12 @@ export class ContractFacade {
     async voteOnFlag(sponsorship: string, targetOperator: string, kick: boolean): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
         await (await this.operatorContract.voteOnFlag(sponsorship, targetOperator, voteData)).wait()
+    }
+
+    async closeFlag(sponsorship: string, targetOperator: string): Promise<void> {
+        // voteOnFlag is not used to vote here but to close the expired flag. The vote data gets ignored.
+        // Anyone can call this function at this point.
+        await this.voteOnFlag(sponsorship, targetOperator, false)
     }
 
     addOperatorContractStakeEventListener(eventName: 'Staked' | 'Unstaked', listener: (sponsorship: string) => unknown): void {

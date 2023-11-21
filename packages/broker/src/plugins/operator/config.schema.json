@@ -140,7 +140,7 @@
           "minimum": 0,
           "default": 600000
         },
-        "maxFlagAgeInS": {
+        "maxAgeInMs": {
           "type": "integer",
           "description": "The maximum age (in seconds) of a flag before it is expired",
           "minimum": 0,

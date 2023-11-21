@@ -45,7 +45,7 @@ export interface OperatorPluginConfig {
     }
     closeExpiredFlags: {
         intervalInMs: number
-        maxFlagAgeInSec: number
+        maxAgeInMs: number
     }
 }
 
@@ -191,7 +191,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             await scheduleAtInterval(async () => {
                 try {
                     await closeExpiredFlags(
-                        this.pluginConfig.closeExpiredFlags.maxFlagAgeInSec,
+                        this.pluginConfig.closeExpiredFlags.maxAgeInMs / 1000,
                         serviceConfig.operatorContractAddress,
                         contractFacade
                     )
