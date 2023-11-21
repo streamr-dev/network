@@ -13,10 +13,11 @@ import { generateId } from '../utils/utils'
 import { IWebrtcConnectorRpc } from '../../src/proto/packages/dht/protos/DhtRpc.server'
 import { waitForCondition } from '@streamr/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('WebRTC rpc messages', () => {
-    let rpcCommunicator1: RpcCommunicator
-    let rpcCommunicator2: RpcCommunicator
+    let rpcCommunicator1: RpcCommunicator<DhtCallContext>
+    let rpcCommunicator2: RpcCommunicator<DhtCallContext>
     let client: ProtoRpcClient<WebrtcConnectorRpcClient>
 
     let requestConnectionCounter: number

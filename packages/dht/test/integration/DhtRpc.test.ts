@@ -5,10 +5,11 @@ import { generateId } from '../utils/utils'
 import { ClosestPeersRequest, ClosestPeersResponse, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { wait } from '@streamr/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('DhtRpc', () => {
-    let rpcCommunicator1: RpcCommunicator
-    let rpcCommunicator2: RpcCommunicator
+    let rpcCommunicator1: RpcCommunicator<DhtCallContext>
+    let rpcCommunicator2: RpcCommunicator<DhtCallContext>
     let client1: ProtoRpcClient<DhtNodeRpcClient>
     let client2: ProtoRpcClient<DhtNodeRpcClient>
 

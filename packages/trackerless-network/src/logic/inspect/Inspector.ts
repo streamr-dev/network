@@ -1,4 +1,4 @@
-import { PeerDescriptor, ConnectionLocker } from '@streamr/dht'
+import { PeerDescriptor, ConnectionLocker, ListeningRpcCommunicator } from '@streamr/dht'
 import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -11,7 +11,7 @@ import { StreamPartID } from '@streamr/protocol'
 interface InspectorConfig {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
-    rpcCommunicator: RpcCommunicator
+    rpcCommunicator: ListeningRpcCommunicator
     connectionLocker: ConnectionLocker
     inspectionTimeout?: number
     openInspectConnection?: (peerDescriptor: PeerDescriptor, lockId: string) => Promise<void>

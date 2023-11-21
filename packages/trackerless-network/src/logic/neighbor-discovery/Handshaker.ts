@@ -1,4 +1,4 @@
-import { ConnectionLocker, PeerDescriptor } from '@streamr/dht'
+import { ConnectionLocker, PeerDescriptor, ListeningRpcCommunicator } from '@streamr/dht'
 import { NodeList } from '../NodeList'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
@@ -25,7 +25,7 @@ interface HandshakerConfig {
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
     randomNodeView: NodeList
-    rpcCommunicator: RpcCommunicator
+    rpcCommunicator: ListeningRpcCommunicator
     maxNeighborCount: number
     rpcRequestTimeout?: number
 }

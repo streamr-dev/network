@@ -4,12 +4,13 @@ import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageAck, RouteM
 import { RouterRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createWrappedClosestPeersRequest, generateId, mockRouterRpc } from '../utils/utils'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('RemoteRouter', () => {
 
     let remoteRouter: RouterRpcRemote
-    let clientRpcCommunicator: RpcCommunicator
-    let serverRpcCommunicator: RpcCommunicator
+    let clientRpcCommunicator: RpcCommunicator<DhtCallContext>
+    let serverRpcCommunicator: RpcCommunicator<DhtCallContext>
     const serviceId = 'test'
     const clientPeerDescriptor: PeerDescriptor = {
         kademliaId: generateId('client'),

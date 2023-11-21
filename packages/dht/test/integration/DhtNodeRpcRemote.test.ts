@@ -12,12 +12,13 @@ import {
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { generateId } from '../utils/utils'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('DhtNodeRpcRemote', () => {
 
     let rpcRemote: DhtNodeRpcRemote
-    let clientRpcCommunicator: RpcCommunicator
-    let serverRpcCommunicator: RpcCommunicator
+    let clientRpcCommunicator: RpcCommunicator<DhtCallContext>
+    let serverRpcCommunicator: RpcCommunicator<DhtCallContext>
     const serviceId = 'test'
     const clientPeerDescriptor: PeerDescriptor = {
         kademliaId: generateId('client'),

@@ -1,4 +1,4 @@
-import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import KBucket from 'k-bucket'
@@ -10,6 +10,7 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
+import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 
 const logger = new Logger(module)
 
@@ -23,7 +24,7 @@ interface DiscoverySessionConfig {
     targetId: Uint8Array
     localPeerDescriptor: PeerDescriptor
     serviceId: ServiceID
-    rpcCommunicator: RpcCommunicator
+    rpcCommunicator: RoutingRpcCommunicator
     parallelism: number
     noProgressLimit: number
     newContactListener?: (rpcRemote: DhtNodeRpcRemote) => void

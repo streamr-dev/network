@@ -21,6 +21,7 @@ export interface ITransport {
     off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
     off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void): void
 
+    // TODO: change ITransport#send to get options inside an object
     send(msg: Message, doNotConnect?: boolean): Promise<void>
     getLocalPeerDescriptor(): PeerDescriptor
     getAllConnectionPeerDescriptors(): PeerDescriptor[]

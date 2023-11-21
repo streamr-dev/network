@@ -27,8 +27,8 @@ export enum StatusCode {
     SERVER_ERROR = 'SERVER_ERROR'
 }
 
-interface RpcCommunicatorEvents {
-    outgoingMessage: (message: RpcMessage, requestId: string, callContext?: ProtoCallContext) => void
+interface RpcCommunicatorEvents<T extends ProtoCallContext> {
+    outgoingMessage: (message: RpcMessage, requestId: string, callContext?: T) => void
 }
 
 export interface RpcCommunicatorConfig {
@@ -112,15 +112,15 @@ interface RpcResponseParams {
     errorMessage?: string
 }
 
-type OutgoingMessageListener = (message: RpcMessage, requestId: string, callContext?: ProtoCallContext) => Promise<void>
+type OutgoingMessageListener<T extends ProtoCallContext> = (message: RpcMessage, requestId: string, callContext?: T) => Promise<void>
 
-export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
+export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<RpcCommunicatorEvents<T>> {
     private stopped = false
     private readonly rpcClientTransport: ClientTransport
     private readonly rpcServerRegistry: ServerRegistry
     private readonly ongoingRequests: Map<string, OngoingRequest>
     private readonly rpcRequestTimeout: number
-    private outgoingMessageListener?: OutgoingMessageListener
+    private outgoingMessageListener?: OutgoingMessageListener<T>
 
     constructor(params?: RpcCommunicatorConfig) {
         super()
@@ -136,11 +136,11 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
             options: ProtoRpcOptions,
             deferredPromises: ResultParts | undefined
         ) => {
-            this.onOutgoingMessage(rpcMessage, deferredPromises, options as ProtoCallContext)
+            this.onOutgoingMessage(rpcMessage, deferredPromises, options as T)
         })
     }
 
-    public async handleIncomingMessage(message: RpcMessage, callContext?: ProtoCallContext): Promise<void> {
+    public async handleIncomingMessage(message: RpcMessage, callContext?: T): Promise<void> {
         if (this.stopped) {
             return
         }
@@ -185,7 +185,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
         this.rpcClientTransport.stop()
     }
 
-    private onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: ResultParts, callContext?: ProtoCallContext): void {
+    private onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: ResultParts, callContext?: T): void {
         if (this.stopped) {
             if (deferredPromises) {
                 const ongoingRequest = new OngoingRequest(deferredPromises, 1000)
@@ -235,7 +235,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
         }
     }
 
-    private async onIncomingMessage(rpcMessage: RpcMessage, callContext?: ProtoCallContext): Promise<void> {
+    private async onIncomingMessage(rpcMessage: RpcMessage, callContext?: T): Promise<void> {
         logger.trace(`onIncomingMessage, requestId: ${rpcMessage.requestId}`)
 
         if (rpcMessage.header.response && this.ongoingRequests.has(rpcMessage.requestId)) {
@@ -253,7 +253,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
         }
     }
 
-    private async handleRequest(rpcMessage: RpcMessage, callContext?: ProtoCallContext): Promise<void> {
+    private async handleRequest(rpcMessage: RpcMessage, callContext?: T): Promise<void> {
         if (this.stopped) {
             return
         }
@@ -288,7 +288,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
     }
 
     private async handleNotification(rpcMessage: RpcMessage,
-        callContext?: ProtoCallContext): Promise<void> {
+        callContext?: T): Promise<void> {
         if (this.stopped) {
             return
         }
@@ -353,7 +353,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
         }
     }
 
-    public setOutgoingMessageListener(listener: OutgoingMessageListener): void {
+    public setOutgoingMessageListener(listener: OutgoingMessageListener<T>): void {
         this.outgoingMessageListener = listener
     }
 

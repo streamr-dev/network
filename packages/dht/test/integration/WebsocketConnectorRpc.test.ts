@@ -9,10 +9,11 @@ import {
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { mockWebsocketConnectorRpc } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('WebsocketConnectorRpc', () => {
-    let rpcCommunicator1: RpcCommunicator
-    let rpcCommunicator2: RpcCommunicator
+    let rpcCommunicator1: RpcCommunicator<DhtCallContext>
+    let rpcCommunicator2: RpcCommunicator<DhtCallContext>
     let client1: ProtoRpcClient<WebsocketConnectorRpcClient>
     let client2: ProtoRpcClient<WebsocketConnectorRpcClient>
 

@@ -5,7 +5,7 @@ import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RpcMessage } from '../proto/packages/proto-rpc/protos/ProtoRpc'
 import { ServiceID } from '../types/ServiceID'
 
-export class RoutingRpcCommunicator extends RpcCommunicator {
+export class RoutingRpcCommunicator extends RpcCommunicator<DhtCallContext> {
     private ownServiceId: ServiceID
     private sendFn: (msg: Message, doNotConnect?: boolean, doNotMindStopped?: boolean) => Promise<void>
 
@@ -38,12 +38,10 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
                 targetDescriptor
             }
 
-            if (msg.header.response || callContext && callContext.doNotConnect && callContext.doNotMindStopped ) {
+            if (msg.header.response) {
                 return this.sendFn(message, true, true)
-            } else if (msg.header.response || callContext && callContext.doNotConnect) {
-                return this.sendFn(message, true)
             } else {
-                return this.sendFn(message)
+                return this.sendFn(message, callContext?.doNotConnect, callContext?.doNotMindStopped)
             }
 
         })
