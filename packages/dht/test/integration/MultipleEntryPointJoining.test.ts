@@ -15,7 +15,7 @@ describe('multiple entry point joining', () => {
         let entryPoints: PeerDescriptor[]
         
         beforeEach(async () => {
-            simulator = new Simulator(LatencyType.RANDOM)
+            simulator = new Simulator(LatencyType.REAL)
 
             node1 = await createMockConnectionDhtNode('node1', simulator)
             node2 = await createMockConnectionDhtNode('node2', simulator)
@@ -68,7 +68,7 @@ describe('multiple entry point joining', () => {
         let entryPoints: PeerDescriptor[]
         
         beforeEach(async () => {
-            simulator = new Simulator(LatencyType.RANDOM)
+            simulator = new Simulator(LatencyType.REAL)
             
             entryPoint1 = await createMockConnectionDhtNode('entryPoint1', simulator)
             entryPoint2 = await createMockConnectionDhtNode('entryPoint2', simulator)
