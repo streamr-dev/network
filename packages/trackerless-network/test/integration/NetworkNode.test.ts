@@ -1,14 +1,16 @@
-import { NetworkNode } from '../../src/NetworkNode'
-import { NodeType, PeerDescriptor, Simulator, SimulatorTransport, isSamePeerDescriptor } from '@streamr/dht'
+import { DhtNode, NodeType, PeerDescriptor, Simulator, SimulatorTransport, areEqualPeerDescriptors } from '@streamr/dht'
 import {
     MessageID,
     MessageRef,
     StreamMessage,
     StreamMessageType,
-    StreamPartIDUtils,
-    toStreamID
+    StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
+import { NodeID } from '../../src/identifiers'
+
+const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 
 describe('NetworkNode', () => {
 
@@ -28,35 +30,33 @@ describe('NetworkNode', () => {
         type: NodeType.NODEJS
     }
 
-    const STREAM_ID = StreamPartIDUtils.parse('test#0')
-
     beforeEach(async () => {
         Simulator.useFakeTimers()
         const simulator = new Simulator()
         transport1 = new SimulatorTransport(pd1, simulator)
+        await transport1.start()
         transport2 = new SimulatorTransport(pd2, simulator)
+        await transport2.start()
 
-        node1 = new NetworkNode({
+        node1 = createNetworkNode({
             layer0: {
                 entryPoints: [pd1],
                 peerDescriptor: pd1,
-                transportLayer: transport1
-            },
-            networkNode: {}
+                transport: transport1
+            }
         })
-        node2 = new NetworkNode({
+        node2 = createNetworkNode({
             layer0: {
                 entryPoints: [pd1],
                 peerDescriptor: pd2,
-                transportLayer: transport2
-            },
-            networkNode: {}
+                transport: transport2
+            }
         })
 
         await node1.start()
-        node1.setStreamPartEntryPoints(STREAM_ID, [pd1])
+        node1.setStreamPartEntryPoints(STREAM_PART_ID, [pd1])
         await node2.start()
-        node2.setStreamPartEntryPoints(STREAM_ID, [pd1])
+        node2.setStreamPartEntryPoints(STREAM_PART_ID, [pd1])
     })
 
     afterEach(async () => {
@@ -67,44 +67,44 @@ describe('NetworkNode', () => {
         Simulator.useFakeTimers(false)
     })
 
-    it('wait for join + publish and subscribe', async () => {
+    it('wait for join + broadcast and subscribe', async () => {
         const streamMessage = new StreamMessage({
             messageId: new MessageID(
-                toStreamID('test'),
-                0,
+                StreamPartIDUtils.getStreamID(STREAM_PART_ID),
+                StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
                 666,
                 0,
-                'peer2' as EthereumAddress,
+                '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
                 'msgChainId'
             ),
             prevMsgRef: new MessageRef(665, 0),
-            content: {
+            content: utf8ToBinary(JSON.stringify({
                 hello: 'world'
-            },
+            })),
             messageType: StreamMessageType.MESSAGE,
-            signature: 'signature',
+            signature: hexToBinary('0x1234'),
         })
 
         let msgCount = 0
-        await node1.subscribeAndWaitForJoin(STREAM_ID)
+        await node1.join(STREAM_PART_ID)
         node1.addMessageListener((msg) => {
             expect(msg.messageId.timestamp).toEqual(666)
             expect(msg.getSequenceNumber()).toEqual(0)
             msgCount += 1
         })
-        await node2.waitForJoinAndPublish(streamMessage)
+        await node2.broadcast(streamMessage)
         await waitForCondition(() => msgCount === 1)
     })
 
     it('can find peer', async () => {
-        await waitForCondition(() => node1.stack.getLayer0DhtNode().getBucketSize() === 1)
+        await waitForCondition(() => (node1.stack.getLayer0Node() as DhtNode).getBucketSize() === 1)
         const result = await node1.findPeer(node2.getNodeId())
-        expect(isSamePeerDescriptor(result!, pd2)).toBe(true)
+        expect(areEqualPeerDescriptors(result!, pd2)).toBe(true)
     })
 
     it('find peer returns undefined if peer not found', async () => {
-        await waitForCondition(() => node1.stack.getLayer0DhtNode().getBucketSize() === 1)
-        const result = await node1.findPeer('does not exist')
+        await waitForCondition(() => (node1.stack.getLayer0Node() as DhtNode).getBucketSize() === 1)
+        const result = await node1.findPeer('dadada' as NodeID)
         expect(result).toBe(undefined)
     })
 

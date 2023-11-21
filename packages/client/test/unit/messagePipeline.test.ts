@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { collect, toEthereumAddress } from '@streamr/utils'
+import { collect, toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { StrictStreamrClientConfig } from '../../src/Config'
@@ -33,7 +33,7 @@ describe('messagePipeline', () => {
     let publisher: Wallet
 
     const createMessage = async (opts: {
-        serializedContent?: string
+        serializedContent?: Uint8Array
         encryptionType?: EncryptionType
         groupKeyId?: string
     } = {}): Promise<StreamMessage> => {
@@ -47,7 +47,7 @@ describe('messagePipeline', () => {
                 toEthereumAddress(publisher.address),
                 'mock-msgChainId'
             ),
-            serializedContent: JSON.stringify(CONTENT),
+            serializedContent: utf8ToBinary(JSON.stringify(CONTENT)),
             authentication: createPrivateKeyAuthentication(publisher.privateKey, undefined as any),
             ...opts
         })
@@ -118,7 +118,7 @@ describe('messagePipeline', () => {
 
     it('error: invalid signature', async () => {
         const msg = await createMessage()
-        msg.signature = 'invalid-signature'
+        msg.signature = hexToBinary('0x111111')
         await pipeline.push(msg)
         pipeline.endWrite()
         const onError = jest.fn()
@@ -132,7 +132,7 @@ describe('messagePipeline', () => {
 
     it('error: invalid content', async () => {
         const msg = await createMessage({
-            serializedContent: '{ invalid-json',
+            serializedContent: utf8ToBinary('{ invalid-json'),
         })
         await pipeline.push(msg)
         pipeline.endWrite()

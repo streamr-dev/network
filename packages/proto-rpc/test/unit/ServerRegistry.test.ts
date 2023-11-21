@@ -1,8 +1,8 @@
-import { wait } from "@streamr/utils"
-import { ServerRegistry } from "../../src/ServerRegistry"
-import { RpcMessage } from "../../src/proto/ProtoRpc"
-import { Any } from "../../src/proto/google/protobuf/any"
-import { HelloRequest, HelloResponse } from "../proto/HelloRpc"
+import { wait } from '@streamr/utils'
+import { ServerRegistry } from '../../src/ServerRegistry'
+import { RpcMessage } from '../../src/proto/ProtoRpc'
+import { Any } from '../../src/proto/google/protobuf/any'
+import { HelloRequest, HelloResponse } from '../proto/HelloRpc'
 
 describe('ServerRegistry', () => {
 

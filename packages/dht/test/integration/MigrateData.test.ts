@@ -1,12 +1,13 @@
 /* eslint-disable no-console */
-import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'
-import { PeerID } from '../../src/exports'
+import { PeerID } from '../../src/helpers/PeerID'
+import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
@@ -28,7 +29,7 @@ describe('Migrating data from node to node in DHT', () => {
 
     if (!fs.existsSync('test/data/nodeids.json')) {
         console.log('ground truth data does not exist yet, generating..')
-        execSync("npm run prepare-kademlia-simulation")
+        execSync('npm run prepare-kademlia-simulation')
     }
 
     const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
@@ -41,14 +42,13 @@ describe('Migrating data from node to node in DHT', () => {
         nodes = []
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
-            Uint8Array.from(dhtIds[0].data), K, entryPointId, MAX_CONNECTIONS)
+            Uint8Array.from(dhtIds[0].data), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodesById.set(entryPoint.getNodeId().toKey(), entryPoint)
 
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS,
-            nodeName: entryPointId
+            type: NodeType.NODEJS
         }
 
         nodes.push(entryPoint)
@@ -57,7 +57,7 @@ describe('Migrating data from node to node in DHT', () => {
             const nodeId = `${i}`
 
             const node = await createMockConnectionDhtNode(nodeId, simulator,
-                Uint8Array.from(dhtIds[i].data), K, nodeId, MAX_CONNECTIONS)
+                Uint8Array.from(dhtIds[i].data), K, MAX_CONNECTIONS)
             nodesById.set(node.getNodeId().toKey(), node)
             nodes.push(node)
         }
@@ -83,7 +83,7 @@ describe('Migrating data from node to node in DHT', () => {
         const sortedList = new SortedContactList<Contact>(dataKey, 10000)
 
         nodes.forEach((node) => {
-            sortedList.addContact(new Contact(node.getPeerDescriptor())
+            sortedList.addContact(new Contact(node.getLocalPeerDescriptor())
             )
         })
 
@@ -91,12 +91,12 @@ describe('Migrating data from node to node in DHT', () => {
 
         logger.info('Nodes sorted according to distance to data are: ')
         closest.forEach((contact) => {
-            logger.info('' + contact.getPeerDescriptor().nodeName)
+            logger.info(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
         })
 
         logger.info('node 0 joining to the DHT')
 
-        await nodes[0].joinDht(entrypointDescriptor)
+        await nodes[0].joinDht([entrypointDescriptor])
 
         logger.info('storing data to node 0')
         const successfulStorers = await nodes[0].storeDataToDht(dataKey.value, data)
@@ -114,14 +114,15 @@ describe('Migrating data from node to node in DHT', () => {
                 hasDataMarker = '<-'
             }
 
-            logger.info(contact.getPeerDescriptor().nodeName + ' ' + node.getNodeName() + hasDataMarker)
+            // eslint-disable-next-line max-len
+            logger.info(peerIdFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
         })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
             nodes.map((node) => {
-                if (node.getNodeName() != '0') {
-                    node.joinDht(entrypointDescriptor)
+                if (keyFromPeerDescriptor(node.getLocalPeerDescriptor()) != '0') {
+                    node.joinDht([entrypointDescriptor])
                 }
             })
         )
@@ -142,7 +143,7 @@ describe('Migrating data from node to node in DHT', () => {
                 hasDataMarker = '<-'
             }
 
-            logger.info('' + node.getNodeName() + hasDataMarker)
+            logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
         })
 
         const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().kademliaId).toKey())!
@@ -158,7 +159,7 @@ describe('Migrating data from node to node in DHT', () => {
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
             nodes.map((node) => {
-                node.joinDht(entrypointDescriptor)
+                node.joinDht([entrypointDescriptor])
             })
         )
 

@@ -80,20 +80,57 @@
                             "items": {
                                 "$ref": "#/definitions/peerDescriptor"
                             },
-                            "default": [{
-                                "id": "productionEntryPoint1",
-                                "type": "nodejs",
-                                "websocket": {
-                                    "ip": "127.0.0.1",
-                                    "port": 40401
+                            "default": [
+                                {
+                                    "id": "eee1",
+                                    "websocket": {
+                                        "host": "polygon-entrypoint-1.streamr.network",
+                                        "port": 40401,
+                                        "tls": true
+                                    }
+                                },
+                                {
+                                    "id": "eee2",
+                                    "websocket": {
+                                        "host": "polygon-entrypoint-2.streamr.network",
+                                        "port": 40401,
+                                        "tls": true
+                                    }
                                 }
-                            }]
+                            ]
                         },
-                        "webSocketPort": {
-                            "type": "number"
+                        "websocketPortRange": {
+                            "$ref": "#/definitions/portRange",
+                            "default": {
+                                "min": 32200,
+                                "max": 32250
+                            }
+                        },
+                        "websocketHost": {
+                            "type": "string",
+                            "format": "hostname"
                         },
                         "peerDescriptor": {
                             "$ref": "#/definitions/peerDescriptor"
+                        },
+                        "tlsCertificate": {
+                            "description": "Files to use for TLS",
+                            "type": "object",
+                            "required": [
+                                "certFileName",
+                                "privateKeyFileName"
+                            ],
+                            "additionalProperties": false,
+                            "properties": {
+                                "certFileName": {
+                                    "type": "string",
+                                    "description": "Path of certificate file"
+                                },
+                                "privateKeyFileName": {
+                                    "type": "string",
+                                    "description": "Path of private key file"
+                                }
+                            }
                         },
                         "iceServers": {
                             "type": "array",
@@ -157,6 +194,37 @@
                         "webrtcDatachannelBufferThresholdHigh": {
                             "type": "number",
                             "default": 131072
+                        },
+                        "maxMessageSize": {
+                            "type": "number",
+                            "default": 1048576
+                        },
+                        "externalIp": {
+                            "type": "string",
+                            "format": "ipv4"
+                        },
+                        "webrtcPortRange": {
+                            "$ref": "#/definitions/portRange",
+                            "default": {
+                                "min": 50000,
+                                "max": 64000
+                            }
+                        },
+                        "networkConnectivityTimeout": {
+                            "type": "number",
+                            "default": 10000
+                        },
+                        "websocketServerEnableTls": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "autoCertifierUrl": {
+                            "type": "string",
+                            "default": "https://ns1.streamr-nodes.xyz:59833"
+                        },
+                        "autoCertifierConfigFile": {
+                            "type": "string",
+                            "default": "~/.streamr/certificate.json"
                         }
                     },
                     "default": {}
@@ -176,10 +244,6 @@
                             "type": "number",
                             "default": 2
                         },
-                        "firstConnectionTimeout": {
-                            "type": "number",
-                            "default": 10000
-                        }, 
                         "acceptProxyConnections": {
                             "type": "boolean",
                             "default": false
@@ -264,7 +328,7 @@
                 "theGraphUrl": {
                     "type": "string",
                     "format": "uri",
-                    "default": "https://api.thegraph.com/subgraphs/name/streamr-dev/streams"
+                    "default": "https://gateway-arbitrum.network.thegraph.com/api/dd0022f5d4d06f3bd55e0c757912fb7d/subgraphs/id/EGWFdhhiWypDuz22Uy7b3F69E9MEkyfU9iAQMttkH5Rj"
                 },
                 "maxConcurrentCalls": {
                     "type": "number",
@@ -491,17 +555,38 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
+                "host",
                 "port",
-                "ip"
+                "tls"
             ],
             "properties": {
+                "host": {
+                    "type": "string"
+                },
                 "port": {
                     "type": "number"
                 },
-                "ip": {
-                    "type": "string"
+                "tls": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "portRange": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "min",
+                "max"
+            ],
+            "properties": {
+                "min": {
+                    "type": "number"
+                },
+                "max": {
+                    "type": "number"
                 }
             }
         }
+
     }
 }

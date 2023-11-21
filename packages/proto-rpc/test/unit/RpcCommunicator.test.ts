@@ -48,7 +48,7 @@ describe('RpcCommunicator', () => {
         }
         /*
         response = {
-            appId: appId,
+            appId,
             messageId: 'aaaa',
             body: RpcMessage.toBinary(responseRpcMessage),
             messageType: MessageType.RPC

@@ -1,21 +1,31 @@
 #!/usr/bin/env node
-import { DhtNode, NodeType, PeerID } from "@streamr/dht"
+import { DhtNode, NodeType } from '@streamr/dht'
+import { hexToBinary } from '@streamr/utils'
+import { CONFIG_TEST } from 'streamr-client'
+import omit from 'lodash/omit'
 
 const main = async () => {
+    const entryPoint = CONFIG_TEST.network!.controlLayer!.entryPoints![0]
     const peerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
-        type: NodeType.NODEJS,
+        ...omit(entryPoint, 'id'),
+        kademliaId: hexToBinary(entryPoint.id),
+        type: NodeType.NODEJS,  // TODO remove this when NET-1070 done
         websocket: {
-            ip: '127.0.0.1',
-            port: 40500
+            ...entryPoint.websocket!,
         }
     }
     const dhtNode = new DhtNode({
-        peerDescriptor,
+        peerId: entryPoint.id,
+        websocketHost: entryPoint.websocket!.host,
+        websocketPortRange: {
+            min: entryPoint.websocket!.port,
+            max: entryPoint.websocket!.port
+        },
+        websocketServerEnableTls: false,
         entryPoints: [peerDescriptor]
     })
     await dhtNode.start()
-    await dhtNode.joinDht(peerDescriptor)
+    await dhtNode.joinDht([peerDescriptor])
     console.info('Entry point started')
 }
 

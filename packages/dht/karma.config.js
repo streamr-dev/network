@@ -5,16 +5,16 @@ const { createKarmaConfig, createWebpackConfig } = require('@streamr/browser-tes
 const TEST_PATHS = [
     'test/unit/**/*.ts',
     './test/integration/**/!(DhtWith*|MigrateData*).ts/',
-    'test/end-to-end/**/*.ts'
+    './test/end-to-end/**/!(RecoveryFromFailedAutoCertification*|memory-leak*).ts'
 ]
 
-const NodeWebRtcConnection = path.resolve(__dirname, 'src/connection/WebRTC/NodeWebRtcConnection.ts')
-const BrowserWebRtcConnection = path.resolve(__dirname, 'src/connection/WebRTC/BrowserWebRtcConnection.ts')
+const NodeWebrtcConnection = path.resolve(__dirname, 'src/connection/webrtc/NodeWebrtcConnection.ts')
+const BrowserWebrtcConnection = path.resolve(__dirname, 'src/connection/webrtc/BrowserWebrtcConnection.ts')
 
 module.exports = createKarmaConfig(TEST_PATHS, createWebpackConfig({
     entry: './src/exports.ts',
     libraryName: 'dht',
     alias: {
-        [NodeWebRtcConnection]: BrowserWebRtcConnection
+        [NodeWebrtcConnection]: BrowserWebrtcConnection
     }
 }))

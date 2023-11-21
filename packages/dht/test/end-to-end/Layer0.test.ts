@@ -1,13 +1,9 @@
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 
 describe('Layer0', () => {
 
-    const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: Uint8Array.from([1, 2, 3]),
-        type: NodeType.NODEJS,
-        websocket: { ip: '127.0.0.1', port: 10011 }
-    }
+    let epPeerDescriptor: PeerDescriptor
     
     let epDhtNode: DhtNode
     let node1: DhtNode
@@ -15,24 +11,47 @@ describe('Layer0', () => {
     let node3: DhtNode
     let node4: DhtNode
 
+    const websocketPortRange = { min: 10012, max: 10015 } 
     beforeEach(async () => {
         
-        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
+        epDhtNode = new DhtNode({ websocketHost: '127.0.0.1', websocketPortRange: { min: 10011, max: 10011 }, websocketServerEnableTls: false })
         await epDhtNode.start()
-        
-        await epDhtNode.joinDht(epPeerDescriptor)
+        epPeerDescriptor = epDhtNode.getLocalPeerDescriptor()
+        await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ peerIdString: '1', webSocketPort: 10012, entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ peerIdString: '2', webSocketPort: 10013, entryPoints: [epPeerDescriptor] })
-        node3 = new DhtNode({ peerIdString: '3', webSocketPort: 10014, entryPoints: [epPeerDescriptor] })
-        node4 = new DhtNode({ peerIdString: '4', webSocketPort: 10015, entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ 
+            websocketPortRange,
+            websocketHost: '127.0.0.1',
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
+        node2 = new DhtNode({ 
+            websocketPortRange,
+            websocketHost: '127.0.0.1',
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
+        node3 = new DhtNode({ 
+            websocketPortRange,
+            websocketHost: '127.0.0.1',
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
+        node4 = new DhtNode({ 
+            websocketPortRange, 
+            websocketHost: '127.0.0.1',
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
         
-        await node1.start()
-        await node2.start()
-        await node3.start()
-        await node4.start()
+        await Promise.all([
+            node1.start(),
+            node2.start(),
+            node3.start(),
+            node4.start()
+        ])
 
-    })
+    }, 10000)
 
     afterEach(async () => {
         await Promise.all([
@@ -46,10 +65,10 @@ describe('Layer0', () => {
 
     it('Happy path', async () => {
         await Promise.all([
-            node1.joinDht(epPeerDescriptor),
-            node2.joinDht(epPeerDescriptor),
-            node3.joinDht(epPeerDescriptor),
-            node4.joinDht(epPeerDescriptor)
+            node1.joinDht([epPeerDescriptor]),
+            node2.joinDht([epPeerDescriptor]),
+            node3.joinDht([epPeerDescriptor]),
+            node4.joinDht([epPeerDescriptor])
         ])
 
         expect(node1.getBucketSize()).toBeGreaterThanOrEqual(2)

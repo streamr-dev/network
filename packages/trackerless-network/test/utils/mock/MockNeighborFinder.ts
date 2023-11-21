@@ -3,7 +3,7 @@ import { INeighborFinder } from '../../../src/logic/neighbor-discovery/NeighborF
 export class MockNeighborFinder implements INeighborFinder {
 
     // eslint-disable-next-line class-methods-use-this
-    start(_excluded?: string[]): void {
+    start(): void {
 
     }
 

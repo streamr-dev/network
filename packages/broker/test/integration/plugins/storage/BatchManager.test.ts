@@ -2,8 +2,8 @@ import { Client, types as cassandraTypes } from 'cassandra-driver'
 import { BatchManager } from '../../../../src/plugins/storage/BatchManager'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { MessageID, StreamMessage, toStreamID } from "@streamr/protocol"
-import { toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { hexToBinary, utf8ToBinary, toEthereumAddress, waitForCondition } from '@streamr/utils'
 const { TimeUuid } = cassandraTypes
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
@@ -31,8 +31,8 @@ function buildMsg(
             publisherId,
             msgChainId
         ),
-        content: JSON.stringify(content),
-        signature: 'signature'
+        content: utf8ToBinary(JSON.stringify(content)),
+        signature: hexToBinary('0x1234')
     })
 }
 

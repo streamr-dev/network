@@ -1,6 +1,6 @@
-import EventEmitter from "eventemitter3"
-import { PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
-import { ConnectionID, ConnectionType, ConnectionEvents } from "./IConnection"
+import EventEmitter from 'eventemitter3'
+import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { ConnectionID, ConnectionType, ConnectionEvents } from './IConnection'
 
 export class Connection extends EventEmitter<ConnectionEvents> {
     public connectionId: ConnectionID

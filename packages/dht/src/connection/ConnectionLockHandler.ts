@@ -1,14 +1,16 @@
 // Connection locks are independent of the existence of connections
 // that is why this class is needed
 
-import { PeerIDKey } from "../helpers/PeerID"
+import { PeerIDKey } from '../helpers/PeerID'
 
-type ServiceName = string
+export type LockID = string
 
 export class ConnectionLockHandler {
 
-    private localLocks: Map<PeerIDKey, Set<ServiceName>> = new Map()
-    private remoteLocks: Map<PeerIDKey, Set<ServiceName>> = new Map()
+    private localLocks: Map<PeerIDKey, Set<LockID>> = new Map()
+    private remoteLocks: Map<PeerIDKey, Set<LockID>> = new Map()
+    // TODO: remove weakLocks use localLocks instead. When opening weakLocks from the ConnectioManager,
+    // simply do not send lock requests.
     private weakLocks: Set<PeerIDKey> = new Set()
 
     public getNumberOfLocalLockedConnections(): number {
@@ -23,23 +25,19 @@ export class ConnectionLockHandler {
         return this.weakLocks.size
     }
 
-    public isLocalLocked(id: PeerIDKey, serviceName?: ServiceName): boolean {
-        if (!serviceName) {
+    public isLocalLocked(id: PeerIDKey, lockId?: LockID): boolean {
+        if (!lockId) {
             return this.localLocks.has(id)
         } else {
-            if (this.localLocks.has(id) && this.localLocks.get(id)!.has(serviceName)) {
-                return true
-            } else {
-                return false
-            }
+            return this.localLocks.has(id) && this.localLocks.get(id)!.has(lockId)
         }
     }
 
-    public isRemoteLocked(id: PeerIDKey, serviceName?: ServiceName): boolean {
-        if (!serviceName) {
+    public isRemoteLocked(id: PeerIDKey, lockId?: LockID): boolean {
+        if (!lockId) {
             return this.remoteLocks.has(id)
         } else {
-            if (this.remoteLocks.has(id) && this.remoteLocks.get(id)!.has(serviceName)) {
+            if (this.remoteLocks.has(id) && this.remoteLocks.get(id)!.has(lockId)) {
                 return true
             } else {
                 return false
@@ -47,7 +45,7 @@ export class ConnectionLockHandler {
         }
     }
 
-    public isWeakLocked(id: PeerIDKey): boolean {
+    private isWeakLocked(id: PeerIDKey): boolean {
         return this.weakLocks.has(id)
     }
 
@@ -55,36 +53,36 @@ export class ConnectionLockHandler {
         return (this.isLocalLocked(id) || this.isRemoteLocked(id) || this.isWeakLocked(id))
     }
 
-    public addLocalLocked(id: PeerIDKey, serviceName: ServiceName): void {
+    public addLocalLocked(id: PeerIDKey, lockId: LockID): void {
         if (!this.localLocks.has(id)) {
             this.localLocks.set(id, new Set())
         }
-        this.localLocks.get(id)!.add(serviceName)
+        this.localLocks.get(id)!.add(lockId)
     }
 
-    public addRemoteLocked(id: PeerIDKey, serviceName: ServiceName): void {
+    public addRemoteLocked(id: PeerIDKey, lockId: LockID): void {
         if (!this.remoteLocks.has(id)) {
             this.remoteLocks.set(id, new Set())
         }
-        this.remoteLocks.get(id)!.add(serviceName)
+        this.remoteLocks.get(id)!.add(lockId)
     }
 
     public addWeakLocked(id: PeerIDKey): void {
         this.weakLocks.add(id)
     }
 
-    public removeLocalLocked(id: PeerIDKey, serviceName: ServiceName): void {
+    public removeLocalLocked(id: PeerIDKey, lockId: LockID): void {
         if (this.localLocks.has(id)) {
-            this.localLocks.get(id)?.delete(serviceName)
+            this.localLocks.get(id)?.delete(lockId)
             if (this.localLocks.get(id)?.size === 0) {
                 this.localLocks.delete(id)
             }
         }
     }
 
-    public removeRemoteLocked(id: PeerIDKey, serviceName: ServiceName): void {
+    public removeRemoteLocked(id: PeerIDKey, lockId: LockID): void {
         if (this.remoteLocks.has(id)) {
-            this.remoteLocks.get(id)?.delete(serviceName)
+            this.remoteLocks.get(id)?.delete(lockId)
             if (this.remoteLocks.get(id)?.size === 0) {
                 this.remoteLocks.delete(id)
             }

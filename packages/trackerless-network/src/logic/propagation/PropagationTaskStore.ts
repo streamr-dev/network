@@ -1,10 +1,11 @@
+import { NodeID } from '../../identifiers'
 import { MessageRef, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { FifoMapWithTTL } from './FifoMapWithTTL'
 
 export interface PropagationTask {
     message: StreamMessage
     source: string | null
-    handledNeighbors: Set<string>
+    handledNeighbors: Set<NodeID>
 }
 
 /**
@@ -30,7 +31,7 @@ export class PropagationTaskStore {
     }
 
     add(task: PropagationTask): void {
-        const messageId = task.message.messageRef!
+        const messageId = task.message.messageId!
         this.tasks.set(messageId, task)
     }
 

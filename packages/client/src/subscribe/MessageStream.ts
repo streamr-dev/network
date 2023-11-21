@@ -24,7 +24,7 @@ export class MessageStream implements AsyncIterable<Message> {
     /** @internal */
     onBeforeFinally: Signal<[]>
     /** @internal */
-    onError: Signal<[Error, (StreamMessage<unknown> | undefined)?, (number | undefined)?]>
+    onError: Signal<[Error, (StreamMessage | undefined)?, (number | undefined)?]>
 
     /** @internal */
     constructor(pipeline?: PushPipeline<StreamMessage, StreamMessage>) {

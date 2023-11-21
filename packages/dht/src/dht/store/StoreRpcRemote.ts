@@ -1,0 +1,47 @@
+import { EXISTING_CONNECTION_TIMEOUT, Remote } from '../contact/Remote'
+import { IStoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { 
+    DeleteDataRequest,
+    DeleteDataResponse,
+    MigrateDataRequest,
+    MigrateDataResponse,
+    StoreDataRequest,
+    StoreDataResponse
+} from '../../proto/packages/dht/protos/DhtRpc'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+
+export class StoreRpcRemote extends Remote<IStoreRpcClient> {
+
+    async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
+        const options = this.formDhtRpcOptions()
+        try {
+            return await this.getClient().storeData(request, options)
+        } catch (err) {
+            const to = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
+            const from = getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor())
+            throw Error(
+                `Could not store data to ${to} from ${from} ${err}`
+            )
+        }
+    }
+
+    async deleteData(request: DeleteDataRequest): Promise<DeleteDataResponse> {
+        const options = this.formDhtRpcOptions()
+        try {
+            return await this.getClient().deleteData(request, options)
+        } catch (err) {
+            throw Error(
+                `Could not call delete data to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} ${err}`
+            )
+        }
+    }
+
+    async migrateData(request: MigrateDataRequest, doNotConnect: boolean = false): Promise<MigrateDataResponse> {
+        const options = this.formDhtRpcOptions({
+            timeout: EXISTING_CONNECTION_TIMEOUT,
+            doNotConnect
+        })
+        return this.getClient().migrateData(request, options)
+    }
+
+}

@@ -1,38 +1,38 @@
 import { NeighborFinder } from '../../src/logic/neighbor-discovery/NeighborFinder'
-import { PeerList } from '../../src/logic/PeerList'
-import { keyFromPeerDescriptor, PeerID } from '@streamr/dht'
+import { NodeList } from '../../src/logic/NodeList'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
-import { createMockRemotePeer } from '../utils/utils'
+import { createMockDeliveryRpcRemote, createRandomNodeId } from '../utils/utils'
+import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('NeighborFinder', () => {
 
-    const peerId = PeerID.fromString('NeighborFinder')
-    let targetNeighbors: PeerList
-    let nearbyContactPool: PeerList
+    const nodeId = createRandomNodeId()
+    let targetNeighbors: NodeList
+    let nearbyNodeView: NodeList
     let neighborFinder: NeighborFinder
 
-    const N = 4
+    const minCount = 4
 
     beforeEach(() => {
-        targetNeighbors = new PeerList(peerId, 15)
-        nearbyContactPool = new PeerList(peerId, 30)
-        range(30).forEach(() => nearbyContactPool.add(createMockRemotePeer()))
-        const mockDoFindNeighbors = async (excluded: string[]) => {
-            const target = nearbyContactPool.getRandom(excluded)
+        targetNeighbors = new NodeList(nodeId, 15)
+        nearbyNodeView = new NodeList(nodeId, 30)
+        range(30).forEach(() => nearbyNodeView.add(createMockDeliveryRpcRemote()))
+        const mockDoFindNeighbors = async (excluded: NodeID[]) => {
+            const target = nearbyNodeView.getRandom(excluded)
             if (Math.random() < 0.5) {
                 targetNeighbors.add(target!)
             } else {
-                excluded.push(keyFromPeerDescriptor(target!.getPeerDescriptor()))
+                excluded.push(getNodeIdFromPeerDescriptor(target!.getPeerDescriptor()))
             }
             return excluded
         }
         neighborFinder = new NeighborFinder({
             targetNeighbors,
-            nearbyContactPool,
+            nearbyNodeView,
             doFindNeighbors: (excluded) => mockDoFindNeighbors(excluded),
-            N
+            minCount
         })
     })
 
@@ -40,9 +40,9 @@ describe('NeighborFinder', () => {
         neighborFinder.stop()
     })
 
-    it('Finds target number of peers', async () => {
+    it('Finds target number of nodes', async () => {
         neighborFinder.start()
-        await waitForCondition(() => targetNeighbors.size() >= N, 10000)
+        await waitForCondition(() => targetNeighbors.size() >= minCount, 10000)
         expect(neighborFinder.isRunning()).toEqual(false)
     })
 })

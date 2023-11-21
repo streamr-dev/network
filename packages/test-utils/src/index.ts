@@ -2,12 +2,12 @@ import { Wallet } from '@ethersproject/wallet'
 import { EthereumAddress, toEthereumAddress, waitForCondition, waitForEvent } from '@streamr/utils'
 import cors from 'cors'
 import crypto from 'crypto'
-import { EventEmitter, once } from "events"
+import { EventEmitter, once } from 'events'
 import express, { Request, Response } from 'express'
 import http from 'http'
 import { AddressInfo } from 'net'
 import fetch from 'node-fetch'
-import { Readable } from "stream"
+import { Readable } from 'stream'
 
 export type Event = string
 
@@ -189,6 +189,13 @@ export function randomEthereumAddress(): EthereumAddress {
     return toEthereumAddress('0x' + crypto.randomBytes(20).toString('hex'))
 }
 
+// eslint-disable-next-line no-underscore-dangle
+declare let _streamr_electron_test: any
+export function isRunningInElectron(): boolean {
+    // eslint-disable-next-line no-underscore-dangle
+    return typeof _streamr_electron_test !== 'undefined'
+}
+
 /**
  * Used to spin up an HTTP server used by integration tests to fetch private keys having non-zero ERC-20 token
  * balances in streamr-docker-dev environment.
@@ -285,7 +292,7 @@ export async function fetchPrivateKeyWithGas(): Promise<string> {
     }
 
     if (!response.ok) {
-        throw new Error(`fetchPrivateKeyWithGas failed ${response.status} ${response.statusText}: ${response.text()}`)
+        throw new Error(`fetchPrivateKeyWithGas failed ${response.status} ${response.statusText}: ${await response.text()}`)
     }
 
     return response.text()

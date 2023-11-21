@@ -1,24 +1,21 @@
-import StreamrClient, {
-    CONFIG_TEST,
-    Stream,
-    StreamPermission,
-    StreamMetadata,
-    StreamrClientConfig,
-    NetworkPeerDescriptor
-} from 'streamr-client'
-import padEnd from 'lodash/padEnd'
+import { EthereumAddress, merge, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
+import padEnd from 'lodash/padEnd'
+import { StreamrClient,
+    CONFIG_TEST,
+    NetworkPeerDescriptor,
+    Stream,
+    StreamMetadata,
+    StreamPermission,
+    StreamrClientConfig
+} from 'streamr-client'
 import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
-import { StreamPartID } from '@streamr/protocol'
-import { EthereumAddress, toEthereumAddress, merge } from '@streamr/utils'
-import { v4 as uuid } from 'uuid'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 
 interface TestConfig {
     privateKey: string
-    networkLayerWsServerPort?: number
     httpPort?: number
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: Config['apiAuthentication']
@@ -27,23 +24,13 @@ interface TestConfig {
     entryPoints?: NetworkPeerDescriptor[]
 }
 
-export const DEFAULT_ENTRYPOINTS = [{
-    id: "entrypoint",
-    websocket: {
-        ip: "127.0.0.1",
-        port: 40500
-    }
-}]
-
 export const formConfig = ({
     privateKey,
     httpPort,
     extraPlugins = {},
     apiAuthentication,
     enableCassandra = false,
-    storageConfigRefreshInterval = 0,
-    networkLayerWsServerPort,
-    entryPoints = DEFAULT_ENTRYPOINTS
+    storageConfigRefreshInterval = 0
 }: TestConfig): Config => {
     const plugins: Record<string, any> = { ...extraPlugins }
     if (httpPort) {
@@ -62,15 +49,6 @@ export const formConfig = ({
             }
         }
     }
-    const peerDescriptor = networkLayerWsServerPort ? {
-        id: uuid(),
-        websocket: {
-            ip: '127.0.0.1',
-            port: networkLayerWsServerPort
-        }
-    } : {
-        id: uuid(),
-    }
 
     return {
         client: {
@@ -79,14 +57,11 @@ export const formConfig = ({
                 privateKey
             },
             network: {
-                controlLayer: {
-                    entryPoints,
-                    peerDescriptor,
-                },
+                ...CONFIG_TEST.network,
                 node: {
                     id: toEthereumAddress(new Wallet(privateKey).address),
                 }
-            }
+            },
         },
         httpServer: {
             port: httpPort ? httpPort : 7171
@@ -117,13 +92,10 @@ export const createClient = (
                 privateKey
             },
             network: {
-                controlLayer: {
-                    ...CONFIG_TEST.network!.controlLayer!,
-                    entryPoints: DEFAULT_ENTRYPOINTS
-                },
+                controlLayer: CONFIG_TEST.network!.controlLayer,
                 node:
                     merge(
-                        CONFIG_TEST!.network!.node,
+                        CONFIG_TEST.network!.node,
                         clientOptions?.network?.node
                     )
             }
@@ -152,15 +124,9 @@ export const createTestStream = async (
     return stream
 }
 
-export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
-    const node = await broker.getNode()
-    return Array.from(node.getStreamParts())
-}
-
 export async function startStorageNode(
     storageNodePrivateKey: string,
     httpPort: number,
-    networkLayerWsServerPort: number,
     entryPoints?: NetworkPeerDescriptor[],
     extraPlugins = {}
 ): Promise<Broker> {
@@ -182,7 +148,6 @@ export async function startStorageNode(
         privateKey: storageNodePrivateKey,
         httpPort,
         enableCassandra: true,
-        networkLayerWsServerPort,
         entryPoints,
         extraPlugins
     })

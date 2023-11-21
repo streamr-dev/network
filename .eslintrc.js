@@ -9,6 +9,7 @@ module.exports = {
     },
     rules: {
         'eol-last': ['error'],
+        'quotes': ['error', 'single', { 'allowTemplateLiterals': true }],
         'no-console': ['error', {allow: ['warn', 'error', 'info']}],
         'no-restricted-imports': ['error', {
             "patterns": ["*/dist"]

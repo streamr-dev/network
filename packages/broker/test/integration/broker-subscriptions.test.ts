@@ -1,17 +1,15 @@
 import { Wallet } from '@ethersproject/wallet'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
-import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
+import { StreamrClient, Stream, StreamPartID, StreamPermission } from 'streamr-client'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
 import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream, getStreamParts } from '../utils'
+import { startBroker, createClient, createTestStream } from '../utils'
 
 jest.setTimeout(50000)
 
 const mqttPort1 = 13551
 const mqttPort2 = 13552
-const networkLayerPort1 = 44400
-const networkLayerPort2 = 44401
 
 const createMqttClient = (mqttPort: number) => {
     return mqtt.connectAsync(`mqtt://localhost:${mqttPort}`)
@@ -24,6 +22,12 @@ const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
         })
         await s.grantPermissions(...assignments)
     }
+}
+
+export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
+    const client = broker.getStreamrClient()
+    const subs = await client.getSubscriptions()
+    return subs.map((s) => s.streamPartId)
 }
 
 describe('broker subscriptions', () => {
@@ -45,8 +49,7 @@ describe('broker subscriptions', () => {
                 mqtt: {
                     port: mqttPort1
                 }
-            },
-            networkLayerWsServerPort: networkLayerPort1
+            }
         })
         broker2 = await startBroker({
             privateKey: broker2User.privateKey,
@@ -54,8 +57,7 @@ describe('broker subscriptions', () => {
                 mqtt: {
                     port: mqttPort2
                 }
-            },
-            networkLayerWsServerPort: networkLayerPort2
+            }
         })
 
         client1 = createClient(await fetchPrivateKeyWithGas())

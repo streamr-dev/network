@@ -1,20 +1,18 @@
-import { PeerDescriptor, NodeType, PeerID, peerIdFromPeerDescriptor, keyFromPeerDescriptor } from '@streamr/dht'
-import { range } from 'lodash'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
-import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createStreamMessage } from '../utils/utils'
+import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('Full node network with WebSocket connections only', () => {
 
     const NUM_OF_NODES = 48
-    const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString(`entrypoint`).value,
-        type: NodeType.NODEJS,
-        nodeName: 'entrypoint',
-        websocket: { ip: 'localhost', port: 15555 }
-    }
-    const randomGraphId = 'websocket-network'
+    const epPeerDescriptor = createMockPeerDescriptor({
+        websocket: { host: '127.0.0.1', port: 15555, tls: false }
+    })
+    const streamPartId = StreamPartIDUtils.parse('websocket-network#0')
 
     let entryPoint: NetworkStack
 
@@ -28,30 +26,26 @@ describe('Full node network with WebSocket connections only', () => {
             layer0: {
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: epPeerDescriptor,
-            },
-            networkNode: {}
+                websocketServerEnableTls: false
+            }
         })
         await entryPoint.start()
-        entryPoint.getStreamrNode()!.setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
-        await entryPoint.getStreamrNode()!.joinStream(randomGraphId)
+        entryPoint.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
+        entryPoint.getStreamrNode()!.joinStreamPart(streamPartId)
 
         await Promise.all(range(NUM_OF_NODES).map(async (i) => {
             const node = new NetworkStack({
                 layer0: {
                     entryPoints: [epPeerDescriptor],
-                    webSocketPort: 15556 + i,
-                    webSocketHost: 'localhost',
-                    peerIdString: `${i}`,
-                    nodeName: `${i}`,
-                    numberOfNodesPerKBucket: 4
-                }, 
-                networkNode: {}
+                    websocketPortRange: { min: 15556 + i, max: 15556 + i },
+                    numberOfNodesPerKBucket: 4,
+                    websocketServerEnableTls: false
+                }
             })
             nodes.push(node)
             await node.start()
-            node.getStreamrNode!().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
-            await node.getStreamrNode().joinStream(randomGraphId)
-            node.getStreamrNode!().subscribeToStream(randomGraphId)
+            node.getStreamrNode().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
+            node.getStreamrNode().joinStreamPart(streamPartId)
         }))
 
     }, 120000)
@@ -66,27 +60,25 @@ describe('Full node network with WebSocket connections only', () => {
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
             waitForCondition(() => {
-                return node.getStreamrNode()!.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
+                return node.getStreamrNode()!.getNeighbors(streamPartId).length >= 4
             }
             , 120000)
         ))
         let numOfMessagesReceived = 0
         const successIds: string[] = []
-        nodes.map((node) => {
+        nodes.forEach((node) => {
             node.getStreamrNode()!.on('newMessage', () => {
-                successIds.push(keyFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
+                successIds.push(getNodeIdFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
                 numOfMessagesReceived += 1
             })
         })
-        const content: ContentMessage = {
-            body: JSON.stringify({ hello: "WORLD" })
-        }
+
         const msg = createStreamMessage(
-            content,
-            randomGraphId,
-            peerIdFromPeerDescriptor(epPeerDescriptor).toString()
+            JSON.stringify({ hello: 'WORLD' }),
+            streamPartId,
+            randomEthereumAddress()
         )
-        entryPoint.getStreamrNode()!.publishToStream(randomGraphId, msg)
+        entryPoint.getStreamrNode()!.broadcast(msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
     }, 220000)
 

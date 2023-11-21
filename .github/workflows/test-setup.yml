@@ -26,7 +26,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v4
       - name: build (cached)
         uses: ./.github/workflows/reusable/cached-build
       - name: start docker services
@@ -44,7 +44,7 @@ jobs:
         working-directory: 'packages/${{ inputs.package }}'
         run: ${{ inputs.command }}
       - name: upload logs
-        if: ${{ inputs.docker-services != '' || inputs.run-brokers }}
+        if: success() || failure()
         uses: ./.github/workflows/reusable/collect-and-upload-logs
         with:
           artifact_prefix: ${{ inputs.package }}

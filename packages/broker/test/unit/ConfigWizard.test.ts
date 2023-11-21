@@ -95,7 +95,7 @@ describe('ConfigWizard', () => {
         it('happy path; create directories if needed', async () => {
             const dirPath = tmpDataDir + '/newdir1/newdir2/'
             const configPath = dirPath + 'test-config.json'
-            const configFileLocation: string = await createStorageFile(CONFIG, {
+            const configFileLocation: string = createStorageFile(CONFIG, {
                 storagePath: configPath
             })
             expect(configFileLocation).toBe(configPath)

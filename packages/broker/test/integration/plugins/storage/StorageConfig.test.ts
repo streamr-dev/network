@@ -1,5 +1,5 @@
 import { Client } from 'cassandra-driver'
-import StreamrClient, { Stream } from 'streamr-client'
+import { StreamrClient, Stream } from 'streamr-client'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
@@ -20,7 +20,6 @@ const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 const HTTP_PORT = 17770
-const NETWORK_LAYER_PORT = 44405
 
 describe('StorageConfig', () => {
     let cassandraClient: Client
@@ -47,11 +46,7 @@ describe('StorageConfig', () => {
     beforeEach(async () => {
         client = createClient(publisherAccount.privateKey)
         stream = await createTestStream(client, module)
-        storageNode = await startStorageNode(
-            storageNodeAccount.privateKey,
-            HTTP_PORT,
-            NETWORK_LAYER_PORT 
-        )
+        storageNode = await startStorageNode(storageNodeAccount.privateKey, HTTP_PORT)
     })
 
     afterEach(async () => {

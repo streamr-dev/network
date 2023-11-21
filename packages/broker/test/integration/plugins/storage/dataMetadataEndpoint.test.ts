@@ -1,18 +1,17 @@
 import http from 'http'
 import { Wallet } from 'ethers'
-import StreamrClient, { Stream } from 'streamr-client'
+import { StreamrClient, Stream } from 'streamr-client'
 import {
     createClient,
     createTestStream,
     startStorageNode
 } from '../../../utils'
-import { Broker } from "../../../../src/broker"
+import { Broker } from '../../../../src/broker'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 
 jest.setTimeout(30000)
 const httpPort1 = 12371
-const networkLayerPort = 40412
 
 const httpGet = (url: string): Promise<[number, string]> => { // return tuple is of form [statusCode, body]
     return new Promise((resolve, reject) => {
@@ -35,11 +34,7 @@ describe('dataMetadataEndpoints', () => {
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
         client1 = createClient(await fetchPrivateKeyWithGas())
-        storageNode = await startStorageNode(
-            storageNodeAccount.privateKey,
-            httpPort1,
-            networkLayerPort
-        )
+        storageNode = await startStorageNode(storageNodeAccount.privateKey, httpPort1)
     })
 
     afterAll(async () => {
@@ -99,7 +94,7 @@ describe('dataMetadataEndpoints', () => {
         const res = JSON.parse(json)
 
         expect(status).toEqual(200)
-        expect(res.totalBytes).toEqual(1771)
+        expect(res.totalBytes).toEqual(1763)
         expect(res.totalMessages).toEqual(4)
         expect(
             new Date(res.firstMessage).getTime()

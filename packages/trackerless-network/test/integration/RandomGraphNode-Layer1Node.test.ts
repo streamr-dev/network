@@ -1,226 +1,161 @@
-/* eslint-disable @typescript-eslint/parameter-properties */
-
-import { DhtNode, Simulator, PeerDescriptor, PeerID, ConnectionManager, getRandomRegion } from '@streamr/dht'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, getRandomRegion } from '@streamr/dht'
+import { Logger, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
-import { wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
-import { Logger } from '@streamr/utils'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
-import { EventEmitter } from 'eventemitter3'
+import { createMockPeerDescriptor } from '../utils/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { Layer1Node } from '../../src/logic/Layer1Node'
 
 const logger = new Logger(module)
 
-interface SuccessEvents {
-    success: () => void
-}
-
-class SuccessListener extends EventEmitter<SuccessEvents> {
-
-    private numNeighbors = 0
-    private numNearby = 0
-
-    constructor(private node: RandomGraphNode,
-        private wantedNumNeighbors: number,
-        private wantedNumNearby: number) {
-
-        super()
-        node.on('targetNeighborConnected', this.onTargetNeighborConnected)
-        node.on('nearbyContactPoolIdAdded', this.onNearbyContactPoolIdAdded)
-    }
-
-    private onTargetNeighborConnected = (_stringId: string) => {
-        this.numNeighbors++
-
-        if (this.numNeighbors >= this.wantedNumNeighbors
-            && this.numNearby >= this.wantedNumNearby) {
-            this.node.off('targetNeighborConnected', this.onTargetNeighborConnected)
-            this.node.off('nearbyContactPoolIdAdded', this.onNearbyContactPoolIdAdded)
-            this.emit('success')
-        }
-    }
-
-    private onNearbyContactPoolIdAdded = () => {
-        this.numNearby++
-
-        if (this.numNeighbors >= this.wantedNumNeighbors
-            && this.numNearby >= this.wantedNumNearby) {
-            this.node.off('targetNeighborConnected', this.onTargetNeighborConnected)
-            this.node.off('nearbyContactPoolIdAdded', this.onNearbyContactPoolIdAdded)
-            this.emit('success')
-        }
-    }
-
-    public async waitForSuccess(timeout: number): Promise<void> {
-        if (this.numNeighbors >= this.wantedNumNeighbors
-            && this.numNearby >= this.wantedNumNearby) {
-            return
-        } else {
-            await waitForEvent3<SuccessEvents>(this, 'success', timeout)
-        }
-    }
-}
-
 describe('RandomGraphNode-DhtNode', () => {
     const numOfNodes = 64
-    let dhtNodes: DhtNode[]
-    let dhtEntryPoint: DhtNode
+    let layer1Nodes: Layer1Node[]
+    let dhtEntryPoint: Layer1Node
     let entryPointRandomGraphNode: RandomGraphNode
     let graphNodes: RandomGraphNode[]
 
-    const streamId = 'Stream1'
-    const entrypointDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
-        nodeName: 'entrypoint',
-        type: 0,
+    const streamPartId = StreamPartIDUtils.parse('stream#0')
+    const entrypointDescriptor = createMockPeerDescriptor({
         region: getRandomRegion()
-    }
+    })
 
-    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
-        return {
-            kademliaId: PeerID.fromString(`${i}`).value,
-            nodeName: `node${i}`,
-            type: 0,
+    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => {
+        return createMockPeerDescriptor({
             region: getRandomRegion()
-        }
+        })
     })
     beforeEach(async () => {
 
         Simulator.useFakeTimers()
         const simulator = new Simulator()
-        const entrypointCm = new ConnectionManager({
-            ownPeerDescriptor: entrypointDescriptor,
-            nodeName: entrypointDescriptor.nodeName, simulator: simulator
-        })
+        const entrypointCm = new SimulatorTransport(
+            entrypointDescriptor,
+            simulator
+        )
+        await entrypointCm.start()
 
         const cms: ConnectionManager[] = range(numOfNodes).map((i) =>
-            new ConnectionManager({
-                ownPeerDescriptor: peerDescriptors[i],
-                nodeName: peerDescriptors[i].nodeName,
-                simulator: simulator
-            })
+            new SimulatorTransport(
+                peerDescriptors[i],
+                simulator
+            )
         )
+        await Promise.all(cms.map((cm) => cm.start()))
 
         dhtEntryPoint = new DhtNode({
-            transportLayer: entrypointCm,
+            transport: entrypointCm,
             peerDescriptor: entrypointDescriptor,
-            serviceId: streamId
+            serviceId: streamPartId
         })
 
-        dhtNodes = range(numOfNodes).map((i) => new DhtNode({
-            transportLayer: cms[i],
+        layer1Nodes = range(numOfNodes).map((i) => new DhtNode({
+            transport: cms[i],
             peerDescriptor: peerDescriptors[i],
-            serviceId: streamId
+            serviceId: streamPartId
         }))
 
         graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
-            randomGraphId: streamId,
-            layer1: dhtNodes[i],
-            P2PTransport: cms[i],
+            streamPartId,
+            layer1Node: layer1Nodes[i],
+            transport: cms[i],
             connectionLocker: cms[i],
-            ownPeerDescriptor: peerDescriptors[i],
+            localPeerDescriptor: peerDescriptors[i],
             neighborUpdateInterval: 2000
         }))
 
         entryPointRandomGraphNode = createRandomGraphNode({
-            randomGraphId: streamId,
-            layer1: dhtEntryPoint,
-            P2PTransport: entrypointCm,
+            streamPartId,
+            layer1Node: dhtEntryPoint,
+            transport: entrypointCm,
             connectionLocker: entrypointCm,
-            ownPeerDescriptor: entrypointDescriptor,
+            localPeerDescriptor: entrypointDescriptor,
             neighborUpdateInterval: 2000
         })
 
         await dhtEntryPoint.start()
-        await dhtEntryPoint.joinDht(entrypointDescriptor)
-        await Promise.all(dhtNodes.map((node) => node.start()))
+        await dhtEntryPoint.joinDht([entrypointDescriptor])
+        await Promise.all(layer1Nodes.map((node) => node.start()))
     })
 
     afterEach(async () => {
         await dhtEntryPoint.stop()
         entryPointRandomGraphNode.stop()
-        await Promise.all(dhtNodes.map((node) => node.stop()))
+        await Promise.all(layer1Nodes.map((node) => node.stop()))
         await Promise.all(graphNodes.map((node) => node.stop()))
         Simulator.useFakeTimers(false)
     })
 
-    it('happy path single peer ', async () => {
-
-        const successListener = new SuccessListener(graphNodes[0], 1, 1)
+    it('happy path single node ', async () => {
         await entryPointRandomGraphNode.start()
-        await dhtNodes[0].joinDht(entrypointDescriptor)
+        await layer1Nodes[0].joinDht([entrypointDescriptor])
 
         await graphNodes[0].start()
 
-        await successListener.waitForSuccess(15006)
-        expect(graphNodes[0].getNearbyContactPoolIds().length).toEqual(1)
-        expect(graphNodes[0].getTargetNeighborStringIds().length).toEqual(1)
-
+        await waitForCondition(() => graphNodes[0].getTargetNeighborIds().length === 1)
+        expect(graphNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
+        expect(graphNodes[0].getTargetNeighborIds().length).toEqual(1)
     })
 
-    it('happy path 4 peers', async () => {
-        const promise = Promise.all(range(4).map((i) => {
-            const successListener = new SuccessListener(graphNodes[i], 4, 4)
-            return waitForEvent3<SuccessEvents>(successListener, 'success', 15009)
-        }))
-
+    it('happy path 4 nodes', async () => {
         entryPointRandomGraphNode.start()
-        range(4).map((i) => graphNodes[i].start())
+        range(4).forEach((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
-            await dhtNodes[i].joinDht(entrypointDescriptor)
+            await layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
 
-        await promise
-
-        range(4).map((i) => {
-            expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
-            expect(graphNodes[i].getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(4)
+        await waitForCondition(() => range(4).every((i) => graphNodes[i].getTargetNeighborIds().length === 4))
+        range(4).forEach((i) => {
+            expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
 
         // Check bidirectionality
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
-        range(5).map((i) => {
-            allNodes[i].getNearbyContactPoolIds().forEach((stringId) => {
-                const neighbor = allNodes.find((peer) => {
-                    return peer.getOwnStringId() === stringId
+        range(5).forEach((i) => {
+            allNodes[i].getNearbyNodeView().getIds().forEach((nodeId) => {
+                const neighbor = allNodes.find((node) => {
+                    return node.getOwnNodeId() === nodeId
                 })
-                expect(neighbor!.getTargetNeighborStringIds().includes(allNodes[i].getOwnStringId())).toEqual(true)
+                expect(neighbor!.getTargetNeighborIds().includes(allNodes[i].getOwnNodeId())).toEqual(true)
             })
         })
     }, 10000)
 
-    it('happy path 64 peers', async () => {
+    it('happy path 64 nodes', async () => {
         await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
         await Promise.all(range(numOfNodes).map((i) => {
-            dhtNodes[i].joinDht(entrypointDescriptor)
+            layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(graphNodes.map((node) =>
-            waitForCondition(() => node.getTargetNeighborStringIds().length >= 4, 10000)
+            waitForCondition(() => node.getTargetNeighborIds().length >= 4, 10000)
         ))
 
         const avg = graphNodes.reduce((acc, curr) => {
-            return acc + curr.getTargetNeighborStringIds().length
+            return acc + curr.getTargetNeighborIds().length
         }, 0) / numOfNodes
 
         logger.info(`AVG Number of neighbors: ${avg}`)
         await Promise.all(graphNodes.map((node) =>
             waitForCondition(() => node.getNumberOfOutgoingHandshakes() === 0)
         ))
-        await wait(10000)
-        let mismatchCounter = 0
-        graphNodes.forEach((node) => {
-            const nodeId = node.getOwnStringId()
-            node.getTargetNeighborStringIds().forEach((neighborId) => {
-                if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
-                    const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
-                    if (!neighbor!.getTargetNeighborStringIds().includes(nodeId)) {
-                        logger.info('mismatching ids length: ' + nodeId + " " + neighbor!.getTargetNeighborStringIds().length)
-                        mismatchCounter += 1
+        await waitForCondition(() => {
+            let mismatchCounter = 0
+            graphNodes.forEach((node) => {
+                const nodeId = node.getOwnNodeId()
+                node.getTargetNeighborIds().forEach((neighborId) => {
+                    if (neighborId !== entryPointRandomGraphNode.getOwnNodeId()) {
+                        const neighbor = graphNodes.find((n) => n.getOwnNodeId() === neighborId)
+                        if (!neighbor!.getTargetNeighborIds().includes(nodeId)) {
+                            mismatchCounter += 1
+                        }
                     }
-                }
-        
+                })
             })
-        })
-        expect(mismatchCounter).toBeLessThanOrEqual(2)
+            // NET-1074 Investigate why sometimes unidirectional connections remain.
+            return mismatchCounter <= 2
+        }, 20000, 1000)
     }, 95000)
 })

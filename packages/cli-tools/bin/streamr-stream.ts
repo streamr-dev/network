@@ -10,7 +10,7 @@ program
     .command('publish', 'publish to a stream')
     .command('search', 'search for streams')
     .command('show', 'info about a stream')
-    .command("create", "create a new stream")
+    .command('create', 'create a new stream')
     .command('resend', 'request resend of a stream')
     .command('grant-permission', 'grant permission')
     .command('revoke-permission', 'revoke permission')

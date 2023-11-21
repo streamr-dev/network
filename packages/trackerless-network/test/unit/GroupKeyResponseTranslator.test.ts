@@ -3,30 +3,30 @@ import {
     GroupKeyResponse as OldGroupKeyResponse,
     EncryptedGroupKey as OldEncryptedGroupKey
 } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
-import { EncryptedGroupKey, GroupKeyResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { EthereumAddress, hexToBinary } from '@streamr/utils'
+import { GroupKey, GroupKeyResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 
 describe('GroupKeyResponseTranslator', () => {
 
     const oldGroupKeyResponse = new OldGroupKeyResponse({
         requestId: 'request',
-        recipient: 'recipient' as EthereumAddress,
-        encryptedGroupKeys: [ new OldEncryptedGroupKey('id', '0000') ]
+        recipient: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
+        encryptedGroupKeys: [ new OldEncryptedGroupKey('id', hexToBinary('0000')) ]
     })
-    const newEncryptedGroupKey: EncryptedGroupKey = {
-        groupKeyId: 'id',
-        encryptedGroupKeyHex: '0000'
+    const newGroupKey: GroupKey = {
+        id: 'id',
+        data: hexToBinary('0000')!
     }
     const newGroupKeyResponse: GroupKeyResponse = {
         requestId: 'request',
-        recipient: 'recipient',
-        encryptedGroupKeys: [ newEncryptedGroupKey ]
+        recipientId: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+        groupKeys: [ newGroupKey ]
     }
 
     it('translates old protocol to protobuf', () => {
         const translated = GroupKeyResponseTranslator.toProtobuf(oldGroupKeyResponse)
-        expect(translated.encryptedGroupKeys).toEqual(newGroupKeyResponse.encryptedGroupKeys)
-        expect(translated.recipient).toEqual(newGroupKeyResponse.recipient)
+        expect(translated.groupKeys).toEqual(newGroupKeyResponse.groupKeys)
+        expect(translated.recipientId).toEqual(newGroupKeyResponse.recipientId)
         expect(translated.requestId).toEqual(newGroupKeyResponse.requestId)
     })
 

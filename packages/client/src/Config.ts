@@ -5,7 +5,7 @@ import type { ConnectionInfo } from '@ethersproject/web'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
 import { LogLevel } from '@streamr/utils'
-import { IceServer } from '@streamr/dht'
+import { IceServer, PortRange, TlsCertificate } from '@streamr/dht'
 import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
 import { GapFillStrategy } from './subscribe/ordering/GapFiller'
@@ -69,6 +69,19 @@ export interface ControlLayerConfig {
     webrtcDatachannelBufferThresholdHigh?: number
 
     /**
+     * Defines a custom UDP port range to be used for WebRTC connections.
+     * This port range should not be restricted by enclosing firewalls
+     * or virtual private cloud configurations. NodeJS only.
+     */
+    webrtcPortRange?: PortRange
+
+    /**
+     * The maximum outgoing message size (in bytes) accepted by connections.
+     * Messages exceeding the maximum size are simply discarded.
+     */
+    maxMessageSize?: number
+
+    /**
      * Contains connectivity information to the client's Network Node, used in the network layer.
      * Can be used in cases where the client's public IP address is known before
      * starting the network node. If not specified, the PeerDescriptor will be auto-generated.
@@ -76,12 +89,58 @@ export interface ControlLayerConfig {
     peerDescriptor?: NetworkPeerDescriptor
 
     /**
-     * The port to use for the client's Network Node WebSocket server.
-     * If not specified, the server will not be started.
+     * The port range used to find a free port for the client's network layer WebSocket server.
+     * If not specified, a server will not be started.
      * The server is used by the network layer to accept incoming connections
      * over the public internet to improve the network node's connectivity.
      */
-    webSocketPort?: number
+    websocketPortRange?: PortRange
+
+    /**
+     * The host name or IP address of the WebSocket server used to connect to it over the internet.
+     * If not specified, the host name will be auto-detected. 
+     * Can be useful in situations where the host is running behind a reverse-proxy or load balancer.
+     */
+    websocketHost?: string
+
+    /**
+     * TLS configuration for the WebSocket server
+     */
+    tlsCertificate?: TlsCertificate
+    
+    /*
+     * Used to assign a custom external IPv4 address for the node.
+     * Useful in cases where the node has a public IP address but
+     * the hosts network interface does not know of it.
+     *
+     * Works only if the Full Cone NAT that the node is behind preserves local
+     * port mappings on the public side.
+    */
+    externalIp?: string
+
+    /**
+     * The maximum time to wait when establishing connectivity to the control layer. If the connection
+     * is not formed within this time, the client's network node will throw an error.
+     */
+    networkConnectivityTimeout?: number
+
+    /**
+     * URL of the autocertifier service used to obtain TLS certificates and subdomain names for the WS server.
+     */
+    autoCertifierUrl?: string
+
+    /**
+     * File path to the autocertified subdomain file. The file contains the autocertified subdomain name
+     * and it's TLS certificate.
+     */
+    autoCertifierConfigFile?: string
+
+    /**
+     * If the node is running a WS server, this option can be used to disable TLS autocertification to
+     * run the server without TLS. This will speed up the starting time of the network node 
+     * (especially when starting the node for the first time on a new machine).
+     */
+    websocketServerEnableTls?: boolean
 }
 
 export interface NetworkNodeConfig {
@@ -102,16 +161,12 @@ export interface NetworkNodeConfig {
     streamPartitionMinPropagationTargets?: number
 
     /**
-     * The waited time for the first connection to be formed when first connecting
-     * to the network. If the connection is not formed within this time, the client's
-     * network node will throw an error.
-     */
-    firstConnectionTimeout?: number
-
-    /**
      * Whether to accept proxy connections. Enabling this option allows
      * this network node to act as proxy on behalf of other nodes / clients.
-    */
+     * When enabling this option, a WebSocket server should be configured for the client
+     * and the node needs to be in the open internet. The server can be started by setting
+     * the websocketPort configuration to a free port in the network control layer configuration.
+     */
     acceptProxyConnections?: boolean
 }
 
@@ -129,13 +184,13 @@ export interface NetworkPeerDescriptor {
     id: string
     type?: NetworkNodeType
     websocket?: ConnectivityMethod
-    openInternet?: boolean
     region?: number
 }
 
 export interface ConnectivityMethod {
-    ip: string
+    host: string
     port: number
+    tls: boolean
 }
 
 export interface ChainConnectionInfo {
@@ -360,7 +415,7 @@ export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStrea
 export const validateConfig = (data: unknown): StrictStreamrClientConfig | never => {
     if (!validate(data)) {
         throw new Error((validate as any).errors!.map((e: any) => {
-            let text = e.instancePath + " " + e.message
+            let text = e.instancePath + ' ' + e.message
             if (e.params.additionalProperty) {
                 text += `: ${e.params.additionalProperty}`
             }

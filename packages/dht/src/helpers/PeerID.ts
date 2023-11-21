@@ -1,8 +1,9 @@
-import { UUID } from "./UUID"
+import { BrandedString } from '@streamr/utils'
+import { UUID } from './UUID'
 import { IllegalArguments } from './errors'
-import crypto from "crypto"
+import crypto from 'crypto'
 
-export type PeerIDKey = string & { readonly __brand: 'peerIDKey' } // Nominal typing 
+export type PeerIDKey = BrandedString<'PeerIDKey'>
 
 export class PeerID {
     // avoid creating a new instance for every operation
@@ -46,13 +47,6 @@ export class PeerID {
 
     static fromString(stringValue: string): PeerID {
         return new PeerID({ stringValue })
-    }
-
-    static generateRandom(): PeerID {
-        // generate 160 bit random Uint8array
-        const value = new Uint8Array(20)
-        crypto.randomFillSync(value)
-        return new PeerID({ value })
     }
 
     // TODO convert to static method?

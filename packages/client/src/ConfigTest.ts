@@ -1,18 +1,12 @@
 import { toEthereumAddress } from '@streamr/utils'
-import { StreamrClientConfig, NetworkNodeType } from './Config'
+import { StreamrClientConfig } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
+import { config as CHAIN_CONFIG } from '@streamr/config'
+
+const DOCKER_DEV_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
 function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
-}
-
-const sideChainConfig = {
-    name: 'streamr',
-    chainId: 8997,
-    rpcs: [{
-        url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8546`,
-        timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
-    }]
 }
 
 /**
@@ -21,32 +15,37 @@ const sideChainConfig = {
 export const CONFIG_TEST: StreamrClientConfig = {
     network: {
         controlLayer: {
-            entryPoints: [{
-                id: 'entryPointBroker',
-                type: NetworkNodeType.NODEJS,
-                websocket: {
-                    ip: '127.0.0.1',
-                    port: 40401
-                }
-            }],
+            entryPoints: CHAIN_CONFIG.dev2.entryPoints,
+            websocketPortRange: {
+                min: 32400,
+                max: 32800
+            },
             iceServers: [],
-            webrtcAllowPrivateAddresses: true
+            webrtcAllowPrivateAddresses: true,
+            websocketServerEnableTls: false
         }
     },
     contracts: {
-        streamRegistryChainAddress: '0x6cCdd5d866ea766f6DF5965aA98DeCCD629ff222',
-        streamStorageRegistryChainAddress: '0xd04af489677001444280366Dd0885B03dAaDe71D',
-        storageNodeRegistryChainAddress: '0x231b810D98702782963472e1D60a25496999E75D',    
+        streamRegistryChainAddress: DOCKER_DEV_CHAIN_CONFIG.contracts.StreamRegistry,
+        streamStorageRegistryChainAddress: DOCKER_DEV_CHAIN_CONFIG.contracts.StreamStorageRegistry,
+        storageNodeRegistryChainAddress: DOCKER_DEV_CHAIN_CONFIG.contracts.StorageNodeRegistry,
         mainChainRPCs: {
-            name: 'dev_ethereum',
-            chainId: 8995,
+            name: DOCKER_DEV_CHAIN_CONFIG.name,
+            chainId: DOCKER_DEV_CHAIN_CONFIG.id,
             rpcs: [{
-                url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8545`,
+                url: DOCKER_DEV_CHAIN_CONFIG.rpcEndpoints[0].url,
                 timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
             }]
         },
-        streamRegistryChainRPCs: sideChainConfig,
-        theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
+        streamRegistryChainRPCs: {
+            name: DOCKER_DEV_CHAIN_CONFIG.name,
+            chainId: DOCKER_DEV_CHAIN_CONFIG.id,
+            rpcs: [{
+                url: DOCKER_DEV_CHAIN_CONFIG.rpcEndpoints[0].url,
+                timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
+            }]
+        },
+        theGraphUrl: DOCKER_DEV_CHAIN_CONFIG.theGraphUrl,
     },
     encryption: {
         rsaKeyLength: MIN_KEY_LENGTH

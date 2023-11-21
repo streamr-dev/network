@@ -10,7 +10,7 @@ const config = {
     title: "Streamr Docs",
     tagline:
         "Publish and subscribe to your json based real-time data powered by the decentralized Streamr network.",
-    url: "https://streamr.network/",
+    url: "https://docs.streamr.network/",
     baseUrl: "/",
     onBrokenLinks: "throw",
     onBrokenMarkdownLinks: "throw",
@@ -130,8 +130,8 @@ const config = {
                         title: "DOCS",
                         items: [
                             {
-                                label: "Quickstart",
-                                to: "quickstart/nodejs",
+                                label: "Quickstart guides",
+                                to: "guides/nodejs",
                             },
                             {
                                 label: "Usage",
@@ -142,8 +142,8 @@ const config = {
                                 to: "streamr-network",
                             },
                             {
-                                label: "Node runners",
-                                to: "node-runners/run-a-node",
+                                label: "Node operators",
+                                to: "streamr-network/network-roles/operators",
                             },
                             {
                                 label: "Help",

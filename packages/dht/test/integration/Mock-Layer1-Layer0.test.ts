@@ -1,7 +1,7 @@
 import { Logger } from '@streamr/utils'
-import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
 
 const logger = new Logger(module)
@@ -52,12 +52,11 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
         entryPointDescriptor = {
             kademliaId: layer0EntryPoint.getNodeId().value,
-            type: 0,
-            nodeName: layer0EntryPointId
+            type: NodeType.NODEJS
         }
 
-        await layer0EntryPoint.joinDht(entryPointDescriptor)
-        await layer1EntryPoint.joinDht(entryPointDescriptor)
+        await layer0EntryPoint.joinDht([entryPointDescriptor])
+        await layer1EntryPoint.joinDht([entryPointDescriptor])
     })
 
     afterEach(async () => {
@@ -76,15 +75,15 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
     })
 
     it('Happy Path', async () => {
-        await layer0Node1.joinDht(entryPointDescriptor)
-        await layer0Node2.joinDht(entryPointDescriptor)
-        await layer0Node3.joinDht(entryPointDescriptor)
-        await layer0Node4.joinDht(entryPointDescriptor)
+        await layer0Node1.joinDht([entryPointDescriptor])
+        await layer0Node2.joinDht([entryPointDescriptor])
+        await layer0Node3.joinDht([entryPointDescriptor])
+        await layer0Node4.joinDht([entryPointDescriptor])
 
-        await layer1Node1.joinDht(entryPointDescriptor)
-        await layer1Node2.joinDht(entryPointDescriptor)
-        await layer1Node3.joinDht(entryPointDescriptor)
-        await layer1Node4.joinDht(entryPointDescriptor)
+        await layer1Node1.joinDht([entryPointDescriptor])
+        await layer1Node2.joinDht([entryPointDescriptor])
+        await layer1Node3.joinDht([entryPointDescriptor])
+        await layer1Node4.joinDht([entryPointDescriptor])
 
         logger.info('layer1EntryPoint.getBucketSize() ' + layer1EntryPoint.getBucketSize())
         logger.info('layer1Node1.getBucketSize()' + layer1Node1.getBucketSize())
