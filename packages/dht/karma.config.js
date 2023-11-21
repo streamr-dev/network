@@ -4,7 +4,7 @@ const { createKarmaConfig, createWebpackConfig } = require('@streamr/browser-tes
 
 const TEST_PATHS = [
     'test/unit/**/*.ts',
-    './test/integration/**/!(DhtWith*|MigrateData*).ts/',
+    './test/integration/**/!(DhtWith*|ReplicateData*).ts/',
     './test/end-to-end/**/!(RecoveryFromFailedAutoCertification*|memory-leak*).ts'
 ]
 
