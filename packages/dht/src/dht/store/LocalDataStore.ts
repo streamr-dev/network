@@ -57,7 +57,7 @@ export class LocalDataStore {
 
     public markAsDeleted(id: Uint8Array, storer: PeerID): boolean {
         const dataKey = PeerID.fromValue(id).toKey()
-        if (!this.store.get(dataKey)?.has(storer.toKey())) {
+        if (this.store.get(dataKey)?.has(storer.toKey()) === undefined) {
             return false
         }
         const storedEntry = this.store.get(dataKey)!.get(storer.toKey())
