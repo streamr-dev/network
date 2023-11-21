@@ -89,6 +89,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
         routingPath: PeerDescriptor[],
         nodes: PeerDescriptor[],
         dataEntries: DataEntry[],
+        // TODO explicit default value for "noCloserNodesFound or make it required
         noCloserNodesFound?: boolean
     ): void {
         this.addKnownHops(routingPath)
@@ -164,6 +165,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
 
     public getResults = (): FindResult => ({
         closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
+        // TODO better check (currently this condition is always true)
         dataEntries: (this.foundData && this.foundData.size > 0) ? Array.from(this.foundData.values()) : undefined
     })
 

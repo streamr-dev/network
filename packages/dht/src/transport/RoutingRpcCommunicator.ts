@@ -38,6 +38,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
                 targetDescriptor
             }
 
+            // TODO is it possible to have explicit default values for "doNotConnect" and "doNotMindStopped"?
             if (msg.header.response || callContext && callContext.doNotConnect && callContext.doNotMindStopped ) {
                 return this.sendFn(message, true, true)
             } else if (msg.header.response || callContext && callContext.doNotConnect) {

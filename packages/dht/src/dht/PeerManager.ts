@@ -157,7 +157,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
     private getClosestActiveContactNotInBucket(): DhtNodeRpcRemote | undefined {
         for (const contactId of this.neighborList!.getContactIds()) {
             if (!this.bucket!.get(contactId.value) && this.neighborList!.isActive(contactId)) {
-                return this.neighborList!.getContact(contactId).contact
+                return this.neighborList!.getContact(contactId)!.contact
             }
         }
         return undefined
@@ -260,10 +260,11 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> implements IPee
             if (!peerId.equals(this.config.ownPeerId!)) {
                 logger.trace(`Adding new contact ${contact.kademliaId.toString()}`)
                 const DhtNodeRpcRemote = this.config.createDhtNodeRpcRemote(contact)
-                if (this.bucket!.get(contact.kademliaId) || this.neighborList!.getContact(peerIdFromPeerDescriptor(contact))) {
+                if ((this.bucket!.get(contact.kademliaId) !== null) 
+                    || (this.neighborList!.getContact(peerIdFromPeerDescriptor(contact)) !== undefined)) {
                     this.randomPeers!.addContact(DhtNodeRpcRemote)
                 }
-                if (!this.bucket!.get(contact.kademliaId) ) {
+                if (this.bucket!.get(contact.kademliaId) === null) {
                     this.bucket!.add(DhtNodeRpcRemote)
                 } 
                 if (!this.neighborList!.getContact(peerIdFromPeerDescriptor(contact))) {

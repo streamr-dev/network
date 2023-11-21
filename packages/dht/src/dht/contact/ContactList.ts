@@ -35,8 +35,8 @@ export class ContactList<C extends { getPeerId: () => PeerID }> extends EventEmi
         this.defaultContactQueryLimit = defaultContactQueryLimit
     }
 
-    public getContact(id: PeerID): ContactState<C> {
-        return this.contactsById.get(id.toKey())!
+    public getContact(id: PeerID): ContactState<C> | undefined {
+        return this.contactsById.get(id.toKey())
     }
 
     public getSize(): number {
