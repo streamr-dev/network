@@ -1,7 +1,7 @@
 import { ConnectionLocker, PeerDescriptor, ListeningRpcCommunicator } from '@streamr/dht'
 import { NodeList } from '../NodeList'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
-import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
+import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     HandshakeRpcClient,
     IHandshakeRpcClient, DeliveryRpcClient

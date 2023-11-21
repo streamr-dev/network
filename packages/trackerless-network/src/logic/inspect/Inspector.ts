@@ -2,7 +2,7 @@ import { PeerDescriptor, ConnectionLocker, ListeningRpcCommunicator } from '@str
 import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
+import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger, waitForEvent3 } from '@streamr/utils'
 import { TemporaryConnectionRpcRemote } from '../temporary-connection/TemporaryConnectionRpcRemote'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
