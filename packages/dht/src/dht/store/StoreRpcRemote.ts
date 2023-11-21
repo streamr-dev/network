@@ -3,8 +3,8 @@ import { IStoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { 
     DeleteDataRequest,
     DeleteDataResponse,
-    MigrateDataRequest,
-    MigrateDataResponse,
+    ReplicateDataRequest,
+    ReplicateDataResponse,
     StoreDataRequest,
     StoreDataResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
@@ -36,12 +36,12 @@ export class StoreRpcRemote extends Remote<IStoreRpcClient> {
         }
     }
 
-    async migrateData(request: MigrateDataRequest, doNotConnect: boolean = false): Promise<MigrateDataResponse> {
+    async replicateData(request: ReplicateDataRequest, doNotConnect: boolean = false): Promise<ReplicateDataResponse> {
         const options = this.formDhtRpcOptions({
             timeout: EXISTING_CONNECTION_TIMEOUT,
             doNotConnect
         })
-        return this.getClient().migrateData(request, options)
+        return this.getClient().replicateData(request, options)
     }
 
 }

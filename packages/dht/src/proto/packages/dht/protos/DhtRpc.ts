@@ -62,19 +62,23 @@ export interface ExternalStoreDataResponse {
     storers: PeerDescriptor[];
 }
 /**
- * @generated from protobuf message dht.MigrateDataRequest
+ * @generated from protobuf message dht.ReplicateDataRequest
  */
-export interface MigrateDataRequest {
+export interface ReplicateDataRequest {
     /**
+     * TODO rename to "entry"
+     *
      * @generated from protobuf field: dht.DataEntry dataEntry = 1;
      */
     dataEntry?: DataEntry;
 }
 /**
- * @generated from protobuf message dht.MigrateDataResponse
+ * @generated from protobuf message dht.ReplicateDataResponse
  */
-export interface MigrateDataResponse {
+export interface ReplicateDataResponse {
     /**
+     * TODO is this optional, could be error code?
+     *
      * @generated from protobuf field: string error = 1;
      */
     error: string;
@@ -725,29 +729,29 @@ class ExternalStoreDataResponse$Type extends MessageType$<ExternalStoreDataRespo
  */
 export const ExternalStoreDataResponse = new ExternalStoreDataResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class MigrateDataRequest$Type extends MessageType$<MigrateDataRequest> {
+class ReplicateDataRequest$Type extends MessageType$<ReplicateDataRequest> {
     constructor() {
-        super("dht.MigrateDataRequest", [
+        super("dht.ReplicateDataRequest", [
             { no: 1, name: "dataEntry", kind: "message", T: () => DataEntry }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.MigrateDataRequest
+ * @generated MessageType for protobuf message dht.ReplicateDataRequest
  */
-export const MigrateDataRequest = new MigrateDataRequest$Type();
+export const ReplicateDataRequest = new ReplicateDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class MigrateDataResponse$Type extends MessageType$<MigrateDataResponse> {
+class ReplicateDataResponse$Type extends MessageType$<ReplicateDataResponse> {
     constructor() {
-        super("dht.MigrateDataResponse", [
+        super("dht.ReplicateDataResponse", [
             { no: 1, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.MigrateDataResponse
+ * @generated MessageType for protobuf message dht.ReplicateDataResponse
  */
-export const MigrateDataResponse = new MigrateDataResponse$Type();
+export const ReplicateDataResponse = new ReplicateDataResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class DeleteDataRequest$Type extends MessageType$<DeleteDataRequest> {
     constructor() {
@@ -1201,7 +1205,7 @@ export const FindRpc = new ServiceType("dht.FindRpc", [
  */
 export const StoreRpc = new ServiceType("dht.StoreRpc", [
     { name: "storeData", options: {}, I: StoreDataRequest, O: StoreDataResponse },
-    { name: "migrateData", options: {}, I: MigrateDataRequest, O: MigrateDataResponse },
+    { name: "replicateData", options: {}, I: ReplicateDataRequest, O: ReplicateDataResponse },
     { name: "deleteData", options: {}, I: DeleteDataRequest, O: DeleteDataResponse }
 ]);
 /**

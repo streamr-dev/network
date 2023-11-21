@@ -1,5 +1,5 @@
 import {
-    DataEntry, DeleteDataRequest, DeleteDataResponse, MigrateDataRequest, MigrateDataResponse, PeerDescriptor,
+    DataEntry, DeleteDataRequest, DeleteDataResponse, ReplicateDataRequest, ReplicateDataResponse, PeerDescriptor,
     StoreDataRequest, StoreDataResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../helpers/PeerID'
@@ -67,8 +67,8 @@ export class StoreRpcLocal implements IStoreRpc {
         this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
         this.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
             (request: StoreDataRequest, context: ServerCallContext) => this.storeData(request, context))
-        this.rpcCommunicator.registerRpcMethod(MigrateDataRequest, MigrateDataResponse, 'migrateData',
-            (request: MigrateDataRequest, context: ServerCallContext) => this.migrateData(request, context))
+        this.rpcCommunicator.registerRpcMethod(ReplicateDataRequest, ReplicateDataResponse, 'replicateData',
+            (request: ReplicateDataRequest, context: ServerCallContext) => this.replicateData(request, context))
         this.rpcCommunicator.registerRpcMethod(DeleteDataRequest, DeleteDataResponse, 'deleteData',
             (request: DeleteDataRequest, context: ServerCallContext) => this.deleteData(request, context))
 
@@ -139,12 +139,12 @@ export class StoreRpcLocal implements IStoreRpc {
             this.rpcRequestTimeout
         )
         try {
-            const response = await rpcRemote.migrateData({ dataEntry }, doNotConnect)
+            const response = await rpcRemote.replicateData({ dataEntry }, doNotConnect)
             if (response.error) {
-                logger.trace('migrateData() returned error: ' + response.error)
+                logger.trace('replicateData() returned error: ' + response.error)
             }
         } catch (e) {
-            logger.trace('migrateData() threw an exception ' + e)
+            logger.trace('replicateData() threw an exception ' + e)
         }
     }
 
@@ -266,8 +266,8 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     // RPC service implementation
-    public async migrateData(request: MigrateDataRequest, context: ServerCallContext): Promise<MigrateDataResponse> {
-        logger.trace('server-side migrateData()')
+    public async replicateData(request: ReplicateDataRequest, context: ServerCallContext): Promise<ReplicateDataResponse> {
+        logger.trace('server-side replicateData()')
         const dataEntry = request.dataEntry!
 
         const wasStored = this.localDataStore.storeEntry(dataEntry)
@@ -278,8 +278,8 @@ export class StoreRpcLocal implements IStoreRpc {
         if (!this.selfIsOneOfClosestPeers(dataEntry.kademliaId)) {
             this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.kademliaId))
         }
-        logger.trace('server-side migrateData() at end')
-        return MigrateDataResponse.create()
+        logger.trace('server-side replicateData() at end')
+        return ReplicateDataResponse.create()
     }
 
     private migrateDataToNeighborsIfNeeded(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {

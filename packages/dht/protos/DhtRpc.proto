@@ -25,7 +25,7 @@ service FindRpc {
 
 service StoreRpc {
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
-  rpc migrateData (MigrateDataRequest) returns (MigrateDataResponse);
+  rpc replicateData (ReplicateDataRequest) returns (ReplicateDataResponse);
   rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
 }
 
@@ -77,11 +77,11 @@ message ExternalStoreDataResponse {
   repeated PeerDescriptor storers = 1;
 }
 
-message MigrateDataRequest {
+message ReplicateDataRequest {
   DataEntry dataEntry = 1;
 }
   
-message MigrateDataResponse {
+message ReplicateDataResponse {
   string error = 1;
 }
 
