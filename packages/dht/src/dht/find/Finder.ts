@@ -37,7 +37,7 @@ interface FinderConfig {
     localPeerDescriptor: PeerDescriptor
     serviceId: ServiceID
     localDataStore: LocalDataStore
-    addContact: (contact: PeerDescriptor, setActive?: boolean) => void
+    addContact: (contact: PeerDescriptor) => void
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
 }
 
@@ -77,7 +77,7 @@ export class Finder implements IFinder {
     private registerLocalRpcMethods(config: FinderConfig) {
         const rpcLocal = new FindRpcLocal({
             doRouteFindRequest: (routedMessage: RouteMessageWrapper) => this.doRouteFindRequest(routedMessage),
-            addContact: (contact: PeerDescriptor, setActive?: boolean) => config.addContact(contact, setActive),
+            addContact: (contact: PeerDescriptor) => config.addContact(contact),
             isMostLikelyDuplicate: (requestId: string) => this.router.isMostLikelyDuplicate(requestId),
             addToDuplicateDetector: (requestId: string) => this.router.addToDuplicateDetector(requestId)
         })
