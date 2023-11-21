@@ -28,10 +28,10 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const result = await this.config.startFind(findDataRequest.kademliaId, true, senderPeerDescriptor)
         if (result.dataEntries) {
-            return ExternalFindDataResponse.create({ dataEntries: result.dataEntries })
+            return ExternalFindDataResponse.create({ entries: result.dataEntries })
         } else {
             return ExternalFindDataResponse.create({ 
-                dataEntries: [],
+                entries: [],
                 error: 'Could not find data with the given key' 
             })
         }

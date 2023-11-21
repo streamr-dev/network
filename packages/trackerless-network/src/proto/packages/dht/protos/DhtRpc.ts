@@ -571,9 +571,9 @@ export interface ExternalFindDataRequest {
  */
 export interface ExternalFindDataResponse {
     /**
-     * @generated from protobuf field: repeated dht.DataEntry dataEntries = 1;
+     * @generated from protobuf field: repeated dht.DataEntry entries = 1;
      */
-    dataEntries: DataEntry[];
+    entries: DataEntry[];
     /**
      * @generated from protobuf field: optional string error = 2;
      */
@@ -1168,7 +1168,7 @@ export const ExternalFindDataRequest = new ExternalFindDataRequest$Type();
 class ExternalFindDataResponse$Type extends MessageType$<ExternalFindDataResponse> {
     constructor() {
         super("dht.ExternalFindDataResponse", [
-            { no: 1, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
+            { no: 1, name: "entries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
             { no: 2, name: "error", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }

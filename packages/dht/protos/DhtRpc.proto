@@ -298,6 +298,6 @@ message ExternalFindDataRequest {
 }
 
 message ExternalFindDataResponse {
-  repeated DataEntry dataEntries = 1;
+  repeated DataEntry entries = 1;
   optional string error = 2;
 }
