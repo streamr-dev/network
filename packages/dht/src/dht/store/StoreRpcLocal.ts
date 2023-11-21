@@ -75,15 +75,15 @@ export class StoreRpcLocal implements IStoreRpc {
         this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor) => {
             this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
                 dataMap.forEach((dataEntry) => {
-                    if (this.shouldMigrateDataToNewNode(dataEntry.dataEntry, peerDescriptor)) {
-                        this.migrateDataToContact(dataEntry.dataEntry, peerDescriptor)
+                    if (this.shouldReplicateDataToNewNode(dataEntry.dataEntry, peerDescriptor)) {
+                        this.replicateDataToContact(dataEntry.dataEntry, peerDescriptor)
                     }
                 })
             })
         })
     }
 
-    private shouldMigrateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
+    private shouldReplicateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
 
         const dataId = PeerID.fromValue(dataEntry.kademliaId)
         const newNodeId = PeerID.fromValue(newNode.kademliaId)
@@ -101,7 +101,7 @@ export class StoreRpcLocal implements IStoreRpc {
         })
 
         if (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)) {
-            // If we are not the closes node to the data, do not migrate
+            // If we are not the closes node to the data, do not replicate
             return false
         }
 
@@ -119,7 +119,7 @@ export class StoreRpcLocal implements IStoreRpc {
         }
 
         // if new node is within the storageRedundancyFactor closest nodes to the data
-        // do migrate data to it
+        // do replicate data to it
 
         if (index < this.redundancyFactor) {
             this.localDataStore.setStale(dataId, dataEntry.storer!, false)
@@ -130,7 +130,7 @@ export class StoreRpcLocal implements IStoreRpc {
         }
     }
 
-    private async migrateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor, doNotConnect: boolean = false): Promise<void> {
+    private async replicateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor, doNotConnect: boolean = false): Promise<void> {
         const rpcRemote = new StoreRpcRemote(
             this.localPeerDescriptor,
             contact,
@@ -273,7 +273,7 @@ export class StoreRpcLocal implements IStoreRpc {
         const wasStored = this.localDataStore.storeEntry(dataEntry)
         
         if (wasStored) {
-            this.migrateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.dataEntry!)
+            this.replicateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.dataEntry!)
         }
         if (!this.selfIsOneOfClosestPeers(dataEntry.kademliaId)) {
             this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.kademliaId))
@@ -282,7 +282,7 @@ export class StoreRpcLocal implements IStoreRpc {
         return ReplicateDataResponse.create()
     }
 
-    private migrateDataToNeighborsIfNeeded(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
+    private replicateDataToNeighborsIfNeeded(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
 
         // sort own contact list according to data id
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.kademliaId)
@@ -298,7 +298,7 @@ export class StoreRpcLocal implements IStoreRpc {
         })
 
         if (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)) {
-            // If we are not the closest node to the data, migrate only to the 
+            // If we are not the closest node to the data, replicate only to the 
             // closest one to the data
 
             const contact = sortedList.getAllContacts()[0]
@@ -306,25 +306,25 @@ export class StoreRpcLocal implements IStoreRpc {
             if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
                 setImmediate(async () => {
                     try {
-                        await this.migrateDataToContact(dataEntry, contact.getPeerDescriptor())
-                        logger.trace('migrateDataToContact() returned when migrating to only the closest contact')
+                        await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())
+                        logger.trace('replicateDataToContact() returned when migrating to only the closest contact')
                     } catch (e) {
-                        logger.error('migrating data to only the closest contact failed ' + e)
+                        logger.error('replicating data to only the closest contact failed ' + e)
                     }
                 })
             }
         } else {
-            // if we are the closest to the data, migrate to all storageRedundancyFactor nearest
+            // if we are the closest to the data, replicate to all storageRedundancyFactor nearest
             sortedList.getAllContacts().forEach((contact) => {
                 const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
                 if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
                     if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
                         setImmediate(async () => {
                             try {
-                                await this.migrateDataToContact(dataEntry, contact.getPeerDescriptor())
-                                logger.trace('migrateDataToContact() returned')
+                                await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())
+                                logger.trace('replicateDataToContact() returned')
                             } catch (e) {
-                                logger.error('migrating data to one of the closest contacts failed ' + e)
+                                logger.error('replicating data to one of the closest contacts failed ' + e)
                             }
                         })
                     }
