@@ -281,7 +281,7 @@ export class StoreRpcLocal implements IStoreRpc {
                 try {
                     await rpcRemote.replicateData({ entry: dataEntry })
                 } catch (err) {
-                    logger.error('failed to replicate data with error', err)
+                    logger.trace('Failed to replicate data in replicateDataToClosestNodes', { error: err })
                 }
             }))
         }))
