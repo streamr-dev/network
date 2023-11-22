@@ -141,6 +141,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             addRemoteLocked: (id: PeerIDKey, serviceId: string) => this.locks.addRemoteLocked(id, serviceId),
             removeRemoteLocked: (id: PeerIDKey, serviceId: string) => this.locks.removeRemoteLocked(id, serviceId),
             closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => {
+                // TODO should we have some handling for this floating promise?
                 this.closeConnection(peerDescriptor, gracefulLeave, reason)
             },
             getLocalPeerDescriptor: () => this.getLocalPeerDescriptor()
@@ -213,6 +214,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             } else {
                 logger.trace('handshake of connection not completed, force-closing')
                 const eventReceived = waitForEvent3<ManagedConnectionEvents>(peer, 'disconnected', 2000)
+                // TODO should we have some handling for this floating promise?
                 peer.close(true)
                 try {
                     await eventReceived
@@ -522,6 +524,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             })
                 .catch((e) => {
                     logger.trace('force-closing connection after timeout ' + e)
+                    // TODO should we have some handling for this floating promise?
                     connection.close(true)
                 })
                 .finally(() => {

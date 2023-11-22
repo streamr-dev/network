@@ -137,6 +137,7 @@ export class Router implements IRouter {
             // eslint-disable-next-line promise/catch-or-return
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
             let eventReceived: Promise<unknown>
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             executeSafePromise(async () => {
                 eventReceived = raceEvents3<RoutingSessionEvents>(
                     session,

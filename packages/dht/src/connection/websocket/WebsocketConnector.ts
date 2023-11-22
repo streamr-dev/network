@@ -259,6 +259,7 @@ export class WebsocketConnector {
                 targetPeerDescriptor,
                 toProtoRpcClient(new WebsocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
+            // TODO should we have some handling for this floating promise?
             remoteConnector.requestConnection(localPeerDescriptor.websocket!.host, localPeerDescriptor.websocket!.port)
         })
         const managedConnection = new ManagedConnection(
