@@ -24,8 +24,8 @@ export class FindRpcRemote extends RpcRemote<IFindRpcClient> {
         })
         try {
             const ack = await this.getClient().routeFindRequest(message, options)
-            if (ack.error.length > 0) {
-                logger.debug('Next hop responded with error ' + ack.error)
+            if (ack.error !== undefined) {
+                logger.trace('Next hop responded with error ' + ack.error)
                 return false
             }
         } catch (err) {
