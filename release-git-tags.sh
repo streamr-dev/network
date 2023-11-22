@@ -25,4 +25,4 @@ fi
 git commit -m "release: $TAG"
 git tag $TAG
 git tag broker/$TAG # TODO: This tag needed to activate tagged release of docker images, remove once 1.0 merged to main
-git push --atomic origin streamr-1.0 $TAG broker/$TAG
+git push --atomic origin pretestnet $TAG broker/$TAG
