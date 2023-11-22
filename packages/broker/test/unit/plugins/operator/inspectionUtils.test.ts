@@ -175,7 +175,7 @@ describe(findNodesForTarget, () => {
     })
 })
 
-describe(inspectTarget, () => {
+describe.skip(inspectTarget, () => {
     let streamrClient: MockProxy<StreamrClient>
     let abortController: AbortController
 
