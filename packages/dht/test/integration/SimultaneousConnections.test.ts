@@ -1,11 +1,12 @@
 import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
-import { Simulator } from '../../src/connection/simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { getRandomRegion } from '../../src/connection/simulator/pings'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
     return new ConnectionManager({
@@ -25,12 +26,14 @@ describe('SimultaneousConnections', () => {
 
     const peerDescriptor1 = {
         kademliaId: PeerID.fromString('mock1').value,
-        type: NodeType.NODEJS
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
 
     const peerDescriptor2 = {
         kademliaId: PeerID.fromString('mock2').value,
-        type: NodeType.NODEJS
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
 
     const baseMsg: Message = {
@@ -44,7 +47,7 @@ describe('SimultaneousConnections', () => {
     }
 
     beforeEach(async () => {
-        simulator = new Simulator()
+        simulator = new Simulator(LatencyType.REAL)
         simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         await simulatorTransport1.start()
         simulatorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
@@ -100,7 +103,8 @@ describe('SimultaneousConnections', () => {
                 host: '127.0.0.1',
                 port: 43432,
                 tls: false
-            }
+            },
+            region: getRandomRegion()
         }
 
         const wsPeer2: PeerDescriptor = {
@@ -110,7 +114,8 @@ describe('SimultaneousConnections', () => {
                 host: '127.0.0.1',
                 port: 43433,
                 tls: false
-            }
+            },
+            region: getRandomRegion()
         }
 
         beforeEach(async () => {
@@ -183,12 +188,14 @@ describe('SimultaneousConnections', () => {
                 host: '127.0.0.1',
                 port: 43432,
                 tls: false
-            }
+            },
+            region: getRandomRegion()
         }
 
         const wsPeer2: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock2').value,
-            type: NodeType.NODEJS
+            type: NodeType.NODEJS,
+            region: getRandomRegion()
         }
 
         beforeEach(async () => {
@@ -252,12 +259,14 @@ describe('SimultaneousConnections', () => {
 
         const wrtcPeer1: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock1').value,
-            type: NodeType.NODEJS
+            type: NodeType.NODEJS,
+            region: getRandomRegion()
         }
 
         const wrtcPeer2: PeerDescriptor = {
             kademliaId: PeerID.fromString('mock2').value,
-            type: NodeType.NODEJS
+            type: NodeType.NODEJS,
+            region: getRandomRegion()
         }
 
         beforeEach(async () => {
