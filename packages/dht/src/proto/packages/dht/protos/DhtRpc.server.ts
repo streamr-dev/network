@@ -19,8 +19,7 @@ import { WebsocketConnectionRequest } from "./DhtRpc";
 import { FindResponse } from "./DhtRpc";
 import { DeleteDataResponse } from "./DhtRpc";
 import { DeleteDataRequest } from "./DhtRpc";
-import { MigrateDataResponse } from "./DhtRpc";
-import { MigrateDataRequest } from "./DhtRpc";
+import { ReplicateDataRequest } from "./DhtRpc";
 import { StoreDataResponse } from "./DhtRpc";
 import { StoreDataRequest } from "./DhtRpc";
 import { RouteMessageAck } from "./DhtRpc";
@@ -80,9 +79,9 @@ export interface IStoreRpc<T = ServerCallContext> {
      */
     storeData(request: StoreDataRequest, context: T): Promise<StoreDataResponse>;
     /**
-     * @generated from protobuf rpc: migrateData(dht.MigrateDataRequest) returns (dht.MigrateDataResponse);
+     * @generated from protobuf rpc: replicateData(dht.ReplicateDataRequest) returns (google.protobuf.Empty);
      */
-    migrateData(request: MigrateDataRequest, context: T): Promise<MigrateDataResponse>;
+    replicateData(request: ReplicateDataRequest, context: T): Promise<Empty>;
     /**
      * @generated from protobuf rpc: deleteData(dht.DeleteDataRequest) returns (dht.DeleteDataResponse);
      */

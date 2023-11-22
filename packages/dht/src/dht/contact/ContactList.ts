@@ -19,6 +19,7 @@ export interface Events<C> {
 export class ContactList<C extends { getPeerId: () => PeerID }> extends EventEmitter<Events<C>> {
 
     protected contactsById: Map<PeerIDKey, ContactState<C>> = new Map()
+    // TODO move this to SortedContactList
     protected contactIds: PeerID[] = []
     protected ownId: PeerID
     protected maxSize: number | undefined

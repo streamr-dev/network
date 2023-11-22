@@ -25,7 +25,7 @@ service FindRpc {
 
 service StoreRpc {
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
-  rpc migrateData (MigrateDataRequest) returns (MigrateDataResponse);
+  rpc replicateData (ReplicateDataRequest) returns (google.protobuf.Empty);
   rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
 }
 
@@ -77,12 +77,8 @@ message ExternalStoreDataResponse {
   repeated PeerDescriptor storers = 1;
 }
 
-message MigrateDataRequest {
-  DataEntry dataEntry = 1;
-}
-  
-message MigrateDataResponse {
-  string error = 1;
+message ReplicateDataRequest {
+  DataEntry entry = 1;
 }
 
 message DeleteDataRequest {
@@ -122,7 +118,7 @@ message FindRequest {
 message FindResponse {
   repeated PeerDescriptor closestConnectedPeers = 1;
   repeated DataEntry dataEntries = 2;
-  optional bool noCloserNodesFound = 3;
+  bool noCloserNodesFound = 3;
   repeated PeerDescriptor routingPath = 4;
 }
 
@@ -177,7 +173,15 @@ message RouteMessageWrapper {
 
 message RouteMessageAck {
   string requestId = 1;
-  string error = 2;
+  optional RouteMessageError error = 2;
+}
+
+enum RouteMessageError {
+  NO_TARGETS = 0;
+  DUPLICATE = 1;
+  // TODO: can this be removed? If DhtNode is already stopped the server side requests
+  // should not be processed
+  STOPPED = 2;
 }
 
 // Correspond to the MessageType Enum
@@ -277,7 +281,6 @@ message UnlockRequest {
 
 message LockResponse {
   bool accepted = 1;
-  optional bool reason = 2;
 }
 
 enum DisconnectMode {
@@ -297,6 +300,5 @@ message ExternalFindDataRequest {
 }
 
 message ExternalFindDataResponse {
-  repeated DataEntry dataEntries = 1;
-  optional string error = 2;
+  repeated DataEntry entries = 1;
 }

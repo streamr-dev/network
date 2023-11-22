@@ -39,7 +39,7 @@ export class LocalDataStore {
             const oldLocalEntry = this.store.get(dataKey)!.get(publisherKey)!
             const oldStoredMillis = (oldLocalEntry.dataEntry.storerTime!.seconds * 1000) + (oldLocalEntry.dataEntry.storerTime!.nanos / 1000000)
         
-            // do nothing if old entry is newer than the one being migrated
+            // do nothing if old entry is newer than the one being replicated
             if (oldStoredMillis >= storedMillis) {
                 return false
             } else {
@@ -57,10 +57,11 @@ export class LocalDataStore {
 
     public markAsDeleted(id: Uint8Array, storer: PeerID): boolean {
         const dataKey = PeerID.fromValue(id).toKey()
-        if (this.store.get(dataKey)?.has(storer.toKey()) === undefined) {
+        const item = this.store.get(dataKey)
+        if ((item === undefined) || !item.has(storer.toKey())) {
             return false
         }
-        const storedEntry = this.store.get(dataKey)!.get(storer.toKey())
+        const storedEntry = item.get(storer.toKey())
         storedEntry!.dataEntry.deleted = true
         return true
     }

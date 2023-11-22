@@ -1,4 +1,4 @@
-import { Remote } from '../../dht/contact/Remote'
+import { RpcRemote } from '../../dht/contact/RpcRemote'
 import {
     IceCandidate,
     PeerDescriptor,
@@ -12,7 +12,7 @@ import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-export class WebrtcConnectorRpcRemote extends Remote<IWebrtcConnectorRpcClient> {
+export class WebrtcConnectorRpcRemote extends RpcRemote<IWebrtcConnectorRpcClient> {
 
     constructor(
         localPeerDescriptor: PeerDescriptor,

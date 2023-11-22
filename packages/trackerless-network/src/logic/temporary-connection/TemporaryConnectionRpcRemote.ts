@@ -1,11 +1,11 @@
-import { Remote } from '@streamr/dht'
+import { RpcRemote } from '@streamr/dht'
 import { Logger } from '@streamr/utils'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { ITemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 
 const logger = new Logger(module)
 
-export class TemporaryConnectionRpcRemote extends Remote<ITemporaryConnectionRpcClient> {
+export class TemporaryConnectionRpcRemote extends RpcRemote<ITemporaryConnectionRpcClient> {
 
     async openConnection(): Promise<boolean> {
         try {
