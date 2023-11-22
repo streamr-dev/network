@@ -1,14 +1,14 @@
 import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Remote } from '../contact/Remote'
+import { RpcRemote } from '../contact/RpcRemote'
 import { Logger } from '@streamr/utils'
 import { IFindRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { getPreviousPeer } from './getPreviousPeer'
 
 const logger = new Logger(module)
 
-export class FindRpcRemote extends Remote<IFindRpcClient> {
+export class FindRpcRemote extends RpcRemote<IFindRpcClient> {
 
     async routeFindRequest(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
@@ -19,7 +19,9 @@ export class FindRpcRemote extends Remote<IFindRpcClient> {
             reachableThrough: params.reachableThrough ?? [],
             routingPath: params.routingPath
         }
-        const options = this.formDhtRpcOptions()
+        const options = this.formDhtRpcOptions({
+            doNotConnect: true
+        })
         try {
             const ack = await this.getClient().routeFindRequest(message, options)
             if (ack.error !== undefined) {
