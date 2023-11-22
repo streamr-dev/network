@@ -8,7 +8,6 @@ on:
   workflow_dispatch:
 jobs:
   broker-docker-image:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: ./.github/workflows/docker-build.yml
     with:
       docker_file: Dockerfile.broker
