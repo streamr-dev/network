@@ -269,7 +269,7 @@ export class StoreRpcLocal implements IStoreRpc {
             .map((localData) => localData.dataEntry)
 
         await Promise.all(dataEntries.map(async (dataEntry) => {
-            const dhtNodeRemotes = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId)
+            const dhtNodeRemotes = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, this.redundancyFactor)
             await Promise.all(dhtNodeRemotes.map(async (remoteDhtNode) => {
                 const rpcRemote = new StoreRpcRemote(
                     this.localPeerDescriptor,
