@@ -24,7 +24,6 @@ interface DiscoverySessionConfig {
     noProgressLimit: number
     // TODO rename to onNewContact and make required (and move the end of the list)
     newContactListener?: (rpcRemote: DhtNodeRpcRemote) => void
-    rpcRequestTimeout?: number
     createRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
 }
 

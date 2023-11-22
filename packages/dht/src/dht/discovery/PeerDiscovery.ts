@@ -76,8 +76,6 @@ export class PeerDiscovery {
             neighborList: this.config.neighborList,
             targetId,
             localPeerDescriptor: this.config.localPeerDescriptor,
-            serviceId: this.config.serviceId,
-            rpcCommunicator: this.config.rpcCommunicator,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
             newContactListener: (newPeer: DhtNodeRpcRemote) => this.config.addContact(newPeer.getPeerDescriptor()),
