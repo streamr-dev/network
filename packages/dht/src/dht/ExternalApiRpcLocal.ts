@@ -27,7 +27,7 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
     async externalFindData(findDataRequest: ExternalFindDataRequest, context: ServerCallContext): Promise<ExternalFindDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const result = await this.config.startFind(findDataRequest.kademliaId, true, senderPeerDescriptor)
-        return ExternalFindDataResponse.create({ dataEntries: result.dataEntries ?? [] })
+        return ExternalFindDataResponse.create({ entries: result.dataEntries ?? [] })
     }
 
     async externalStoreData(request: ExternalStoreDataRequest): Promise<ExternalStoreDataResponse> {

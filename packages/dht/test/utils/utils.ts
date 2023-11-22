@@ -2,7 +2,6 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
-    MigrateDataResponse,
     NodeType,
     PeerDescriptor,
     PingRequest,
@@ -204,8 +203,8 @@ export const mockStoreRpc: IStoreRpcWithError = {
             error: 'Mock'
         }
     },
-    async migrateData(): Promise<MigrateDataResponse> {
-        return MigrateDataResponse.create()
+    async replicateData(): Promise<Empty> {
+        return {}
     },
     async deleteData(): Promise<DeleteDataResponse> {
         return DeleteDataResponse.create()

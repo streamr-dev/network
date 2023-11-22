@@ -16,7 +16,7 @@ const logger = new Logger(module)
 
 jest.setTimeout(60000)
 
-describe('Migrating data from node to node in DHT', () => {
+describe('Replicate data from node to node in DHT', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
@@ -74,7 +74,7 @@ describe('Migrating data from node to node in DHT', () => {
         simulator.stop()
     })
 
-    it('Data migrates to the closest node no matter where it is stored', async () => {
+    it('Data replicates to the closest node no matter where it is stored', async () => {
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
@@ -152,7 +152,7 @@ describe('Migrating data from node to node in DHT', () => {
         expect(closestNode.localDataStore.getEntry(dataKey)).toBeTruthy()
     }, 180000)
 
-    it('Data migrates to the last remaining node if all other nodes leave gracefully', async () => {
+    it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 

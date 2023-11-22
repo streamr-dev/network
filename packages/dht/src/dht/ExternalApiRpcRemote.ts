@@ -14,7 +14,7 @@ export class ExternalApiRpcRemote extends RpcRemote<IExternalApiRpcClient> {
         })
         try {
             const data = await this.getClient().externalFindData(request, options)
-            return data.dataEntries
+            return data.entries
         } catch (err) {
             return []
         }

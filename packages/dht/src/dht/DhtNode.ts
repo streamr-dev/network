@@ -647,7 +647,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
         }
         const result = await this.finder!.startFind(idToFind, true)
-        return result.dataEntries ?? []
+        return result.dataEntries ?? []  // TODO is this fallback needed? 
     }
 
     public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
