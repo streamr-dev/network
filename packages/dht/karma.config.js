@@ -3,7 +3,7 @@ const path = require('path')
 const { createKarmaConfig, createWebpackConfig } = require('@streamr/browser-test-runner')
 
 const TEST_PATHS = [
-    'test/unit/**/*.ts',
+    'test/unit/**/!(connectivityRequestHandler*).ts',
     './test/integration/**/!(DhtWith*|MigrateData*).ts/',
     './test/end-to-end/**/!(RecoveryFromFailedAutoCertification*|memory-leak*).ts'
 ]

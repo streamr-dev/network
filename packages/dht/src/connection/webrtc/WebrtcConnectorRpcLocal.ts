@@ -123,7 +123,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
     private isIceCandidateAllowed(candidate: string): boolean {
         if (!this.config.allowPrivateAddresses) {
             const address = getAddressFromIceCandidate(candidate)
-            if (address && isPrivateIPv4(address)) {
+            if ((address !== undefined) && isPrivateIPv4(address)) {
                 return false
             }
         }

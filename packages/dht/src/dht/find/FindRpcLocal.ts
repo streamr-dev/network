@@ -1,5 +1,5 @@
 import { Logger } from '@streamr/utils'
-import { PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { IFindRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
@@ -24,7 +24,7 @@ export class FindRpcLocal implements IFindRpc {
 
     async routeFindRequest(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.config.isMostLikelyDuplicate(routedMessage.requestId)) {
-            return createRouteMessageAck(routedMessage, 'message given to routeFindRequest() service is likely a duplicate')
+            return createRouteMessageAck(routedMessage, RouteMessageError.DUPLICATE)
         }
         const senderId = getNodeIdFromPeerDescriptor(getPreviousPeer(routedMessage) ?? routedMessage.sourcePeer!)
         logger.trace(`Received routeFindRequest call from ${senderId}`)
