@@ -1,9 +1,9 @@
 import { Any } from '../proto/google/protobuf/any'
 import { DataEntry, ExternalStoreDataRequest, ExternalFindDataRequest, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { IExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { Remote } from './contact/Remote'
+import { RpcRemote } from './contact/RpcRemote'
 
-export class ExternalApiRpcRemote extends Remote<IExternalApiRpcClient> {
+export class ExternalApiRpcRemote extends RpcRemote<IExternalApiRpcClient> {
 
     async externalFindData(idToFind: Uint8Array): Promise<DataEntry[]> {
         const request: ExternalFindDataRequest = {

@@ -173,7 +173,15 @@ message RouteMessageWrapper {
 
 message RouteMessageAck {
   string requestId = 1;
-  string error = 2;
+  optional RouteMessageError error = 2;
+}
+
+enum RouteMessageError {
+  NO_TARGETS = 0;
+  DUPLICATE = 1;
+  // TODO: can this be removed? If DhtNode is already stopped the server side requests
+  // should not be processed
+  STOPPED = 2;
 }
 
 // Correspond to the MessageType Enum
@@ -273,7 +281,6 @@ message UnlockRequest {
 
 message LockResponse {
   bool accepted = 1;
-  optional bool reason = 2;
 }
 
 enum DisconnectMode {
@@ -294,5 +301,4 @@ message ExternalFindDataRequest {
 
 message ExternalFindDataResponse {
   repeated DataEntry entries = 1;
-  optional string error = 2;
 }

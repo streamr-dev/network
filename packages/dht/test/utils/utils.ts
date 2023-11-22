@@ -169,15 +169,13 @@ interface IRouterRpcWithError extends IRouterRpc {
 export const mockRouterRpc: IRouterRpcWithError = {
     async routeMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
-            requestId: routed.requestId,
-            error: ''
+            requestId: routed.requestId
         }
         return response
     },
     async forwardMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
-            requestId: routed.requestId,
-            error: ''
+            requestId: routed.requestId
         }
         return response
     },

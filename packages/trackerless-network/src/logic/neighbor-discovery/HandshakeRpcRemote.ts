@@ -1,4 +1,4 @@
-import { PeerDescriptor, Remote } from '@streamr/dht'
+import { PeerDescriptor, RpcRemote } from '@streamr/dht'
 import { Logger, hexToBinary } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
@@ -12,7 +12,7 @@ interface HandshakeResponse {
     interleaveTargetDescriptor?: PeerDescriptor
 }
 
-export class HandshakeRpcRemote extends Remote<IHandshakeRpcClient> {
+export class HandshakeRpcRemote extends RpcRemote<IHandshakeRpcClient> {
 
     async handshake(
         neighborIds: NodeID[],

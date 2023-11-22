@@ -1,4 +1,4 @@
-import { EXISTING_CONNECTION_TIMEOUT, Remote } from '../contact/Remote'
+import { EXISTING_CONNECTION_TIMEOUT, RpcRemote } from '../contact/RpcRemote'
 import { IStoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { 
     DeleteDataRequest,
@@ -9,7 +9,7 @@ import {
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
-export class StoreRpcRemote extends Remote<IStoreRpcClient> {
+export class StoreRpcRemote extends RpcRemote<IStoreRpcClient> {
 
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         const options = this.formDhtRpcOptions()
