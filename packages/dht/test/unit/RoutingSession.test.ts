@@ -62,15 +62,15 @@ describe('RoutingSession', () => {
 
     it('findMoreContacts', () => {
         connections.set(keyFromPeerDescriptor(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
-        const contacts = session.findMoreContacts()
+        const contacts = session.getRoutablePeers()
         expect(contacts.length).toBe(1)
     })
 
     it('findMoreContacts peer disconnects', () => {
         connections.set(keyFromPeerDescriptor(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
-        expect(session.findMoreContacts().length).toBe(1)
+        expect(session.getRoutablePeers().length).toBe(1)
         connections.delete(keyFromPeerDescriptor(mockPeerDescriptor2))
-        expect(session.findMoreContacts().length).toBe(0)
+        expect(session.getRoutablePeers().length).toBe(0)
     })
 
 })
