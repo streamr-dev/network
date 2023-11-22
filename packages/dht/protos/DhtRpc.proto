@@ -123,7 +123,7 @@ message FindRequest {
 message FindResponse {
   repeated PeerDescriptor closestConnectedPeers = 1;
   repeated DataEntry dataEntries = 2;
-  optional bool noCloserNodesFound = 3;
+  bool noCloserNodesFound = 3;
   repeated PeerDescriptor routingPath = 4;
 }
 

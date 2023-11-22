@@ -56,7 +56,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
 
     private registerLocalRpcMethods() {
         const rpcLocal = new FindSessionRpcLocal({
-            doSendFindResponse: (routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound?: boolean) => {
+            doSendFindResponse: (routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean) => {
                 this.doSendFindResponse(routingPath, nodes, dataEntries, noCloserNodesFound)
             }
         })
@@ -89,8 +89,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
         routingPath: PeerDescriptor[],
         nodes: PeerDescriptor[],
         dataEntries: DataEntry[],
-        // TODO explicit default value for "noCloserNodesFound or make it required
-        noCloserNodesFound?: boolean
+        noCloserNodesFound: boolean
     ): void {
         this.addKnownHops(routingPath)
         if (routingPath.length >= 1) {
@@ -165,8 +164,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
 
     public getResults = (): FindResult => ({
         closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
-        // TODO better check (currently this condition is always true)
-        dataEntries: (this.foundData && this.foundData.size > 0) ? Array.from(this.foundData.values()) : undefined
+        dataEntries: Array.from(this.foundData.values())
     })
 
     public stop(): void {

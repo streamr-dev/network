@@ -188,9 +188,9 @@ export interface FindResponse {
      */
     dataEntries: DataEntry[];
     /**
-     * @generated from protobuf field: optional bool noCloserNodesFound = 3;
+     * @generated from protobuf field: bool noCloserNodesFound = 3;
      */
-    noCloserNodesFound?: boolean;
+    noCloserNodesFound: boolean;
     /**
      * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 4;
      */
