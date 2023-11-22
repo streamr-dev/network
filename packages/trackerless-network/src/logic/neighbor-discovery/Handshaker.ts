@@ -98,6 +98,7 @@ export class Handshaker implements IHandshaker {
         const results = await Promise.allSettled(
             Array.from(targets.values()).map(async (target: HandshakeRpcRemote, i) => {
                 const otherNode = i === 0 ? targets[1] : targets[0]
+                // TODO better check (currently this condition is always true)
                 const otherNodeId = otherNode ? getNodeIdFromPeerDescriptor(otherNode.getPeerDescriptor()) : undefined
                 return this.handshakeWithTarget(target, otherNodeId)
             })

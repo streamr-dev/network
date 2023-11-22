@@ -85,7 +85,7 @@ export class SimulatorConnection extends Connection implements IConnection {
             logger.trace('connect() called')
 
             this.simulator.connect(this, this.targetPeerDescriptor, (error?: string) => {
-                if (error) {
+                if (error !== undefined) {
                     logger.trace(error)
                     this.doDisconnect(false)
                 } else {
