@@ -30,7 +30,7 @@ const hasData = (node: DhtNode): boolean => {
     return getDataValues(node).length > 0
 }
 
-describe('Migrating data from node to node in DHT', () => {
+describe('Replicate data from node to node in DHT', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
@@ -84,7 +84,7 @@ describe('Migrating data from node to node in DHT', () => {
         simulator.stop()
     })
 
-    it('Data migrates to the closest node no matter where it is stored', async () => {
+    it('Data replicates to the closest node no matter where it is stored', async () => {
         // calculate offline which node is closest to the data
         const sortedList = new SortedContactList<Contact>(DATA_KEY, 10000)
 
@@ -152,7 +152,7 @@ describe('Migrating data from node to node in DHT', () => {
         expect(hasData(closestNode)).toBe(true)
     }, 180000)
 
-    it('Data migrates to the last remaining node if all other nodes leave gracefully', async () => {
+    it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
 

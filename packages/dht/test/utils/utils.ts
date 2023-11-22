@@ -2,7 +2,6 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
-    MigrateDataResponse,
     NodeType,
     PeerDescriptor,
     PingRequest,
@@ -170,15 +169,13 @@ interface IRouterRpcWithError extends IRouterRpc {
 export const mockRouterRpc: IRouterRpcWithError = {
     async routeMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
-            requestId: routed.requestId,
-            error: ''
+            requestId: routed.requestId
         }
         return response
     },
     async forwardMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
-            requestId: routed.requestId,
-            error: ''
+            requestId: routed.requestId
         }
         return response
     },
@@ -206,8 +203,8 @@ export const mockStoreRpc: IStoreRpcWithError = {
             error: 'Mock'
         }
     },
-    async migrateData(): Promise<MigrateDataResponse> {
-        return MigrateDataResponse.create()
+    async replicateData(): Promise<Empty> {
+        return {}
     },
     async deleteData(): Promise<DeleteDataResponse> {
         return DeleteDataResponse.create()

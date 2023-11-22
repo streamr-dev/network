@@ -19,6 +19,7 @@ export interface Events<C> {
 export class ContactList<C extends { getPeerId: () => PeerID }> extends EventEmitter<Events<C>> {
 
     protected contactsById: Map<PeerIDKey, ContactState<C>> = new Map()
+    // TODO move this to SortedContactList
     protected contactIds: PeerID[] = []
     protected ownId: PeerID
     protected maxSize: number
@@ -35,8 +36,8 @@ export class ContactList<C extends { getPeerId: () => PeerID }> extends EventEmi
         this.defaultContactQueryLimit = defaultContactQueryLimit
     }
 
-    public getContact(id: PeerID): ContactState<C> {
-        return this.contactsById.get(id.toKey())!
+    public getContact(id: PeerID): ContactState<C> | undefined {
+        return this.contactsById.get(id.toKey())
     }
 
     public getSize(): number {
