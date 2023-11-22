@@ -5,6 +5,7 @@ on:
     workflows: [validate]
     types:
       - completed
+  workflow_dispatch:
 jobs:
   tracker-docker-image:
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'refs/heads/main' }}
