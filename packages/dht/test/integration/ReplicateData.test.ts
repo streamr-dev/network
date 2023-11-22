@@ -149,7 +149,7 @@ describe('Replicate data from node to node in DHT', () => {
         const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().kademliaId).toKey())!
 
         // @ts-expect-error private field
-        expect(closestNode.localDataStore.getEntry(dataKey).size).toBeGreaterThanOrEqual(1)
+        expect(closestNode.localDataStore.getEntry(dataKey)).toBeTruthy()
     }, 180000)
 
     it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
@@ -198,7 +198,7 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('data of ' + randomIndices[0] + ' was ' + nodes[randomIndices[0]].localDataStore.getEntry(dataKey))
 
         // @ts-expect-error private field
-        expect(nodes[randomIndices[0]].localDataStore.getEntry(dataKey).size).toBeGreaterThanOrEqual(1)
+        expect(nodes[randomIndices[0]].localDataStore.getEntry(dataKey)).toBeTruthy()
 
     }, 180000)
 })
