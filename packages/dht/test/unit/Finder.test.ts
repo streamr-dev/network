@@ -64,7 +64,7 @@ describe('Finder', () => {
             serviceId: 'Finder',
             localDataStore: new LocalDataStore(),
             sessionTransport: new MockTransport(),
-            addContact: (_contact, _setActive) => {},
+            addContact: () => {},
             isPeerCloserToIdThanSelf: (_peer1, _compareToId) => true,
             rpcCommunicator: rpcCommunicator as any
         })
