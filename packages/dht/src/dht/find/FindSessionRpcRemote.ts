@@ -5,11 +5,11 @@ import {
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { IFindSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger } from '@streamr/utils'
-import { Remote } from '../contact/Remote'
+import { RpcRemote } from '../contact/RpcRemote'
 
 const logger = new Logger(module)
 
-export class FindSessionRpcRemote extends Remote<IFindSessionRpcClient> {
+export class FindSessionRpcRemote extends RpcRemote<IFindSessionRpcClient> {
 
     sendFindResponse(
         routingPath: PeerDescriptor[],
