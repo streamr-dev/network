@@ -536,10 +536,6 @@ export interface LockResponse {
      * @generated from protobuf field: bool accepted = 1;
      */
     accepted: boolean;
-    /**
-     * @generated from protobuf field: optional bool reason = 2;
-     */
-    reason?: boolean;
 }
 /**
  * @generated from protobuf message dht.DisconnectNotice
@@ -1119,8 +1115,7 @@ export const UnlockRequest = new UnlockRequest$Type();
 class LockResponse$Type extends MessageType$<LockResponse> {
     constructor() {
         super("dht.LockResponse", [
-            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "reason", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ }
+            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
