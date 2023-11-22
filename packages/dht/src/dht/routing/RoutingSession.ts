@@ -1,7 +1,7 @@
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { SortedContactList } from '../contact/SortedContactList'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
@@ -172,8 +172,13 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     findMoreContacts(): RemoteContact[] {
         logger.trace('findMoreContacts() sessionId: ' + this.sessionId)
-        // the contents of the connections might have changed between the rounds
-        // addContacts() will only add new contacts that were not there yet
+        // Remove stale contacts that may have been removed from connections
+        this.contactList.getAllContacts().forEach((contact) => {
+            const peerId = peerIdFromPeerDescriptor(contact.getPeerDescriptor())
+            if (this.connections.has(peerId.toKey()) === false) {
+                this.contactList.removeContact(peerId)
+            }
+        })
         const contacts = Array.from(this.connections.values())
             .map((peer) => new RemoteContact(peer, this.localPeerDescriptor, this.rpcCommunicator))
         this.contactList.addContacts(contacts)

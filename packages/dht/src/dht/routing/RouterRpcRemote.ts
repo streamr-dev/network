@@ -22,7 +22,9 @@ export class RouterRpcRemote extends Remote<IRouterRpcClient> {
             reachableThrough: params.reachableThrough ?? [],
             routingPath: params.routingPath
         }
-        const options = this.formDhtRpcOptions()
+        const options = this.formDhtRpcOptions({
+            doNotConnect: true
+        })
         try {
             const ack = await this.getClient().routeMessage(message, options)
             // Success signal if sent to destination and error includes duplicate
@@ -54,7 +56,9 @@ export class RouterRpcRemote extends Remote<IRouterRpcClient> {
             reachableThrough: params.reachableThrough ?? [],
             routingPath: params.routingPath
         }
-        const options = this.formDhtRpcOptions()
+        const options = this.formDhtRpcOptions({
+            doNotConnect: true
+        })
         try {
             const ack = await this.getClient().forwardMessage(message, options)
             if (ack.error.length > 0) {
