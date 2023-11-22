@@ -385,7 +385,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 + ' onDisconnected() did nothing, no such connection in connectionManager')
             if (storedConnection) {
                 logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
-                + ' connectionIds do not match ' + storedConnection.connectionId + ' ' + connection.connectionId)
+                + ' connectionIds do not match ' + storedConnection.connectionId.toString() + ' ' + connection.connectionId.toString())
             }
         }
 
