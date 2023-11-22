@@ -79,7 +79,7 @@ export class WebsocketConnector {
 
     constructor(config: WebsocketConnectorConfig) {
         this.websocketServer = config.portRange ? new WebsocketServer({
-            portRange: config.portRange!,
+            portRange: config.portRange,
             tlsCertificate: config.tlsCertificate,
             maxMessageSize: config.maxMessageSize,
             enableTls: config.serverEnableTls
@@ -136,7 +136,7 @@ export class WebsocketConnector {
             updateCertificate: (certificate: string, privateKey: string) => this.websocketServer!.updateCertificate(certificate, privateKey)
         })
         logger.trace(`AutoCertifying subdomain...`)
-        await this.autoCertifierClient!.start()
+        await this.autoCertifierClient.start()
     }
 
     private setHost(hostName: string): void {
