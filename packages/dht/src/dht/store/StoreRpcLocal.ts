@@ -259,6 +259,34 @@ export class StoreRpcLocal implements IStoreRpc {
         return StoreDataResponse.create()
     }
 
+    async destroy(): Promise<void> {
+        await this.replicateDataToClosestNodes()
+    }
+
+    async replicateDataToClosestNodes(): Promise<void> {
+        const dataEntries = Array.from(this.localDataStore.getStore().values())
+            .flatMap((dataMap) => Array.from(dataMap.values()))
+            .map((localData) => localData.dataEntry)
+
+        await Promise.all(dataEntries.map(async (dataEntry) => {
+            const dhtNodeRemotes = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId)
+            await Promise.all(dhtNodeRemotes.map(async (remoteDhtNode) => {
+                const rpcRemote = new StoreRpcRemote(
+                    this.localPeerDescriptor,
+                    remoteDhtNode.getPeerDescriptor(),
+                    this.serviceId,
+                    toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport())),
+                    this.rpcRequestTimeout
+                )
+                try {
+                    await rpcRemote.replicateData({ entry: dataEntry })
+                } catch (err) {
+                    logger.error('failed to replicate data with error', err)
+                }
+            }))
+        }))
+    }
+
     // RPC service implementation
     async deleteData(request: DeleteDataRequest, context: ServerCallContext): Promise<DeleteDataResponse> {
         const { incomingSourceDescriptor } = context as DhtCallContext
