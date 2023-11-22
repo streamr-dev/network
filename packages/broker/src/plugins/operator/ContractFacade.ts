@@ -182,8 +182,8 @@ export class ContractFacade {
         return results
     }
 
-    async getExpiredFlags(sponsorships: EthereumAddress[], maxFlagAgeSec: number): Promise<Flag[]> {
-        const maxFlagStartTime = Math.floor(Date.now() / 1000) - maxFlagAgeSec
+    async getExpiredFlags(sponsorships: EthereumAddress[], maxAgeInMs: number): Promise<Flag[]> {
+        const maxFlagStartTime = Math.floor((Date.now() - maxAgeInMs) / 1000)
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
