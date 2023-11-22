@@ -123,7 +123,7 @@ export class ProxyClient extends EventEmitter {
         if (connectionCount !== undefined && connectionCount > nodes.length) {
             throw Error('Cannot set connectionCount above the size of the configured array of nodes')
         }
-        const nodesIds = new Map()
+        const nodesIds = new Map<NodeID, PeerDescriptor>()
         nodes.forEach((peerDescriptor) => {
             nodesIds.set(getNodeIdFromPeerDescriptor(peerDescriptor), peerDescriptor)
         })
