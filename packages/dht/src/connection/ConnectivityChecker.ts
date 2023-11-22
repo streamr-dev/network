@@ -59,7 +59,7 @@ export class ConnectivityChecker {
         try {
             outgoingConnection = await connectAsync({
                 url,
-                selfSigned
+                selfSigned: false
             })
         } catch (e) {
             throw new Err.ConnectionFailed(`Failed to connect to the entrypoint ${url}`, e)
