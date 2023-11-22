@@ -16,7 +16,7 @@ The 1.0 testnets will be launched with the technical parameters set out in: [SIP
 3. [Delegate](../streamr-network/network-roles/delegators.md) your `DATA` tokens onto other Operators
 
 ## Current node software version
-Use node version: `v100.0.0-pretestnet.4`. Do not use the `latest` tag release.
+Use node version: `v100.0.0-pretestnet.6`. Do not use the `latest` tag release.
 
 ## Schedules
 Keep a close eye on this page as these dates may change based on the findings of each testnet.
