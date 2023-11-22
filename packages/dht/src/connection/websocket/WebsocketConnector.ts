@@ -29,6 +29,8 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { expectedConnectionType } from '../../helpers/Connectivity'
 import { WebsocketServerStartError } from '../../helpers/errors'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
+import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
+
 const logger = new Logger(module)
 
 export type Action = 'connectivityRequest' | 'connectivityProbe'
@@ -151,7 +153,7 @@ export class WebsocketConnector {
                 const action = query?.action as (Action | undefined)
                 logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.getRemoteAddress() })
                 if (action === 'connectivityRequest') {
-                    this.connectivityChecker!.listenToIncomingConnectivityRequests(serverSocket)
+                    attachConnectivityRequestHandler(serverSocket)
                 } else if (action === 'connectivityProbe') {
                     // no-op
                 } else {
@@ -265,7 +267,7 @@ export class WebsocketConnector {
             undefined,
             undefined,
             targetPeerDescriptor
-        )        
+        )
         managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor)))
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
         this.ongoingConnectRequests.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
@@ -273,7 +275,7 @@ export class WebsocketConnector {
     }
 
     private onServerSocketHandshakeRequest(
-        sourcePeerDescriptor: PeerDescriptor, 
+        sourcePeerDescriptor: PeerDescriptor,
         serverWebsocket: IConnection,
         targetPeerDescriptor?: PeerDescriptor
     ) {

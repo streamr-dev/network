@@ -20,7 +20,7 @@ interface PeerDiscoveryConfig {
     serviceId: ServiceID
     parallelism: number
     joinTimeout: number
-    addContact: (contact: PeerDescriptor, setActive?: boolean) => void
+    addContact: (contact: PeerDescriptor) => void
     connectionManager?: ConnectionManager
     rpcRequestTimeout?: number
 }
