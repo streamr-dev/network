@@ -19,7 +19,9 @@ export class FindRpcRemote extends RpcRemote<IFindRpcClient> {
             reachableThrough: params.reachableThrough ?? [],
             routingPath: params.routingPath
         }
-        const options = this.formDhtRpcOptions()
+        const options = this.formDhtRpcOptions({
+            doNotConnect: true
+        })
         try {
             const ack = await this.getClient().routeFindRequest(message, options)
             if (ack.error.length > 0) {
