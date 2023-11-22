@@ -71,17 +71,6 @@ export interface ReplicateDataRequest {
     entry?: DataEntry;
 }
 /**
- * @generated from protobuf message dht.ReplicateDataResponse
- */
-export interface ReplicateDataResponse {
-    /**
-     * TODO is this optional, could be error code?
-     *
-     * @generated from protobuf field: string error = 1;
-     */
-    error: string;
-}
-/**
  * @generated from protobuf message dht.DeleteDataRequest
  */
 export interface DeleteDataRequest {
@@ -188,9 +177,9 @@ export interface FindResponse {
      */
     dataEntries: DataEntry[];
     /**
-     * @generated from protobuf field: optional bool noCloserNodesFound = 3;
+     * @generated from protobuf field: bool noCloserNodesFound = 3;
      */
-    noCloserNodesFound?: boolean;
+    noCloserNodesFound: boolean;
     /**
      * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 4;
      */
@@ -739,18 +728,6 @@ class ReplicateDataRequest$Type extends MessageType$<ReplicateDataRequest> {
  */
 export const ReplicateDataRequest = new ReplicateDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ReplicateDataResponse$Type extends MessageType$<ReplicateDataResponse> {
-    constructor() {
-        super("dht.ReplicateDataResponse", [
-            { no: 1, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.ReplicateDataResponse
- */
-export const ReplicateDataResponse = new ReplicateDataResponse$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class DeleteDataRequest$Type extends MessageType$<DeleteDataRequest> {
     constructor() {
         super("dht.DeleteDataRequest", [
@@ -838,7 +815,7 @@ class FindResponse$Type extends MessageType$<FindResponse> {
         super("dht.FindResponse", [
             { no: 1, name: "closestConnectedPeers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 2, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
-            { no: 3, name: "noCloserNodesFound", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "noCloserNodesFound", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 4, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
@@ -1203,7 +1180,7 @@ export const FindRpc = new ServiceType("dht.FindRpc", [
  */
 export const StoreRpc = new ServiceType("dht.StoreRpc", [
     { name: "storeData", options: {}, I: StoreDataRequest, O: StoreDataResponse },
-    { name: "replicateData", options: {}, I: ReplicateDataRequest, O: ReplicateDataResponse },
+    { name: "replicateData", options: {}, I: ReplicateDataRequest, O: Empty },
     { name: "deleteData", options: {}, I: DeleteDataRequest, O: DeleteDataResponse }
 ]);
 /**

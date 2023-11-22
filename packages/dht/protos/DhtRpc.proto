@@ -25,7 +25,7 @@ service FindRpc {
 
 service StoreRpc {
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
-  rpc replicateData (ReplicateDataRequest) returns (ReplicateDataResponse);
+  rpc replicateData (ReplicateDataRequest) returns (google.protobuf.Empty);
   rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
 }
 
@@ -79,11 +79,6 @@ message ExternalStoreDataResponse {
 
 message ReplicateDataRequest {
   DataEntry entry = 1;
-}
-  
-message ReplicateDataResponse {
-  // TODO is this optional, could be error code?
-  string error = 1;
 }
 
 message DeleteDataRequest {

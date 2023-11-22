@@ -4,7 +4,6 @@ import {
     DeleteDataRequest,
     DeleteDataResponse,
     ReplicateDataRequest,
-    ReplicateDataResponse,
     StoreDataRequest,
     StoreDataResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
@@ -36,7 +35,7 @@ export class StoreRpcRemote extends Remote<IStoreRpcClient> {
         }
     }
 
-    async replicateData(request: ReplicateDataRequest, doNotConnect: boolean = false): Promise<ReplicateDataResponse> {
+    async replicateData(request: ReplicateDataRequest, doNotConnect: boolean = false): Promise<void> {
         const options = this.formDhtRpcOptions({
             timeout: EXISTING_CONNECTION_TIMEOUT,
             doNotConnect

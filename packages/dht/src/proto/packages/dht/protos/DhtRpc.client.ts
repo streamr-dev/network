@@ -25,7 +25,6 @@ import type { FindResponse } from "./DhtRpc";
 import { StoreRpc } from "./DhtRpc";
 import type { DeleteDataResponse } from "./DhtRpc";
 import type { DeleteDataRequest } from "./DhtRpc";
-import type { ReplicateDataResponse } from "./DhtRpc";
 import type { ReplicateDataRequest } from "./DhtRpc";
 import type { StoreDataResponse } from "./DhtRpc";
 import type { StoreDataRequest } from "./DhtRpc";
@@ -165,9 +164,9 @@ export interface IStoreRpcClient {
      */
     storeData(input: StoreDataRequest, options?: RpcOptions): UnaryCall<StoreDataRequest, StoreDataResponse>;
     /**
-     * @generated from protobuf rpc: replicateData(dht.ReplicateDataRequest) returns (dht.ReplicateDataResponse);
+     * @generated from protobuf rpc: replicateData(dht.ReplicateDataRequest) returns (google.protobuf.Empty);
      */
-    replicateData(input: ReplicateDataRequest, options?: RpcOptions): UnaryCall<ReplicateDataRequest, ReplicateDataResponse>;
+    replicateData(input: ReplicateDataRequest, options?: RpcOptions): UnaryCall<ReplicateDataRequest, Empty>;
     /**
      * @generated from protobuf rpc: deleteData(dht.DeleteDataRequest) returns (dht.DeleteDataResponse);
      */
@@ -190,11 +189,11 @@ export class StoreRpcClient implements IStoreRpcClient, ServiceInfo {
         return stackIntercept<StoreDataRequest, StoreDataResponse>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: replicateData(dht.ReplicateDataRequest) returns (dht.ReplicateDataResponse);
+     * @generated from protobuf rpc: replicateData(dht.ReplicateDataRequest) returns (google.protobuf.Empty);
      */
-    replicateData(input: ReplicateDataRequest, options?: RpcOptions): UnaryCall<ReplicateDataRequest, ReplicateDataResponse> {
+    replicateData(input: ReplicateDataRequest, options?: RpcOptions): UnaryCall<ReplicateDataRequest, Empty> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<ReplicateDataRequest, ReplicateDataResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<ReplicateDataRequest, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: deleteData(dht.DeleteDataRequest) returns (dht.DeleteDataResponse);

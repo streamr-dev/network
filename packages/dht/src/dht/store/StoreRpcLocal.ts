@@ -1,5 +1,5 @@
 import {
-    DataEntry, DeleteDataRequest, DeleteDataResponse, ReplicateDataRequest, ReplicateDataResponse, PeerDescriptor,
+    DataEntry, DeleteDataRequest, DeleteDataResponse, ReplicateDataRequest, PeerDescriptor,
     StoreDataRequest, StoreDataResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../helpers/PeerID'
@@ -22,6 +22,7 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ServiceID } from '../../types/ServiceID'
+import { Empty } from '../../proto/google/protobuf/empty'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -67,16 +68,20 @@ export class StoreRpcLocal implements IStoreRpc {
         this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
         this.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
             (request: StoreDataRequest, context: ServerCallContext) => this.storeData(request, context))
-        this.rpcCommunicator.registerRpcMethod(ReplicateDataRequest, ReplicateDataResponse, 'replicateData',
+        this.rpcCommunicator.registerRpcNotification(ReplicateDataRequest, 'replicateData',
             (request: ReplicateDataRequest, context: ServerCallContext) => this.replicateData(request, context))
         this.rpcCommunicator.registerRpcMethod(DeleteDataRequest, DeleteDataResponse, 'deleteData',
             (request: DeleteDataRequest, context: ServerCallContext) => this.deleteData(request, context))
 
         this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor) => {
             this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
-                dataMap.forEach((dataEntry) => {
+                dataMap.forEach(async (dataEntry) => {
                     if (this.shouldReplicateDataToNewNode(dataEntry.dataEntry, peerDescriptor)) {
-                        this.replicateDataToContact(dataEntry.dataEntry, peerDescriptor)
+                        try {
+                            await this.replicateDataToContact(dataEntry.dataEntry, peerDescriptor)
+                        } catch (e) {
+                            logger.trace('replicateDataToContact() failed', { error: e })
+                        }
                     }
                 })
             })
@@ -139,10 +144,7 @@ export class StoreRpcLocal implements IStoreRpc {
             this.rpcRequestTimeout
         )
         try {
-            const response = await rpcRemote.replicateData({ entry: dataEntry }, doNotConnect)
-            if (response.error) {
-                logger.trace('replicateData() returned error: ' + response.error)
-            }
+            await rpcRemote.replicateData({ entry: dataEntry }, doNotConnect)
         } catch (e) {
             logger.trace('replicateData() threw an exception ' + e)
         }
@@ -266,7 +268,7 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     // RPC service implementation
-    public async replicateData(request: ReplicateDataRequest, context: ServerCallContext): Promise<ReplicateDataResponse> {
+    public async replicateData(request: ReplicateDataRequest, context: ServerCallContext): Promise<Empty> {
         logger.trace('server-side replicateData()')
         const dataEntry = request.entry!
 
@@ -279,7 +281,7 @@ export class StoreRpcLocal implements IStoreRpc {
             this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.kademliaId))
         }
         logger.trace('server-side replicateData() at end')
-        return ReplicateDataResponse.create()
+        return {}
     }
 
     private replicateDataToNeighborsIfNeeded(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
