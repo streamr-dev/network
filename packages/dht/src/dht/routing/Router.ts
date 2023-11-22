@@ -136,7 +136,7 @@ export class Router implements IRouter {
         logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
             + `to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`)
         const session = this.createRoutingSession(routedMessage, mode)
-        const contacts = session.getRoutablePeers()
+        const contacts = session.updateAndGetRoutablePeers()
         if (contacts.length > 0) {
             this.addRoutingSession(session)
             // eslint-disable-next-line promise/catch-or-return

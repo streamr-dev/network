@@ -116,7 +116,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (this.ongoingRequests.has(peerId.toKey())) {
             this.ongoingRequests.delete(peerId.toKey())
         }
-        const contacts = this.getRoutablePeers()
+        const contacts = this.updateAndGetRoutablePeers()
         if (contacts.length === 0 && this.ongoingRequests.size === 0) {
             logger.trace('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
             // TODO should call this.stop() so that we do cleanup? (after the emitFailure call)
@@ -143,7 +143,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             return
         }
         this.successfulHopCounter += 1
-        const contacts = this.getRoutablePeers()
+        const contacts = this.updateAndGetRoutablePeers()
         if (this.successfulHopCounter >= this.parallelism || contacts.length === 0) {
             // TODO should call this.stop() so that we do cleanup? (after the routingSucceeded call)
             this.stopped = true
@@ -170,7 +170,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    getRoutablePeers(): RemoteContact[] {
+    updateAndGetRoutablePeers(): RemoteContact[] {
         logger.trace('getRoutablePeers() sessionId: ' + this.sessionId)
         // Remove stale contacts that may have been removed from connections
         this.contactList.getAllContacts().forEach((contact) => {
