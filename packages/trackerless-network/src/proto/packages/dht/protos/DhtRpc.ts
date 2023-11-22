@@ -186,9 +186,9 @@ export interface FindResponse {
      */
     dataEntries: DataEntry[];
     /**
-     * @generated from protobuf field: optional bool noCloserNodesFound = 3;
+     * @generated from protobuf field: bool noCloserNodesFound = 3;
      */
-    noCloserNodesFound?: boolean;
+    noCloserNodesFound: boolean;
     /**
      * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 4;
      */
@@ -568,10 +568,6 @@ export interface ExternalFindDataResponse {
      * @generated from protobuf field: repeated dht.DataEntry dataEntries = 1;
      */
     dataEntries: DataEntry[];
-    /**
-     * @generated from protobuf field: optional string error = 2;
-     */
-    error?: string;
 }
 /**
  * @generated from protobuf enum dht.NodeType
@@ -832,7 +828,7 @@ class FindResponse$Type extends MessageType$<FindResponse> {
         super("dht.FindResponse", [
             { no: 1, name: "closestConnectedPeers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 2, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
-            { no: 3, name: "noCloserNodesFound", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "noCloserNodesFound", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 4, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
@@ -1161,8 +1157,7 @@ export const ExternalFindDataRequest = new ExternalFindDataRequest$Type();
 class ExternalFindDataResponse$Type extends MessageType$<ExternalFindDataResponse> {
     constructor() {
         super("dht.ExternalFindDataResponse", [
-            { no: 1, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
-            { no: 2, name: "error", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry }
         ]);
     }
 }

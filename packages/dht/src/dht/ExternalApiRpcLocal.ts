@@ -27,14 +27,7 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
     async externalFindData(findDataRequest: ExternalFindDataRequest, context: ServerCallContext): Promise<ExternalFindDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const result = await this.config.startFind(findDataRequest.kademliaId, true, senderPeerDescriptor)
-        if (result.dataEntries) {
-            return ExternalFindDataResponse.create({ dataEntries: result.dataEntries })
-        } else {
-            return ExternalFindDataResponse.create({ 
-                dataEntries: [],
-                error: 'Could not find data with the given key' 
-            })
-        }
+        return ExternalFindDataResponse.create({ dataEntries: result.dataEntries ?? [] })
     }
 
     async externalStoreData(request: ExternalStoreDataRequest): Promise<ExternalStoreDataResponse> {
