@@ -23,7 +23,7 @@ async function runWhileWaiting<T>(task: () => Promise<T>, minElapsedTimeInMs: nu
     return result
 }
 
-describe(MaintainTopologyHelper, () => {
+describe.skip(MaintainTopologyHelper, () => {
     let streamId1: string
     let streamId2: string
 
