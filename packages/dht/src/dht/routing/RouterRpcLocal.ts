@@ -20,7 +20,8 @@ const logger = new Logger(module)
 export const createRouteMessageAck = (routedMessage: RouteMessageWrapper, error?: string): RouteMessageAck => {
     const ack: RouteMessageAck = {
         requestId: routedMessage.requestId,
-        error: error ? error : ''
+        // TODO if there is no error, can we just leave the field out?
+        error: (error !== undefined) ? error : ''
     }
     return ack
 }

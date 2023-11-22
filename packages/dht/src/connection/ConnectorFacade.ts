@@ -39,6 +39,7 @@ export interface DefaultConnectorFacadeConfig {
     webrtcPortRange?: PortRange
     maxMessageSize?: number
     tlsCertificate?: TlsCertificate
+    // TODO explicit default value for "websocketServerEnableTls" or make it required
     websocketServerEnableTls?: boolean
     autoCertifierUrl?: string
     autoCertifierConfigFile?: string

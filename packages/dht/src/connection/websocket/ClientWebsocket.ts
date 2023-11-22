@@ -23,6 +23,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.connectionId = new ConnectionID()
     }
 
+    // TODO explicit default value for "selfSigned" or make it required
     public connect(address: string, selfSigned?: boolean): void {
         if (!this.destroyed) {
             this.socket = new Websocket(address, undefined, undefined, undefined, { rejectUnauthorized: !selfSigned })
