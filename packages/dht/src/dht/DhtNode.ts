@@ -492,6 +492,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             && this.config.entryPoints.length > 0
         ) {
             setImmediate(async () => {
+                // TODO should we catch possible promise rejection?
                 await Promise.all(this.config.entryPoints!.map((entryPoint) => 
                     this.peerDiscovery!.rejoinDht(entryPoint)
                 )) 

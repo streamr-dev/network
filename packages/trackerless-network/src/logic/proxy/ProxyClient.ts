@@ -86,6 +86,7 @@ export class ProxyClient extends EventEmitter {
             onLeaveNotice: (senderId: NodeID) => {
                 const contact = this.targetNeighbors.get(senderId)
                 if (contact) {
+                    // TODO should we catch possible promise rejection?
                     setImmediate(() => this.onNodeDisconnected(contact.getPeerDescriptor()))
                 }
             },
@@ -243,6 +244,7 @@ export class ProxyClient extends EventEmitter {
         addManagedEventListener<any, any>(
             this.config.transport as any,
             'disconnected',
+            // TODO should we catch possible promise rejection?
             (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor),
             this.abortController.signal
         )

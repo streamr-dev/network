@@ -128,6 +128,7 @@ export class EntryPointDiscovery {
             await this.keepSelfAsEntryPoint()
         }
         if (possibleNetworkSplitDetected) {
+            // TODO should we catch possible promise rejection?
             setImmediate(() => this.avoidNetworkSplit())
         }
     }
