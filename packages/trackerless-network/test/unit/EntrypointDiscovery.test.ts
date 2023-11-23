@@ -79,7 +79,6 @@ describe('EntryPointDiscovery', () => {
     } 
 
     let layer1Node: MockLayer1Node
-    let layer1NodeWithPeers: MockLayer1Node
 
     beforeEach(() => {
         storeCalled = 0
@@ -103,14 +102,10 @@ describe('EntryPointDiscovery', () => {
             deleteEntryPointData: fakeDeleteEntryPointData,
             ensureInterval: 2000
         })
-        layer1NodeWithPeers = new MockLayer1Node()
-        range(8).forEach(() => {
-            layer1NodeWithPeers.addNewRandomPeerToKBucket()
-        })
         entryPointDiscoveryWithSaturatedEntryPointCount = new EntryPointDiscovery({
             localPeerDescriptor: peerDescriptor,
             streamPartId: STREAM_PART_ID,
-            layer1Node: layer1NodeWithPeers,
+            layer1Node,
             getEntryPointData: fakeGetSaturatedEntryPointData,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
@@ -120,8 +115,6 @@ describe('EntryPointDiscovery', () => {
 
     afterEach(() => {
         entryPointDiscoveryWithData.destroy()
-        layer1Node.stop()
-        layer1NodeWithPeers.stop()
     })
 
     it('discoverEntryPointsFromDht has known entrypoints', async () => {
@@ -164,6 +157,9 @@ describe('EntryPointDiscovery', () => {
     })
 
     it('non entry point nodes ensure that entry points exist', async () => {
+        range(8).forEach(() => {
+            layer1Node.addNewRandomPeerToKBucket()
+        })
         await entryPointDiscoveryWithSaturatedEntryPointCount.storeSelfAsEntryPointIfNecessary(8)
         expect(storeCalled).toEqual(0)
         expect(saturatedGetEntryPointDataCalled).toEqual(0)
