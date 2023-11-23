@@ -580,11 +580,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         logger.trace('stop()')
         this.abortController.abort()
-
+        await this.storeRpcLocal!.destroy()
         if (this.entryPointDisconnectTimeout) {
             clearTimeout(this.entryPointDisconnectTimeout)
         }
-
         this.peerManager!.stop()
         this.localDataStore.clear()
         this.rpcCommunicator!.stop()
