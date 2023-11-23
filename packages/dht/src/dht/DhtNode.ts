@@ -713,7 +713,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         logger.trace('stop()')
         this.stopped = true
-
+        await this.storeRpcLocal!.destroy()
         if (this.entryPointDisconnectTimeout) {
             clearTimeout(this.entryPointDisconnectTimeout)
         }
