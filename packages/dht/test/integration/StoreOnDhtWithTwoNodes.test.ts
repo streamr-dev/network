@@ -1,4 +1,4 @@
-import { createMockConnectionDhtNode } from '../utils/utils'
+import { createMockConnectionDhtNode, createMockPeerDescriptor } from '../utils/utils'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -42,10 +42,12 @@ describe('Storing data in DHT with two peers', () => {
     })
 
     it('Node can store on two peer DHT', async () => {
+        const storedData1 = createMockPeerDescriptor()
+        const storedData2 = createMockPeerDescriptor()
         const dataKey1 = PeerID.fromString('node0-stored-data')
-        const data1 = Any.pack(otherNode.getLocalPeerDescriptor(), PeerDescriptor)
         const dataKey2 = PeerID.fromString('other-node-stored-data')
-        const data2 = Any.pack(entryPoint.getLocalPeerDescriptor(), PeerDescriptor)
+        const data1 = Any.pack(storedData1, PeerDescriptor)
+        const data2 = Any.pack(storedData2, PeerDescriptor)
 
         const successfulStorers1 = await otherNode.storeDataToDht(dataKey1.value, data1)
         const successfulStorers2 = await entryPoint.storeDataToDht(dataKey2.value, data2)
@@ -54,19 +56,20 @@ describe('Storing data in DHT with two peers', () => {
 
         const foundData1 = await otherNode.getDataFromDht(dataKey1.value)
         const foundData2 = await entryPoint.getDataFromDht(dataKey2.value)
-        expect(areEqualPeerDescriptors(otherNode.getLocalPeerDescriptor(), Any.unpack(foundData1[0]!.data!, PeerDescriptor))).toBeTrue()
-        expect(areEqualPeerDescriptors(entryPoint.getLocalPeerDescriptor(), Any.unpack(foundData2[0]!.data!, PeerDescriptor))).toBeTrue()
+        expect(areEqualPeerDescriptors(storedData1, Any.unpack(foundData1[0]!.data!, PeerDescriptor))).toBeTrue()
+        expect(areEqualPeerDescriptors(storedData2, Any.unpack(foundData2[0]!.data!, PeerDescriptor))).toBeTrue()
     })
 
     it('Can store on one peer DHT', async () => {
         await otherNode.stop()
         await waitForCondition(() => getTestInterface(getTestInterface(entryPoint).getPeerManager()).getKBucketSize() === 0)
         const dataKey = PeerID.fromString('data-to-store')
-        const data = Any.pack(entryPoint.getLocalPeerDescriptor(), PeerDescriptor)
+        const storedData = createMockPeerDescriptor()
+        const data = Any.pack(storedData, PeerDescriptor)
         const successfulStorers = await entryPoint.storeDataToDht(dataKey.value, data)
         expect(successfulStorers[0].kademliaId).toStrictEqual(entryPoint.getLocalPeerDescriptor().kademliaId)
 
         const foundData = await entryPoint.getDataFromDht(dataKey.value)
-        expect(areEqualPeerDescriptors(entryPoint.getLocalPeerDescriptor(), Any.unpack(foundData[0]!.data!, PeerDescriptor))).toBeTrue()
+        expect(areEqualPeerDescriptors(storedData, Any.unpack(foundData[0]!.data!, PeerDescriptor))).toBeTrue()
     }, 60000)
 })

@@ -22,13 +22,17 @@ export interface StoreDataRequest {
      */
     data?: Any;
     /**
-     * @generated from protobuf field: uint32 ttl = 3;
+     * @generated from protobuf field: dht.PeerDescriptor storer = 3;
      */
-    ttl: number;
+    storer?: PeerDescriptor;
     /**
      * @generated from protobuf field: google.protobuf.Timestamp storerTime = 4;
      */
     storerTime?: Timestamp;
+    /**
+     * @generated from protobuf field: uint32 ttl = 5;
+     */
+    ttl: number;
 }
 /**
  * @generated from protobuf message dht.StoreDataResponse
@@ -681,8 +685,9 @@ class StoreDataRequest$Type extends MessageType$<StoreDataRequest> {
         super("dht.StoreDataRequest", [
             { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "data", kind: "message", T: () => Any },
-            { no: 3, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 4, name: "storerTime", kind: "message", T: () => Timestamp }
+            { no: 3, name: "storer", kind: "message", T: () => PeerDescriptor },
+            { no: 4, name: "storerTime", kind: "message", T: () => Timestamp },
+            { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
 }
