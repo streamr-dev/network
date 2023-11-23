@@ -85,6 +85,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             this.handshaker.once('handshakeFailed', (error) => {
                 if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR) {
+                    // TODO should we have some handling for this floating promise?
                     this.close(false)
                 } else {
                     logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' handshakeFailed: ' + error)

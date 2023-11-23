@@ -77,10 +77,12 @@ export class ConnectivityChecker {
         const responseAwaiter = () => {
             return new Promise((resolve: (res: ConnectivityResponse) => void, reject) => {
                 const timeoutId = setTimeout(() => {
+                    // TODO should we have some handling for this floating promise?
                     outgoingConnection.close(false)
                     reject(new Err.ConnectivityResponseTimeout('timeout'))
                 }, ConnectivityChecker.CONNECTIVITY_CHECKER_TIMEOUT)
                 const listener = (bytes: Uint8Array) => {
+                    // TODO should we have some handling for this floating promise?
                     outgoingConnection.close(false)
                     try {
                         const message: Message = Message.fromBinary(bytes)

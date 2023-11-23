@@ -34,7 +34,7 @@ interface ForwardingTableEntry {
 
 export interface IRouter {
     doRouteMessage(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RouteMessageAck
-    send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void>
+    send(msg: Message, reachableThrough: PeerDescriptor[]): void
     isMostLikelyDuplicate(requestId: string): boolean
     addToDuplicateDetector(requestId: string): void
     addRoutingSession(session: RoutingSession): void
@@ -96,7 +96,7 @@ export class Router implements IRouter {
 
     }
 
-    public async send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void> {
+    public send(msg: Message, reachableThrough: PeerDescriptor[]): void {
         msg.sourceDescriptor = this.localPeerDescriptor
         const targetPeerDescriptor = msg.targetDescriptor!
         const forwardingEntry = this.forwardingTable.get(keyFromPeerDescriptor(targetPeerDescriptor))
@@ -137,6 +137,7 @@ export class Router implements IRouter {
             // eslint-disable-next-line promise/catch-or-return
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
             let eventReceived: Promise<unknown>
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             executeSafePromise(async () => {
                 eventReceived = raceEvents3<RoutingSessionEvents>(
                     session,

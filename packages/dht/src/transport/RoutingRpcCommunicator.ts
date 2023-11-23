@@ -54,6 +54,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
         if (message.serviceId == this.ownServiceId && message.body.oneofKind === 'rpcMessage') {
             const context = new DhtCallContext()
             context.incomingSourceDescriptor = message.sourceDescriptor
+            // TODO should we have some handling for this floating promise?
             this.handleIncomingMessage(message.body.rpcMessage, context)
         }
     }
