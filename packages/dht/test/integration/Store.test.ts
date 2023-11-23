@@ -68,4 +68,22 @@ describe('Storing data in DHT', () => {
             expect(areEqualPeerDescriptors(foundData, storedData)).toBeTrue()
         })
     }, 90000)
+
+    it('storing with explicit storer PeerDescriptor', async () => {
+        const storingNode = getRandomNode()
+        const dataKey = PeerID.fromString('3232323e12r31r3')
+        const storedData = createMockPeerDescriptor()
+        const data = Any.pack(storedData, PeerDescriptor)
+        const requestor = createMockPeerDescriptor()
+        const successfulStorers = await storingNode.storeDataToDht(dataKey.value, data, requestor)
+        expect(successfulStorers.length).toBeGreaterThan(4)
+
+        const fetchingNode = getRandomNode()
+        const results = await fetchingNode.getDataFromDht(dataKey.value)
+        results.forEach((entry) => {
+            const foundData = Any.unpack(entry.data!, PeerDescriptor)
+            expect(areEqualPeerDescriptors(foundData, storedData)).toBeTrue()
+            expect(areEqualPeerDescriptors(entry.storer!, requestor)).toBeTrue()
+        })
+    })
 })
