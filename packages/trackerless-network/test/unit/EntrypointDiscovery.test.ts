@@ -14,7 +14,9 @@ describe('EntryPointDiscovery', () => {
 
     let entryPointDiscoveryWithData: EntryPointDiscovery
     let entryPointDiscoveryWithoutData: EntryPointDiscovery
+    let entryPointDiscoveryWithSaturatedEntryPointCount: EntryPointDiscovery
     let storeCalled: number
+    let saturatedGetEntryPointDataCalled: number
 
     const peerDescriptor = createMockPeerDescriptor()
     const deletedPeerDescriptor = createMockPeerDescriptor()
@@ -46,6 +48,21 @@ describe('EntryPointDiscovery', () => {
         return [peerDescriptor]
     }
 
+    const fakeGetSaturatedEntryPointData = async (): Promise<DataEntry[]> => {
+        saturatedGetEntryPointDataCalled++
+        return range(8).map(() => {
+            const peerDescriptor = createMockPeerDescriptor()
+            return {
+                data: Any.pack(peerDescriptor, PeerDescriptor),
+                ttl: 1000,
+                storer: peerDescriptor,
+                kademliaId: Uint8Array.from([1, 2, 3]),
+                stale: false,
+                deleted: true
+            }
+        })
+    } 
+
     const fakeEmptyGetEntryPointData = async (): Promise<DataEntry[]> => {
         return []
     }
@@ -62,9 +79,11 @@ describe('EntryPointDiscovery', () => {
     } 
 
     let layer1Node: MockLayer1Node
+    let layer1NodeWithPeers: MockLayer1Node
 
     beforeEach(() => {
         storeCalled = 0
+        saturatedGetEntryPointDataCalled = 0
         layer1Node = new MockLayer1Node()
         entryPointDiscoveryWithData = new EntryPointDiscovery({
             localPeerDescriptor: peerDescriptor,
@@ -73,7 +92,7 @@ describe('EntryPointDiscovery', () => {
             getEntryPointData: fakeGetEntryPointData,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
-            storeInterval: 2000
+            ensureInterval: 2000
         })
         entryPointDiscoveryWithoutData = new EntryPointDiscovery({
             localPeerDescriptor: peerDescriptor,
@@ -82,12 +101,27 @@ describe('EntryPointDiscovery', () => {
             getEntryPointData: fakeEmptyGetEntryPointData,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
-            storeInterval: 2000
+            ensureInterval: 2000
+        })
+        layer1NodeWithPeers = new MockLayer1Node()
+        range(8).forEach(() => {
+            layer1NodeWithPeers.addNewRandomPeerToKBucket()
+        })
+        entryPointDiscoveryWithSaturatedEntryPointCount = new EntryPointDiscovery({
+            localPeerDescriptor: peerDescriptor,
+            streamPartId: STREAM_PART_ID,
+            layer1Node: layer1NodeWithPeers,
+            getEntryPointData: fakeGetSaturatedEntryPointData,
+            storeEntryPointData: fakeStoreEntryPointData,
+            deleteEntryPointData: fakeDeleteEntryPointData,
+            ensureInterval: 2000
         })
     })
 
     afterEach(() => {
         entryPointDiscoveryWithData.destroy()
+        layer1Node.stop()
+        layer1NodeWithPeers.stop()
     })
 
     it('discoverEntryPointsFromDht has known entrypoints', async () => {
@@ -127,6 +161,16 @@ describe('EntryPointDiscovery', () => {
         await entryPointDiscoveryWithData.destroy()
         // we have configured storeInterval to 2 seconds, i.e. after 4.5 seconds it should have been called 2 more items 
         expect(storeCalled).toEqual(3)
+    })
+
+    it('non entry point nodes ensure that entry points exist', async () => {
+        await entryPointDiscoveryWithSaturatedEntryPointCount.storeSelfAsEntryPointIfNecessary(8)
+        expect(storeCalled).toEqual(0)
+        expect(saturatedGetEntryPointDataCalled).toEqual(0)
+        await wait(4500)
+        await entryPointDiscoveryWithSaturatedEntryPointCount.destroy()
+        // we have configured storeInterval to 2 seconds, i.e. after 4.5 seconds it should have been called 2 more items 
+        expect(saturatedGetEntryPointDataCalled).toEqual(saturatedGetEntryPointDataCalled)
     })
 
 })

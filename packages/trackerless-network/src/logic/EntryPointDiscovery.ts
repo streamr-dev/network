@@ -61,19 +61,19 @@ interface EntryPointDiscoveryConfig {
     getEntryPointData: (key: Uint8Array) => Promise<DataEntry[]>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
     deleteEntryPointData: (key: Uint8Array) => Promise<void>
-    storeInterval?: number
+    ensureInterval?: number
 }
 
 export class EntryPointDiscovery {
-    private readonly abortController: AbortController
+    private readonly entryPointAbortController: AbortController
     private readonly config: EntryPointDiscoveryConfig
-    private readonly storeInterval: number
+    private readonly ensureInterval: number
     private readonly networkSplitAvoidedNodes: Set<NodeID> = new Set()
 
     constructor(config: EntryPointDiscoveryConfig) {
         this.config = config
-        this.abortController = new AbortController()
-        this.storeInterval = this.config.storeInterval ?? 60000
+        this.entryPointAbortController = new AbortController()
+        this.ensureInterval = this.config.ensureInterval ?? 60000
     }
 
     async discoverEntryPointsFromDht(
@@ -119,17 +119,20 @@ export class EntryPointDiscovery {
     }
 
     async storeSelfAsEntryPointIfNecessary(currentEntrypointCount: number): Promise<void> {
-        if (this.abortController.signal.aborted) {
+        if (this.entryPointAbortController.signal.aborted) {
             return
         }
         const possibleNetworkSplitDetected = this.config.layer1Node.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT
         if ((currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) || possibleNetworkSplitDetected) {
             await this.storeSelfAsEntryPoint()
-            await this.keepSelfAsEntryPoint()
+            await this.ensureEntryPointsExist()
+            if (possibleNetworkSplitDetected) {
+                setImmediate(() => this.avoidNetworkSplit())
+            }
+        } else {
+            await this.ensureEntryPointsExist()
         }
-        if (possibleNetworkSplitDetected) {
-            setImmediate(() => this.avoidNetworkSplit())
-        }
+        
     }
 
     private async storeSelfAsEntryPoint(): Promise<void> {
@@ -142,9 +145,9 @@ export class EntryPointDiscovery {
         }
     }
 
-    private async keepSelfAsEntryPoint(): Promise<void> {
+    private async ensureEntryPointsExist(): Promise<void> {
         await scheduleAtInterval(async () => {
-            logger.trace(`Attempting to keep self as entrypoint for ${this.config.streamPartId}`)
+            logger.trace(`Ensuring that entry points exist for ${this.config.streamPartId}`)
             try {
                 const discovered = await this.discoverEntryPoints()
                 if (discovered.length < ENTRYPOINT_STORE_LIMIT 
@@ -152,9 +155,9 @@ export class EntryPointDiscovery {
                     await this.storeSelfAsEntryPoint()
                 }
             } catch (err) {
-                logger.debug(`Failed to keep self as entrypoint for ${this.config.streamPartId}`)
+                logger.debug(`Failed to store self as entrypoint for ${this.config.streamPartId}`)
             }
-        }, this.storeInterval, false, this.abortController.signal)
+        }, this.ensureInterval, false, this.entryPointAbortController.signal)
     }
 
     private async avoidNetworkSplit(): Promise<void> {
@@ -169,13 +172,13 @@ export class EntryPointDiscovery {
                 nodesToAvoid.forEach((node) => this.networkSplitAvoidedNodes.add(node))
                 throw new Error(`Network split is still possible`)
             }
-        }, 'avoid network split', this.abortController.signal)
+        }, 'avoid network split', this.entryPointAbortController.signal)
         this.networkSplitAvoidedNodes.clear()
         logger.trace(`Network split avoided`)
     }
 
     async destroy(): Promise<void> {
-        this.abortController.abort()
+        this.entryPointAbortController.abort()
         await this.config.deleteEntryPointData(streamPartIdToDataKey(this.config.streamPartId))
     }
 }
