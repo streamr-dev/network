@@ -230,7 +230,15 @@ export class Finder implements IFinder {
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.kademliaId, 5)
         const data = this.findLocalData(idToFind.value, findRequest!.fetchData)
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
-            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId, closestPeersToDestination, data, true)
+            // TODO this is also very similar case to what we do at line 255, could simplify the code paths?
+            this.sendFindResponse(
+                routedMessage.routingPath,
+                routedMessage.sourcePeer!,
+                findRequest!.sessionId,
+                closestPeersToDestination,
+                data,
+                true
+            )
             return createRouteMessageAck(routedMessage)
         } else {
             const ack = this.router.doRouteMessage(routedMessage, RoutingMode.FIND, excludedPeer)
@@ -244,7 +252,14 @@ export class Finder implements IFinder {
                     && getPreviousPeer(routedMessage) 
                     && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
                 )
-            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId, closestPeersToDestination, data, noCloserContactsFound)
+            this.sendFindResponse(
+                routedMessage.routingPath,
+                routedMessage.sourcePeer!,
+                findRequest!.sessionId,
+                closestPeersToDestination,
+                data,
+                noCloserContactsFound
+            )
             return ack
         }
     }
