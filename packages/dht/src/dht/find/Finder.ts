@@ -232,20 +232,21 @@ export class Finder implements IFinder {
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
             this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId, closestPeersToDestination, data, true)
             return createRouteMessageAck(routedMessage)
+        } else {
+            const ack = this.router.doRouteMessage(routedMessage, RoutingMode.FIND, excludedPeer)
+            if (ack.error === RouteMessageError.NO_TARGETS) {
+                // TODO can we remove this, is the info already logged in Router:166
+                logger.trace(`routeFindRequest Node found no candidates`)
+            }
+            const noCloserContactsFound = (ack.error === RouteMessageError.NO_TARGETS) ||
+                (
+                    closestPeersToDestination.length > 0 
+                    && getPreviousPeer(routedMessage) 
+                    && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
+                )
+            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId, closestPeersToDestination, data, noCloserContactsFound)
+            return ack
         }
-        const ack = this.router.doRouteMessage(routedMessage, RoutingMode.FIND, excludedPeer)
-        if (ack.error === RouteMessageError.NO_TARGETS) {
-            // TODO can we remove this, is the info already logged in Router:166
-            logger.trace(`routeFindRequest Node found no candidates`)
-        }
-        const noCloserContactsFound = (ack.error === RouteMessageError.NO_TARGETS) ||
-            (
-                closestPeersToDestination.length > 0 
-                && getPreviousPeer(routedMessage) 
-                && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
-            )
-        this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId, closestPeersToDestination, data, noCloserContactsFound)
-        return ack
     }
 
     private getClosestConnections(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
