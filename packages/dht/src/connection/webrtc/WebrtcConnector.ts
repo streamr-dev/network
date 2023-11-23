@@ -17,6 +17,7 @@ import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     areEqualPeerDescriptors,
+    getNodeIdFromPeerDescriptor,
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
@@ -67,23 +68,23 @@ export class WebrtcConnector {
 
     constructor(
         config: WebrtcConnectorConfig,
-        onIncomingConnection: (connection: ManagedConnection) => boolean
+        onNewConnection: (connection: ManagedConnection) => boolean
     ) {
         this.config = config
         this.iceServers = config.iceServers ?? []
         this.rpcCommunicator = new ListeningRpcCommunicator(WebrtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000
         })
-        this.registerLocalRpcMethods(config, onIncomingConnection)
+        this.registerLocalRpcMethods(config, onNewConnection)
     }
 
     private registerLocalRpcMethods(
         config: WebrtcConnectorConfig,
-        onIncomingConnection: (connection: ManagedConnection) => boolean
+        onNewConnection: (connection: ManagedConnection) => boolean
     ) {
         const localRpc = new WebrtcConnectorRpcLocal({
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
-            onIncomingConnection,
+            onNewConnection,
             ongoingConnectAttempts: this.ongoingConnectAttempts,
             rpcCommunicator: this.rpcCommunicator,
             getLocalPeerDescriptor: () => this.localPeerDescriptor!,
@@ -132,7 +133,7 @@ export class WebrtcConnector {
             throw new Err.CannotConnectToSelf('Cannot open WebRTC Connection to self')
         }
 
-        logger.trace(`Opening WebRTC connection to ${keyFromPeerDescriptor(targetPeerDescriptor)}`)
+        logger.trace(`Opening WebRTC connection to ${getNodeIdFromPeerDescriptor(targetPeerDescriptor)}`)
 
         const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.ongoingConnectAttempts.get(peerKey)
@@ -158,7 +159,7 @@ export class WebrtcConnector {
             managedConnection = new ManagedWebrtcConnection(this.localPeerDescriptor!, undefined, connection)
         }
 
-        managedConnection.setPeerDescriptor(targetPeerDescriptor)
+        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
         this.ongoingConnectAttempts.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
 
@@ -177,7 +178,7 @@ export class WebrtcConnector {
         )
 
         connection.on('localCandidate', (candidate: string, mid: string) => {
-            if (this.config.externalIp) {
+            if (this.config.externalIp !== undefined) {
                 candidate = replaceInternalIpWithExternalIp(candidate, this.config.externalIp)
                 logger.debug(`onLocalCandidate injected external ip ${candidate} ${mid}`)
             }

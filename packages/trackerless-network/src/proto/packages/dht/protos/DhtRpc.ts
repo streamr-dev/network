@@ -22,13 +22,17 @@ export interface StoreDataRequest {
      */
     data?: Any;
     /**
-     * @generated from protobuf field: uint32 ttl = 3;
+     * @generated from protobuf field: dht.PeerDescriptor storer = 3;
      */
-    ttl: number;
+    storer?: PeerDescriptor;
     /**
      * @generated from protobuf field: google.protobuf.Timestamp storerTime = 4;
      */
     storerTime?: Timestamp;
+    /**
+     * @generated from protobuf field: uint32 ttl = 5;
+     */
+    ttl: number;
 }
 /**
  * @generated from protobuf message dht.StoreDataResponse
@@ -62,22 +66,13 @@ export interface ExternalStoreDataResponse {
     storers: PeerDescriptor[];
 }
 /**
- * @generated from protobuf message dht.MigrateDataRequest
+ * @generated from protobuf message dht.ReplicateDataRequest
  */
-export interface MigrateDataRequest {
+export interface ReplicateDataRequest {
     /**
-     * @generated from protobuf field: dht.DataEntry dataEntry = 1;
+     * @generated from protobuf field: dht.DataEntry entry = 1;
      */
-    dataEntry?: DataEntry;
-}
-/**
- * @generated from protobuf message dht.MigrateDataResponse
- */
-export interface MigrateDataResponse {
-    /**
-     * @generated from protobuf field: string error = 1;
-     */
-    error: string;
+    entry?: DataEntry;
 }
 /**
  * @generated from protobuf message dht.DeleteDataRequest
@@ -186,9 +181,9 @@ export interface FindResponse {
      */
     dataEntries: DataEntry[];
     /**
-     * @generated from protobuf field: optional bool noCloserNodesFound = 3;
+     * @generated from protobuf field: bool noCloserNodesFound = 3;
      */
-    noCloserNodesFound?: boolean;
+    noCloserNodesFound: boolean;
     /**
      * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 4;
      */
@@ -305,9 +300,9 @@ export interface RouteMessageAck {
      */
     requestId: string;
     /**
-     * @generated from protobuf field: string error = 2;
+     * @generated from protobuf field: optional dht.RouteMessageError error = 2;
      */
-    error: string;
+    error?: RouteMessageError;
 }
 // Correspond to the MessageType Enum
 
@@ -327,6 +322,10 @@ export interface ConnectivityRequest {
      * @generated from protobuf field: optional string host = 3;
      */
     host?: string;
+    /**
+     * @generated from protobuf field: bool selfSigned = 4;
+     */
+    selfSigned: boolean;
 }
 /**
  * @generated from protobuf message dht.ConnectivityResponse
@@ -350,30 +349,26 @@ export interface ConnectivityResponse {
  */
 export interface HandshakeRequest {
     /**
-     * @generated from protobuf field: bytes sourceId = 1;
+     * @generated from protobuf field: dht.PeerDescriptor sourcePeerDescriptor = 1;
      */
-    sourceId: Uint8Array;
+    sourcePeerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
+     * @generated from protobuf field: optional dht.PeerDescriptor targetPeerDescriptor = 2;
      */
-    peerDescriptor?: PeerDescriptor;
+    targetPeerDescriptor?: PeerDescriptor;
 }
 /**
  * @generated from protobuf message dht.HandshakeResponse
  */
 export interface HandshakeResponse {
     /**
-     * @generated from protobuf field: bytes sourceId = 1;
+     * @generated from protobuf field: dht.PeerDescriptor sourcePeerDescriptor = 1;
      */
-    sourceId: Uint8Array;
+    sourcePeerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
+     * @generated from protobuf field: optional dht.HandshakeError error = 2;
      */
-    peerDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: optional string responseError = 3;
-     */
-    responseError?: string;
+    error?: HandshakeError;
 }
 /**
  * @generated from protobuf message dht.Message
@@ -536,10 +531,6 @@ export interface LockResponse {
      * @generated from protobuf field: bool accepted = 1;
      */
     accepted: boolean;
-    /**
-     * @generated from protobuf field: optional bool reason = 2;
-     */
-    reason?: boolean;
 }
 /**
  * @generated from protobuf message dht.DisconnectNotice
@@ -569,13 +560,9 @@ export interface ExternalFindDataRequest {
  */
 export interface ExternalFindDataResponse {
     /**
-     * @generated from protobuf field: repeated dht.DataEntry dataEntries = 1;
+     * @generated from protobuf field: repeated dht.DataEntry entries = 1;
      */
-    dataEntries: DataEntry[];
-    /**
-     * @generated from protobuf field: optional string error = 2;
-     */
-    error?: string;
+    entries: DataEntry[];
 }
 /**
  * @generated from protobuf enum dht.NodeType
@@ -614,6 +601,39 @@ export enum RpcResponseError {
      * @generated from protobuf enum value: UNKNOWN_RPC_METHOD = 3;
      */
     UNKNOWN_RPC_METHOD = 3
+}
+/**
+ * @generated from protobuf enum dht.RouteMessageError
+ */
+export enum RouteMessageError {
+    /**
+     * @generated from protobuf enum value: NO_TARGETS = 0;
+     */
+    NO_TARGETS = 0,
+    /**
+     * @generated from protobuf enum value: DUPLICATE = 1;
+     */
+    DUPLICATE = 1,
+    /**
+     * TODO: can this be removed? If DhtNode is already stopped the server side requests
+     * should not be processed
+     *
+     * @generated from protobuf enum value: STOPPED = 2;
+     */
+    STOPPED = 2
+}
+/**
+ * @generated from protobuf enum dht.HandshakeError
+ */
+export enum HandshakeError {
+    /**
+     * @generated from protobuf enum value: DUPLICATE_CONNECTION = 0;
+     */
+    DUPLICATE_CONNECTION = 0,
+    /**
+     * @generated from protobuf enum value: INVALID_TARGET_PEER_DESCRIPTOR = 1;
+     */
+    INVALID_TARGET_PEER_DESCRIPTOR = 1
 }
 // Wraps all messages
 
@@ -665,8 +685,9 @@ class StoreDataRequest$Type extends MessageType$<StoreDataRequest> {
         super("dht.StoreDataRequest", [
             { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "data", kind: "message", T: () => Any },
-            { no: 3, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 4, name: "storerTime", kind: "message", T: () => Timestamp }
+            { no: 3, name: "storer", kind: "message", T: () => PeerDescriptor },
+            { no: 4, name: "storerTime", kind: "message", T: () => Timestamp },
+            { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
 }
@@ -712,29 +733,17 @@ class ExternalStoreDataResponse$Type extends MessageType$<ExternalStoreDataRespo
  */
 export const ExternalStoreDataResponse = new ExternalStoreDataResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class MigrateDataRequest$Type extends MessageType$<MigrateDataRequest> {
+class ReplicateDataRequest$Type extends MessageType$<ReplicateDataRequest> {
     constructor() {
-        super("dht.MigrateDataRequest", [
-            { no: 1, name: "dataEntry", kind: "message", T: () => DataEntry }
+        super("dht.ReplicateDataRequest", [
+            { no: 1, name: "entry", kind: "message", T: () => DataEntry }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.MigrateDataRequest
+ * @generated MessageType for protobuf message dht.ReplicateDataRequest
  */
-export const MigrateDataRequest = new MigrateDataRequest$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class MigrateDataResponse$Type extends MessageType$<MigrateDataResponse> {
-    constructor() {
-        super("dht.MigrateDataResponse", [
-            { no: 1, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.MigrateDataResponse
- */
-export const MigrateDataResponse = new MigrateDataResponse$Type();
+export const ReplicateDataRequest = new ReplicateDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class DeleteDataRequest$Type extends MessageType$<DeleteDataRequest> {
     constructor() {
@@ -823,7 +832,7 @@ class FindResponse$Type extends MessageType$<FindResponse> {
         super("dht.FindResponse", [
             { no: 1, name: "closestConnectedPeers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 2, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
-            { no: 3, name: "noCloserNodesFound", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "noCloserNodesFound", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 4, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
@@ -921,7 +930,7 @@ class RouteMessageAck$Type extends MessageType$<RouteMessageAck> {
     constructor() {
         super("dht.RouteMessageAck", [
             { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "error", kind: "enum", opt: true, T: () => ["dht.RouteMessageError", RouteMessageError] }
         ]);
     }
 }
@@ -935,7 +944,8 @@ class ConnectivityRequest$Type extends MessageType$<ConnectivityRequest> {
         super("dht.ConnectivityRequest", [
             { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 2, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 3, name: "host", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 3, name: "host", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "selfSigned", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -961,8 +971,8 @@ export const ConnectivityResponse = new ConnectivityResponse$Type();
 class HandshakeRequest$Type extends MessageType$<HandshakeRequest> {
     constructor() {
         super("dht.HandshakeRequest", [
-            { no: 1, name: "sourceId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "targetPeerDescriptor", kind: "message", T: () => PeerDescriptor }
         ]);
     }
 }
@@ -974,9 +984,8 @@ export const HandshakeRequest = new HandshakeRequest$Type();
 class HandshakeResponse$Type extends MessageType$<HandshakeResponse> {
     constructor() {
         super("dht.HandshakeResponse", [
-            { no: 1, name: "sourceId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "responseError", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "error", kind: "enum", opt: true, T: () => ["dht.HandshakeError", HandshakeError] }
         ]);
     }
 }
@@ -1106,8 +1115,7 @@ export const UnlockRequest = new UnlockRequest$Type();
 class LockResponse$Type extends MessageType$<LockResponse> {
     constructor() {
         super("dht.LockResponse", [
-            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "reason", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ }
+            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -1153,8 +1161,7 @@ export const ExternalFindDataRequest = new ExternalFindDataRequest$Type();
 class ExternalFindDataResponse$Type extends MessageType$<ExternalFindDataResponse> {
     constructor() {
         super("dht.ExternalFindDataResponse", [
-            { no: 1, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
-            { no: 2, name: "error", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "entries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry }
         ]);
     }
 }
@@ -1188,7 +1195,7 @@ export const FindRpc = new ServiceType("dht.FindRpc", [
  */
 export const StoreRpc = new ServiceType("dht.StoreRpc", [
     { name: "storeData", options: {}, I: StoreDataRequest, O: StoreDataResponse },
-    { name: "migrateData", options: {}, I: MigrateDataRequest, O: MigrateDataResponse },
+    { name: "replicateData", options: {}, I: ReplicateDataRequest, O: Empty },
     { name: "deleteData", options: {}, I: DeleteDataRequest, O: DeleteDataResponse }
 ]);
 /**

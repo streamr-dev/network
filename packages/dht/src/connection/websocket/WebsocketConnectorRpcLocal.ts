@@ -11,7 +11,7 @@ import { ManagedConnection } from '../ManagedConnection'
 interface WebsocketConnectorRpcLocalConfig {
     canConnect: (peerDescriptor: PeerDescriptor) => boolean
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection
-    onIncomingConnection: (connection: ManagedConnection) => boolean
+    onNewConnection: (connection: ManagedConnection) => boolean
     abortSignal: AbortSignal
 }
 
@@ -31,7 +31,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
                     return
                 }
                 const connection = this.config.connect(senderPeerDescriptor)
-                this.config.onIncomingConnection(connection)
+                this.config.onNewConnection(connection)
             })
             return { accepted: true }
         } else {

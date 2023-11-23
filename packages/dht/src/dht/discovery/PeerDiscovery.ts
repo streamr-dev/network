@@ -1,6 +1,6 @@
 import { DiscoverySession } from './DiscoverySession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
-import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import KBucket from 'k-bucket'
@@ -20,7 +20,7 @@ interface PeerDiscoveryConfig {
     serviceId: ServiceID
     parallelism: number
     joinTimeout: number
-    addContact: (contact: PeerDescriptor, setActive?: boolean) => void
+    addContact: (contact: PeerDescriptor) => void
     connectionManager?: ConnectionManager
     rpcRequestTimeout?: number
 }
@@ -49,7 +49,7 @@ export class PeerDiscovery {
         this.joinCalled = true
         logger.debug(
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
-            + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
+            + ` via entrypoint ${getNodeIdFromPeerDescriptor(entryPointDescriptor)}`
         )
         if (areEqualPeerDescriptors(entryPointDescriptor, this.config.localPeerDescriptor)) {
             return
@@ -95,6 +95,7 @@ export class PeerDiscovery {
             if (!this.isStopped()) {
                 if (this.config.bucket.count() === 0) {
                     if (retry) {
+                        // TODO should we catch possible promise rejection?
                         setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.abortController.signal)
                     }
                 } else {
@@ -118,6 +119,7 @@ export class PeerDiscovery {
         } catch (err) {
             logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)
             if (!this.isStopped()) {
+                // TODO should we catch possible promise rejection?
                 setAbortableTimeout(() => this.rejoinDht(entryPoint), 5000, this.abortController.signal)
             }
         } finally {

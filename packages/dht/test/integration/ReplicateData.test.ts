@@ -7,7 +7,7 @@ import { execSync } from 'child_process'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
-import { keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
@@ -16,7 +16,7 @@ const logger = new Logger(module)
 
 jest.setTimeout(60000)
 
-describe('Migrating data from node to node in DHT', () => {
+describe('Replicate data from node to node in DHT', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
@@ -74,7 +74,7 @@ describe('Migrating data from node to node in DHT', () => {
         simulator.stop()
     })
 
-    it('Data migrates to the closest node no matter where it is stored', async () => {
+    it('Data replicates to the closest node no matter where it is stored', async () => {
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
@@ -91,7 +91,7 @@ describe('Migrating data from node to node in DHT', () => {
 
         logger.info('Nodes sorted according to distance to data are: ')
         closest.forEach((contact) => {
-            logger.info(keyFromPeerDescriptor(contact.getPeerDescriptor()))
+            logger.info(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
         })
 
         logger.info('node 0 joining to the DHT')
@@ -115,7 +115,7 @@ describe('Migrating data from node to node in DHT', () => {
             }
 
             // eslint-disable-next-line max-len
-            logger.info(keyFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + keyFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
+            logger.info(peerIdFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
         })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
@@ -143,16 +143,16 @@ describe('Migrating data from node to node in DHT', () => {
                 hasDataMarker = '<-'
             }
 
-            logger.info(keyFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
+            logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
         })
 
         const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().kademliaId).toKey())!
 
         // @ts-expect-error private field
-        expect(closestNode.localDataStore.getEntry(dataKey)).toBeTruthy()
+        expect(closestNode.localDataStore.getEntry(dataKey).size).toBeGreaterThanOrEqual(1)
     }, 180000)
 
-    it('Data migrates to the last remaining node if all other nodes leave gracefully', async () => {
+    it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
@@ -198,7 +198,7 @@ describe('Migrating data from node to node in DHT', () => {
         logger.info('data of ' + randomIndices[0] + ' was ' + nodes[randomIndices[0]].localDataStore.getEntry(dataKey))
 
         // @ts-expect-error private field
-        expect(nodes[randomIndices[0]].localDataStore.getEntry(dataKey)).toBeTruthy()
+        expect(nodes[randomIndices[0]].localDataStore.getEntry(dataKey).size).toBeGreaterThanOrEqual(1)
 
     }, 180000)
 })

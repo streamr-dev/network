@@ -1,11 +1,11 @@
-import { Remote, EXISTING_CONNECTION_TIMEOUT } from '@streamr/dht'
+import { RpcRemote, EXISTING_CONNECTION_TIMEOUT } from '@streamr/dht'
 import { EthereumAddress, Logger, hexToBinary } from '@streamr/utils'
 import { ProxyConnectionRequest, ProxyDirection } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 
 const logger = new Logger(module)
 
-export class ProxyConnectionRpcRemote extends Remote<IProxyConnectionRpcClient> {
+export class ProxyConnectionRpcRemote extends RpcRemote<IProxyConnectionRpcClient> {
 
     async requestConnection(direction: ProxyDirection, userId: EthereumAddress): Promise<boolean> {
         const request: ProxyConnectionRequest = {

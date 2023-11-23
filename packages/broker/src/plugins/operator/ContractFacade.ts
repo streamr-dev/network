@@ -1,7 +1,14 @@
 import { Provider } from '@ethersproject/providers'
 import { Operator, Sponsorship, operatorABI, sponsorshipABI } from '@streamr/network-contracts'
 import { StreamID, ensureValidStreamPartitionIndex, toStreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger, TheGraphClient, addManagedEventListener, toEthereumAddress } from '@streamr/utils'
+import {
+    EthereumAddress,
+    Logger,
+    TheGraphClient,
+    addManagedEventListener,
+    toEthereumAddress,
+    collect
+} from '@streamr/utils'
 import { Contract } from 'ethers'
 import sample from 'lodash/sample'
 import fetch from 'node-fetch'
@@ -70,6 +77,17 @@ export interface SponsorshipResult {
     sponsorshipAddress: EthereumAddress
     streamId: StreamID
     operatorCount: number
+}
+
+export interface Flag {
+    id: string
+    flaggingTimestamp: number
+    target: {
+        id: string
+    }
+    sponsorship: {
+        id: string
+    }
 }
 
 export class ContractFacade {
@@ -169,6 +187,38 @@ export class ContractFacade {
             })
         }
         return results
+    }
+
+    async getExpiredFlags(sponsorships: EthereumAddress[], maxAgeInMs: number): Promise<Flag[]> {
+        const maxFlagStartTime = Math.floor((Date.now() - maxAgeInMs) / 1000)
+        const createQuery = (lastId: string, pageSize: number) => {
+            return {
+                query: `
+                {
+                    flags (where : {
+                        id_gt: "${lastId}",
+                        flaggingTimestamp_lt: ${maxFlagStartTime},
+                        result_in: ["waiting", "voting"],
+                        sponsorship_in: ${JSON.stringify(sponsorships)}
+                    }, first: ${pageSize}) {
+                        id
+                        flaggingTimestamp
+                        target {
+                            id
+                        }
+                        sponsorship {
+                            id
+                        }
+                    }
+                }`
+            }
+        }
+        const flagEntities = this.theGraphClient.queryEntities<Flag>(createQuery)
+        const flags: Flag[] = []
+        for await (const flag of flagEntities) {
+            flags.push(flag)
+        }
+        return flags
     }
 
     async getOperatorsInSponsorship(sponsorshipAddress: EthereumAddress): Promise<EthereumAddress[]> {
@@ -327,6 +377,33 @@ export class ContractFacade {
         return this.theGraphClient.queryEntities<{ id: string, sponsorship: { id: string, stream: { id: string } } }>(createQuery, parseItems)
     }
 
+    async hasOpenFlag(operatorAddress: EthereumAddress, sponsorshipAddress: EthereumAddress): Promise<boolean> {
+        const createQuery = () => {
+            return {
+                query: `
+                    {
+                        flags(where: {
+                            sponsorship: "${sponsorshipAddress}",
+                            target: "${operatorAddress}",
+                            result_in: ["waiting", "voting"]
+                        }) {
+                            id
+                        }
+                    }
+                    `
+            }
+        }
+        const queryResult = this.theGraphClient.queryEntities<{ id: string }>(createQuery)
+
+        const flags = await collect(queryResult, 1)
+        if (flags.length > 0) {
+            logger.debug('Found open flag', { flag: flags[0] })
+            return true
+        } else {
+            return false
+        }
+    }
+
     addReviewRequestListener(listener: ReviewRequestListener, abortSignal: AbortSignal): void {
         addManagedEventListener<any, any>(
             this.operatorContract as any,
@@ -379,6 +456,12 @@ export class ContractFacade {
     async voteOnFlag(sponsorship: string, targetOperator: string, kick: boolean): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
         await (await this.operatorContract.voteOnFlag(sponsorship, targetOperator, voteData)).wait()
+    }
+
+    async closeFlag(sponsorship: string, targetOperator: string): Promise<void> {
+        // voteOnFlag is not used to vote here but to close the expired flag. The vote data gets ignored.
+        // Anyone can call this function at this point.
+        await this.voteOnFlag(sponsorship, targetOperator, false)
     }
 
     addOperatorContractStakeEventListener(eventName: 'Staked' | 'Unstaked', listener: (sponsorship: string) => unknown): void {

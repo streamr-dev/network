@@ -64,7 +64,7 @@ describe('Finder', () => {
             serviceId: 'Finder',
             localDataStore: new LocalDataStore(),
             sessionTransport: new MockTransport(),
-            addContact: (_contact, _setActive) => {},
+            addContact: () => {},
             isPeerCloserToIdThanSelf: (_peer1, _compareToId) => true,
             rpcCommunicator: rpcCommunicator as any
         })
@@ -76,7 +76,7 @@ describe('Finder', () => {
 
     it('Finder server', async () => {
         const res = await rpcCommunicator.callRpcMethod('routeFindRequest', routedMessage) as RouteMessageAck
-        expect(res.error).toEqual('')
+        expect(res.error).toBeUndefined()
     })
 
     it('startFind with mode Node returns self if no peers', async () => {

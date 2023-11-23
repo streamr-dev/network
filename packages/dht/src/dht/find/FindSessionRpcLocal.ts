@@ -6,7 +6,7 @@ import { Logger } from '@streamr/utils'
 const logger = new Logger(module)
 
 interface FindSessionRpcLocalConfig {
-    doSendFindResponse: (routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound?: boolean) => void
+    doSendFindResponse: (routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean) => void
 }
 
 export class FindSessionRpcLocal implements IFindSessionRpc {

@@ -25,7 +25,7 @@ service FindRpc {
 
 service StoreRpc {
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
-  rpc migrateData (MigrateDataRequest) returns (MigrateDataResponse);
+  rpc replicateData (ReplicateDataRequest) returns (google.protobuf.Empty);
   rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
 }
 
@@ -60,8 +60,9 @@ service ExternalApiRpc {
 message StoreDataRequest {
   bytes kademliaId = 1;
   google.protobuf.Any data = 2;
-  uint32 ttl = 3;
+  PeerDescriptor storer = 3;
   google.protobuf.Timestamp storerTime = 4;
+  uint32 ttl = 5;
 }
 
 message StoreDataResponse {
@@ -77,12 +78,8 @@ message ExternalStoreDataResponse {
   repeated PeerDescriptor storers = 1;
 }
 
-message MigrateDataRequest {
-  DataEntry dataEntry = 1;
-}
-  
-message MigrateDataResponse {
-  string error = 1;
+message ReplicateDataRequest {
+  DataEntry entry = 1;
 }
 
 message DeleteDataRequest {
@@ -122,7 +119,7 @@ message FindRequest {
 message FindResponse {
   repeated PeerDescriptor closestConnectedPeers = 1;
   repeated DataEntry dataEntries = 2;
-  optional bool noCloserNodesFound = 3;
+  bool noCloserNodesFound = 3;
   repeated PeerDescriptor routingPath = 4;
 }
 
@@ -177,7 +174,15 @@ message RouteMessageWrapper {
 
 message RouteMessageAck {
   string requestId = 1;
-  string error = 2;
+  optional RouteMessageError error = 2;
+}
+
+enum RouteMessageError {
+  NO_TARGETS = 0;
+  DUPLICATE = 1;
+  // TODO: can this be removed? If DhtNode is already stopped the server side requests
+  // should not be processed
+  STOPPED = 2;
 }
 
 // Correspond to the MessageType Enum
@@ -196,14 +201,18 @@ message ConnectivityResponse {
 }
 
 message HandshakeRequest {
-  bytes sourceId = 1;
-  PeerDescriptor peerDescriptor = 2;
+  PeerDescriptor sourcePeerDescriptor = 1;
+  optional PeerDescriptor targetPeerDescriptor = 2;
 }
 
 message HandshakeResponse {
-  bytes sourceId = 1;
-  PeerDescriptor peerDescriptor = 2;
-  optional string responseError = 3;
+  PeerDescriptor sourcePeerDescriptor = 1;
+  optional HandshakeError error = 2;
+}
+
+enum HandshakeError {
+  DUPLICATE_CONNECTION = 0;
+  INVALID_TARGET_PEER_DESCRIPTOR = 1;
 }
 
 // Wraps all messages
@@ -273,7 +282,6 @@ message UnlockRequest {
 
 message LockResponse {
   bool accepted = 1;
-  optional bool reason = 2;
 }
 
 enum DisconnectMode {
@@ -293,6 +301,5 @@ message ExternalFindDataRequest {
 }
 
 message ExternalFindDataResponse {
-  repeated DataEntry dataEntries = 1;
-  optional string error = 2;
+  repeated DataEntry entries = 1;
 }
