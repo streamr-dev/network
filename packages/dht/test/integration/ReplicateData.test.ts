@@ -136,11 +136,9 @@ describe('Replicate data from node to node in DHT', () => {
         closest.forEach((contact) => {
             const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey())!
             let hasDataMarker = ''
-
             if (hasData(node)) {
                 hasDataMarker = ' <-'
             }
-
             logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
         })
 
@@ -175,9 +173,7 @@ describe('Replicate data from node to node in DHT', () => {
             const index = Math.floor(Math.random() * randomIndices.length)
             const nodeIndex = randomIndices[index]
             randomIndices.splice(index, 1)
-
             logger.info('Stopping node ' + nodeIndex, { hasData: hasData(nodes[nodeIndex])})
-
             await nodes[nodeIndex].stop()
         }
 
