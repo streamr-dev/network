@@ -283,9 +283,9 @@ async function waitReadyForTesting(connectionManager: ConnectionManager, limit: 
     } catch (err) {
         if (connectionManager.getNumberOfLocalLockedConnections() > 0
             && connectionManager.getNumberOfRemoteLockedConnections() > 0) {
-            throw Error('Connections are still locked')
+            throw new Error('Connections are still locked')
         } else if (connectionManager.getAllConnectionPeerDescriptors().length > limit) {
-            throw Error(`ConnectionManager has more than ${limit}`)
+            throw new Error(`ConnectionManager has more than ${limit}`)
         }
     }
 }

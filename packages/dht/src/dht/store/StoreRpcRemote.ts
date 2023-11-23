@@ -18,9 +18,7 @@ export class StoreRpcRemote extends RpcRemote<IStoreRpcClient> {
         } catch (err) {
             const to = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
             const from = getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor())
-            throw Error(
-                `Could not store data to ${to} from ${from} ${err}`
-            )
+            throw new Error(`Could not store data to ${to} from ${from} ${err}`)
         }
     }
 
@@ -29,9 +27,7 @@ export class StoreRpcRemote extends RpcRemote<IStoreRpcClient> {
         try {
             return await this.getClient().deleteData(request, options)
         } catch (err) {
-            throw Error(
-                `Could not call delete data to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} ${err}`
-            )
+            throw new Error(`Could not call delete data to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} ${err}`)
         }
     }
 

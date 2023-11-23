@@ -30,7 +30,7 @@ export class MockRouter implements IRouter {
 
     // eslint-disable-next-line class-methods-use-this
     send(): Promise<void> {
-        throw Error('Not implemented')
+        throw new Error('Not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
