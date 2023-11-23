@@ -150,7 +150,7 @@ describe('Replicate data from node to node in DHT', () => {
 
         // @ts-expect-error private field
         // TODO assert the content? (use getData/hasData helper)
-        expect(closestNode.localDataStore.getEntry(dataKey).size).toBeGreaterThanOrEqual(1)
+        expect(closestNode.localDataStore.getEntry(DATA_KEY).size).toBeGreaterThanOrEqual(1)
     }, 180000)
 
     it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
@@ -191,7 +191,7 @@ describe('Replicate data from node to node in DHT', () => {
 
         // TODO assert the content? (use getData/hasData helper)
         // @ts-expect-error private field
-        expect(nodes[randomIndices[0]].localDataStore.getEntry(dataKey).size).toBeGreaterThanOrEqual(1)
+        expect(nodes[randomIndices[0]].localDataStore.getEntry(DATA_KEY).size).toBeGreaterThanOrEqual(1)
 
     }, 180000)
 })
