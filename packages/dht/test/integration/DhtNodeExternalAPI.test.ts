@@ -3,8 +3,8 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { createMockConnectionDhtNode, createMockPeerDescriptor } from '../utils/utils'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { PeerID } from '../../src/helpers/PeerID'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { createRandomKademliaId } from '../../src/helpers/kademliaId'
 
 describe('DhtNodeExternalApi', () => {
 
@@ -29,7 +29,7 @@ describe('DhtNodeExternalApi', () => {
 
     it('findData happy path', async () => {
         const data = Any.pack(dhtNode1.getLocalPeerDescriptor(), PeerDescriptor)
-        const key = PeerID.fromString('key').value
+        const key = createRandomKademliaId()
         await dhtNode1.storeDataToDht(key, data)
 
         const foundData = await remote.findDataViaPeer(key, dhtNode1.getLocalPeerDescriptor())
@@ -37,14 +37,14 @@ describe('DhtNodeExternalApi', () => {
     })
     
     it('findData returns empty array if no data found', async () => {
-        const foundData = await remote.findDataViaPeer(PeerID.fromString('key').value, dhtNode1.getLocalPeerDescriptor())
+        const foundData = await remote.findDataViaPeer(createRandomKademliaId(), dhtNode1.getLocalPeerDescriptor())
         expect(foundData).toEqual([])
     })
 
     it('external store data happy path', async () => {
         const storedPeerDescriptor = createMockPeerDescriptor()
         const data = Any.pack(storedPeerDescriptor, PeerDescriptor)
-        const key = PeerID.fromString('key').value 
+        const key = createRandomKademliaId()
 
         await remote.storeDataViaPeer(key, data, dhtNode1.getLocalPeerDescriptor())
         const foundData = await remote.findDataViaPeer(key, dhtNode1.getLocalPeerDescriptor())
