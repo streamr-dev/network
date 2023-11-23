@@ -302,7 +302,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
     private getPropagationTargets(msg: StreamMessage): NodeID[] {
         let propagationTargets = this.config.targetNeighbors.getIds()
         if (this.config.proxyConnectionRpcLocal) {
-            propagationTargets = propagationTargets.concat(this.config.proxyConnectionRpcLocal!.getPropagationTargets(msg))
+            propagationTargets = propagationTargets.concat(this.config.proxyConnectionRpcLocal.getPropagationTargets(msg))
         }
         propagationTargets = propagationTargets.filter((target) => !this.config.inspector.isInspected(target ))
         propagationTargets = propagationTargets.concat(this.config.temporaryConnectionRpcLocal.getNodes().getIds())

@@ -313,6 +313,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         this.simulatorTimeout = setTimeout(this.executeQueuedOperations, timeDifference)
 
         if (Simulator.clock) {
+            // TODO should we have some handling for this floating promise?
             Simulator.clock.runAllAsync()
         }
     }
