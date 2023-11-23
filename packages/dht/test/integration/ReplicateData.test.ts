@@ -138,7 +138,7 @@ describe('Replicate data from node to node in DHT', () => {
             let hasDataMarker = ''
 
             if (hasData(node)) {
-                hasDataMarker = '<-'
+                hasDataMarker = ' <-'
             }
 
             logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
@@ -176,8 +176,7 @@ describe('Replicate data from node to node in DHT', () => {
             const nodeIndex = randomIndices[index]
             randomIndices.splice(index, 1)
 
-            logger.info('Stopping node ' + nodeIndex + ' ' +
-                (hasData(nodes[nodeIndex]) ? ', has data' : ' does not have data'))
+            logger.info('Stopping node ' + nodeIndex, { hasData: hasData(nodes[nodeIndex])})
 
             await nodes[nodeIndex].stop()
         }
