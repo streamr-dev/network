@@ -234,17 +234,16 @@ export class Finder implements IFinder {
             return createRouteMessageAck(routedMessage)
         }
         const ack = this.router.doRouteMessage(routedMessage, RoutingMode.FIND, excludedPeer)
-        let noCloserContactsFound
         if (ack.error === RouteMessageError.NO_TARGETS) {
+            // TODO can we remove this, is the info already logged in Router:166
             logger.trace(`routeFindRequest Node found no candidates`)
-            noCloserContactsFound = true
-        } else if (ack.error === undefined) {
-            noCloserContactsFound = (
-                closestPeersToDestination.length > 0
-                && getPreviousPeer(routedMessage)
+        }
+        const noCloserContactsFound = (ack.error === RouteMessageError.NO_TARGETS) ||
+            (
+                closestPeersToDestination.length > 0 
+                && getPreviousPeer(routedMessage) 
                 && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
             )
-        }
         this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId, closestPeersToDestination, data, noCloserContactsFound)
         return ack
     }
