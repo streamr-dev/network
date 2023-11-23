@@ -3,8 +3,6 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/utils'
-import { execSync } from 'child_process'
-import fs from 'fs'
 import { Logger } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
@@ -42,18 +40,9 @@ describe('Replicate data from node to node in DHT', () => {
 
     const nodesById: Map<string, DhtNode> = new Map()
 
-    if (!fs.existsSync('test/data/nodeids.json')) {
-        console.log('ground truth data does not exist yet, generating..')
-        execSync('npm run prepare-kademlia-simulation')
-    }
-
-    const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
-
     beforeEach(async () => {
         nodes = []
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
-            Uint8Array.from(dhtIds[0].data), K, MAX_CONNECTIONS)
+        entryPoint = await createMockConnectionDhtNode('dummy', simulator, createRandomKademliaId(), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodesById.set(entryPoint.getNodeId().toKey(), entryPoint)
 
