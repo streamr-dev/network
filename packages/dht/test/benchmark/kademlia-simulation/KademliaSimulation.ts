@@ -17,7 +17,7 @@ export class KademliaSimulation {
 
     constructor() {
         if (!fs.existsSync('test/data/nodeids.json')) {
-            throw ('Cannot find test/data/nodeids.json, please run "npm run prepare-kademlia-simulation first"')
+            throw new Error('Cannot find test/data/nodeids.json, please run "npm run prepare-kademlia-simulation first"')
         }
         this.dhtIds = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
         this.groundTruth = JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
