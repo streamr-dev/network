@@ -1,6 +1,6 @@
 import { DhtNode } from '../../src/dht/DhtNode'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
-import { createMockConnectionDhtNode } from '../utils/utils'
+import { createMockConnectionDhtNode, createMockPeerDescriptor } from '../utils/utils'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -42,12 +42,13 @@ describe('DhtNodeExternalApi', () => {
     })
 
     it('external store data happy path', async () => {
-        const data = Any.pack(remote.getLocalPeerDescriptor(), PeerDescriptor)
+        const storedPeerDescriptor = createMockPeerDescriptor()
+        const data = Any.pack(storedPeerDescriptor, PeerDescriptor)
         const key = PeerID.fromString('key').value 
 
         await remote.storeDataViaPeer(key, data, dhtNode1.getLocalPeerDescriptor())
         const foundData = await remote.findDataViaPeer(key, dhtNode1.getLocalPeerDescriptor())
-        expect(Any.unpack(foundData[0].data!, PeerDescriptor)).toEqual(remote.getLocalPeerDescriptor())
+        expect(areEqualPeerDescriptors(Any.unpack(foundData[0].data!, PeerDescriptor), storedPeerDescriptor)).toEqual(true)
         expect(areEqualPeerDescriptors(foundData[0].storer!, remote.getLocalPeerDescriptor())).toEqual(true)
     })
   
