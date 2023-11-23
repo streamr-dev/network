@@ -20,7 +20,7 @@ interface PeerDiscoveryConfig {
     serviceId: ServiceID
     parallelism: number
     joinTimeout: number
-    addContact: (contact: PeerDescriptor, setActive?: boolean) => void
+    addContact: (contact: PeerDescriptor) => void
     connectionManager?: ConnectionManager
     rpcRequestTimeout?: number
 }
@@ -95,6 +95,7 @@ export class PeerDiscovery {
             if (!this.isStopped()) {
                 if (this.config.bucket.count() === 0) {
                     if (retry) {
+                        // TODO should we catch possible promise rejection?
                         setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.abortController.signal)
                     }
                 } else {
@@ -118,6 +119,7 @@ export class PeerDiscovery {
         } catch (err) {
             logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)
             if (!this.isStopped()) {
+                // TODO should we catch possible promise rejection?
                 setAbortableTimeout(() => this.rejoinDht(entryPoint), 5000, this.abortController.signal)
             }
         } finally {

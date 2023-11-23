@@ -1,7 +1,7 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
+import { createMockConnectionDhtNode, createMockPeerDescriptor, waitConnectionManagersReadyForTesting } from '../utils/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
@@ -47,7 +47,8 @@ describe('Storing data in DHT', () => {
     it('Storing data works', async () => {
         const storingNodeIndex = 34
         const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
+        const storedData = createMockPeerDescriptor()
+        const data = Any.pack(storedData, PeerDescriptor)
         const successfulStorers = await nodes[storingNodeIndex].storeDataToDht(dataKey.value, data)
         expect(successfulStorers.length).toBeGreaterThan(4)
     }, 90000)
@@ -55,15 +56,34 @@ describe('Storing data in DHT', () => {
     it('Storing and getting data works', async () => {
         const storingNode = getRandomNode()
         const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
+        const storedData = createMockPeerDescriptor()
+        const data = Any.pack(storedData, PeerDescriptor)
         const successfulStorers = await storingNode.storeDataToDht(dataKey.value, data)
         expect(successfulStorers.length).toBeGreaterThan(4)
 
         const fetchingNode = getRandomNode()
         const results = await fetchingNode.getDataFromDht(dataKey.value)
         results.forEach((entry) => {
-            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(areEqualPeerDescriptors(fetchedDescriptor, entrypointDescriptor)).toBeTrue()
+            const foundData = Any.unpack(entry.data!, PeerDescriptor)
+            expect(areEqualPeerDescriptors(foundData, storedData)).toBeTrue()
         })
     }, 90000)
+
+    it('storing with explicit storer PeerDescriptor', async () => {
+        const storingNode = getRandomNode()
+        const dataKey = PeerID.fromString('3232323e12r31r3')
+        const storedData = createMockPeerDescriptor()
+        const data = Any.pack(storedData, PeerDescriptor)
+        const requestor = createMockPeerDescriptor()
+        const successfulStorers = await storingNode.storeDataToDht(dataKey.value, data, requestor)
+        expect(successfulStorers.length).toBeGreaterThan(4)
+
+        const fetchingNode = getRandomNode()
+        const results = await fetchingNode.getDataFromDht(dataKey.value)
+        results.forEach((entry) => {
+            const foundData = Any.unpack(entry.data!, PeerDescriptor)
+            expect(areEqualPeerDescriptors(foundData, storedData)).toBeTrue()
+            expect(areEqualPeerDescriptors(entry.storer!, requestor)).toBeTrue()
+        })
+    })
 })

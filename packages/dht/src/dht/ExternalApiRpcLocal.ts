@@ -13,7 +13,7 @@ import { Any } from '../proto/google/protobuf/any'
 
 interface ExternalApiRpcLocalConfig {
     startFind: (idToFind: Uint8Array, fetchData: boolean, excludedPeer: PeerDescriptor) => Promise<FindResult>
-    storeDataToDht: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
+    storeDataToDht: (key: Uint8Array, data: Any, storer: PeerDescriptor) => Promise<PeerDescriptor[]>
 }
 
 export class ExternalApiRpcLocal implements IExternalApiRpc {
@@ -27,18 +27,12 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
     async externalFindData(findDataRequest: ExternalFindDataRequest, context: ServerCallContext): Promise<ExternalFindDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const result = await this.config.startFind(findDataRequest.kademliaId, true, senderPeerDescriptor)
-        if (result.dataEntries) {
-            return ExternalFindDataResponse.create({ dataEntries: result.dataEntries })
-        } else {
-            return ExternalFindDataResponse.create({ 
-                dataEntries: [],
-                error: 'Could not find data with the given key' 
-            })
-        }
+        return ExternalFindDataResponse.create({ entries: result.dataEntries ?? [] })
     }
 
-    async externalStoreData(request: ExternalStoreDataRequest): Promise<ExternalStoreDataResponse> {
-        const result = await this.config.storeDataToDht(request.key, request.data!)
+    async externalStoreData(request: ExternalStoreDataRequest, context: ServerCallContext): Promise<ExternalStoreDataResponse> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const result = await this.config.storeDataToDht(request.key, request.data!, senderPeerDescriptor)
         return ExternalStoreDataResponse.create({
             storers: result
         })

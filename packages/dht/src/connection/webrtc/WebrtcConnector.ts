@@ -178,7 +178,7 @@ export class WebrtcConnector {
         )
 
         connection.on('localCandidate', (candidate: string, mid: string) => {
-            if (this.config.externalIp) {
+            if (this.config.externalIp !== undefined) {
                 candidate = replaceInternalIpWithExternalIp(candidate, this.config.externalIp)
                 logger.debug(`onLocalCandidate injected external ip ${candidate} ${mid}`)
             }

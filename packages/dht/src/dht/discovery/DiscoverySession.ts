@@ -60,7 +60,7 @@ export class DiscoverySession {
                 if (this.config.newContactListener) {
                     this.config.newContactListener(rpcRemote)
                 }
-                if (!this.config.neighborList.getContact(rpcRemote.getPeerId())) {
+                if (this.config.neighborList.getContact(rpcRemote.getPeerId()) !== undefined) {
                     this.config.neighborList.addContact(rpcRemote)
                 }
             }

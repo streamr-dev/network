@@ -1,7 +1,7 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
+import { createMockConnectionDhtNode, createMockPeerDescriptor, waitConnectionManagersReadyForTesting } from '../utils/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
@@ -47,7 +47,8 @@ describe('Storing data in DHT', () => {
     it('Data can be deleted', async () => {
         const storingNode = getRandomNode()
         const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
+        const storedData = createMockPeerDescriptor()
+        const data = Any.pack(storedData, PeerDescriptor)
         const successfulStorers = await storingNode.storeDataToDht(dataKey.value, data)
         expect(successfulStorers.length).toBeGreaterThan(4)
         await storingNode.deleteDataFromDht(dataKey.value)
@@ -57,14 +58,15 @@ describe('Storing data in DHT', () => {
         results.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(entry.deleted).toBeTrue()
-            expect(areEqualPeerDescriptors(fetchedDescriptor, entrypointDescriptor)).toBeTrue()
+            expect(areEqualPeerDescriptors(fetchedDescriptor, storedData)).toBeTrue()
         })
     }, 90000)
 
     it('Data can be deleted and re-stored', async () => {
         const storingNode = getRandomNode()
         const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
+        const storedData = createMockPeerDescriptor()
+        const data = Any.pack(storedData, PeerDescriptor)
         const successfulStorers1 = await storingNode.storeDataToDht(dataKey.value, data)
         expect(successfulStorers1.length).toBeGreaterThan(4)
         await storingNode.deleteDataFromDht(dataKey.value)
@@ -74,7 +76,7 @@ describe('Storing data in DHT', () => {
         results1.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(entry.deleted).toBeTrue()
-            expect(areEqualPeerDescriptors(fetchedDescriptor, entrypointDescriptor)).toBeTrue()
+            expect(areEqualPeerDescriptors(fetchedDescriptor, storedData)).toBeTrue()
         })
 
         const successfulStorers2 = await storingNode.storeDataToDht(dataKey.value, data)
@@ -84,7 +86,7 @@ describe('Storing data in DHT', () => {
         results2.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(entry.deleted).toBeFalse()
-            expect(areEqualPeerDescriptors(fetchedDescriptor, entrypointDescriptor)).toBeTrue()
+            expect(areEqualPeerDescriptors(fetchedDescriptor, storedData)).toBeTrue()
         })
     }, 90000)
 })

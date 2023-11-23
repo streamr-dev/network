@@ -26,7 +26,7 @@ export class ConnectionLockHandler {
     }
 
     public isLocalLocked(id: PeerIDKey, lockId?: LockID): boolean {
-        if (!lockId) {
+        if (lockId === undefined) {
             return this.localLocks.has(id)
         } else {
             return this.localLocks.has(id) && this.localLocks.get(id)!.has(lockId)
@@ -34,7 +34,7 @@ export class ConnectionLockHandler {
     }
 
     public isRemoteLocked(id: PeerIDKey, lockId?: LockID): boolean {
-        if (!lockId) {
+        if (lockId === undefined) {
             return this.remoteLocks.has(id)
         } else {
             if (this.remoteLocks.has(id) && this.remoteLocks.get(id)!.has(lockId)) {
