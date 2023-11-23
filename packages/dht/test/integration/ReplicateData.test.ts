@@ -12,6 +12,7 @@ import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
 import crypto from 'crypto'
+import { createRandomKademliaId } from '../../src/helpers/kademliaId'
 
 const logger = new Logger(module)
 
@@ -64,10 +65,7 @@ describe('Replicate data from node to node in DHT', () => {
         nodes.push(entryPoint)
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-
-            const node = await createMockConnectionDhtNode(nodeId, simulator,
-                Uint8Array.from(dhtIds[i].data), K, MAX_CONNECTIONS)
+            const node = await createMockConnectionDhtNode('dummy', simulator, createRandomKademliaId(), K, MAX_CONNECTIONS)
             nodesById.set(node.getNodeId().toKey(), node)
             nodes.push(node)
         }
