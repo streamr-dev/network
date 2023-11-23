@@ -22,10 +22,10 @@ export const connectAsync = async ({ url, selfSigned, timeoutMs = 1000 }:
         socket, ['connected', 'error'],
         timeoutMs)
     } catch (e) {
-        throw (new Err.ConnectionFailed('WebSocket connection timed out'))
+        throw new Err.ConnectionFailed('WebSocket connection timed out')
     }
     if (result.winnerName === 'error') {
-        throw (new Err.ConnectionFailed('Could not open WebSocket connection'))
+        throw new Err.ConnectionFailed('Could not open WebSocket connection')
     }
     return socket
 }
