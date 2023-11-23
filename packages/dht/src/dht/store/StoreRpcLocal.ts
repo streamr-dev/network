@@ -150,7 +150,7 @@ export class StoreRpcLocal implements IStoreRpc {
         }
     }
 
-    public async storeDataToDht(key: Uint8Array, data: Any, externalStorer?: PeerDescriptor): Promise<PeerDescriptor[]> {
+    public async storeDataToDht(key: Uint8Array, data: Any, originalStorer?: PeerDescriptor): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.serviceId}`)
         const result = await this.finder.startFind(key)
         const closestNodes = result.closestNodes
@@ -161,7 +161,7 @@ export class StoreRpcLocal implements IStoreRpc {
             if (areEqualPeerDescriptors(this.localPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
                     kademliaId: key, 
-                    storer: externalStorer ?? this.localPeerDescriptor,
+                    storer: originalStorer ?? this.localPeerDescriptor,
                     ttl, 
                     storedAt: Timestamp.now(), 
                     data,
