@@ -7,7 +7,7 @@ import { execSync } from 'child_process'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
-import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
@@ -148,8 +148,9 @@ describe('Replicate data from node to node in DHT', () => {
 
         const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().kademliaId).toKey())!
 
-        // TODO assert the content?
-        expect(hasData(closestNode)).toBe(true)
+        // @ts-expect-error private field
+        // TODO assert the content? (use getData/hasData helper)
+        expect(closestNode.localDataStore.getEntry(dataKey).size).toBeGreaterThanOrEqual(1)
     }, 180000)
 
     it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
@@ -188,8 +189,9 @@ describe('Replicate data from node to node in DHT', () => {
 
         logger.info('data of ' + randomIndices[0] + ' was ' + JSON.stringify(getDataValues(nodes[randomIndices[0]])))
 
-        // TODO assert the content?
-        expect(hasData(nodes[randomIndices[0]])).toBe(true)
+        // TODO assert the content? (use getData/hasData helper)
+        // @ts-expect-error private field
+        expect(nodes[randomIndices[0]].localDataStore.getEntry(dataKey).size).toBeGreaterThanOrEqual(1)
 
     }, 180000)
 })

@@ -56,6 +56,7 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
         }
     }
     if (outgoingConnection) {
+        // TODO should we have some handling for this floating promise?
         outgoingConnection.close(false)
         logger.trace('Connectivity test produced positive result, communicating reply to the requester ' + host + ':' + connectivityRequest.port)
         connectivityResponseMessage = {
