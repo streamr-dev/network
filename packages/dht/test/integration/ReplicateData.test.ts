@@ -122,8 +122,8 @@ describe('Replicate data from node to node in DHT', () => {
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
-            nodes.map(async (node) => {
-                if (keyFromPeerDescriptor(node.getLocalPeerDescriptor()) != '0') {
+            nodes.map(async (node, i) => {
+                if (i !== 0) {
                     await node.joinDht([entrypointDescriptor])
                 }
             })
