@@ -50,8 +50,8 @@ describe('Finder', () => {
         requestId: 'REQ',
         routingPath: [],
         reachableThrough: [],
-        destinationPeer: peerDescriptor1,
-        sourcePeer: peerDescriptor2
+        sourcePeer: peerDescriptor1,
+        destinationPeer: peerDescriptor2
     }
     const rpcCommunicator = new FakeRpcCommunicator()
 
