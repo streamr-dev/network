@@ -225,6 +225,7 @@ export class StreamrNode extends EventEmitter<Events> {
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
+        // TODO explicit default value for "acceptProxyConnections" or make it required
         if (this.config.acceptProxyConnections) {
             throw new Error('cannot set proxies when acceptProxyConnections=true')
         }
@@ -313,6 +314,7 @@ export class StreamrNode extends EventEmitter<Events> {
 
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {
     process.on(term, async () => {
+        // TODO should we catch possible promise rejection?
         await cleanUp()
         process.exit()
     })

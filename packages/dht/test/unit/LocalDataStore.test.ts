@@ -91,15 +91,32 @@ describe('LocalDataStore', () => {
         expect(fetchedData.size).toBe(0)
     })
 
-    it('can mark data as deleted', () => {
-        const dataKey = peerIdFromPeerDescriptor(storer1)
-        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1,
-            ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
-        const notDeletedData = localDataStore.getEntry(dataKey)
-        expect(notDeletedData.get(keyFromPeerDescriptor(storer1))!.deleted).toBeFalse()
-        localDataStore.markAsDeleted(dataKey.value, peerIdFromPeerDescriptor(storer1))
-        const deletedData = localDataStore.getEntry(dataKey)
-        expect(deletedData.get(keyFromPeerDescriptor(storer1))!.deleted).toBeTrue()
-    })
+    describe('mark data as deleted', () => {
 
+        it('happy path', () => {
+            const dataKey = peerIdFromPeerDescriptor(storer1)
+            localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1,
+                ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
+            const notDeletedData = localDataStore.getEntry(dataKey)
+            expect(notDeletedData.get(keyFromPeerDescriptor(storer1))!.deleted).toBeFalse()
+            const returnValue = localDataStore.markAsDeleted(dataKey.value, peerIdFromPeerDescriptor(storer1))
+            expect(returnValue).toBe(true)
+            const deletedData = localDataStore.getEntry(dataKey)
+            expect(deletedData.get(keyFromPeerDescriptor(storer1))!.deleted).toBeTrue()
+        })
+
+        it('data not stored', () => {
+            const dataKey = peerIdFromPeerDescriptor(storer1)
+            const returnValue = localDataStore.markAsDeleted(dataKey.value, peerIdFromPeerDescriptor(storer2))
+            expect(returnValue).toBe(false)
+        })
+
+        it('data not stored by the given storer', () => {
+            const dataKey = peerIdFromPeerDescriptor(storer1)
+            localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1,
+                ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
+            const returnValue = localDataStore.markAsDeleted(dataKey.value, peerIdFromPeerDescriptor(storer2))
+            expect(returnValue).toBe(false)
+        })
+    })
 })

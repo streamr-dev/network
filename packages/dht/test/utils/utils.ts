@@ -2,7 +2,6 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
-    MigrateDataResponse,
     NodeType,
     PeerDescriptor,
     PingRequest,
@@ -31,9 +30,17 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
+import { createRandomKademliaId } from '../../src/helpers/kademliaId'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
+}
+
+export const createMockPeerDescriptor = (): PeerDescriptor => {
+    return {
+        kademliaId: createRandomKademliaId(),
+        type: NodeType.NODEJS,
+    }  
 }
 
 export const createMockConnectionDhtNode = async (
@@ -170,15 +177,13 @@ interface IRouterRpcWithError extends IRouterRpc {
 export const mockRouterRpc: IRouterRpcWithError = {
     async routeMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
-            requestId: routed.requestId,
-            error: ''
+            requestId: routed.requestId
         }
         return response
     },
     async forwardMessage(routed: RouteMessageWrapper): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
-            requestId: routed.requestId,
-            error: ''
+            requestId: routed.requestId
         }
         return response
     },
@@ -206,8 +211,8 @@ export const mockStoreRpc: IStoreRpcWithError = {
             error: 'Mock'
         }
     },
-    async migrateData(): Promise<MigrateDataResponse> {
-        return MigrateDataResponse.create()
+    async replicateData(): Promise<Empty> {
+        return {}
     },
     async deleteData(): Promise<DeleteDataResponse> {
         return DeleteDataResponse.create()

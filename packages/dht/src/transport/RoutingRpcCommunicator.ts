@@ -38,6 +38,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
                 targetDescriptor
             }
 
+            // TODO is it possible to have explicit default values for "doNotConnect" and "doNotMindStopped"?
             if (msg.header.response || callContext && callContext.doNotConnect && callContext.doNotMindStopped ) {
                 return this.sendFn(message, true, true)
             } else if (msg.header.response || callContext && callContext.doNotConnect) {
@@ -53,6 +54,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
         if (message.serviceId == this.ownServiceId && message.body.oneofKind === 'rpcMessage') {
             const context = new DhtCallContext()
             context.incomingSourceDescriptor = message.sourceDescriptor
+            // TODO should we have some handling for this floating promise?
             this.handleIncomingMessage(message.body.rpcMessage, context)
         }
     }

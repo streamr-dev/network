@@ -33,20 +33,16 @@ describe('memory leak', () => {
         await entryPoint.joinDht([entryPointDescriptor])
         let sender: DhtNode | undefined = new DhtNode({})
         let receiver: DhtNode | undefined = new DhtNode({})
-        /*TODO should this work? await Promise.all([
-            async () => {
+        await Promise.all([
+            (async () => {
                 await sender.start()
                 await sender.joinDht([entryPointDescriptor])
-            },
-            async () => {
+            })(),
+            (async () => {
                 await receiver.start()
                 await receiver.joinDht([entryPointDescriptor])
-            }
-        ])*/
-        await sender.start()
-        await sender.joinDht([entryPointDescriptor])
-        await receiver.start()
-        await receiver.joinDht([entryPointDescriptor])
+            })()
+        ])
 
         let receivedMessage: Message | undefined = undefined
         receiver.on('message', (msg: Message) => receivedMessage = msg)

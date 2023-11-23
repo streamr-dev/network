@@ -148,7 +148,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             this.latencyTable = getRegionDelayMatrix()
         }
 
-        if (this.latencyType === LatencyType.FIXED && !this.fixedLatency) {
+        if ((this.latencyType === LatencyType.FIXED) && (this.fixedLatency === undefined)) {
             throw new Error('LatencyType.FIXED requires the desired latency to be given as second parameter')
         }
 
@@ -313,6 +313,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         this.simulatorTimeout = setTimeout(this.executeQueuedOperations, timeDifference)
        
         if (Simulator.clock) {
+            // TODO should we have some handling for this floating promise?
             Simulator.clock.runAllAsync()
         }
     }
