@@ -30,9 +30,17 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
+import { createRandomKademliaId } from '../../src/helpers/kademliaId'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
+}
+
+export const createMockPeerDescriptor = (): PeerDescriptor => {
+    return {
+        kademliaId: createRandomKademliaId(),
+        type: NodeType.NODEJS,
+    }  
 }
 
 export const createMockConnectionDhtNode = async (
