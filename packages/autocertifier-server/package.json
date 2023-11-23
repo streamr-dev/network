@@ -36,7 +36,8 @@
     "express": "^4.17.1",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.0.3",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "@aws-sdk/client-route-53": "^3.454.0"
   },
   "devDependencies": {
     "@streamr/test-utils": "100.0.0-pretestnet.4",

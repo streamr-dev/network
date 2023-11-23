@@ -9,6 +9,8 @@ import { CertificateCreator } from './CertificateCreator'
 import { runStreamrChallenge } from './StreamrChallenger'
 import 'dotenv/config'
 import { ChallengeManager } from './ChallengeManager'
+import { RRType } from '@aws-sdk/client-route-53'
+import { Route53Api } from './Route53Api'
 
 const logger = new Logger(module)
 
@@ -27,6 +29,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
     private restServer?: RestServer
     private database?: Database
     private certificateCreator?: CertificateCreator
+    private route53Api?: Route53Api
 
     public async start(): Promise<void> {
         // TODO: considering env name prefix AUTO_CERTIFIER for consistent naming
@@ -45,6 +48,16 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         const hmacKey = validateEnvironmentVariable('AUTOCERTIFIER_HMAC_KEY')
         const restServerCertPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_CERT_PATH')
         const restServerKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_KEY_PATH')
+
+        const useRoute53 = process.env['AUTOCERTIFIER_USE_ROUTE53'] !== undefined &&
+            process.env['AUTOCERTIFIER_USE_ROUTE53'] !== 'false'
+
+        if (useRoute53) {
+            // these env variables are needed by route53 package
+            validateEnvironmentVariable('AWS_ACCESS_KEY_ID')
+            validateEnvironmentVariable('AWS_SECRET_ACCESS_KEY')
+            this.route53Api = new Route53Api(validateEnvironmentVariable('AUTOCERTIFIER_ROUTE53_HOSTED_ZONE_ID'))
+        }
 
         this.database = new Database(databaseFilePath)
         await this.database.start()
@@ -95,11 +108,16 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
 
         // this will throw if the client cannot answer the challenge of getting sessionId 
         await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
-        
+
         const subdomain = v4()
         const authenticationToken = v4()
         await this.database!.createSubdomain(subdomain, ipAddress, port, authenticationToken)
         const fqdn = subdomain + '.' + this.domainName
+
+        if (this.route53Api !== undefined) {
+            await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
+        }
+
         const certificate = await this.certificateCreator!.createCertificate(fqdn)
         return {
             fqdn,
@@ -123,6 +141,11 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         // This will throw if the authenticationToken is incorrect
         await this.updateSubdomainIp(subdomain, ipAddress, port, streamrWebSocketPort, sessionId, authenticationToken)
         const fqdn = subdomain + '.' + this.domainName
+
+        if (this.route53Api !== undefined) {
+            await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
+        }
+
         const certificate = await this.certificateCreator!.createCertificate(fqdn)
         return {
             fqdn,
@@ -146,19 +169,30 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         // this will throw if the client cannot answer the challenge of getting sessionId 
         await runStreamrChallenge(ipAddress, streamrWebSocketPort, sessionId)
         await this.database!.updateSubdomainIp(subdomain, ipAddress, port, authenticationToken)
+        const fqdn = subdomain + '.' + this.domainName
+
+        if (this.route53Api !== undefined) {
+            await this.route53Api.upsertRecord(RRType.A, fqdn, ipAddress, 300)
+        }
     }
 
     // ChallengeManager implementation
     public async createChallenge(fqdn: string, value: string): Promise<void> {
         logger.info('creating challenge for ' + fqdn + ' with value ' + value)
         await this.database!.updateSubdomainAcmeChallenge(fqdn.split('.')[0], value)
+        if (this.route53Api !== undefined) {
+            await this.route53Api.upsertRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, value, 300)
+        }
     }
 
     // ChallengeManager implementation
     // eslint-disable-next-line class-methods-use-this
-    public async deleteChallenge(): Promise<void> {
+    public async deleteChallenge(fqdn: string, value: string): Promise<void> {
         // TODO: Should this function do something?
         // TODO: we could add logging here to see if this is actually called ever
+        if (this.route53Api !== undefined) {
+            await this.route53Api.deleteRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, value, 300)
+        }
     }
 
     public async stop(): Promise<void> {
