@@ -67,12 +67,13 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
         try {
             // eslint-disable-next-line no-constant-condition
             while (true) {
-                const chunk = await this.server.read(fd, 1316 * 8)
+                const chunk = await this.server.read(fd, 1316 * 16)
                 if (chunk instanceof Uint8Array) {
                     const base64Chunk = arrayBufferToBase64(chunk)
                     const base64Payload = JSON.parse(JSON.stringify(base64Chunk))
                     const payload = { b:[0, base64Payload] }
                     const resp = await this.streamrClient?.publish(this.pluginConfig.streamId, payload)
+                    //console.log(JSON.stringify(resp))
                     // logger.info(JSON.stringify(resp))
                     // "0x82a31ab84fd2159b54f887d4d8e46a0a1f3a7ffc/mapmetrics"
                 }
