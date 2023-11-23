@@ -492,6 +492,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             && this.config.entryPoints.length > 0
         ) {
             setImmediate(async () => {
+                // TODO should we catch possible promise rejection?
                 await Promise.all(this.config.entryPoints!.map((entryPoint) => 
                     this.peerDiscovery!.rejoinDht(entryPoint)
                 )) 
@@ -609,7 +610,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             return
         }
         const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints ?? [] : []
-        await this.router!.send(msg, reachableThrough)
+        this.router!.send(msg, reachableThrough)
     }
 
     public async joinDht(entryPointDescriptors: PeerDescriptor[], doAdditionalRandomPeerDiscovery?: boolean, retry?: boolean): Promise<void> {
