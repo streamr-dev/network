@@ -239,9 +239,7 @@ export class Finder implements IFinder {
             logger.trace(`routeFindRequest Node found no candidates`)
             this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
                 closestPeersToDestination, data, true)
-        } else if (ack.error) {
-            return ack
-        } else {
+        } else if (ack.error === undefined) {
             const noCloserContactsFound = (
                 closestPeersToDestination.length > 0
                 && getPreviousPeer(routedMessage)
