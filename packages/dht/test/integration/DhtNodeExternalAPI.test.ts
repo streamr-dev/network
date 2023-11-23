@@ -4,6 +4,7 @@ import { createMockConnectionDhtNode } from '../utils/utils'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
+import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('DhtNodeExternalApi', () => {
 
@@ -41,12 +42,14 @@ describe('DhtNodeExternalApi', () => {
     })
 
     it('external store data happy path', async () => {
-        const data = Any.pack(dhtNode1.getLocalPeerDescriptor(), PeerDescriptor)
+        const data = Any.pack(remote.getLocalPeerDescriptor(), PeerDescriptor)
         const key = PeerID.fromString('key').value 
 
         await remote.storeDataViaPeer(key, data, dhtNode1.getLocalPeerDescriptor())
         const foundData = await remote.findDataViaPeer(key, dhtNode1.getLocalPeerDescriptor())
-        expect(Any.unpack(foundData[0].data!, PeerDescriptor)).toEqual(dhtNode1.getLocalPeerDescriptor())
+        console.log(foundData[0].storer!.kademliaId, Any.unpack(foundData[0].data!, PeerDescriptor).kademliaId)
+        expect(Any.unpack(foundData[0].data!, PeerDescriptor)).toEqual(remote.getLocalPeerDescriptor())
+        expect(areEqualPeerDescriptors(foundData[0].storer!, remote.getLocalPeerDescriptor())).toEqual(true)
     })
   
 })
