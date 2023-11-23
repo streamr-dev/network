@@ -23,7 +23,7 @@ const DATA_VALUE = Any.pack({ kademliaId: crypto.randomBytes(10), type: NodeType
 const getDataValues = (node: DhtNode): PeerDescriptor[] => {
     // @ts-expect-error private field
     return Array.from(node.localDataStore.getEntry(DATA_KEY).values())
-        .map(value => Any.unpack(value.data!, PeerDescriptor))
+        .map((value) => Any.unpack(value.data!, PeerDescriptor))
 }
 
 const hasData = (node: DhtNode): boolean => {
