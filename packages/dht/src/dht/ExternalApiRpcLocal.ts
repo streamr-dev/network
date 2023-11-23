@@ -13,7 +13,7 @@ import { Any } from '../proto/google/protobuf/any'
 
 interface ExternalApiRpcLocalConfig {
     startFind: (idToFind: Uint8Array, fetchData: boolean, excludedPeer: PeerDescriptor) => Promise<FindResult>
-    storeDataToDht: (key: Uint8Array, data: Any, originalStorer?: PeerDescriptor) => Promise<PeerDescriptor[]>
+    storeDataToDht: (key: Uint8Array, data: Any, storer: PeerDescriptor) => Promise<PeerDescriptor[]>
 }
 
 export class ExternalApiRpcLocal implements IExternalApiRpc {

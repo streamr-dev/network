@@ -67,7 +67,7 @@ export class StoreRpcLocal implements IStoreRpc {
         this.rpcRequestTimeout = config.rpcRequestTimeout
         this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
         this.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
-            (request: StoreDataRequest, context: ServerCallContext) => this.storeData(request, context))
+            (request: StoreDataRequest) => this.storeData(request))
         this.rpcCommunicator.registerRpcNotification(ReplicateDataRequest, 'replicateData',
             (request: ReplicateDataRequest, context: ServerCallContext) => this.replicateData(request, context))
         this.rpcCommunicator.registerRpcMethod(DeleteDataRequest, DeleteDataResponse, 'deleteData',
@@ -150,7 +150,7 @@ export class StoreRpcLocal implements IStoreRpc {
         }
     }
 
-    public async storeDataToDht(key: Uint8Array, data: Any, originalStorer?: PeerDescriptor): Promise<PeerDescriptor[]> {
+    public async storeDataToDht(key: Uint8Array, data: Any, storer: PeerDescriptor): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.serviceId}`)
         const result = await this.finder.startFind(key)
         const closestNodes = result.closestNodes
@@ -161,7 +161,7 @@ export class StoreRpcLocal implements IStoreRpc {
             if (areEqualPeerDescriptors(this.localPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
                     kademliaId: key, 
-                    storer: originalStorer ?? this.localPeerDescriptor,
+                    storer,
                     ttl, 
                     storedAt: Timestamp.now(), 
                     data,
@@ -180,7 +180,13 @@ export class StoreRpcLocal implements IStoreRpc {
                 this.rpcRequestTimeout
             )
             try {
-                const response = await rpcRemote.storeData({ kademliaId: key, data, ttl, storerTime })
+                const response = await rpcRemote.storeData({
+                    kademliaId: key,
+                    data,
+                    storer,
+                    storerTime,
+                    ttl
+                })
                 if (!response.error) {
                     successfulNodes.push(closestNodes[i])
                     logger.trace('remote.storeData() returned success')
@@ -236,13 +242,12 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     // RPC service implementation
-    async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {
+    async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         const ttl = Math.min(request.ttl, this.maxTtl)
-        const { incomingSourceDescriptor } = context as DhtCallContext
-        const { kademliaId, data, storerTime } = request
+        const { kademliaId, data, storerTime, storer } = request
         this.localDataStore.storeEntry({ 
             kademliaId, 
-            storer: incomingSourceDescriptor!, 
+            storer, 
             ttl,
             storedAt: Timestamp.now(),
             storerTime,
