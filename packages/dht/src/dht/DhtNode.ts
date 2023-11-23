@@ -48,7 +48,7 @@ import { IceServer } from '../connection/webrtc/WebrtcConnector'
 import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
 import { UUID } from '../helpers/UUID'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
-import { sample } from 'lodash'
+import { head, sample, sortBy } from 'lodash'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
 import { MarkRequired } from 'ts-essentials'
 import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
@@ -497,6 +497,20 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                     this.peerDiscovery!.rejoinDht(entryPoint)
                 )) 
             })
+        } else if (this.bucket!.count() < this.config.numberOfNodesPerKBucket) {
+            const connectedPeerIdsNotInBuckets = Array.from(this.connections.keys())
+                .map((key) => PeerID.fromKey(key))
+                .filter((peerId) => {
+                    return (this.bucket!.get(peerId.value) === null) 
+                })
+            if (connectedPeerIdsNotInBuckets.length === 0) {
+                return
+            }
+            const closestConnectedPeer = head(sortBy(
+                connectedPeerIdsNotInBuckets,
+                (p: PeerID) => KBucket.distance(this.getLocalPeerDescriptor().kademliaId, p.value)
+            ))
+            this.bucket!.add(this.connections.get(closestConnectedPeer!.toKey())!)
         }
     }
 
