@@ -51,7 +51,7 @@ const exponentialRunOff = async (
 
 const logger = new Logger(module)
 
-const ENTRYPOINT_STORE_LIMIT = 8
+const ENTRYPOINT_STORE_LIMIT = 20
 export const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 
 interface EntryPointDiscoveryConfig {
