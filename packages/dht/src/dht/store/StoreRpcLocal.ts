@@ -268,7 +268,7 @@ export class StoreRpcLocal implements IStoreRpc {
         await this.replicateDataToClosestNodes()
     }
 
-    async replicateDataToClosestNodes(): Promise<void> {
+    private async replicateDataToClosestNodes(): Promise<void> {
         const dataEntries = Array.from(this.localDataStore.getStore().values())
             .flatMap((dataMap) => Array.from(dataMap.values()))
             .map((localData) => localData.dataEntry)
