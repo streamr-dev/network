@@ -60,8 +60,9 @@ service ExternalApiRpc {
 message StoreDataRequest {
   bytes kademliaId = 1;
   google.protobuf.Any data = 2;
-  uint32 ttl = 3;
+  PeerDescriptor storer = 3;
   google.protobuf.Timestamp storerTime = 4;
+  uint32 ttl = 5;
 }
 
 message StoreDataResponse {

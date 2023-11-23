@@ -423,7 +423,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             startFind: (idToFind: Uint8Array, fetchData: boolean, excludedPeer: PeerDescriptor) => {
                 return this.startFind(idToFind, fetchData, excludedPeer)
             },
-            storeDataToDht: (key: Uint8Array, data: Any) => this.storeDataToDht(key, data)
+            storeDataToDht: (key: Uint8Array, data: Any, originalStorer?: PeerDescriptor) => this.storeDataToDht(key, data, originalStorer)
         })
         this.rpcCommunicator!.registerRpcMethod(
             ExternalFindDataRequest,
@@ -436,7 +436,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             ExternalStoreDataRequest,
             ExternalStoreDataResponse,
             'externalStoreData',
-            (req: ExternalStoreDataRequest) => externalApiRpcLocal.externalStoreData(req),
+            (req: ExternalStoreDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalStoreData(req, context),
             { timeout: 10000 }
         )
     }
@@ -492,6 +492,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             && this.config.entryPoints.length > 0
         ) {
             setImmediate(async () => {
+                // TODO should we catch possible promise rejection?
                 await Promise.all(this.config.entryPoints!.map((entryPoint) => 
                     this.peerDiscovery!.rejoinDht(entryPoint)
                 )) 
@@ -609,7 +610,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             return
         }
         const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints ?? [] : []
-        await this.router!.send(msg, reachableThrough)
+        this.router!.send(msg, reachableThrough)
     }
 
     public async joinDht(entryPointDescriptors: PeerDescriptor[], doAdditionalRandomPeerDiscovery?: boolean, retry?: boolean): Promise<void> {
@@ -625,11 +626,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.finder!.startFind(idToFind, fetchData, excludedPeer)
     }
 
-    public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
+    public async storeDataToDht(key: Uint8Array, data: Any, originalStorer?: PeerDescriptor): Promise<PeerDescriptor[]> {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
         }
-        return this.storeRpcLocal!.storeDataToDht(key, data)
+        return this.storeRpcLocal!.storeDataToDht(key, data, originalStorer ?? this.localPeerDescriptor!)
     }
 
     public async storeDataViaPeer(key: Uint8Array, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
