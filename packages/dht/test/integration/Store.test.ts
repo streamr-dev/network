@@ -2,9 +2,9 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, createMockPeerDescriptor, waitConnectionManagersReadyForTesting } from '../utils/utils'
-import { PeerID } from '../../src/helpers/PeerID'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
+import { createRandomKademliaId } from '../../src/helpers/kademliaId'
 
 describe('Storing data in DHT', () => {
     let entryPoint: DhtNode
@@ -46,23 +46,23 @@ describe('Storing data in DHT', () => {
 
     it('Storing data works', async () => {
         const storingNodeIndex = 34
-        const dataKey = PeerID.fromString('3232323e12r31r3')
+        const dataKey = createRandomKademliaId()
         const storedData = createMockPeerDescriptor()
         const data = Any.pack(storedData, PeerDescriptor)
-        const successfulStorers = await nodes[storingNodeIndex].storeDataToDht(dataKey.value, data)
+        const successfulStorers = await nodes[storingNodeIndex].storeDataToDht(dataKey, data)
         expect(successfulStorers.length).toBeGreaterThan(4)
     }, 90000)
 
     it('Storing and getting data works', async () => {
         const storingNode = getRandomNode()
-        const dataKey = PeerID.fromString('3232323e12r31r3')
+        const dataKey = createRandomKademliaId()
         const storedData = createMockPeerDescriptor()
         const data = Any.pack(storedData, PeerDescriptor)
-        const successfulStorers = await storingNode.storeDataToDht(dataKey.value, data)
+        const successfulStorers = await storingNode.storeDataToDht(dataKey, data)
         expect(successfulStorers.length).toBeGreaterThan(4)
 
         const fetchingNode = getRandomNode()
-        const results = await fetchingNode.getDataFromDht(dataKey.value)
+        const results = await fetchingNode.getDataFromDht(dataKey)
         results.forEach((entry) => {
             const foundData = Any.unpack(entry.data!, PeerDescriptor)
             expect(areEqualPeerDescriptors(foundData, storedData)).toBeTrue()
@@ -71,15 +71,15 @@ describe('Storing data in DHT', () => {
 
     it('storing with explicit storer PeerDescriptor', async () => {
         const storingNode = getRandomNode()
-        const dataKey = PeerID.fromString('3232323e12r31r3')
+        const dataKey = createRandomKademliaId()
         const storedData = createMockPeerDescriptor()
         const data = Any.pack(storedData, PeerDescriptor)
         const requestor = createMockPeerDescriptor()
-        const successfulStorers = await storingNode.storeDataToDht(dataKey.value, data, requestor)
+        const successfulStorers = await storingNode.storeDataToDht(dataKey, data, requestor)
         expect(successfulStorers.length).toBeGreaterThan(4)
 
         const fetchingNode = getRandomNode()
-        const results = await fetchingNode.getDataFromDht(dataKey.value)
+        const results = await fetchingNode.getDataFromDht(dataKey)
         results.forEach((entry) => {
             const foundData = Any.unpack(entry.data!, PeerDescriptor)
             expect(areEqualPeerDescriptors(foundData, storedData)).toBeTrue()

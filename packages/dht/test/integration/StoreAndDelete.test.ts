@@ -2,9 +2,9 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, createMockPeerDescriptor, waitConnectionManagersReadyForTesting } from '../utils/utils'
-import { PeerID } from '../../src/helpers/PeerID'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
+import { createRandomKademliaId } from '../../src/helpers/kademliaId'
 
 describe('Storing data in DHT', () => {
     let entryPoint: DhtNode
@@ -46,15 +46,15 @@ describe('Storing data in DHT', () => {
 
     it('Data can be deleted', async () => {
         const storingNode = getRandomNode()
-        const dataKey = PeerID.fromString('3232323e12r31r3')
+        const dataKey = createRandomKademliaId()
         const storedData = createMockPeerDescriptor()
         const data = Any.pack(storedData, PeerDescriptor)
-        const successfulStorers = await storingNode.storeDataToDht(dataKey.value, data)
+        const successfulStorers = await storingNode.storeDataToDht(dataKey, data)
         expect(successfulStorers.length).toBeGreaterThan(4)
-        await storingNode.deleteDataFromDht(dataKey.value)
+        await storingNode.deleteDataFromDht(dataKey)
 
         const fetchingNode = getRandomNode()
-        const results = await fetchingNode.getDataFromDht(dataKey.value)
+        const results = await fetchingNode.getDataFromDht(dataKey)
         results.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(entry.deleted).toBeTrue()
@@ -64,25 +64,25 @@ describe('Storing data in DHT', () => {
 
     it('Data can be deleted and re-stored', async () => {
         const storingNode = getRandomNode()
-        const dataKey = PeerID.fromString('3232323e12r31r3')
+        const dataKey = createRandomKademliaId()
         const storedData = createMockPeerDescriptor()
         const data = Any.pack(storedData, PeerDescriptor)
-        const successfulStorers1 = await storingNode.storeDataToDht(dataKey.value, data)
+        const successfulStorers1 = await storingNode.storeDataToDht(dataKey, data)
         expect(successfulStorers1.length).toBeGreaterThan(4)
-        await storingNode.deleteDataFromDht(dataKey.value)
+        await storingNode.deleteDataFromDht(dataKey)
 
         const fetchingNode = getRandomNode()
-        const results1 = await fetchingNode.getDataFromDht(dataKey.value)
+        const results1 = await fetchingNode.getDataFromDht(dataKey)
         results1.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(entry.deleted).toBeTrue()
             expect(areEqualPeerDescriptors(fetchedDescriptor, storedData)).toBeTrue()
         })
 
-        const successfulStorers2 = await storingNode.storeDataToDht(dataKey.value, data)
+        const successfulStorers2 = await storingNode.storeDataToDht(dataKey, data)
         expect(successfulStorers2.length).toBeGreaterThan(4)
 
-        const results2 = await fetchingNode.getDataFromDht(dataKey.value)
+        const results2 = await fetchingNode.getDataFromDht(dataKey)
         results2.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(entry.deleted).toBeFalse()
