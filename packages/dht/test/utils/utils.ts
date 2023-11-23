@@ -49,7 +49,8 @@ export const createMockConnectionDhtNode = async (
     binaryId?: Uint8Array,
     numberOfNodesPerKBucket?: number,
     maxConnections = 80,
-    dhtJoinTimeout = 45000
+    dhtJoinTimeout = 45000,
+    entryPoints: PeerDescriptor[] = []
 ): Promise<DhtNode> => {
     let id: PeerID
     if (binaryId) {
@@ -66,11 +67,12 @@ export const createMockConnectionDhtNode = async (
     await mockConnectionManager.start()
     const opts = {
         peerDescriptor: peerDescriptor,
+        entryPoints,
         transport: mockConnectionManager,
         numberOfNodesPerKBucket,
         maxConnections: maxConnections,
         dhtJoinTimeout,
-        rpcRequestTimeout: 5000
+        rpcRequestTimeout: 5000,
     }
     const node = new class extends DhtNode {
         async stop(): Promise<void> {

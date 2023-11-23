@@ -7,7 +7,7 @@ import { execSync } from 'child_process'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
-import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
@@ -57,15 +57,12 @@ describe('Replicate data from node to node in DHT', () => {
         nodes.push(entryPoint)
         nodesById.set(entryPoint.getNodeId().toKey(), entryPoint)
 
-        entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS
-        }
+        entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
 
-        nodes.push(entryPoint)
+        await entryPoint.joinDht([entrypointDescriptor])
 
-        for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode('dummy', simulator, createRandomKademliaId(), K, MAX_CONNECTIONS)
+        for (let i = 0; i < NUM_NODES; i++) {
+            const node = await createMockConnectionDhtNode('dummy', simulator, createRandomKademliaId(), K, MAX_CONNECTIONS, undefined, [entrypointDescriptor])
             nodesById.set(node.getNodeId().toKey(), node)
             nodes.push(node)
         }
@@ -75,6 +72,7 @@ describe('Replicate data from node to node in DHT', () => {
         await Promise.all([
             ...nodes.map(async (node) => await node.stop())
         ])
+        await entryPoint.stop()
         logger.info('nodes stopped')
     })
 
@@ -94,10 +92,6 @@ describe('Replicate data from node to node in DHT', () => {
         closest.forEach((contact) => {
             logger.info(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
         })
-
-        logger.info('node 0 joining to the DHT')
-
-        await nodes[0].joinDht([entrypointDescriptor])
 
         logger.info('storing data to node 0')
         const successfulStorers = await nodes[0].storeDataToDht(DATA_KEY.value, DATA_VALUE)
@@ -173,7 +167,7 @@ describe('Replicate data from node to node in DHT', () => {
             const index = Math.floor(Math.random() * randomIndices.length)
             const nodeIndex = randomIndices[index]
             randomIndices.splice(index, 1)
-            logger.info('Stopping node ' + nodeIndex, { hasData: hasData(nodes[nodeIndex])})
+            logger.info('Stopping node ' + nodeIndex, { hasData: hasData(nodes[nodeIndex]) })
             await nodes[nodeIndex].stop()
         }
 
