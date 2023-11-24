@@ -25,7 +25,7 @@ service FindRpc {
 
 service StoreRpc {
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
-  rpc migrateData (MigrateDataRequest) returns (MigrateDataResponse);
+  rpc replicateData (ReplicateDataRequest) returns (google.protobuf.Empty);
   rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
 }
 
@@ -60,8 +60,9 @@ service ExternalApiRpc {
 message StoreDataRequest {
   bytes kademliaId = 1;
   google.protobuf.Any data = 2;
-  uint32 ttl = 3;
+  PeerDescriptor storer = 3;
   google.protobuf.Timestamp storerTime = 4;
+  uint32 ttl = 5;
 }
 
 message StoreDataResponse {
@@ -77,12 +78,8 @@ message ExternalStoreDataResponse {
   repeated PeerDescriptor storers = 1;
 }
 
-message MigrateDataRequest {
-  DataEntry dataEntry = 1;
-}
-  
-message MigrateDataResponse {
-  string error = 1;
+message ReplicateDataRequest {
+  DataEntry entry = 1;
 }
 
 message DeleteDataRequest {
@@ -304,6 +301,5 @@ message ExternalFindDataRequest {
 }
 
 message ExternalFindDataResponse {
-  repeated DataEntry dataEntries = 1;
-  optional string error = 2;
+  repeated DataEntry entries = 1;
 }

@@ -39,7 +39,7 @@ export class LocalDataStore {
             const oldLocalEntry = this.store.get(dataKey)!.get(publisherKey)!
             const oldStoredMillis = (oldLocalEntry.dataEntry.storerTime!.seconds * 1000) + (oldLocalEntry.dataEntry.storerTime!.nanos / 1000000)
         
-            // do nothing if old entry is newer than the one being migrated
+            // do nothing if old entry is newer than the one being replicated
             if (oldStoredMillis >= storedMillis) {
                 return false
             } else {

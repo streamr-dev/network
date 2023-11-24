@@ -34,6 +34,7 @@ export class NeighborFinder implements INeighborFinder {
         }
         const newExcludes = await this.config.doFindNeighbors(excluded)
         if (this.config.targetNeighbors.size() < this.config.minCount && newExcludes.length < this.config.nearbyNodeView.size()) {
+            // TODO should we catch possible promise rejection?
             setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL, this.abortController.signal)
         } else {
             this.running = false
@@ -49,6 +50,7 @@ export class NeighborFinder implements INeighborFinder {
             return
         }
         this.running = true
+        // TODO should we catch possible promise rejection?
         setAbortableTimeout(() => this.findNeighbors(excluded), INITIAL_WAIT, this.abortController.signal)
     }
 
