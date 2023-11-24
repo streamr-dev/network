@@ -89,7 +89,7 @@ The only information they will need from you is your address. Please do not enga
             "controlLayer": {
                 "entryPoints": [
                     {
-                        "id": "e1",
+                        "nodeId": "e1",
                         "websocket": {
                             "host": "entrypoint-1.streamr.network",
                             "port": 40401,
@@ -97,7 +97,7 @@ The only information they will need from you is your address. Please do not enga
                         }
                     },
                     {
-                        "id": "e2",
+                        "node": "e2",
                         "websocket": {
                             "host": "entrypoint-2.streamr.network",
                             "port": 40401,
