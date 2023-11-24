@@ -3,10 +3,11 @@ import {
     ChangeResourceRecordSetsCommand, ChangeAction, RRType,
     ChangeResourceRecordSetsCommandOutput
 } from '@aws-sdk/client-route-53'
-import { Logger } from '@streamr/utils'
 
-const logger = new Logger(module)
-
+interface Record {
+    fqdn: string 
+    value: string
+}
 export class Route53Api {
     
     private hostedZoneId: string
@@ -17,42 +18,42 @@ export class Route53Api {
         this.client = new Route53Client({ region })
     }
 
-    private async changeRecord(
+    private async changeRecords(
         action: ChangeAction,
         recordType: RRType,
-        fqdn: string, 
-        value: string,
+        records: Record[],
         ttl: number
     ): Promise<ChangeResourceRecordSetsCommandOutput> {
-        logger.trace(`Changing record ${recordType} ${fqdn} to ${value}`)
         const input = {
             HostedZoneId: this.hostedZoneId,
             ChangeBatch: {
-                Changes: [{
-                    Action: action,
-                    ResourceRecordSet: {
-                        Name: fqdn,
-                        Type: recordType,
-                        TTL: ttl,
-                        ResourceRecords: [{
-                            Value: value,
-                        }]
+                Changes: records.map((record) => {
+                    return {
+                        Action: action,
+                        ResourceRecordSet: {
+                            Name: record.fqdn,
+                            Type: recordType,
+                            TTL: ttl,
+                            ResourceRecords: [{
+                                Value: record.value,
+                            }]
+                        }
                     }
-                }]
+                })
             }
         }
         const command = new ChangeResourceRecordSetsCommand(input)
         const response = await this.client.send(command)
-        logger.trace(`Record ${recordType} ${fqdn} changed to ${value}`, { response })
+       
         return response
     }
 
     public async upsertRecord(recordType: RRType, fqdn: string, value: string, ttl: number): Promise<ChangeResourceRecordSetsCommandOutput> {
-        return this.changeRecord(ChangeAction.UPSERT, recordType, fqdn, value, ttl)
+        return this.changeRecords(ChangeAction.UPSERT, recordType, [ { fqdn, value } ], ttl)
     }
 
     public async deleteRecord(recordType: RRType, fqdn: string, value: string, ttl: number): Promise<ChangeResourceRecordSetsCommandOutput> {
-        return this.changeRecord(ChangeAction.DELETE, recordType, fqdn, value, ttl)
+        return this.changeRecords(ChangeAction.DELETE, recordType, [ { fqdn, value } ], ttl)
     }
 
     // Debugging tool to list all records in a zone
