@@ -35,9 +35,9 @@ export class LocalDataStore {
         }
 
         if (this.store.get(dataKey)!.has(publisherKey)) {
-            const storedMillis = (dataEntry.storerTime!.seconds * 1000) + (dataEntry.storerTime!.nanos / 1000000)
+            const storedMillis = (dataEntry.createdAt!.seconds * 1000) + (dataEntry.createdAt!.nanos / 1000000)
             const oldLocalEntry = this.store.get(dataKey)!.get(publisherKey)!
-            const oldStoredMillis = (oldLocalEntry.dataEntry.storerTime!.seconds * 1000) + (oldLocalEntry.dataEntry.storerTime!.nanos / 1000000)
+            const oldStoredMillis = (oldLocalEntry.dataEntry.createdAt!.seconds * 1000) + (oldLocalEntry.dataEntry.createdAt!.nanos / 1000000)
         
             // do nothing if old entry is newer than the one being replicated
             if (oldStoredMillis >= storedMillis) {

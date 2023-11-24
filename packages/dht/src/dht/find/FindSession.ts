@@ -134,8 +134,8 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
         dataEntries.forEach((entry) => {
             const creatorKey = keyFromPeerDescriptor(entry.creator!)
             const existingEntry = this.foundData.get(creatorKey)
-            if (!existingEntry || existingEntry.storerTime! < entry.storerTime! 
-                || (existingEntry.storerTime! <= entry.storerTime! && entry.deleted)) {
+            if (!existingEntry || existingEntry.createdAt! < entry.createdAt! 
+                || (existingEntry.createdAt! <= entry.createdAt! && entry.deleted)) {
                 this.foundData.set(creatorKey, entry)
             }
         })

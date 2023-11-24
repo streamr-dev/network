@@ -61,7 +61,7 @@ message StoreDataRequest {
   bytes kademliaId = 1;
   google.protobuf.Any data = 2;
   PeerDescriptor creator = 3;
-  google.protobuf.Timestamp storerTime = 4;
+  google.protobuf.Timestamp createdAt = 4;
   uint32 ttl = 5;
 }
 
@@ -98,7 +98,7 @@ message DataEntry {
   uint32 ttl = 5;   // milliseconds
   bool stale = 6;
   bool deleted = 7;
-  google.protobuf.Timestamp storerTime = 8;
+  google.protobuf.Timestamp createdAt = 8;
 }
 
 message ClosestPeersRequest {

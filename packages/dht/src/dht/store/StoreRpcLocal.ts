@@ -156,7 +156,7 @@ export class StoreRpcLocal implements IStoreRpc {
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         const ttl = this.highestTtl // ToDo: make TTL decrease according to some nice curve
-        const storerTime = Timestamp.now()
+        const createdAt = Timestamp.now()
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.redundancyFactor; i++) {
             if (areEqualPeerDescriptors(this.localPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
@@ -167,7 +167,7 @@ export class StoreRpcLocal implements IStoreRpc {
                     data,
                     stale: false,
                     deleted: false,
-                    storerTime
+                    createdAt
                 })
                 successfulNodes.push(closestNodes[i])
                 continue
@@ -184,7 +184,7 @@ export class StoreRpcLocal implements IStoreRpc {
                     kademliaId: key,
                     data,
                     creator,
-                    storerTime,
+                    createdAt,
                     ttl
                 })
                 if (!response.error) {
@@ -244,13 +244,13 @@ export class StoreRpcLocal implements IStoreRpc {
     // RPC service implementation
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         const ttl = Math.min(request.ttl, this.maxTtl)
-        const { kademliaId, data, storerTime, creator } = request
+        const { kademliaId, data, createdAt, creator } = request
         this.localDataStore.storeEntry({ 
             kademliaId, 
             creator, 
             ttl,
             storedAt: Timestamp.now(),
-            storerTime,
+            createdAt,
             data,
             stale: !this.selfIsOneOfClosestPeers(kademliaId),
             deleted: false

@@ -26,9 +26,9 @@ export interface StoreDataRequest {
      */
     creator?: PeerDescriptor;
     /**
-     * @generated from protobuf field: google.protobuf.Timestamp storerTime = 4;
+     * @generated from protobuf field: google.protobuf.Timestamp createdAt = 4;
      */
-    storerTime?: Timestamp;
+    createdAt?: Timestamp;
     /**
      * @generated from protobuf field: uint32 ttl = 5;
      */
@@ -125,9 +125,9 @@ export interface DataEntry {
      */
     deleted: boolean;
     /**
-     * @generated from protobuf field: google.protobuf.Timestamp storerTime = 8;
+     * @generated from protobuf field: google.protobuf.Timestamp createdAt = 8;
      */
-    storerTime?: Timestamp;
+    createdAt?: Timestamp;
 }
 /**
  * @generated from protobuf message dht.ClosestPeersRequest
@@ -686,7 +686,7 @@ class StoreDataRequest$Type extends MessageType$<StoreDataRequest> {
             { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "data", kind: "message", T: () => Any },
             { no: 3, name: "creator", kind: "message", T: () => PeerDescriptor },
-            { no: 4, name: "storerTime", kind: "message", T: () => Timestamp },
+            { no: 4, name: "createdAt", kind: "message", T: () => Timestamp },
             { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
@@ -779,7 +779,7 @@ class DataEntry$Type extends MessageType$<DataEntry> {
             { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 6, name: "stale", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 7, name: "deleted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 8, name: "storerTime", kind: "message", T: () => Timestamp }
+            { no: 8, name: "createdAt", kind: "message", T: () => Timestamp }
         ]);
     }
 }
