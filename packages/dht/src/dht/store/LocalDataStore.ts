@@ -23,11 +23,11 @@ interface LocalDataEntry {
 export class LocalDataStore {
     // A map into which each node can store one value per data key
     // The first key is the key of the data, the second key is the
-    // PeerID of the storer of the data
+    // PeerID of the creator of the data
     private store: Map<PeerIDKey, Map<PeerIDKey, LocalDataEntry>> = new Map()
 
     public storeEntry(dataEntry: DataEntry): boolean {
-        const publisherKey = PeerID.fromValue(dataEntry.storer!.kademliaId).toKey()
+        const publisherKey = PeerID.fromValue(dataEntry.creator!.kademliaId).toKey()
         const dataKey = PeerID.fromValue(dataEntry.kademliaId).toKey()
         
         if (!this.store.has(dataKey)) {
@@ -49,19 +49,19 @@ export class LocalDataStore {
         this.store.get(dataKey)!.set(publisherKey, {
             dataEntry,
             ttlTimeout: setTimeout(() => {
-                this.deleteEntry(PeerID.fromValue(dataEntry.kademliaId), dataEntry.storer!)
+                this.deleteEntry(PeerID.fromValue(dataEntry.kademliaId), dataEntry.creator!)
             }, createTtlValue(dataEntry.ttl))
         })
         return true
     }
 
-    public markAsDeleted(id: Uint8Array, storer: PeerID): boolean {
+    public markAsDeleted(id: Uint8Array, creator: PeerID): boolean {
         const dataKey = PeerID.fromValue(id).toKey()
         const item = this.store.get(dataKey)
-        if ((item === undefined) || !item.has(storer.toKey())) {
+        if ((item === undefined) || !item.has(creator.toKey())) {
             return false
         }
-        const storedEntry = item.get(storer.toKey())
+        const storedEntry = item.get(creator.toKey())
         storedEntry!.dataEntry.deleted = true
         return true
     }
@@ -78,9 +78,9 @@ export class LocalDataStore {
         return dataEntries
     }
 
-    public setStale(key: PeerID, storer: PeerDescriptor, stale: boolean): void {
-        const storerKey = keyFromPeerDescriptor(storer)
-        const storedEntry = this.store.get(key.toKey())?.get(storerKey)
+    public setStale(key: PeerID, creator: PeerDescriptor, stale: boolean): void {
+        const creatorKey = keyFromPeerDescriptor(creator)
+        const storedEntry = this.store.get(key.toKey())?.get(creatorKey)
         if (storedEntry) {
             storedEntry.dataEntry.stale = stale
         }
@@ -92,12 +92,12 @@ export class LocalDataStore {
         })
     }
 
-    public deleteEntry(key: PeerID, storer: PeerDescriptor): void {
-        const storerKey = keyFromPeerDescriptor(storer)
-        const storedEntry = this.store.get(key.toKey())?.get(storerKey)
+    public deleteEntry(key: PeerID, creator: PeerDescriptor): void {
+        const creatorKey = keyFromPeerDescriptor(creator)
+        const storedEntry = this.store.get(key.toKey())?.get(creatorKey)
         if (storedEntry) {
             clearTimeout(storedEntry.ttlTimeout)
-            this.store.get(key.toKey())?.delete(storerKey)
+            this.store.get(key.toKey())?.delete(creatorKey)
             if (this.store.get(key.toKey())?.size === 0) {
                 this.store.delete(key.toKey())
             }

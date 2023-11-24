@@ -22,9 +22,9 @@ export interface StoreDataRequest {
      */
     data?: Any;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor storer = 3;
+     * @generated from protobuf field: dht.PeerDescriptor creator = 3;
      */
-    storer?: PeerDescriptor;
+    creator?: PeerDescriptor;
     /**
      * @generated from protobuf field: google.protobuf.Timestamp storerTime = 4;
      */
@@ -97,9 +97,9 @@ export interface DeleteDataResponse {
  */
 export interface DataEntry {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor storer = 1;
+     * @generated from protobuf field: dht.PeerDescriptor creator = 1;
      */
-    storer?: PeerDescriptor;
+    creator?: PeerDescriptor;
     /**
      * @generated from protobuf field: bytes kademliaId = 2;
      */
@@ -685,7 +685,7 @@ class StoreDataRequest$Type extends MessageType$<StoreDataRequest> {
         super("dht.StoreDataRequest", [
             { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "data", kind: "message", T: () => Any },
-            { no: 3, name: "storer", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "creator", kind: "message", T: () => PeerDescriptor },
             { no: 4, name: "storerTime", kind: "message", T: () => Timestamp },
             { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
@@ -772,7 +772,7 @@ export const DeleteDataResponse = new DeleteDataResponse$Type();
 class DataEntry$Type extends MessageType$<DataEntry> {
     constructor() {
         super("dht.DataEntry", [
-            { no: 1, name: "storer", kind: "message", T: () => PeerDescriptor },
+            { no: 1, name: "creator", kind: "message", T: () => PeerDescriptor },
             { no: 2, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 3, name: "data", kind: "message", T: () => Any },
             { no: 4, name: "storedAt", kind: "message", T: () => Timestamp },

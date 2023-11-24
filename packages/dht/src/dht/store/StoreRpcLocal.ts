@@ -127,10 +127,10 @@ export class StoreRpcLocal implements IStoreRpc {
         // do replicate data to it
 
         if (index < this.redundancyFactor) {
-            this.localDataStore.setStale(dataId, dataEntry.storer!, false)
+            this.localDataStore.setStale(dataId, dataEntry.creator!, false)
             return true
         } else {
-            this.localDataStore.setStale(dataId, dataEntry.storer!, true)
+            this.localDataStore.setStale(dataId, dataEntry.creator!, true)
             return false
         }
     }
@@ -150,7 +150,7 @@ export class StoreRpcLocal implements IStoreRpc {
         }
     }
 
-    public async storeDataToDht(key: Uint8Array, data: Any, storer: PeerDescriptor): Promise<PeerDescriptor[]> {
+    public async storeDataToDht(key: Uint8Array, data: Any, creator: PeerDescriptor): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.serviceId}`)
         const result = await this.finder.startFind(key)
         const closestNodes = result.closestNodes
@@ -161,7 +161,7 @@ export class StoreRpcLocal implements IStoreRpc {
             if (areEqualPeerDescriptors(this.localPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
                     kademliaId: key, 
-                    storer,
+                    creator,
                     ttl, 
                     storedAt: Timestamp.now(), 
                     data,
@@ -183,7 +183,7 @@ export class StoreRpcLocal implements IStoreRpc {
                 const response = await rpcRemote.storeData({
                     kademliaId: key,
                     data,
-                    storer,
+                    creator,
                     storerTime,
                     ttl
                 })
@@ -244,10 +244,10 @@ export class StoreRpcLocal implements IStoreRpc {
     // RPC service implementation
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         const ttl = Math.min(request.ttl, this.maxTtl)
-        const { kademliaId, data, storerTime, storer } = request
+        const { kademliaId, data, storerTime, creator } = request
         this.localDataStore.storeEntry({ 
             kademliaId, 
-            storer, 
+            creator, 
             ttl,
             storedAt: Timestamp.now(),
             storerTime,
