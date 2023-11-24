@@ -20,7 +20,20 @@ import { MockTransport } from '../utils/mock/Transport'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 import { IRouter } from '../../src/dht/routing/Router'
+import { ITransport } from '../../src/exports'
 
+const createMockRouter = (error?: RouteMessageError): Partial<IRouter> => {
+    return {
+        doRouteMessage: (routedMessage: RouteMessageWrapper) => {
+            return {
+                requestId: routedMessage.requestId,
+                error
+            }
+        },
+        isMostLikelyDuplicate: () => false,
+        addToDuplicateDetector: () => {}
+    }
+}
 describe('Finder', () => {
 
     const peerDescriptor1: PeerDescriptor = {
@@ -53,14 +66,14 @@ describe('Finder', () => {
     }
     const rpcCommunicator = new FakeRpcCommunicator()
 
-    const createFinder = (router: IRouter): Finder => {
+    const createFinder = (router: IRouter = new MockRouter(), transport: ITransport = new MockTransport()): Finder => {
         return new Finder({
             localPeerDescriptor: peerDescriptor1,
             router,
             connections: new Map(),
             serviceId: 'Finder',
             localDataStore: new LocalDataStore(),
-            sessionTransport: new MockTransport(),
+            sessionTransport: transport,
             addContact: () => {},
             isPeerCloserToIdThanSelf: (_peer1, _compareToId) => true,
             rpcCommunicator: rpcCommunicator as any
@@ -68,14 +81,14 @@ describe('Finder', () => {
     }
 
     it('Finder server', async () => {
-        const finder = createFinder(new MockRouter())
+        const finder = createFinder()
         const res = await rpcCommunicator.callRpcMethod('routeFindRequest', routedMessage) as RouteMessageAck
         expect(res.error).toBeUndefined()
         finder.stop()
     })
 
     it('startFind with mode Node returns self if no peers', async () => {
-        const finder = createFinder(new MockRouter())
+        const finder = createFinder()
         const res = await finder.startFind(PeerID.fromString('find').value)
         expect(areEqualPeerDescriptors(res.closestNodes[0], peerDescriptor1)).toEqual(true)
         finder.stop()
@@ -107,22 +120,36 @@ describe('Finder', () => {
     })
 
     it('no targets', async () => {
-        const router: Partial<IRouter> = {
-            doRouteMessage: (routedMessage: RouteMessageWrapper) => {
-                return {
-                    requestId: routedMessage.requestId,
-                    error: RouteMessageError.NO_TARGETS
-                }
-            },
-            isMostLikelyDuplicate: () => false,
-            addToDuplicateDetector: () => {}
+        const router = createMockRouter(RouteMessageError.NO_TARGETS)
+        const send = jest.fn()
+        const transport = { 
+            send,
+            on: () => {},
+            off: () => {}
         }
-        const finder = createFinder(router as any)
+        const finder = createFinder(router as any, transport as any)
         const ack = await rpcCommunicator.callRpcMethod('routeFindRequest', routedMessage)
         expect(ack).toEqual({
             requestId: routedMessage.requestId,
             error: RouteMessageError.NO_TARGETS
         })
+        expect(send).toHaveBeenCalledTimes(1)
+        finder.stop()
+    })
+
+    it('error', async () => {
+        const router = createMockRouter(RouteMessageError.DUPLICATE)
+        const send = jest.fn()
+        const transport = { 
+            send
+        }
+        const finder = createFinder(router as any, transport as any)
+        const ack = await rpcCommunicator.callRpcMethod('routeFindRequest', routedMessage)
+        expect(ack).toEqual({
+            requestId: routedMessage.requestId,
+            error: RouteMessageError.DUPLICATE
+        })
+        expect(send).not.toHaveBeenCalled()
         finder.stop()
     })
 })
