@@ -22,8 +22,7 @@
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
     "test": "jest test/unit test/integration",
     "test-unit": "jest test/unit",
-    "test-integration": "jest test/integration",
-    "start": "node dist/src/main.js"
+    "test-integration": "jest test/integration"
   },
   "dependencies": {
     "@streamr/autocertifier-client": "100.0.0-pretestnet.4",
