@@ -48,15 +48,16 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         const hmacKey = validateEnvironmentVariable('AUTOCERTIFIER_HMAC_KEY')
         const restServerCertPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_CERT_PATH')
         const restServerKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_KEY_PATH')
-
-        const useRoute53 = process.env['AUTOCERTIFIER_USE_ROUTE53'] !== undefined &&
-            process.env['AUTOCERTIFIER_USE_ROUTE53'] !== 'false'
+        const useRoute53 = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_KEY_PATH') === 'true' ? true : false
 
         if (useRoute53) {
-            // these env variables are needed by route53 package
+            // these env variables are needed by route53 package, it will read the env variables internally
             validateEnvironmentVariable('AWS_ACCESS_KEY_ID')
             validateEnvironmentVariable('AWS_SECRET_ACCESS_KEY')
-            this.route53Api = new Route53Api(validateEnvironmentVariable('AUTOCERTIFIER_ROUTE53_HOSTED_ZONE_ID'))
+            this.route53Api = new Route53Api(
+                validateEnvironmentVariable('AUTOCERTIFIER_ROUTE53_REGION'),
+                validateEnvironmentVariable('AUTOCERTIFIER_ROUTE53_HOSTED_ZONE_ID')
+            )
         }
 
         this.database = new Database(databaseFilePath)
@@ -181,17 +182,17 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         logger.info('creating challenge for ' + fqdn + ' with value ' + value)
         await this.database!.updateSubdomainAcmeChallenge(fqdn.split('.')[0], value)
         if (this.route53Api !== undefined) {
-            await this.route53Api.upsertRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, value, 300)
+            logger.trace(`Creating acme challenge for ${fqdn} with value ${value} to Route53`)
+            await this.route53Api.upsertRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, `"${value}"`, 300)
         }
     }
 
     // ChallengeManager implementation
     // eslint-disable-next-line class-methods-use-this
     public async deleteChallenge(fqdn: string, value: string): Promise<void> {
-        // TODO: Should this function do something?
-        // TODO: we could add logging here to see if this is actually called ever
         if (this.route53Api !== undefined) {
-            await this.route53Api.deleteRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, value, 300)
+            logger.trace(`Deleting acme challenge for ${fqdn} with value ${value} to Route53`)
+            await this.route53Api.deleteRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, `"${value}"`, 300)
         }
     }
 
