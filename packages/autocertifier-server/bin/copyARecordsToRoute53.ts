@@ -23,7 +23,7 @@ import { ChangeAction } from '@aws-sdk/client-route-53'
     try {
         const allSubdomains = await database.getAllSubdomains()
         if (allSubdomains) {
-            const batched = chunk(allSubdomains, 25)
+            const batched = chunk(allSubdomains, 100)
             for (const batch of batched) {
                 const records = batch.map((subdomain: Subdomain) => {
                     return {
