@@ -191,7 +191,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         // TODO: Should this function do something?
         // TODO: we could add logging here to see if this is actually called ever
         if (this.route53Api !== undefined) {
-            await this.route53Api.deleteRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, value, 300)
+            await this.route53Api.deleteRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, `"${value}"`, 300)
         }
     }
 
