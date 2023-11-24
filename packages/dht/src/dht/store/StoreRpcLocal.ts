@@ -90,11 +90,11 @@ export class StoreRpcLocal implements IStoreRpc {
 
     private shouldReplicateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
 
-        const dataId = PeerID.fromValue(dataEntry.kademliaId)
+        const dataId = PeerID.fromValue(dataEntry.key)
         const newNodeId = PeerID.fromValue(newNode.kademliaId)
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.kademliaId)
 
-        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
+        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
 
         const sortedList = new SortedContactList<Contact>(dataId, 20, undefined, true)
         sortedList.addContact(new Contact(this.localPeerDescriptor))
@@ -160,7 +160,7 @@ export class StoreRpcLocal implements IStoreRpc {
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.redundancyFactor; i++) {
             if (areEqualPeerDescriptors(this.localPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
-                    kademliaId: key, 
+                    key, 
                     data,
                     creator,
                     createdAt,
@@ -181,7 +181,7 @@ export class StoreRpcLocal implements IStoreRpc {
             )
             try {
                 const response = await rpcRemote.storeData({
-                    kademliaId: key,
+                    key,
                     data,
                     creator,
                     createdAt,
@@ -228,7 +228,7 @@ export class StoreRpcLocal implements IStoreRpc {
                 this.rpcRequestTimeout
             )
             try {
-                const response = await rpcRemote.deleteData({ kademliaId: key })
+                const response = await rpcRemote.deleteData({ key })
                 if (response.deleted) {
                     logger.trace('remote.deleteData() returned success')
                 } else {
@@ -244,20 +244,20 @@ export class StoreRpcLocal implements IStoreRpc {
     // RPC service implementation
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         const ttl = Math.min(request.ttl, this.maxTtl)
-        const { kademliaId, data, createdAt, creator } = request
+        const { key, data, createdAt, creator } = request
         this.localDataStore.storeEntry({ 
-            kademliaId, 
+            key, 
             data,
             creator, 
             createdAt,
             storedAt: Timestamp.now(),
             ttl,
-            stale: !this.selfIsOneOfClosestPeers(kademliaId),
+            stale: !this.selfIsOneOfClosestPeers(key),
             deleted: false
         })
         
-        if (!this.selfIsOneOfClosestPeers(kademliaId)) {
-            this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(kademliaId))
+        if (!this.selfIsOneOfClosestPeers(key)) {
+            this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(key))
         }
 
         logger.trace('storeData()')
@@ -274,7 +274,7 @@ export class StoreRpcLocal implements IStoreRpc {
             .map((localData) => localData.dataEntry)
 
         await Promise.all(dataEntries.map(async (dataEntry) => {
-            const dhtNodeRemotes = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, this.redundancyFactor)
+            const dhtNodeRemotes = this.getNodesClosestToIdFromBucket(dataEntry.key, this.redundancyFactor)
             await Promise.all(dhtNodeRemotes.map(async (remoteDhtNode) => {
                 const rpcRemote = new StoreRpcRemote(
                     this.localPeerDescriptor,
@@ -295,8 +295,8 @@ export class StoreRpcLocal implements IStoreRpc {
     // RPC service implementation
     async deleteData(request: DeleteDataRequest, context: ServerCallContext): Promise<DeleteDataResponse> {
         const { incomingSourceDescriptor } = context as DhtCallContext
-        const { kademliaId } = request
-        const deleted = this.localDataStore.markAsDeleted(kademliaId, peerIdFromPeerDescriptor(incomingSourceDescriptor!))
+        const { key } = request
+        const deleted = this.localDataStore.markAsDeleted(key, peerIdFromPeerDescriptor(incomingSourceDescriptor!))
         return DeleteDataResponse.create({ deleted })
     }
 
@@ -310,8 +310,8 @@ export class StoreRpcLocal implements IStoreRpc {
         if (wasStored) {
             this.replicateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.entry!)
         }
-        if (!this.selfIsOneOfClosestPeers(dataEntry.kademliaId)) {
-            this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.kademliaId))
+        if (!this.selfIsOneOfClosestPeers(dataEntry.key)) {
+            this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.key))
         }
         logger.trace('server-side replicateData() at end')
         return {}
@@ -321,9 +321,9 @@ export class StoreRpcLocal implements IStoreRpc {
 
         // sort own contact list according to data id
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.kademliaId)
-        const dataId = PeerID.fromValue(dataEntry.kademliaId)
+        const dataId = PeerID.fromValue(dataEntry.key)
         const incomingPeerId = PeerID.fromValue(incomingPeer.kademliaId)
-        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
+        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
 
         const sortedList = new SortedContactList<Contact>(dataId, this.redundancyFactor, undefined, true)
         sortedList.addContact(new Contact(this.localPeerDescriptor))

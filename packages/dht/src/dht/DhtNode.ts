@@ -643,28 +643,28 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return await rpcRemote.storeData(key, data)
     }
 
-    public async getDataFromDht(idToFind: Uint8Array): Promise<DataEntry[]> {
+    public async getDataFromDht(key: Uint8Array): Promise<DataEntry[]> {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
-            return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
+            return this.findDataViaPeer(key, sample(this.config.entryPoints)!)
         }
-        const result = await this.finder!.startFind(idToFind, true)
+        const result = await this.finder!.startFind(key, true)
         return result.dataEntries ?? []  // TODO is this fallback needed? 
     }
 
-    public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
+    public async deleteDataFromDht(key: Uint8Array): Promise<void> {
         if (!this.stopped) {
-            return this.storeRpcLocal!.deleteDataFromDht(idToDelete)
+            return this.storeRpcLocal!.deleteDataFromDht(key)
         }
     }
 
-    public async findDataViaPeer(idToFind: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
+    public async findDataViaPeer(key: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
         const rpcRemote = new ExternalApiRpcRemote(
             this.localPeerDescriptor!,
             peer,
             this.config.serviceId,
             toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        return await rpcRemote.externalFindData(idToFind)
+        return await rpcRemote.externalFindData(key)
     }
 
     public getTransport(): ITransport {

@@ -28,7 +28,7 @@ export class LocalDataStore {
 
     public storeEntry(dataEntry: DataEntry): boolean {
         const publisherKey = PeerID.fromValue(dataEntry.creator!.kademliaId).toKey()
-        const dataKey = PeerID.fromValue(dataEntry.kademliaId).toKey()
+        const dataKey = PeerID.fromValue(dataEntry.key).toKey()
         
         if (!this.store.has(dataKey)) {
             this.store.set(dataKey, new Map())
@@ -49,7 +49,7 @@ export class LocalDataStore {
         this.store.get(dataKey)!.set(publisherKey, {
             dataEntry,
             ttlTimeout: setTimeout(() => {
-                this.deleteEntry(PeerID.fromValue(dataEntry.kademliaId), dataEntry.creator!)
+                this.deleteEntry(PeerID.fromValue(dataEntry.key), dataEntry.creator!)
             }, createTtlValue(dataEntry.ttl))
         })
         return true

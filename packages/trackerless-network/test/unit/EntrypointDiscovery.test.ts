@@ -20,7 +20,7 @@ describe('EntryPointDiscovery', () => {
     const deletedPeerDescriptor = createMockPeerDescriptor()
 
     const fakeData: DataEntry = {
-        kademliaId: Uint8Array.from([1, 2, 3]),
+        key: Uint8Array.from([1, 2, 3]),
         data: Any.pack(peerDescriptor, PeerDescriptor),
         creator: peerDescriptor,
         ttl: 1000,
@@ -29,7 +29,7 @@ describe('EntryPointDiscovery', () => {
     }
 
     const fakeDeletedData: DataEntry = {
-        kademliaId: Uint8Array.from([1, 2, 3]),
+        key: Uint8Array.from([1, 2, 3]),
         data: Any.pack(deletedPeerDescriptor, PeerDescriptor),
         creator: deletedPeerDescriptor,
         ttl: 1000,

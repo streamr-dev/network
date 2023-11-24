@@ -58,7 +58,7 @@ service ExternalApiRpc {
 // Used inside RpcMessage
 
 message StoreDataRequest {
-  bytes kademliaId = 1;
+  bytes key = 1;
   google.protobuf.Any data = 2;
   PeerDescriptor creator = 3;
   google.protobuf.Timestamp createdAt = 4;
@@ -83,7 +83,7 @@ message ReplicateDataRequest {
 }
 
 message DeleteDataRequest {
-  bytes kademliaId = 1;
+  bytes key = 1;
 }
 
 message DeleteDataResponse {
@@ -91,7 +91,7 @@ message DeleteDataResponse {
 }
 
 message DataEntry {
-  bytes kademliaId = 1;
+  bytes key = 1;
   google.protobuf.Any data = 2;
   PeerDescriptor creator = 3;
   google.protobuf.Timestamp createdAt = 4;
@@ -297,7 +297,7 @@ message DisconnectNoticeResponse {
 }
 
 message ExternalFindDataRequest {
-  bytes kademliaId = 1;
+  bytes key = 1;
 }
 
 message ExternalFindDataResponse {

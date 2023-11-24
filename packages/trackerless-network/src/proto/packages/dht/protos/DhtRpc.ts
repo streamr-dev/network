@@ -14,9 +14,9 @@ import { Any } from "../../../google/protobuf/any";
  */
 export interface StoreDataRequest {
     /**
-     * @generated from protobuf field: bytes kademliaId = 1;
+     * @generated from protobuf field: bytes key = 1;
      */
-    kademliaId: Uint8Array;
+    key: Uint8Array;
     /**
      * @generated from protobuf field: google.protobuf.Any data = 2;
      */
@@ -79,9 +79,9 @@ export interface ReplicateDataRequest {
  */
 export interface DeleteDataRequest {
     /**
-     * @generated from protobuf field: bytes kademliaId = 1;
+     * @generated from protobuf field: bytes key = 1;
      */
-    kademliaId: Uint8Array;
+    key: Uint8Array;
 }
 /**
  * @generated from protobuf message dht.DeleteDataResponse
@@ -97,37 +97,37 @@ export interface DeleteDataResponse {
  */
 export interface DataEntry {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor creator = 1;
+     * @generated from protobuf field: bytes key = 1;
      */
-    creator?: PeerDescriptor;
+    key: Uint8Array;
     /**
-     * @generated from protobuf field: bytes kademliaId = 2;
-     */
-    kademliaId: Uint8Array;
-    /**
-     * @generated from protobuf field: google.protobuf.Any data = 3;
+     * @generated from protobuf field: google.protobuf.Any data = 2;
      */
     data?: Any;
     /**
-     * @generated from protobuf field: google.protobuf.Timestamp storedAt = 4;
+     * @generated from protobuf field: dht.PeerDescriptor creator = 3;
+     */
+    creator?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp createdAt = 4;
+     */
+    createdAt?: Timestamp;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp storedAt = 5;
      */
     storedAt?: Timestamp;
     /**
-     * @generated from protobuf field: uint32 ttl = 5;
+     * @generated from protobuf field: uint32 ttl = 6;
      */
     ttl: number; // milliseconds
     /**
-     * @generated from protobuf field: bool stale = 6;
+     * @generated from protobuf field: bool stale = 7;
      */
     stale: boolean;
     /**
-     * @generated from protobuf field: bool deleted = 7;
+     * @generated from protobuf field: bool deleted = 8;
      */
     deleted: boolean;
-    /**
-     * @generated from protobuf field: google.protobuf.Timestamp createdAt = 8;
-     */
-    createdAt?: Timestamp;
 }
 /**
  * @generated from protobuf message dht.ClosestPeersRequest
@@ -551,9 +551,9 @@ export interface DisconnectNoticeResponse {
  */
 export interface ExternalFindDataRequest {
     /**
-     * @generated from protobuf field: bytes kademliaId = 1;
+     * @generated from protobuf field: bytes key = 1;
      */
-    kademliaId: Uint8Array;
+    key: Uint8Array;
 }
 /**
  * @generated from protobuf message dht.ExternalFindDataResponse
@@ -683,7 +683,7 @@ export enum DisconnectMode {
 class StoreDataRequest$Type extends MessageType$<StoreDataRequest> {
     constructor() {
         super("dht.StoreDataRequest", [
-            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "data", kind: "message", T: () => Any },
             { no: 3, name: "creator", kind: "message", T: () => PeerDescriptor },
             { no: 4, name: "createdAt", kind: "message", T: () => Timestamp },
@@ -748,7 +748,7 @@ export const ReplicateDataRequest = new ReplicateDataRequest$Type();
 class DeleteDataRequest$Type extends MessageType$<DeleteDataRequest> {
     constructor() {
         super("dht.DeleteDataRequest", [
-            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+            { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }
@@ -772,14 +772,14 @@ export const DeleteDataResponse = new DeleteDataResponse$Type();
 class DataEntry$Type extends MessageType$<DataEntry> {
     constructor() {
         super("dht.DataEntry", [
-            { no: 1, name: "creator", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 3, name: "data", kind: "message", T: () => Any },
-            { no: 4, name: "storedAt", kind: "message", T: () => Timestamp },
-            { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 6, name: "stale", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 7, name: "deleted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 8, name: "createdAt", kind: "message", T: () => Timestamp }
+            { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "data", kind: "message", T: () => Any },
+            { no: 3, name: "creator", kind: "message", T: () => PeerDescriptor },
+            { no: 4, name: "createdAt", kind: "message", T: () => Timestamp },
+            { no: 5, name: "storedAt", kind: "message", T: () => Timestamp },
+            { no: 6, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 7, name: "stale", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 8, name: "deleted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -1149,7 +1149,7 @@ export const DisconnectNoticeResponse = new DisconnectNoticeResponse$Type();
 class ExternalFindDataRequest$Type extends MessageType$<ExternalFindDataRequest> {
     constructor() {
         super("dht.ExternalFindDataRequest", [
-            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+            { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }
