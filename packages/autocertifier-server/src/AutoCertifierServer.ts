@@ -181,6 +181,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         logger.info('creating challenge for ' + fqdn + ' with value ' + value)
         await this.database!.updateSubdomainAcmeChallenge(fqdn.split('.')[0], value)
         if (this.route53Api !== undefined) {
+            logger.trace(`Creating acme challenge for ${fqdn} with value ${value} to Route53`)
             await this.route53Api.upsertRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, `"${value}"`, 300)
         }
     }
@@ -191,6 +192,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         // TODO: Should this function do something?
         // TODO: we could add logging here to see if this is actually called ever
         if (this.route53Api !== undefined) {
+            logger.trace(`Deleting acme challenge for ${fqdn} with value ${value} to Route53`)
             await this.route53Api.deleteRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, `"${value}"`, 300)
         }
     }
