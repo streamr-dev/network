@@ -122,13 +122,29 @@ export class MaxSizedSet<T> {
 }
 
 // TODO: rename to convertNetworkPeerDescriptorToPeerDescriptor
+
+// This function contains temporary compatibility layer which allows that PeerDescriptor can be configured with 
+// "id" field instead of "nodeId" field. This is done so that pretestnet users don't need to change their configs.
+// After strear-1.0 testnet1 or mainnet starts, remove this hack.
+// - Good to ensure at that point that the new format has landed to the public documentation: 
+//   https://docs.streamr.network/guides/become-an-operator
+// - or maybe NET-1133 or NET-1004 have been implemented and the documentation no longer mentions the low
+//   level way of configuring the entry points.
+// Actions:
+// - remove "temporary compatibility" test case from Broker's config.test.ts 
+// - remove "id" property from config.schema.json (line 536) and make "nodeId" property required
+// - remove "id" property handling from this method
+// - (not strictly related to this, but could also rename id -> nodeId for each entry point in '@streamr/config')
 export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescriptor {
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
         ...json,
-        nodeId: hexToBinary(json.nodeId),
+        nodeId: hexToBinary(json.nodeId ?? (json as any).id),
         type,
         websocket: json.websocket
+    }
+    if ((peerDescriptor as any).id !== undefined) {
+        delete (peerDescriptor as any).id
     }
     return peerDescriptor
 }
