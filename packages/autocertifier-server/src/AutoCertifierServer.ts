@@ -48,7 +48,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         const hmacKey = validateEnvironmentVariable('AUTOCERTIFIER_HMAC_KEY')
         const restServerCertPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_CERT_PATH')
         const restServerKeyPath = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_KEY_PATH')
-        const useRoute53 = validateEnvironmentVariable('AUTOCERTIFIER_REST_SERVER_KEY_PATH') === 'true' ? true : false
+        const useRoute53 = validateEnvironmentVariable('AUTOCERTIFIER_USE_ROUTE53') === 'true' ? true : false
 
         if (useRoute53) {
             // these env variables are needed by route53 package, it will read the env variables internally
