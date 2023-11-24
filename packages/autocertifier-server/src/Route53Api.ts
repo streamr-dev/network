@@ -12,7 +12,7 @@ export class Route53Api {
     private hostedZoneId: string
     private client: Route53Client
     
-    constructor(hostedZoneId: string, region = 'EU-NORTH-1' ) {
+    constructor(region: string, hostedZoneId: string) {
         this.hostedZoneId = hostedZoneId
         this.client = new Route53Client({ region })
     }
@@ -55,6 +55,7 @@ export class Route53Api {
         return this.changeRecord(ChangeAction.DELETE, recordType, fqdn, value, ttl)
     }
 
+    // Debugging tool to list all records in a zone
     public async listRecords(): Promise<ListResourceRecordSetsCommandOutput> {
         const input = {
             HostedZoneId: this.hostedZoneId,

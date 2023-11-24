@@ -67,6 +67,9 @@ AWS_ACCESS_KEY_ID="example-id"
 # AWS access key, needed if AUTOCERTIFIER_USE_ROUTE53="true"
 AWS_SECRET_ACCESS_KEY="example-key"
 
+# ID of the AWS region to use, needed if AUTOCERTIFIER_USE_ROUTE53="true"
+AUTOCERTIFIER_ROUTE53_REGION="example region"
+
 # ID of the DNS zone in Route 53 AWS, needed if AUTOCERTIFIER_USE_ROUTE53="true"
 AUTOCERTIFIER_ROUTE53_HOSTED_ZONE_ID="example-id"
 ```
