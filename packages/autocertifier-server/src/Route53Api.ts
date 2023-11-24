@@ -3,6 +3,9 @@ import {
     ChangeResourceRecordSetsCommand, ChangeAction, RRType,
     ChangeResourceRecordSetsCommandOutput
 } from '@aws-sdk/client-route-53'
+import { Logger } from '@streamr/utils'
+
+const logger = new Logger(module)
 
 export class Route53Api {
     
@@ -16,6 +19,7 @@ export class Route53Api {
 
     private async changeRecord(action: ChangeAction, recordType: RRType, fqdn: string, 
         value: string, ttl: number): Promise<ChangeResourceRecordSetsCommandOutput> {
+        logger.trace(`Changing record ${recordType} ${fqdn} to ${value}`)
         const input = {
             HostedZoneId: this.hostedZoneId,
             ChangeBatch: {
@@ -39,6 +43,7 @@ export class Route53Api {
     
         const command = new ChangeResourceRecordSetsCommand(input)
         const response = await this.client.send(command)
+        logger.trace(`Record ${recordType} ${fqdn} changed to ${value}`, { response })
         return response
     }
 
