@@ -8,7 +8,8 @@
     "directory": "packages/autocertifier-server"
   },
   "bin": {
-    "autocertifier": "dist/bin/run.js"
+    "autocertifier": "dist/bin/run.js",
+    "copyARecordsToRoute53": "dist/bin/copyARecordsToRoute53.js"
   },
   "main": "dist/src/exports.js",
   "types": "dist/src/exports.d.ts",
