@@ -91,8 +91,8 @@ export class StoreRpcLocal implements IStoreRpc {
     private shouldReplicateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
 
         const dataId = PeerID.fromValue(dataEntry.key)
-        const newNodeId = PeerID.fromValue(newNode.kademliaId)
-        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.kademliaId)
+        const newNodeId = PeerID.fromValue(newNode.nodeId)
+        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
 
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
 
@@ -100,7 +100,7 @@ export class StoreRpcLocal implements IStoreRpc {
         sortedList.addContact(new Contact(this.localPeerDescriptor))
 
         closestToData.forEach((con) => {
-            if (!newNodeId.equals(PeerID.fromValue(con.getPeerDescriptor().kademliaId))) {
+            if (!newNodeId.equals(PeerID.fromValue(con.getPeerDescriptor().nodeId))) {
                 sortedList.addContact(new Contact(con.getPeerDescriptor()))
             }
         })
@@ -110,7 +110,7 @@ export class StoreRpcLocal implements IStoreRpc {
             return false
         }
 
-        const newPeerId = PeerID.fromValue(newNode.kademliaId)
+        const newPeerId = PeerID.fromValue(newNode.nodeId)
         sortedList.addContact(new Contact(newNode))
 
         const sorted = sortedList.getAllContacts()
@@ -201,7 +201,7 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     private selfIsOneOfClosestPeers(dataId: Uint8Array): boolean {
-        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.kademliaId)
+        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
         const closestPeers = this.getNodesClosestToIdFromBucket(dataId, this.redundancyFactor)
         const sortedList = new SortedContactList<Contact>(localPeerId, this.redundancyFactor, undefined, true)
         sortedList.addContact(new Contact(this.localPeerDescriptor))
@@ -320,9 +320,9 @@ export class StoreRpcLocal implements IStoreRpc {
     private replicateDataToNeighborsIfNeeded(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
 
         // sort own contact list according to data id
-        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.kademliaId)
+        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
         const dataId = PeerID.fromValue(dataEntry.key)
-        const incomingPeerId = PeerID.fromValue(incomingPeer.kademliaId)
+        const incomingPeerId = PeerID.fromValue(incomingPeer.nodeId)
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
 
         const sortedList = new SortedContactList<Contact>(dataId, this.redundancyFactor, undefined, true)
@@ -337,7 +337,7 @@ export class StoreRpcLocal implements IStoreRpc {
             // closest one to the data
 
             const contact = sortedList.getAllContacts()[0]
-            const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
+            const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().nodeId)
             if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
                 setImmediate(async () => {
                     try {
@@ -351,7 +351,7 @@ export class StoreRpcLocal implements IStoreRpc {
         } else {
             // if we are the closest to the data, replicate to all storageRedundancyFactor nearest
             sortedList.getAllContacts().forEach((contact) => {
-                const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
+                const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().nodeId)
                 if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
                     if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
                         setImmediate(async () => {

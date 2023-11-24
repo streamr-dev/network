@@ -118,14 +118,14 @@ const logger = new Logger(module)
 export type Events = TransportEvents & DhtNodeEvents
 
 export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string): PeerDescriptor => {
-    let kademliaId: Uint8Array
+    let nodeId: Uint8Array
     if (msg) {
-        kademliaId = (peerId !== undefined) ? hexToBinary(peerId) : PeerID.fromIp(msg.host).value
+        nodeId = (peerId !== undefined) ? hexToBinary(peerId) : PeerID.fromIp(msg.host).value
     } else {
-        kademliaId = hexToBinary(peerId!)
+        nodeId = hexToBinary(peerId!)
     }
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
-    const ret: PeerDescriptor = { kademliaId, type: nodeType }
+    const ret: PeerDescriptor = { nodeId, type: nodeType }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
     }
@@ -381,8 +381,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
-        const distance1 = this.peerManager!.bucket!.distance(peer1.kademliaId, compareToId.value)
-        const distance2 = this.peerManager!.bucket!.distance(this.localPeerDescriptor!.kademliaId, compareToId.value)
+        const distance1 = this.peerManager!.bucket!.distance(peer1.nodeId, compareToId.value)
+        const distance2 = this.peerManager!.bucket!.distance(this.localPeerDescriptor!.nodeId, compareToId.value)
         return distance1 < distance2
     }
 

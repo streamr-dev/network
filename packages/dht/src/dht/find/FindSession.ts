@@ -17,7 +17,7 @@ export interface FindSessionEvents {
 export interface FindSessionConfig {
     serviceId: ServiceID
     transport: ITransport
-    kademliaIdToFind: Uint8Array
+    nodeIdToFind: Uint8Array
     localPeerId: PeerID
     waitedRoutingPathCompletions: number
     fetchData: boolean
@@ -26,7 +26,7 @@ export interface FindSessionConfig {
 export class FindSession extends EventEmitter<FindSessionEvents> {
     private readonly serviceId: ServiceID
     private readonly transport: ITransport
-    private readonly kademliaIdToFind: Uint8Array
+    private readonly nodeIdToFind: Uint8Array
     private readonly localPeerId: PeerID
     private readonly waitedRoutingPathCompletions: number
     private readonly rpcCommunicator: ListeningRpcCommunicator
@@ -43,10 +43,10 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
         super()
         this.serviceId = config.serviceId
         this.transport = config.transport
-        this.kademliaIdToFind = config.kademliaIdToFind
+        this.nodeIdToFind = config.nodeIdToFind
         this.localPeerId = config.localPeerId
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
-        this.results = new SortedContactList(PeerID.fromValue(this.kademliaIdToFind), 10, undefined, true)
+        this.results = new SortedContactList(PeerID.fromValue(this.nodeIdToFind), 10, undefined, true)
         this.fetchData = config.fetchData
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
             rpcRequestTimeout: 15000
@@ -106,7 +106,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
 
     private addKnownHops(routingPath: PeerDescriptor[]) {
         routingPath.forEach((desc) => {
-            const newPeerId = PeerID.fromValue(desc.kademliaId)
+            const newPeerId = PeerID.fromValue(desc.nodeId)
             if (!this.localPeerId.equals(newPeerId)) {
                 this.allKnownHops.add(newPeerId.toKey())
             }
@@ -114,7 +114,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
     }
 
     private setHopAsReported(desc: PeerDescriptor) {
-        const newPeerId = PeerID.fromValue(desc.kademliaId)
+        const newPeerId = PeerID.fromValue(desc.nodeId)
         if (!this.localPeerId.equals(newPeerId)) {
             this.reportedHops.add(newPeerId.toKey())
         }

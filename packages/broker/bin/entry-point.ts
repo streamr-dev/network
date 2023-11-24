@@ -8,7 +8,7 @@ const main = async () => {
     const entryPoint = CONFIG_TEST.network!.controlLayer!.entryPoints![0]
     const peerDescriptor = {
         ...omit(entryPoint, 'id'),
-        kademliaId: hexToBinary(entryPoint.id),
+        nodeId: hexToBinary(entryPoint.id),
         type: NodeType.NODEJS,  // TODO remove this when NET-1070 done
         websocket: {
             ...entryPoint.websocket!,

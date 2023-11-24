@@ -1,8 +1,8 @@
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { PeerID } from '../../src/helpers/PeerID'
 
-const createItem = (kademliaId: Uint8Array): { getPeerId: () => PeerID } => {
-    return { getPeerId: () => PeerID.fromValue(kademliaId) }
+const createItem = (nodeId: Uint8Array): { getPeerId: () => PeerID } => {
+    return { getPeerId: () => PeerID.fromValue(nodeId) }
 }
 
 describe('SortedContactList', () => {

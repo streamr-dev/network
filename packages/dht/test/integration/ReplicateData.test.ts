@@ -47,7 +47,7 @@ describe('Replicate data from node to node in DHT', () => {
         nodesById.set(entryPoint.getNodeId().toKey(), entryPoint)
 
         entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
+            nodeId: entryPoint.getNodeId().value,
             type: NodeType.NODEJS
         }
 
@@ -106,7 +106,7 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('Nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey())!
+            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().nodeId).toKey())!
             let hasDataMarker = ''
             
             // @ts-expect-error private field
@@ -134,7 +134,7 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('After join of 99 nodes: nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey())!
+            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().nodeId).toKey())!
             let hasDataMarker = ''
 
             // @ts-expect-error private field
@@ -146,7 +146,7 @@ describe('Replicate data from node to node in DHT', () => {
             logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
         })
 
-        const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().kademliaId).toKey())!
+        const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().nodeId).toKey())!
 
         // @ts-expect-error private field
         expect(closestNode.localDataStore.getEntry(dataKey).size).toBeGreaterThanOrEqual(1)

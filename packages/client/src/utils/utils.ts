@@ -127,7 +127,7 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
         ...json,
-        kademliaId: hexToBinary(json.id),
+        nodeId: hexToBinary(json.id),
         type,
         websocket: json.websocket
     }
@@ -139,8 +139,8 @@ export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDes
         throw new Error('nodeType "virtual" not supported')
     }
     return {
-        ...omit(descriptor, 'kademliaId'),
-        id: binaryToHex(descriptor.kademliaId),
+        ...omit(descriptor, 'nodeId'),
+        id: binaryToHex(descriptor.nodeId),
         type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
     }
 }

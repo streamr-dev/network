@@ -27,7 +27,7 @@ export class LocalDataStore {
     private store: Map<PeerIDKey, Map<PeerIDKey, LocalDataEntry>> = new Map()
 
     public storeEntry(dataEntry: DataEntry): boolean {
-        const publisherKey = PeerID.fromValue(dataEntry.creator!.kademliaId).toKey()
+        const publisherKey = PeerID.fromValue(dataEntry.creator!.nodeId).toKey()
         const dataKey = PeerID.fromValue(dataEntry.key).toKey()
         
         if (!this.store.has(dataKey)) {

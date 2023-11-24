@@ -4,7 +4,7 @@ import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, createMockPeerDescriptor, waitConnectionManagersReadyForTesting } from '../utils/utils'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
-import { createRandomKademliaId } from '../../src/helpers/kademliaId'
+import { createRandomNodeId } from '../../src/helpers/nodeId'
 
 describe('Storing data in DHT', () => {
     let entryPoint: DhtNode
@@ -46,7 +46,7 @@ describe('Storing data in DHT', () => {
 
     it('Data can be deleted', async () => {
         const storingNode = getRandomNode()
-        const dataKey = createRandomKademliaId()
+        const dataKey = createRandomNodeId()
         const storedData = createMockPeerDescriptor()
         const data = Any.pack(storedData, PeerDescriptor)
         const successfulStorers = await storingNode.storeDataToDht(dataKey, data)
@@ -64,7 +64,7 @@ describe('Storing data in DHT', () => {
 
     it('Data can be deleted and re-stored', async () => {
         const storingNode = getRandomNode()
-        const dataKey = createRandomKademliaId()
+        const dataKey = createRandomNodeId()
         const storedData = createMockPeerDescriptor()
         const data = Any.pack(storedData, PeerDescriptor)
         const successfulStorers1 = await storingNode.storeDataToDht(dataKey, data)

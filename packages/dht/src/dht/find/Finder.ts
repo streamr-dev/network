@@ -108,7 +108,7 @@ export class Finder implements IFinder {
         const session = new FindSession({
             serviceId: sessionId,
             transport: this.sessionTransport,
-            kademliaIdToFind: idToFind,
+            nodeIdToFind: idToFind,
             localPeerId: peerIdFromPeerDescriptor(this.localPeerDescriptor),
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
             fetchData
@@ -142,7 +142,7 @@ export class Finder implements IFinder {
 
     private wrapFindRequest(idToFind: Uint8Array, sessionId: string, fetchData: boolean): RouteMessageWrapper {
         const targetDescriptor: PeerDescriptor = {
-            kademliaId: idToFind,
+            nodeId: idToFind,
             type: NodeType.VIRTUAL
         }
         const request: FindRequest = {
@@ -227,7 +227,7 @@ export class Finder implements IFinder {
         const idToFind = peerIdFromPeerDescriptor(routedMessage.destinationPeer!)
         const msg = routedMessage.message
         const findRequest = msg?.body.oneofKind === 'findRequest' ? msg.body.findRequest : undefined
-        const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.kademliaId, 5)
+        const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.nodeId, 5)
         const data = this.findLocalData(idToFind.value, findRequest!.fetchData)
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
             // TODO this is also very similar case to what we do at line 255, could simplify the code paths?
@@ -262,10 +262,10 @@ export class Finder implements IFinder {
         }    
     }
 
-    private getClosestConnections(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
+    private getClosestConnections(nodeId: Uint8Array, limit: number): PeerDescriptor[] {
         const connectedPeers = Array.from(this.connections.values())
         const closestPeers = new SortedContactList<DhtNodeRpcRemote>(
-            PeerID.fromValue(kademliaId),
+            PeerID.fromValue(nodeId),
             limit,
             undefined,
             true,
