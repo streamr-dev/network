@@ -14,7 +14,7 @@ import { Route53Api } from './Route53Api'
 
 const logger = new Logger(module)
 
-const validateEnvironmentVariable = (name: string): string | never => {
+export const validateEnvironmentVariable = (name: string): string | never => {
     const value = process.env[name]
     if (value === undefined) {
         throw new Error(`${name} environment variable is not set`)
