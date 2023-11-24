@@ -181,7 +181,7 @@ export class AutoCertifierServer implements RestInterface, ChallengeManager {
         logger.info('creating challenge for ' + fqdn + ' with value ' + value)
         await this.database!.updateSubdomainAcmeChallenge(fqdn.split('.')[0], value)
         if (this.route53Api !== undefined) {
-            await this.route53Api.upsertRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, value, 300)
+            await this.route53Api.upsertRecord(RRType.TXT, '_acme-challenge' + '.' + fqdn, `"${value}"`, 300)
         }
     }
 
