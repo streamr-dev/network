@@ -91,14 +91,14 @@ message DeleteDataResponse {
 }
 
 message DataEntry {
-  PeerDescriptor creator = 1;
-  bytes kademliaId = 2;
-  google.protobuf.Any data = 3;
-  google.protobuf.Timestamp storedAt = 4; 
-  uint32 ttl = 5;   // milliseconds
-  bool stale = 6;
-  bool deleted = 7;
-  google.protobuf.Timestamp createdAt = 8;
+  bytes kademliaId = 1;
+  google.protobuf.Any data = 2;
+  PeerDescriptor creator = 3;
+  google.protobuf.Timestamp createdAt = 4;
+  google.protobuf.Timestamp storedAt = 5; 
+  uint32 ttl = 6;   // milliseconds
+  bool stale = 7;
+  bool deleted = 8;
 }
 
 message ClosestPeersRequest {

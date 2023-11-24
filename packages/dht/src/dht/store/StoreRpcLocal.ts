@@ -161,13 +161,13 @@ export class StoreRpcLocal implements IStoreRpc {
             if (areEqualPeerDescriptors(this.localPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
                     kademliaId: key, 
-                    creator,
-                    ttl, 
-                    storedAt: Timestamp.now(), 
                     data,
+                    creator,
+                    createdAt,
+                    storedAt: Timestamp.now(), 
+                    ttl, 
                     stale: false,
                     deleted: false,
-                    createdAt
                 })
                 successfulNodes.push(closestNodes[i])
                 continue
@@ -247,11 +247,11 @@ export class StoreRpcLocal implements IStoreRpc {
         const { kademliaId, data, createdAt, creator } = request
         this.localDataStore.storeEntry({ 
             kademliaId, 
-            creator, 
-            ttl,
-            storedAt: Timestamp.now(),
-            createdAt,
             data,
+            creator, 
+            createdAt,
+            storedAt: Timestamp.now(),
+            ttl,
             stale: !this.selfIsOneOfClosestPeers(kademliaId),
             deleted: false
         })
