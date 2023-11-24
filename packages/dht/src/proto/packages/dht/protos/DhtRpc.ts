@@ -164,9 +164,9 @@ export interface FindRequest {
      */
     sessionId: string;
     /**
-     * @generated from protobuf field: bool fetchData = 2;
+     * @generated from protobuf field: dht.findMode action = 2;
      */
-    fetchData: boolean;
+    action: findMode;
 }
 /**
  * @generated from protobuf message dht.FindResponse
@@ -565,6 +565,23 @@ export interface ExternalFindDataResponse {
     entries: DataEntry[];
 }
 /**
+ * @generated from protobuf enum dht.findMode
+ */
+export enum findMode {
+    /**
+     * @generated from protobuf enum value: NODE = 0;
+     */
+    NODE = 0,
+    /**
+     * @generated from protobuf enum value: FETCH_DATA = 1;
+     */
+    FETCH_DATA = 1,
+    /**
+     * @generated from protobuf enum value: DELETE_DATA = 2;
+     */
+    DELETE_DATA = 2
+}
+/**
  * @generated from protobuf enum dht.NodeType
  */
 export enum NodeType {
@@ -818,7 +835,7 @@ class FindRequest$Type extends MessageType$<FindRequest> {
     constructor() {
         super("dht.FindRequest", [
             { no: 1, name: "sessionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "fetchData", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 2, name: "action", kind: "enum", T: () => ["dht.findMode", findMode] }
         ]);
     }
 }
