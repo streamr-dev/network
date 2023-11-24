@@ -38,7 +38,7 @@ export class RestClient {
             streamrWebSocketPort,
             sessionId
         }
-        const response = await this.patch<CertifiedSubdomain>(url, body)
+        const response = await this.patch<CertifiedSubdomain>(url, body, 2 * 60 * 1000)
         return response
     }
 
@@ -96,9 +96,9 @@ export class RestClient {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private patch<T>(url: string, body: any): Promise<T> {
+    private patch<T>(url: string, body: any, timeout?: number): Promise<T> {
         return new Promise((resolve, reject) => {
-            request.patch(url, { json: body, rejectUnauthorized: false }, (error: any, response: Response, body: any) => {
+            request.patch(url, { json: body, rejectUnauthorized: false, timeout }, (error: any, response: Response, body: any) => {
                 if (error) {
                     reject(error)
                 } else if (response.statusCode >= 200 && response.statusCode < 300) {
