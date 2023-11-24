@@ -17,30 +17,30 @@ export class Route53Api {
         this.client = new Route53Client({ region })
     }
 
-    private async changeRecord(action: ChangeAction, recordType: RRType, fqdn: string, 
-        value: string, ttl: number): Promise<ChangeResourceRecordSetsCommandOutput> {
+    private async changeRecord(
+        action: ChangeAction,
+        recordType: RRType,
+        fqdn: string, 
+        value: string,
+        ttl: number
+    ): Promise<ChangeResourceRecordSetsCommandOutput> {
         logger.trace(`Changing record ${recordType} ${fqdn} to ${value}`)
         const input = {
             HostedZoneId: this.hostedZoneId,
             ChangeBatch: {
-                Changes: [
-                    {
-                        Action: action,
-                        ResourceRecordSet: {
-                            Name: fqdn,
-                            Type: recordType,
-                            TTL: ttl,
-                            ResourceRecords: [
-                                {
-                                    Value: value,
-                                },
-                            ],
-                        },
-                    },
-                ],
-            },
+                Changes: [{
+                    Action: action,
+                    ResourceRecordSet: {
+                        Name: fqdn,
+                        Type: recordType,
+                        TTL: ttl,
+                        ResourceRecords: [{
+                            Value: value,
+                        }]
+                    }
+                }]
+            }
         }
-    
         const command = new ChangeResourceRecordSetsCommand(input)
         const response = await this.client.send(command)
         logger.trace(`Record ${recordType} ${fqdn} changed to ${value}`, { response })
