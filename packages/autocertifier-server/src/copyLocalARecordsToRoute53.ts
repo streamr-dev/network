@@ -1,7 +1,9 @@
 import { Logger } from '@streamr/utils'
 import { validateEnvironmentVariable } from './AutoCertifierServer'
-import { Database } from './Database'
+import { Database, Subdomain } from './Database'
 import { Route53Api } from './Route53Api'
+import { chunk } from 'lodash'
+import { ChangeAction } from '@aws-sdk/client-route-53'
 
 (async () => {
     const logger = new Logger(module)
@@ -21,9 +23,17 @@ import { Route53Api } from './Route53Api'
     try {
         const allSubdomains = await database.getAllSubdomains()
         if (allSubdomains) {
-            for (const subdomain of allSubdomains) {
-                logger.info('upserting A record to route53: ' + subdomain.subdomainName + '.' + domainName + ' -> ' + subdomain.ip)
-                await route53Api.upsertRecord('A', subdomain.subdomainName + '.' + domainName, subdomain.ip, 300)
+            const batched = chunk(allSubdomains, 25)
+            for (const batch of batched) {
+                const records = batch.map((subdomain: Subdomain) => {
+                    return {
+                        fqdn: subdomain.subdomainName + '.' + domainName,
+                        value: subdomain.ip
+                    }
+                })
+                logger.info('upserting records to route53: ', { records })
+
+                await route53Api.changeRecords(ChangeAction.UPSERT, 'A', records, 300)
             }
         }
 

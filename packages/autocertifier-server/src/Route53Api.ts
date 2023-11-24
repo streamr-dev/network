@@ -1,6 +1,10 @@
 import {
-    Route53Client, ListResourceRecordSetsCommand, ListResourceRecordSetsCommandOutput,
-    ChangeResourceRecordSetsCommand, ChangeAction, RRType,
+    Route53Client,
+    ListResourceRecordSetsCommand,
+    ListResourceRecordSetsCommandOutput,
+    ChangeResourceRecordSetsCommand,
+    ChangeAction,
+    RRType,
     ChangeResourceRecordSetsCommandOutput
 } from '@aws-sdk/client-route-53'
 
@@ -18,7 +22,7 @@ export class Route53Api {
         this.client = new Route53Client({ region })
     }
 
-    private async changeRecords(
+    public async changeRecords(
         action: ChangeAction,
         recordType: RRType,
         records: Record[],
