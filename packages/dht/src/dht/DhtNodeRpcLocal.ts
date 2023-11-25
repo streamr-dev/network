@@ -1,6 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
-import KBucket from 'k-bucket'
 import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Empty } from '../proto/google/protobuf/empty'
 import {
@@ -16,9 +15,9 @@ import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 
 interface DhtNodeRpcLocalConfig {
-    bucket: KBucket<DhtNodeRpcRemote>
     serviceId: string
     peerDiscoveryQueryBatchSize: number
+    getClosestPeersTo: (kademliaId: Uint8Array, limit: number) => DhtNodeRpcRemote[]
     addNewContact: (contact: PeerDescriptor) => void
     removeContact: (contact: PeerDescriptor) => void
 }
@@ -43,8 +42,8 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     }
 
     private getClosestPeerDescriptors(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
-        const closestPeers = this.config.bucket.closest(kademliaId, limit)
-        return closestPeers.map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
+        const closestPeers = this.config.getClosestPeersTo(kademliaId, limit)
+        return closestPeers.map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
     }
 
     async ping(request: PingRequest, context: ServerCallContext): Promise<PingResponse> {
