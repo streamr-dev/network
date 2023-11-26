@@ -35,8 +35,7 @@ const CONNECTIVITY_CHECKER_TIMEOUT = 5000
 
 export const sendConnectivityRequest = async (
     request: ConnectivityRequest,
-    entryPoint: PeerDescriptor,
-    selfSigned: boolean
+    entryPoint: PeerDescriptor
 ): Promise<ConnectivityResponse> => {
     let outgoingConnection: IConnection
     const wsServerInfo = {
@@ -48,7 +47,7 @@ export const sendConnectivityRequest = async (
     try {
         outgoingConnection = await connectAsync({
             url,
-            selfSigned
+            selfSigned: request.selfSigned
         })
     } catch (e) {
         throw new Err.ConnectionFailed(`Failed to connect to the entrypoint ${url}`, e)

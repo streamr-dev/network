@@ -196,7 +196,7 @@ export class WebsocketConnector {
                             selfSigned
                         }
                         if (!this.abortController.signal.aborted) {
-                            return await sendConnectivityRequest(connectivityRequest, entryPoint, selfSigned)
+                            return await sendConnectivityRequest(connectivityRequest, entryPoint)
                         } else {
                             throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
                         }
