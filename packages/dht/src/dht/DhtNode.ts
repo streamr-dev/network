@@ -244,7 +244,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.initPeerManager()
 
         this.peerDiscovery = new PeerDiscovery({
-            rpcCommunicator: this.rpcCommunicator,
             localPeerDescriptor: this.localPeerDescriptor!,
             joinNoProgressLimit: this.config.joinNoProgressLimit,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
@@ -253,7 +252,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             parallelism: this.config.joinParallelism,
             addContact: (contact: PeerDescriptor) => this.peerManager!.addNewContact(contact),
             connectionManager: this.connectionManager,
-            rpcRequestTimeout: this.config.rpcRequestTimeout,
             peerManager: this.peerManager!
         })
         this.router = new Router({

@@ -4,13 +4,11 @@ import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, peerIdFromPeerDes
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
-import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { createRandomKademliaId } from '../../helpers/kademliaId'
 import { ServiceID } from '../../types/ServiceID'
 import { PeerManager } from '../PeerManager'
 
 interface PeerDiscoveryConfig {
-    rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
     joinNoProgressLimit: number
     peerDiscoveryQueryBatchSize: number
@@ -19,7 +17,6 @@ interface PeerDiscoveryConfig {
     joinTimeout: number
     addContact: (contact: PeerDescriptor) => void
     connectionManager?: ConnectionManager
-    rpcRequestTimeout?: number
     peerManager: PeerManager
 }
 
@@ -70,12 +67,9 @@ export class PeerDiscovery {
         const sessionOptions = {
             targetId,
             localPeerDescriptor: this.config.localPeerDescriptor,
-            serviceId: this.config.serviceId,
-            rpcCommunicator: this.config.rpcCommunicator,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
-            peerManager: this.config.peerManager,
-            newContactListener: (newPeer: DhtNodeRpcRemote) => this.config.addContact(newPeer.getPeerDescriptor()),
+            peerManager: this.config.peerManager
         }
         return new DiscoverySession(sessionOptions)
     }

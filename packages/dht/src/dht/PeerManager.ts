@@ -171,6 +171,18 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.connections.clear()
     }
 
+    handleNewPeers(contacts: PeerDescriptor[]): void {
+        contacts.forEach((contact) => {
+            if (!PeerID.fromValue(contact.kademliaId).equals(this.config.ownPeerId)) {
+                const rpcRemote = this.config.createDhtNodeRpcRemote(contact)
+                this.addNewContact(contact)
+                if (this.neighborList!.getContact(rpcRemote.getPeerId()) !== undefined) {
+                    this.neighborList!.addContact(rpcRemote)
+                }
+            }
+        })
+    }
+
     addNewContact(contact: PeerDescriptor, setActive = false): void {
         if (this.stopped) {
             return

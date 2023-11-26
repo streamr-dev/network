@@ -1,14 +1,11 @@
-import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
 import { PeerID } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { DhtNodeRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { SortedContactList } from '../contact/SortedContactList'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { ServiceID } from '../../types/ServiceID'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerManager } from '../PeerManager'
 
 const logger = new Logger(module)
@@ -20,12 +17,8 @@ interface DiscoverySessionEvents {
 interface DiscoverySessionConfig {
     targetId: Uint8Array
     localPeerDescriptor: PeerDescriptor
-    serviceId: ServiceID
-    rpcCommunicator: RpcCommunicator
     parallelism: number
     noProgressLimit: number
-    newContactListener?: (rpcRemote: DhtNodeRpcRemote) => void
-    rpcRequestTimeout?: number
     peerManager: PeerManager
 }
 
@@ -47,23 +40,7 @@ export class DiscoverySession {
         if (this.stopped) {
             return
         }
-        contacts.forEach((contact) => {
-            if (!areEqualPeerDescriptors(contact, this.config.localPeerDescriptor)) {
-                const rpcRemote = new DhtNodeRpcRemote(
-                    this.config.localPeerDescriptor,
-                    contact,
-                    toProtoRpcClient(new DhtNodeRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
-                    this.config.serviceId,
-                    this.config.rpcRequestTimeout
-                )
-                if (this.config.newContactListener) {
-                    this.config.newContactListener(rpcRemote)
-                }
-                if (this.config.peerManager.neighborList!.getContact(rpcRemote.getPeerId()) !== undefined) {
-                    this.config.peerManager.neighborList!.addContact(rpcRemote)
-                }
-            }
-        })
+        this.config.peerManager.handleNewPeers(contacts)
     }
 
     private async getClosestPeersFromContact(contact: DhtNodeRpcRemote): Promise<PeerDescriptor[]> {
