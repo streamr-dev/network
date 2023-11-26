@@ -12,7 +12,7 @@ import {
     StoreDataResponse,
     WebsocketConnectionResponse,
     FindRequest, 
-    DeleteDataResponse
+    FindAction
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -122,10 +122,10 @@ export const createWrappedClosestPeersRequest = (
 }
 
 export const createFindRequest = (
-    fetchData: boolean
+    action: FindAction
 ): FindRequest => {
     const request: FindRequest = {
-        fetchData,
+        action,
         sessionId: v4()
     }
     return request
@@ -213,9 +213,6 @@ export const mockStoreRpc: IStoreRpcWithError = {
     },
     async replicateData(): Promise<Empty> {
         return {}
-    },
-    async deleteData(): Promise<DeleteDataResponse> {
-        return DeleteDataResponse.create()
     }
 }
 
