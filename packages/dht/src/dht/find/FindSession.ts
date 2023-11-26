@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { DataEntry, PeerDescriptor, FindResponse } from '../../proto/packages/dht/protos/DhtRpc'
+import { DataEntry, PeerDescriptor, FindResponse, FindAction } from '../../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Contact } from '../contact/Contact'
@@ -20,7 +20,7 @@ export interface FindSessionConfig {
     kademliaIdToFind: Uint8Array
     localPeerId: PeerID
     waitedRoutingPathCompletions: number
-    fetchData: boolean
+    action: FindAction
 }
 
 export class FindSession extends EventEmitter<FindSessionEvents> {
@@ -30,7 +30,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
     private readonly localPeerId: PeerID
     private readonly waitedRoutingPathCompletions: number
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly fetchData: boolean
+    private readonly action: FindAction
     private results: SortedContactList<Contact>
     private foundData: Map<string, DataEntry> = new Map()
     private allKnownHops: Set<PeerIDKey> = new Set()
@@ -47,7 +47,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
         this.localPeerId = config.localPeerId
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
         this.results = new SortedContactList(PeerID.fromValue(this.kademliaIdToFind), 10, undefined, true)
-        this.fetchData = config.fetchData
+        this.action = config.action
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
             rpcRequestTimeout: 15000
         })
@@ -70,10 +70,10 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
             unreportedHops.delete(id)
         })
         if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size === 0) {
-            if (this.fetchData
+            if (this.action
                 && (this.hasNonStaleData() || this.noCloserNodesReceivedCounter >= this.waitedRoutingPathCompletions)) {
                 return true
-            } else if (this.fetchData) {
+            } else if (this.action) {
                 return false
             }
             return true

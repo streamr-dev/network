@@ -113,10 +113,10 @@ message ClosestPeersResponse {
 
 message FindRequest {
   string sessionId = 1;
-  findMode action = 2;
+  FindAction action = 2;
 }
 
-enum findMode {
+enum FindAction {
   NODE = 0;
   FETCH_DATA = 1;
   DELETE_DATA = 2;
