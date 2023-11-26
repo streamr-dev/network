@@ -235,6 +235,10 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return this.connections.size
     }
 
+    getKBucketSize(): number {
+        return this.bucket!.count()
+    }
+
     handlePeerActive(peerId: PeerID): void {
         this.neighborList!.setActive(peerId)
     }
