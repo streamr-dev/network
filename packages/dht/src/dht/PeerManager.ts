@@ -187,7 +187,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
     }
 
-    public handlePeerLeaving(peerDescriptor: PeerDescriptor): void {
+    handlePeerLeaving(peerDescriptor: PeerDescriptor): void {
         this.removeContact(peerDescriptor)
     }
 
@@ -214,7 +214,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.connections.clear()
     }
 
-    public getNumberOfConnections(): number {
+    getNumberOfConnections(): number {
         return this.connections.size
     }
 
