@@ -7,8 +7,7 @@ import {
     FindRequest,
     RouteMessageAck,
     RouteMessageWrapper,
-    RouteMessageError,
-    FindAction
+    RouteMessageError
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { IRouter } from '../routing/Router'
@@ -44,7 +43,7 @@ interface FinderConfig {
 }
 
 export interface IFinder {
-    startFind(idToFind: Uint8Array, action?: FindAction): Promise<FindResult>
+    startFind(idToFind: Uint8Array, fetchData?: boolean): Promise<FindResult>
 }
 
 export interface FindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
@@ -99,7 +98,7 @@ export class Finder implements IFinder {
 
     public async startFind(
         idToFind: Uint8Array,
-        action: FindAction = FindAction.NODE,
+        fetchData: boolean = false,
         excludedPeer?: PeerDescriptor
     ): Promise<FindResult> {
         if (this.stopped) {
@@ -112,7 +111,7 @@ export class Finder implements IFinder {
             kademliaIdToFind: idToFind,
             localPeerId: peerIdFromPeerDescriptor(this.localPeerDescriptor),
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
-            action
+            fetchData
         })
         if (this.connections.size === 0) {
             const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
@@ -124,7 +123,7 @@ export class Finder implements IFinder {
             )
             return session.getResults()
         }
-        const routeMessage = this.wrapFindRequest(idToFind, sessionId, action)
+        const routeMessage = this.wrapFindRequest(idToFind, sessionId, fetchData)
         this.ongoingSessions.set(sessionId, session)
         try {
             await runAndWaitForEvents3<FindSessionEvents>(
@@ -135,24 +134,20 @@ export class Finder implements IFinder {
         } catch (err) {
             logger.debug(`doRouteFindRequest failed with error ${err}`)
         }
-        if (action === FindAction.FETCH_DATA) {
-            this.findAndReportLocalData(idToFind, [], this.localPeerDescriptor, sessionId)
-        } else if (action === FindAction.DELETE_DATA) {
-            this.localDataStore.markAsDeleted(idToFind, peerIdFromPeerDescriptor(this.localPeerDescriptor))
-        }
+        this.findAndReportLocalData(idToFind, fetchData, [], this.localPeerDescriptor, sessionId)
         this.ongoingSessions.delete(sessionId)
         session.stop()
         return session.getResults()
     }
 
-    private wrapFindRequest(idToFind: Uint8Array, sessionId: string, action: FindAction): RouteMessageWrapper {
+    private wrapFindRequest(idToFind: Uint8Array, sessionId: string, fetchData: boolean): RouteMessageWrapper {
         const targetDescriptor: PeerDescriptor = {
             kademliaId: idToFind,
             type: NodeType.VIRTUAL
         }
         const request: FindRequest = {
             sessionId,
-            action
+            fetchData
         }
         const msg: Message = {
             messageType: MessageType.FIND_REQUEST,
@@ -176,14 +171,19 @@ export class Finder implements IFinder {
 
     private findAndReportLocalData(
         idToFind: Uint8Array,
+        fetchData: boolean,
         routingPath: PeerDescriptor[],
         sourcePeer: PeerDescriptor,
         sessionId: string
-    ): void {
-        const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
-        if (data.size > 0) {
-            this.sendFindResponse(routingPath, sourcePeer, sessionId, [], data, true)
+    ): boolean {
+        if (fetchData) {
+            const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
+            if (data.size > 0) {
+                this.sendFindResponse(routingPath, sourcePeer, sessionId, [], data, true)
+                return true
+            }
         }
+        return false
     }
 
     private findLocalData(idToFind: Uint8Array, fetchData: boolean): Map<PeerIDKey, DataEntry> | undefined {
@@ -228,10 +228,7 @@ export class Finder implements IFinder {
         const msg = routedMessage.message
         const findRequest = msg?.body.oneofKind === 'findRequest' ? msg.body.findRequest : undefined
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.kademliaId, 5)
-        const data = this.findLocalData(idToFind.value, findRequest!.action === FindAction.FETCH_DATA)
-        if (findRequest!.action === FindAction.DELETE_DATA) {
-            this.localDataStore.markAsDeleted(idToFind.value, peerIdFromPeerDescriptor(routedMessage.sourcePeer!))
-        }
+        const data = this.findLocalData(idToFind.value, findRequest!.fetchData)
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
             this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
                 closestPeersToDestination, data, true)

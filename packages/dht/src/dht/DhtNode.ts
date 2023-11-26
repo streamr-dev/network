@@ -19,7 +19,6 @@ import {
     ExternalFindDataResponse,
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
-    FindAction,
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
@@ -421,8 +420,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
             (req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(req, context))
         const externalApiRpcLocal = new ExternalApiRpcLocal({
-            startFind: (idToFind: Uint8Array, action: FindAction, excludedPeer: PeerDescriptor) => {
-                return this.startFind(idToFind, action, excludedPeer)
+            startFind: (idToFind: Uint8Array, fetchData: boolean, excludedPeer: PeerDescriptor) => {
+                return this.startFind(idToFind, fetchData, excludedPeer)
             },
             storeDataToDht: (key: Uint8Array, data: Any, originalStorer?: PeerDescriptor) => this.storeDataToDht(key, data, originalStorer)
         })
@@ -623,8 +622,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         ))
     }
 
-    public async startFind(idToFind: Uint8Array, action?: FindAction, excludedPeer?: PeerDescriptor): Promise<FindResult> {
-        return this.finder!.startFind(idToFind, action, excludedPeer)
+    public async startFind(idToFind: Uint8Array, fetchData?: boolean, excludedPeer?: PeerDescriptor): Promise<FindResult> {
+        return this.finder!.startFind(idToFind, fetchData, excludedPeer)
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any, originalStorer?: PeerDescriptor): Promise<PeerDescriptor[]> {
@@ -648,13 +647,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
         }
-        const result = await this.finder!.startFind(idToFind, FindAction.FETCH_DATA)
+        const result = await this.finder!.startFind(idToFind, true)
         return result.dataEntries ?? []  // TODO is this fallback needed? 
     }
 
     public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
         if (!this.stopped) {
-            await this.finder!.startFind(idToDelete, FindAction.DELETE_DATA)
+            return this.storeRpcLocal!.deleteDataFromDht(idToDelete)
         }
     }
 

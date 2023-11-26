@@ -75,6 +75,24 @@ export interface ReplicateDataRequest {
     entry?: DataEntry;
 }
 /**
+ * @generated from protobuf message dht.DeleteDataRequest
+ */
+export interface DeleteDataRequest {
+    /**
+     * @generated from protobuf field: bytes kademliaId = 1;
+     */
+    kademliaId: Uint8Array;
+}
+/**
+ * @generated from protobuf message dht.DeleteDataResponse
+ */
+export interface DeleteDataResponse {
+    /**
+     * @generated from protobuf field: bool deleted = 1;
+     */
+    deleted: boolean;
+}
+/**
  * @generated from protobuf message dht.DataEntry
  */
 export interface DataEntry {
@@ -146,9 +164,9 @@ export interface FindRequest {
      */
     sessionId: string;
     /**
-     * @generated from protobuf field: dht.FindAction action = 2;
+     * @generated from protobuf field: bool fetchData = 2;
      */
-    action: FindAction;
+    fetchData: boolean;
 }
 /**
  * @generated from protobuf message dht.FindResponse
@@ -547,23 +565,6 @@ export interface ExternalFindDataResponse {
     entries: DataEntry[];
 }
 /**
- * @generated from protobuf enum dht.FindAction
- */
-export enum FindAction {
-    /**
-     * @generated from protobuf enum value: NODE = 0;
-     */
-    NODE = 0,
-    /**
-     * @generated from protobuf enum value: FETCH_DATA = 1;
-     */
-    FETCH_DATA = 1,
-    /**
-     * @generated from protobuf enum value: DELETE_DATA = 2;
-     */
-    DELETE_DATA = 2
-}
-/**
  * @generated from protobuf enum dht.NodeType
  */
 export enum NodeType {
@@ -744,6 +745,30 @@ class ReplicateDataRequest$Type extends MessageType$<ReplicateDataRequest> {
  */
 export const ReplicateDataRequest = new ReplicateDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class DeleteDataRequest$Type extends MessageType$<DeleteDataRequest> {
+    constructor() {
+        super("dht.DeleteDataRequest", [
+            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.DeleteDataRequest
+ */
+export const DeleteDataRequest = new DeleteDataRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DeleteDataResponse$Type extends MessageType$<DeleteDataResponse> {
+    constructor() {
+        super("dht.DeleteDataResponse", [
+            { no: 1, name: "deleted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.DeleteDataResponse
+ */
+export const DeleteDataResponse = new DeleteDataResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class DataEntry$Type extends MessageType$<DataEntry> {
     constructor() {
         super("dht.DataEntry", [
@@ -793,7 +818,7 @@ class FindRequest$Type extends MessageType$<FindRequest> {
     constructor() {
         super("dht.FindRequest", [
             { no: 1, name: "sessionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "action", kind: "enum", T: () => ["dht.FindAction", FindAction] }
+            { no: 2, name: "fetchData", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -1170,7 +1195,8 @@ export const FindRpc = new ServiceType("dht.FindRpc", [
  */
 export const StoreRpc = new ServiceType("dht.StoreRpc", [
     { name: "storeData", options: {}, I: StoreDataRequest, O: StoreDataResponse },
-    { name: "replicateData", options: {}, I: ReplicateDataRequest, O: Empty }
+    { name: "replicateData", options: {}, I: ReplicateDataRequest, O: Empty },
+    { name: "deleteData", options: {}, I: DeleteDataRequest, O: DeleteDataResponse }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.FindSessionRpc
