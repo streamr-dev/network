@@ -146,7 +146,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
         const closest = this.getClosestActiveContactNotInBucket()
         if (closest) {
-            this.addNewContact(closest.getPeerDescriptor())
+            this.handleNewPeers([closest.getPeerDescriptor()])
         }
     }
 
@@ -228,37 +228,30 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.neighborList!.removeContact(peerId)
     }
 
-    handleNewPeers(contacts: PeerDescriptor[]): void {
+    handleNewPeers(contacts: PeerDescriptor[], setActive = false): void {
+        if (this.stopped) {
+            return
+        }
         contacts.forEach((contact) => {
             if (!PeerID.fromValue(contact.kademliaId).equals(this.config.ownPeerId)) {
+                logger.trace(`Adding new contact ${getNodeIdFromPeerDescriptor(contact)}`)
                 const rpcRemote = this.config.createDhtNodeRpcRemote(contact)
-                this.addNewContact(contact)
+                if ((this.bucket!.get(contact.kademliaId) === null) 
+                    && (this.neighborList!.getContact(peerIdFromPeerDescriptor(contact)) === undefined)
+                ) {
+                    this.neighborList!.addContact(rpcRemote)
+                    if (setActive) {
+                        const peerId = peerIdFromPeerDescriptor(contact)
+                        this.neighborList!.setActive(peerId)
+                    }
+                    this.bucket!.add(rpcRemote)
+                } else {
+                    this.randomPeers!.addContact(rpcRemote)
+                }
                 if (this.neighborList!.getContact(rpcRemote.getPeerId()) !== undefined) {
                     this.neighborList!.addContact(rpcRemote)
                 }
             }
         })
-    }
-
-    addNewContact(contact: PeerDescriptor, setActive = false): void {
-        if (this.stopped) {
-            return
-        }
-        if (!PeerID.fromValue(contact.kademliaId).equals(this.config.ownPeerId)) {
-            logger.trace(`Adding new contact ${getNodeIdFromPeerDescriptor(contact)}`)
-            const rpcRemote = this.config.createDhtNodeRpcRemote(contact)
-            if ((this.bucket!.get(contact.kademliaId) === null) 
-                && (this.neighborList!.getContact(peerIdFromPeerDescriptor(contact)) === undefined)
-            ) {
-                this.neighborList!.addContact(rpcRemote)
-                if (setActive) {
-                    const peerId = peerIdFromPeerDescriptor(contact)
-                    this.neighborList!.setActive(peerId)
-                }
-                this.bucket!.add(rpcRemote)
-            } else {
-                this.randomPeers!.addContact(rpcRemote)
-            }
-        }
     }
 }

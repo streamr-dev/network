@@ -249,7 +249,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             joinTimeout: this.config.dhtJoinTimeout,
             serviceId: this.config.serviceId,
             parallelism: this.config.joinParallelism,
-            addContact: (contact: PeerDescriptor) => this.peerManager!.addNewContact(contact),
+            addContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
             connectionManager: this.connectionManager,
             peerManager: this.peerManager!
         })
@@ -257,7 +257,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             rpcCommunicator: this.rpcCommunicator,
             connections: this.peerManager!.connections,
             localPeerDescriptor: this.localPeerDescriptor!,
-            addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.addNewContact(contact, setActive),
+            addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.handleNewPeers([contact], setActive),
             serviceId: this.config.serviceId,
             connectionManager: this.connectionManager
         })
@@ -268,7 +268,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connections: this.peerManager!.connections,
             localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
-            addContact: (contact: PeerDescriptor) => this.peerManager!.addNewContact(contact),
+            addContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
             isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
             localDataStore: this.localDataStore
         })
@@ -349,7 +349,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             bucket: this.peerManager!.bucket!,
             serviceId: this.config.serviceId,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
-            addNewContact: (contact: PeerDescriptor) => this.peerManager!.addNewContact(contact),
+            addNewContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
             removeContact: (contact: PeerDescriptor) => this.removeContact(contact)
         })
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',
