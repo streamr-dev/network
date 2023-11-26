@@ -188,7 +188,11 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
     }
 
-    public removeContact(contact: PeerDescriptor): void {
+    public handlePeerLeaving(peerDescriptor: PeerDescriptor): void {
+        this.removeContact(peerDescriptor)
+    }
+
+    private removeContact(contact: PeerDescriptor): void {
         if (this.stopped) {
             return
         }
