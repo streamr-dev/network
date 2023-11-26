@@ -142,7 +142,6 @@ export class WebsocketConnector {
     private setHost(hostName: string): void {
         logger.trace(`Setting host name to ${hostName}`)
         this.host = hostName
-        this.connectivityChecker!.setHost(hostName)
     }
 
     public async start(): Promise<void> {
@@ -162,7 +161,7 @@ export class WebsocketConnector {
             })
             const port = await this.websocketServer.start()
             this.selectedPort = port
-            this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.serverEnableTls, this.host)
+            this.connectivityChecker = new ConnectivityChecker()
         }
     }
 
@@ -191,7 +190,13 @@ export class WebsocketConnector {
                         return preconfiguredConnectivityResponse
                     } else {
                         // Do real connectivity checking
-                        return await this.connectivityChecker!.sendConnectivityRequest(entryPoint, selfSigned)
+                        const connectivityRequest = {
+                            port: this.selectedPort!,
+                            host: this.host, 
+                            tls: this.serverEnableTls,
+                            selfSigned
+                        }
+                        return await this.connectivityChecker!.sendConnectivityRequest(connectivityRequest, entryPoint, selfSigned)
                     }
                 }
             } catch (err) {

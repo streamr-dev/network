@@ -35,17 +35,12 @@ export class ConnectivityChecker {
     public static readonly CONNECTIVITY_CHECKER_SERVICE_ID = 'system/connectivity-checker'
     private static readonly CONNECTIVITY_CHECKER_TIMEOUT = 5000
     private destroyed = false
-    private readonly websocketPort: number
-    private readonly tls: boolean 
-    private host?: string
 
-    constructor(websocketPort: number, tls: boolean, host?: string) {
-        this.websocketPort = websocketPort
-        this.tls = tls
-        this.host = host
-    }
-
-    public async sendConnectivityRequest(entryPoint: PeerDescriptor, selfSigned: boolean): Promise<ConnectivityResponse> {
+    public async sendConnectivityRequest(
+        request: ConnectivityRequest,
+        entryPoint: PeerDescriptor,
+        selfSigned: boolean
+    ): Promise<ConnectivityResponse> {
         if (this.destroyed) {
             throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
         }
@@ -65,13 +60,12 @@ export class ConnectivityChecker {
             throw new Err.ConnectionFailed(`Failed to connect to the entrypoint ${url}`, e)
         }
         // send connectivity request
-        const connectivityRequestMessage: ConnectivityRequest = { port: this.websocketPort, host: this.host, tls: this.tls, selfSigned }
         const msg: Message = {
             serviceId: ConnectivityChecker.CONNECTIVITY_CHECKER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_REQUEST, messageId: v4(),
             body: {
                 oneofKind: 'connectivityRequest',
-                connectivityRequest: connectivityRequestMessage
+                connectivityRequest: request
             }
         }
         const responseAwaiter = () => {
@@ -111,10 +105,6 @@ export class ConnectivityChecker {
             logger.error('error getting connectivityresponse')
             throw e
         }
-    }
-
-    public setHost(hostName: string): void {
-        this.host = hostName
     }
 
     public destroy(): void {
