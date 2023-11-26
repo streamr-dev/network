@@ -65,7 +65,6 @@ export class PeerDiscovery {
     private createSession(targetId: Uint8Array): DiscoverySession {
         const sessionOptions = {
             targetId,
-            localPeerDescriptor: this.config.localPeerDescriptor,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
             peerManager: this.config.peerManager
