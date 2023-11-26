@@ -7,7 +7,7 @@ export interface Layer0Node extends ITransport {
     getLocalPeerDescriptor(): PeerDescriptor
     getDataFromDht(key: Uint8Array): Promise<DataEntry[]>
     storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]>
-    deleteDataFromDht(key: Uint8Array): Promise<void>
+    deleteDataFromDht(key: Uint8Array, expectResponses: boolean): Promise<void>
     waitForNetworkConnectivity(): Promise<void>
     getTransport(): ITransport
     start(): Promise<void>

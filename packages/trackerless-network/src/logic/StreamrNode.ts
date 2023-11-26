@@ -140,11 +140,8 @@ export class StreamrNode extends EventEmitter<Events> {
             layer1Node,
             getEntryPointData: (key) => this.layer0Node!.getDataFromDht(key),
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
-            deleteEntryPointData: async (key) => {
-                if (this.destroyed) {
-                    return 
-                }
-                return this.layer0Node!.deleteDataFromDht(key)
+            deleteEntryPointData: async (key: Uint8Array) => {
+                return this.layer0Node!.deleteDataFromDht(key, this.destroyed)
             }
         })
         streamPart = {

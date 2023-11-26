@@ -51,7 +51,7 @@ describe('Storing data in DHT', () => {
         const data = Any.pack(storedData, PeerDescriptor)
         const successfulStorers = await storingNode.storeDataToDht(dataKey, data)
         expect(successfulStorers.length).toBeGreaterThan(4)
-        await storingNode.deleteDataFromDht(dataKey)
+        await storingNode.deleteDataFromDht(dataKey, true)
 
         const fetchingNode = getRandomNode()
         const results = await fetchingNode.getDataFromDht(dataKey)
@@ -69,7 +69,7 @@ describe('Storing data in DHT', () => {
         const data = Any.pack(storedData, PeerDescriptor)
         const successfulStorers1 = await storingNode.storeDataToDht(dataKey, data)
         expect(successfulStorers1.length).toBeGreaterThan(4)
-        await storingNode.deleteDataFromDht(dataKey)
+        await storingNode.deleteDataFromDht(dataKey, true)
 
         const fetchingNode = getRandomNode()
         const results1 = await fetchingNode.getDataFromDht(dataKey)

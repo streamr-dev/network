@@ -100,7 +100,8 @@ export class Finder implements IFinder {
     public async startFind(
         idToFind: Uint8Array,
         action: FindAction = FindAction.NODE,
-        excludedPeer?: PeerDescriptor
+        excludedPeer?: PeerDescriptor,
+        expectResponses = true
     ): Promise<FindResult> {
         if (this.stopped) {
             return { closestNodes: [] }
@@ -126,14 +127,18 @@ export class Finder implements IFinder {
         }
         const routeMessage = this.wrapFindRequest(idToFind, sessionId, action)
         this.ongoingSessions.set(sessionId, session)
-        try {
-            await runAndWaitForEvents3<FindSessionEvents>(
-                [() => this.doRouteFindRequest(routeMessage, excludedPeer)],
-                [[session, 'findCompleted']],
-                15000
-            )
-        } catch (err) {
-            logger.debug(`doRouteFindRequest failed with error ${err}`)
+        if (expectResponses === true) {
+            try {
+                await runAndWaitForEvents3<FindSessionEvents>(
+                    [() => this.doRouteFindRequest(routeMessage, excludedPeer)],
+                    [[session, 'findCompleted']],
+                    15000
+                )
+            } catch (err) {
+                logger.debug(`doRouteFindRequest failed with error ${err}`)
+            }
+        } else {
+            this.doRouteFindRequest(routeMessage, excludedPeer)
         }
         if (action === FindAction.FETCH_DATA) {
             this.findAndReportLocalData(idToFind, [], this.localPeerDescriptor, sessionId)
