@@ -15,7 +15,6 @@ interface PeerDiscoveryConfig {
     serviceId: ServiceID
     parallelism: number
     joinTimeout: number
-    addContact: (contact: PeerDescriptor) => void
     connectionManager?: ConnectionManager
     peerManager: PeerManager
 }
@@ -50,7 +49,7 @@ export class PeerDiscovery {
             return
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
-        this.config.addContact(entryPointDescriptor)
+        this.config.peerManager.handleNewPeers([entryPointDescriptor])
         const targetId = peerIdFromPeerDescriptor(this.config.localPeerDescriptor).value
         const closest = this.config.peerManager.bucket!.closest(targetId, this.config.peerDiscoveryQueryBatchSize)
         this.config.peerManager.neighborList!.addContacts(closest)
@@ -136,7 +135,7 @@ export class PeerDiscovery {
         await Promise.allSettled(nodes.map(async (peer: DhtNodeRpcRemote) => {
             const contacts = await peer.getClosestPeers(this.config.localPeerDescriptor.kademliaId)
             contacts.forEach((contact) => {
-                this.config.addContact(contact)
+                this.config.peerManager.handleNewPeers([contact])
             })
         }))
     }

@@ -249,7 +249,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             joinTimeout: this.config.dhtJoinTimeout,
             serviceId: this.config.serviceId,
             parallelism: this.config.joinParallelism,
-            addContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
             connectionManager: this.connectionManager,
             peerManager: this.peerManager!
         })
