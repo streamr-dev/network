@@ -10,7 +10,7 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Co
 
     constructor(
         ownId: PeerID,
-        maxSize: number,
+        maxSize?: number,
         defaultContactQueryLimit?: number,
         allowLocalPeerId = false,
         peerIdDistanceLimit?: PeerID,
@@ -42,7 +42,7 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Co
             return
         }
         if (!this.contactsById.has(contact.getPeerId().toKey())) {
-            if (this.contactIds.length < this.maxSize) {
+            if ((this.maxSize === undefined) || (this.contactIds.length < this.maxSize)) {
                 this.contactsById.set(contact.getPeerId().toKey(), new ContactState(contact))
                 this.contactIds.push(contact.getPeerId())
                 this.contactIds.sort(this.compareIds)

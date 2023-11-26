@@ -22,12 +22,12 @@ export class ContactList<C extends { getPeerId: () => PeerID }> extends EventEmi
     // TODO move this to SortedContactList
     protected contactIds: PeerID[] = []
     protected ownId: PeerID
-    protected maxSize: number
+    protected maxSize?: number
     protected defaultContactQueryLimit
 
     constructor(
         ownId: PeerID,
-        maxSize: number,
+        maxSize?: number,
         defaultContactQueryLimit = 20
     ) {
         super()
