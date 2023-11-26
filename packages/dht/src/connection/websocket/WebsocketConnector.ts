@@ -16,7 +16,7 @@ import { WebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/Dht
 import { Logger, binaryToHex, wait } from '@streamr/utils'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebsocketServer } from './WebsocketServer'
-import { ConnectivityChecker } from '../ConnectivityChecker'
+import { sendConnectivityRequest } from '../connectivityChecker'
 import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { ServerWebsocket } from './ServerWebsocket'
@@ -196,8 +196,7 @@ export class WebsocketConnector {
                             selfSigned
                         }
                         if (!this.abortController.signal.aborted) {
-                            const connectivityChecker = new ConnectivityChecker()
-                            return await connectivityChecker.sendConnectivityRequest(connectivityRequest, entryPoint, selfSigned)
+                            return await sendConnectivityRequest(connectivityRequest, entryPoint, selfSigned)
                         } else {
                             throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
                         }
