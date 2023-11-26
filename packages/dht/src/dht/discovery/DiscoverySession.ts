@@ -106,7 +106,7 @@ export class DiscoverySession {
 
     public async findClosestNodes(timeout: number): Promise<SortedContactList<DhtNodeRpcRemote>> {
         if (this.config.peerManager.neighborList!.getUncontactedContacts(this.config.parallelism).length === 0) {
-            logger.trace('getUncontactedContacts length was 0 in beginning of discovery, this.neighborList.size: '
+            logger.trace('getUncontactedContacts length was 0 in beginning of discovery, neighborList.size: '
                 + this.config.peerManager.neighborList!.getSize())
             return this.config.peerManager.neighborList!
         }
