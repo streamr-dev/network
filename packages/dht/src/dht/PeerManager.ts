@@ -248,28 +248,28 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.neighborList!.removeContact(peerId)
     }
 
-    handleNewPeers(contacts: PeerDescriptor[], setActive = false): void {
+    handleNewPeers(peerDescriptors: PeerDescriptor[], setActive?: boolean): void { 
         if (this.stopped) {
             return
         }
-        contacts.forEach((contact) => {
-            if (!PeerID.fromValue(contact.kademliaId).equals(this.config.ownPeerId)) {
+        peerDescriptors.forEach((contact) => {
+            const peerId = peerIdFromPeerDescriptor(contact)
+            if (!peerId.equals(this.config.ownPeerId)) {
                 logger.trace(`Adding new contact ${getNodeIdFromPeerDescriptor(contact)}`)
-                const rpcRemote = this.config.createDhtNodeRpcRemote(contact)
-                if ((this.bucket!.get(contact.kademliaId) === null)
-                    && (this.neighborList!.getContact(peerIdFromPeerDescriptor(contact)) === undefined)
-                ) {
-                    this.neighborList!.addContact(rpcRemote)
-                    if (setActive) {
-                        const peerId = peerIdFromPeerDescriptor(contact)
-                        this.neighborList!.setActive(peerId)
-                    }
-                    this.bucket!.add(rpcRemote)
-                } else {
-                    this.randomPeers!.addContact(rpcRemote)
+                const remote = this.config.createDhtNodeRpcRemote(contact)
+                const isInBucket = (this.bucket!.get(contact.kademliaId) !== null)
+                const isInNeighborList = (this.neighborList!.getContact(peerId) !== undefined)
+                if (isInBucket || isInNeighborList) {
+                    this.randomPeers!.addContact(remote)
                 }
-                if (this.neighborList!.getContact(rpcRemote.getPeerId()) !== undefined) {
-                    this.neighborList!.addContact(rpcRemote)
+                if (!isInBucket) {
+                    this.bucket!.add(remote)
+                } 
+                if (!isInNeighborList) {
+                    this.neighborList!.addContact(remote)
+                } 
+                if (setActive) {
+                    this.neighborList!.setActive(peerId)
                 }
             }
         })
