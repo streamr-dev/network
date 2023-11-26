@@ -75,24 +75,6 @@ export interface ReplicateDataRequest {
     entry?: DataEntry;
 }
 /**
- * @generated from protobuf message dht.DeleteDataRequest
- */
-export interface DeleteDataRequest {
-    /**
-     * @generated from protobuf field: bytes kademliaId = 1;
-     */
-    kademliaId: Uint8Array;
-}
-/**
- * @generated from protobuf message dht.DeleteDataResponse
- */
-export interface DeleteDataResponse {
-    /**
-     * @generated from protobuf field: bool deleted = 1;
-     */
-    deleted: boolean;
-}
-/**
  * @generated from protobuf message dht.DataEntry
  */
 export interface DataEntry {
@@ -762,30 +744,6 @@ class ReplicateDataRequest$Type extends MessageType$<ReplicateDataRequest> {
  */
 export const ReplicateDataRequest = new ReplicateDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class DeleteDataRequest$Type extends MessageType$<DeleteDataRequest> {
-    constructor() {
-        super("dht.DeleteDataRequest", [
-            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.DeleteDataRequest
- */
-export const DeleteDataRequest = new DeleteDataRequest$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class DeleteDataResponse$Type extends MessageType$<DeleteDataResponse> {
-    constructor() {
-        super("dht.DeleteDataResponse", [
-            { no: 1, name: "deleted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.DeleteDataResponse
- */
-export const DeleteDataResponse = new DeleteDataResponse$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class DataEntry$Type extends MessageType$<DataEntry> {
     constructor() {
         super("dht.DataEntry", [
@@ -1212,8 +1170,7 @@ export const FindRpc = new ServiceType("dht.FindRpc", [
  */
 export const StoreRpc = new ServiceType("dht.StoreRpc", [
     { name: "storeData", options: {}, I: StoreDataRequest, O: StoreDataResponse },
-    { name: "replicateData", options: {}, I: ReplicateDataRequest, O: Empty },
-    { name: "deleteData", options: {}, I: DeleteDataRequest, O: DeleteDataResponse }
+    { name: "replicateData", options: {}, I: ReplicateDataRequest, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.FindSessionRpc

@@ -26,7 +26,6 @@ service FindRpc {
 service StoreRpc {
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
   rpc replicateData (ReplicateDataRequest) returns (google.protobuf.Empty);
-  rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
 }
 
 service FindSessionRpc {
@@ -80,14 +79,6 @@ message ExternalStoreDataResponse {
 
 message ReplicateDataRequest {
   DataEntry entry = 1;
-}
-
-message DeleteDataRequest {
-  bytes kademliaId = 1;
-}
-
-message DeleteDataResponse {
-  bool deleted = 1;
 }
 
 message DataEntry {

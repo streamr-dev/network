@@ -135,7 +135,11 @@ export class Finder implements IFinder {
         } catch (err) {
             logger.debug(`doRouteFindRequest failed with error ${err}`)
         }
-        this.findAndReportLocalData(idToFind, action === FindAction.FETCH_DATA, [], this.localPeerDescriptor, sessionId)
+        if (action === FindAction.FETCH_DATA) {
+            this.findAndReportLocalData(idToFind, [], this.localPeerDescriptor, sessionId)
+        } else if (action === FindAction.DELETE_DATA) {
+            this.localDataStore.markAsDeleted(idToFind, peerIdFromPeerDescriptor(this.localPeerDescriptor))
+        }
         this.ongoingSessions.delete(sessionId)
         session.stop()
         return session.getResults()
@@ -172,19 +176,14 @@ export class Finder implements IFinder {
 
     private findAndReportLocalData(
         idToFind: Uint8Array,
-        fetchData: boolean,
         routingPath: PeerDescriptor[],
         sourcePeer: PeerDescriptor,
         sessionId: string
-    ): boolean {
-        if (fetchData) {
-            const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
-            if (data.size > 0) {
-                this.sendFindResponse(routingPath, sourcePeer, sessionId, [], data, true)
-                return true
-            }
+    ): void {
+        const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
+        if (data.size > 0) {
+            this.sendFindResponse(routingPath, sourcePeer, sessionId, [], data, true)
         }
-        return false
     }
 
     private findLocalData(idToFind: Uint8Array, fetchData: boolean): Map<PeerIDKey, DataEntry> | undefined {
@@ -230,6 +229,9 @@ export class Finder implements IFinder {
         const findRequest = msg?.body.oneofKind === 'findRequest' ? msg.body.findRequest : undefined
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.kademliaId, 5)
         const data = this.findLocalData(idToFind.value, findRequest!.action === FindAction.FETCH_DATA)
+        if (findRequest!.action === FindAction.DELETE_DATA) {
+            this.localDataStore.markAsDeleted(idToFind.value, peerIdFromPeerDescriptor(routedMessage.sourcePeer!))
+        }
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
             this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
                 closestPeersToDestination, data, true)

@@ -1,8 +1,6 @@
 import { EXISTING_CONNECTION_TIMEOUT, RpcRemote } from '../contact/RpcRemote'
 import { IStoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { 
-    DeleteDataRequest,
-    DeleteDataResponse,
+import {
     ReplicateDataRequest,
     StoreDataRequest,
     StoreDataResponse
@@ -19,15 +17,6 @@ export class StoreRpcRemote extends RpcRemote<IStoreRpcClient> {
             const to = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
             const from = getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor())
             throw new Error(`Could not store data to ${to} from ${from} ${err}`)
-        }
-    }
-
-    async deleteData(request: DeleteDataRequest): Promise<DeleteDataResponse> {
-        const options = this.formDhtRpcOptions()
-        try {
-            return await this.getClient().deleteData(request, options)
-        } catch (err) {
-            throw new Error(`Could not call delete data to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} ${err}`)
         }
     }
 

@@ -1,5 +1,5 @@
 import {
-    DataEntry, DeleteDataRequest, DeleteDataResponse, ReplicateDataRequest, PeerDescriptor,
+    DataEntry, ReplicateDataRequest, PeerDescriptor,
     StoreDataRequest, StoreDataResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../helpers/PeerID'
@@ -10,7 +10,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IFinder } from '../find/Finder'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
@@ -70,8 +70,6 @@ export class StoreRpcLocal implements IStoreRpc {
             (request: StoreDataRequest) => this.storeData(request))
         this.rpcCommunicator.registerRpcNotification(ReplicateDataRequest, 'replicateData',
             (request: ReplicateDataRequest, context: ServerCallContext) => this.replicateData(request, context))
-        this.rpcCommunicator.registerRpcMethod(DeleteDataRequest, DeleteDataResponse, 'deleteData',
-            (request: DeleteDataRequest, context: ServerCallContext) => this.deleteData(request, context))
 
         this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor) => {
             this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
@@ -209,38 +207,6 @@ export class StoreRpcLocal implements IStoreRpc {
         return sortedList.getClosestContacts().some((node) => node.getPeerId().equals(localPeerId))
     }
 
-    public async deleteDataFromDht(key: Uint8Array): Promise<void> {
-        logger.debug(`Deleting data from DHT ${this.serviceId}`)
-        const result = await this.finder.startFind(key)
-        const closestNodes = result.closestNodes
-        const successfulNodes: PeerDescriptor[] = []
-        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.redundancyFactor; i++) {
-            if (areEqualPeerDescriptors(this.localPeerDescriptor, closestNodes[i])) {
-                this.localDataStore.markAsDeleted(key, peerIdFromPeerDescriptor(this.localPeerDescriptor))
-                successfulNodes.push(closestNodes[i])
-                continue
-            }
-            const rpcRemote = new StoreRpcRemote(
-                this.localPeerDescriptor,
-                closestNodes[i],
-                this.serviceId,
-                toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport())),
-                this.rpcRequestTimeout
-            )
-            try {
-                const response = await rpcRemote.deleteData({ kademliaId: key })
-                if (response.deleted) {
-                    logger.trace('remote.deleteData() returned success')
-                } else {
-                    logger.trace('could not delete data from ' + getNodeIdFromPeerDescriptor(closestNodes[i]))
-                }
-                successfulNodes.push(closestNodes[i])
-            } catch (e) {
-                logger.trace('remote.deleteData() threw an exception ' + e)
-            }
-        }
-    }
-
     // RPC service implementation
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         const ttl = Math.min(request.ttl, this.maxTtl)
@@ -290,14 +256,6 @@ export class StoreRpcLocal implements IStoreRpc {
                 }
             }))
         }))
-    }
-
-    // RPC service implementation
-    async deleteData(request: DeleteDataRequest, context: ServerCallContext): Promise<DeleteDataResponse> {
-        const { incomingSourceDescriptor } = context as DhtCallContext
-        const { kademliaId } = request
-        const deleted = this.localDataStore.markAsDeleted(kademliaId, peerIdFromPeerDescriptor(incomingSourceDescriptor!))
-        return DeleteDataResponse.create({ deleted })
     }
 
     // RPC service implementation

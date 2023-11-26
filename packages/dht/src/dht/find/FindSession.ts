@@ -70,10 +70,10 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
             unreportedHops.delete(id)
         })
         if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size === 0) {
-            if (this.action
+            if (this.action === FindAction.FETCH_DATA
                 && (this.hasNonStaleData() || this.noCloserNodesReceivedCounter >= this.waitedRoutingPathCompletions)) {
                 return true
-            } else if (this.action) {
+            } else if (this.action === FindAction.FETCH_DATA) {
                 return false
             }
             return true

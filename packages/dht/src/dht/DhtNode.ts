@@ -654,7 +654,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
         if (!this.stopped) {
-            return this.storeRpcLocal!.deleteDataFromDht(idToDelete)
+            await this.finder!.startFind(idToDelete, FindAction.DELETE_DATA)
         }
     }
 

@@ -12,7 +12,6 @@ import {
     StoreDataResponse,
     WebsocketConnectionResponse,
     FindRequest, 
-    DeleteDataResponse,
     FindAction
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
@@ -214,9 +213,6 @@ export const mockStoreRpc: IStoreRpcWithError = {
     },
     async replicateData(): Promise<Empty> {
         return {}
-    },
-    async deleteData(): Promise<DeleteDataResponse> {
-        return DeleteDataResponse.create()
     }
 }
 
