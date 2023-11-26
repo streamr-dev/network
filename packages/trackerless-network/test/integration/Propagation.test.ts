@@ -1,4 +1,4 @@
-import { Simulator } from '@streamr/dht'
+import { LatencyType, Simulator } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
@@ -16,8 +16,8 @@ describe('Propagation', () => {
     const NUM_OF_NODES = 256
 
     beforeEach(async () => {
+        const simulator = new Simulator(LatencyType.FIXED, 10)
         totalReceived = 0
-        const simulator = new Simulator()
         layer1Nodes = []
         randomGraphNodes = []
         const [entryPoint, node1] = await createMockRandomGraphNodeAndDhtNode(entryPointDescriptor, entryPointDescriptor, STREAM_PART_ID, simulator)
