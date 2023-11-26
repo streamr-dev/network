@@ -51,7 +51,7 @@ export class DiscoverySession {
         this.outgoingClosestPeersRequestsCounter++
         this.config.peerManager.neighborList!.setContacted(contact.getPeerId())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)
-        this.config.peerManager.neighborList!.setActive(contact.getPeerId())
+        this.config.peerManager.handlePeerActive(contact.getPeerId())
         return returnedContacts
     }
 
@@ -74,8 +74,7 @@ export class DiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(peer.getPeerId().toKey())
-        this.config.peerManager.bucket!.remove(peer.getPeerId().value)
-        this.config.peerManager.neighborList!.removeContact(peer.getPeerId())
+        this.config.peerManager.handlePeerUnresponsive(peer.getPeerId())
     }
 
     private findMoreContacts(): void {

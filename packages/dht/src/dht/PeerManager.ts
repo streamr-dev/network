@@ -215,6 +215,15 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.connections.clear()
     }
 
+    handlePeerActive(peerId: PeerID): void {
+        this.neighborList!.setActive(peerId)
+    }
+
+    handlePeerUnresponsive(peerId: PeerID): void {
+        this.bucket!.remove(peerId.value)
+        this.neighborList!.removeContact(peerId)
+    }
+
     handleNewPeers(contacts: PeerDescriptor[]): void {
         contacts.forEach((contact) => {
             if (!PeerID.fromValue(contact.kademliaId).equals(this.config.ownPeerId)) {
