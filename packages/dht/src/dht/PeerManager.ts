@@ -25,6 +25,7 @@ interface PeerManagerConfig {
     peerDiscoveryQueryBatchSize: number
     ownPeerId: PeerID
     connectionManager: ConnectionManager
+    isLayer0: boolean
     createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
 }
 
@@ -176,8 +177,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     handleDisconnected(peerDescriptor: PeerDescriptor, gracefulLeave: boolean): void {
         logger.trace('disconnected: ' + getNodeIdFromPeerDescriptor(peerDescriptor))
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
-        // only remove from bucket if we are on layer 0
-        if (this.config.connectionManager) {
+        if (this.config.isLayer0) {
             this.bucket!.remove(peerDescriptor.kademliaId)
             if (gracefulLeave === true) {
                 logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
