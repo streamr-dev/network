@@ -349,6 +349,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             )
             if (areEqualPeerDescriptors(peer, this.localPeerDescriptor!)) {
                 logger.error('own peerdescriptor added to connections in initKBucket')
+                return
             }
             this.connections.set(keyFromPeerDescriptor(peer), rpcRemote)
         })
@@ -365,6 +366,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         if (areEqualPeerDescriptors(this.localPeerDescriptor!, peerDescriptor)) {
             logger.error('onTransportConnected() to self')
+            return
         }
 
         const rpcRemote = new DhtNodeRpcRemote(
