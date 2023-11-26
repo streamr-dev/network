@@ -147,7 +147,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public connectionManager?: ConnectionManager
     private started = false
-    private stopped = false
+    private abortController = new AbortController()
     private entryPointDisconnectTimeout?: NodeJS.Timeout
 
     constructor(conf: DhtNodeOptions) {
@@ -172,7 +172,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async start(): Promise<void> {
-        if (this.started || this.stopped) {
+        if (this.started || this.abortController.signal.aborted) {
             return
         }
         logger.trace(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
@@ -342,7 +342,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private bindRpcLocalMethods(): void {
-        if (!this.started || this.stopped) {
+        if (!this.started || this.abortController.signal.aborted) {
             return
         }
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
@@ -434,7 +434,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async send(msg: Message): Promise<void> {
-        if (!this.started || this.stopped) {
+        if (!this.started || this.abortController.signal.aborted) {
             return
         }
         const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints ?? [] : []
@@ -480,7 +480,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
-        if (!this.stopped) {
+        if (!this.abortController.signal.aborted) {
             return this.storeRpcLocal!.deleteDataFromDht(idToDelete)
         }
     }
@@ -528,7 +528,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async waitForNetworkConnectivity(): Promise<void> {
-        await waitForCondition(() => this.peerManager!.connections.size > 0, this.config.networkConnectivityTimeout)
+        await waitForCondition(() => {
+            if (!this.peerManager) {
+                return false
+            } else {
+                return (this.peerManager.getNumberOfPeers() > 0)
+            }
+        }, this.config.networkConnectivityTimeout, 100, this.abortController.signal)
     }
 
     public hasJoined(): boolean {
@@ -536,11 +542,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async stop(): Promise<void> {
-        if (this.stopped || !this.started) {
+        if (this.abortController.signal.aborted || !this.started) {
             return
         }
         logger.trace('stop()')
-        this.stopped = true
+        this.abortController.abort()
         await this.storeRpcLocal!.destroy()
         if (this.entryPointDisconnectTimeout) {
             clearTimeout(this.entryPointDisconnectTimeout)
