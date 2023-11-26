@@ -189,6 +189,14 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
     }
 
+    handleConnected(peer: PeerDescriptor): void {
+        const rpcRemote = this.config.createDhtNodeRpcRemote(peer)
+        if (PeerID.fromValue(peer.kademliaId).equals(this.config.ownPeerId)) {
+            logger.error('own peerdescriptor added to connections in initKBucket')
+        }
+        this.connections.set(keyFromPeerDescriptor(peer), rpcRemote)
+    }
+
     stop(): void {
         this.stopped = true
         this.bucket!.toArray().forEach((rpcRemote: DhtNodeRpcRemote) => { 

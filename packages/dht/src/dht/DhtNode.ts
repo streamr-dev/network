@@ -33,7 +33,6 @@ import { Any } from '../proto/google/protobuf/any'
 import {
     areEqualPeerDescriptors,
     getNodeIdFromPeerDescriptor,
-    keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
@@ -339,17 +338,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.emit('disconnected', peerDescriptor, gracefulLeave)
         })
         this.transport!.getAllConnectionPeerDescriptors().forEach((peer) => {
-            const rpcRemote = new DhtNodeRpcRemote(
-                this.localPeerDescriptor!,
-                peer,
-                toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
-                this.config.serviceId,
-                this.config.rpcRequestTimeout
-            )
-            if (areEqualPeerDescriptors(peer, this.localPeerDescriptor!)) {
-                logger.error('own peerdescriptor added to connections in initKBucket')
-            }
-            this.peerManager!.connections.set(keyFromPeerDescriptor(peer), rpcRemote)
+            this.peerManager!.handleConnected(peer)
         })
     }
 
