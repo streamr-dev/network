@@ -512,7 +512,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getNumberOfConnections(): number {
-        return this.peerManager!.connections.size
+        return this.peerManager!.getNumberOfConnections()
     }
 
     public getNumberOfLocalLockedConnections(): number {

@@ -215,6 +215,10 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.connections.clear()
     }
 
+    public getNumberOfConnections(): number {
+        return this.connections.size
+    }
+
     handlePeerActive(peerId: PeerID): void {
         this.neighborList!.setActive(peerId)
     }
