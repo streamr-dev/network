@@ -45,8 +45,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     public readonly connections: Map<PeerIDKey, DhtNodeRpcRemote> = new Map()
     // TODO make private
     public neighborList?: SortedContactList<DhtNodeRpcRemote>
-    // TODO make private
-    public randomPeers?: RandomContactList<DhtNodeRpcRemote>
+    private randomPeers?: RandomContactList<DhtNodeRpcRemote>
     private readonly config: PeerManagerConfig
     private stopped: boolean = false
 
