@@ -26,7 +26,6 @@ interface PeerManagerConfig {
     ownPeerId: PeerID
     connectionManager: ConnectionManager
     createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
-    removeContact: (contact: PeerDescriptor) => void
 }
 
 export interface PeerManagerEvents {
@@ -128,13 +127,13 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
                     } else {
                         logger.trace('ping failed ' + getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
                         this.config.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
-                        this.config.removeContact(contact.getPeerDescriptor())
+                        this.removeContact(contact.getPeerDescriptor())
                         this.addClosestContactToBucket()
                     }
                     return
                 }).catch((_e) => {
                     this.config.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
-                    this.config.removeContact(contact.getPeerDescriptor())
+                    this.removeContact(contact.getPeerDescriptor())
                     this.addClosestContactToBucket()
                 })
             }
@@ -182,7 +181,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             this.bucket!.remove(peerDescriptor.kademliaId)
             if (gracefulLeave === true) {
                 logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
-                this.config.removeContact(peerDescriptor)
+                this.removeContact(peerDescriptor)
             } else {
                 logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
             }
@@ -195,6 +194,17 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             logger.error('own peerdescriptor added to connections in initKBucket')
         }
         this.connections.set(keyFromPeerDescriptor(peer), rpcRemote)
+    }
+
+    public removeContact(contact: PeerDescriptor): void {
+        if (this.stopped) {
+            return
+        }
+        logger.trace(`Removing contact ${getNodeIdFromPeerDescriptor(contact)}`)
+        const peerId = peerIdFromPeerDescriptor(contact)
+        this.bucket!.remove(peerId.value)
+        this.neighborList!.removeContact(peerId)
+        this.randomPeers!.removeContact(peerId)
     }
 
     stop(): void {

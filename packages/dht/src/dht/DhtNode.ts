@@ -301,8 +301,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             ownPeerId: this.getNodeId(),
             connectionManager: this.connectionManager!,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
-            createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
-            removeContact: (contact: PeerDescriptor) => this.removeContact(contact)
+            createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor)
         })
         this.peerManager.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
             this.emit('contactRemoved', peerDescriptor, activeContacts)
@@ -428,14 +427,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public removeContact(contact: PeerDescriptor): void {
-        if (!this.started || this.stopped) {
+        if (!this.started) {  // the stopped state is checked in PeerManager
             return
         }
-        logger.trace(`Removing contact ${getNodeIdFromPeerDescriptor(contact)}`)
-        const peerId = peerIdFromPeerDescriptor(contact)
-        this.peerManager!.bucket!.remove(peerId.value)
-        this.peerManager!.neighborList!.removeContact(peerId)
-        this.peerManager!.randomPeers!.removeContact(peerId)
+        this.peerManager!.removeContact(contact)
     }
 
     public async send(msg: Message): Promise<void> {
