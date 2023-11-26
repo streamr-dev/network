@@ -159,9 +159,9 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return undefined
     }
 
-    onTransportConnected(peerDescriptor: PeerDescriptor): void {
+    handleConnected(peerDescriptor: PeerDescriptor): void {
         if (PeerID.fromValue(peerDescriptor.kademliaId).equals(this.config.ownPeerId)) {
-            logger.error('onTransportConnected() to self')
+            logger.error('handleConnected() to self')
         }
         const rpcRemote = this.config.createDhtNodeRpcRemote(peerDescriptor)
         if (!this.connections.has(PeerID.fromValue(rpcRemote.id).toKey())) {
@@ -173,7 +173,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         logger.trace('connected: ' + getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + this.connections.size)
     }
 
-    onTransportDisconnected(peerDescriptor: PeerDescriptor, gracefulLeave: boolean): void {
+    handleDisconnected(peerDescriptor: PeerDescriptor, gracefulLeave: boolean): void {
         logger.trace('disconnected: ' + getNodeIdFromPeerDescriptor(peerDescriptor))
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
         // only remove from bucket if we are on layer 0
@@ -186,14 +186,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
                 logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
             }
         }
-    }
-
-    handleConnected(peer: PeerDescriptor): void {
-        const rpcRemote = this.config.createDhtNodeRpcRemote(peer)
-        if (PeerID.fromValue(peer.kademliaId).equals(this.config.ownPeerId)) {
-            logger.error('own peerdescriptor added to connections in initKBucket')
-        }
-        this.connections.set(keyFromPeerDescriptor(peer), rpcRemote)
     }
 
     public removeContact(contact: PeerDescriptor): void {
