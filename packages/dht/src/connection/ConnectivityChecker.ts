@@ -34,16 +34,13 @@ export class ConnectivityChecker {
 
     public static readonly CONNECTIVITY_CHECKER_SERVICE_ID = 'system/connectivity-checker'
     private static readonly CONNECTIVITY_CHECKER_TIMEOUT = 5000
-    private destroyed = false
 
     public async sendConnectivityRequest(
         request: ConnectivityRequest,
         entryPoint: PeerDescriptor,
         selfSigned: boolean
     ): Promise<ConnectivityResponse> {
-        if (this.destroyed) {
-            throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
-        }
+
         let outgoingConnection: IConnection
         const wsServerInfo = {
             host: entryPoint.websocket!.host, 
@@ -105,9 +102,5 @@ export class ConnectivityChecker {
             logger.error('error getting connectivityresponse')
             throw e
         }
-    }
-
-    public destroy(): void {
-        this.destroyed = true
     }
 }

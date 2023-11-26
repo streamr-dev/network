@@ -30,6 +30,7 @@ import { expectedConnectionType } from '../../helpers/Connectivity'
 import { WebsocketServerStartError } from '../../helpers/errors'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
+import * as Err from '../../helpers/errors'
 
 const logger = new Logger(module)
 
@@ -61,7 +62,6 @@ export class WebsocketConnector {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly websocketServer?: WebsocketServer
-    private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private onNewConnection: (connection: ManagedConnection) => boolean
     private host?: string
@@ -161,7 +161,6 @@ export class WebsocketConnector {
             })
             const port = await this.websocketServer.start()
             this.selectedPort = port
-            this.connectivityChecker = new ConnectivityChecker()
         }
     }
 
@@ -196,7 +195,12 @@ export class WebsocketConnector {
                             tls: this.serverEnableTls,
                             selfSigned
                         }
-                        return await this.connectivityChecker!.sendConnectivityRequest(connectivityRequest, entryPoint, selfSigned)
+                        if (!this.abortController.signal.aborted) {
+                            const connectivityChecker = new ConnectivityChecker()
+                            return await connectivityChecker.sendConnectivityRequest(connectivityRequest, entryPoint, selfSigned)
+                        } else {
+                            throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
+                        }
                     }
                 }
             } catch (err) {
@@ -330,7 +334,6 @@ export class WebsocketConnector {
 
         const attempts = Array.from(this.connectingConnections.values())
         await Promise.allSettled(attempts.map((conn) => conn.close(false)))
-        this.connectivityChecker?.destroy()
         await this.websocketServer?.stop()
     }
 }
