@@ -97,7 +97,7 @@ export interface DhtNodeOptions {
     autoCertifierConfigFile?: string
 }
 
-type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions, 
+type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
     'serviceId' |
     'joinParallelism' |
     'maxNeighborListSize' |
@@ -124,7 +124,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
     } else {
         kademliaId = hexToBinary(peerId!)
     }
-    const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS 
+    const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
     const ret: PeerDescriptor = { kademliaId, type: nodeType }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
@@ -212,12 +212,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
                 connectorFacadeConfig.websocketHost = this.config.peerDescriptor.websocket.host
-                connectorFacadeConfig.websocketPortRange = { 
+                connectorFacadeConfig.websocketPortRange = {
                     min: this.config.peerDescriptor.websocket.port,
                     max: this.config.peerDescriptor.websocket.port
                 }
             // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
-            } else if (this.config.websocketPortRange) { 
+            } else if (this.config.websocketPortRange) {
                 connectorFacadeConfig.websocketHost = this.config.websocketHost
                 connectorFacadeConfig.websocketPortRange = this.config.websocketPortRange
             }
@@ -322,9 +322,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             ) {
                 setImmediate(async () => {
                     // TODO should we catch possible promise rejection?
-                    await Promise.all(this.config.entryPoints!.map((entryPoint) => 
+                    await Promise.all(this.config.entryPoints!.map((entryPoint) =>
                         this.peerDiscovery!.rejoinDht(entryPoint)
-                    )) 
+                    ))
                 })
             }
         })
@@ -367,7 +367,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.rpcCommunicator!.registerRpcMethod(
             ExternalFindDataRequest,
             ExternalFindDataResponse,
-            'externalFindData', 
+            'externalFindData',
             (req: ExternalFindDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalFindData(req, context),
             { timeout: 10000 }
         )
@@ -445,7 +445,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started) {
             throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
-        await Promise.all(entryPointDescriptors.map((entryPoint) => 
+        await Promise.all(entryPointDescriptors.map((entryPoint) =>
             this.peerDiscovery!.joinDht(entryPoint, doAdditionalRandomPeerDiscovery, retry)
         ))
     }
@@ -476,7 +476,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
         }
         const result = await this.finder!.startFind(idToFind, true)
-        return result.dataEntries ?? []  // TODO is this fallback needed? 
+        return result.dataEntries ?? []  // TODO is this fallback needed?
     }
 
     public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
@@ -552,7 +552,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.finder!.stop()
         this.peerDiscovery!.stop()
         if (this.config.transport === undefined) {
-            // if the transport was not given in config, the instance was created in start() and 
+            // if the transport was not given in config, the instance was created in start() and
             // this component is responsible for stopping it
             await this.transport!.stop()
         }

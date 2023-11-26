@@ -205,7 +205,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
 
     stop(): void {
         this.stopped = true
-        this.bucket!.toArray().forEach((rpcRemote: DhtNodeRpcRemote) => { 
+        this.bucket!.toArray().forEach((rpcRemote: DhtNodeRpcRemote) => {
             rpcRemote.leaveNotice()
             this.bucket!.remove(rpcRemote.id)
         })
@@ -236,7 +236,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             if (!PeerID.fromValue(contact.kademliaId).equals(this.config.ownPeerId)) {
                 logger.trace(`Adding new contact ${getNodeIdFromPeerDescriptor(contact)}`)
                 const rpcRemote = this.config.createDhtNodeRpcRemote(contact)
-                if ((this.bucket!.get(contact.kademliaId) === null) 
+                if ((this.bucket!.get(contact.kademliaId) === null)
                     && (this.neighborList!.getContact(peerIdFromPeerDescriptor(contact)) === undefined)
                 ) {
                     this.neighborList!.addContact(rpcRemote)
