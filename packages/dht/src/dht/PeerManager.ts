@@ -5,6 +5,7 @@ import KBucket from 'k-bucket'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import {
     getNodeIdFromPeerDescriptor,
+    keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
 import {
@@ -157,6 +158,35 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             }
         }
         return undefined
+    }
+
+    onTransportConnected(peerDescriptor: PeerDescriptor): void {
+        if (PeerID.fromValue(peerDescriptor.kademliaId).equals(this.config.ownPeerId)) {
+            logger.error('onTransportConnected() to self')
+        }
+        const rpcRemote = this.config.createDhtNodeRpcRemote(peerDescriptor)
+        if (!this.connections.has(PeerID.fromValue(rpcRemote.id).toKey())) {
+            this.connections.set(PeerID.fromValue(rpcRemote.id).toKey(), rpcRemote)
+            logger.trace('connectionschange add ' + this.connections.size)
+        } else {
+            logger.trace('new connection not set to connections, there is already a connection with the peer ID')
+        }
+        logger.trace('connected: ' + getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + this.connections.size)
+    }
+
+    onTransportDisconnected(peerDescriptor: PeerDescriptor, gracefulLeave: boolean): void {
+        logger.trace('disconnected: ' + getNodeIdFromPeerDescriptor(peerDescriptor))
+        this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
+        // only remove from bucket if we are on layer 0
+        if (this.config.connectionManager) {
+            this.bucket!.remove(peerDescriptor.kademliaId)
+            if (gracefulLeave === true) {
+                logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
+                this.config.removeContact(peerDescriptor)
+            } else {
+                logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
+            }
+        }
     }
 
     stop(): void {

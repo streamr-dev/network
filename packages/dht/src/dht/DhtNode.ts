@@ -330,9 +330,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 })
             }
         })
-        this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => this.onTransportConnected(peerDescriptor))
+        this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => {
+            this.peerManager!.onTransportConnected(peerDescriptor)
+            this.emit('connected', peerDescriptor)
+        })
         this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
-            this.onTransportDisconnected(peerDescriptor, gracefulLeave)
+            this.peerManager!.onTransportDisconnected(peerDescriptor, gracefulLeave)
+            this.emit('disconnected', peerDescriptor, gracefulLeave)
         })
         this.transport!.getAllConnectionPeerDescriptors().forEach((peer) => {
             const rpcRemote = new DhtNodeRpcRemote(
@@ -347,47 +351,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
             this.peerManager!.connections.set(keyFromPeerDescriptor(peer), rpcRemote)
         })
-    }
-
-    private onTransportConnected(peerDescriptor: PeerDescriptor): void {
-
-        if (areEqualPeerDescriptors(this.localPeerDescriptor!, peerDescriptor)) {
-            logger.error('onTransportConnected() to self')
-        }
-
-        const rpcRemote = new DhtNodeRpcRemote(
-            this.localPeerDescriptor!,
-            peerDescriptor,
-            toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
-            this.config.serviceId,
-            this.config.rpcRequestTimeout
-        )
-        if (!this.peerManager!.connections.has(PeerID.fromValue(rpcRemote.id).toKey())) {
-            this.peerManager!.connections.set(PeerID.fromValue(rpcRemote.id).toKey(), rpcRemote)
-            logger.trace('connectionschange add ' + this.peerManager!.connections.size)
-        } else {
-            logger.trace('new connection not set to connections, there is already a connection with the peer ID')
-        }
-        logger.trace('connected: ' + getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + this.peerManager!.connections.size)
-        this.emit('connected', peerDescriptor)
-    }
-
-    private onTransportDisconnected(peerDescriptor: PeerDescriptor, gracefulLeave: boolean): void {
-        logger.trace('disconnected: ' + getNodeIdFromPeerDescriptor(peerDescriptor))
-        this.peerManager!.connections.delete(keyFromPeerDescriptor(peerDescriptor))
-        // only remove from bucket if we are on layer 0
-        if (this.connectionManager) {
-            this.peerManager!.bucket!.remove(peerDescriptor.kademliaId)
-
-            if (gracefulLeave === true) {
-                logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
-                this.removeContact(peerDescriptor)
-            } else {
-                logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
-            }
-        }
-
-        this.emit('disconnected', peerDescriptor, gracefulLeave)
     }
 
     private bindRpcLocalMethods(): void {
