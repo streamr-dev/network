@@ -69,7 +69,7 @@ describe('Storing data in DHT', () => {
         })
     }, 30000)
 
-    it('storing with explicit storer PeerDescriptor', async () => {
+    it('storing with explicit creator', async () => {
         const storingNode = getRandomNode()
         const dataKey = createRandomKademliaId()
         const storedData = createMockPeerDescriptor()
@@ -83,7 +83,7 @@ describe('Storing data in DHT', () => {
         results.forEach((entry) => {
             const foundData = Any.unpack(entry.data!, PeerDescriptor)
             expect(areEqualPeerDescriptors(foundData, storedData)).toBeTrue()
-            expect(areEqualPeerDescriptors(entry.storer!, requestor)).toBeTrue()
+            expect(areEqualPeerDescriptors(entry.creator!, requestor)).toBeTrue()
         })
     }, 30000)
 })

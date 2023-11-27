@@ -27,7 +27,7 @@ describe('StoreRpcRemote', () => {
     }
     const data = Any.pack(clientPeerDescriptor, PeerDescriptor)
     const request: StoreDataRequest = {
-        kademliaId: clientPeerDescriptor.kademliaId,
+        key: clientPeerDescriptor.kademliaId,
         data,
         ttl: 10
     }

@@ -58,10 +58,10 @@ service ExternalApiRpc {
 // Used inside RpcMessage
 
 message StoreDataRequest {
-  bytes kademliaId = 1;
+  bytes key = 1;
   google.protobuf.Any data = 2;
-  PeerDescriptor storer = 3;
-  google.protobuf.Timestamp storerTime = 4;
+  PeerDescriptor creator = 3;
+  google.protobuf.Timestamp createdAt = 4;
   uint32 ttl = 5;
 }
 
@@ -83,7 +83,7 @@ message ReplicateDataRequest {
 }
 
 message DeleteDataRequest {
-  bytes kademliaId = 1;
+  bytes key = 1;
 }
 
 message DeleteDataResponse {
@@ -91,14 +91,14 @@ message DeleteDataResponse {
 }
 
 message DataEntry {
-  PeerDescriptor storer = 1;
-  bytes kademliaId = 2;
-  google.protobuf.Any data = 3;
-  google.protobuf.Timestamp storedAt = 4; 
-  uint32 ttl = 5;   // milliseconds
-  bool stale = 6;
-  bool deleted = 7;
-  google.protobuf.Timestamp storerTime = 8;
+  bytes key = 1;
+  google.protobuf.Any data = 2;
+  PeerDescriptor creator = 3;
+  google.protobuf.Timestamp createdAt = 4;
+  google.protobuf.Timestamp storedAt = 5; 
+  uint32 ttl = 6;   // milliseconds
+  bool stale = 7;
+  bool deleted = 8;
 }
 
 message ClosestPeersRequest {
@@ -297,7 +297,7 @@ message DisconnectNoticeResponse {
 }
 
 message ExternalFindDataRequest {
-  bytes kademliaId = 1;
+  bytes key = 1;
 }
 
 message ExternalFindDataResponse {
