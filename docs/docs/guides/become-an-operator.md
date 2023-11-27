@@ -97,7 +97,7 @@ The only information they will need from you is your address. Please do not enga
                         }
                     },
                     {
-                        "node": "e2",
+                        "nodeId": "e2",
                         "websocket": {
                             "host": "entrypoint-2.streamr.network",
                             "port": 40401,
