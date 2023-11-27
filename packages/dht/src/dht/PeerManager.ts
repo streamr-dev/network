@@ -160,7 +160,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     }
 
     handleConnected(peerDescriptor: PeerDescriptor): void {
-        if (PeerID.fromValue(peerDescriptor.kademliaId).equals(this.config.ownPeerId)) {
+        if (PeerID.fromValue(peerDescriptor.nodeId).equals(this.config.ownPeerId)) {
             logger.error('handleConnected() to self')
         }
         const rpcRemote = this.config.createDhtNodeRpcRemote(peerDescriptor)
@@ -177,7 +177,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         logger.trace('disconnected: ' + getNodeIdFromPeerDescriptor(peerDescriptor))
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
         if (this.config.isLayer0) {
-            this.bucket!.remove(peerDescriptor.kademliaId)
+            this.bucket!.remove(peerDescriptor.nodeId)
             if (gracefulLeave === true) {
                 logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
                 this.removeContact(peerDescriptor)
@@ -232,10 +232,10 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             return
         }
         contacts.forEach((contact) => {
-            if (!PeerID.fromValue(contact.kademliaId).equals(this.config.ownPeerId)) {
+            if (!PeerID.fromValue(contact.nodeId).equals(this.config.ownPeerId)) {
                 logger.trace(`Adding new contact ${getNodeIdFromPeerDescriptor(contact)}`)
                 const rpcRemote = this.config.createDhtNodeRpcRemote(contact)
-                if ((this.bucket!.get(contact.kademliaId) === null)
+                if ((this.bucket!.get(contact.nodeId) === null)
                     && (this.neighborList!.getContact(peerIdFromPeerDescriptor(contact)) === undefined)
                 ) {
                     this.neighborList!.addContact(rpcRemote)
