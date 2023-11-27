@@ -24,12 +24,12 @@ describe('SimultaneousConnections', () => {
     let simulatorTransport2: SimulatorTransport
 
     const peerDescriptor1 = {
-        kademliaId: PeerID.fromString('mock1').value,
+        nodeId: PeerID.fromString('mock1').value,
         type: NodeType.NODEJS
     }
 
     const peerDescriptor2 = {
-        kademliaId: PeerID.fromString('mock2').value,
+        nodeId: PeerID.fromString('mock2').value,
         type: NodeType.NODEJS
     }
 
@@ -94,7 +94,7 @@ describe('SimultaneousConnections', () => {
         let connectionManager2: ConnectionManager
 
         const wsPeer1: PeerDescriptor = {
-            kademliaId: PeerID.fromString('mock1').value,
+            nodeId: PeerID.fromString('mock1').value,
             type: NodeType.NODEJS,
             websocket: {
                 host: '127.0.0.1',
@@ -104,7 +104,7 @@ describe('SimultaneousConnections', () => {
         }
 
         const wsPeer2: PeerDescriptor = {
-            kademliaId: PeerID.fromString('mock2').value,
+            nodeId: PeerID.fromString('mock2').value,
             type: NodeType.NODEJS,
             websocket: {
                 host: '127.0.0.1',
@@ -177,7 +177,7 @@ describe('SimultaneousConnections', () => {
         let connectionManager2: ConnectionManager
 
         const wsPeer1: PeerDescriptor = {
-            kademliaId: PeerID.fromString('mock1').value,
+            nodeId: PeerID.fromString('mock1').value,
             type: NodeType.NODEJS,
             websocket: {
                 host: '127.0.0.1',
@@ -187,7 +187,7 @@ describe('SimultaneousConnections', () => {
         }
 
         const wsPeer2: PeerDescriptor = {
-            kademliaId: PeerID.fromString('mock2').value,
+            nodeId: PeerID.fromString('mock2').value,
             type: NodeType.NODEJS
         }
 
@@ -251,12 +251,12 @@ describe('SimultaneousConnections', () => {
         let connectionManager2: ConnectionManager
 
         const wrtcPeer1: PeerDescriptor = {
-            kademliaId: PeerID.fromString('mock1').value,
+            nodeId: PeerID.fromString('mock1').value,
             type: NodeType.NODEJS
         }
 
         const wrtcPeer2: PeerDescriptor = {
-            kademliaId: PeerID.fromString('mock2').value,
+            nodeId: PeerID.fromString('mock2').value,
             type: NodeType.NODEJS
         }
 

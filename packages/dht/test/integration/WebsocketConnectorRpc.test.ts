@@ -17,12 +17,12 @@ describe('WebsocketConnectorRpc', () => {
     let client2: ProtoRpcClient<WebsocketConnectorRpcClient>
 
     const peerDescriptor1: PeerDescriptor = {
-        kademliaId: generateId('peer1'),
+        nodeId: generateId('peer1'),
         type: NodeType.NODEJS
     }
 
     const peerDescriptor2: PeerDescriptor = {
-        kademliaId: generateId('peer2'),
+        nodeId: generateId('peer2'),
         type: NodeType.NODEJS
     }
 

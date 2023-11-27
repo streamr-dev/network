@@ -9,13 +9,21 @@ function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
 }
 
+const withRenamedProperty = (obj: any, from: string, to: string) => {
+    const result = { ...obj }
+    result[to] = obj[from]
+    delete result[from]
+    return result
+}
+
 /**
  * Streamr client constructor options that work in the test environment
  */
 export const CONFIG_TEST: StreamrClientConfig = {
     network: {
         controlLayer: {
-            entryPoints: CHAIN_CONFIG.dev2.entryPoints,
+            // TODO rename 'id' -> 'nodeId' in '@streamr/config' and remove the use of withRenamedProperty
+            entryPoints: CHAIN_CONFIG.dev2.entryPoints.map((item) => withRenamedProperty(item, 'id', 'nodeId')),
             websocketPortRange: {
                 min: 32400,
                 max: 32800

@@ -15,12 +15,12 @@ describe('RoutingSession', () => {
     let rpcCommunicator: RoutingRpcCommunicator
 
     const mockPeerDescriptor1: PeerDescriptor = {
-        kademliaId: hexToBinary('eee1'),
+        nodeId: hexToBinary('eee1'),
         type: NodeType.NODEJS
     }
 
     const mockPeerDescriptor2 = {
-        kademliaId: hexToBinary('eee2'),
+        nodeId: hexToBinary('eee2'),
         type: NodeType.NODEJS
     }
 
