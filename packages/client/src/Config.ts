@@ -30,6 +30,13 @@ export interface ControlLayerConfig {
     entryPoints?: NetworkPeerDescriptor[]
 
     /**
+     * The maximum number of connections before unwanted connections are clean up.
+     * This is a soft limit, meaning that the number of connections may exceed the count temporarily.
+     * Locked connections such as the ones used for stream operations are not counted towards this limit.
+    */
+    maxConnections?: number
+
+    /**
      * The list of STUN and TURN servers to use in ICE protocol when
      * forming WebRTC connections.
     */

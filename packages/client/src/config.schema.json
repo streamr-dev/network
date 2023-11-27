@@ -113,6 +113,10 @@
                         "peerDescriptor": {
                             "$ref": "#/definitions/peerDescriptor"
                         },
+                        "maxConnections": {
+                            "type": "number",
+                            "default": 80
+                        },
                         "tlsCertificate": {
                             "description": "Files to use for TLS",
                             "type": "object",
