@@ -1,7 +1,7 @@
 name: release
 on:
   workflow_run:
-    branches: [main, streamr-1.0, pretestnet]
+    branches: [main, streamr-1.0, pretestnet, testnet-one, testnet-two, testnet-three]
     workflows: [validate]
     types:
       - completed
