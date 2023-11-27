@@ -273,35 +273,6 @@
                     "format": "ethereum-address",
                     "default": "0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6"
                 },
-                "mainChainRPCs": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/definitions/chainConnectionInfoList"
-                        },
-                        {
-                            "type": "string",
-                            "format": "uri"
-                        }
-                    ],
-                    "default": {
-                        "name": "ethereum",
-                        "chainId": 1,
-                        "rpcs": [
-                            {
-                                "url": "https://eth-rpc.gateway.pokt.network",
-                                "timeout": 120000
-                            },
-                            {
-                                "url": "https://ethereum.publicnode.com",
-                                "timeout": 120000
-                            },
-                            {
-                                "url": "https://rpc.ankr.com/eth",
-                                "timeout": 120000
-                            }
-                        ]
-                    }
-                },
                 "streamRegistryChainRPCs": {
                     "$ref": "#/definitions/chainConnectionInfoList",
                     "default": {

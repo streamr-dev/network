@@ -20,13 +20,13 @@ describe('Config', () => {
             expect(() => {
                 return createStrictConfig({
                     contracts: {
-                        mainChainRPCs: {
+                        streamRegistryChainRPCs: {
                             chainId: 123,
                             rpcs: []
                         }
                     }
                 } as any)
-            }).toThrow('/contracts/mainChainRPCs/rpcs must NOT have fewer than 1 items')
+            }).toThrow('/contracts/streamRegistryChainRPCs/rpcs must NOT have fewer than 1 items')
         })
 
         describe('invalid property format', () => {
