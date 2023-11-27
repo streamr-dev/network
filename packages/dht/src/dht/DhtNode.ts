@@ -536,7 +536,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             if (!this.peerManager) {
                 return false
             } else {
-                return (this.peerManager.getNumberOfPeers() > 0)
+                return (this.peerManager.getNumberOfConnections() > 0)
             }
         }, this.config.networkConnectivityTimeout, 100, this.abortController.signal)
     }
