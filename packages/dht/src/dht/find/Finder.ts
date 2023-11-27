@@ -238,27 +238,36 @@ export class Finder implements IFinder {
             this.localDataStore.markAsDeleted(idToFind.value, peerIdFromPeerDescriptor(routedMessage.sourcePeer!))
         }
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
-            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
-                closestPeersToDestination, data, true)
-            return createRouteMessageAck(routedMessage)
-        }
-        const ack = this.router.doRouteMessage(routedMessage, RoutingMode.FIND, excludedPeer)
-        if (ack.error === RouteMessageError.NO_TARGETS) {
-            logger.trace(`routeFindRequest Node found no candidates`)
-            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
-                closestPeersToDestination, data, true)
-        } else if (ack.error) {
-            return ack
-        } else {
-            const noCloserContactsFound = (
-                closestPeersToDestination.length > 0
-                && getPreviousPeer(routedMessage)
-                && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
+            // TODO this is also very similar case to what we do at line 255, could simplify the code paths?
+            this.sendFindResponse(
+                routedMessage.routingPath,
+                routedMessage.sourcePeer!,
+                findRequest!.sessionId,
+                closestPeersToDestination,
+                data,
+                true
             )
-            this.sendFindResponse(routedMessage.routingPath, routedMessage.sourcePeer!, findRequest!.sessionId,
-                closestPeersToDestination, data, noCloserContactsFound)
-        }
-        return ack
+            return createRouteMessageAck(routedMessage)
+        } else {
+            const ack = this.router.doRouteMessage(routedMessage, RoutingMode.FIND, excludedPeer)
+            if ((ack.error === undefined) || (ack.error === RouteMessageError.NO_TARGETS)) {
+                const noCloserContactsFound = (ack.error === RouteMessageError.NO_TARGETS) ||
+                    (
+                        closestPeersToDestination.length > 0 
+                        && getPreviousPeer(routedMessage) 
+                        && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
+                    )
+                this.sendFindResponse(
+                    routedMessage.routingPath,
+                    routedMessage.sourcePeer!,
+                    findRequest!.sessionId,
+                    closestPeersToDestination,
+                    data,
+                    noCloserContactsFound
+                )
+            }
+            return ack
+        }    
     }
 
     private getClosestConnections(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
