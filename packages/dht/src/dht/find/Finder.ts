@@ -14,7 +14,7 @@ import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { areEqualPeerDescriptors, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
+import { Logger, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { FindSessionRpcRemote } from './FindSessionRpcRemote'
 import { v4 } from 'uuid'
@@ -100,7 +100,8 @@ export class Finder implements IFinder {
     public async startFind(
         idToFind: Uint8Array,
         action: FindAction = FindAction.NODE,
-        excludedPeer?: PeerDescriptor
+        excludedPeer?: PeerDescriptor,
+        waitForCompletion = true
     ): Promise<FindResult> {
         if (this.stopped) {
             return { closestNodes: [] }
@@ -126,14 +127,21 @@ export class Finder implements IFinder {
         }
         const routeMessage = this.wrapFindRequest(idToFind, sessionId, action)
         this.ongoingSessions.set(sessionId, session)
-        try {
-            await runAndWaitForEvents3<FindSessionEvents>(
-                [() => this.doRouteFindRequest(routeMessage, excludedPeer)],
-                [[session, 'findCompleted']],
-                15000
-            )
-        } catch (err) {
-            logger.debug(`doRouteFindRequest failed with error ${err}`)
+        if (waitForCompletion === true) {
+            try {
+                await runAndWaitForEvents3<FindSessionEvents>(
+                    [() => this.doRouteFindRequest(routeMessage, excludedPeer)],
+                    [[session, 'findCompleted']],
+                    15000
+                )
+            } catch (err) {
+                logger.debug(`doRouteFindRequest failed with error ${err}`)
+            }
+        } else {
+            this.doRouteFindRequest(routeMessage, excludedPeer)
+            // Wait for delete operation to be sent out by the router
+            // TODO: Add a feature to wait for the router to pass the message?
+            await wait(50)
         }
         if (action === FindAction.FETCH_DATA) {
             this.findAndReportLocalData(idToFind, [], this.localPeerDescriptor, sessionId)

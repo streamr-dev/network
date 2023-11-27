@@ -480,9 +480,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return result.dataEntries ?? []  // TODO is this fallback needed?
     }
 
-    public async deleteDataFromDht(key: Uint8Array): Promise<void> {
+    public async deleteDataFromDht(key: Uint8Array, waitForCompletion: boolean): Promise<void> {
         if (!this.stopped) {
-            await this.finder!.startFind(key, FindAction.DELETE_DATA)
+            await this.finder!.startFind(key, FindAction.DELETE_DATA, undefined, waitForCompletion)
         }
     }
 
