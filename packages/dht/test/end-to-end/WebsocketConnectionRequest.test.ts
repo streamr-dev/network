@@ -7,7 +7,7 @@ import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescrip
 
 describe('Websocket IConnection Requests', () => {
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('3').value,
+        nodeId: PeerID.fromString('3').value,
         type: NodeType.NODEJS,
         websocket: { host: '127.0.0.1', port: 10021, tls: false }
     }

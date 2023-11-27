@@ -53,7 +53,7 @@ describe('NodeList', () => {
         nodeList = new NodeList(ownId, 6)
         for (const id of ids) {
             const peerDescriptor: PeerDescriptor = {
-                kademliaId: id,
+                nodeId: id,
                 type: NodeType.NODEJS
             }
             nodeList.add(await createRemoteGraphNode(peerDescriptor))
@@ -70,7 +70,7 @@ describe('NodeList', () => {
 
     it('add', async () => {
         const newDescriptor = {
-            kademliaId: new Uint8Array([1, 2, 3]),
+            nodeId: new Uint8Array([1, 2, 3]),
             type: NodeType.NODEJS
         }
         const newNode = await createRemoteGraphNode(newDescriptor)
@@ -78,7 +78,7 @@ describe('NodeList', () => {
         expect(nodeList.hasNode(newDescriptor)).toEqual(true)
 
         const newDescriptor2 = {
-            kademliaId: new Uint8Array([1, 2, 4]),
+            nodeId: new Uint8Array([1, 2, 4]),
             type: NodeType.NODEJS
         }
         const newNode2 = await createRemoteGraphNode(newDescriptor2)

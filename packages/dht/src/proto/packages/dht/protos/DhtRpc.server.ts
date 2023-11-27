@@ -17,8 +17,6 @@ import { WebrtcConnectionRequest } from "./DhtRpc";
 import { WebsocketConnectionResponse } from "./DhtRpc";
 import { WebsocketConnectionRequest } from "./DhtRpc";
 import { FindResponse } from "./DhtRpc";
-import { DeleteDataResponse } from "./DhtRpc";
-import { DeleteDataRequest } from "./DhtRpc";
 import { ReplicateDataRequest } from "./DhtRpc";
 import { StoreDataResponse } from "./DhtRpc";
 import { StoreDataRequest } from "./DhtRpc";
@@ -82,10 +80,6 @@ export interface IStoreRpc<T = ServerCallContext> {
      * @generated from protobuf rpc: replicateData(dht.ReplicateDataRequest) returns (google.protobuf.Empty);
      */
     replicateData(request: ReplicateDataRequest, context: T): Promise<Empty>;
-    /**
-     * @generated from protobuf rpc: deleteData(dht.DeleteDataRequest) returns (dht.DeleteDataResponse);
-     */
-    deleteData(request: DeleteDataRequest, context: T): Promise<DeleteDataResponse>;
 }
 /**
  * @generated from protobuf service dht.FindSessionRpc

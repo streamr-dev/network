@@ -10,14 +10,14 @@ import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
 import crypto from 'crypto'
-import { createRandomKademliaId } from '../../src/helpers/kademliaId'
+import { createRandomNodeId } from '../../src/helpers/nodeId'
 
 const logger = new Logger(module)
 
 jest.setTimeout(60000)
 
 const DATA_KEY = PeerID.fromString('3232323e12r31r3')
-const DATA_VALUE = Any.pack({ kademliaId: crypto.randomBytes(10), type: NodeType.NODEJS, }, PeerDescriptor)
+const DATA_VALUE = Any.pack({ nodeId: crypto.randomBytes(10), type: NodeType.NODEJS, }, PeerDescriptor)
 
 const getDataValues = (node: DhtNode): PeerDescriptor[] => {
     // @ts-expect-error private field
@@ -42,7 +42,7 @@ describe('Replicate data from node to node in DHT', () => {
 
     beforeEach(async () => {
         nodes = []
-        entryPoint = await createMockConnectionDhtNode('dummy', simulator, createRandomKademliaId(), K, MAX_CONNECTIONS)
+        entryPoint = await createMockConnectionDhtNode('dummy', simulator, createRandomNodeId(), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodesById.set(entryPoint.getNodeId().toKey(), entryPoint)
 
@@ -51,7 +51,7 @@ describe('Replicate data from node to node in DHT', () => {
         await entryPoint.joinDht([entrypointDescriptor])
 
         for (let i = 0; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode('dummy', simulator, createRandomKademliaId(), K, MAX_CONNECTIONS, undefined, [entrypointDescriptor])
+            const node = await createMockConnectionDhtNode('dummy', simulator, createRandomNodeId(), K, MAX_CONNECTIONS, undefined, [entrypointDescriptor])
             nodesById.set(node.getNodeId().toKey(), node)
             nodes.push(node)
         }
@@ -90,7 +90,7 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('Nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey())!
+            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().nodeId).toKey())!
             let hasDataMarker = ''
             
             if (hasData(node)) {
@@ -117,7 +117,7 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('After join of 99 nodes: nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey())!
+            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().nodeId).toKey())!
             let hasDataMarker = ''
             if (hasData(node)) {
                 hasDataMarker = ' <-'
@@ -125,7 +125,7 @@ describe('Replicate data from node to node in DHT', () => {
             logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
         })
 
-        const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().kademliaId).toKey())!
+        const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().nodeId).toKey())!
 
         // TODO assert the content?
         expect(hasData(closestNode)).toBe(true)

@@ -21,12 +21,12 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport:
 describe('Connection Locking', () => {
 
     const mockPeerDescriptor1: PeerDescriptor = {
-        kademliaId: PeerID.fromString('mock1').value,
+        nodeId: PeerID.fromString('mock1').value,
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
     const mockPeerDescriptor2: PeerDescriptor = {
-        kademliaId: PeerID.fromString('mock2').value,
+        nodeId: PeerID.fromString('mock2').value,
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }

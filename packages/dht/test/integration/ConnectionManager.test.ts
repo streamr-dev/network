@@ -8,7 +8,7 @@ import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/exports'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 import { MarkOptional } from 'ts-essentials'
-import { createRandomKademliaId } from '../../src/helpers/kademliaId'
+import { createRandomNodeId } from '../../src/helpers/nodeId'
 import { TransportEvents } from '../../src/transport/ITransport'
 
 const logger = new Logger(module)
@@ -18,20 +18,20 @@ describe('ConnectionManager', () => {
     const serviceId = 'demo'
 
     const mockPeerDescriptor1: PeerDescriptor = {
-        kademliaId: PeerID.fromString('tester1').value,
+        nodeId: PeerID.fromString('tester1').value,
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor2: PeerDescriptor = {
-        kademliaId: PeerID.fromString('tester2').value,
+        nodeId: PeerID.fromString('tester2').value,
         type: NodeType.NODEJS
     }
 
     const mockPeerDescriptor3: PeerDescriptor = {
-        kademliaId: PeerID.fromString('tester3').value,
+        nodeId: PeerID.fromString('tester3').value,
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor4: PeerDescriptor = {
-        kademliaId: PeerID.fromString('tester4').value,
+        nodeId: PeerID.fromString('tester4').value,
         type: NodeType.NODEJS
     }
     const simulator = new Simulator()
@@ -89,7 +89,7 @@ describe('ConnectionManager', () => {
             transport: mockTransport,
             websocketPortRange: { min: 9992, max: 9992 },
             entryPoints: [
-                { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { host: '127.0.0.1', port: 12345, tls: false } }
+                { nodeId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { host: '127.0.0.1', port: 12345, tls: false } }
             ]
         })
 
@@ -112,7 +112,7 @@ describe('ConnectionManager', () => {
             transport: mockConnectorTransport2,
             websocketPortRange: { min: 9994, max: 9994 },
             entryPoints: [
-                { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { host: '127.0.0.1', port: 9993, tls: false } }
+                { nodeId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { host: '127.0.0.1', port: 9993, tls: false } }
             ]
         })
 
@@ -306,7 +306,7 @@ describe('ConnectionManager', () => {
         await connectionManager4.stop()
     })
 
-    it('Cannot send to own WebsocketServer if kademliaIds do not match', async () => {
+    it('Cannot send to own WebsocketServer if nodeIds do not match', async () => {
         const connectionManager1 = createConnectionManager({
             transport: mockTransport,
             websocketHost: '127.0.0.1',
@@ -317,7 +317,7 @@ describe('ConnectionManager', () => {
         expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
         
         const peerDescriptor = connectionManager1.getLocalPeerDescriptor()
-        peerDescriptor.kademliaId = new Uint8Array([12, 12, 12, 12])
+        peerDescriptor.nodeId = new Uint8Array([12, 12, 12, 12])
         const msg: Message = {
             serviceId,
             messageType: MessageType.RPC,
@@ -335,10 +335,10 @@ describe('ConnectionManager', () => {
         await connectionManager1.stop()
     })
 
-    it('Cannot send to a WebSocketServer if kademliaIds do not match', async () => {
+    it('Cannot send to a WebSocketServer if nodeIds do not match', async () => {
 
         const peerDescriptor1 = {
-            kademliaId: createRandomKademliaId(),
+            nodeId: createRandomNodeId(),
             type: NodeType.NODEJS,
             websocket: {
                 host: '127.0.0.1',
@@ -348,7 +348,7 @@ describe('ConnectionManager', () => {
         }
 
         const peerDescriptor2 = {
-            kademliaId: createRandomKademliaId(),
+            nodeId: createRandomNodeId(),
             type: NodeType.NODEJS,
             websocket: {
                 host: '127.0.0.1',
@@ -379,8 +379,8 @@ describe('ConnectionManager', () => {
             messageType: MessageType.RPC,
             messageId: '1',
             targetDescriptor: {
-                // This is not the correct kademliaId of peerDescriptor2
-                kademliaId: new Uint8Array([1, 2, 3, 4]),
+                // This is not the correct nodeId of peerDescriptor2
+                nodeId: new Uint8Array([1, 2, 3, 4]),
                 type: NodeType.NODEJS,
                 websocket: peerDescriptor2.websocket
             },
