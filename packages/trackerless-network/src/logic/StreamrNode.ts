@@ -12,8 +12,7 @@ import {
     Metric,
     MetricsContext,
     MetricsDefinition,
-    RateMetric,
-    wait
+    RateMetric
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
@@ -141,12 +140,7 @@ export class StreamrNode extends EventEmitter<Events> {
             layer1Node,
             getEntryPointData: (key) => this.layer0Node!.getDataFromDht(key),
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
-            deleteEntryPointData: async (key: Uint8Array) => { 
-                await this.layer0Node!.deleteDataFromDht(key, false)
-                // Wait for delete operation to be fanned out
-                // TODO: Should wait for the delete operation to be fanned out?
-                await wait(50)
-            }
+            deleteEntryPointData: async (key: Uint8Array) => this.layer0Node!.deleteDataFromDht(key, false)
         })
         streamPart = {
             proxied: false,

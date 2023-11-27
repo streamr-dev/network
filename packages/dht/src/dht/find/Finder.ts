@@ -14,7 +14,7 @@ import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { areEqualPeerDescriptors, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
+import { Logger, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { FindSessionRpcRemote } from './FindSessionRpcRemote'
 import { v4 } from 'uuid'
@@ -139,6 +139,9 @@ export class Finder implements IFinder {
             }
         } else {
             this.doRouteFindRequest(routeMessage, excludedPeer)
+            // Wait for delete operation to be fanned out
+            // TODO: Should wait for the delete operation to be fanned out?
+            await wait(50)
         }
         if (action === FindAction.FETCH_DATA) {
             this.findAndReportLocalData(idToFind, [], this.localPeerDescriptor, sessionId)
