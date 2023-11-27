@@ -5,7 +5,7 @@ import { Any } from '../../src/proto/google/protobuf/any'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { waitForCondition } from '@streamr/utils'
-import { createRandomKademliaId } from '../../src/helpers/kademliaId'
+import { createRandomNodeId } from '../../src/helpers/nodeId'
 
 describe('Storing data in DHT with two peers', () => {
 
@@ -43,8 +43,8 @@ describe('Storing data in DHT with two peers', () => {
     it('Node can store on two peer DHT', async () => {
         const storedData1 = createMockPeerDescriptor()
         const storedData2 = createMockPeerDescriptor()
-        const dataKey1 = createRandomKademliaId()
-        const dataKey2 = createRandomKademliaId()
+        const dataKey1 = createRandomNodeId()
+        const dataKey2 = createRandomNodeId()
         const data1 = Any.pack(storedData1, PeerDescriptor)
         const data2 = Any.pack(storedData2, PeerDescriptor)
 
@@ -60,7 +60,7 @@ describe('Storing data in DHT with two peers', () => {
     it('Can store on one peer DHT', async () => {
         await otherNode.stop()
         await waitForCondition(() => entryPoint.getBucketSize() === 0)
-        const dataKey = createRandomKademliaId()
+        const dataKey = createRandomNodeId()
         const storedData = createMockPeerDescriptor()
         const data = Any.pack(storedData, PeerDescriptor)
         await entryPoint.storeDataToDht(dataKey, data)

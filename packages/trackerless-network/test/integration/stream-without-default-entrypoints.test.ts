@@ -20,7 +20,7 @@ describe('stream without default entrypoints', () => {
     let nodes: NetworkNode[]
     let numOfReceivedMessages: number
     const entryPointPeerDescriptor: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 2, 3]),
+        nodeId: new Uint8Array([1, 2, 3]),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }

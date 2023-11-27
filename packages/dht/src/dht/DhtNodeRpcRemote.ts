@@ -39,10 +39,10 @@ export class DhtNodeRpcRemote extends RpcRemote<IDhtNodeRpcClient> implements KB
         this.vectorClock = DhtNodeRpcRemote.counter++
     }
 
-    async getClosestPeers(kademliaId: Uint8Array): Promise<PeerDescriptor[]> {
+    async getClosestPeers(nodeId: Uint8Array): Promise<PeerDescriptor[]> {
         logger.trace(`Requesting getClosestPeers on ${this.getServiceId()} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: ClosestPeersRequest = {
-            kademliaId,
+            nodeId,
             requestId: v4()
         }
         try {

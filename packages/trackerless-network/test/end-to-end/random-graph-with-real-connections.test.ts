@@ -11,7 +11,7 @@ import { Layer1Node } from '../../src/logic/Layer1Node'
 describe('random graph with real connections', () => {
 
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: Uint8Array.from([1, 2, 3]),
+        nodeId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
         websocket: { host: '127.0.0.1', port: 12221, tls: false }
     }

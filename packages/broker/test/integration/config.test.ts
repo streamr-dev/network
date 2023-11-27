@@ -22,6 +22,28 @@ describe('Config', () => {
         await broker.stop()
     })
 
+    it('temporary compatibility', async () => {
+        const broker = await createBroker({
+            client: {
+                network: {
+                    controlLayer: {
+                        entryPoints: [{
+                            id: 'eeeeeeeeee',
+                            websocket: {
+                                'host': '10.200.10.1',
+                                'port': 40500,
+                                'tls': false
+                            }
+                        }],
+                        websocketServerEnableTls: false
+                    }
+                }
+            }
+        } as any)
+        await broker.start()
+        await broker.stop()
+    })
+
     const fileNames = fs.readdirSync(PATH)
 
     describe.each(fileNames.map((fileName) => [fileName]))('validate', (fileName: string) => {

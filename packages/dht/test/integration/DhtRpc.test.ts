@@ -13,12 +13,12 @@ describe('DhtRpc', () => {
     let client2: ProtoRpcClient<DhtNodeRpcClient>
 
     const peerDescriptor1: PeerDescriptor = {
-        kademliaId: generateId('peer1'),
+        nodeId: generateId('peer1'),
         type: NodeType.NODEJS
     }
 
     const peerDescriptor2: PeerDescriptor = {
-        kademliaId: generateId('peer2'),
+        nodeId: generateId('peer2'),
         type: NodeType.NODEJS
     }
 
@@ -50,7 +50,7 @@ describe('DhtRpc', () => {
 
     it('Happy path', async () => {
         const response1 = client1.getClosestPeers(
-            { kademliaId: peerDescriptor1.kademliaId, requestId: '1' },
+            { nodeId: peerDescriptor1.nodeId, requestId: '1' },
             {
                 sourceDescriptor: peerDescriptor1,
                 targetDescriptor: peerDescriptor2,
@@ -60,7 +60,7 @@ describe('DhtRpc', () => {
         expect(res1.peers).toEqual(getMockPeers())
 
         const response2 = client2.getClosestPeers(
-            { kademliaId: peerDescriptor2.kademliaId, requestId: '1' },
+            { nodeId: peerDescriptor2.nodeId, requestId: '1' },
             {
                 sourceDescriptor: peerDescriptor2,
                 targetDescriptor: peerDescriptor1
@@ -76,7 +76,7 @@ describe('DhtRpc', () => {
             await wait(3000)
         })
         const response2 = client2.getClosestPeers(
-            { kademliaId: peerDescriptor2.kademliaId, requestId: '1' },
+            { nodeId: peerDescriptor2.nodeId, requestId: '1' },
             {
                 sourceDescriptor: peerDescriptor2,
                 targetDescriptor: peerDescriptor1
@@ -102,7 +102,7 @@ describe('DhtRpc', () => {
 
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', respondGetClosestPeersWithTimeout)
         const response = client2.getClosestPeers(
-            { kademliaId: peerDescriptor2.kademliaId, requestId: '1' },
+            { nodeId: peerDescriptor2.nodeId, requestId: '1' },
             {
                 sourceDescriptor: peerDescriptor2,
                 targetDescriptor: peerDescriptor1
