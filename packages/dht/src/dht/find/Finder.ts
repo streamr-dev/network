@@ -101,7 +101,7 @@ export class Finder implements IFinder {
         idToFind: Uint8Array,
         action: FindAction = FindAction.NODE,
         excludedPeer?: PeerDescriptor,
-        expectResponses = true
+        waitForCompletion = true
     ): Promise<FindResult> {
         if (this.stopped) {
             return { closestNodes: [] }
@@ -127,7 +127,7 @@ export class Finder implements IFinder {
         }
         const routeMessage = this.wrapFindRequest(idToFind, sessionId, action)
         this.ongoingSessions.set(sessionId, session)
-        if (expectResponses === true) {
+        if (waitForCompletion === true) {
             try {
                 await runAndWaitForEvents3<FindSessionEvents>(
                     [() => this.doRouteFindRequest(routeMessage, excludedPeer)],
