@@ -214,7 +214,7 @@ export interface EthereumNetworkConfig {
 //   empty arrays will be applied as-is: we may want to remove "enthereum.rpcEndpoints" key 
 //   from @streamr/config as the intention is to use system-defaults (e.g. Metamask defaults)
 //   in Ethereum network
-type PresetId = 'polygon' | 'mumbai' | 'dev2'
+export type PresetId = 'polygon' | 'mumbai' | 'dev2'
 
 /**
  * @category Important
