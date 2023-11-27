@@ -43,10 +43,10 @@
     "@streamr/network-tracker": "8.5.5",
     "@streamr/test-utils": "8.5.5",
     "@types/heap": "^0.2.34",
-    "@types/lodash": "^4.14.201",
+    "@types/lodash": "^4.14.202",
     "@types/uuid": "^9.0.7",
-    "@types/websocket": "^1.0.9",
-    "@types/ws": "^8.5.9",
+    "@types/websocket": "^1.0.10",
+    "@types/ws": "^8.5.10",
     "@types/yallist": "^4.0.4",
     "express": "^4.17.1"
   },

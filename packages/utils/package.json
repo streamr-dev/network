@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@types/lodash": "^4.14.201",
+    "@types/lodash": "^4.14.202",
     "@types/node-fetch": "^2.6.4",
     "express": "^4.17.1",
     "node-fetch": "^2.7.0"
