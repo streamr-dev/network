@@ -40,7 +40,7 @@ export class LocalDataStore {
             const oldStoredMillis = (oldLocalEntry.dataEntry.storerTime!.seconds * 1000) + (oldLocalEntry.dataEntry.storerTime!.nanos / 1000000)
         
             // do nothing if old entry is newer than the one being replicated
-            if ((oldLocalEntry.dataEntry.deleted && oldStoredMillis >= storedMillis) || oldStoredMillis >= storedMillis) {
+            if (oldStoredMillis >= storedMillis) {
                 return false
             } else {
                 clearTimeout(oldLocalEntry.ttlTimeout)
