@@ -7,7 +7,7 @@ import { TransportEvents } from '../../src/transport/ITransport'
 describe('Layer0MixedConnectionTypes', () => {
 
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: Uint8Array.from([1, 2, 3]),
+        nodeId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
         websocket: { host: '127.0.0.1', port: 11221, tls: false }
     }

@@ -4,6 +4,7 @@ import {
     ExternalFindDataResponse,
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
+    FindAction,
     PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -12,8 +13,8 @@ import { FindResult } from './find/Finder'
 import { Any } from '../proto/google/protobuf/any'
 
 interface ExternalApiRpcLocalConfig {
-    startFind: (idToFind: Uint8Array, fetchData: boolean, excludedPeer: PeerDescriptor) => Promise<FindResult>
-    storeDataToDht: (key: Uint8Array, data: Any, storer: PeerDescriptor) => Promise<PeerDescriptor[]>
+    startFind: (idToFind: Uint8Array, action: FindAction, excludedPeer: PeerDescriptor) => Promise<FindResult>
+    storeDataToDht: (key: Uint8Array, data: Any, creator: PeerDescriptor) => Promise<PeerDescriptor[]>
 }
 
 export class ExternalApiRpcLocal implements IExternalApiRpc {
@@ -26,7 +27,7 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
 
     async externalFindData(findDataRequest: ExternalFindDataRequest, context: ServerCallContext): Promise<ExternalFindDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const result = await this.config.startFind(findDataRequest.kademliaId, true, senderPeerDescriptor)
+        const result = await this.config.startFind(findDataRequest.key, FindAction.FETCH_DATA, senderPeerDescriptor)
         return ExternalFindDataResponse.create({ entries: result.dataEntries ?? [] })
     }
 

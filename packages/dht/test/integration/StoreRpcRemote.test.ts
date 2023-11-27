@@ -18,16 +18,16 @@ describe('StoreRpcRemote', () => {
     let serverRpcCommunicator: RpcCommunicator
     const serviceId = 'test'
     const clientPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('client'),
+        nodeId: generateId('client'),
         type: NodeType.NODEJS
     }
     const serverPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('server'),
+        nodeId: generateId('server'),
         type: NodeType.NODEJS
     }
     const data = Any.pack(clientPeerDescriptor, PeerDescriptor)
     const request: StoreDataRequest = {
-        kademliaId: clientPeerDescriptor.kademliaId,
+        key: clientPeerDescriptor.nodeId,
         data,
         ttl: 10
     }

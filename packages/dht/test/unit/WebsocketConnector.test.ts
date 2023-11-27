@@ -6,7 +6,7 @@ import { MockTransport } from '../utils/mock/Transport'
 
 const createMockPeerDescriptor = (nodeType: NodeType, websocket?: ConnectivityMethod): PeerDescriptor => {
     return {
-        kademliaId: crypto.randomBytes(10),
+        nodeId: crypto.randomBytes(10),
         type: nodeType,
         websocket
     }
