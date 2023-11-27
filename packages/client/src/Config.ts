@@ -206,10 +206,22 @@ export interface EthereumNetworkConfig {
     highGasPriceStrategy?: boolean
 }
 
+// a subset of config ids which are available in @streamr/config
+// - do not include legacy configs, which no longer work, e.g. "dev0"
+// - and no need to include configs, which users won't use in practice
+// - note that there is no special handling for empty arrays in the applyConfig and therefore
+//   empty arrays will be applied as-is: we may want to remove "enthereum.rpcEndpoints" key 
+//   from @streamr/config as the intention is to use system-defaults (e.g. Metamask defaults)
+//   in Ethereum network
+type PresetId = 'polygon' | 'mumbai' | 'dev2'
+
 /**
  * @category Important
  */
 export interface StreamrClientConfig {
+
+    config?: PresetId
+
     /** Custom human-readable debug id for client. Used in logging. */
     id?: string
 
@@ -394,7 +406,7 @@ export interface StreamrClientConfig {
     }
 }
 
-export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'auth' | 'metrics'> & {
+export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'config' | 'auth' | 'metrics'> & {
     network: Exclude<Required<StreamrClientConfig['network']>, undefined>
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
     encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>

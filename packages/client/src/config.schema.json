@@ -5,6 +5,15 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
+        "config": {
+            "type": "string",
+            "enum": [
+                "polygon",
+                "mumbai",
+                "dev2"
+            ],
+            "description": "config preset id"
+        },
         "id": {
             "type": "string"
         },
