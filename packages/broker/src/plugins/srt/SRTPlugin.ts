@@ -63,19 +63,24 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
         logger.info('SRT plugin: awaiting incoming client connection ...')
         const fd = await this.server!.accept(socket)
         logger.info('SRT plugin: New incoming client fd:', { fd })
+        // make messagePoolSize configurable parameter
+        const messagePoolSize = 30
+        let messagePool: Array<string> = []
         
         try {
             // eslint-disable-next-line no-constant-condition
             while (true) {
-                const chunk = await this.server.read(fd, 1316 * 16)
+                const chunk = await this.server.read(fd, 1316 * 8)
                 if (chunk instanceof Uint8Array) {
                     const base64Chunk = arrayBufferToBase64(chunk)
                     const base64Payload = JSON.parse(JSON.stringify(base64Chunk))
-                    const payload = { b:[0, base64Payload] }
-                    const resp = await this.streamrClient?.publish(this.pluginConfig.streamId, payload)
-                    //console.log(JSON.stringify(resp))
-                    // logger.info(JSON.stringify(resp))
-                    // "0x82a31ab84fd2159b54f887d4d8e46a0a1f3a7ffc/mapmetrics"
+                    messagePool.push(base64Payload)
+                    
+                    if (messagePool.length == messagePoolSize) {
+                        const payload = { b:[0, messagePool] }
+                        const resp = await this.streamrClient?.publish(this.pluginConfig.streamId, payload)
+                        messagePool = []
+                    }
                 }
             }
         } catch (error) {
