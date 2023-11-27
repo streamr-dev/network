@@ -5,9 +5,9 @@ import { RpcRemote } from './contact/RpcRemote'
 
 export class ExternalApiRpcRemote extends RpcRemote<IExternalApiRpcClient> {
 
-    async externalFindData(idToFind: Uint8Array): Promise<DataEntry[]> {
+    async externalFindData(key: Uint8Array): Promise<DataEntry[]> {
         const request: ExternalFindDataRequest = {
-            kademliaId: idToFind
+            key
         }
         const options = this.formDhtRpcOptions({
             timeout: 10000

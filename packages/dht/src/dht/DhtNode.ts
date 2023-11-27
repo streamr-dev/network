@@ -360,10 +360,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
             (req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(req, context))
         const externalApiRpcLocal = new ExternalApiRpcLocal({
-            startFind: (idToFind: Uint8Array, action: FindAction, excludedPeer: PeerDescriptor) => {
-                return this.startFind(idToFind, action, excludedPeer)
+            startFind: (key: Uint8Array, action: FindAction, excludedPeer: PeerDescriptor) => {
+                return this.startFind(key, action, excludedPeer)
             },
-            storeDataToDht: (key: Uint8Array, data: Any, originalStorer?: PeerDescriptor) => this.storeDataToDht(key, data, originalStorer)
+            storeDataToDht: (key: Uint8Array, data: Any, creator?: PeerDescriptor) => this.storeDataToDht(key, data, creator)
         })
         this.rpcCommunicator!.registerRpcMethod(
             ExternalFindDataRequest,
@@ -451,15 +451,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         ))
     }
 
-    public async startFind(idToFind: Uint8Array, action?: FindAction, excludedPeer?: PeerDescriptor): Promise<FindResult> {
-        return this.finder!.startFind(idToFind, action, excludedPeer)
+    public async startFind(key: Uint8Array, action?: FindAction, excludedPeer?: PeerDescriptor): Promise<FindResult> {
+        return this.finder!.startFind(key, action, excludedPeer)
     }
 
-    public async storeDataToDht(key: Uint8Array, data: Any, originalStorer?: PeerDescriptor): Promise<PeerDescriptor[]> {
+    public async storeDataToDht(key: Uint8Array, data: Any, creator?: PeerDescriptor): Promise<PeerDescriptor[]> {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
         }
-        return this.storeRpcLocal!.storeDataToDht(key, data, originalStorer ?? this.localPeerDescriptor!)
+        return this.storeRpcLocal!.storeDataToDht(key, data, creator ?? this.localPeerDescriptor!)
     }
 
     public async storeDataViaPeer(key: Uint8Array, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
@@ -472,28 +472,28 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return await rpcRemote.storeData(key, data)
     }
 
-    public async getDataFromDht(idToFind: Uint8Array): Promise<DataEntry[]> {
+    public async getDataFromDht(key: Uint8Array): Promise<DataEntry[]> {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
-            return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
+            return this.findDataViaPeer(key, sample(this.config.entryPoints)!)
         }
-        const result = await this.finder!.startFind(idToFind, FindAction.FETCH_DATA)
-        return result.dataEntries ?? []  // TODO is this fallback needed? 
+        const result = await this.finder!.startFind(key, FindAction.FETCH_DATA)
+        return result.dataEntries ?? []  // TODO is this fallback needed?
     }
 
-    public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
+    public async deleteDataFromDht(key: Uint8Array): Promise<void> {
         if (!this.stopped) {
-            await this.finder!.startFind(idToDelete, FindAction.DELETE_DATA)
+            await this.finder!.startFind(key, FindAction.DELETE_DATA)
         }
     }
 
-    public async findDataViaPeer(idToFind: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
+    public async findDataViaPeer(key: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
         const rpcRemote = new ExternalApiRpcRemote(
             this.localPeerDescriptor!,
             peer,
             this.config.serviceId,
             toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        return await rpcRemote.externalFindData(idToFind)
+        return await rpcRemote.externalFindData(key)
     }
 
     public getTransport(): ITransport {
