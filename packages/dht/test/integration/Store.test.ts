@@ -51,7 +51,7 @@ describe('Storing data in DHT', () => {
         const data = Any.pack(storedData, PeerDescriptor)
         const successfulStorers = await nodes[storingNodeIndex].storeDataToDht(dataKey, data)
         expect(successfulStorers.length).toBeGreaterThan(4)
-    }, 90000)
+    }, 30000)
 
     it('Storing and getting data works', async () => {
         const storingNode = getRandomNode()
@@ -67,7 +67,7 @@ describe('Storing data in DHT', () => {
             const foundData = Any.unpack(entry.data!, PeerDescriptor)
             expect(areEqualPeerDescriptors(foundData, storedData)).toBeTrue()
         })
-    }, 90000)
+    }, 30000)
 
     it('storing with explicit storer PeerDescriptor', async () => {
         const storingNode = getRandomNode()
@@ -85,5 +85,5 @@ describe('Storing data in DHT', () => {
             expect(areEqualPeerDescriptors(foundData, storedData)).toBeTrue()
             expect(areEqualPeerDescriptors(entry.storer!, requestor)).toBeTrue()
         })
-    })
+    }, 30000)
 })
