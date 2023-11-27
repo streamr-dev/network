@@ -12,11 +12,11 @@ describe('RemoteRouter', () => {
     let serverRpcCommunicator: RpcCommunicator
     const serviceId = 'test'
     const clientPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('client'),
+        nodeId: generateId('client'),
         type: NodeType.NODEJS
     }
     const serverPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('server'),
+        nodeId: generateId('server'),
         type: NodeType.NODEJS
     }
 

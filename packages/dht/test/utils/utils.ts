@@ -30,7 +30,7 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { createRandomKademliaId } from '../../src/helpers/kademliaId'
+import { createRandomNodeId } from '../../src/helpers/nodeId'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
@@ -38,7 +38,7 @@ export const generateId = (stringId: string): Uint8Array => {
 
 export const createMockPeerDescriptor = (): PeerDescriptor => {
     return {
-        kademliaId: createRandomKademliaId(),
+        nodeId: createRandomNodeId(),
         type: NodeType.NODEJS,
     }  
 }
@@ -58,7 +58,7 @@ export const createMockConnectionDhtNode = async (
         id = PeerID.fromString(stringId)
     }
     const peerDescriptor: PeerDescriptor = {
-        kademliaId: id.value,
+        nodeId: id.value,
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
@@ -90,7 +90,7 @@ export const createMockConnectionLayer1Node = async (
 ): Promise<DhtNode> => {
     const id = PeerID.fromString(stringId)
     const descriptor: PeerDescriptor = {
-        kademliaId: id.value,
+        nodeId: id.value,
         type: NodeType.NODEJS,
     }
     const node = new DhtNode({
@@ -107,7 +107,7 @@ export const createWrappedClosestPeersRequest = (
 ): RpcMessage => {
 
     const routedMessage: ClosestPeersRequest = {
-        kademliaId: sourceDescriptor.kademliaId,
+        nodeId: sourceDescriptor.nodeId,
         requestId: v4()
     }
     const rpcWrapper: RpcMessage = {
@@ -227,19 +227,19 @@ export const mockWebsocketConnectorRpc: IWebsocketConnectorRpc = {
 
 export const getMockPeers = (): PeerDescriptor[] => {
     const n1: PeerDescriptor = {
-        kademliaId: generateId('Neighbor1'),
+        nodeId: generateId('Neighbor1'),
         type: NodeType.NODEJS,
     }
     const n2: PeerDescriptor = {
-        kademliaId: generateId('Neighbor2'),
+        nodeId: generateId('Neighbor2'),
         type: NodeType.NODEJS,
     }
     const n3: PeerDescriptor = {
-        kademliaId: generateId('Neighbor3'),
+        nodeId: generateId('Neighbor3'),
         type: NodeType.NODEJS,
     }
     const n4: PeerDescriptor = {
-        kademliaId: generateId('Neighbor4'),
+        nodeId: generateId('Neighbor4'),
         type: NodeType.NODEJS,
     }
     return [

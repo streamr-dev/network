@@ -88,7 +88,7 @@ describe('HandshakeRpcLocal', () => {
         const req: InterleaveNotice = {
             streamPartId: STREAM_PART_ID,
             interleaveTargetDescriptor: {
-                kademliaId: hexToBinary('0x2222'),
+                nodeId: hexToBinary('0x2222'),
                 type: NodeType.NODEJS
             }
 
@@ -103,7 +103,7 @@ describe('HandshakeRpcLocal', () => {
         const req: InterleaveNotice = {
             streamPartId: StreamPartIDUtils.parse('other-stream#0'),
             interleaveTargetDescriptor: {
-                kademliaId: hexToBinary('0x2222'),
+                nodeId: hexToBinary('0x2222'),
                 type: NodeType.NODEJS
             }
         }

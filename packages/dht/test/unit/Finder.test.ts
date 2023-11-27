@@ -38,11 +38,11 @@ const createMockRouter = (error?: RouteMessageError): Partial<IRouter> => {
 describe('Finder', () => {
 
     const peerDescriptor1: PeerDescriptor = {
-        kademliaId: PeerID.fromString('peerid').value,
+        nodeId: PeerID.fromString('peerid').value,
         type: NodeType.NODEJS
     }
     const peerDescriptor2: PeerDescriptor = {
-        kademliaId: PeerID.fromString('destination').value,
+        nodeId: PeerID.fromString('destination').value,
         type: NodeType.NODEJS
     }
     const findRequest = createFindRequest(FindAction.NODE)

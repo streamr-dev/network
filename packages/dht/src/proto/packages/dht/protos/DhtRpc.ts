@@ -116,9 +116,9 @@ export interface DataEntry {
  */
 export interface ClosestPeersRequest {
     /**
-     * @generated from protobuf field: bytes kademliaId = 1;
+     * @generated from protobuf field: bytes nodeId = 1;
      */
-    kademliaId: Uint8Array;
+    nodeId: Uint8Array;
     /**
      * @generated from protobuf field: string requestId = 2;
      */
@@ -203,9 +203,9 @@ export interface LeaveNotice {
  */
 export interface PeerDescriptor {
     /**
-     * @generated from protobuf field: bytes kademliaId = 1;
+     * @generated from protobuf field: bytes nodeId = 1;
      */
-    kademliaId: Uint8Array;
+    nodeId: Uint8Array;
     /**
      * @generated from protobuf field: dht.NodeType type = 2;
      */
@@ -766,7 +766,7 @@ export const DataEntry = new DataEntry$Type();
 class ClosestPeersRequest$Type extends MessageType$<ClosestPeersRequest> {
     constructor() {
         super("dht.ClosestPeersRequest", [
-            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 1, name: "nodeId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
@@ -856,7 +856,7 @@ export const LeaveNotice = new LeaveNotice$Type();
 class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
     constructor() {
         super("dht.PeerDescriptor", [
-            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 1, name: "nodeId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "type", kind: "enum", T: () => ["dht.NodeType", NodeType] },
             { no: 3, name: "udp", kind: "message", T: () => ConnectivityMethod },
             { no: 4, name: "tcp", kind: "message", T: () => ConnectivityMethod },

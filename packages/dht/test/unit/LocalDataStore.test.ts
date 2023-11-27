@@ -12,11 +12,11 @@ import { Timestamp } from '../../src/proto/google/protobuf/timestamp'
 describe('LocalDataStore', () => {
     let localDataStore: LocalDataStore
     const creator1: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 2, 3]),
+        nodeId: new Uint8Array([1, 2, 3]),
         type: NodeType.NODEJS
     }
     const creator2: PeerDescriptor = {
-        kademliaId: new Uint8Array([3, 2, 1]),
+        nodeId: new Uint8Array([3, 2, 1]),
         type: NodeType.NODEJS
     }
     const data1 = Any.pack(creator1, PeerDescriptor)

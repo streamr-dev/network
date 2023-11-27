@@ -6,7 +6,7 @@ const NUM_OF_NODES_PER_KBUCKET = 8
 
 describe('Layer1 Scale', () => {
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
+        nodeId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
         websocket: { host: '127.0.0.1', port: 43225, tls: false }
     }

@@ -93,7 +93,7 @@ message DataEntry {
 }
 
 message ClosestPeersRequest {
-  bytes kademliaId = 1;
+  bytes nodeId = 1;
   string requestId = 2;
 }
 
@@ -133,7 +133,7 @@ message LeaveNotice {
 }
 
 message PeerDescriptor {
-  bytes kademliaId = 1;
+  bytes nodeId = 1;
   NodeType type = 2;
   ConnectivityMethod udp = 3;
   ConnectivityMethod tcp = 4;

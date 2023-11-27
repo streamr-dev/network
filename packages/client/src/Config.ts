@@ -181,7 +181,7 @@ export enum NetworkNodeType {
 }
 
 export interface NetworkPeerDescriptor {
-    id: string
+    nodeId: string
     type?: NetworkNodeType
     websocket?: ConnectivityMethod
     region?: number

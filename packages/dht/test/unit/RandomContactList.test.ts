@@ -1,8 +1,8 @@
 import { RandomContactList } from '../../src/dht/contact/RandomContactList'
 import { PeerID } from '../../src/helpers/PeerID'
 
-const createItem = (kademliaId: Uint8Array): { getPeerId: () => PeerID } => {
-    return { getPeerId: () => PeerID.fromValue(kademliaId) }
+const createItem = (nodeId: Uint8Array): { getPeerId: () => PeerID } => {
+    return { getPeerId: () => PeerID.fromValue(nodeId) }
 }
 
 describe('RandomContactList', () => {

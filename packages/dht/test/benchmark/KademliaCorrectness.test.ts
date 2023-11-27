@@ -34,7 +34,7 @@ describe('Kademlia correctness', () => {
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
+            nodeId: entryPoint.getNodeId().value,
             type: NodeType.NODEJS
         }
 
@@ -72,7 +72,7 @@ describe('Kademlia correctness', () => {
                 groundTruthString += groundTruth[i + ''][j].name + ','
             }
 
-            const kademliaNeighbors = nodes[i].getClosestContacts().map((p) => PeerID.fromValue(p.kademliaId))
+            const kademliaNeighbors = nodes[i].getClosestContacts().map((p) => PeerID.fromValue(p.nodeId))
 
             let kadString = 'kademliaNeighbors: '
             kademliaNeighbors.forEach((neighbor) => {
