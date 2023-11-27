@@ -3,7 +3,7 @@ import { EventEmitter } from 'eventemitter3'
 import { once } from 'events'
 import { Server as HttpServer, createServer as createHttpServer } from 'http'
 import { server as WsServer } from 'websocket'
-import { ConnectivityChecker } from '../../src/connection/ConnectivityChecker'
+import { CONNECTIVITY_CHECKER_SERVICE_ID } from '../../src/connection/connectivityChecker'
 import { attachConnectivityRequestHandler } from '../../src/connection/connectivityRequestHandler'
 import { Message, MessageType } from '../../src/proto/packages/dht/protos/DhtRpc'
 
@@ -37,7 +37,7 @@ describe('connectivityRequestHandler', () => {
 
         attachConnectivityRequestHandler(connection as any)
         const request: Message = {
-            serviceId: ConnectivityChecker.CONNECTIVITY_CHECKER_SERVICE_ID,
+            serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_REQUEST,
             messageId: 'mock-message-id',
             body: {
