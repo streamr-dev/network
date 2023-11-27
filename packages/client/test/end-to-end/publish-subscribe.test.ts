@@ -1,27 +1,32 @@
-import { Wallet } from 'ethers'
+import { config as CHAIN_CONFIG } from '@streamr/config'
+import { NodeType } from '@streamr/dht'
 import { StreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { createNetworkNode } from '@streamr/trackerless-network'
+import { hexToBinary, waitForCondition } from '@streamr/utils'
+import { Wallet } from 'ethers'
+import omit from 'lodash/omit'
 import { CONFIG_TEST } from '../../src/ConfigTest'
-import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { peerDescriptorTranslator } from '../../src/utils/utils'
-import { createTestStream, createTestClient } from '../test-utils/utils'
-import { waitForCondition } from '@streamr/utils'
-import { createNetworkNode } from '@streamr/trackerless-network'
+import { PermissionAssignment, StreamPermission } from '../../src/permission'
+import { createTestClient, createTestStream } from '../test-utils/utils'
 
 const TIMEOUT = 15 * 1000
 
 const PAYLOAD = { hello: 'world' }
 
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
-    const entryPoints = CONFIG_TEST.network!.controlLayer!.entryPoints!.map(peerDescriptorTranslator)
+    const entryPoints = CHAIN_CONFIG.dev2.entryPoints.map((entryPoint) => ({
+        ...omit(entryPoint, 'id'),
+        nodeId: hexToBinary(entryPoint.id),
+        type: NodeType.NODEJS
+    }))
     const networkNode = createNetworkNode({
         layer0: {
-            entryPoints,
+            entryPoints
         }
     })
-
     try {
         await networkNode.start()
         networkNode.join(toStreamPartID(streamId, 0))
