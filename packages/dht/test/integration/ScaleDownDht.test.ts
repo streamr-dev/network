@@ -25,7 +25,7 @@ describe('Scaling down a Dht network', () => {
         nodes.push(entryPoint)
 
         entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
+            nodeId: entryPoint.getNodeId().value,
             type: NodeType.NODEJS,
             region: getRandomRegion()
         }

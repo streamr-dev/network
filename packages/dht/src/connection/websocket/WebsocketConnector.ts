@@ -16,7 +16,7 @@ import { WebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/Dht
 import { Logger, binaryToHex, wait } from '@streamr/utils'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebsocketServer } from './WebsocketServer'
-import { ConnectivityChecker } from '../ConnectivityChecker'
+import { sendConnectivityRequest } from '../connectivityChecker'
 import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { ServerWebsocket } from './ServerWebsocket'
@@ -30,6 +30,7 @@ import { expectedConnectionType } from '../../helpers/Connectivity'
 import { WebsocketServerStartError } from '../../helpers/errors'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
+import * as Err from '../../helpers/errors'
 
 const logger = new Logger(module)
 
@@ -61,7 +62,6 @@ export class WebsocketConnector {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly websocketServer?: WebsocketServer
-    private connectivityChecker?: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private onNewConnection: (connection: ManagedConnection) => boolean
     private host?: string
@@ -142,7 +142,6 @@ export class WebsocketConnector {
     private setHost(hostName: string): void {
         logger.trace(`Setting host name to ${hostName}`)
         this.host = hostName
-        this.connectivityChecker!.setHost(hostName)
     }
 
     public async start(): Promise<void> {
@@ -162,7 +161,6 @@ export class WebsocketConnector {
             })
             const port = await this.websocketServer.start()
             this.selectedPort = port
-            this.connectivityChecker = new ConnectivityChecker(this.selectedPort, this.serverEnableTls, this.host)
         }
     }
 
@@ -191,12 +189,22 @@ export class WebsocketConnector {
                         return preconfiguredConnectivityResponse
                     } else {
                         // Do real connectivity checking
-                        return await this.connectivityChecker!.sendConnectivityRequest(entryPoint, selfSigned)
+                        const connectivityRequest = {
+                            port: this.selectedPort!,
+                            host: this.host, 
+                            tls: this.serverEnableTls,
+                            selfSigned
+                        }
+                        if (!this.abortController.signal.aborted) {
+                            return await sendConnectivityRequest(connectivityRequest, entryPoint)
+                        } else {
+                            throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
+                        }
                     }
                 }
             } catch (err) {
                 if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
-                    const error = `Failed to connect to entrypoint with id ${binaryToHex(entryPoint.kademliaId)} `
+                    const error = `Failed to connect to entrypoint with id ${binaryToHex(entryPoint.nodeId)} `
                         + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
                     logger.error(error, { error: err })
                     await wait(2000)
@@ -325,7 +333,6 @@ export class WebsocketConnector {
 
         const attempts = Array.from(this.connectingConnections.values())
         await Promise.allSettled(attempts.map((conn) => conn.close(false)))
-        this.connectivityChecker?.destroy()
         await this.websocketServer?.stop()
     }
 }

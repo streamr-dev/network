@@ -20,11 +20,11 @@ describe('DhtNodeRpcRemote', () => {
     let serverRpcCommunicator: RpcCommunicator
     const serviceId = 'test'
     const clientPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('client'),
+        nodeId: generateId('client'),
         type: NodeType.NODEJS
     }
     const serverPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('server'),
+        nodeId: generateId('server'),
         type: NodeType.NODEJS
     }
 
@@ -54,7 +54,7 @@ describe('DhtNodeRpcRemote', () => {
     })
 
     it('getClosestPeers happy path', async () => {
-        const neighbors = await rpcRemote.getClosestPeers(clientPeerDescriptor.kademliaId)
+        const neighbors = await rpcRemote.getClosestPeers(clientPeerDescriptor.nodeId)
         expect(neighbors.length).toEqual(getMockPeers().length)
     })
 
@@ -66,7 +66,7 @@ describe('DhtNodeRpcRemote', () => {
 
     it('getClosestPeers error path', async () => {
         serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.throwGetClosestPeersError)
-        await expect(rpcRemote.getClosestPeers(clientPeerDescriptor.kademliaId))
+        await expect(rpcRemote.getClosestPeers(clientPeerDescriptor.nodeId))
             .rejects.toThrow('Closest peers error')
     })
 

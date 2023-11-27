@@ -82,7 +82,7 @@
                             },
                             "default": [
                                 {
-                                    "id": "eee1",
+                                    "nodeId": "eee1",
                                     "websocket": {
                                         "host": "polygon-entrypoint-1.streamr.network",
                                         "port": 40401,
@@ -90,7 +90,7 @@
                                     }
                                 },
                                 {
-                                    "id": "eee2",
+                                    "nodeId": "eee2",
                                     "websocket": {
                                         "host": "polygon-entrypoint-2.streamr.network",
                                         "port": 40401,
@@ -529,12 +529,13 @@
         "peerDescriptor": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-                "id"
-            ],
             "properties": {
-                "id": {
+                "nodeId": {
                     "type": "string"
+                },
+                "id": {
+                    "type": "string",
+                    "description": "legacy: remove this property and make nodeId required"
                 },
                 "type": {
                     "$ref": "#/definitions/nodeType"

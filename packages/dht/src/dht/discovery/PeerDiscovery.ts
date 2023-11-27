@@ -5,7 +5,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { PeerManager } from '../PeerManager'
-import { createRandomKademliaId } from '../../helpers/kademliaId'
+import { createRandomNodeId } from '../../helpers/nodeId'
 import { ServiceID } from '../../types/ServiceID'
 
 interface PeerDiscoveryConfig {
@@ -53,7 +53,7 @@ export class PeerDiscovery {
 
         const sessions = [this.createSession(peerIdFromPeerDescriptor(this.config.localPeerDescriptor).value)]
         if (doAdditionalRandomPeerDiscovery) {
-            sessions.push(this.createSession(createRandomKademliaId()))
+            sessions.push(this.createSession(createRandomNodeId()))
         }
         await this.runSessions(sessions, entryPointDescriptor, retry)
         this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
@@ -126,7 +126,7 @@ export class PeerDiscovery {
         }
         const nodes = this.config.peerManager.getClosestPeersTo(this.config.localPeerDescriptor.kademliaId, this.config.parallelism)
         await Promise.allSettled(nodes.map(async (peer: DhtNodeRpcRemote) => {
-            const contacts = await peer.getClosestPeers(this.config.localPeerDescriptor.kademliaId!)
+            const contacts = await peer.getClosestPeers(this.config.localPeerDescriptor.nodeId!)
             this.config.peerManager.handleNewPeers(contacts)    
         }))
     }

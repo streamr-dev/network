@@ -80,10 +80,10 @@ export const createRandomNodeId = (): NodeID => {
     return randomBytes(10).toString('hex') as NodeID
 }
 
-export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'kademliaId' | 'type'>): PeerDescriptor => {
+export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'nodeId' | 'type'>): PeerDescriptor => {
     return {
         ...opts,
-        kademliaId: hexToBinary(createRandomNodeId()),
+        nodeId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }

@@ -11,7 +11,7 @@ describe('memory leak', () => {
 
     it('send message', async () => {
         const entryPointDescriptor = {
-            kademliaId: randomBytes(10),
+            nodeId: randomBytes(10),
             type: NodeType.NODEJS,
             websocket: {
                 host: '127.0.0.1',
@@ -20,7 +20,7 @@ describe('memory leak', () => {
             }
         }
         let entryPoint: DhtNode | undefined = new DhtNode({
-            peerId: binaryToHex(entryPointDescriptor.kademliaId),
+            peerId: binaryToHex(entryPointDescriptor.nodeId),
             websocketHost: entryPointDescriptor.websocket!.host,
             websocketPortRange: {
                 min: entryPointDescriptor.websocket.port,

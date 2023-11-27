@@ -17,6 +17,7 @@ import {
     ExternalFindDataResponse,
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
+    FindAction,
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
@@ -118,14 +119,14 @@ const logger = new Logger(module)
 export type Events = TransportEvents & DhtNodeEvents
 
 export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string): PeerDescriptor => {
-    let kademliaId: Uint8Array
+    let nodeId: Uint8Array
     if (msg) {
-        kademliaId = (peerId !== undefined) ? hexToBinary(peerId) : PeerID.fromIp(msg.host).value
+        nodeId = (peerId !== undefined) ? hexToBinary(peerId) : PeerID.fromIp(msg.host).value
     } else {
-        kademliaId = hexToBinary(peerId!)
+        nodeId = hexToBinary(peerId!)
     }
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
-    const ret: PeerDescriptor = { kademliaId, type: nodeType }
+    const ret: PeerDescriptor = { nodeId, type: nodeType }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
     }
@@ -359,10 +360,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
             (req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(req, context))
         const externalApiRpcLocal = new ExternalApiRpcLocal({
-            startFind: (idToFind: Uint8Array, fetchData: boolean, excludedPeer: PeerDescriptor) => {
-                return this.startFind(idToFind, fetchData, excludedPeer)
+            startFind: (key: Uint8Array, action: FindAction, excludedPeer: PeerDescriptor) => {
+                return this.startFind(key, action, excludedPeer)
             },
-            storeDataToDht: (key: Uint8Array, data: Any, originalStorer?: PeerDescriptor) => this.storeDataToDht(key, data, originalStorer)
+            storeDataToDht: (key: Uint8Array, data: Any, creator?: PeerDescriptor) => this.storeDataToDht(key, data, creator)
         })
         this.rpcCommunicator!.registerRpcMethod(
             ExternalFindDataRequest,
@@ -381,8 +382,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
-        const distance1 = this.peerManager!.bucket!.distance(peer1.kademliaId, compareToId.value)
-        const distance2 = this.peerManager!.bucket!.distance(this.localPeerDescriptor!.kademliaId, compareToId.value)
+        const distance1 = this.peerManager!.bucket!.distance(peer1.nodeId, compareToId.value)
+        const distance2 = this.peerManager!.bucket!.distance(this.localPeerDescriptor!.nodeId, compareToId.value)
         return distance1 < distance2
     }
 
@@ -454,15 +455,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         ))
     }
 
-    public async startFind(idToFind: Uint8Array, fetchData?: boolean, excludedPeer?: PeerDescriptor): Promise<FindResult> {
-        return this.finder!.startFind(idToFind, fetchData, excludedPeer)
+    public async startFind(key: Uint8Array, action?: FindAction, excludedPeer?: PeerDescriptor): Promise<FindResult> {
+        return this.finder!.startFind(key, action, excludedPeer)
     }
 
-    public async storeDataToDht(key: Uint8Array, data: Any, originalStorer?: PeerDescriptor): Promise<PeerDescriptor[]> {
+    public async storeDataToDht(key: Uint8Array, data: Any, creator?: PeerDescriptor): Promise<PeerDescriptor[]> {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
         }
-        return this.storeRpcLocal!.storeDataToDht(key, data, originalStorer ?? this.localPeerDescriptor!)
+        return this.storeRpcLocal!.storeDataToDht(key, data, creator ?? this.localPeerDescriptor!)
     }
 
     public async storeDataViaPeer(key: Uint8Array, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
@@ -475,28 +476,28 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return await rpcRemote.storeData(key, data)
     }
 
-    public async getDataFromDht(idToFind: Uint8Array): Promise<DataEntry[]> {
+    public async getDataFromDht(key: Uint8Array): Promise<DataEntry[]> {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
-            return this.findDataViaPeer(idToFind, sample(this.config.entryPoints)!)
+            return this.findDataViaPeer(key, sample(this.config.entryPoints)!)
         }
-        const result = await this.finder!.startFind(idToFind, true)
+        const result = await this.finder!.startFind(key, FindAction.FETCH_DATA)
         return result.dataEntries ?? []  // TODO is this fallback needed?
     }
 
-    public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
+    public async deleteDataFromDht(key: Uint8Array, waitForCompletion: boolean): Promise<void> {
         if (!this.abortController.signal.aborted) {
-            return this.storeRpcLocal!.deleteDataFromDht(idToDelete)
+            await this.finder!.startFind(key, FindAction.DELETE_DATA, undefined, waitForCompletion)
         }
     }
 
-    public async findDataViaPeer(idToFind: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
+    public async findDataViaPeer(key: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
         const rpcRemote = new ExternalApiRpcRemote(
             this.localPeerDescriptor!,
             peer,
             this.config.serviceId,
             toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        return await rpcRemote.externalFindData(idToFind)
+        return await rpcRemote.externalFindData(key)
     }
 
     public getTransport(): ITransport {

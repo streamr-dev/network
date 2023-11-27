@@ -36,7 +36,7 @@ describe('Find correctness', () => {
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
+            nodeId: entryPoint.getNodeId().value,
             type: NodeType.NODEJS
         }
 
@@ -77,11 +77,11 @@ describe('Find correctness', () => {
             + ', weakLocked: ' + node.getNumberOfWeakLockedConnections()))
 
         logger.info('starting find')
-        const kademliaIdToFind = Uint8Array.from(dhtIds[9].data)
-        const results = await nodes[159].startFind(kademliaIdToFind)
+        const nodeIdToFind = Uint8Array.from(dhtIds[9].data)
+        const results = await nodes[159].startFind(nodeIdToFind)
         logger.info('find over')
         expect(results.closestNodes).toBeGreaterThanOrEqual(5)
-        expect(PeerID.fromValue(kademliaIdToFind).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))
+        expect(PeerID.fromValue(nodeIdToFind).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))
 
     }, 180000)
 })
