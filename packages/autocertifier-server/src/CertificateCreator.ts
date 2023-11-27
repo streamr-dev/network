@@ -61,6 +61,7 @@ export class CertificateCreator {
        
         logger.debug('Creating certificate')
         let cert: string
+        let keyAuth: string
         try {
             cert = await client.auto({
                 csr,
@@ -68,10 +69,12 @@ export class CertificateCreator {
                 termsOfServiceAgreed: true,
                 challengePriority: [DNS_01_CHALLENGE],
                 challengeCreateFn: async (authz: acme.Authorization, _challenge: Challenge, keyAuthorization: string) => {
+                    // this value must be saved for the challengeRemoveFn
+                    keyAuth = keyAuthorization
                     await this.challengeManager.createChallenge(authz.identifier.value, keyAuthorization)
                 },
                 challengeRemoveFn: async (authz: acme.Authorization) => {
-                    await this.challengeManager.deleteChallenge(authz.identifier.value)
+                    await this.challengeManager.deleteChallenge(authz.identifier.value, keyAuth)
                 },
             })
         } catch (e) {
