@@ -26,7 +26,6 @@ service FindRpc {
 service StoreRpc {
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
   rpc replicateData (ReplicateDataRequest) returns (google.protobuf.Empty);
-  rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
 }
 
 service FindSessionRpc {
@@ -82,14 +81,6 @@ message ReplicateDataRequest {
   DataEntry entry = 1;
 }
 
-message DeleteDataRequest {
-  bytes key = 1;
-}
-
-message DeleteDataResponse {
-  bool deleted = 1;
-}
-
 message DataEntry {
   bytes key = 1;
   google.protobuf.Any data = 2;
@@ -113,7 +104,13 @@ message ClosestPeersResponse {
 
 message FindRequest {
   string sessionId = 1;
-  bool fetchData = 2;
+  FindAction action = 2;
+}
+
+enum FindAction {
+  NODE = 0;
+  FETCH_DATA = 1;
+  DELETE_DATA = 2;
 }
 
 message FindResponse {

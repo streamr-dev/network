@@ -1,4 +1,5 @@
 import {
+    FindAction,
     Message,
     MessageType,
     NodeType,
@@ -44,7 +45,7 @@ describe('Finder', () => {
         kademliaId: PeerID.fromString('destination').value,
         type: NodeType.NODEJS
     }
-    const findRequest = createFindRequest(false)
+    const findRequest = createFindRequest(FindAction.NODE)
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),
