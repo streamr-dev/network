@@ -349,7 +349,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
             serviceId: this.config.serviceId,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
-            getClosestPeersTo: (kademliaId: Uint8Array, limit: number) => this.peerManager!.getClosestPeersTo(kademliaId, limit),
+            getClosestPeersTo: (nodeId: Uint8Array, limit: number) => this.peerManager!.getClosestPeersTo(nodeId, limit),
             addNewContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
             removeContact: (contact: PeerDescriptor) => this.removeContact(contact)
         })
@@ -409,7 +409,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getClosestContacts(limit?: number): PeerDescriptor[] {
-        return this.peerManager!.getClosestPeersTo(this.localPeerDescriptor!.kademliaId, limit).map((peer) => peer.getPeerDescriptor())
+        return this.peerManager!.getClosestPeersTo(this.localPeerDescriptor!.nodeId, limit).map((peer) => peer.getPeerDescriptor())
     }
 
     public getNumberOfContacts(): number {

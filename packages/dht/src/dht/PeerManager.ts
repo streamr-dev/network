@@ -214,8 +214,8 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.connections.clear()
     }
 
-    getClosestPeersTo(kademliaId: Uint8Array, limit?: number, excludeSet?: Set<PeerIDKey>): DhtNodeRpcRemote[] {
-        const closest = new SortedContactList<DhtNodeRpcRemote>(PeerID.fromValue(kademliaId))
+    getClosestPeersTo(nodeId: Uint8Array, limit?: number, excludeSet?: Set<PeerIDKey>): DhtNodeRpcRemote[] {
+        const closest = new SortedContactList<DhtNodeRpcRemote>(PeerID.fromValue(nodeId))
         this.neighborList!.getAllContacts().map((contact) => closest.addContact(contact))
         this.bucket!.toArray().map((contact) => closest.addContact(contact))
         return closest.getClosestContacts(limit).filter((contact) => {

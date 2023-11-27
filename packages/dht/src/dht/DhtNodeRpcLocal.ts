@@ -17,7 +17,7 @@ import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 interface DhtNodeRpcLocalConfig {
     serviceId: string
     peerDiscoveryQueryBatchSize: number
-    getClosestPeersTo: (kademliaId: Uint8Array, limit: number) => DhtNodeRpcRemote[]
+    getClosestPeersTo: (nodeId: Uint8Array, limit: number) => DhtNodeRpcRemote[]
     addNewContact: (contact: PeerDescriptor) => void
     removeContact: (contact: PeerDescriptor) => void
 }

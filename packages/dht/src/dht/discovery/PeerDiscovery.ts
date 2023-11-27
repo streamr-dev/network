@@ -124,7 +124,7 @@ export class PeerDiscovery {
         if (this.isStopped()) {
             return
         }
-        const nodes = this.config.peerManager.getClosestPeersTo(this.config.localPeerDescriptor.kademliaId, this.config.parallelism)
+        const nodes = this.config.peerManager.getClosestPeersTo(this.config.localPeerDescriptor.nodeId, this.config.parallelism)
         await Promise.allSettled(nodes.map(async (peer: DhtNodeRpcRemote) => {
             const contacts = await peer.getClosestPeers(this.config.localPeerDescriptor.nodeId!)
             this.config.peerManager.handleNewPeers(contacts)    
