@@ -19,11 +19,11 @@ describe('NeighborUpdateRpcRemote', () => {
     let rpcRemote: NeighborUpdateRpcRemote
 
     const clientNode: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 1, 1]),
+        nodeId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
     const serverNode: PeerDescriptor = {
-        kademliaId: new Uint8Array([2, 2, 2]),
+        nodeId: new Uint8Array([2, 2, 2]),
         type: NodeType.NODEJS
     }
 
@@ -47,7 +47,7 @@ describe('NeighborUpdateRpcRemote', () => {
             'neighborUpdate',
             async (): Promise<NeighborUpdate> => {
                 const node: PeerDescriptor = {
-                    kademliaId: new Uint8Array([4, 2, 4]),
+                    nodeId: new Uint8Array([4, 2, 4]),
                     type: NodeType.NODEJS
                 }
                 const update: NeighborUpdate = {

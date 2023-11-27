@@ -25,7 +25,7 @@ describe('WebRTC rpc messages', () => {
     let iceCandidateCounter: number
 
     const targetDescriptor: PeerDescriptor = {
-        kademliaId: generateId('peer'),
+        nodeId: generateId('peer'),
         type: NodeType.NODEJS
     }
 

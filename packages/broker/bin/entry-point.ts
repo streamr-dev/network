@@ -7,15 +7,15 @@ import omit from 'lodash/omit'
 const main = async () => {
     const entryPoint = CONFIG_TEST.network!.controlLayer!.entryPoints![0]
     const peerDescriptor = {
-        ...omit(entryPoint, 'id'),
-        kademliaId: hexToBinary(entryPoint.id),
+        ...omit(entryPoint, 'nodeId'),
+        nodeId: hexToBinary(entryPoint.nodeId),
         type: NodeType.NODEJS,  // TODO remove this when NET-1070 done
         websocket: {
             ...entryPoint.websocket!,
         }
     }
     const dhtNode = new DhtNode({
-        peerId: entryPoint.id,
+        peerId: entryPoint.nodeId,
         websocketHost: entryPoint.websocket!.host,
         websocketPortRange: {
             min: entryPoint.websocket!.port,

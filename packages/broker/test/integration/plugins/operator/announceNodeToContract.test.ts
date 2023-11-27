@@ -21,7 +21,7 @@ describe('announceNodeToContract', () => {
         expect(await contractFacade.getTimestampOfLastHeartbeat()).toBeUndefined()
 
         const streamrClient = {
-            getPeerDescriptor: () => ({ id: '1234' })
+            getPeerDescriptor: () => ({ nodeId: '1234' })
         }
         await announceNodeToContract(0, contractFacade, streamrClient as any)
         const approximateWriteTimestamp = Date.now()

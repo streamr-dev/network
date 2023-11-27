@@ -104,12 +104,12 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.controlLayer.entryPoints![0].id).toEqual('eee1')
+            expect(clientOverrides.network.controlLayer.entryPoints![0].nodeId).toEqual('eee1')
         })
 
         it('can override entryPoints', () => {
             const entryPoints = [{
-                id: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
+                nodeId: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
                 type: NetworkNodeType.NODEJS,
                 websocket: {
                     host: 'brubeck3.streamr.network',
