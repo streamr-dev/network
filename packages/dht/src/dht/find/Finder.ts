@@ -139,8 +139,8 @@ export class Finder implements IFinder {
             }
         } else {
             this.doRouteFindRequest(routeMessage, excludedPeer)
-            // Wait for delete operation to be fanned out
-            // TODO: Should wait for the delete operation to be fanned out?
+            // Wait for delete operation to be sent out by the router
+            // TODO: Add a feature to wait for the router to pass the message?
             await wait(50)
         }
         if (action === FindAction.FETCH_DATA) {
