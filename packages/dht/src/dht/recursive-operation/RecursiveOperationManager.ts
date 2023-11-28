@@ -125,7 +125,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             )
             return session.getResults()
         }
-        const routeMessage = this.wrapFindRequest(idToFind, sessionId, operation)
+        const routeMessage = this.wrapRequest(idToFind, sessionId, operation)
         this.ongoingSessions.set(sessionId, session)
         if (waitForCompletion === true) {
             try {
@@ -153,7 +153,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         return session.getResults()
     }
 
-    private wrapFindRequest(idToFind: Uint8Array, sessionId: string, operation: RecursiveOperation): RouteMessageWrapper {
+    private wrapRequest(idToFind: Uint8Array, sessionId: string, operation: RecursiveOperation): RouteMessageWrapper {
         const targetDescriptor: PeerDescriptor = {
             nodeId: idToFind,
             type: NodeType.VIRTUAL
