@@ -4,7 +4,7 @@ import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescrip
 import { RpcRemote } from '../contact/RpcRemote'
 import { Logger } from '@streamr/utils'
 import { IRecursiveOperationRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { getPreviousPeer } from './getPreviousPeer'
+import { getPreviousPeer } from '../routing/getPreviousPeer'
 
 const logger = new Logger(module)
 
