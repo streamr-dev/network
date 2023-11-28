@@ -11,7 +11,7 @@ import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
 
 export interface RecursiveOperationSessionEvents {
-    findCompleted: (results: PeerDescriptor[]) => void
+    completed: (results: PeerDescriptor[]) => void
 }
 
 export interface RecursiveOperationSessionConfig {
@@ -36,7 +36,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     private allKnownHops: Set<PeerIDKey> = new Set()
     private reportedHops: Set<PeerIDKey> = new Set()
     private reportFindCompletedTimeout?: NodeJS.Timeout
-    private findCompletedEmitted = false
+    private completionEventEmitted = false
     private noCloserNodesReceivedCounter = 0
 
     constructor(config: RecursiveOperationSessionConfig) {
@@ -64,7 +64,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             (req: RecursiveOperationResponse) => rpcLocal.sendResponse(req))
     }
 
-    private isFindCompleted(): boolean {
+    private isCompleted(): boolean {
         const unreportedHops: Set<PeerIDKey> = new Set(this.allKnownHops)
         this.reportedHops.forEach((id) => {
             unreportedHops.delete(id)
@@ -118,14 +118,14 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         if (!this.localPeerId.equals(newPeerId)) {
             this.reportedHops.add(newPeerId.toKey())
         }
-        if (this.isFindCompleted()) {
-            if (!this.findCompletedEmitted && this.isFindCompleted()) {
+        if (this.isCompleted()) {
+            if (!this.completionEventEmitted && this.isCompleted()) {
                 if (this.reportFindCompletedTimeout) {
                     clearTimeout(this.reportFindCompletedTimeout)
                     this.reportFindCompletedTimeout = undefined
                 }
-                this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
-                this.findCompletedEmitted = true
+                this.emit('completed', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
+                this.completionEventEmitted = true
             }
         }
     }
@@ -143,19 +143,19 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     private onNoCloserPeersFound(): void {
         this.noCloserNodesReceivedCounter += 1
-        if (this.isFindCompleted()) {
-            this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
-            this.findCompletedEmitted = true
+        if (this.isCompleted()) {
+            this.emit('completed', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
+            this.completionEventEmitted = true
             if (this.reportFindCompletedTimeout) {
                 clearTimeout(this.reportFindCompletedTimeout)
                 this.reportFindCompletedTimeout = undefined
             }
         } else {
-            if (!this.reportFindCompletedTimeout && !this.findCompletedEmitted) {
+            if (!this.reportFindCompletedTimeout && !this.completionEventEmitted) {
                 this.reportFindCompletedTimeout = setTimeout(() => {
-                    if (!this.findCompletedEmitted) {
-                        this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
-                        this.findCompletedEmitted = true
+                    if (!this.completionEventEmitted) {
+                        this.emit('completed', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
+                        this.completionEventEmitted = true
                     }
                 }, 4000)
             }
@@ -173,6 +173,6 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             this.reportFindCompletedTimeout = undefined
         }
         this.rpcCommunicator.destroy()
-        this.emit('findCompleted', [])
+        this.emit('completed', [])
     }
 }

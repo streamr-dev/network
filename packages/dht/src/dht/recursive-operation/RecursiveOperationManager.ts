@@ -131,7 +131,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             try {
                 await runAndWaitForEvents3<RecursiveOperationSessionEvents>(
                     [() => this.doRouteRequest(routeMessage, excludedPeer)],
-                    [[session, 'findCompleted']],
+                    [[session, 'completed']],
                     15000
                 )
             } catch (err) {
