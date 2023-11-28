@@ -117,7 +117,7 @@ Add given nodes public key to operator node addresses.
 I’m receiving the following warning message.
 
 ```JSON
-INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version 100.0.0-pretestnet.6
+INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version testnet-one.0
 Error: call revert exception [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="metadata()", data="0x", errorArgs=null, errorName=null, errorSignature=null, reason=null, code=CALL_EXCEPTION, version=abi/5.7.0)
 ```
 
@@ -164,7 +164,7 @@ I’m receiving the following warning message.
 Could not synchronize with thegraph blockchain indexing service.
 
 **Solution:**
-This is likely to only be an issue on the pretestnet environment where The Graph support is limited. Check that your internet connection is active and try to restart the Streamr node. If this doesn’t help, try again in a while, The Graph service may be updating.
+This is likely to only be an issue on the Mumbai environment where The Graph support is limited. Check that your internet connection is active and try to restart the Streamr node. If this doesn’t help, try again in a while, The Graph service may be updating.
 
 ## Staking on, and earning from Sponsorships
 #### Will my rewards automatically be sent to my wallet?
@@ -210,7 +210,7 @@ The global minimum is set to 5k DATA. This value could be changed in the future 
 #### As a Delegator can I always withdraw tokens from the Operators that I have delegated to?
 Eventually, yes. If there's not enough available balance on the Operator you have delegated on then your withdrawal gets entered into the delegation que. When the Operator has an available balance, your tokens will be withdrawn. This will take at maximum 30 days and will happen automatically with no further action required.
 
-## Slashing
+## Slashing & kicking
 #### How and when does slashing occurs? When exactly will operators be slashed?
 There are two kinds of slashing events that Operators need to pay attention to. These are "Normal slashing" and "False flag" slashing. The short answer is that normal slashing occurs when nodes are caught being offline or unreachable when they should be online and doing work. It's a similar story for false flag voting, though the penalties are smaller. 
 
@@ -226,7 +226,16 @@ Running reliable and reachable nodes with good redundancy is the best defense ag
 Most operators would set a redundancy Factor parameter to a number more than 1, which means that you have multiple nodes doing the same work. You'd only get slashed if all of them are offline when you're being inspected by the majority of flag reviewers. A higher redundancy factor therefore protects from slashing.
 
 #### What happens to the slashed tokens?
-Slashed tokens are moved to the project treasury controlled by Streamr DAO governance. 
+Slashed tokens are sent to a  controlled by Streamr DAO governance.
 
 #### What happens when the Sponsorship is exhausted of tokens, am I still on the hook for slashing penalties until I leave the Sponsorship?
 Yes. If you are staked on the Sponsorship, you must do the work (contribute to the stream) and you're subject to slashing if you don't. Sponsorships that you have joined can get topped up so they may activate to start paying out once a sponsor funds the Sponsorship. You must unstake to remove this staking risk. Unstaking does not happen automatically.
+
+#### What are the conditions for getting kicked from a Sponsorship?
+If you stake has dropped below the global minimum stake. This can be caused by slashing events against your Operator 
+
+#### I got kicked from a Sponsorship, what happens to me?
+You'll no longer be earning from the Sponsorship and no longer required to do the work of the Sponsorship. The unwithdrawn earnings from that Sponsorship are automatically sent out, along with the remaining stake after slashing.
+
+#### I force unstaked from a Sponsorship, what happens?
+You'll need to pay the early exit fee of 5k DATA. The unwithdrawn earnings from that Sponsorship are automatically sent out, along with the remaining stake after slashing.

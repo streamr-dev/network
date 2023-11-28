@@ -38,13 +38,13 @@ The Operator plugin will automatically validate that other Operators are doing w
 ![image](@site/static/img/operator-sponsorship-relational-diagram.png)
 
 ### Operator heartbeat
-To observe your Operator's heartbeat, paste in your Operator contract address into [streams search](https://mumbai.streamr.network/hub/streams) and select the coordination stream, then "Live data". If your node is connectable then there will be a "websocket entry" inside the peer descriptor heartbeats. Be patient, it may require a browser refresh, also note Firefox is currently not working- please use Chrome.
+To observe your Operator's heartbeat, paste in your Operator contract address into [streams search](https://streamr.network/hub/streams) and select the coordination stream, then "Live data". If your node is connectable then there will be a "websocket entry" inside the peer descriptor heartbeats. Be patient, it may require a browser refresh, also note Firefox is currently not working- please use Chrome.
 
 ### Node redundancy factor
 The redundancy factor sets the amount of duplicated work when running a fleet of multiple nodes. Doing redundant work protects against slashing in case some of your nodes experience failures. For example, setting this to 1 means that no duplication of work occurs (the feature is off), and setting it to 2 means that each stream assignment will be worked on by 2 nodes in your fleet.
 
-### Owner’s cut
-The Operator’s cut is the percentage taken by the Operator from all earnings. This percentage can not be changed later. The remainder percentage is shared among all Delegators, including the Operator's own stake (if the Operator has self-delegated).
+### Owner's cut
+The Operator’s cut is the percentage taken by the Operator from all earnings. This percentage can be changed, but only while the Operator is not staked in any Sponsorships. The remainder percentage is shared among all Delegators, including the Operator's own stake (if the Operator has self-delegated).
 
 ### Operator maintenance
 #### Operator uncollected earnings limit

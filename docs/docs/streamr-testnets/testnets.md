@@ -16,36 +16,44 @@ The 1.0 testnets will be launched with the technical parameters set out in: [SIP
 3. [Delegate](../streamr-network/network-roles/delegators.md) your `DATA` tokens onto other Operators
 
 ## Current node software version
-Use node version: `v100.0.0-pretestnet.6`. Do not use the `latest` tag release.
+Use node version: `testnet-one.0`. Do not use the `latest` tag release.
 
 ## Schedules
 Keep a close eye on this page as these dates may change based on the findings of each testnet.
 
-### Pre-testnet
+### Mumbai Operator testing (the pre-testnet)
 - Live! Checkout the [Mumbai Streamr Hub](https://mumbai.streamr.network)
 
 ### Testnet 1
-- Start date: Mid/Late Nov, 2023 (estimate)
+- Start date: 4PM CET / 15:00 UTC, November 27th, 2023
 - Reward pool: 1 million DATA
 - Duration: 7 days
 
 ### Testnet 2
 - Start date: Nov/Dec, 2023 (estimate)
 - Reward pool: 1.5 million DATA
-- Duration: TBA
+- Duration: 21 days
 
 ### Testnet 3
 - Start date: Dec, 2023 (estimate)
 - Reward pool: 2.5 million DATA
-- Duration: TBA
+- Duration: 14 days
 
 ### Testnet Sponsorships
 Each testnet will have a set of Sponsorships that will be the source of incentivization. These will be visible on [The Hub](https://streamr.network/hub/network) (release TBA).
+
+### The Streamr 1.0 Hub
+- Create your Operator on the [Streamr Hub](https://streamr.network/hub/network/operators)
 
 ### The Mumbai test environment
 The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens.
 
 You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
+
+### Community resources
+- Tutorial videos (follow at your own risk)
+- [StreamrRUN - A Streamr Node in 3 minutes, by Logic Ethos](https://www.youtube.com/watch?v=tGTdaNTtjLY)
+- [Manage your Streamr Node in 1 minute, by Logic Ethos](https://www.youtube.com/watch?v=V6yS0bCt13g)
 
 ### Bounty prizes
 We're offering DATA prizes for quality contributions to the following categories:

@@ -3,7 +3,7 @@ sidebar_position: 1
 ---
 
 :::caution
-Note that this documentation is for the Brubeck network - the current production network. If you're running a node for the purpose of publishing/subscribing to data on the Streamr Network then avoid the `pretestnet` versions of the Streamr node and Streamr SDK.
+Note that this documentation is for the Brubeck network - the current production network. If you're running a node for the purpose of publishing/subscribing to data on the Streamr Network then avoid the `testnet` versions of the Streamr node and Streamr SDK.
 :::
 
 # Connect to a Streamr node

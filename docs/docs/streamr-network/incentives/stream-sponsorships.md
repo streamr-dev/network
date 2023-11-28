@@ -26,7 +26,7 @@ The proportion of earnings that each Owner-Operator and delegators receive is ba
 - The **owner's cut** percentage in each Operator that has staked into the Sponsorship
 
 ![image](@site/static/img/stream-sponsorship.png)
-<!-- TODO bigger stake numbers -->
+
 In this example, the Operator with the smaller **Owner's cut** has attracted more delegation, and thus a larger share of the earnings emitted from the Sponsorship smart contract.
 
 The amount of DATA tokens the Operator stakes on the Sponsorship determines the size of their share of the token flow. The Operator will generally stake on Sponsorships where they can earn the best available yield for their stake. Other Operators in a Sponsorship are there to share the cake, so overcrowded Sponsorships may not offer the best yields, and some Operators will decide to mine other Sponsorships instead. Like any open market, the market of servicing Sponsorships will always gravitate towards achieving equilibrium between supply and demand. Note that the Operator owner earns twice- once for due to their owner's cut and twice due to their own stake in their Operator. 

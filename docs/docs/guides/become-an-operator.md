@@ -21,7 +21,7 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 - You can run ~~up to 5 nodes per IP address~~ any number of nodes from the same IP address, although one node per machine is recommended
 - Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships at any time
 - You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
-- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `100.0.0-pretestnet.6`. The `latest` tag still points to the previous milestone (Brubeck) software.
+- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `testnet-one.0`. The `latest` tag still points to the previous milestone (Brubeck) software.
 - There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
 :::
 
@@ -29,15 +29,16 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 Follow these steps below to setup your Operator so that you can participate in the protocol and collect rewards. 
 
 ### Step 1: Deploy your Operator Contract
-Currently you can practice your Operator deployment in the Mumbai pre-testnet. Go the the [Mumbai Streamr Hub](https://mumbai.streamr.network/hub), connect your wallet (top-right corner), navigate to Network -> Operators, then click "Become an Operator" and complete the dialog. The [Operator contract](../streamr-network/network-roles/operators#the-operator-contract) is deployed on the Polygon Mumbai blockchain.
-
+In the [Streamr Hub](https://streamr.network/hub), connect your wallet (top-right corner), navigate to Network -> Operators, then click "Become an Operator" and complete the dialog. The [Operator contract](../streamr-network/network-roles/operators#the-operator-contract) is deployed on the Polygon blockchain.
 
 The wallet/account that you use to make the Operator creation transaction will be known as the **Owner wallet**. It's the wallet you'll use to control your Operator business. The owner wallet controls the Operator and is able to stake and unstake on Sponsorships, update the Operator settings, and withdraw the owner's share of the Operator's stake and earnings. This should be a very secure wallet as it controls the whole Operator. A hardware wallet (Ledger, etc) is recommended, although a software wallet (Metamask) will work too - just be sure to keep the account private and never share your private key or seed phrase with anyone.
 
-You'll need to decide on your [owner's cut](../streamr-network/network-roles/operators#owners-cut) at the time of deployment. You'll be able to change this value later on, as long as you unstake from all Sponsorships first.
+You'll need to decide on your [owner's cut](../streamr-network/network-roles/operators#owners-cut) at the time of your Operator deployment. You'll be able to change this value later on, as long as you unstake from all Sponsorships first.
+
+You can also practice your Operator deployment in the Mumbai environment with the [Mumbai Streamr Hub](https://mumbai.streamr.network/hub) (rather than switching networks on the Streamr Hub). You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 ### Step 2: Run a Streamr node
-Spin up a Streamr node using this [guide](./how-to-run-streamr-node.md). 
+Spin up a Streamr node using this [guide](./how-to-run-streamr-node.md).
 
 Nodes will consume resources, mainly bandwidth and CPU. RAM usage is moderate and disk usage in negligible. 
 
@@ -64,19 +65,21 @@ First, scroll down on your Operator page and find the "Operator's node addresses
 
 ![image](@site/static/img/node-addresses.png)
 
-**Update your noode's configuration file**
+**Update your node's configuration file**
 
-Then, update your node's config file. For Mumbai pre-testnet, copy and paste [this config snippet](#mumbai-testing-environment-node-config). In that snippet:
+Then, update your node's config file. Use [this testnet config](#testnet-configuration-node-config). Inside this configuration you will need to update:
 - Replace `"YOUR_OPERATOR_CONTRACT_ADDRESS"` with your **Operator address** (keep the quotes).
 - Replace `"NODE_PRIVATE_KEY"` with the **private key** of your **node wallet** (keep the quotes).
 
-After the config file changes, restart your node(s). If you run several nodes, you can use the same config file for all of them.
+After the config file changes, restart your node(s). **If you run several nodes, you can use the same config file for all of them.**
+
+If you're building your Operator in Mumbai, copy and paste [this config snippet](#mumbai-testing-environment-node-config) instead.
 
 ### Step 4: Fund your nodes
 You’ll need a bit of `MATIC` (the gas token of Polygon) in your node’s wallets as Streamr nodes that participate in sponsored streams will periodically make transactions. 1 to 5 `MATIC` is recommended since the nodes will be making a few transactions per day. If the node runs out of gas while they’re a part of an active Sponsorship, then a penalty may be applied to your unclaimed earnings. See [Operator value maintenance](../streamr-network/network-roles/operators#operator-maintenance).
 
 ### Step 5: Fund your Operator
-Now, on your Operator page in the Streamr Hub UI, fund your Operator with DATA tokens (on Mumbai, TEST tokens). There's no minimum amount, but note that the more you fund, the more you can accept delegations. The owner (you) must have at least a 5% stake in the Operator.
+Now, on your Operator page in the Streamr Hub UI, fund your Operator with DATA tokens (or if you're in Mumbai, then TEST tokens). There's no minimum amount, but note that the more tokens you fund your Operator with, the more you can accept delegations. The owner (you) must have at least a 5% stake in the Operator.
 
 ### Step 6: Join sponsorships
 All the checkmarks in the Operator status section on your Operator page should now be green, and you’re ready to join Sponsorships! In the Hub, go to Network -> Sponsorships and find a Sponsorship you want your Operator to start working on. Click the "Join as Operator" button and select your stake. Note there is a minimum stake of 5000 `DATA` tokens for each Sponsorship that you join. Joining Sponsorships locks your tokens for a period of time, defined in the Sponsorship contract.
@@ -96,7 +99,11 @@ The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your O
 You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 ## Mumbai testing environment node config
-Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/default.json). 
+Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/mumbai-default.json). 
+
+:::info Important
+- This is the Mumbai configuration. If you want to participate in the incentivized testnets, use the [testnet configuration](#testnet-configuration-node-config).
+:::
 
 ```json
 {
@@ -155,6 +162,24 @@ Below is the template you can use to override and replace the contents of your c
     "plugins": {
         "operator": {
             "operatorContractAddress": "YOUR_OPERATOR_CONTRACT_ADDRESS"
+        }
+    }
+}
+```
+
+## Testnet configuration node config
+Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/default.json). 
+
+```json
+{
+    "client": {
+        "auth": {
+            "privateKey": "NODE_PRIVATE_KEY"
+        }
+    },
+    "plugins": {
+        "operator": {
+            "operatorContractAddress": "OPERATOR_CONTRACT_ADDRESS"
         }
     }
 }
