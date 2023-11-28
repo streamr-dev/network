@@ -31,7 +31,7 @@ import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
 
-interface FinderConfig {
+interface RecursiveOperationManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
     connections: Map<PeerIDKey, DhtNodeRpcRemote>
@@ -43,7 +43,7 @@ interface FinderConfig {
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
 }
 
-export interface IFinder {
+export interface IRecursiveOperationManager {
     startFind(idToFind: Uint8Array, operation?: RecursiveOperation): Promise<FindResult>
 }
 
@@ -51,7 +51,7 @@ export interface FindResult { closestNodes: Array<PeerDescriptor>, dataEntries?:
 
 const logger = new Logger(module)
 
-export class Finder implements IFinder {
+export class RecursiveOperationManager implements IRecursiveOperationManager {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly sessionTransport: ITransport
@@ -64,7 +64,7 @@ export class Finder implements IFinder {
     private ongoingSessions: Map<string, RecursiveOperationSession> = new Map()
     private stopped = false
 
-    constructor(config: FinderConfig) {
+    constructor(config: RecursiveOperationManagerConfig) {
         this.rpcCommunicator = config.rpcCommunicator
         this.sessionTransport = config.sessionTransport
         this.connections = config.connections
@@ -76,7 +76,7 @@ export class Finder implements IFinder {
         this.registerLocalRpcMethods(config)
     }
 
-    private registerLocalRpcMethods(config: FinderConfig) {
+    private registerLocalRpcMethods(config: RecursiveOperationManagerConfig) {
         const rpcLocal = new RecursiveOperationRpcLocal({
             doRouteFindRequest: (routedMessage: RouteMessageWrapper) => this.doRouteFindRequest(routedMessage),
             addContact: (contact: PeerDescriptor) => config.addContact(contact),

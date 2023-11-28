@@ -9,7 +9,7 @@ import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { IFinder } from '../find/Finder'
+import { IRecursiveOperationManager } from '../find/RecursiveOperationManager'
 import { areEqualPeerDescriptors } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
@@ -26,7 +26,7 @@ import { Empty } from '../../proto/google/protobuf/empty'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
-    finder: IFinder
+    recursiveOperationManager: IRecursiveOperationManager
     localPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
     serviceId: ServiceID
@@ -43,7 +43,7 @@ const logger = new Logger(module)
 export class StoreRpcLocal implements IStoreRpc {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
-    private readonly finder: IFinder
+    private readonly recursiveOperationManager: IRecursiveOperationManager
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly localDataStore: LocalDataStore
     private readonly serviceId: ServiceID
@@ -56,7 +56,7 @@ export class StoreRpcLocal implements IStoreRpc {
 
     constructor(config: DataStoreConfig) {
         this.rpcCommunicator = config.rpcCommunicator
-        this.finder = config.finder
+        this.recursiveOperationManager = config.recursiveOperationManager
         this.localPeerDescriptor = config.localPeerDescriptor
         this.localDataStore = config.localDataStore
         this.serviceId = config.serviceId
@@ -150,7 +150,7 @@ export class StoreRpcLocal implements IStoreRpc {
 
     public async storeDataToDht(key: Uint8Array, data: Any, creator: PeerDescriptor): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.serviceId}`)
-        const result = await this.finder.startFind(key)
+        const result = await this.recursiveOperationManager.startFind(key)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         const ttl = this.highestTtl // ToDo: make TTL decrease according to some nice curve

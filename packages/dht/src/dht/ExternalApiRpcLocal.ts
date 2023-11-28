@@ -9,7 +9,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { FindResult } from './find/Finder'
+import { FindResult } from './find/RecursiveOperationManager'
 import { Any } from '../proto/google/protobuf/any'
 
 interface ExternalApiRpcLocalConfig {
