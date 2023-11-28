@@ -18,7 +18,7 @@ import { Logger, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationSessionRpcRemote } from './RecursiveOperationSessionRpcRemote'
 import { v4 } from 'uuid'
-import { FindSession, FindSessionEvents } from './FindSession'
+import { RecursiveOperationSession, RecursiveOperationSessionEvents } from './RecursiveOperationSession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
@@ -61,7 +61,7 @@ export class Finder implements IFinder {
     private readonly serviceId: ServiceID
     private readonly localDataStore: LocalDataStore
     private readonly isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
-    private ongoingSessions: Map<string, FindSession> = new Map()
+    private ongoingSessions: Map<string, RecursiveOperationSession> = new Map()
     private stopped = false
 
     constructor(config: FinderConfig) {
@@ -107,7 +107,7 @@ export class Finder implements IFinder {
             return { closestNodes: [] }
         }
         const sessionId = v4()
-        const session = new FindSession({
+        const session = new RecursiveOperationSession({
             serviceId: sessionId,
             transport: this.sessionTransport,
             nodeIdToFind: idToFind,
@@ -129,7 +129,7 @@ export class Finder implements IFinder {
         this.ongoingSessions.set(sessionId, session)
         if (waitForCompletion === true) {
             try {
-                await runAndWaitForEvents3<FindSessionEvents>(
+                await runAndWaitForEvents3<RecursiveOperationSessionEvents>(
                     [() => this.doRouteFindRequest(routeMessage, excludedPeer)],
                     [[session, 'findCompleted']],
                     15000

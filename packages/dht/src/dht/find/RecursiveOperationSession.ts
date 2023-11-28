@@ -10,11 +10,11 @@ import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
 
-export interface FindSessionEvents {
+export interface RecursiveOperationSessionEvents {
     findCompleted: (results: PeerDescriptor[]) => void
 }
 
-export interface FindSessionConfig {
+export interface RecursiveOperationSessionConfig {
     serviceId: ServiceID
     transport: ITransport
     nodeIdToFind: Uint8Array
@@ -23,7 +23,7 @@ export interface FindSessionConfig {
     operation: RecursiveOperation
 }
 
-export class FindSession extends EventEmitter<FindSessionEvents> {
+export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSessionEvents> {
     private readonly serviceId: ServiceID
     private readonly transport: ITransport
     private readonly nodeIdToFind: Uint8Array
@@ -39,7 +39,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
     private findCompletedEmitted = false
     private noCloserNodesReceivedCounter = 0
 
-    constructor(config: FindSessionConfig) {
+    constructor(config: RecursiveOperationSessionConfig) {
         super()
         this.serviceId = config.serviceId
         this.transport = config.transport
