@@ -17,6 +17,7 @@ const PAYLOAD = { hello: 'world' }
 
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
     const entryPoints = CHAIN_CONFIG.dev2.entryPoints.map((entryPoint) => ({
+        ...entryPoint,
         nodeId: hexToBinary(entryPoint.nodeId),
         type: NodeType.NODEJS
     }))

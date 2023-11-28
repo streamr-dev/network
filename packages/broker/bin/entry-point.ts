@@ -6,11 +6,9 @@ import { hexToBinary } from '@streamr/utils'
 const main = async () => {
     const entryPoint = CHAIN_CONFIG.dev2.entryPoints![0]
     const peerDescriptor = {
+        ...entryPoint,
         nodeId: hexToBinary(entryPoint.nodeId),
-        type: NodeType.NODEJS,  // TODO remove this when NET-1070 done
-        websocket: {
-            ...entryPoint.websocket!,
-        }
+        type: NodeType.NODEJS  // TODO remove this when NET-1070 done
     }
     const dhtNode = new DhtNode({
         peerId: entryPoint.nodeId,
