@@ -252,7 +252,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             )
             return createRouteMessageAck(routedMessage)
         } else {
-            const ack = this.router.doRouteMessage(routedMessage, RoutingMode.FIND, excludedPeer)
+            const ack = this.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE, excludedPeer)
             if ((ack.error === undefined) || (ack.error === RouteMessageError.NO_TARGETS)) {
                 const noCloserContactsFound = (ack.error === RouteMessageError.NO_TARGETS) ||
                     (

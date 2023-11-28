@@ -63,7 +63,7 @@ export interface RoutingSessionEvents {
     stopped: (sessionId: string) => void
 }
 
-export enum RoutingMode { ROUTE, FORWARD, FIND }
+export enum RoutingMode { ROUTE, FORWARD, RECURSIVE }
 
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
@@ -163,7 +163,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         if (this.mode === RoutingMode.FORWARD) {
             return contact.getRouterRpcRemote().forwardMessage(msg)
-        } else if (this.mode === RoutingMode.FIND) {
+        } else if (this.mode === RoutingMode.RECURSIVE) {
             return contact.getRecursiveOperationRpcRemote().routeRequest(msg)
         } else {
             return contact.getRouterRpcRemote().routeMessage(msg)
