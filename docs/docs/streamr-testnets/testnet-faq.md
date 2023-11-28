@@ -39,6 +39,13 @@ Nodes will be doing real work on real streams, and the amount one can stake/earn
 
 Learn more about [node redundancy](../streamr-network/network-roles/operators#node-redundancy-factor).
 
+#### What is the advantage of Operators running multiple nodes?
+With more nodes, Operators can do more work and/or have more redundancy to protect from slashing. Theoretical example:
+- Say there's a sponsored stream in the testnet which has so much data that it takes 100% of the capacity of any node that works on it. (In practice such heavy streams should be partitioned, and therefore the work would be distributed more evenly, but let's entertain this for the sake of example!)
+- If the user runs 1 node, it will be working at full capacity and the owner shouldn't stake on any other sponsorships (or else their node becomes overloaded and risks getting slashed). Also if that single node goes down, they will get slashed.
+- If the user runs 2 nodes, and their `redundancyFactor` setting is 2, then both nodes will be working at full capacity and they still can not take on more work, but now the failure of 1 node won't lead to slashing.
+- If the user runs 5 nodes, and their `redundancyFactor` setting is 2, then only 2 of their nodes are working on that heavy stream at full capacity and the other 3 are doing nothing, enabling them to stake on other sponsorships to take on more work and earn more rewards. They are also well protected from slashing as multiple nodes could fail without any of the work getting neglected.
+
 #### Failed to publish to stream... Cause: You don't have permission to publish to this (coordination) stream
 If you see an error like this:
 `WARN [2023-10-31T10:19:06.979] (announceNodeToStream): Unable to publish to coordination stream`

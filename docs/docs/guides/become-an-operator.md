@@ -88,6 +88,7 @@ Now, on your Operator page in the Streamr Hub UI, fund your Operator with DATA t
 
 ### Step 6: Check your Operator status
 All the checkmarks in the Operator status section on your Operator page should now be green, and you’re ready to join Sponsorships!
+
 ![image](@site/static/img/operator-status-green.png)
 
 ### Step 7: Join sponsorships
@@ -100,7 +101,11 @@ All the checkmarks in the Operator status section on your Operator page should n
 ## Running a node fleet
 Running a fleet of nodes is recommended as it will reduce your risk of slashing. Node private keys can be shared among all your nodes so there is no need to create a unique node address key pair for each node, i.e. You only need to add one node address for *N* nodes if you wish.
 
-A typical node fleet may have 2 - 10 nodes and use a node [Redundancy Factor](../streamr-network/network-roles/operators#node-redundancy-factor) of 2 - 3, for example.
+A typical node fleet may have 2 - 10 nodes and use a node [Redundancy Factor](../streamr-network/network-roles/operators#node-redundancy-factor) of 2 - 3, for example. 
+
+Checkout the [Testnet FAQ](../streamr-testnets/testnet-faq#what-is-the-advantage-of-operators-running-multiple-nodes) for more commentary on running multiple nodes.
+
+<div id="testnet-configuration-node-config"></div>
 
 ## Testnet node config
 Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/default.json). 
