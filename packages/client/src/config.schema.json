@@ -335,7 +335,7 @@
                             "url": "https://polygon-rpc.com",
                             "timeout": 120000
                         }, {
-                            "url": "https://poly-rpc.gateway.pokt.network/",
+                            "url": "https://polygon.llamarpc.com",
                             "timeout": 120000
                         }]
                     }
