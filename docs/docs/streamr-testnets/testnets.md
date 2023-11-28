@@ -54,7 +54,7 @@ The active network depends on the node config. The [Mumbai node config](../guide
 
 Don’t use the `pretestnet` releases anymore.
 
-![image](@site/static/img/testnets.jpg)
+![image](@site/static/img/mumbai-to-testnet.jpg)
 
 ### Community resources
 - Tutorial videos. Follow at your own risk. Note that version numbers and exact instructions may change over time.

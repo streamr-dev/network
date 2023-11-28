@@ -11,7 +11,7 @@ The active network depends on the node config. The [Mumbai node config](../guide
 
 Don’t use the `pretestnet` releases anymore.
 
-![image](@site/static/img/testnets.jpg)
+![image](@site/static/img/mumbai-to-testnet.jpg)
 
 #### What are the differences between the Brubeck network and the 1.0 network?
 In the old Brubeck network, people would cram multiple Streamr nodes into the cheapest possible VMs to optimize earnings vs. costs, but that only made sense because the nodes weren't doing much in terms of actual work. Now the nodes will be doing actual work by relaying data in the streams that the node Operator stakes on, and this has a few consequences:

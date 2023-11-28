@@ -83,7 +83,7 @@ Now, on your Operator page in the Streamr Hub UI, fund your Operator with DATA t
 
 ### Step 6: Check your Operator status
 All the checkmarks in the Operator status section on your Operator page should now be green, and you’re ready to join Sponsorships!
-![image](@site/static/img/operator-status.jpg)
+![image](@site/static/img/operator-status-green.png)
 
 ### Step 7: Join sponsorships
  In the Hub, go to Network -> Sponsorships and find a Sponsorship you want your Operator to start working on. Click the "Join as Operator" button and select your stake. Note there is a minimum stake of 5000 `DATA` tokens for each Sponsorship that you join. Joining Sponsorships locks your tokens for a period of time, defined in the Sponsorship contract.
