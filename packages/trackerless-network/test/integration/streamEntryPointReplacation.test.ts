@@ -1,11 +1,10 @@
-import { Simulator, SimulatorTransport } from '@streamr/dht'
+import { Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { ENTRYPOINT_STORE_LIMIT } from '../../src/logic/EntryPointDiscovery'
 import { range } from 'lodash'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
-import { LatencyType } from '@streamr/dht/dist/src/exports'
 
 describe('Stream Entry Points are replaced when known entry points leave streams', () => {
     
