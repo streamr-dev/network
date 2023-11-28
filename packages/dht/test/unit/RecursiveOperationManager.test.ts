@@ -45,7 +45,7 @@ describe('RecursiveOperationManager', () => {
         nodeId: PeerID.fromString('destination').value,
         type: NodeType.NODEJS
     }
-    const recursiveOperationRequest = createFindRequest(RecursiveOperation.FIND_NODE)
+    const recursiveOperationRequest = createFindRequest()
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),

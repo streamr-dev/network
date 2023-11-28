@@ -121,11 +121,9 @@ export const createWrappedClosestPeersRequest = (
     return rpcWrapper
 }
 
-export const createFindRequest = (
-    operation: RecursiveOperation
-): RecursiveOperationRequest => {
+export const createFindRequest = (): RecursiveOperationRequest => {
     const request: RecursiveOperationRequest = {
-        operation,
+        operation: RecursiveOperation.FIND_NODE,
         sessionId: v4()
     }
     return request
