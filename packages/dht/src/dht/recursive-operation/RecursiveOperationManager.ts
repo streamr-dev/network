@@ -78,7 +78,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
 
     private registerLocalRpcMethods(config: RecursiveOperationManagerConfig) {
         const rpcLocal = new RecursiveOperationRpcLocal({
-            doRouteFindRequest: (routedMessage: RouteMessageWrapper) => this.doRouteFindRequest(routedMessage),
+            doRouteRequest: (routedMessage: RouteMessageWrapper) => this.doRouteRequest(routedMessage),
             addContact: (contact: PeerDescriptor) => config.addContact(contact),
             isMostLikelyDuplicate: (requestId: string) => this.router.isMostLikelyDuplicate(requestId),
             addToDuplicateDetector: (requestId: string) => this.router.addToDuplicateDetector(requestId)
@@ -117,7 +117,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         })
         if (this.connections.size === 0) {
             const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
-            session.doSendFindResponse(
+            session.doSendResponse(
                 [this.localPeerDescriptor],
                 [this.localPeerDescriptor],
                 Array.from(data.values()),
@@ -130,15 +130,15 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         if (waitForCompletion === true) {
             try {
                 await runAndWaitForEvents3<RecursiveOperationSessionEvents>(
-                    [() => this.doRouteFindRequest(routeMessage, excludedPeer)],
+                    [() => this.doRouteRequest(routeMessage, excludedPeer)],
                     [[session, 'findCompleted']],
                     15000
                 )
             } catch (err) {
-                logger.debug(`doRouteFindRequest failed with error ${err}`)
+                logger.debug(`doRouteRequest failed with error ${err}`)
             }
         } else {
-            this.doRouteFindRequest(routeMessage, excludedPeer)
+            this.doRouteRequest(routeMessage, excludedPeer)
             // Wait for delete operation to be sent out by the router
             // TODO: Add a feature to wait for the router to pass the message?
             await wait(50)
@@ -213,7 +213,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         const isOwnNode = areEqualPeerDescriptors(this.localPeerDescriptor, targetPeerDescriptor)
         if (isOwnNode && this.ongoingSessions.has(serviceId)) {
             this.ongoingSessions.get(serviceId)!
-                .doSendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+                .doSendResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         } else {
             const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.sessionTransport, { rpcRequestTimeout: 15000 })
             const rpcRemote = new RecursiveOperationSessionRpcRemote(
@@ -228,7 +228,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         }
     }
 
-    private doRouteFindRequest(routedMessage: RouteMessageWrapper, excludedPeer?: PeerDescriptor): RouteMessageAck {
+    private doRouteRequest(routedMessage: RouteMessageWrapper, excludedPeer?: PeerDescriptor): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }

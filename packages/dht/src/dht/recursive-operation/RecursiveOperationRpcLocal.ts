@@ -8,7 +8,7 @@ import { getPreviousPeer } from '../routing/getPreviousPeer'
 const logger = new Logger(module)
 
 interface RecursiveOperationRpcLocalConfig {
-    doRouteFindRequest: (routedMessage: RouteMessageWrapper) => RouteMessageAck
+    doRouteRequest: (routedMessage: RouteMessageWrapper) => RouteMessageAck
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     isMostLikelyDuplicate: (requestId: string) => boolean
     addToDuplicateDetector: (requestId: string) => void
@@ -30,6 +30,6 @@ export class RecursiveOperationRpcLocal implements IRecursiveOperationRpc {
         logger.trace(`Received routeRequest call from ${senderId}`)
         this.config.addContact(routedMessage.sourcePeer!, true)
         this.config.addToDuplicateDetector(routedMessage.requestId)
-        return this.config.doRouteFindRequest(routedMessage)
+        return this.config.doRouteRequest(routedMessage)
     }
 }

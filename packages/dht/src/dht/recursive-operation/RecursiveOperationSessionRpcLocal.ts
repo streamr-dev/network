@@ -6,7 +6,7 @@ import { Logger } from '@streamr/utils'
 const logger = new Logger(module)
 
 interface RecursiveOperationSessionRpcLocalConfig {
-    doSendFindResponse: (routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean) => void
+    doSendResponse: (routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean) => void
 }
 
 export class RecursiveOperationSessionRpcLocal implements IRecursiveOperationSessionRpc {
@@ -19,7 +19,7 @@ export class RecursiveOperationSessionRpcLocal implements IRecursiveOperationSes
     
     async sendResponse(report: RecursiveOperationResponse): Promise<Empty> {
         logger.trace('RecursiveOperationResponse arrived: ' + JSON.stringify(report))
-        this.config.doSendFindResponse(report.routingPath, report.closestConnectedPeers, report.dataEntries, report.noCloserNodesFound)
+        this.config.doSendResponse(report.routingPath, report.closestConnectedPeers, report.dataEntries, report.noCloserNodesFound)
         return {}
     }
 }

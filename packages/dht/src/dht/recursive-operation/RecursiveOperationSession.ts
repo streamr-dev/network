@@ -56,8 +56,8 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     private registerLocalRpcMethods() {
         const rpcLocal = new RecursiveOperationSessionRpcLocal({
-            doSendFindResponse: (routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean) => {
-                this.doSendFindResponse(routingPath, nodes, dataEntries, noCloserNodesFound)
+            doSendResponse: (routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean) => {
+                this.doSendResponse(routingPath, nodes, dataEntries, noCloserNodesFound)
             }
         })
         this.rpcCommunicator.registerRpcNotification(RecursiveOperationResponse, 'sendResponse',
@@ -85,7 +85,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         return Array.from(this.foundData.values()).some((entry) => entry.stale === false)
     }
 
-    public doSendFindResponse(
+    public doSendResponse(
         routingPath: PeerDescriptor[],
         nodes: PeerDescriptor[],
         dataEntries: DataEntry[],
