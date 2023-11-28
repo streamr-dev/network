@@ -10,6 +10,9 @@ sidebar_position: 5
 - Stake `DATA` tokens on your Operator and give your nodes some `MATIC`
 - Join Sponsorships through your Operator that will earn you DATA tokens.
 
+## Testnet schedule
+Checkout the official [Streamr Testnets page](../streamr-testnets/testnets.md) for the latest news and updates related to the incentivized three testnets running over December 2023 and January 2024.
+
 ## Migrating from Brubeck
 If you’ve been running a Streamr node in the past you might be familiar with a two step process– run some software and stake some tokens, i.e. a software step and a blockchain step. Behind the scenes, the Streamr core team would validate user’s stake and transfer tokens to node runner wallets at the end of each month. This has worked, but it's been highly centralized. With the introduction of stream Sponsorships, Operators, Sponsors and Delegators we now have everything we need for a peer to peer decentralized and market based incentivization on Streamr. The most important role is the Operator, so let's learn how to become one.
 
@@ -22,7 +25,10 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 :::
 
 ## Migrating from Mumbai
-If you've created your node in the Mumbai testing environment and you want to participate in the incentivized testnets with real token rewards and risks, then you'll need to recreate your Operator using the Streamr Network [Hub](https://streamr.network/hub). The testnets and the future 1.0 mainnet will run on the Polygon Blockchain.
+If you've created your node in the Mumbai testing environment and you want to participate in the incentivized testnets with real token rewards and risks, then you'll need to recreate your Operator using the Streamr Network [Hub](https://streamr.network/hub). The same funding and pairing steps that you did for your Mumbai Operator need to be repeated here too. The testnets and the future 1.0 mainnet will run on the Polygon Blockchain.
+
+- **Node version:** The `pretestnet` tagged releases shouldn't be used anymore, instead use `v100.0.0-testnet-one.0`. 
+- **Node config:** Your node config should resemble the [Testnet 1 config template](../guides/become-an-operator#testnet-node-config).
 
 ## Operator setup instructions
 Follow these steps below to setup your Operator so that you can participate in the protocol and collect rewards. 

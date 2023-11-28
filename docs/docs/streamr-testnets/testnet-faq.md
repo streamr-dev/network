@@ -5,7 +5,7 @@ sidebar_position: 2
 # Testnet FAQs
 ## General
 #### What are the differences between the "pretestnet" and Testnet 1?
-This `v100.0.0-testnet-one.0` version can be used to connect to Testnet 1 **or** the Mumbai pre-testnet. 
+This `v100.0.0-testnet-one.0` version can be used to connect to Testnet 1 **or** the Mumbai testing environment. 
 
 The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator#testnet-node-config) is a much shorter version.
 
@@ -216,6 +216,9 @@ Sponsorships each have their own starting criteria, for example, all Sponsorship
 The global minimum is set to 5k DATA. This value could be changed in the future by governance vote.
 
 ## Delegation
+#### Do I need to run a node to delegate tokens?
+No, you only need `DATA` tokens.
+
 #### As a Delegator can I always withdraw tokens from the Operators that I have delegated to?
 Eventually, yes. If there's not enough available balance on the Operator you have delegated on then your withdrawal gets entered into the delegation que. When the Operator has an available balance, your tokens will be withdrawn. This will take at maximum 30 days and will happen automatically with no further action required.
 
