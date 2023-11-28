@@ -261,17 +261,6 @@
                     "type": "string",
                     "format": "ethereum-address"
                 },
-                "mainChainRPCs": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/definitions/chainConnectionInfoList"
-                        },
-                        {
-                            "type": "string",
-                            "format": "uri"
-                        }
-                    ]
-                },
                 "streamRegistryChainRPCs": {
                     "$ref": "#/definitions/chainConnectionInfoList"
                 },

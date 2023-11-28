@@ -5,7 +5,6 @@ import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createNetworkNode } from '@streamr/trackerless-network'
 import { hexToBinary, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import omit from 'lodash/omit'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -18,8 +17,7 @@ const PAYLOAD = { hello: 'world' }
 
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
     const entryPoints = CHAIN_CONFIG.dev2.entryPoints.map((entryPoint) => ({
-        ...omit(entryPoint, 'id'),
-        nodeId: hexToBinary(entryPoint.id),
+        nodeId: hexToBinary(entryPoint.nodeId),
         type: NodeType.NODEJS
     }))
     const networkNode = createNetworkNode({

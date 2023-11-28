@@ -2,20 +2,18 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { DhtNode, NodeType } from '@streamr/dht'
 import { hexToBinary } from '@streamr/utils'
-import omit from 'lodash/omit'
 
 const main = async () => {
     const entryPoint = CHAIN_CONFIG.dev2.entryPoints![0]
     const peerDescriptor = {
-        ...omit(entryPoint, 'nodeId'),
-        nodeId: hexToBinary(entryPoint.id),
+        nodeId: hexToBinary(entryPoint.nodeId),
         type: NodeType.NODEJS,  // TODO remove this when NET-1070 done
         websocket: {
             ...entryPoint.websocket!,
         }
     }
     const dhtNode = new DhtNode({
-        peerId: entryPoint.id,
+        peerId: entryPoint.nodeId,
         websocketHost: entryPoint.websocket!.host,
         websocketPortRange: {
             min: entryPoint.websocket!.port,

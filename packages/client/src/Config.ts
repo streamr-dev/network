@@ -357,7 +357,6 @@ export interface StreamrClientConfig {
         streamRegistryChainAddress?: string
         streamStorageRegistryChainAddress?: string
         storageNodeRegistryChainAddress?: string
-        mainChainRPCs?: ChainConnectionInfo
         streamRegistryChainRPCs?: ChainConnectionInfo
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
         ethereumNetworks?: Record<string, EthereumNetworkConfig>
@@ -430,17 +429,11 @@ export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStrea
 
 const applyPreset = (presetId: PresetId, data: StreamrClientConfig): StreamrClientConfig => {
     const preset = CHAIN_CONFIG[presetId]
-    const withRenamedProperty = (obj: any, from: string, to: string) => {
-        const result = { ...obj }
-        result[to] = obj[from]
-        delete result[from]
-        return result
-    }
     const config = merge(data, {
         network: {
             ...data.network,
             controlLayer: {
-                entryPoints: preset.entryPoints.map((item) => withRenamedProperty(item, 'id', 'nodeId')),
+                entryPoints: preset.entryPoints,
                 ...data.network?.controlLayer,
             }
         } as any,
@@ -448,11 +441,6 @@ const applyPreset = (presetId: PresetId, data: StreamrClientConfig): StreamrClie
             streamRegistryChainAddress: preset.contracts.StreamRegistry,
             streamStorageRegistryChainAddress: preset.contracts.StreamStorageRegistry,
             storageNodeRegistryChainAddress: preset.contracts.StorageNodeRegistry,
-            mainChainRPCs: {
-                name: preset.name,
-                chainId: preset.id,
-                rpcs: preset.rpcEndpoints
-            },
             streamRegistryChainRPCs: {
                 name: preset.name,
                 chainId: preset.id,
@@ -467,10 +455,8 @@ const applyPreset = (presetId: PresetId, data: StreamrClientConfig): StreamrClie
         const toNumber = (value: any): number | undefined => {
             return (value !== undefined) ? Number(value) : undefined
         }
-        [config.contracts.mainChainRPCs, config.contracts.mainChainRPCs].forEach((rpcContainers) => {
-            rpcContainers.rpcs.forEach((rpc: ConnectionInfo) => {
-                rpc.timeout = toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
-            })
+        config.contracts.streamRegistryChainRPCs.rpcs.forEach((rpc: ConnectionInfo) => {
+            rpc.timeout = toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
         })
     }
     return config

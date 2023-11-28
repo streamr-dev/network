@@ -1,5 +1,4 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import omit from 'lodash/omit'
 import { NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
@@ -22,13 +21,13 @@ describe('Config', () => {
             expect(() => {
                 return createStrictConfig({
                     contracts: {
-                        mainChainRPCs: {
+                        streamRegistryChainRPCs: {
                             chainId: 123,
                             rpcs: []
                         }
                     }
                 } as any)
-            }).toThrow('/contracts/mainChainRPCs/rpcs must NOT have fewer than 1 items')
+            }).toThrow('/contracts/streamRegistryChainRPCs/rpcs must NOT have fewer than 1 items')
         })
 
         describe('invalid property format', () => {
@@ -97,10 +96,7 @@ describe('Config', () => {
             const clientDefaults = createStrictConfig()
             const clientOverrides = createStrictConfig(CONFIG_TEST)
             expect(clientOverrides.network.controlLayer.entryPoints).not.toEqual(clientDefaults.network.controlLayer.entryPoints)
-            expect(clientOverrides.network.controlLayer.entryPoints).toEqual(CHAIN_CONFIG.dev2.entryPoints.map((entryPoint) => ({
-                ...omit(entryPoint, 'id'),
-                nodeId: entryPoint.id 
-            })))
+            expect(clientOverrides.network.controlLayer.entryPoints).toEqual(CHAIN_CONFIG.dev2.entryPoints)
         })
 
         it('network can be empty', () => {
@@ -155,21 +151,13 @@ describe('Config', () => {
             expect(createStrictConfig(config)).toMatchObject({
                 network: {
                     controlLayer: {
-                        entryPoints: CHAIN_CONFIG[presetId].entryPoints.map((entryPoint) => ({
-                            ...omit(entryPoint, 'id'),
-                            nodeId: entryPoint.id 
-                        }))
+                        entryPoints: CHAIN_CONFIG[presetId].entryPoints
                     }
                 },
                 contracts: {
                     streamRegistryChainAddress: CHAIN_CONFIG[presetId].contracts.StreamRegistry,
                     streamStorageRegistryChainAddress: CHAIN_CONFIG[presetId].contracts.StreamStorageRegistry,
                     storageNodeRegistryChainAddress: CHAIN_CONFIG[presetId].contracts.StorageNodeRegistry,
-                    mainChainRPCs: {
-                        name: CHAIN_CONFIG[presetId].name,
-                        chainId: CHAIN_CONFIG[presetId].id,
-                        rpcs: CHAIN_CONFIG[presetId].rpcEndpoints
-                    },
                     streamRegistryChainRPCs: {
                         name: CHAIN_CONFIG[presetId].name,
                         chainId: CHAIN_CONFIG[presetId].id,
