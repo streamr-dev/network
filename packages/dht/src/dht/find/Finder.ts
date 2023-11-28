@@ -16,20 +16,20 @@ import { RoutingMode } from '../routing/RoutingSession'
 import { areEqualPeerDescriptors, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { FindSessionRpcRemote } from './FindSessionRpcRemote'
+import { RecursiveOperationSessionRpcRemote } from './RecursiveOperationSessionRpcRemote'
 import { v4 } from 'uuid'
 import { FindSession, FindSessionEvents } from './FindSession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { FindSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { RecursiveOperationSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { SortedContactList } from '../contact/SortedContactList'
 import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
-import { FindRpcLocal } from './FindRpcLocal'
+import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
 
 interface FinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -77,7 +77,7 @@ export class Finder implements IFinder {
     }
 
     private registerLocalRpcMethods(config: FinderConfig) {
-        const rpcLocal = new FindRpcLocal({
+        const rpcLocal = new RecursiveOperationRpcLocal({
             doRouteFindRequest: (routedMessage: RouteMessageWrapper) => this.doRouteFindRequest(routedMessage),
             addContact: (contact: PeerDescriptor) => config.addContact(contact),
             isMostLikelyDuplicate: (requestId: string) => this.router.isMostLikelyDuplicate(requestId),
@@ -216,11 +216,11 @@ export class Finder implements IFinder {
                 .doSendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         } else {
             const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.sessionTransport, { rpcRequestTimeout: 15000 })
-            const rpcRemote = new FindSessionRpcRemote(
+            const rpcRemote = new RecursiveOperationSessionRpcRemote(
                 this.localPeerDescriptor,
                 targetPeerDescriptor,
                 serviceId,
-                toProtoRpcClient(new FindSessionRpcClient(remoteCommunicator.getRpcClientTransport())),
+                toProtoRpcClient(new RecursiveOperationSessionRpcClient(remoteCommunicator.getRpcClientTransport())),
                 10000
             )
             rpcRemote.sendResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)

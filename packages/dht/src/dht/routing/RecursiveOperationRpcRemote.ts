@@ -3,12 +3,12 @@ import { v4 } from 'uuid'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { RpcRemote } from '../contact/RpcRemote'
 import { Logger } from '@streamr/utils'
-import { IFindRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { IRecursiveOperationRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { getPreviousPeer } from './getPreviousPeer'
 
 const logger = new Logger(module)
 
-export class FindRpcRemote extends RpcRemote<IFindRpcClient> {
+export class RecursiveOperationRpcRemote extends RpcRemote<IRecursiveOperationRpcClient> {
 
     async routeRequest(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {

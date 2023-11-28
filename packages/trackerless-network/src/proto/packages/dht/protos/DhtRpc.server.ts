@@ -60,9 +60,9 @@ export interface IRouterRpc<T = ServerCallContext> {
     forwardMessage(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
 }
 /**
- * @generated from protobuf service dht.FindRpc
+ * @generated from protobuf service dht.RecursiveOperationRpc
  */
-export interface IFindRpc<T = ServerCallContext> {
+export interface IRecursiveOperationRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: routeRequest(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
@@ -82,9 +82,9 @@ export interface IStoreRpc<T = ServerCallContext> {
     replicateData(request: ReplicateDataRequest, context: T): Promise<Empty>;
 }
 /**
- * @generated from protobuf service dht.FindSessionRpc
+ * @generated from protobuf service dht.RecursiveOperationSessionRpc
  */
-export interface IFindSessionRpc<T = ServerCallContext> {
+export interface IRecursiveOperationSessionRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: sendResponse(dht.RecursiveOperationResponse) returns (google.protobuf.Empty);
      */

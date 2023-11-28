@@ -8,7 +8,7 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { FindResult } from './Finder'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
-import { FindSessionRpcLocal } from './FindSessionRpcLocal'
+import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
 
 export interface FindSessionEvents {
     findCompleted: (results: PeerDescriptor[]) => void
@@ -55,7 +55,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
     }
 
     private registerLocalRpcMethods() {
-        const rpcLocal = new FindSessionRpcLocal({
+        const rpcLocal = new RecursiveOperationSessionRpcLocal({
             doSendFindResponse: (routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean) => {
                 this.doSendFindResponse(routingPath, nodes, dataEntries, noCloserNodesFound)
             }

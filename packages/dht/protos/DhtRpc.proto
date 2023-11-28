@@ -19,7 +19,7 @@ service RouterRpc {
   rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
-service FindRpc {
+service RecursiveOperationRpc {
   rpc routeRequest (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
@@ -28,7 +28,7 @@ service StoreRpc {
   rpc replicateData (ReplicateDataRequest) returns (google.protobuf.Empty);
 }
 
-service FindSessionRpc {
+service RecursiveOperationSessionRpc {
   rpc sendResponse(RecursiveOperationResponse) returns (google.protobuf.Empty);
 }
 

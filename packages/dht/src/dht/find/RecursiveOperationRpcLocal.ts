@@ -1,24 +1,24 @@
 import { Logger } from '@streamr/utils'
 import { PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
-import { IFindRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { IRecursiveOperationRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { getPreviousPeer } from '../routing/getPreviousPeer'
 
 const logger = new Logger(module)
 
-interface FindRpcLocalConfig {
+interface RecursiveOperationRpcLocalConfig {
     doRouteFindRequest: (routedMessage: RouteMessageWrapper) => RouteMessageAck
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     isMostLikelyDuplicate: (requestId: string) => boolean
     addToDuplicateDetector: (requestId: string) => void
 }
 
-export class FindRpcLocal implements IFindRpc {
+export class RecursiveOperationRpcLocal implements IRecursiveOperationRpc {
 
-    private readonly config: FindRpcLocalConfig
+    private readonly config: RecursiveOperationRpcLocalConfig
 
-    constructor(config: FindRpcLocalConfig) {
+    constructor(config: RecursiveOperationRpcLocalConfig) {
         this.config = config
     }
 
