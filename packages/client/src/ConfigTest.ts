@@ -37,14 +37,6 @@ export const CONFIG_TEST: StreamrClientConfig = {
         streamRegistryChainAddress: DOCKER_DEV_CHAIN_CONFIG.contracts.StreamRegistry,
         streamStorageRegistryChainAddress: DOCKER_DEV_CHAIN_CONFIG.contracts.StreamStorageRegistry,
         storageNodeRegistryChainAddress: DOCKER_DEV_CHAIN_CONFIG.contracts.StorageNodeRegistry,
-        mainChainRPCs: {
-            name: DOCKER_DEV_CHAIN_CONFIG.name,
-            chainId: DOCKER_DEV_CHAIN_CONFIG.id,
-            rpcs: [{
-                url: DOCKER_DEV_CHAIN_CONFIG.rpcEndpoints[0].url,
-                timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
-            }]
-        },
         streamRegistryChainRPCs: {
             name: DOCKER_DEV_CHAIN_CONFIG.name,
             chainId: DOCKER_DEV_CHAIN_CONFIG.id,
