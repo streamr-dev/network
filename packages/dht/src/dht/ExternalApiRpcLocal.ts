@@ -9,11 +9,11 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { FindResult } from './recursive-operation/RecursiveOperationManager'
+import { RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
 import { Any } from '../proto/google/protobuf/any'
 
 interface ExternalApiRpcLocalConfig {
-    startFind: (idToFind: Uint8Array, operation: RecursiveOperation, excludedPeer: PeerDescriptor) => Promise<FindResult>
+    startFind: (idToFind: Uint8Array, operation: RecursiveOperation, excludedPeer: PeerDescriptor) => Promise<RecursiveOperationResult>
     storeDataToDht: (key: Uint8Array, data: Any, creator: PeerDescriptor) => Promise<PeerDescriptor[]>
 }
 

@@ -44,10 +44,10 @@ interface RecursiveOperationManagerConfig {
 }
 
 export interface IRecursiveOperationManager {
-    startFind(idToFind: Uint8Array, operation?: RecursiveOperation): Promise<FindResult>
+    startFind(idToFind: Uint8Array, operation?: RecursiveOperation): Promise<RecursiveOperationResult>
 }
 
-export interface FindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
+export interface RecursiveOperationResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
 
 const logger = new Logger(module)
 
@@ -102,7 +102,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         operation: RecursiveOperation = RecursiveOperation.FIND_NODE,
         excludedPeer?: PeerDescriptor,
         waitForCompletion = true
-    ): Promise<FindResult> {
+    ): Promise<RecursiveOperationResult> {
         if (this.stopped) {
             return { closestNodes: [] }
         }

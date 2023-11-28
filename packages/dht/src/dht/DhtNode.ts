@@ -37,7 +37,7 @@ import {
     peerIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
-import { RecursiveOperationManager, FindResult } from './recursive-operation/RecursiveOperationManager'
+import { RecursiveOperationManager, RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
 import { StoreRpcLocal } from './store/StoreRpcLocal'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
@@ -451,7 +451,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         ))
     }
 
-    public async startFind(key: Uint8Array, operation?: RecursiveOperation, excludedPeer?: PeerDescriptor): Promise<FindResult> {
+    public async startFind(key: Uint8Array, operation?: RecursiveOperation, excludedPeer?: PeerDescriptor): Promise<RecursiveOperationResult> {
         return this.recursiveOperationManager!.startFind(key, operation, excludedPeer)
     }
 

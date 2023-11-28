@@ -5,7 +5,7 @@ import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Contact } from '../contact/Contact'
 import { SortedContactList } from '../contact/SortedContactList'
-import { FindResult } from './RecursiveOperationManager'
+import { RecursiveOperationResult } from './RecursiveOperationManager'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
@@ -162,7 +162,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         }
     }
 
-    public getResults = (): FindResult => ({
+    public getResults = (): RecursiveOperationResult => ({
         closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
         dataEntries: Array.from(this.foundData.values())
     })
