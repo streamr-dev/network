@@ -146,9 +146,9 @@ export interface FindRequest {
      */
     sessionId: string;
     /**
-     * @generated from protobuf field: dht.FindAction action = 2;
+     * @generated from protobuf field: dht.RecursiveOperation operation = 2;
      */
-    action: FindAction;
+    operation: RecursiveOperation;
 }
 /**
  * @generated from protobuf message dht.FindResponse
@@ -547,13 +547,13 @@ export interface ExternalFindDataResponse {
     entries: DataEntry[];
 }
 /**
- * @generated from protobuf enum dht.FindAction
+ * @generated from protobuf enum dht.RecursiveOperation
  */
-export enum FindAction {
+export enum RecursiveOperation {
     /**
-     * @generated from protobuf enum value: NODE = 0;
+     * @generated from protobuf enum value: FIND_NODE = 0;
      */
-    NODE = 0,
+    FIND_NODE = 0,
     /**
      * @generated from protobuf enum value: FETCH_DATA = 1;
      */
@@ -793,7 +793,7 @@ class FindRequest$Type extends MessageType$<FindRequest> {
     constructor() {
         super("dht.FindRequest", [
             { no: 1, name: "sessionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "action", kind: "enum", T: () => ["dht.FindAction", FindAction] }
+            { no: 2, name: "operation", kind: "enum", T: () => ["dht.RecursiveOperation", RecursiveOperation] }
         ]);
     }
 }

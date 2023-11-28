@@ -8,7 +8,7 @@ import {
     RouteMessageAck,
     RouteMessageWrapper,
     RouteMessageError,
-    FindAction
+    RecursiveOperation
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { IRouter } from '../routing/Router'
@@ -44,7 +44,7 @@ interface FinderConfig {
 }
 
 export interface IFinder {
-    startFind(idToFind: Uint8Array, action?: FindAction): Promise<FindResult>
+    startFind(idToFind: Uint8Array, operation?: RecursiveOperation): Promise<FindResult>
 }
 
 export interface FindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
@@ -99,7 +99,7 @@ export class Finder implements IFinder {
 
     public async startFind(
         idToFind: Uint8Array,
-        action: FindAction = FindAction.NODE,
+        operation: RecursiveOperation = RecursiveOperation.FIND_NODE,
         excludedPeer?: PeerDescriptor,
         waitForCompletion = true
     ): Promise<FindResult> {
@@ -113,7 +113,7 @@ export class Finder implements IFinder {
             nodeIdToFind: idToFind,
             localPeerId: peerIdFromPeerDescriptor(this.localPeerDescriptor),
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
-            action
+            operation
         })
         if (this.connections.size === 0) {
             const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
@@ -125,7 +125,7 @@ export class Finder implements IFinder {
             )
             return session.getResults()
         }
-        const routeMessage = this.wrapFindRequest(idToFind, sessionId, action)
+        const routeMessage = this.wrapFindRequest(idToFind, sessionId, operation)
         this.ongoingSessions.set(sessionId, session)
         if (waitForCompletion === true) {
             try {
@@ -143,9 +143,9 @@ export class Finder implements IFinder {
             // TODO: Add a feature to wait for the router to pass the message?
             await wait(50)
         }
-        if (action === FindAction.FETCH_DATA) {
+        if (operation === RecursiveOperation.FETCH_DATA) {
             this.findAndReportLocalData(idToFind, [], this.localPeerDescriptor, sessionId)
-        } else if (action === FindAction.DELETE_DATA) {
+        } else if (operation === RecursiveOperation.DELETE_DATA) {
             this.localDataStore.markAsDeleted(idToFind, peerIdFromPeerDescriptor(this.localPeerDescriptor))
         }
         this.ongoingSessions.delete(sessionId)
@@ -153,14 +153,14 @@ export class Finder implements IFinder {
         return session.getResults()
     }
 
-    private wrapFindRequest(idToFind: Uint8Array, sessionId: string, action: FindAction): RouteMessageWrapper {
+    private wrapFindRequest(idToFind: Uint8Array, sessionId: string, operation: RecursiveOperation): RouteMessageWrapper {
         const targetDescriptor: PeerDescriptor = {
             nodeId: idToFind,
             type: NodeType.VIRTUAL
         }
         const request: FindRequest = {
             sessionId,
-            action
+            operation
         }
         const msg: Message = {
             messageType: MessageType.FIND_REQUEST,
@@ -236,8 +236,8 @@ export class Finder implements IFinder {
         const msg = routedMessage.message
         const findRequest = msg?.body.oneofKind === 'findRequest' ? msg.body.findRequest : undefined
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.nodeId, 5)
-        const data = this.findLocalData(idToFind.value, findRequest!.action === FindAction.FETCH_DATA)
-        if (findRequest!.action === FindAction.DELETE_DATA) {
+        const data = this.findLocalData(idToFind.value, findRequest!.operation === RecursiveOperation.FETCH_DATA)
+        if (findRequest!.operation === RecursiveOperation.DELETE_DATA) {
             this.localDataStore.markAsDeleted(idToFind.value, peerIdFromPeerDescriptor(routedMessage.sourcePeer!))
         }
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {

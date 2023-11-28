@@ -1,5 +1,5 @@
 import {
-    FindAction,
+    RecursiveOperation,
     Message,
     MessageType,
     NodeType,
@@ -45,7 +45,7 @@ describe('Finder', () => {
         nodeId: PeerID.fromString('destination').value,
         type: NodeType.NODEJS
     }
-    const findRequest = createFindRequest(FindAction.NODE)
+    const findRequest = createFindRequest(RecursiveOperation.FIND_NODE)
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),

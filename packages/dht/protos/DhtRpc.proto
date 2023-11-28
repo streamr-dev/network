@@ -104,11 +104,11 @@ message ClosestPeersResponse {
 
 message FindRequest {
   string sessionId = 1;
-  FindAction action = 2;
+  RecursiveOperation operation = 2;
 }
 
-enum FindAction {
-  NODE = 0;
+enum RecursiveOperation {
+  FIND_NODE = 0;
   FETCH_DATA = 1;
   DELETE_DATA = 2;
 }
