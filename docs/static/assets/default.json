@@ -6,7 +6,7 @@
     },
     "plugins": {
         "operator": {
-            "operatorContractAddress": "OPERATOR_CONTRACT_ADDRESS"
+            "operatorContractAddress": "YOUR_OPERATOR_CONTRACT_ADDRESS"
         }
     }
 }

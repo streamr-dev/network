@@ -16,7 +16,7 @@ The 1.0 testnets will be launched with the technical parameters set out in: [SIP
 3. [Delegate](../streamr-network/network-roles/delegators.md) your `DATA` tokens onto other Operators
 
 ## Current node software version
-Use node version: `testnet-one.0`. Do not use the `latest` tag release.
+Use node version: `100.0.0-testnet-one.0`. Do not use the `latest` tag release.
 
 ## Schedules
 Keep a close eye on this page as these dates may change based on the findings of each testnet.
@@ -25,33 +25,39 @@ Keep a close eye on this page as these dates may change based on the findings of
 - Live! Checkout the [Mumbai Streamr Hub](https://mumbai.streamr.network)
 
 ### Testnet 1
-- Start date: 4PM CET / 15:00 UTC, November 27th, 2023
+- Start date: 4PM CET / 15:00 UTC, 4th December to 11th December
 - Reward pool: 1 million DATA
 - Duration: 7 days
 
 ### Testnet 2
-- Start date: Nov/Dec, 2023 (estimate)
+- Start date: 18th December to 8th January
 - Reward pool: 1.5 million DATA
 - Duration: 21 days
 
 ### Testnet 3
-- Start date: Dec, 2023 (estimate)
+- Start date: 15th January to 29th January
 - Reward pool: 2.5 million DATA
 - Duration: 14 days
 
 ### Testnet Sponsorships
 Each testnet will have a set of Sponsorships that will be the source of incentivization. These will be visible on [The Hub](https://streamr.network/hub/network) (release TBA).
 
-### The Streamr 1.0 Hub
-- Create your Operator on the [Streamr Hub](https://streamr.network/hub/network/operators)
-
 ### The Mumbai test environment
 The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens.
 
 You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
+**What are the differences between the "pretestnet" and Testnet 1?**
+This `100.0.0-testnet-one.0` version can be used to connect to Testnet 1 **or** the Mumbai pre-testnet. 
+
+The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator#testnet-configuration-node-config) is a much shorter version.
+
+Don’t use the `pretestnet` releases anymore.
+
+![image](@site/static/img/testnets.jpg)
+
 ### Community resources
-- Tutorial videos (follow at your own risk)
+- Tutorial videos. Follow at your own risk. Note that version numbers and exact instructions may change over time.
 - [StreamrRUN - A Streamr Node in 3 minutes, by Logic Ethos](https://www.youtube.com/watch?v=tGTdaNTtjLY)
 - [Manage your Streamr Node in 1 minute, by Logic Ethos](https://www.youtube.com/watch?v=V6yS0bCt13g)
 

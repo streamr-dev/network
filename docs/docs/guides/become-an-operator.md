@@ -21,7 +21,7 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 - You can run ~~up to 5 nodes per IP address~~ any number of nodes from the same IP address, although one node per machine is recommended
 - Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships at any time
 - You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
-- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `testnet-one.0`. The `latest` tag still points to the previous milestone (Brubeck) software.
+- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `100.0.0-testnet-one.0`. The `latest` tag still points to the previous milestone (Brubeck) software.
 - There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
 :::
 
@@ -81,12 +81,17 @@ You’ll need a bit of `MATIC` (the gas token of Polygon) in your node’s walle
 ### Step 5: Fund your Operator
 Now, on your Operator page in the Streamr Hub UI, fund your Operator with DATA tokens (or if you're in Mumbai, then TEST tokens). There's no minimum amount, but note that the more tokens you fund your Operator with, the more you can accept delegations. The owner (you) must have at least a 5% stake in the Operator.
 
-### Step 6: Join sponsorships
-All the checkmarks in the Operator status section on your Operator page should now be green, and you’re ready to join Sponsorships! In the Hub, go to Network -> Sponsorships and find a Sponsorship you want your Operator to start working on. Click the "Join as Operator" button and select your stake. Note there is a minimum stake of 5000 `DATA` tokens for each Sponsorship that you join. Joining Sponsorships locks your tokens for a period of time, defined in the Sponsorship contract.
+### Step 6: Check your Operator status
+All the checkmarks in the Operator status section on your Operator page should now be green, and you’re ready to join Sponsorships!
+![image](@site/static/img/operator-status.jpg)
+
+### Step 7: Join sponsorships
+ In the Hub, go to Network -> Sponsorships and find a Sponsorship you want your Operator to start working on. Click the "Join as Operator" button and select your stake. Note there is a minimum stake of 5000 `DATA` tokens for each Sponsorship that you join. Joining Sponsorships locks your tokens for a period of time, defined in the Sponsorship contract.
 
 :::info Important
-- It's best to use the Hub with Chrome and Metamask. There are known connectivity issues using other browsers such as Firefox. For example, your node connectivity status may report incorrectly in Firefox, but not in Chrome.
+- There's a known connectivity issue using Brave browser. Your node connectivity status may report incorrectly on the Streamr Hub.
 :::
+
 
 ## Running a node fleet
 Running a fleet of nodes is recommended as it will reduce your risk of slashing. Node private keys can be shared among all your nodes so there is no need to create a unique node address key pair for each node, i.e. You only need to add one node address for *N* nodes if you wish.

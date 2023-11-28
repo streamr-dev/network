@@ -4,6 +4,15 @@ sidebar_position: 2
 
 # Testnet FAQs
 ## General
+#### What are the differences between the "pretestnet" and Testnet 1?
+This `100.0.0-testnet-one.0` version can be used to connect to Testnet 1 **or** the Mumbai pre-testnet. 
+
+The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator#testnet-configuration-node-config) is a much shorter version.
+
+Don’t use the `pretestnet` releases anymore.
+
+![image](@site/static/img/testnets.jpg)
+
 #### What are the differences between the Brubeck network and the 1.0 network?
 In the old Brubeck network, people would cram multiple Streamr nodes into the cheapest possible VMs to optimize earnings vs. costs, but that only made sense because the nodes weren't doing much in terms of actual work. Now the nodes will be doing actual work by relaying data in the streams that the node Operator stakes on, and this has a few consequences:
 - One node per VM is now the only pattern that makes sense really - there's nothing to gain (but redundancy to lose) by running multiple nodes on the same VM
@@ -117,7 +126,7 @@ Add given nodes public key to operator node addresses.
 I’m receiving the following warning message.
 
 ```JSON
-INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version testnet-one.0
+INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version 100.0.0-testnet-one.0
 Error: call revert exception [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="metadata()", data="0x", errorArgs=null, errorName=null, errorSignature=null, reason=null, code=CALL_EXCEPTION, version=abi/5.7.0)
 ```
 

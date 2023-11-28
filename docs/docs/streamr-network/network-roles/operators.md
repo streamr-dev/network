@@ -38,7 +38,11 @@ The Operator plugin will automatically validate that other Operators are doing w
 ![image](@site/static/img/operator-sponsorship-relational-diagram.png)
 
 ### Operator heartbeat
-To observe your Operator's heartbeat, paste in your Operator contract address into [streams search](https://streamr.network/hub/streams) and select the coordination stream, then "Live data". If your node is connectable then there will be a "websocket entry" inside the peer descriptor heartbeats. Be patient, it may require a browser refresh, also note Firefox is currently not working- please use Chrome.
+To observe your Operator's heartbeat, paste in your Operator contract address into [streams search](https://streamr.network/hub/streams) and select the coordination stream, then "Live data". If your node is connectable then there will be a "websocket entry" inside the peer descriptor heartbeats. 
+
+:::info Important
+- There's a known connectivity issue using Brave browser. Your node connectivity status may report incorrectly on the Streamr Hub.
+:::
 
 ### Node redundancy factor
 The redundancy factor sets the amount of duplicated work when running a fleet of multiple nodes. Doing redundant work protects against slashing in case some of your nodes experience failures. For example, setting this to 1 means that no duplication of work occurs (the feature is off), and setting it to 2 means that each stream assignment will be worked on by 2 nodes in your fleet.
