@@ -135,7 +135,6 @@ export class MaxSizedSet<T> {
 // - remove "temporary compatibility" test case from Broker's config.test.ts 
 // - remove "id" property from config.schema.json (line 536) and make "nodeId" property required
 // - remove "id" property handling from this method
-// - (not strictly related to this, but could also rename id -> nodeId for each entry point in '@streamr/config')
 export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescriptor {
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
