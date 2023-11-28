@@ -28,7 +28,7 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 If you've created your node in the Mumbai testing environment and you want to participate in the incentivized testnets with real token rewards and risks, then you'll need to recreate your Operator using the Streamr Network [Hub](https://streamr.network/hub). The same funding and pairing steps that you did for your Mumbai Operator need to be repeated here too. The testnets and the future 1.0 mainnet will run on the Polygon Blockchain.
 
 - **Node version:** The `pretestnet` tagged releases shouldn't be used anymore, instead use `v100.0.0-testnet-one.0`. 
-- **Node config:** Your node config should resemble the [Testnet 1 config template](../guides/become-an-operator#testnet-node-config).
+- **Node config:** Your node config should resemble the [Testnet 1 config template](#testnet-node-config).
 
 ## Operator setup instructions
 Follow these steps below to setup your Operator so that you can participate in the protocol and collect rewards. 
