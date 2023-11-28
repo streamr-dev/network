@@ -10,10 +10,6 @@ These instructions are for running a Streamr node in the "1.0" Network and testn
 For those looking to earn either from an incentivized testnet or in general- Running a node is part of becoming an earning Operator. If that's new to you, then goto [becoming an Operator](../streamr-network/network-roles/operators.md)
 :::
 
-:::info Important
-- There's a known connectivity issue using Brave browser. Your node connectivity status may report incorrectly on the Streamr Hub.
-:::
-
 ## Docker or npm installation
 You have two methods to choose from: Docker and npm. Docker is the most straightforward and recommended method unless you are well-acquainted with npm.
 
@@ -88,7 +84,7 @@ Start the config wizard with the below command. Docker will download the node im
 **Linux / macOS**
 
 ```
-sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:100.0.0-testnet-one.0 bin/config-wizard
+sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.0 bin/config-wizard
 ```
 
 **Windows PowerShell**
@@ -102,7 +98,7 @@ cd ~/.streamrDocker
 Then run the config wizard:
 
 ```
-docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:100.0.0-testnet-one.0 bin/config-wizard
+docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.0 bin/config-wizard
 ```
 
 **Using the config wizard**
@@ -124,9 +120,9 @@ The path to the config file in the `docker run` command and the path defined via
 :::
 
 ### Step 3b: Update the node config file
-Replace the node config file (typically located at `~/.streamrDocker/config/default.json`) contents with the [testnet config](./become-an-operator.md#testnet-configuration-node-config) using a text editor. If you previously generated a node signing key then you can keep using that `privateKey` but the file schema must match what's in the provided [testnet config](./become-an-operator.md#testnet-configuration-node-config).
+Replace the node config file (typically located at `~/.streamrDocker/config/default.json`) contents with the [testnet config](./become-an-operator.md#testnet-node-config) using a text editor. If you previously generated a node signing key then you can keep using that `privateKey` but the file schema must match what's in the provided [testnet config](./become-an-operator.md#testnet-node-config).
 
-If you intend to test your Operator in the Mumbai environment, then the above advice applies, but use instead the [Mumbai testnet config](./become-an-operator.md#mumbai-testing-environment-node-config).
+If you intend to test your Operator in the Mumbai environment, then the above advice applies, but use instead the [Mumbai testnet config](./become-an-operator.md#mumbai-node-config).
 
 If you're running a node to become an Operator, then you could now jump back to [Step 3 of becoming an Operator](./become-an-operator/#step-3-pair-your-node-with-your-operator-contract) to add your Operator contract address into the node config before starting your node.
 
@@ -135,7 +131,7 @@ If you're running a node to become an Operator, then you could now jump back to 
 **Linux / macOS**
 
 ```
-sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:100.0.0-testnet-one.0
+sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.0
 ```
 
 **Windows PowerShell**
@@ -149,7 +145,7 @@ cd ~/.streamrDocker
 Start your node:
 
 ```
-docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/broker-node:100.0.0-testnet-one.0
+docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.0
 ```
 
 **The `docker run` command, deconstructed:**
@@ -247,9 +243,9 @@ The wizard asks if you would like it to display your Ethereum private key. From 
 ### Step 2b: Update the node config file
 If you want to become an Operator in the testnet, you need to manually modify the node config file to include your Operator contract address.
 
-Find the config file generated in step 2a and take a backup copy. Then replace the config file with the [testnet config](./become-an-operator.md#testnet-configuration-node-config) using a text editor. Replace YOUR_OPERATOR_CONTRACT_ADDRESS with your newly deployed Operator contract's address (find it on the Operator page, there's a "Copy address" button next to it), and NODE_PRIVATE_KEY with the private key in your automatically generated backup. If you previously generated a node signing key then you can also keep using that `privateKey`.
+Find the config file generated in step 2a and take a backup copy. Then replace the config file with the [testnet config](./become-an-operator.md#testnet-node-config) using a text editor. Replace YOUR_OPERATOR_CONTRACT_ADDRESS with your newly deployed Operator contract's address (find it on the Operator page, there's a "Copy address" button next to it), and NODE_PRIVATE_KEY with the private key in your automatically generated backup. If you previously generated a node signing key then you can also keep using that `privateKey`.
 
-If you intend to test your Operator in the Mumbai environment, the same above advice applies, but use instead the [Mumbai testnet config](./become-an-operator.md#mumbai-testing-environment-node-config) using a text editor. Replace YOUR_OPERATOR_CONTRACT_ADDRESS with your newly deployed Operator contract's address (find it on the Operator page, there's a "Copy address" button next to it), and NODE_PRIVATE_KEY with the private key in your automatically generated backup. If you previously generated a node signing key then you can also keep using that `privateKey`.
+If you intend to test your Operator in the Mumbai environment, the same above advice applies, but use instead the [Mumbai testnet config](./become-an-operator.md#mumbai-node-config) using a text editor. Replace YOUR_OPERATOR_CONTRACT_ADDRESS with your newly deployed Operator contract's address (find it on the Operator page, there's a "Copy address" button next to it), and NODE_PRIVATE_KEY with the private key in your automatically generated backup. If you previously generated a node signing key then you can also keep using that `privateKey`.
 
 ### Step 3: Start the Streamr node
 If you want to become an Operator in the testnet, then you must first perform the [Step 3 of becoming an Operator](https://docs.streamr.network/guides/become-an-operator/#step-3-pair-your-node-with-your-operator-contract) to pair your nodes with your Operator contract before starting your node.
@@ -261,6 +257,24 @@ INFO [2023-10-31T17:42:30.897] (broker              ): Start broker version ...
 INFO [2023-10-31T17:42:32.660] (StreamrNode         ): Starting new StreamrNode with id 251cdad515544d7e863602413a5d91b2
 INFO [2023-10-31T17:42:33.131] (OperatorPlugin      ): Fetched redundancy factor {"redundancyFactor":1}
 INFO [2023-10-31T17:42:33.152] (MaintainTopologyHelp): Starting
+```
+
+## Testnet node config
+Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/default.json). 
+
+```json
+{
+    "client": {
+        "auth": {
+            "privateKey": "NODE_PRIVATE_KEY"
+        }
+    },
+    "plugins": {
+        "operator": {
+            "operatorContractAddress": "OPERATOR_CONTRACT_ADDRESS"
+        }
+    }
+}
 ```
 
 ## The Network Explorer
@@ -298,12 +312,81 @@ Also, [ChatGPT](https://chat.openai.com) is a handy resource for debugging netwo
 ### RPC issues
 Your node may have issues if the RPC connection is flaky. The RPC is the connection to the Blockchain.
 
-[Operators](../streamr-network/network-roles/operators.md) may choose to replace their RPC endpoint address by updating their [node config file](./become-an-operator#mumbai-testing-environment-node-config).
+[Operators](../streamr-network/network-roles/operators.md) may choose to replace their RPC endpoint address by updating their [node config file](./become-an-operator.md#mumbai-node-config).
 
 ### Diagnostics
 For extra logging on your Streamr node, add the `LOG_LEVEL` environmental variable to your run script.
 
 For example,
 ```shell
-sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -e LOG_LEVEL=trace -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:100.0.0-testnet-one.0
+sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -e LOG_LEVEL=trace -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.0
+```
+
+## Mumbai node config
+Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/mumbai-default.json). 
+
+:::info Important
+- This is the Mumbai configuration. If you want to participate in the incentivized testnets, use the [testnet configuration](#testnet-node-config).
+:::
+
+```json
+{
+    "client": {
+        "metrics": false,
+        "auth": {
+            "privateKey": "NODE_PRIVATE_KEY"
+        },
+        "network": {
+            "controlLayer": {
+                "entryPoints": [
+                    {
+                        "id": "e1",
+                        "websocket": {
+                            "host": "entrypoint-1.streamr.network",
+                            "port": 40401,
+                            "tls": true
+                        }
+                    },
+                    {
+                        "id": "e2",
+                        "websocket": {
+                            "host": "entrypoint-2.streamr.network",
+                            "port": 40401,
+                            "tls": true
+                        }
+                    }
+                ]
+            }
+        },
+        "contracts": {
+            "streamRegistryChainAddress": "0x4F0779292bd0aB33B9EBC1DBE8e0868f3940E3F2",
+            "streamStorageRegistryChainAddress": "0xA5a2298c9b48C08DaBF5D76727620d898FD2BEc1",
+            "storageNodeRegistryChainAddress": "0xE6D449A7Ef200C0e50418c56F84079B9fe625199",
+            "mainChainRPCs": {
+                "name": "mumbai",
+                "chainId": 80001,
+                "rpcs": [
+                    {
+                        "url": "https://rpc-mumbai.maticvigil.com"
+                    }
+                ]
+            },
+            "streamRegistryChainRPCs": {
+                "name": "mumbai",
+                "chainId": 80001,
+                "rpcs": [
+                    {
+                        "url": "https://rpc-mumbai.maticvigil.com"
+                    }
+                ]
+            },
+            "theGraphUrl": "https://api.thegraph.com/subgraphs/name/samt1803/network-subgraphs"
+        }
+    },
+    "plugins": {
+        "operator": {
+            "operatorContractAddress": "YOUR_OPERATOR_CONTRACT_ADDRESS"
+        }
+    }
+}
 ```

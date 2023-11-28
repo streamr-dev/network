@@ -5,9 +5,9 @@ sidebar_position: 2
 # Testnet FAQs
 ## General
 #### What are the differences between the "pretestnet" and Testnet 1?
-This `100.0.0-testnet-one.0` version can be used to connect to Testnet 1 **or** the Mumbai pre-testnet. 
+This `v100.0.0-testnet-one.0` version can be used to connect to Testnet 1 **or** the Mumbai pre-testnet. 
 
-The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator#testnet-configuration-node-config) is a much shorter version.
+The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator#testnet-node-config) is a much shorter version.
 
 Don’t use the `pretestnet` releases anymore.
 
@@ -45,7 +45,7 @@ If you see an error like this:
 Then it is likely that you have not added your [node address to your Operator](../guides/become-an-operator#step-3-pair-your-node-with-your-operator-contract). Complete this step and restart your node.
 
 #### My node appears to not be running and/or are not reachable on the Streamr Hub
-Firstly, it's best to check on your node using the Chrome browser. Other browsers, such as Firefox, are known to have connectivity issues.
+Firstly, it's best to check on your node using the Chrome browser- There's a known connectivity issue using Brave browser.
 
 The Operator status checks involve a peer-to-peer connection between your browser and your node. This means that a connection needs to be formed from the network that you're browsing in, to the network that your node is running on. This means that if you are browsing from inside a heavily controlled public WiFi hotspot for example, then it may show as a problem with your node, when in fact it may be a problem with the network you are in.
 
@@ -126,7 +126,7 @@ Add given nodes public key to operator node addresses.
 I’m receiving the following warning message.
 
 ```JSON
-INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version 100.0.0-testnet-one.0
+INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version v100.0.0-testnet-one.0
 Error: call revert exception [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="metadata()", data="0x", errorArgs=null, errorName=null, errorSignature=null, reason=null, code=CALL_EXCEPTION, version=abi/5.7.0)
 ```
 
@@ -220,6 +220,9 @@ The global minimum is set to 5k DATA. This value could be changed in the future 
 Eventually, yes. If there's not enough available balance on the Operator you have delegated on then your withdrawal gets entered into the delegation que. When the Operator has an available balance, your tokens will be withdrawn. This will take at maximum 30 days and will happen automatically with no further action required.
 
 ## Slashing & kicking
+#### What are the penalties for Testnet 1?
+Testnet 1 will have reduced slashing penalties of 1% instead of the usual 10%.
+
 #### How and when does slashing occurs? When exactly will operators be slashed?
 There are two kinds of slashing events that Operators need to pay attention to. These are "Normal slashing" and "False flag" slashing. The short answer is that normal slashing occurs when nodes are caught being offline or unreachable when they should be online and doing work. It's a similar story for false flag voting, though the penalties are smaller. 
 

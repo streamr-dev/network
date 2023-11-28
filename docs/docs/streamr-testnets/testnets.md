@@ -16,7 +16,7 @@ The 1.0 testnets will be launched with the technical parameters set out in: [SIP
 3. [Delegate](../streamr-network/network-roles/delegators.md) your `DATA` tokens onto other Operators
 
 ## Current node software version
-Use node version: `100.0.0-testnet-one.0`. Do not use the `latest` tag release.
+Use node version: `v100.0.0-testnet-one.0`. Do not use the `latest` tag release.
 
 ## Schedules
 Keep a close eye on this page as these dates may change based on the findings of each testnet.
@@ -28,6 +28,7 @@ Keep a close eye on this page as these dates may change based on the findings of
 - Start date: 4PM CET / 15:00 UTC, 4th December to 11th December
 - Reward pool: 1 million DATA
 - Duration: 7 days
+- **Testnet 1 will have reduced slashing penalties of 1% instead of 10%**
 
 ### Testnet 2
 - Start date: 18th December to 8th January
@@ -48,9 +49,9 @@ The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your O
 You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 **What are the differences between the "pretestnet" and Testnet 1?**
-This `100.0.0-testnet-one.0` version can be used to connect to Testnet 1 **or** the Mumbai pre-testnet. 
+This `v100.0.0-testnet-one.0` version can be used to connect to Testnet 1 **or** the Mumbai pre-testnet. 
 
-The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator#testnet-configuration-node-config) is a much shorter version.
+The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator#testnet-node-config) is a much shorter version.
 
 Don’t use the `pretestnet` releases anymore.
 

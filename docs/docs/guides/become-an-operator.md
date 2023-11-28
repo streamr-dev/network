@@ -10,10 +10,6 @@ sidebar_position: 5
 - Stake `DATA` tokens on your Operator and give your nodes some `MATIC`
 - Join Sponsorships through your Operator that will earn you DATA tokens.
 
-:::info Important
-- There are known connectivity issues using browsers such as Firefox. For example, your node connectivity status may report incorrectly. We strongly recommend for you to use the Chrome desktop browser.
-:::
-
 ## Migrating from Brubeck
 If you’ve been running a Streamr node in the past you might be familiar with a two step process– run some software and stake some tokens, i.e. a software step and a blockchain step. Behind the scenes, the Streamr core team would validate user’s stake and transfer tokens to node runner wallets at the end of each month. This has worked, but it's been highly centralized. With the introduction of stream Sponsorships, Operators, Sponsors and Delegators we now have everything we need for a peer to peer decentralized and market based incentivization on Streamr. The most important role is the Operator, so let's learn how to become one.
 
@@ -21,9 +17,12 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 - You can run ~~up to 5 nodes per IP address~~ any number of nodes from the same IP address, although one node per machine is recommended
 - Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships at any time
 - You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
-- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `100.0.0-testnet-one.0`. The `latest` tag still points to the previous milestone (Brubeck) software.
+- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `v100.0.0-testnet-one.0`. The `latest` tag still points to the previous milestone (Brubeck) software.
 - There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
 :::
+
+## Migrating from Mumbai
+If you've created your node in the Mumbai testing environment and you want to participate in the incentivized testnets with real token rewards and risks, then you'll need to recreate your Operator using the Streamr Network [Hub](https://streamr.network/hub). The testnets and the future 1.0 mainnet will run on the Polygon Blockchain.
 
 ## Operator setup instructions
 Follow these steps below to setup your Operator so that you can participate in the protocol and collect rewards. 
@@ -67,13 +66,13 @@ First, scroll down on your Operator page and find the "Operator's node addresses
 
 **Update your node's configuration file**
 
-Then, update your node's config file. Use [this testnet config](#testnet-configuration-node-config). Inside this configuration you will need to update:
+Then, update your node's config file. Use [this testnet config](#testnet-node-config). Inside this configuration you will need to update:
 - Replace `"YOUR_OPERATOR_CONTRACT_ADDRESS"` with your **Operator address** (keep the quotes).
 - Replace `"NODE_PRIVATE_KEY"` with the **private key** of your **node wallet** (keep the quotes).
 
 After the config file changes, restart your node(s). **If you run several nodes, you can use the same config file for all of them.**
 
-If you're building your Operator in Mumbai, copy and paste [this config snippet](#mumbai-testing-environment-node-config) instead.
+If you're building your Operator in Mumbai, copy and paste [this config snippet](#mumbai-node-config) instead.
 
 ### Step 4: Fund your nodes
 You’ll need a bit of `MATIC` (the gas token of Polygon) in your node’s wallets as Streamr nodes that participate in sponsored streams will periodically make transactions. 1 to 5 `MATIC` is recommended since the nodes will be making a few transactions per day. If the node runs out of gas while they’re a part of an active Sponsorship, then a penalty may be applied to your unclaimed earnings. See [Operator value maintenance](../streamr-network/network-roles/operators#operator-maintenance).
@@ -92,22 +91,39 @@ All the checkmarks in the Operator status section on your Operator page should n
 - There's a known connectivity issue using Brave browser. Your node connectivity status may report incorrectly on the Streamr Hub.
 :::
 
-
 ## Running a node fleet
 Running a fleet of nodes is recommended as it will reduce your risk of slashing. Node private keys can be shared among all your nodes so there is no need to create a unique node address key pair for each node, i.e. You only need to add one node address for *N* nodes if you wish.
 
 A typical node fleet may have 2 - 10 nodes and use a node [Redundancy Factor](../streamr-network/network-roles/operators#node-redundancy-factor) of 2 - 3, for example.
+
+## Testnet node config
+Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/default.json). 
+
+```json
+{
+    "client": {
+        "auth": {
+            "privateKey": "NODE_PRIVATE_KEY"
+        }
+    },
+    "plugins": {
+        "operator": {
+            "operatorContractAddress": "OPERATOR_CONTRACT_ADDRESS"
+        }
+    }
+}
+```
 
 ## The Mumbai test environment
 The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens.
 
 You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
-## Mumbai testing environment node config
+## Mumbai node config
 Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/mumbai-default.json). 
 
 :::info Important
-- This is the Mumbai configuration. If you want to participate in the incentivized testnets, use the [testnet configuration](#testnet-configuration-node-config).
+- This is the Mumbai configuration. If you want to participate in the incentivized testnets, use the [testnet configuration](#testnet-node-config).
 :::
 
 ```json
@@ -167,24 +183,6 @@ Below is the template you can use to override and replace the contents of your c
     "plugins": {
         "operator": {
             "operatorContractAddress": "YOUR_OPERATOR_CONTRACT_ADDRESS"
-        }
-    }
-}
-```
-
-## Testnet configuration node config
-Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/default.json). 
-
-```json
-{
-    "client": {
-        "auth": {
-            "privateKey": "NODE_PRIVATE_KEY"
-        }
-    },
-    "plugins": {
-        "operator": {
-            "operatorContractAddress": "OPERATOR_CONTRACT_ADDRESS"
         }
     }
 }
