@@ -142,16 +142,18 @@ export class StreamrNode extends EventEmitter<Events> {
             deleteEntryPointData: async (key: Uint8Array) => this.layer0Node!.deleteDataFromDht(key, false)
         })
         const onEntryPointLeaveDetected = async () => {
-            console.log("HERE", this.destroyed, entryPointDiscovery.amStreamEntryPoint(), this.knownStreamPartEntryPoints.has(streamPartId))
             if (this.destroyed || entryPointDiscovery.amStreamEntryPoint() || this.knownStreamPartEntryPoints.has(streamPartId)) {
                 return
             }
             const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht(0)
-            console.log(entryPoints)
-            await layer1Node.joinDht(sampleSize(entryPoints.discoveredEntryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT))
             await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
         }
-        const node = this.createRandomGraphNode(streamPartId, layer1Node, () => onEntryPointLeaveDetected(), () => entryPointDiscovery.amStreamEntryPoint())
+        const node = this.createRandomGraphNode(
+            streamPartId,
+            layer1Node, 
+            () => onEntryPointLeaveDetected(),
+            () => entryPointDiscovery.amStreamEntryPoint()
+        )
         streamPart = {
             proxied: false,
             layer1Node,
@@ -209,7 +211,12 @@ export class StreamrNode extends EventEmitter<Events> {
         })
     }
 
-    private createRandomGraphNode(streamPartId: StreamPartID, layer1Node: Layer1Node, onEntryPointLeaveDetected: () => Promise<void>, amStreamEntryPoint: () => boolean) {
+    private createRandomGraphNode(
+        streamPartId: StreamPartID,
+        layer1Node: Layer1Node,
+        onEntryPointLeaveDetected: () => Promise<void>,
+        amStreamEntryPoint: () => boolean
+    ) {
         return createRandomGraphNode({
             streamPartId,
             transport: this.transport!,

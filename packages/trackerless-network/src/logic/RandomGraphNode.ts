@@ -96,7 +96,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                     this.config.neighborFinder.start([senderId])
                     this.config.proxyConnectionRpcLocal?.removeConnection(senderId)
                 }
-                console.log(senderId, isStreamEntryPoint)
+                // console.log(senderId, isStreamEntryPoint)
                 if (isStreamEntryPoint) {
                     setImmediate(() => this.config.onEntryPointLeaveDetected())
                 }
