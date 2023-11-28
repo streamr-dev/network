@@ -44,7 +44,7 @@ interface RecursiveOperationManagerConfig {
 }
 
 export interface IRecursiveOperationManager {
-    startFind(idToFind: Uint8Array, operation?: RecursiveOperation): Promise<RecursiveOperationResult>
+    execute(idToFind: Uint8Array, operation: RecursiveOperation): Promise<RecursiveOperationResult>
 }
 
 export interface RecursiveOperationResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
@@ -97,9 +97,9 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         )
     }
 
-    public async startFind(
+    public async execute(
         idToFind: Uint8Array,
-        operation: RecursiveOperation = RecursiveOperation.FIND_NODE,
+        operation: RecursiveOperation,
         excludedPeer?: PeerDescriptor,
         waitForCompletion = true
     ): Promise<RecursiveOperationResult> {

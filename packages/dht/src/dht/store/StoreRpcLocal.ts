@@ -1,6 +1,6 @@
 import {
     DataEntry, ReplicateDataRequest, PeerDescriptor,
-    StoreDataRequest, StoreDataResponse
+    StoreDataRequest, StoreDataResponse, RecursiveOperation
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../helpers/PeerID'
 import { Any } from '../../proto/google/protobuf/any'
@@ -150,7 +150,7 @@ export class StoreRpcLocal implements IStoreRpc {
 
     public async storeDataToDht(key: Uint8Array, data: Any, creator: PeerDescriptor): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.serviceId}`)
-        const result = await this.recursiveOperationManager.startFind(key)
+        const result = await this.recursiveOperationManager.execute(key, RecursiveOperation.FIND_NODE)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         const ttl = this.highestTtl // ToDo: make TTL decrease according to some nice curve

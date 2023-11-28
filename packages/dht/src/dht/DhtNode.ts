@@ -360,8 +360,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
             (req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(req, context))
         const externalApiRpcLocal = new ExternalApiRpcLocal({
-            startFind: (key: Uint8Array, operation: RecursiveOperation, excludedPeer: PeerDescriptor) => {
-                return this.startFind(key, operation, excludedPeer)
+            executeRecursiveOperation: (key: Uint8Array, operation: RecursiveOperation, excludedPeer: PeerDescriptor) => {
+                return this.executeRecursiveOperation(key, operation, excludedPeer)
             },
             storeDataToDht: (key: Uint8Array, data: Any, creator?: PeerDescriptor) => this.storeDataToDht(key, data, creator)
         })
@@ -451,8 +451,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         ))
     }
 
-    public async startFind(key: Uint8Array, operation?: RecursiveOperation, excludedPeer?: PeerDescriptor): Promise<RecursiveOperationResult> {
-        return this.recursiveOperationManager!.startFind(key, operation, excludedPeer)
+    // TODO make this private and unify the public API of find/fetch/store/delete methods
+    // (we already have storeDataToDht etc. here)
+    public async executeRecursiveOperation(
+        key: Uint8Array,
+        operation: RecursiveOperation,
+        excludedPeer?: PeerDescriptor
+    ): Promise<RecursiveOperationResult> {
+        return this.recursiveOperationManager!.execute(key, operation, excludedPeer)
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any, creator?: PeerDescriptor): Promise<PeerDescriptor[]> {
@@ -476,13 +482,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.findDataViaPeer(key, sample(this.config.entryPoints)!)
         }
-        const result = await this.recursiveOperationManager!.startFind(key, RecursiveOperation.FETCH_DATA)
+        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FETCH_DATA)
         return result.dataEntries ?? []  // TODO is this fallback needed?
     }
 
     public async deleteDataFromDht(key: Uint8Array, waitForCompletion: boolean): Promise<void> {
         if (!this.stopped) {
-            await this.recursiveOperationManager!.startFind(key, RecursiveOperation.DELETE_DATA, undefined, waitForCompletion)
+            await this.recursiveOperationManager!.execute(key, RecursiveOperation.DELETE_DATA, undefined, waitForCompletion)
         }
     }
 

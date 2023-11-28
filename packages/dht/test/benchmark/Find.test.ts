@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { NodeType, PeerDescriptor, RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
@@ -78,7 +78,7 @@ describe('Find correctness', () => {
 
         logger.info('starting find')
         const nodeIdToFind = Uint8Array.from(dhtIds[9].data)
-        const results = await nodes[159].startFind(nodeIdToFind)
+        const results = await nodes[159].executeRecursiveOperation(nodeIdToFind, RecursiveOperation.FIND_NODE)
         logger.info('find over')
         expect(results.closestNodes).toBeGreaterThanOrEqual(5)
         expect(PeerID.fromValue(nodeIdToFind).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))

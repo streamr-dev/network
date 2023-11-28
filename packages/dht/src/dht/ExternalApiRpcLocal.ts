@@ -13,8 +13,16 @@ import { RecursiveOperationResult } from './recursive-operation/RecursiveOperati
 import { Any } from '../proto/google/protobuf/any'
 
 interface ExternalApiRpcLocalConfig {
-    startFind: (idToFind: Uint8Array, operation: RecursiveOperation, excludedPeer: PeerDescriptor) => Promise<RecursiveOperationResult>
-    storeDataToDht: (key: Uint8Array, data: Any, creator: PeerDescriptor) => Promise<PeerDescriptor[]>
+    executeRecursiveOperation: (
+        idToFind: Uint8Array,
+        operation: RecursiveOperation,
+        excludedPeer: PeerDescriptor
+    ) => Promise<RecursiveOperationResult>
+    storeDataToDht: (
+        key: Uint8Array,
+        data: Any,
+        creator: PeerDescriptor
+    ) => Promise<PeerDescriptor[]>
 }
 
 export class ExternalApiRpcLocal implements IExternalApiRpc {
@@ -27,7 +35,7 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
 
     async externalFindData(findDataRequest: ExternalFindDataRequest, context: ServerCallContext): Promise<ExternalFindDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const result = await this.config.startFind(findDataRequest.key, RecursiveOperation.FETCH_DATA, senderPeerDescriptor)
+        const result = await this.config.executeRecursiveOperation(findDataRequest.key, RecursiveOperation.FETCH_DATA, senderPeerDescriptor)
         return ExternalFindDataResponse.create({ entries: result.dataEntries ?? [] })
     }
 
