@@ -22,12 +22,12 @@ export class FindRpcLocal implements IFindRpc {
         this.config = config
     }
 
-    async routeFindRequest(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
+    async routeRequest(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.config.isMostLikelyDuplicate(routedMessage.requestId)) {
             return createRouteMessageAck(routedMessage, RouteMessageError.DUPLICATE)
         }
         const senderId = getNodeIdFromPeerDescriptor(getPreviousPeer(routedMessage) ?? routedMessage.sourcePeer!)
-        logger.trace(`Received routeFindRequest call from ${senderId}`)
+        logger.trace(`Received routeRequest call from ${senderId}`)
         this.config.addContact(routedMessage.sourcePeer!, true)
         this.config.addToDuplicateDetector(routedMessage.requestId)
         return this.config.doRouteFindRequest(routedMessage)

@@ -45,14 +45,14 @@ describe('Finder', () => {
         nodeId: PeerID.fromString('destination').value,
         type: NodeType.NODEJS
     }
-    const findRequest = createFindRequest(RecursiveOperation.FIND_NODE)
+    const recursiveOperationRequest = createFindRequest(RecursiveOperation.FIND_NODE)
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),
         messageType: MessageType.RPC,
         body: {
-            oneofKind: 'findRequest',
-            findRequest
+            oneofKind: 'recursiveOperationRequest',
+            recursiveOperationRequest
         },
         sourceDescriptor: peerDescriptor1,
         targetDescriptor: peerDescriptor2
@@ -83,7 +83,7 @@ describe('Finder', () => {
 
     it('Finder server', async () => {
         const finder = createFinder()
-        const res = await rpcCommunicator.callRpcMethod('routeFindRequest', routedMessage) as RouteMessageAck
+        const res = await rpcCommunicator.callRpcMethod('routeRequest', routedMessage) as RouteMessageAck
         expect(res.error).toBeUndefined()
         finder.stop()
     })
@@ -95,7 +95,7 @@ describe('Finder', () => {
         finder.stop()
     })
 
-    it('Finder server throws if payload is not FindRequest', async () => {
+    it('Finder server throws if payload is not RecursiveOperationRequest', async () => {
         const finder = createFinder(new MockRouter())
         const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1)
         const badMessage: Message = {
@@ -109,7 +109,7 @@ describe('Finder', () => {
             sourceDescriptor: peerDescriptor1,
             targetDescriptor: peerDescriptor2
         }
-        await expect(() => rpcCommunicator.callRpcMethod('routeFindRequest', {
+        await expect(() => rpcCommunicator.callRpcMethod('routeRequest', {
             message: badMessage,
             requestId: 'REQ',
             routingPath: [],
@@ -129,7 +129,7 @@ describe('Finder', () => {
             off: () => {}
         }
         const finder = createFinder(router as any, transport as any)
-        const ack = await rpcCommunicator.callRpcMethod('routeFindRequest', routedMessage)
+        const ack = await rpcCommunicator.callRpcMethod('routeRequest', routedMessage)
         expect(ack).toEqual({
             requestId: routedMessage.requestId,
             error: RouteMessageError.NO_TARGETS
@@ -145,7 +145,7 @@ describe('Finder', () => {
             send
         }
         const finder = createFinder(router as any, transport as any)
-        const ack = await rpcCommunicator.callRpcMethod('routeFindRequest', routedMessage)
+        const ack = await rpcCommunicator.callRpcMethod('routeRequest', routedMessage)
         expect(ack).toEqual({
             requestId: routedMessage.requestId,
             error: RouteMessageError.DUPLICATE

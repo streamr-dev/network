@@ -1,7 +1,7 @@
 import {
     DataEntry,
     PeerDescriptor,
-    FindResponse
+    RecursiveOperationResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { IFindSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger } from '@streamr/utils'
@@ -11,20 +11,20 @@ const logger = new Logger(module)
 
 export class FindSessionRpcRemote extends RpcRemote<IFindSessionRpcClient> {
 
-    sendFindResponse(
+    sendResponse(
         routingPath: PeerDescriptor[],
         closestNodes: PeerDescriptor[],
         dataEntries: DataEntry[],
         noCloserNodesFound: boolean
     ): void {
-        const report: FindResponse = {
+        const report: RecursiveOperationResponse = {
             routingPath,
             closestConnectedPeers: closestNodes,
             dataEntries,
             noCloserNodesFound
         }
-        this.getClient().sendFindResponse(report, this.formDhtRpcOptions()).catch((_e) => {
-            logger.trace('Failed to send FindResponse')
+        this.getClient().sendResponse(report, this.formDhtRpcOptions()).catch((_e) => {
+            logger.trace('Failed to send RecursiveOperationResponse')
         })
     }
 }

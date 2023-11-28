@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { DataEntry, PeerDescriptor, FindResponse, RecursiveOperation } from '../../proto/packages/dht/protos/DhtRpc'
+import { DataEntry, PeerDescriptor, RecursiveOperationResponse, RecursiveOperation } from '../../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Contact } from '../contact/Contact'
@@ -60,8 +60,8 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
                 this.doSendFindResponse(routingPath, nodes, dataEntries, noCloserNodesFound)
             }
         })
-        this.rpcCommunicator.registerRpcNotification(FindResponse, 'sendFindResponse',
-            (req: FindResponse) => rpcLocal.sendFindResponse(req))
+        this.rpcCommunicator.registerRpcNotification(RecursiveOperationResponse, 'sendResponse',
+            (req: RecursiveOperationResponse) => rpcLocal.sendResponse(req))
     }
 
     private isFindCompleted(): boolean {

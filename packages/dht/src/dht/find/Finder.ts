@@ -4,7 +4,7 @@ import {
     MessageType,
     NodeType,
     PeerDescriptor,
-    FindRequest,
+    RecursiveOperationRequest,
     RouteMessageAck,
     RouteMessageWrapper,
     RouteMessageError,
@@ -86,12 +86,12 @@ export class Finder implements IFinder {
         this.rpcCommunicator.registerRpcMethod(
             RouteMessageWrapper,
             RouteMessageAck,
-            'routeFindRequest',
+            'routeRequest',
             async (routedMessage: RouteMessageWrapper) => {
                 if (this.stopped) {
                     return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
                 } else {
-                    return rpcLocal.routeFindRequest(routedMessage)
+                    return rpcLocal.routeRequest(routedMessage)
                 }
             }
         )
@@ -158,17 +158,17 @@ export class Finder implements IFinder {
             nodeId: idToFind,
             type: NodeType.VIRTUAL
         }
-        const request: FindRequest = {
+        const request: RecursiveOperationRequest = {
             sessionId,
             operation
         }
         const msg: Message = {
-            messageType: MessageType.FIND_REQUEST,
+            messageType: MessageType.RECURSIVE_OPERATION_REQUEST,
             messageId: v4(),
             serviceId: this.serviceId,
             body: {
-                oneofKind: 'findRequest',
-                findRequest: request
+                oneofKind: 'recursiveOperationRequest',
+                recursiveOperationRequest: request
             }
         }
         const routeMessage: RouteMessageWrapper = {
@@ -190,7 +190,7 @@ export class Finder implements IFinder {
     ): void {
         const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
         if (data.size > 0) {
-            this.sendFindResponse(routingPath, sourcePeer, sessionId, [], data, true)
+            this.sendResponse(routingPath, sourcePeer, sessionId, [], data, true)
         }
     }
 
@@ -201,7 +201,7 @@ export class Finder implements IFinder {
         return undefined
     }
 
-    private sendFindResponse(
+    private sendResponse(
         routingPath: PeerDescriptor[],
         targetPeerDescriptor: PeerDescriptor,
         serviceId: ServiceID,
@@ -223,7 +223,7 @@ export class Finder implements IFinder {
                 toProtoRpcClient(new FindSessionRpcClient(remoteCommunicator.getRpcClientTransport())),
                 10000
             )
-            rpcRemote.sendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+            rpcRemote.sendResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
             remoteCommunicator.destroy()
         }
     }
@@ -234,18 +234,18 @@ export class Finder implements IFinder {
         }
         const idToFind = peerIdFromPeerDescriptor(routedMessage.destinationPeer!)
         const msg = routedMessage.message
-        const findRequest = msg?.body.oneofKind === 'findRequest' ? msg.body.findRequest : undefined
+        const recursiveOperationRequest = msg?.body.oneofKind === 'recursiveOperationRequest' ? msg.body.recursiveOperationRequest : undefined
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.nodeId, 5)
-        const data = this.findLocalData(idToFind.value, findRequest!.operation === RecursiveOperation.FETCH_DATA)
-        if (findRequest!.operation === RecursiveOperation.DELETE_DATA) {
+        const data = this.findLocalData(idToFind.value, recursiveOperationRequest!.operation === RecursiveOperation.FETCH_DATA)
+        if (recursiveOperationRequest!.operation === RecursiveOperation.DELETE_DATA) {
             this.localDataStore.markAsDeleted(idToFind.value, peerIdFromPeerDescriptor(routedMessage.sourcePeer!))
         }
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
             // TODO this is also very similar case to what we do at line 255, could simplify the code paths?
-            this.sendFindResponse(
+            this.sendResponse(
                 routedMessage.routingPath,
                 routedMessage.sourcePeer!,
-                findRequest!.sessionId,
+                recursiveOperationRequest!.sessionId,
                 closestPeersToDestination,
                 data,
                 true
@@ -260,10 +260,10 @@ export class Finder implements IFinder {
                         && getPreviousPeer(routedMessage) 
                         && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
                     )
-                this.sendFindResponse(
+                this.sendResponse(
                     routedMessage.routingPath,
                     routedMessage.sourcePeer!,
-                    findRequest!.sessionId,
+                    recursiveOperationRequest!.sessionId,
                     closestPeersToDestination,
                     data,
                     noCloserContactsFound

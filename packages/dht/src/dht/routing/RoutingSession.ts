@@ -164,7 +164,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (this.mode === RoutingMode.FORWARD) {
             return contact.getRouterRpcRemote().forwardMessage(msg)
         } else if (this.mode === RoutingMode.FIND) {
-            return contact.getFindRpcRemote().routeFindRequest(msg)
+            return contact.getFindRpcRemote().routeRequest(msg)
         } else {
             return contact.getRouterRpcRemote().routeMessage(msg)
         }

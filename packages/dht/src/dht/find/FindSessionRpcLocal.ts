@@ -1,6 +1,6 @@
 import { IFindSessionRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { Empty } from '../../proto/google/protobuf/empty'
-import { DataEntry, FindResponse, PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { DataEntry, RecursiveOperationResponse, PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
@@ -17,8 +17,8 @@ export class FindSessionRpcLocal implements IFindSessionRpc {
         this.config = config
     }
     
-    async sendFindResponse(report: FindResponse): Promise<Empty> {
-        logger.trace('FindResponse arrived: ' + JSON.stringify(report))
+    async sendResponse(report: RecursiveOperationResponse): Promise<Empty> {
+        logger.trace('RecursiveOperationResponse arrived: ' + JSON.stringify(report))
         this.config.doSendFindResponse(report.routingPath, report.closestConnectedPeers, report.dataEntries, report.noCloserNodesFound)
         return {}
     }

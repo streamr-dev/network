@@ -10,7 +10,7 @@ const logger = new Logger(module)
 
 export class FindRpcRemote extends RpcRemote<IFindRpcClient> {
 
-    async routeFindRequest(params: RouteMessageWrapper): Promise<boolean> {
+    async routeRequest(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
             destinationPeer: params.destinationPeer,
             sourcePeer: params.sourcePeer,
@@ -23,7 +23,7 @@ export class FindRpcRemote extends RpcRemote<IFindRpcClient> {
             doNotConnect: true
         })
         try {
-            const ack = await this.getClient().routeFindRequest(message, options)
+            const ack = await this.getClient().routeRequest(message, options)
             if (ack.error !== undefined) {
                 logger.trace('Next hop responded with error ' + ack.error)
                 return false
@@ -34,7 +34,7 @@ export class FindRpcRemote extends RpcRemote<IFindRpcClient> {
                 ? getNodeIdFromPeerDescriptor(previousPeer)
                 : getNodeIdFromPeerDescriptor(params.sourcePeer!)
             // eslint-disable-next-line max-len
-            logger.debug(`Failed to send routeFindRequest message from ${fromNode} to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
+            logger.debug(`Failed to send routeRequest message from ${fromNode} to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
             return false
         }
         return true

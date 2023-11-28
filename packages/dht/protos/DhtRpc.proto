@@ -20,7 +20,7 @@ service RouterRpc {
 }
 
 service FindRpc {
-  rpc routeFindRequest (RouteMessageWrapper) returns (RouteMessageAck);
+  rpc routeRequest (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
 service StoreRpc {
@@ -29,7 +29,7 @@ service StoreRpc {
 }
 
 service FindSessionRpc {
-  rpc sendFindResponse(FindResponse) returns (google.protobuf.Empty);
+  rpc sendResponse(RecursiveOperationResponse) returns (google.protobuf.Empty);
 }
 
 service WebsocketConnectorRpc {
@@ -102,7 +102,7 @@ message ClosestPeersResponse {
   string requestId = 2;
 }
 
-message FindRequest {
+message RecursiveOperationRequest {
   string sessionId = 1;
   RecursiveOperation operation = 2;
 }
@@ -113,7 +113,7 @@ enum RecursiveOperation {
   DELETE_DATA = 2;
 }
 
-message FindResponse {
+message RecursiveOperationResponse {
   repeated PeerDescriptor closestConnectedPeers = 1;
   repeated DataEntry dataEntries = 2;
   bool noCloserNodesFound = 3;
@@ -220,7 +220,7 @@ enum MessageType {
   CONNECTIVITY_RESPONSE = 2;
   HANDSHAKE_REQUEST = 3;
   HANDSHAKE_RESPONSE = 4;
-  FIND_REQUEST = 5;
+  RECURSIVE_OPERATION_REQUEST = 5;
 }
 
 message Message {
@@ -235,7 +235,7 @@ message Message {
     HandshakeRequest handshakeRequest = 8;
     HandshakeResponse handshakeResponse = 9;
     protorpc.RpcMessage rpcMessage = 10;
-    FindRequest findRequest = 11;
+    RecursiveOperationRequest recursiveOperationRequest = 11;
   };
 }
 
