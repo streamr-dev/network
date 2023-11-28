@@ -13,7 +13,7 @@ import {
     createWrappedClosestPeersRequest,
     createFindRequest
 } from '../utils/utils'
-import { RecursiveOperationManager } from '../../src/dht/find/RecursiveOperationManager'
+import { RecursiveOperationManager } from '../../src/dht/recursive-operation/RecursiveOperationManager'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import { v4 } from 'uuid'
 import { MockRouter } from '../utils/mock/Router'

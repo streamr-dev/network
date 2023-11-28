@@ -37,7 +37,7 @@ import {
     peerIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
-import { RecursiveOperationManager, FindResult } from './find/RecursiveOperationManager'
+import { RecursiveOperationManager, FindResult } from './recursive-operation/RecursiveOperationManager'
 import { StoreRpcLocal } from './store/StoreRpcLocal'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
