@@ -69,7 +69,7 @@ export class EntryPointDiscovery {
     private readonly config: EntryPointDiscoveryConfig
     private readonly storeInterval: number
     private readonly networkSplitAvoidedNodes: Set<NodeID> = new Set()
-    private amEntryPoint = false
+    private amStoredAsEntryPoint = false
     constructor(config: EntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
@@ -117,12 +117,12 @@ export class EntryPointDiscovery {
     }
 
     async storeSelfAsEntryPointIfNecessary(currentEntrypointCount: number): Promise<void> {
-        if (this.abortController.signal.aborted || this.amEntryPoint) {
+        if (this.abortController.signal.aborted || this.amStoredAsEntryPoint) {
             return
         }
         const possibleNetworkSplitDetected = this.config.layer1Node.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT
         if ((currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) || possibleNetworkSplitDetected) {
-            this.amEntryPoint = true
+            this.amStoredAsEntryPoint = true
             await this.storeSelfAsEntryPoint()
             await this.keepSelfAsEntryPoint()
         }
@@ -175,7 +175,7 @@ export class EntryPointDiscovery {
     }
 
     public amEntryPoint(): boolean {
-        return this.amEntryPoint
+        return this.amStoredAsEntryPoint
     }
 
     async destroy(): Promise<void> {
