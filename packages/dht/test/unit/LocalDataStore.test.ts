@@ -16,7 +16,7 @@ const MockData = new class extends MessageType$<{ foo: string }> {
     constructor() {
         super('MockData', [
             { no: 1, name: 'foo', kind: 'scalar', opt: false, T: ScalarType.STRING }
-        ]);
+        ])
     }
 }
 
