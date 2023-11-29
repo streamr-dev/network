@@ -9,18 +9,13 @@ import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import { wait } from '@streamr/utils'
 import { Timestamp } from '../../src/proto/google/protobuf/timestamp'
 import { PeerID } from '../../src/helpers/PeerID'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('LocalDataStore', () => {
 
     let localDataStore: LocalDataStore
-    const creator1: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS
-    }
-    const creator2: PeerDescriptor = {
-        nodeId: new Uint8Array([3, 2, 1]),
-        type: NodeType.NODEJS
-    }
+    const creator1 = createMockPeerDescriptor()
+    const creator2 = createMockPeerDescriptor()
 
     const storeEntry = (dataKey: PeerID, creator: PeerDescriptor, explicitData?: PeerDescriptor, explicitTtl?: number) => {
         localDataStore.storeEntry({ creator: creator, key: dataKey.value, data: Any.pack(explicitData ?? creator, PeerDescriptor), ttl: explicitTtl ?? 10000, stale: false, deleted: false, createdAt: Timestamp.now() })
