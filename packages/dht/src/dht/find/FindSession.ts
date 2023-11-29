@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { DataEntry, PeerDescriptor, FindResponse } from '../../proto/packages/dht/protos/DhtRpc'
+import { DataEntry, PeerDescriptor, FindResponse, FindAction } from '../../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Contact } from '../contact/Contact'
@@ -17,20 +17,20 @@ export interface FindSessionEvents {
 export interface FindSessionConfig {
     serviceId: ServiceID
     transport: ITransport
-    kademliaIdToFind: Uint8Array
+    nodeIdToFind: Uint8Array
     localPeerId: PeerID
     waitedRoutingPathCompletions: number
-    fetchData: boolean
+    action: FindAction
 }
 
 export class FindSession extends EventEmitter<FindSessionEvents> {
     private readonly serviceId: ServiceID
     private readonly transport: ITransport
-    private readonly kademliaIdToFind: Uint8Array
+    private readonly nodeIdToFind: Uint8Array
     private readonly localPeerId: PeerID
     private readonly waitedRoutingPathCompletions: number
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly fetchData: boolean
+    private readonly action: FindAction
     private results: SortedContactList<Contact>
     private foundData: Map<string, DataEntry> = new Map()
     private allKnownHops: Set<PeerIDKey> = new Set()
@@ -43,11 +43,11 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
         super()
         this.serviceId = config.serviceId
         this.transport = config.transport
-        this.kademliaIdToFind = config.kademliaIdToFind
+        this.nodeIdToFind = config.nodeIdToFind
         this.localPeerId = config.localPeerId
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
-        this.results = new SortedContactList(PeerID.fromValue(this.kademliaIdToFind), 10, undefined, true)
-        this.fetchData = config.fetchData
+        this.results = new SortedContactList(PeerID.fromValue(this.nodeIdToFind), 10, undefined, true)
+        this.action = config.action
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
             rpcRequestTimeout: 15000
         })
@@ -56,7 +56,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
 
     private registerLocalRpcMethods() {
         const rpcLocal = new FindSessionRpcLocal({
-            doSendFindResponse: (routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound?: boolean) => {
+            doSendFindResponse: (routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean) => {
                 this.doSendFindResponse(routingPath, nodes, dataEntries, noCloserNodesFound)
             }
         })
@@ -70,10 +70,10 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
             unreportedHops.delete(id)
         })
         if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size === 0) {
-            if (this.fetchData
+            if (this.action === FindAction.FETCH_DATA
                 && (this.hasNonStaleData() || this.noCloserNodesReceivedCounter >= this.waitedRoutingPathCompletions)) {
                 return true
-            } else if (this.fetchData) {
+            } else if (this.action === FindAction.FETCH_DATA) {
                 return false
             }
             return true
@@ -89,7 +89,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
         routingPath: PeerDescriptor[],
         nodes: PeerDescriptor[],
         dataEntries: DataEntry[],
-        noCloserNodesFound?: boolean
+        noCloserNodesFound: boolean
     ): void {
         this.addKnownHops(routingPath)
         if (routingPath.length >= 1) {
@@ -106,7 +106,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
 
     private addKnownHops(routingPath: PeerDescriptor[]) {
         routingPath.forEach((desc) => {
-            const newPeerId = PeerID.fromValue(desc.kademliaId)
+            const newPeerId = PeerID.fromValue(desc.nodeId)
             if (!this.localPeerId.equals(newPeerId)) {
                 this.allKnownHops.add(newPeerId.toKey())
             }
@@ -114,7 +114,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
     }
 
     private setHopAsReported(desc: PeerDescriptor) {
-        const newPeerId = PeerID.fromValue(desc.kademliaId)
+        const newPeerId = PeerID.fromValue(desc.nodeId)
         if (!this.localPeerId.equals(newPeerId)) {
             this.reportedHops.add(newPeerId.toKey())
         }
@@ -132,11 +132,11 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
 
     private processFoundData(dataEntries: DataEntry[]): void {
         dataEntries.forEach((entry) => {
-            const storerKey = keyFromPeerDescriptor(entry.storer!)
-            const existingEntry = this.foundData.get(storerKey)
-            if (!existingEntry || existingEntry.storerTime! < entry.storerTime! 
-                || (existingEntry.storerTime! <= entry.storerTime! && entry.deleted)) {
-                this.foundData.set(storerKey, entry)
+            const creatorKey = keyFromPeerDescriptor(entry.creator!)
+            const existingEntry = this.foundData.get(creatorKey)
+            if (!existingEntry || existingEntry.createdAt! < entry.createdAt! 
+                || (existingEntry.createdAt! <= entry.createdAt! && entry.deleted)) {
+                this.foundData.set(creatorKey, entry)
             }
         })
     }
@@ -164,7 +164,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
 
     public getResults = (): FindResult => ({
         closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
-        dataEntries: (this.foundData && this.foundData.size > 0) ? Array.from(this.foundData.values()) : undefined
+        dataEntries: Array.from(this.foundData.values())
     })
 
     public stop(): void {

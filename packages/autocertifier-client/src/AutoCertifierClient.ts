@@ -180,7 +180,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         if (this.ongoingSessions.has(request.sessionId)) {
             return { sessionId: request.sessionId }
         } else {
-            throw `Session not found ${request.sessionId}`
+            throw new Error(`Session not found ${request.sessionId}`)
         }
     }
 }

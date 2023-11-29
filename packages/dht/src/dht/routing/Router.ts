@@ -1,4 +1,4 @@
-import { Message, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import {
     areEqualPeerDescriptors,
     getNodeIdFromPeerDescriptor,
@@ -15,11 +15,6 @@ import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
-
-export enum RoutingErrors {
-    NO_CANDIDATES_FOUND = 'No routing candidates found',
-    STOPPED = 'DhtNode Stopped'
-}
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -39,7 +34,7 @@ interface ForwardingTableEntry {
 
 export interface IRouter {
     doRouteMessage(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RouteMessageAck
-    send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void>
+    send(msg: Message, reachableThrough: PeerDescriptor[]): void
     isMostLikelyDuplicate(requestId: string): boolean
     addToDuplicateDetector(requestId: string): void
     addRoutingSession(session: RoutingSession): void
@@ -82,7 +77,7 @@ export class Router implements IRouter {
             'routeMessage',
             async (routedMessage: RouteMessageWrapper) => {
                 if (this.stopped) {
-                    return createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
+                    return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
                 }
                 return rpcLocal.routeMessage(routedMessage)
             }
@@ -93,7 +88,7 @@ export class Router implements IRouter {
             'forwardMessage',
             async (forwardMessage: RouteMessageWrapper) => {
                 if (this.stopped) {
-                    return createRouteMessageAck(forwardMessage, 'forwardMessage() service is not running')
+                    return createRouteMessageAck(forwardMessage, RouteMessageError.STOPPED)
                 }
                 return rpcLocal.forwardMessage(forwardMessage)
             }
@@ -101,7 +96,7 @@ export class Router implements IRouter {
 
     }
 
-    public async send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void> {
+    public send(msg: Message, reachableThrough: PeerDescriptor[]): void {
         msg.sourceDescriptor = this.localPeerDescriptor
         const targetPeerDescriptor = msg.targetDescriptor!
         const forwardingEntry = this.forwardingTable.get(keyFromPeerDescriptor(targetPeerDescriptor))
@@ -115,7 +110,12 @@ export class Router implements IRouter {
                 reachableThrough,
                 routingPath: []
             }
-            this.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
+            const ack = this.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
+            if (ack.error !== undefined) {
+                const error = 'Could not forward message with error ' + ack.error
+                logger.debug(error)
+                throw new Error(error)
+            }
         } else {
             const routedMessage: RouteMessageWrapper = {
                 message: msg,
@@ -125,23 +125,29 @@ export class Router implements IRouter {
                 reachableThrough,
                 routingPath: []
             }
-            this.doRouteMessage(routedMessage, RoutingMode.ROUTE)
+            const ack = this.doRouteMessage(routedMessage, RoutingMode.ROUTE)
+            if (ack.error !== undefined) {
+                const error = 'Could not route message with error ' + ack.error
+                logger.debug(error)
+                throw new Error(error)
+            }
         }
     }
 
     public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE): RouteMessageAck {
         if (this.stopped) {
-            return createRouteMessageAck(routedMessage, RoutingErrors.STOPPED)
+            return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
         logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
             + `to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`)
         const session = this.createRoutingSession(routedMessage, mode)
-        const contacts = session.findMoreContacts()
+        const contacts = session.updateAndGetRoutablePeers()
         if (contacts.length > 0) {
             this.addRoutingSession(session)
             // eslint-disable-next-line promise/catch-or-return
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
             let eventReceived: Promise<unknown>
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             executeSafePromise(async () => {
                 eventReceived = raceEvents3<RoutingSessionEvents>(
                     session,
@@ -162,13 +168,8 @@ export class Router implements IRouter {
             session.sendMoreRequests(contacts)
             return createRouteMessageAck(routedMessage)
         } else {
-            if (areEqualPeerDescriptors(routedMessage.sourcePeer!, this.localPeerDescriptor)) {
-                logger.debug(
-                    `Failed to send (routeMessage: ${this.serviceId}) to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`
-                )
-            }
-            logger.trace('noCandidatesFound sessionId: ' + session.sessionId)
-            return createRouteMessageAck(routedMessage, RoutingErrors.NO_CANDIDATES_FOUND)
+            logger.trace('no targets', { sessionId: session.sessionId })
+            return createRouteMessageAck(routedMessage, RouteMessageError.NO_TARGETS)
         }
     }
 

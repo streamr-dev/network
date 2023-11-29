@@ -1,9 +1,10 @@
 import { DhtNode } from '../../src/dht/DhtNode'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
-import { createMockConnectionDhtNode } from '../utils/utils'
+import { createMockConnectionDhtNode, createMockPeerDescriptor } from '../utils/utils'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { PeerID } from '../../src/helpers/PeerID'
+import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { createRandomNodeId } from '../../src/helpers/nodeId'
 
 describe('DhtNodeExternalApi', () => {
 
@@ -28,7 +29,7 @@ describe('DhtNodeExternalApi', () => {
 
     it('findData happy path', async () => {
         const data = Any.pack(dhtNode1.getLocalPeerDescriptor(), PeerDescriptor)
-        const key = PeerID.fromString('key').value
+        const key = createRandomNodeId()
         await dhtNode1.storeDataToDht(key, data)
 
         const foundData = await remote.findDataViaPeer(key, dhtNode1.getLocalPeerDescriptor())
@@ -36,17 +37,19 @@ describe('DhtNodeExternalApi', () => {
     })
     
     it('findData returns empty array if no data found', async () => {
-        const foundData = await remote.findDataViaPeer(PeerID.fromString('key').value, dhtNode1.getLocalPeerDescriptor())
+        const foundData = await remote.findDataViaPeer(createRandomNodeId(), dhtNode1.getLocalPeerDescriptor())
         expect(foundData).toEqual([])
     })
 
     it('external store data happy path', async () => {
-        const data = Any.pack(dhtNode1.getLocalPeerDescriptor(), PeerDescriptor)
-        const key = PeerID.fromString('key').value 
+        const storedPeerDescriptor = createMockPeerDescriptor()
+        const data = Any.pack(storedPeerDescriptor, PeerDescriptor)
+        const key = createRandomNodeId()
 
         await remote.storeDataViaPeer(key, data, dhtNode1.getLocalPeerDescriptor())
         const foundData = await remote.findDataViaPeer(key, dhtNode1.getLocalPeerDescriptor())
-        expect(Any.unpack(foundData[0].data!, PeerDescriptor)).toEqual(dhtNode1.getLocalPeerDescriptor())
+        expect(areEqualPeerDescriptors(Any.unpack(foundData[0].data!, PeerDescriptor), storedPeerDescriptor)).toEqual(true)
+        expect(areEqualPeerDescriptors(foundData[0].creator!, remote.getLocalPeerDescriptor())).toEqual(true)
     })
   
 })

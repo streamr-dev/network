@@ -14,7 +14,7 @@ export class PeerID {
     private readonly key: PeerIDKey  // precompute often-used form of data
 
     protected constructor({ ip, value, stringValue }: { ip?: string, value?: Uint8Array, stringValue?: string } = {}) {
-        if (ip) {
+        if (ip !== undefined) {
             this.data = new Uint8Array(20)
             const ipNum = this.ip2Int(ip)
             const view = new DataView(this.data.buffer)
@@ -23,7 +23,7 @@ export class PeerID {
             this.data.set((new UUID()).value, 4)
         } else if (value) {
             this.data = new Uint8Array(value.slice(0))
-        } else if (stringValue) {
+        } else if (stringValue !== undefined) {
             const ab = PeerID.textEncoder.encode(stringValue) //toUTF8Array(stringValue)
             this.data = ab
         } else {

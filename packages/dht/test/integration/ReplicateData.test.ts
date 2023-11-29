@@ -16,7 +16,7 @@ const logger = new Logger(module)
 
 jest.setTimeout(60000)
 
-describe('Migrating data from node to node in DHT', () => {
+describe('Replicate data from node to node in DHT', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
@@ -47,7 +47,7 @@ describe('Migrating data from node to node in DHT', () => {
         nodesById.set(entryPoint.getNodeId().toKey(), entryPoint)
 
         entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
+            nodeId: entryPoint.getNodeId().value,
             type: NodeType.NODEJS
         }
 
@@ -74,7 +74,7 @@ describe('Migrating data from node to node in DHT', () => {
         simulator.stop()
     })
 
-    it('Data migrates to the closest node no matter where it is stored', async () => {
+    it('Data replicates to the closest node no matter where it is stored', async () => {
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
@@ -106,7 +106,7 @@ describe('Migrating data from node to node in DHT', () => {
         logger.info('Nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey())!
+            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().nodeId).toKey())!
             let hasDataMarker = ''
             
             // @ts-expect-error private field
@@ -134,7 +134,7 @@ describe('Migrating data from node to node in DHT', () => {
         logger.info('After join of 99 nodes: nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey())!
+            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().nodeId).toKey())!
             let hasDataMarker = ''
 
             // @ts-expect-error private field
@@ -146,13 +146,13 @@ describe('Migrating data from node to node in DHT', () => {
             logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
         })
 
-        const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().kademliaId).toKey())!
+        const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().nodeId).toKey())!
 
         // @ts-expect-error private field
-        expect(closestNode.localDataStore.getEntry(dataKey)).toBeTruthy()
+        expect(closestNode.localDataStore.getEntry(dataKey).size).toBeGreaterThanOrEqual(1)
     }, 180000)
 
-    it('Data migrates to the last remaining node if all other nodes leave gracefully', async () => {
+    it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
@@ -198,7 +198,7 @@ describe('Migrating data from node to node in DHT', () => {
         logger.info('data of ' + randomIndices[0] + ' was ' + nodes[randomIndices[0]].localDataStore.getEntry(dataKey))
 
         // @ts-expect-error private field
-        expect(nodes[randomIndices[0]].localDataStore.getEntry(dataKey)).toBeTruthy()
+        expect(nodes[randomIndices[0]].localDataStore.getEntry(dataKey).size).toBeGreaterThanOrEqual(1)
 
     }, 180000)
 })

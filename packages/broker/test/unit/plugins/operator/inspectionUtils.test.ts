@@ -19,9 +19,9 @@ const target = Object.freeze({
     streamPart: toStreamPartID(STREAM_ID, 4),
 })
 
-const PEER_DESCRIPTOR_ONE = { id: '0x1111' }
-const PEER_DESCRIPTOR_TWO = { id: '0x2222' }
-const PEER_DESCRIPTOR_THREE = { id: '0x3333' }
+const PEER_DESCRIPTOR_ONE = { nodeId: '0x1111' }
+const PEER_DESCRIPTOR_TWO = { nodeId: '0x2222' }
+const PEER_DESCRIPTOR_THREE = { nodeId: '0x3333' }
 
 const logger = new Logger(module)
 
@@ -117,11 +117,11 @@ describe(findNodesForTarget, () => {
         operatorFleetState.start.mockImplementation(() => wait(0))
         operatorFleetState.getNodeIds.mockImplementation(() => onlineNodes)
         operatorFleetState.getPeerDescriptor.mockImplementation((nodeId) => {
-            if (nodeId === PEER_DESCRIPTOR_ONE.id) {
+            if (nodeId === PEER_DESCRIPTOR_ONE.nodeId) {
                 return PEER_DESCRIPTOR_ONE
-            } else if (nodeId === PEER_DESCRIPTOR_TWO.id) {
+            } else if (nodeId === PEER_DESCRIPTOR_TWO.nodeId) {
                 return PEER_DESCRIPTOR_TWO
-            } else if (nodeId === PEER_DESCRIPTOR_THREE.id) {
+            } else if (nodeId === PEER_DESCRIPTOR_THREE.nodeId) {
                 return PEER_DESCRIPTOR_THREE
             } else {
                 return undefined
@@ -136,7 +136,7 @@ describe(findNodesForTarget, () => {
     })
 
     function comeOnline(peerDescriptors: NetworkPeerDescriptor[]): void {
-        onlineNodes = peerDescriptors.map(({ id }) => id as NodeID)
+        onlineNodes = peerDescriptors.map(({ nodeId }) => nodeId as NodeID)
     }
 
     it('returns empty array if no nodes found', async () => {

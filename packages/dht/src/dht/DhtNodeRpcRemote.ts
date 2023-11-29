@@ -8,7 +8,7 @@ import {
 import { v4 } from 'uuid'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { Remote } from './contact/Remote'
+import { RpcRemote } from './contact/RpcRemote'
 import { PeerID } from '../helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../types/ServiceID'
@@ -21,7 +21,7 @@ export interface KBucketContact {
     vectorClock: number
 }
 
-export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBucketContact {
+export class DhtNodeRpcRemote extends RpcRemote<IDhtNodeRpcClient> implements KBucketContact {
 
     private static counter = 0
     public vectorClock: number
@@ -39,10 +39,10 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
         this.vectorClock = DhtNodeRpcRemote.counter++
     }
 
-    async getClosestPeers(kademliaId: Uint8Array): Promise<PeerDescriptor[]> {
+    async getClosestPeers(nodeId: Uint8Array): Promise<PeerDescriptor[]> {
         logger.trace(`Requesting getClosestPeers on ${this.getServiceId()} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: ClosestPeersRequest = {
-            kademliaId,
+            nodeId,
             requestId: v4()
         }
         try {
