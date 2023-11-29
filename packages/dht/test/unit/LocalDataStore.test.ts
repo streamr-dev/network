@@ -13,11 +13,10 @@ import { DataEntry, PeerDescriptor } from '../../src/proto/packages/dht/protos/D
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const createMockEntry = (entry: Partial<DataEntry>): DataEntry => {
-    const creator = entry.creator ?? createMockPeerDescriptor()
     return { 
         key: crypto.randomBytes(10),
-        data: Any.pack(creator, PeerDescriptor),  // TODO use random data, i.e. createMockPeerDescriptor(),
-        creator,
+        data: Any.pack(createMockPeerDescriptor(), PeerDescriptor),
+        creator: entry.creator ?? createMockPeerDescriptor(),
         ttl: 10000,
         stale: false,
         deleted: false,
