@@ -10,7 +10,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IFinder } from '../find/Finder'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, executeSafePromise } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
@@ -72,7 +72,7 @@ export class StoreRpcLocal implements IStoreRpc {
         this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
             dataMap.forEach(async (dataEntry) => {
                 const shouldReplicate = this.shouldReplicateDataToNewNode(dataEntry.dataEntry, peerDescriptor)
-                this.localDataStore.setStale(PeerID.fromValue(dataEntry.dataEntry.key), dataEntry.dataEntry.creator!, !shouldReplicate)
+                this.localDataStore.setStale(dataEntry.dataEntry.key, peerIdFromPeerDescriptor(dataEntry.dataEntry.creator!), !shouldReplicate)
                 if (shouldReplicate) {
                     try {
                         await this.replicateDataToContact(dataEntry.dataEntry, peerDescriptor)
@@ -197,7 +197,7 @@ export class StoreRpcLocal implements IStoreRpc {
             deleted: false
         })
         if (!this.selfIsOneOfClosestPeers(key)) {
-            this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(key))
+            this.localDataStore.setAllEntriesAsStale(key)
         }
         logger.trace('storeData()')
         return StoreDataResponse.create()
@@ -235,7 +235,7 @@ export class StoreRpcLocal implements IStoreRpc {
             this.replicateDataToNeighbors((context as DhtCallContext).incomingSourceDescriptor!, request.entry!)
         }
         if (!this.selfIsOneOfClosestPeers(dataEntry.key)) {
-            this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.key))
+            this.localDataStore.setAllEntriesAsStale(dataEntry.key)
         }
         logger.trace('server-side replicateData() at end')
         return {}

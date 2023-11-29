@@ -21,7 +21,6 @@ import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
 import { NodeType, PeerDescriptor } from '@streamr/dht'
-import omit from 'lodash/omit'
 
 const logger = new Logger(module)
 
@@ -154,7 +153,7 @@ export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDes
         throw new Error('nodeType "virtual" not supported')
     }
     return {
-        ...omit(descriptor, 'nodeId'),
+        ...descriptor,
         nodeId: binaryToHex(descriptor.nodeId),
         type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
     }
