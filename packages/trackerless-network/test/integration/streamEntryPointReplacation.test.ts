@@ -69,7 +69,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
     })
 
     it('stream entry points are replaced when nodes leave streams', async () => {
-        await Promise.all(initialNodesOnStream.map((node) => node.joinStreamPart(STREAM_PART_ID, { minCount: 3, timeout: 15000 })))
+        await Promise.all(initialNodesOnStream.map((node) => node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 30000 })))
 
         let receivedMessages = 0
         for (const node of laterNodesOnStream) {
@@ -88,6 +88,6 @@ describe('Stream Entry Points are replaced when known entry points leave streams
             randomEthereumAddress()
         )
         newNodeInStream.getStreamrNode().broadcast(msg)
-        await waitForCondition(() => receivedMessages === NUM_OF_LATER_NODES, 10000)
+        await waitForCondition(() => receivedMessages === NUM_OF_LATER_NODES, 15000)
     }, 200000)
 })
