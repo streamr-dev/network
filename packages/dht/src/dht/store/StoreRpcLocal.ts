@@ -75,7 +75,9 @@ export class StoreRpcLocal implements IStoreRpc {
         this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor) => {
             this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
                 dataMap.forEach(async (dataEntry) => {
-                    if (this.shouldReplicateDataToNewNode(dataEntry.dataEntry, peerDescriptor)) {
+                    const shouldReplicate = this.shouldReplicateDataToNewNode(dataEntry.dataEntry, peerDescriptor)
+                    this.localDataStore.setStale(PeerID.fromValue(dataEntry.dataEntry.key), dataEntry.dataEntry.creator!, !shouldReplicate)
+                    if (shouldReplicate) {
                         try {
                             await this.replicateDataToContact(dataEntry.dataEntry, peerDescriptor)
                         } catch (e) {
@@ -88,40 +90,27 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     private shouldReplicateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
-
-        const dataId = PeerID.fromValue(dataEntry.key)
         const newNodeId = PeerID.fromValue(newNode.nodeId)
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
-
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
-
-        const sortedList = new SortedContactList<Contact>(dataId, 20, undefined, true)
+        const sortedList = new SortedContactList<Contact>(PeerID.fromValue(dataEntry.key), 20, undefined, true)
         sortedList.addContact(new Contact(this.localPeerDescriptor))
-
         closestToData.forEach((con) => {
             if (!newNodeId.equals(PeerID.fromValue(con.getPeerDescriptor().nodeId))) {
                 sortedList.addContact(new Contact(con.getPeerDescriptor()))
             }
         })
-
         const isClosest = sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)
         if (!isClosest) {
             return false
         }
-
         const newPeerId = PeerID.fromValue(newNode.nodeId)
         sortedList.addContact(new Contact(newNode))
         const sorted = sortedList.getAllContacts()
         let index = findIndex(sorted, (contact) => contact.getPeerId().equals(newPeerId))
         // if new node is within the storageRedundancyFactor closest nodes to the data
         // do replicate data to it
-        if (index < this.redundancyFactor) {
-            this.localDataStore.setStale(dataId, dataEntry.creator!, false)
-            return true
-        } else {
-            this.localDataStore.setStale(dataId, dataEntry.creator!, true)
-            return false
-        }
+        return (index < this.redundancyFactor)
     }
 
     private async replicateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor, doNotConnect: boolean = false): Promise<void> {
