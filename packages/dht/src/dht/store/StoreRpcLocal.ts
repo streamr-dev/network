@@ -274,16 +274,14 @@ export class StoreRpcLocal implements IStoreRpc {
             sortedList.getAllContacts().forEach((contact) => {
                 const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().nodeId)
                 if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
-                    if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
-                        setImmediate(async () => {
-                            try {
-                                await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())
-                                logger.trace('replicateDataToContact() returned')
-                            } catch (e) {
-                                logger.error('replicating data to one of the closest contacts failed ' + e)
-                            }
-                        })
-                    }
+                    setImmediate(async () => {
+                        try {
+                            await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())
+                            logger.trace('replicateDataToContact() returned')
+                        } catch (e) {
+                            logger.error('replicating data to one of the closest contacts failed ' + e)
+                        }
+                    })
                 }
             })
         }
