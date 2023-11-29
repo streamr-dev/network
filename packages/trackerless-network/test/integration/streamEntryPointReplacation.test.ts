@@ -75,7 +75,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
     it('stream entry points are replaced when nodes leave streams', async () => {
         let receivedMessages = 0
 
-        await Promise.all(initialNodesOnStream.map((node, i) => node.joinStreamPart(STREAM_PART_ID, { minCount: i <= 4 ? i : 4, timeout: 15000 })))
+        await Promise.all(initialNodesOnStream.map((node) => node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 15000 })))
 
         for (const node of laterNodesOnStream) {
             await node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 15000 }) 
