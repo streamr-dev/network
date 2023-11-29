@@ -32,7 +32,7 @@ describe('LocalDataStore', () => {
     it('can store', () => {
         const dataKey = peerIdFromPeerDescriptor(creator1)
         storeEntry(dataKey, creator1)
-        const fetchedEntries = localDataStore.getEntry(dataKey)
+        const fetchedEntries = localDataStore.getEntries(dataKey)
         fetchedEntries.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(areEqualPeerDescriptors(fetchedDescriptor, creator1)).toBeTrue()
@@ -43,7 +43,7 @@ describe('LocalDataStore', () => {
         const dataKey = peerIdFromPeerDescriptor(creator1)
         storeEntry(dataKey, creator1)
         storeEntry(dataKey, creator2, creator1)
-        const fetchedEntries = localDataStore.getEntry(dataKey)
+        const fetchedEntries = localDataStore.getEntries(dataKey)
         fetchedEntries.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(areEqualPeerDescriptors(fetchedDescriptor, creator1)).toBeTrue()
@@ -55,7 +55,7 @@ describe('LocalDataStore', () => {
         storeEntry(dataKey, creator1)
         storeEntry(dataKey, creator2)
         localDataStore.deleteEntry(dataKey, creator1)
-        const fetchedEntries = localDataStore.getEntry(dataKey)
+        const fetchedEntries = localDataStore.getEntries(dataKey)
         fetchedEntries.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(areEqualPeerDescriptors(fetchedDescriptor, creator2)).toBeTrue()
@@ -68,17 +68,17 @@ describe('LocalDataStore', () => {
         storeEntry(dataKey, creator2)
         localDataStore.deleteEntry(dataKey, creator1)
         localDataStore.deleteEntry(dataKey, creator2)
-        const fetchedEntries = localDataStore.getEntry(dataKey)
+        const fetchedEntries = localDataStore.getEntries(dataKey)
         expect(fetchedEntries.size).toBe(0)
     })
 
     it('data is deleted after TTL', async () => {
         const dataKey = peerIdFromPeerDescriptor(creator1)
         storeEntry(dataKey, creator1, undefined, 1000)
-        const intitialStore = localDataStore.getEntry(dataKey)
+        const intitialStore = localDataStore.getEntries(dataKey)
         expect(intitialStore.size).toBe(1)
         await wait(1100)
-        const fetchedEntries = localDataStore.getEntry(dataKey)
+        const fetchedEntries = localDataStore.getEntries(dataKey)
         expect(fetchedEntries.size).toBe(0)
     })
 
@@ -87,11 +87,11 @@ describe('LocalDataStore', () => {
         it('happy path', () => {
             const dataKey = peerIdFromPeerDescriptor(creator1)
             storeEntry(dataKey, creator1)
-            const notDeletedData = localDataStore.getEntry(dataKey)
+            const notDeletedData = localDataStore.getEntries(dataKey)
             expect(notDeletedData.get(keyFromPeerDescriptor(creator1))!.deleted).toBeFalse()
             const returnValue = localDataStore.markAsDeleted(dataKey.value, peerIdFromPeerDescriptor(creator1))
             expect(returnValue).toBe(true)
-            const deletedData = localDataStore.getEntry(dataKey)
+            const deletedData = localDataStore.getEntries(dataKey)
             expect(deletedData.get(keyFromPeerDescriptor(creator1))!.deleted).toBeTrue()
         })
 

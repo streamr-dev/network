@@ -116,7 +116,7 @@ export class Finder implements IFinder {
             action
         })
         if (this.connections.size === 0) {
-            const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
+            const data = this.localDataStore.getEntries(PeerID.fromValue(idToFind))
             session.doSendFindResponse(
                 [this.localPeerDescriptor],
                 [this.localPeerDescriptor],
@@ -188,7 +188,7 @@ export class Finder implements IFinder {
         sourcePeer: PeerDescriptor,
         sessionId: string
     ): void {
-        const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
+        const data = this.localDataStore.getEntries(PeerID.fromValue(idToFind))
         if (data.size > 0) {
             this.sendFindResponse(routingPath, sourcePeer, sessionId, [], data, true)
         }
@@ -196,7 +196,7 @@ export class Finder implements IFinder {
 
     private findLocalData(idToFind: Uint8Array, fetchData: boolean): Map<PeerIDKey, DataEntry> | undefined {
         if (fetchData) {
-            return this.localDataStore.getEntry(PeerID.fromValue(idToFind))
+            return this.localDataStore.getEntries(PeerID.fromValue(idToFind))
         }
         return undefined
     }
