@@ -88,7 +88,6 @@ export class DeliveryLayer extends EventEmitter<Events> {
         if (this.started || this.destroyed) {
             return
         }
-        logger.info(`Starting node with id ${getNodeIdFromPeerDescriptor(startedAndJoinedLayer0Node.getLocalPeerDescriptor())}`)
         this.started = true
         this.layer0Node = startedAndJoinedLayer0Node
         this.transport = transport
@@ -100,7 +99,7 @@ export class DeliveryLayer extends EventEmitter<Events> {
         if (!this.started || this.destroyed) {
             return
         }
-        logger.trace('Destroying node')
+        logger.trace('Destroying delivery layer')
         this.destroyed = true
         await Promise.all(Array.from(this.streamParts.values()).map((streamPart) => streamPart.stop()))
         this.streamParts.clear()

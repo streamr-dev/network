@@ -1,10 +1,11 @@
 import { ConnectionManager, DhtNode, DhtNodeOptions, areEqualPeerDescriptors } from '@streamr/dht'
 import { DeliveryLayer, DeliveryLayerConfig } from './logic/DeliveryLayer'
-import { MetricsContext, waitForCondition } from '@streamr/utils'
+import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { Layer0Node } from './logic/Layer0Node'
+import { getNodeIdFromPeerDescriptor } from './identifiers'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
@@ -15,6 +16,8 @@ export interface NetworkOptions {
 export interface NetworkStackEvents {
     stopped: () => void
 }
+
+const logger = new Logger(module)
 
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
@@ -64,6 +67,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     async start(doJoin = true): Promise<void> {
         await this.layer0Node!.start()
+        logger.info(`Starting node with id ${getNodeIdFromPeerDescriptor(this.layer0Node!.getLocalPeerDescriptor())}`)
         const connectionManager = this.layer0Node!.getTransport() as ConnectionManager
         if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
             areEqualPeerDescriptors(entryPoint, this.layer0Node!.getLocalPeerDescriptor())
