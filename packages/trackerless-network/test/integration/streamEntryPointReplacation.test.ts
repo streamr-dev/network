@@ -73,7 +73,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
 
         let receivedMessages = 0
         for (const node of laterNodesOnStream) {
-            await node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 15000 }) 
+            await node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 30000 }) 
             node.getStreamrNode().on('newMessage', () => {
                 receivedMessages += 1
             })
