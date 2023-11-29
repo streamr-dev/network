@@ -48,16 +48,12 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         await entryPointTransport.start()
         await layer0EntryPoint.start()
 
-        initialNodesOnStream = []
-        await Promise.all(range(ENTRYPOINT_STORE_LIMIT).map(async () => {
-            const node = await startNode()
-            initialNodesOnStream.push(node)
+        initialNodesOnStream = await Promise.all(range(ENTRYPOINT_STORE_LIMIT).map(async () => {
+            return await startNode()
         }))
 
-        laterNodesOnStream = []
-        await Promise.all(range(NUM_OF_LATER_NODES).map(async () => {
-            const node = await startNode()
-            laterNodesOnStream.push(node)
+        laterNodesOnStream = await Promise.all(range(NUM_OF_LATER_NODES).map(async () => {
+            return await startNode()
         }))
         newNodeInStream = await startNode()
     })
@@ -73,10 +69,9 @@ describe('Stream Entry Points are replaced when known entry points leave streams
     })
 
     it('stream entry points are replaced when nodes leave streams', async () => {
-        let receivedMessages = 0
-
         await Promise.all(initialNodesOnStream.map((node) => node.joinStreamPart(STREAM_PART_ID, { minCount: 3, timeout: 15000 })))
 
+        let receivedMessages = 0
         for (const node of laterNodesOnStream) {
             await node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 15000 }) 
             node.getStreamrNode().on('newMessage', () => {
