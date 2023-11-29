@@ -71,7 +71,6 @@ export class StoreRpcLocal implements IStoreRpc {
             (request: StoreDataRequest) => this.storeData(request))
         this.rpcCommunicator.registerRpcNotification(ReplicateDataRequest, 'replicateData',
             (request: ReplicateDataRequest, context: ServerCallContext) => this.replicateData(request, context))
-
         this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor) => {
             this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
                 dataMap.forEach(async (dataEntry) => {
@@ -201,24 +200,17 @@ export class StoreRpcLocal implements IStoreRpc {
             stale: !this.selfIsOneOfClosestPeers(key),
             deleted: false
         })
-        
         if (!this.selfIsOneOfClosestPeers(key)) {
             this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(key))
         }
-
         logger.trace('storeData()')
         return StoreDataResponse.create()
-    }
-
-    async destroy(): Promise<void> {
-        await this.replicateDataToClosestNodes()
     }
 
     private async replicateDataToClosestNodes(): Promise<void> {
         const dataEntries = Array.from(this.localDataStore.getStore().values())
             .flatMap((dataMap) => Array.from(dataMap.values()))
             .map((localData) => localData.dataEntry)
-
         await Promise.all(dataEntries.map(async (dataEntry) => {
             const dhtNodeRemotes = this.getNodesClosestToIdFromBucket(dataEntry.key, this.redundancyFactor)
             await Promise.all(dhtNodeRemotes.map(async (remoteDhtNode) => {
@@ -242,9 +234,7 @@ export class StoreRpcLocal implements IStoreRpc {
     public async replicateData(request: ReplicateDataRequest, context: ServerCallContext): Promise<Empty> {
         logger.trace('server-side replicateData()')
         const dataEntry = request.entry!
-
         const wasStored = this.localDataStore.storeEntry(dataEntry)
-        
         if (wasStored) {
             this.replicateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.entry!)
         }
@@ -256,24 +246,19 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     private replicateDataToNeighborsIfNeeded(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
-
         // sort own contact list according to data id
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
         const dataId = PeerID.fromValue(dataEntry.key)
         const incomingPeerId = PeerID.fromValue(incomingPeer.nodeId)
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
-
         const sortedList = new SortedContactList<Contact>(dataId, this.redundancyFactor, undefined, true)
         sortedList.addContact(new Contact(this.localPeerDescriptor))
-
         closestToData.forEach((con) => {
             sortedList.addContact(new Contact(con.getPeerDescriptor()))
         })
-
         if (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)) {
             // If we are not the closest node to the data, replicate only to the 
             // closest one to the data
-
             const contact = sortedList.getAllContacts()[0]
             const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().nodeId)
             if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
@@ -304,5 +289,9 @@ export class StoreRpcLocal implements IStoreRpc {
                 }
             })
         }
+    }
+
+    async destroy(): Promise<void> {
+        await this.replicateDataToClosestNodes()
     }
 }
