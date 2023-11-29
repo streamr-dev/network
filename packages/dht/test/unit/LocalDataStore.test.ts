@@ -31,6 +31,10 @@ describe('LocalDataStore', () => {
     const creator1 = createMockPeerDescriptor()
     const creator2 = createMockPeerDescriptor()
 
+    const getEntryArray = (key: Uint8Array) => {
+        return Array.from(localDataStore.getEntries(PeerID.fromValue(key)).values())
+    }
+
     beforeEach(() => {
         localDataStore = new LocalDataStore()
     })
@@ -42,7 +46,8 @@ describe('LocalDataStore', () => {
     it('can store', () => {
         const storedEntry = createMockEntry({ creator: creator1 })
         localDataStore.storeEntry(storedEntry)
-        const fetchedEntries = localDataStore.getEntries(PeerID.fromValue(storedEntry.key))
+        const fetchedEntries = getEntryArray(storedEntry.key)
+        expect(fetchedEntries).toHaveLength(1)
         fetchedEntries.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(areEqualPeerDescriptors(fetchedDescriptor, creator1)).toBeTrue()
@@ -55,7 +60,8 @@ describe('LocalDataStore', () => {
         const storedEntry2 = createMockEntry({ key, creator: creator2, data: Any.pack(creator1, PeerDescriptor) })
         localDataStore.storeEntry(storedEntry1)
         localDataStore.storeEntry(storedEntry2)
-        const fetchedEntries = localDataStore.getEntries(PeerID.fromValue(key))
+        const fetchedEntries = getEntryArray(key)
+        expect(fetchedEntries).toHaveLength(2)
         fetchedEntries.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(areEqualPeerDescriptors(fetchedDescriptor, creator1)).toBeTrue()
@@ -69,7 +75,8 @@ describe('LocalDataStore', () => {
         localDataStore.storeEntry(storedEntry1)
         localDataStore.storeEntry(storedEntry2)
         localDataStore.deleteEntry(PeerID.fromValue(key), creator1)
-        const fetchedEntries = localDataStore.getEntries(PeerID.fromValue(key))
+        const fetchedEntries = getEntryArray(key)
+        expect(fetchedEntries).toHaveLength(1)
         fetchedEntries.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(areEqualPeerDescriptors(fetchedDescriptor, creator2)).toBeTrue()
@@ -84,18 +91,15 @@ describe('LocalDataStore', () => {
         localDataStore.storeEntry(storedEntry2)
         localDataStore.deleteEntry(PeerID.fromValue(key), creator1)
         localDataStore.deleteEntry(PeerID.fromValue(key), creator2)
-        const fetchedEntries = localDataStore.getEntries(PeerID.fromValue(key))
-        expect(fetchedEntries.size).toBe(0)
+        expect(getEntryArray(key)).toHaveLength(0)
     })
 
     it('data is deleted after TTL', async () => {
         const storedEntry = createMockEntry({ creator: creator1, ttl: 1000 })
         localDataStore.storeEntry(storedEntry)
-        const fethedEntriesBeforeExpiration = localDataStore.getEntries(PeerID.fromValue(storedEntry.key))
-        expect(fethedEntriesBeforeExpiration.size).toBe(1)
+        expect(getEntryArray(storedEntry.key)).toHaveLength(1)
         await wait(1100)
-        const fetchedEntriesAfterExpiration = localDataStore.getEntries(PeerID.fromValue(storedEntry.key))
-        expect(fetchedEntriesAfterExpiration.size).toBe(0)
+        expect(getEntryArray(storedEntry.key)).toHaveLength(0)
     })
 
     describe('mark data as deleted', () => {
