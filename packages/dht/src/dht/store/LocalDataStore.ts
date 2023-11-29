@@ -20,6 +20,8 @@ interface LocalDataEntry {
     ttlTimeout: NodeJS.Timeout
 }
 
+type Key = Uint8Array
+
 export class LocalDataStore {
     // A map into which each node can store one value per data key
     // The first key is the key of the data, the second key is the
@@ -49,14 +51,14 @@ export class LocalDataStore {
         this.store.get(dataKey)!.set(publisherKey, {
             dataEntry,
             ttlTimeout: setTimeout(() => {
-                this.deleteEntry(PeerID.fromValue(dataEntry.key), dataEntry.creator!)
+                this.deleteEntry(dataEntry.key, dataEntry.creator!)
             }, createTtlValue(dataEntry.ttl))
         })
         return true
     }
 
-    public markAsDeleted(id: Uint8Array, creator: PeerID): boolean {
-        const dataKey = PeerID.fromValue(id).toKey()
+    public markAsDeleted(key: Key, creator: PeerID): boolean {
+        const dataKey = PeerID.fromValue(key).toKey()
         const item = this.store.get(dataKey)
         if ((item === undefined) || !item.has(creator.toKey())) {
             return false
@@ -70,36 +72,40 @@ export class LocalDataStore {
         return this.store
     }
 
-    public getEntries(key: PeerID): Map<PeerIDKey, DataEntry> {
+    public getEntries(key: Key): Map<PeerIDKey, DataEntry> {
         const dataEntries = new Map<PeerIDKey, DataEntry>
-        this.store.get(key.toKey())?.forEach((value, key) => {
+        const mapKey = PeerID.fromValue(key).toKey()
+        this.store.get(mapKey)?.forEach((value, key) => {
             dataEntries.set(key, value.dataEntry)
         })
         return dataEntries
     }
 
-    public setStale(key: PeerID, creator: PeerDescriptor, stale: boolean): void {
+    public setStale(key: Key, creator: PeerDescriptor, stale: boolean): void {
         const creatorKey = keyFromPeerDescriptor(creator)
-        const storedEntry = this.store.get(key.toKey())?.get(creatorKey)
+        const mapKey = PeerID.fromValue(key).toKey()
+        const storedEntry = this.store.get(mapKey)?.get(creatorKey)
         if (storedEntry) {
             storedEntry.dataEntry.stale = stale
         }
     }
 
-    public setAllEntriesAsStale(key: PeerID): void {
-        this.store.get(key.toKey())?.forEach((value) => {
+    public setAllEntriesAsStale(key: Key): void {
+        const mapKey = PeerID.fromValue(key).toKey()
+        this.store.get(mapKey)?.forEach((value) => {
             value.dataEntry.stale = true
         })
     }
 
-    public deleteEntry(key: PeerID, creator: PeerDescriptor): void {
+    public deleteEntry(key: Key, creator: PeerDescriptor): void {
+        const mapKey = PeerID.fromValue(key).toKey()
         const creatorKey = keyFromPeerDescriptor(creator)
-        const storedEntry = this.store.get(key.toKey())?.get(creatorKey)
+        const storedEntry = this.store.get(mapKey)?.get(creatorKey)
         if (storedEntry) {
             clearTimeout(storedEntry.ttlTimeout)
-            this.store.get(key.toKey())?.delete(creatorKey)
-            if (this.store.get(key.toKey())?.size === 0) {
-                this.store.delete(key.toKey())
+            this.store.get(mapKey)?.delete(creatorKey)
+            if (this.store.get(mapKey)?.size === 0) {
+                this.store.delete(mapKey)
             }
         }
     }

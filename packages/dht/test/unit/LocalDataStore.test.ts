@@ -1,7 +1,6 @@
 import { wait } from '@streamr/utils'
 import crypto from 'crypto'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
-import { PeerID } from '../../src/helpers/PeerID'
 import {
     areEqualPeerDescriptors,
     keyFromPeerDescriptor,
@@ -30,7 +29,7 @@ describe('LocalDataStore', () => {
     let localDataStore: LocalDataStore
 
     const getEntryArray = (key: Uint8Array) => {
-        return Array.from(localDataStore.getEntries(PeerID.fromValue(key)).values())
+        return Array.from(localDataStore.getEntries(key).values())
     }
 
     const haveEqualData = (entry1: DataEntry, entry2: DataEntry) => {
@@ -61,7 +60,7 @@ describe('LocalDataStore', () => {
         const storedEntry2 = createMockEntry({ key, creator: creator2, data: Any.pack(creator1, PeerDescriptor) })
         localDataStore.storeEntry(storedEntry1)
         localDataStore.storeEntry(storedEntry2)
-        const fetchedEntries = localDataStore.getEntries(PeerID.fromValue(key))
+        const fetchedEntries = localDataStore.getEntries(key)
         expect(fetchedEntries.size).toBe(2)
         expect(haveEqualData(fetchedEntries.get(keyFromPeerDescriptor(creator1))!, storedEntry1))
         expect(haveEqualData(fetchedEntries.get(keyFromPeerDescriptor(creator2))!, storedEntry2))
@@ -75,7 +74,7 @@ describe('LocalDataStore', () => {
         const storedEntry2 = createMockEntry({ key, creator: creator2 })
         localDataStore.storeEntry(storedEntry1)
         localDataStore.storeEntry(storedEntry2)
-        localDataStore.deleteEntry(PeerID.fromValue(key), creator1)
+        localDataStore.deleteEntry(key, creator1)
         const fetchedEntries = getEntryArray(key)
         expect(fetchedEntries).toHaveLength(1)
         expect(haveEqualData(fetchedEntries[0], storedEntry2 )).toBeTrue()
@@ -89,8 +88,8 @@ describe('LocalDataStore', () => {
         const storedEntry2 = createMockEntry({ key, creator: creator2 })
         localDataStore.storeEntry(storedEntry1)
         localDataStore.storeEntry(storedEntry2)
-        localDataStore.deleteEntry(PeerID.fromValue(key), creator1)
-        localDataStore.deleteEntry(PeerID.fromValue(key), creator2)
+        localDataStore.deleteEntry(key, creator1)
+        localDataStore.deleteEntry(key, creator2)
         expect(getEntryArray(key)).toHaveLength(0)
     })
 
@@ -108,11 +107,11 @@ describe('LocalDataStore', () => {
             const creator1 = createMockPeerDescriptor()
             const storedEntry = createMockEntry({ creator: creator1 })
             localDataStore.storeEntry(storedEntry)
-            const notDeletedData = localDataStore.getEntries(PeerID.fromValue(storedEntry.key))
+            const notDeletedData = localDataStore.getEntries(storedEntry.key)
             expect(notDeletedData.get(keyFromPeerDescriptor(creator1))!.deleted).toBeFalse()
             const returnValue = localDataStore.markAsDeleted(storedEntry.key, peerIdFromPeerDescriptor(creator1))
             expect(returnValue).toBe(true)
-            const deletedData = localDataStore.getEntries(PeerID.fromValue(storedEntry.key))
+            const deletedData = localDataStore.getEntries(storedEntry.key)
             expect(deletedData.get(keyFromPeerDescriptor(creator1))!.deleted).toBeTrue()
         })
 
