@@ -1,4 +1,5 @@
-import { createStrictConfig, NetworkPeerDescriptor, redactConfig, NetworkNodeType } from '../../src/Config'
+import { config as CHAIN_CONFIG } from '@streamr/config'
+import { NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -95,7 +96,7 @@ describe('Config', () => {
             const clientDefaults = createStrictConfig()
             const clientOverrides = createStrictConfig(CONFIG_TEST)
             expect(clientOverrides.network.controlLayer.entryPoints).not.toEqual(clientDefaults.network.controlLayer.entryPoints)
-            expect(clientOverrides.network.controlLayer.entryPoints).toEqual(CONFIG_TEST.network!.controlLayer!.entryPoints)
+            expect(clientOverrides.network.controlLayer.entryPoints).toEqual(CHAIN_CONFIG.dev2.entryPoints)
         })
 
         it('network can be empty', () => {
@@ -138,5 +139,50 @@ describe('Config', () => {
         }
         redactConfig(config)
         expect(config.auth.privateKey).toBe('(redacted)')
+    })
+
+    describe('preset', () => {
+
+        it('happy path', () => {
+            const presetId = 'mumbai'  // some preset id
+            const config: any = {
+                config: presetId
+            }
+            expect(createStrictConfig(config)).toMatchObject({
+                network: {
+                    controlLayer: {
+                        entryPoints: CHAIN_CONFIG[presetId].entryPoints
+                    }
+                },
+                contracts: {
+                    streamRegistryChainAddress: CHAIN_CONFIG[presetId].contracts.StreamRegistry,
+                    streamStorageRegistryChainAddress: CHAIN_CONFIG[presetId].contracts.StreamStorageRegistry,
+                    storageNodeRegistryChainAddress: CHAIN_CONFIG[presetId].contracts.StorageNodeRegistry,
+                    streamRegistryChainRPCs: {
+                        name: CHAIN_CONFIG[presetId].name,
+                        chainId: CHAIN_CONFIG[presetId].id,
+                        rpcs: CHAIN_CONFIG[presetId].rpcEndpoints
+                    },
+                    theGraphUrl: CHAIN_CONFIG[presetId].theGraphUrl
+                }
+            })
+        })
+
+        it('override', () => {
+            const presetId = 'mumbai'  // some preset id
+            const config: any = {
+                config: presetId,
+                contracts: {
+                    streamStorageRegistryChainAddress: '0x1234567890123456789012345678901234567890'
+                }
+            }
+            expect(createStrictConfig(config)).toMatchObject({
+                contracts: {
+                    streamRegistryChainAddress: CHAIN_CONFIG[presetId].contracts.StreamRegistry,
+                    streamStorageRegistryChainAddress: '0x1234567890123456789012345678901234567890',
+                    storageNodeRegistryChainAddress: CHAIN_CONFIG[presetId].contracts.StorageNodeRegistry
+                }
+            })
+        })
     })
 })

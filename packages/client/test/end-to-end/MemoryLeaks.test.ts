@@ -23,6 +23,7 @@ import { MessageMetadata } from '../../src/Message'
 import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
 import { merge, TheGraphClient } from '@streamr/utils'
 import { StreamrClientEventEmitter } from '../../src/events'
+import { config as CHAIN_CONFIG } from '@streamr/config'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -54,6 +55,7 @@ describe('MemoryLeaks', () => {
         leaksDetector = new LeaksDetector()
         leaksDetector.ignoreAll(rootContainer)
         leaksDetector.ignoreAll(ethersAbi)
+        leaksDetector.ignoreAll(CHAIN_CONFIG)
         snapshot()
     })
 
