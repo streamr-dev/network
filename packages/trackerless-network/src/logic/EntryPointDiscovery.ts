@@ -69,7 +69,7 @@ export class EntryPointDiscovery {
     private readonly config: EntryPointDiscoveryConfig
     private readonly storeInterval: number
     private readonly networkSplitAvoidedNodes: Set<NodeID> = new Set()
-    private amStoredAsEntryPoint = false
+    private localPeerDescriptorStored = false
     constructor(config: EntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
@@ -117,12 +117,12 @@ export class EntryPointDiscovery {
     }
 
     async storeSelfAsEntryPointIfNecessary(currentEntrypointCount: number): Promise<void> {
-        if (this.abortController.signal.aborted || this.amStoredAsEntryPoint) {
+        if (this.abortController.signal.aborted || this.localPeerDescriptorStored) {
             return
         }
         const possibleNetworkSplitDetected = this.config.layer1Node.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT
         if ((currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) || possibleNetworkSplitDetected) {
-            this.amStoredAsEntryPoint = true
+            this.localPeerDescriptorStored = true
             await this.storeSelfAsEntryPoint()
             await this.keepSelfAsEntryPoint()
         }
@@ -174,8 +174,8 @@ export class EntryPointDiscovery {
         logger.trace(`Network split avoided`)
     }
 
-    public amEntryPoint(): boolean {
-        return this.amStoredAsEntryPoint
+    public localNodeIsEntryPoint(): boolean {
+        return this.localPeerDescriptorStored
     }
 
     async destroy(): Promise<void> {

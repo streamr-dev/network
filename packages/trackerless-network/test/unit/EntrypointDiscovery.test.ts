@@ -112,20 +112,20 @@ describe('EntryPointDiscovery', () => {
     it('store on empty stream', async () => {
         await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(0)
         expect(storeCalled).toEqual(1)
-        expect(entryPointDiscoveryWithData.amEntryPoint()).toEqual(true)
+        expect(entryPointDiscoveryWithData.localNodeIsEntryPoint()).toEqual(true)
     })
 
     it('store on stream without saturated entrypoint count', async () => {
         addNodesToStreamPart(layer1Node, 4)
         await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(0)
         expect(storeCalled).toEqual(1)
-        expect(entryPointDiscoveryWithData.amEntryPoint()).toEqual(true)
+        expect(entryPointDiscoveryWithData.localNodeIsEntryPoint()).toEqual(true)
     })
 
     it('will keep stored until destroyed', async () => {
         await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(0)
         expect(storeCalled).toEqual(1)
-        expect(entryPointDiscoveryWithData.amEntryPoint()).toEqual(true)
+        expect(entryPointDiscoveryWithData.localNodeIsEntryPoint()).toEqual(true)
         await wait(4500)
         await entryPointDiscoveryWithData.destroy()
         // we have configured storeInterval to 2 seconds, i.e. after 4.5 seconds it should have been called 2 more items 

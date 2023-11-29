@@ -44,7 +44,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             transport: cms[i],
             connectionLocker: cms[i],
             localPeerDescriptor: peerDescriptors[i],
-            amEntryPoint: () => false,
+            localNodeIsEntryPoint: () => false,
             onEntryPointLeaveDetected: async () => {}
         }))
         entryPointRandomGraphNode = createRandomGraphNode({
@@ -53,7 +53,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             transport: entrypointCm,
             connectionLocker: entrypointCm,
             localPeerDescriptor: entrypointDescriptor,
-            amEntryPoint: () => false,
+            localNodeIsEntryPoint: () => false,
             onEntryPointLeaveDetected: async () => {}
         })
 

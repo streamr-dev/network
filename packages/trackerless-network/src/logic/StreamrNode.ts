@@ -142,7 +142,7 @@ export class StreamrNode extends EventEmitter<Events> {
             deleteEntryPointData: async (key: Uint8Array) => this.layer0Node!.deleteDataFromDht(key, false)
         })
         const onEntryPointLeaveDetected = async () => {
-            if (this.destroyed || entryPointDiscovery.amEntryPoint() || this.knownStreamPartEntryPoints.has(streamPartId)) {
+            if (this.destroyed || entryPointDiscovery.localNodeIsEntryPoint() || this.knownStreamPartEntryPoints.has(streamPartId)) {
                 return
             }
             const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht(0)
@@ -152,7 +152,7 @@ export class StreamrNode extends EventEmitter<Events> {
             streamPartId,
             layer1Node, 
             () => onEntryPointLeaveDetected(),
-            () => entryPointDiscovery.amEntryPoint()
+            () => entryPointDiscovery.localNodeIsEntryPoint()
         )
         streamPart = {
             proxied: false,
@@ -215,7 +215,7 @@ export class StreamrNode extends EventEmitter<Events> {
         streamPartId: StreamPartID,
         layer1Node: Layer1Node,
         onEntryPointLeaveDetected: () => Promise<void>,
-        amEntryPoint: () => boolean
+        localNodeIsEntryPoint: () => boolean
     ) {
         return createRandomGraphNode({
             streamPartId,
@@ -228,7 +228,7 @@ export class StreamrNode extends EventEmitter<Events> {
             acceptProxyConnections: this.config.acceptProxyConnections,
             rpcRequestTimeout: this.config.rpcRequestTimeout,
             onEntryPointLeaveDetected,
-            amEntryPoint
+            localNodeIsEntryPoint
         })
     }
 

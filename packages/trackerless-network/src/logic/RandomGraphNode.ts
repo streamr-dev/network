@@ -56,7 +56,7 @@ export interface StrictRandomGraphNodeConfig {
     numOfTargetNeighbors: number
     inspector: IInspector
     temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
-    amEntryPoint: () => boolean
+    localNodeIsEntryPoint: () => boolean
     onEntryPointLeaveDetected: () => Promise<void>
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
     rpcRequestTimeout?: number
@@ -82,7 +82,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             rpcCommunicator: this.config.rpcCommunicator,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
-            onLeaveNotice: (senderId: NodeID, isStreamEntryPoint: boolean) => {
+            onLeaveNotice: (senderId: NodeID, isStrelocalNodeIsEntryPoint: boolean) => {
                 const contact = this.config.nearbyNodeView.get(senderId)
                 || this.config.randomNodeView.get(senderId)
                 || this.config.targetNeighbors.get(senderId)
@@ -96,7 +96,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                     this.config.neighborFinder.start([senderId])
                     this.config.proxyConnectionRpcLocal?.removeConnection(senderId)
                 }
-                if (isStreamEntryPoint) {
+                if (isStrelocalNodeIsEntryPoint) {
                     setImmediate(() => this.config.onEntryPointLeaveDetected())
                 }
             },
@@ -284,7 +284,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
         this.abortController.abort()
         this.config.proxyConnectionRpcLocal?.stop()
-        this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice(this.config.amEntryPoint()))
+        this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice(this.config.localNodeIsEntryPoint()))
         this.config.rpcCommunicator.destroy()
         this.removeAllListeners()
         this.config.nearbyNodeView.stop()
