@@ -24,7 +24,7 @@ export class NetworkNode {
     /** @internal */
     constructor(stack: NetworkStack) {
         this.stack = stack
-        this.stack.getStreamrNode().on('newMessage', (msg) => {
+        this.stack.getDeliveryLayer().on('newMessage', (msg) => {
             if (this.messageListeners.length > 0) {
                 try {
                     const translated = StreamMessageTranslator.toClientProtocol(msg)
@@ -43,7 +43,7 @@ export class NetworkNode {
     }
 
     async inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
-        return this.stack.getStreamrNode().inspect(node, streamPartId)
+        return this.stack.getDeliveryLayer().inspect(node, streamPartId)
     }
 
     async broadcast(streamMessage: StreamMessage): Promise<void> {
@@ -62,11 +62,11 @@ export class NetworkNode {
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
-        await this.stack.getStreamrNode().setProxies(streamPartId, nodes, direction, userId, connectionCount)
+        await this.stack.getDeliveryLayer().setProxies(streamPartId, nodes, direction, userId, connectionCount)
     }
 
     isProxiedStreamPart(streamPartId: StreamPartID): boolean {
-        return this.stack.getStreamrNode().isProxiedStreamPart(streamPartId)
+        return this.stack.getDeliveryLayer().isProxiedStreamPart(streamPartId)
     }
 
     addMessageListener(cb: (msg: StreamMessage) => void): void {
@@ -74,7 +74,7 @@ export class NetworkNode {
     }
 
     setStreamPartEntryPoints(streamPartId: StreamPartID, contactPeerDescriptors: PeerDescriptor[]): void {
-        this.stack.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, contactPeerDescriptors)
+        this.stack.getDeliveryLayer()!.setStreamPartEntryPoints(streamPartId, contactPeerDescriptors)
     }
 
     removeMessageListener(cb: (msg: StreamMessage) => void): void {
@@ -85,15 +85,15 @@ export class NetworkNode {
         if (this.stopped) {
             return
         }
-        await this.stack.getStreamrNode().leaveStreamPart(streamPartId)
+        await this.stack.getDeliveryLayer().leaveStreamPart(streamPartId)
     }
 
     getNeighbors(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
-        return this.stack.getStreamrNode().getNeighbors(streamPartId)
+        return this.stack.getDeliveryLayer().getNeighbors(streamPartId)
     }
 
     hasStreamPart(streamPartId: StreamPartID): boolean {
-        return this.stack.getStreamrNode().hasStreamPart(streamPartId)
+        return this.stack.getDeliveryLayer().hasStreamPart(streamPartId)
     }
 
     async stop(): Promise<void> {
@@ -110,11 +110,11 @@ export class NetworkNode {
     }
 
     getNodeId(): NodeID {
-        return this.stack.getStreamrNode().getNodeId()
+        return this.stack.getDeliveryLayer().getNodeId()
     }
 
     getStreamParts(): StreamPartID[] {
-        return this.stack.getStreamrNode().getStreamParts()
+        return this.stack.getDeliveryLayer().getStreamParts()
     }
 
     // eslint-disable-next-line class-methods-use-this

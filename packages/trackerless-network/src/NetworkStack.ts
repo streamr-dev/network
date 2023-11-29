@@ -1,5 +1,5 @@
 import { ConnectionManager, DhtNode, DhtNodeOptions, areEqualPeerDescriptors } from '@streamr/dht'
-import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
+import { DeliveryLayer, DeliveryLayerConfig } from './logic/DeliveryLayer'
 import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
@@ -8,7 +8,7 @@ import { Layer0Node } from './logic/Layer0Node'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
-    networkNode?: StreamrNodeConfig
+    networkNode?: DeliveryLayerConfig
     metricsContext?: MetricsContext
 }
 
@@ -19,7 +19,7 @@ export interface NetworkStackEvents {
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     private layer0Node?: Layer0Node
-    private streamrNode?: StreamrNode
+    private deliveryLayer?: DeliveryLayer
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
 
@@ -31,35 +31,35 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             ...options.layer0,
             metricsContext: this.metricsContext
         })
-        this.streamrNode = new StreamrNode({
+        this.deliveryLayer = new DeliveryLayer({
             ...options.networkNode,
             metricsContext: this.metricsContext
         })
     }
 
     async joinStreamPart(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
-        if (this.getStreamrNode().isProxiedStreamPart(streamPartId)) {
+        if (this.getDeliveryLayer().isProxiedStreamPart(streamPartId)) {
             throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
         }
         await this.ensureConnectedToControlLayer()
-        this.getStreamrNode().joinStreamPart(streamPartId)
+        this.getDeliveryLayer().joinStreamPart(streamPartId)
         if (neighborRequirement !== undefined) {
             await waitForCondition(() => {
-                return this.getStreamrNode().getNeighbors(streamPartId).length >= neighborRequirement.minCount
+                return this.getDeliveryLayer().getNeighbors(streamPartId).length >= neighborRequirement.minCount
             }, neighborRequirement.timeout)
         }
     }
 
     async broadcast(msg: StreamMessage): Promise<void> {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
-        if (this.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.messageType === StreamMessageType.MESSAGE)) {
+        if (this.getDeliveryLayer().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.messageType === StreamMessageType.MESSAGE)) {
             throw new Error(`Cannot broadcast to ${streamPartId} as proxy subscribe connections have been set`)
         }
         // TODO could combine these two calls to isProxiedStreamPart?
-        if (!this.streamrNode!.isProxiedStreamPart(streamPartId)) {
+        if (!this.deliveryLayer!.isProxiedStreamPart(streamPartId)) {
             await this.ensureConnectedToControlLayer()
         }
-        this.getStreamrNode().broadcast(msg)
+        this.getDeliveryLayer().broadcast(msg)
     }
 
     async start(doJoin = true): Promise<void> {
@@ -75,7 +75,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
                 await this.ensureConnectedToControlLayer()
             }
         }
-        await this.streamrNode?.start(this.layer0Node!, connectionManager, connectionManager)
+        await this.deliveryLayer?.start(this.layer0Node!, connectionManager, connectionManager)
     }
 
     private async ensureConnectedToControlLayer(): Promise<void> {
@@ -93,8 +93,8 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         await this.layer0Node!.waitForNetworkConnectivity()
     }
 
-    getStreamrNode(): StreamrNode {
-        return this.streamrNode!
+    getDeliveryLayer(): DeliveryLayer {
+        return this.deliveryLayer!
     }
 
     getLayer0Node(): Layer0Node {
@@ -106,9 +106,9 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     async stop(): Promise<void> {
-        await this.streamrNode!.destroy()
+        await this.deliveryLayer!.destroy()
         await this.layer0Node!.stop()
-        this.streamrNode = undefined
+        this.deliveryLayer = undefined
         this.layer0Node = undefined
         this.emit('stopped')
     }

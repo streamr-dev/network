@@ -84,14 +84,14 @@ describe('inspect', () => {
         await inspectedNode.start()
         await inspectorNode.start()
 
-        publisherNode.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
-        inspectedNode.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
-        inspectorNode.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
+        publisherNode.stack.getDeliveryLayer()!.joinStreamPart(STREAM_PART_ID)
+        inspectedNode.stack.getDeliveryLayer()!.joinStreamPart(STREAM_PART_ID)
+        inspectorNode.stack.getDeliveryLayer()!.joinStreamPart(STREAM_PART_ID)
 
         await waitForCondition(() => 
-            publisherNode.stack.getStreamrNode().getNeighbors(STREAM_PART_ID).length === 2 
-            && inspectedNode.stack.getStreamrNode().getNeighbors(STREAM_PART_ID).length === 2 
-            && inspectorNode.stack.getStreamrNode().getNeighbors(STREAM_PART_ID).length === 2
+            publisherNode.stack.getDeliveryLayer().getNeighbors(STREAM_PART_ID).length === 2 
+            && inspectedNode.stack.getDeliveryLayer().getNeighbors(STREAM_PART_ID).length === 2 
+            && inspectorNode.stack.getDeliveryLayer().getNeighbors(STREAM_PART_ID).length === 2
         )
     }, 30000)
 

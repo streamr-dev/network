@@ -51,7 +51,7 @@ interface Metrics extends MetricsDefinition {
     broadcastBytesPerSecond: Metric
 }
 
-export interface StreamrNodeConfig {
+export interface DeliveryLayerConfig {
     metricsContext?: MetricsContext
     streamPartitionNumOfNeighbors?: number
     streamPartitionMinPropagationTargets?: number
@@ -59,21 +59,20 @@ export interface StreamrNodeConfig {
     rpcRequestTimeout?: number
 }
 
-// TODO rename class?
-export class StreamrNode extends EventEmitter<Events> {
+export class DeliveryLayer extends EventEmitter<Events> {
 
     private transport?: ITransport
     private connectionLocker?: ConnectionLocker
     private layer0Node?: Layer0Node
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
-    private readonly config: StreamrNodeConfig
+    private readonly config: DeliveryLayerConfig
     private readonly streamParts: Map<StreamPartID, StreamPartDelivery>
     private readonly knownStreamPartEntryPoints: Map<StreamPartID, PeerDescriptor[]> = new Map()
     private started = false
     private destroyed = false
 
-    constructor(config: StreamrNodeConfig) {
+    constructor(config: DeliveryLayerConfig) {
         super()
         this.config = config
         this.streamParts = new Map()

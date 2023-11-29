@@ -34,9 +34,9 @@ describe('NetworkStack', () => {
         })
 
         await stack1.start()
-        stack1.getStreamrNode()!.setStreamPartEntryPoints(STREAM_PART_ID, [epDescriptor])
+        stack1.getDeliveryLayer()!.setStreamPartEntryPoints(STREAM_PART_ID, [epDescriptor])
         await stack2.start()
-        stack2.getStreamrNode()!.setStreamPartEntryPoints(STREAM_PART_ID, [epDescriptor])
+        stack2.getDeliveryLayer()!.setStreamPartEntryPoints(STREAM_PART_ID, [epDescriptor])
     })
 
     afterEach(async () => {
@@ -48,8 +48,8 @@ describe('NetworkStack', () => {
 
     it('Can use NetworkNode pub/sub via NetworkStack', async () => {
         let receivedMessages = 0
-        stack1.getStreamrNode().joinStreamPart(STREAM_PART_ID)
-        stack1.getStreamrNode().on('newMessage', () => {
+        stack1.getDeliveryLayer().joinStreamPart(STREAM_PART_ID)
+        stack1.getDeliveryLayer().on('newMessage', () => {
             receivedMessages += 1
         })
         const msg = createStreamMessage(
@@ -57,7 +57,7 @@ describe('NetworkStack', () => {
             STREAM_PART_ID,
             randomEthereumAddress()
         )
-        stack2.getStreamrNode().broadcast(msg)
+        stack2.getDeliveryLayer().broadcast(msg)
         await waitForCondition(() => receivedMessages === 1)
     })
 
@@ -66,7 +66,7 @@ describe('NetworkStack', () => {
             stack1.joinStreamPart(STREAM_PART_ID, { minCount: 1, timeout: 5000 }),
             stack2.joinStreamPart(STREAM_PART_ID, { minCount: 1, timeout: 5000 }),
         ])
-        expect(stack1.getStreamrNode().getNeighbors(STREAM_PART_ID).length).toBe(1)
-        expect(stack2.getStreamrNode().getNeighbors(STREAM_PART_ID).length).toBe(1)
+        expect(stack1.getDeliveryLayer().getNeighbors(STREAM_PART_ID).length).toBe(1)
+        expect(stack2.getDeliveryLayer().getNeighbors(STREAM_PART_ID).length).toBe(1)
     })
 })
