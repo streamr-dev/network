@@ -49,7 +49,7 @@ With more nodes, Operators can do more work and/or have more redundancy to prote
 #### Failed to publish to stream... Cause: You don't have permission to publish to this (coordination) stream
 If you see an error like this:
 `WARN [2023-10-31T10:19:06.979] (announceNodeToStream): Unable to publish to coordination stream`
-Then it is likely that you have not added your [node address to your Operator](../guides/become-an-operator#step-3-pair-your-node-with-your-operator-contract). Complete this step and restart your node.
+Then it is likely that you have not added your [node address to your Operator](../guides/become-an-operator.md#step-3-pair-your-node-with-your-operator-contract). Complete this step and restart your node.
 
 #### My node appears to not be running and/or are not reachable on the Streamr Hub
 Firstly, it's best to check on your node using the Chrome browser- There's a known connectivity issue using Brave browser.
