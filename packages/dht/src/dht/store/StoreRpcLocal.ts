@@ -34,7 +34,6 @@ interface DataStoreConfig {
     maxTtl: number
     highestTtl: number
     redundancyFactor: number
-    dhtNodeEmitter: EventEmitter<Events>
     getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
     rpcRequestTimeout?: number
 }
@@ -51,7 +50,6 @@ export class StoreRpcLocal implements IStoreRpc {
     private readonly maxTtl: number
     private readonly highestTtl: number
     private readonly redundancyFactor: number
-    private readonly dhtNodeEmitter: EventEmitter<Events>
     private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
     private readonly rpcRequestTimeout?: number
 
@@ -64,28 +62,28 @@ export class StoreRpcLocal implements IStoreRpc {
         this.maxTtl = config.maxTtl
         this.highestTtl = config.highestTtl
         this.redundancyFactor = config.redundancyFactor
-        this.dhtNodeEmitter = config.dhtNodeEmitter
         this.rpcRequestTimeout = config.rpcRequestTimeout
         this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
         this.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
             (request: StoreDataRequest) => this.storeData(request))
         this.rpcCommunicator.registerRpcNotification(ReplicateDataRequest, 'replicateData',
             (request: ReplicateDataRequest, context: ServerCallContext) => this.replicateData(request, context))
-        this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor) => {
-            this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
-                dataMap.forEach(async (dataEntry) => {
-                    const shouldReplicate = this.shouldReplicateDataToNewNode(dataEntry.dataEntry, peerDescriptor)
-                    this.localDataStore.setStale(PeerID.fromValue(dataEntry.dataEntry.key), dataEntry.dataEntry.creator!, !shouldReplicate)
-                    if (shouldReplicate) {
-                        try {
-                            await this.replicateDataToContact(dataEntry.dataEntry, peerDescriptor)
-                        } catch (e) {
-                            logger.trace('replicateDataToContact() failed', { error: e })
-                        }
+    }
+
+    onNewContact(peerDescriptor: PeerDescriptor) {
+        this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
+            dataMap.forEach(async (dataEntry) => {
+                const shouldReplicate = this.shouldReplicateDataToNewNode(dataEntry.dataEntry, peerDescriptor)
+                this.localDataStore.setStale(PeerID.fromValue(dataEntry.dataEntry.key), dataEntry.dataEntry.creator!, !shouldReplicate)
+                if (shouldReplicate) {
+                    try {
+                        await this.replicateDataToContact(dataEntry.dataEntry, peerDescriptor)
+                    } catch (e) {
+                        logger.trace('replicateDataToContact() failed', { error: e })
                     }
-                })
+                }
             })
-        })
+        })    
     }
 
     private shouldReplicateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {

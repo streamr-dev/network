@@ -281,11 +281,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             maxTtl: this.config.storeMaxTtl,
             redundancyFactor: this.config.storageRedundancyFactor,
             localDataStore: this.localDataStore,
-            dhtNodeEmitter: this,
             getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
                 return this.peerManager!.bucket!.closest(id, n)
             },
             rpcRequestTimeout: this.config.rpcRequestTimeout
+        })
+        this.on('newContact', (peerDescriptor: PeerDescriptor) => {
+            this.storeRpcLocal!.onNewContact(peerDescriptor)
         })
         this.bindRpcLocalMethods()
         if ((this.connectionManager !== undefined) && (this.config.entryPoints !== undefined) && this.config.entryPoints.length > 0
