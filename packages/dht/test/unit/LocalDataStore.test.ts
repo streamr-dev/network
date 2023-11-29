@@ -58,7 +58,7 @@ describe('LocalDataStore', () => {
         const creator2 = createMockPeerDescriptor()
         const key = peerIdFromPeerDescriptor(creator1).value
         const storedEntry1 = createMockEntry({ key, creator: creator1 })
-        const storedEntry2 = createMockEntry({ key, creator: creator2, data: Any.pack(creator1, PeerDescriptor) })
+        const storedEntry2 = createMockEntry({ key, creator: creator2 })
         localDataStore.storeEntry(storedEntry1)
         localDataStore.storeEntry(storedEntry2)
         const fetchedEntries = localDataStore.getEntries(PeerID.fromValue(key))
