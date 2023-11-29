@@ -69,6 +69,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
     })
 
     it('stream entry points are replaced when nodes leave streams', async () => {
+        // TODO: Investigate why CI needs more than 15 seconds to find 4 neighbors for the stream.
         await Promise.all(initialNodesOnStream.map((node) => node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 30000 })))
 
         let receivedMessages = 0
