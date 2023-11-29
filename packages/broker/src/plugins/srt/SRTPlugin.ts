@@ -1,9 +1,9 @@
-import { Schema } from "ajv"
+import { Schema } from 'ajv'
 import { ApiPluginConfig, Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { SRT, AsyncSRT, SRTReadStream } from "@eyevinn/srt"
+import { SRT, AsyncSRT, SRTReadStream } from '@eyevinn/srt'
 import { Logger } from '@streamr/utils'
-import StreamrClient from "streamr-client"
+import StreamrClient from 'streamr-client'
 
 const logger = new Logger(module)
 
@@ -22,6 +22,7 @@ export interface SRTPluginConfig {
     payloadMetadata: boolean
     ip: string
     streamId: string
+    partition: number
 }
 
 export class SRTPlugin extends Plugin<SRTPluginConfig> {
@@ -78,7 +79,7 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
                     
                     if (messagePool.length == messagePoolSize) {
                         const payload = { b:[0, messagePool] }
-                        const resp = await this.streamrClient?.publish(this.pluginConfig.streamId, payload)
+                        await this.streamrClient?.publish({ id: this.pluginConfig.streamId, partition: this.pluginConfig.partition }, payload)
                         messagePool = []
                     }
                 }

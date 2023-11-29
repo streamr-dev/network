@@ -25,6 +25,11 @@
             "description": "Stream Id",
             "default": "0x9df242563572223fce4e1aa9870c0710abcfe257/video-stream"
         },
+        "partition": {
+            "type": "integer",
+            "description": "Stream Partition Id",
+            "default": 0
+        },
         "apiAuthentication": {
             "$ref": "definitions.schema.json#/definitions/apiAuthenticationOverride"
         }
