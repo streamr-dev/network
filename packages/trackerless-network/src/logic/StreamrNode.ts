@@ -61,6 +61,7 @@ export interface StreamrNodeConfig {
 
 // TODO rename class?
 export class StreamrNode extends EventEmitter<Events> {
+
     private transport?: ITransport
     private connectionLocker?: ConnectionLocker
     private layer0Node?: Layer0Node
@@ -88,7 +89,7 @@ export class StreamrNode extends EventEmitter<Events> {
         if (this.started || this.destroyed) {
             return
         }
-        logger.info(`Starting new StreamrNode with id ${getNodeIdFromPeerDescriptor(startedAndJoinedLayer0Node.getLocalPeerDescriptor())}`)
+        logger.info(`Starting node with id ${getNodeIdFromPeerDescriptor(startedAndJoinedLayer0Node.getLocalPeerDescriptor())}`)
         this.started = true
         this.layer0Node = startedAndJoinedLayer0Node
         this.transport = transport
@@ -100,7 +101,7 @@ export class StreamrNode extends EventEmitter<Events> {
         if (!this.started || this.destroyed) {
             return
         }
-        logger.trace('Destroying StreamrNode...')
+        logger.trace('Destroying node')
         this.destroyed = true
         await Promise.all(Array.from(this.streamParts.values()).map((streamPart) => streamPart.stop()))
         this.streamParts.clear()
