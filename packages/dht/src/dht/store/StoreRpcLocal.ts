@@ -10,7 +10,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IFinder } from '../find/Finder'
-import { areEqualPeerDescriptors } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
@@ -88,13 +88,12 @@ export class StoreRpcLocal implements IStoreRpc {
 
     private shouldReplicateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
 
-        const dataId = PeerID.fromValue(dataEntry.key)
         const newNodeId = PeerID.fromValue(newNode.nodeId)
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
 
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
 
-        const sortedList = new SortedContactList<Contact>(dataId, 20, undefined, true)
+        const sortedList = new SortedContactList<Contact>(PeerID.fromValue(dataEntry.key), 20, undefined, true)
         sortedList.addContact(new Contact(this.localPeerDescriptor))
 
         closestToData.forEach((con) => {
@@ -125,10 +124,10 @@ export class StoreRpcLocal implements IStoreRpc {
         // do replicate data to it
 
         if (index < this.redundancyFactor) {
-            this.localDataStore.setStale(dataId, dataEntry.creator!, false)
+            this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), false)
             return true
         } else {
-            this.localDataStore.setStale(dataId, dataEntry.creator!, true)
+            this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), true)
             return false
         }
     }
@@ -223,7 +222,7 @@ export class StoreRpcLocal implements IStoreRpc {
         })
         
         if (!this.selfIsOneOfClosestPeers(key)) {
-            this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(key))
+            this.localDataStore.setAllEntriesAsStale(key)
         }
 
         logger.trace('storeData()')
@@ -269,7 +268,7 @@ export class StoreRpcLocal implements IStoreRpc {
             this.replicateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.entry!)
         }
         if (!this.selfIsOneOfClosestPeers(dataEntry.key)) {
-            this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.key))
+            this.localDataStore.setAllEntriesAsStale(dataEntry.key)
         }
         logger.trace('server-side replicateData() at end')
         return {}
