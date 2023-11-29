@@ -207,21 +207,21 @@ export interface EthereumNetworkConfig {
     highGasPriceStrategy?: boolean
 }
 
-// a subset of config ids which are available in @streamr/config
+// a subset of environment ids which are available in @streamr/config
 // - do not include legacy configs, which no longer work, e.g. "dev0"
 // - and no need to include configs, which users won't use in practice
 // - note that there is no special handling for empty arrays in the applyConfig and therefore
 //   empty arrays will be applied as-is: we may want to remove "enthereum.rpcEndpoints" key 
 //   from @streamr/config as the intention is to use system-defaults (e.g. Metamask defaults)
 //   in Ethereum network
-export type PresetId = 'polygon' | 'mumbai' | 'dev2'
+export type EnvironmentId = 'polygon' | 'mumbai' | 'dev2'
 
 /**
  * @category Important
  */
 export interface StreamrClientConfig {
 
-    config?: PresetId
+    environment?: EnvironmentId
 
     /** Custom human-readable debug id for client. Used in logging. */
     id?: string
@@ -406,7 +406,7 @@ export interface StreamrClientConfig {
     }
 }
 
-export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'config' | 'auth' | 'metrics'> & {
+export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'environment' | 'auth' | 'metrics'> & {
     network: Exclude<Required<StreamrClientConfig['network']>, undefined>
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
     encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>
@@ -420,37 +420,37 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
     // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?
     let config = cloneDeep(input)
-    const preset = config.config ?? 'polygon'
-    config = applyPreset(preset, config)
+    const environment = config.environment ?? 'polygon'
+    config = applyEnvironmentDefaults(environment, config)
     const strictConfig = validateConfig(config)
     strictConfig.id ??= generateClientId()
     return strictConfig
 }
 
-const applyPreset = (presetId: PresetId, data: StreamrClientConfig): StreamrClientConfig => {
-    const preset = CHAIN_CONFIG[presetId]
+const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrClientConfig): StreamrClientConfig => {
+    const defauls = CHAIN_CONFIG[environmentId]
     const config = merge(data, {
         network: {
             ...data.network,
             controlLayer: {
-                entryPoints: preset.entryPoints,
+                entryPoints: defauls.entryPoints,
                 ...data.network?.controlLayer,
             }
         } as any,
         contracts: {
-            streamRegistryChainAddress: preset.contracts.StreamRegistry,
-            streamStorageRegistryChainAddress: preset.contracts.StreamStorageRegistry,
-            storageNodeRegistryChainAddress: preset.contracts.StorageNodeRegistry,
+            streamRegistryChainAddress: defauls.contracts.StreamRegistry,
+            streamStorageRegistryChainAddress: defauls.contracts.StreamStorageRegistry,
+            storageNodeRegistryChainAddress: defauls.contracts.StorageNodeRegistry,
             streamRegistryChainRPCs: {
-                name: preset.name,
-                chainId: preset.id,
-                rpcs: preset.rpcEndpoints
+                name: defauls.name,
+                chainId: defauls.id,
+                rpcs: defauls.rpcEndpoints
             },
-            theGraphUrl: preset.theGraphUrl,
+            theGraphUrl: defauls.theGraphUrl,
             ...data.contracts,
         } as any
     }) as any
-    if (presetId === 'dev2') {
+    if (environmentId === 'dev2') {
         // TODO config the 30s default for "dev2 in" @streamr/config and remove this explicit timeout
         const toNumber = (value: any): number | undefined => {
             return (value !== undefined) ? Number(value) : undefined
