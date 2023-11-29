@@ -23,6 +23,7 @@ import { Contact } from '../contact/Contact'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ServiceID } from '../../types/ServiceID'
 import { Empty } from '../../proto/google/protobuf/empty'
+import { findIndex } from 'lodash'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -110,20 +111,10 @@ export class StoreRpcLocal implements IStoreRpc {
 
         const newPeerId = PeerID.fromValue(newNode.nodeId)
         sortedList.addContact(new Contact(newNode))
-
         const sorted = sortedList.getAllContacts()
-
-        let index = 0
-
-        for (index = 0; index < sorted.length; index++) {
-            if (sorted[index].getPeerId().equals(newPeerId)) {
-                break
-            }
-        }
-
+        let index = findIndex(sorted, (contact) => contact.getPeerId().equals(newPeerId))
         // if new node is within the storageRedundancyFactor closest nodes to the data
         // do replicate data to it
-
         if (index < this.redundancyFactor) {
             this.localDataStore.setStale(dataId, dataEntry.creator!, false)
             return true
