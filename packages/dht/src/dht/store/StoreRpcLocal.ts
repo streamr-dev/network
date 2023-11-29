@@ -11,7 +11,7 @@ import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IFinder } from '../find/Finder'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Logger } from '@streamr/utils'
+import { Logger, executeSafePromise } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { StoreRpcRemote } from './StoreRpcRemote'
@@ -261,20 +261,14 @@ export class StoreRpcLocal implements IStoreRpc {
         targets.forEach((contact) => {
             const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().nodeId)
             if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
-                setImmediate(async () => {
-                    try {
+                setImmediate(() => {
+                    executeSafePromise(async () => {
                         await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())
                         logger.trace('replicateDataToContact() returned', { 
                             node: getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()),
                             replicateOnlyToClosest
                         })
-                    } catch (e) {
-                        logger.error('replicateDataToContact failed', { 
-                            node: getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()),
-                            replicateOnlyToClosest,
-                            error: e
-                        })
-                    }
+                    })
                 })
             }
         })
