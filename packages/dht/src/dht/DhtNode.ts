@@ -282,7 +282,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             localDataStore: this.localDataStore,
             dhtNodeEmitter: this,
             getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
-                return this.peerManager!.getClosestPeersTo(id, n)
+                return this.peerManager!.getClosestNeighborsTo(id, n)
             },
             rpcRequestTimeout: this.config.rpcRequestTimeout
         })
@@ -348,7 +348,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
             serviceId: this.config.serviceId,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
-            getClosestPeersTo: (kademliaId: Uint8Array, limit: number) => this.peerManager!.getClosestPeersTo(kademliaId, limit),
+            getClosestPeersTo: (kademliaId: Uint8Array, limit: number) => this.peerManager!.getClosestNeighborsTo(kademliaId, limit),
             addNewContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
             removeContact: (contact: PeerDescriptor) => this.removeContact(contact)
         })
@@ -381,8 +381,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
-        const distance1 = this.peerManager!.bucket!.distance(peer1.kademliaId, compareToId.value)
-        const distance2 = this.peerManager!.bucket!.distance(this.localPeerDescriptor!.kademliaId, compareToId.value)
+        const distance1 = this.peerManager!.getDistance(peer1.kademliaId, compareToId.value)
+        const distance2 = this.peerManager!.getDistance(this.localPeerDescriptor!.kademliaId, compareToId.value)
         return distance1 < distance2
     }
 
@@ -408,19 +408,19 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getClosestContacts(limit?: number): PeerDescriptor[] {
-        return this.peerManager!.getClosestPeersTo(this.localPeerDescriptor!.kademliaId, limit).map((peer) => peer.getPeerDescriptor())
+        return this.peerManager!.getClosestNeighborsTo(this.localPeerDescriptor!.kademliaId, limit).map((peer) => peer.getPeerDescriptor())
     }
 
     public getNumberOfContacts(): number {
-        return this.peerManager!.getNumberOfPeers()
+        return this.peerManager!.getNumberOfNeighbors()
     }
     
     public getNodeId(): PeerID {
         return peerIdFromPeerDescriptor(this.localPeerDescriptor!)
     }
 
-    public getBucketSize(): number {
-        return this.peerManager!.bucket!.count()
+    public getNumberOfNeighbors(): number {
+        return this.peerManager!.getNumberOfNeighbors()
     }
 
     private connectToEntryPoint(entryPoint: PeerDescriptor): void {
@@ -511,8 +511,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return Array.from(this.peerManager!.connections.values()).map((peer) => peer.getPeerDescriptor())
     }
 
-    public getKBucketPeers(): PeerDescriptor[] {
-        return this.peerManager!.bucket!.toArray().map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
+    public getAllNeighborPeerDescriptors(): PeerDescriptor[] {
+        return this.peerManager!.getNeighbors().map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
     }
 
     public getNumberOfConnections(): number {

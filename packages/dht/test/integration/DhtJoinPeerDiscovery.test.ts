@@ -25,10 +25,10 @@ const runTest = async (latencyType: LatencyType) => {
     await entryPoint.joinDht([entrypointDescriptor])
     await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
     nodes.forEach((node) => {
-        expect(node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+        expect(node.getNumberOfNeighbors()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
         expect(node.getClosestContacts().length).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
     })
-    expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+    expect(entryPoint.getNumberOfNeighbors()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
 
     await Promise.all([
         entryPoint.stop(),

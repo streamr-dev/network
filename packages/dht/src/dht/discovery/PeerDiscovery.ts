@@ -80,7 +80,7 @@ export class PeerDiscovery {
             logger.debug(`DHT join on ${this.config.serviceId} timed out`)
         } finally {
             if (!this.isStopped()) {
-                if (this.config.peerManager.getKBucketSize() === 0) {
+                if (this.config.peerManager.getNumberOfNeighbors() === 0) {
                     if (retry) {
                         // TODO should we catch possible promise rejection?
                         setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.abortController.signal)
@@ -124,7 +124,7 @@ export class PeerDiscovery {
         if (this.isStopped()) {
             return
         }
-        const nodes = this.config.peerManager.getClosestPeersTo(this.config.localPeerDescriptor.kademliaId, this.config.parallelism)
+        const nodes = this.config.peerManager.getClosestNeighborsTo(this.config.localPeerDescriptor.kademliaId, this.config.parallelism)
         await Promise.allSettled(nodes.map(async (peer: DhtNodeRpcRemote) => {
             const contacts = await peer.getClosestPeers(this.config.localPeerDescriptor.kademliaId!)
             this.config.peerManager.handleNewPeers(contacts)    
