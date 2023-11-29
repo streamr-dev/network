@@ -10,7 +10,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IFinder } from '../find/Finder'
-import { areEqualPeerDescriptors } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
@@ -252,37 +252,32 @@ export class StoreRpcLocal implements IStoreRpc {
         closestToData.forEach((con) => {
             sortedList.addContact(new Contact(con.getPeerDescriptor()))
         })
-        if (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)) {
-            // If we are not the closest node to the data, replicate only to the 
-            // closest one to the data
-            const contact = sortedList.getAllContacts()[0]
+        const replicateOnlyToClosest = (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId))
+        const targets = replicateOnlyToClosest
+            // If we are not the closest node to the data, replicate only to the closest one to the data
+            ? [sortedList.getAllContacts()[0]]
+            // if we are the closest to the data, replicate to all storageRedundancyFactor nearest
+            : sortedList.getAllContacts()
+        targets.forEach((contact) => {
             const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().nodeId)
             if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
                 setImmediate(async () => {
                     try {
                         await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())
-                        logger.trace('replicateDataToContact() returned when migrating to only the closest contact')
+                        logger.trace('replicateDataToContact() returned', { 
+                            node: getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()),
+                            replicateOnlyToClosest
+                        })
                     } catch (e) {
-                        logger.error('replicating data to only the closest contact failed ' + e)
+                        logger.error('replicateDataToContact failed', { 
+                            node: getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()),
+                            replicateOnlyToClosest,
+                            error: e
+                        })
                     }
                 })
             }
-        } else {
-            // if we are the closest to the data, replicate to all storageRedundancyFactor nearest
-            sortedList.getAllContacts().forEach((contact) => {
-                const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().nodeId)
-                if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
-                    setImmediate(async () => {
-                        try {
-                            await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())
-                            logger.trace('replicateDataToContact() returned')
-                        } catch (e) {
-                            logger.error('replicating data to one of the closest contacts failed ' + e)
-                        }
-                    })
-                }
-            })
-        }
+        })
     }
 
     async destroy(): Promise<void> {
