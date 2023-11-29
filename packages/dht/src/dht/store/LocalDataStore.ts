@@ -1,6 +1,6 @@
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { DataEntry, PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { DataEntry } from '../../proto/packages/dht/protos/DhtRpc'
+import { peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const MIN_TTL = 1 * 1000
 const MAX_TTL = 300 * 1000
@@ -29,16 +29,14 @@ export class LocalDataStore {
     private store: Map<PeerIDKey, Map<PeerIDKey, LocalDataEntry>> = new Map()
 
     public storeEntry(dataEntry: DataEntry): boolean {
-        const publisherKey = PeerID.fromValue(dataEntry.creator!.nodeId).toKey()
         const dataKey = PeerID.fromValue(dataEntry.key).toKey()
-        
+        const creatorKey = PeerID.fromValue(dataEntry.creator!.nodeId).toKey()
         if (!this.store.has(dataKey)) {
             this.store.set(dataKey, new Map())
         }
-
-        if (this.store.get(dataKey)!.has(publisherKey)) {
+        if (this.store.get(dataKey)!.has(creatorKey)) {
             const storedMillis = (dataEntry.createdAt!.seconds * 1000) + (dataEntry.createdAt!.nanos / 1000000)
-            const oldLocalEntry = this.store.get(dataKey)!.get(publisherKey)!
+            const oldLocalEntry = this.store.get(dataKey)!.get(creatorKey)!
             const oldStoredMillis = (oldLocalEntry.dataEntry.createdAt!.seconds * 1000) + (oldLocalEntry.dataEntry.createdAt!.nanos / 1000000)
         
             // do nothing if old entry is newer than the one being replicated
@@ -48,10 +46,10 @@ export class LocalDataStore {
                 clearTimeout(oldLocalEntry.ttlTimeout)
             }
         }
-        this.store.get(dataKey)!.set(publisherKey, {
+        this.store.get(dataKey)!.set(creatorKey, {
             dataEntry,
             ttlTimeout: setTimeout(() => {
-                this.deleteEntry(dataEntry.key, dataEntry.creator!)
+                this.deleteEntry(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!))
             }, createTtlValue(dataEntry.ttl))
         })
         return true
@@ -81,9 +79,9 @@ export class LocalDataStore {
         return dataEntries
     }
 
-    public setStale(key: Key, creator: PeerDescriptor, stale: boolean): void {
-        const creatorKey = keyFromPeerDescriptor(creator)
+    public setStale(key: Key, creator: PeerID, stale: boolean): void {
         const mapKey = PeerID.fromValue(key).toKey()
+        const creatorKey = creator.toKey()
         const storedEntry = this.store.get(mapKey)?.get(creatorKey)
         if (storedEntry) {
             storedEntry.dataEntry.stale = stale
@@ -97,9 +95,9 @@ export class LocalDataStore {
         })
     }
 
-    public deleteEntry(key: Key, creator: PeerDescriptor): void {
+    public deleteEntry(key: Key, creator: PeerID): void {
         const mapKey = PeerID.fromValue(key).toKey()
-        const creatorKey = keyFromPeerDescriptor(creator)
+        const creatorKey = creator.toKey()
         const storedEntry = this.store.get(mapKey)?.get(creatorKey)
         if (storedEntry) {
             clearTimeout(storedEntry.ttlTimeout)

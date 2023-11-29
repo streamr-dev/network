@@ -10,7 +10,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IFinder } from '../find/Finder'
-import { areEqualPeerDescriptors } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
@@ -124,10 +124,10 @@ export class StoreRpcLocal implements IStoreRpc {
         // do replicate data to it
 
         if (index < this.redundancyFactor) {
-            this.localDataStore.setStale(dataEntry.key, dataEntry.creator!, false)
+            this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), false)
             return true
         } else {
-            this.localDataStore.setStale(dataEntry.key, dataEntry.creator!, true)
+            this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), true)
             return false
         }
     }
