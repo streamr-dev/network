@@ -87,7 +87,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
             STREAM_PART_ID,
             randomEthereumAddress()
         )
-        await newNodeInStream.getStreamrNode().broadcast(msg)
+        newNodeInStream.getStreamrNode().broadcast(msg)
         await waitForCondition(() => receivedMessages === NUM_OF_LATER_NODES, 10000)
     }, 200000)
 })
