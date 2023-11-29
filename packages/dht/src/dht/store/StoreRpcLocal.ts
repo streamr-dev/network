@@ -104,8 +104,8 @@ export class StoreRpcLocal implements IStoreRpc {
             }
         })
 
-        if (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)) {
-            // If we are not the closes node to the data, do not replicate
+        const isClosest = sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)
+        if (!isClosest) {
             return false
         }
 
