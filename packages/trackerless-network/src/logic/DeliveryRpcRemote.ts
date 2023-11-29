@@ -19,10 +19,10 @@ export class DeliveryRpcRemote extends RpcRemote<IDeliveryRpcClient> {
         })
     }
 
-    leaveStreamPartNotice(amStreamEntryPoint: boolean): void {
+    leaveStreamPartNotice(amEntryPoint: boolean): void {
         const notification: LeaveStreamPartNotice = {
             streamPartId: this.getServiceId(),
-            amStreamEntryPoint
+            amEntryPoint
         }
         const options = this.formDhtRpcOptions({
             notification: true

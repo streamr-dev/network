@@ -56,7 +56,7 @@ export interface StrictRandomGraphNodeConfig {
     numOfTargetNeighbors: number
     inspector: IInspector
     temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
-    amStreamEntryPoint: () => boolean
+    amEntryPoint: () => boolean
     onEntryPointLeaveDetected: () => Promise<void>
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
     rpcRequestTimeout?: number
@@ -96,7 +96,6 @@ export class RandomGraphNode extends EventEmitter<Events> {
                     this.config.neighborFinder.start([senderId])
                     this.config.proxyConnectionRpcLocal?.removeConnection(senderId)
                 }
-                // console.log(senderId, isStreamEntryPoint)
                 if (isStreamEntryPoint) {
                     setImmediate(() => this.config.onEntryPointLeaveDetected())
                 }
@@ -285,7 +284,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
         this.abortController.abort()
         this.config.proxyConnectionRpcLocal?.stop()
-        this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice(this.config.amStreamEntryPoint()))
+        this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice(this.config.amEntryPoint()))
         this.config.rpcCommunicator.destroy()
         this.removeAllListeners()
         this.config.nearbyNodeView.stop()

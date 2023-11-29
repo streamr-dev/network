@@ -51,7 +51,7 @@ describe('random graph with real connections', () => {
                 transport: epDhtNode.getTransport(),
                 connectionLocker: epDhtNode.getTransport() as ConnectionManager,
                 localPeerDescriptor: epPeerDescriptor,
-                amStreamEntryPoint: () => false,
+                amEntryPoint: () => false,
                 onEntryPointLeaveDetected: async () => {}
             }
         )
@@ -61,7 +61,7 @@ describe('random graph with real connections', () => {
             transport: dhtNode1.getTransport(),
             connectionLocker: dhtNode1.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode1.getLocalPeerDescriptor(),
-            amStreamEntryPoint: () => false,
+            amEntryPoint: () => false,
             onEntryPointLeaveDetected: async () => {}
         })
         randomGraphNode3 = createRandomGraphNode({
@@ -70,7 +70,7 @@ describe('random graph with real connections', () => {
             transport: dhtNode2.getTransport(),
             connectionLocker: dhtNode2.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode2.getLocalPeerDescriptor(),
-            amStreamEntryPoint: () => false,
+            amEntryPoint: () => false,
             onEntryPointLeaveDetected: async () => {}
         })
         randomGraphNode4 = createRandomGraphNode({
@@ -79,7 +79,7 @@ describe('random graph with real connections', () => {
             transport: dhtNode3.getTransport(),
             connectionLocker: dhtNode3.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode3.getLocalPeerDescriptor(),
-            amStreamEntryPoint: () => false,
+            amEntryPoint: () => false,
             onEntryPointLeaveDetected: async () => {}
         })
         randomGraphNode5 = createRandomGraphNode({
@@ -88,7 +88,7 @@ describe('random graph with real connections', () => {
             transport: dhtNode4.getTransport(),
             connectionLocker: dhtNode4.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode4.getLocalPeerDescriptor(),
-            amStreamEntryPoint: () => false,
+            amEntryPoint: () => false,
             onEntryPointLeaveDetected: async () => {}
         })
         await epDhtNode.joinDht([epPeerDescriptor])

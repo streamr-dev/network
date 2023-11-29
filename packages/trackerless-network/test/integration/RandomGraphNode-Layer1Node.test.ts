@@ -63,7 +63,7 @@ describe('RandomGraphNode-DhtNode', () => {
             connectionLocker: cms[i],
             localPeerDescriptor: peerDescriptors[i],
             neighborUpdateInterval: 2000,
-            amStreamEntryPoint: () => false,
+            amEntryPoint: () => false,
             onEntryPointLeaveDetected: async () => {}
         }))
 
@@ -74,7 +74,7 @@ describe('RandomGraphNode-DhtNode', () => {
             connectionLocker: entrypointCm,
             localPeerDescriptor: entrypointDescriptor,
             neighborUpdateInterval: 2000,
-            amStreamEntryPoint: () => false,
+            amEntryPoint: () => false,
             onEntryPointLeaveDetected: async () => {}
         })
 

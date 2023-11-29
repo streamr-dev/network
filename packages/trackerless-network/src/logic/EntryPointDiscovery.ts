@@ -174,7 +174,7 @@ export class EntryPointDiscovery {
         logger.trace(`Network split avoided`)
     }
 
-    public amStreamEntryPoint(): boolean {
+    public amEntryPoint(): boolean {
         return this.amEntryPoint
     }
 
