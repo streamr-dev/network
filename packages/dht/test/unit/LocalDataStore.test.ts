@@ -1,6 +1,5 @@
 import { wait } from '@streamr/utils'
 import crypto from 'crypto'
-import { MarkRequired } from 'ts-essentials'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import { PeerID } from '../../src/helpers/PeerID'
 import {
@@ -13,10 +12,12 @@ import { Timestamp } from '../../src/proto/google/protobuf/timestamp'
 import { DataEntry, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
-const createMockEntry = (entry: MarkRequired<Partial<DataEntry>, 'creator'>): DataEntry => {
+const createMockEntry = (entry: Partial<DataEntry>): DataEntry => {
+    const creator = entry.creator ?? createMockPeerDescriptor()
     return { 
         key: crypto.randomBytes(10),
-        data: Any.pack(entry.creator, PeerDescriptor),  // TODO use random data, i.e. createMockPeerDescriptor()
+        data: Any.pack(creator, PeerDescriptor),  // TODO use random data, i.e. createMockPeerDescriptor(),
+        creator,
         ttl: 10000,
         stale: false,
         deleted: false,
@@ -35,6 +36,10 @@ describe('LocalDataStore', () => {
         return Array.from(localDataStore.getEntries(PeerID.fromValue(key)).values())
     }
 
+    const haveEqualData = (entry1: DataEntry, entry2: DataEntry) => {
+        return areEqualPeerDescriptors(Any.unpack(entry1.data!, PeerDescriptor), Any.unpack(entry2.data!, PeerDescriptor))
+    }
+
     beforeEach(() => {
         localDataStore = new LocalDataStore()
     })
@@ -44,14 +49,11 @@ describe('LocalDataStore', () => {
     })
 
     it('can store', () => {
-        const storedEntry = createMockEntry({ creator: creator1 })
+        const storedEntry = createMockEntry({})
         localDataStore.storeEntry(storedEntry)
         const fetchedEntries = getEntryArray(storedEntry.key)
         expect(fetchedEntries).toHaveLength(1)
-        fetchedEntries.forEach((entry) => {
-            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(areEqualPeerDescriptors(fetchedDescriptor, creator1)).toBeTrue()
-        })
+        expect(haveEqualData(fetchedEntries[0], storedEntry )).toBeTrue()
     })
 
     it('multiple storers behind one key', () => {
@@ -60,12 +62,10 @@ describe('LocalDataStore', () => {
         const storedEntry2 = createMockEntry({ key, creator: creator2, data: Any.pack(creator1, PeerDescriptor) })
         localDataStore.storeEntry(storedEntry1)
         localDataStore.storeEntry(storedEntry2)
-        const fetchedEntries = getEntryArray(key)
-        expect(fetchedEntries).toHaveLength(2)
-        fetchedEntries.forEach((entry) => {
-            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(areEqualPeerDescriptors(fetchedDescriptor, creator1)).toBeTrue()
-        })
+        const fetchedEntries = localDataStore.getEntries(PeerID.fromValue(key))
+        expect(fetchedEntries.size).toBe(2)
+        expect(haveEqualData(fetchedEntries.get(keyFromPeerDescriptor(creator1))!, storedEntry1))
+        expect(haveEqualData(fetchedEntries.get(keyFromPeerDescriptor(creator2))!, storedEntry2))
     })
 
     it('can remove data entries', () => {
@@ -77,10 +77,7 @@ describe('LocalDataStore', () => {
         localDataStore.deleteEntry(PeerID.fromValue(key), creator1)
         const fetchedEntries = getEntryArray(key)
         expect(fetchedEntries).toHaveLength(1)
-        fetchedEntries.forEach((entry) => {
-            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(areEqualPeerDescriptors(fetchedDescriptor, creator2)).toBeTrue()
-        })
+        expect(haveEqualData(fetchedEntries[0], storedEntry2 )).toBeTrue()
     })
 
     it('can remove all data entries', () => {
