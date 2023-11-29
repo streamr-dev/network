@@ -232,7 +232,7 @@ export class StoreRpcLocal implements IStoreRpc {
         const dataEntry = request.entry!
         const wasStored = this.localDataStore.storeEntry(dataEntry)
         if (wasStored) {
-            this.replicateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.entry!)
+            this.replicateDataToNeighbors((context as DhtCallContext).incomingSourceDescriptor!, request.entry!)
         }
         if (!this.selfIsOneOfClosestPeers(dataEntry.key)) {
             this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.key))
@@ -241,7 +241,7 @@ export class StoreRpcLocal implements IStoreRpc {
         return {}
     }
 
-    private replicateDataToNeighborsIfNeeded(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
+    private replicateDataToNeighbors(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
         // sort own contact list according to data id
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
         const dataId = PeerID.fromValue(dataEntry.key)
