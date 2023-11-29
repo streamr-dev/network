@@ -66,7 +66,8 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         await Promise.all([
             layer0EntryPoint.stop(),
             ...initialNodesOnStream.map((node) => node.stop()),
-            ...laterNodesOnStream.map((node) => node.stop())
+            ...laterNodesOnStream.map((node) => node.stop()),
+            newNodeInStream.stop()
         ])
         simulator.stop()
     })
