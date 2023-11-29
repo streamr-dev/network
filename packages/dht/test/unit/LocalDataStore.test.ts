@@ -41,10 +41,10 @@ describe('LocalDataStore', () => {
         return Array.from(localDataStore.getEntries(PeerID.fromValue(key)).values())
     }
 
-    const haveEqualData = (entry1: DataEntry, entry2: DataEntry) => {
+    const expectEqualData = (entry1: DataEntry, entry2: DataEntry) => {
         const entity1 = Any.unpack(entry1.data!, MockData)
         const entity2 = Any.unpack(entry2.data!, MockData)
-        return (entity1.foo === entity2.foo)
+        expect(entity1.foo).toBe(entity2.foo)
     }
 
     beforeEach(() => {
@@ -60,7 +60,7 @@ describe('LocalDataStore', () => {
         localDataStore.storeEntry(storedEntry)
         const fetchedEntries = getEntryArray(storedEntry.key)
         expect(fetchedEntries).toHaveLength(1)
-        expect(haveEqualData(fetchedEntries[0], storedEntry )).toBeTrue()
+        expectEqualData(fetchedEntries[0], storedEntry)
     })
 
     it('multiple storers behind one key', () => {
@@ -73,8 +73,8 @@ describe('LocalDataStore', () => {
         localDataStore.storeEntry(storedEntry2)
         const fetchedEntries = localDataStore.getEntries(PeerID.fromValue(key))
         expect(fetchedEntries.size).toBe(2)
-        expect(haveEqualData(fetchedEntries.get(keyFromPeerDescriptor(creator1))!, storedEntry1))
-        expect(haveEqualData(fetchedEntries.get(keyFromPeerDescriptor(creator2))!, storedEntry2))
+        expectEqualData(fetchedEntries.get(keyFromPeerDescriptor(creator1))!, storedEntry1)
+        expectEqualData(fetchedEntries.get(keyFromPeerDescriptor(creator2))!, storedEntry2)
     })
 
     it('can remove data entries', () => {
@@ -88,7 +88,7 @@ describe('LocalDataStore', () => {
         localDataStore.deleteEntry(PeerID.fromValue(key), creator1)
         const fetchedEntries = getEntryArray(key)
         expect(fetchedEntries).toHaveLength(1)
-        expect(haveEqualData(fetchedEntries[0], storedEntry2 )).toBeTrue()
+        expectEqualData(fetchedEntries[0], storedEntry2)
     })
 
     it('can remove all data entries', () => {
