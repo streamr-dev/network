@@ -16,8 +16,6 @@ import { LocalDataStore } from './LocalDataStore'
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { StoreRpcRemote } from './StoreRpcRemote'
 import { Timestamp } from '../../proto/google/protobuf/timestamp'
-import EventEmitter from 'eventemitter3'
-import { Events } from '../DhtNode'
 import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
@@ -70,7 +68,7 @@ export class StoreRpcLocal implements IStoreRpc {
             (request: ReplicateDataRequest, context: ServerCallContext) => this.replicateData(request, context))
     }
 
-    onNewContact(peerDescriptor: PeerDescriptor) {
+    onNewContact(peerDescriptor: PeerDescriptor): void {
         this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
             dataMap.forEach(async (dataEntry) => {
                 const shouldReplicate = this.shouldReplicateDataToNewNode(dataEntry.dataEntry, peerDescriptor)
@@ -104,7 +102,7 @@ export class StoreRpcLocal implements IStoreRpc {
         const newPeerId = PeerID.fromValue(newNode.nodeId)
         sortedList.addContact(new Contact(newNode))
         const sorted = sortedList.getAllContacts()
-        let index = findIndex(sorted, (contact) => contact.getPeerId().equals(newPeerId))
+        const index = findIndex(sorted, (contact) => contact.getPeerId().equals(newPeerId))
         // if new node is within the storageRedundancyFactor closest nodes to the data
         // do replicate data to it
         return (index < this.redundancyFactor)
