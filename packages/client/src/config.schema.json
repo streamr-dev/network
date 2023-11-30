@@ -5,14 +5,14 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-        "config": {
+        "environment": {
             "type": "string",
             "enum": [
                 "polygon",
                 "mumbai",
                 "dev2"
             ],
-            "description": "config preset id"
+            "description": "applies all environment-specific defaults for the given environment"
         },
         "id": {
             "type": "string"
