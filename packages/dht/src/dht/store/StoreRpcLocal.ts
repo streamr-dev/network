@@ -32,6 +32,7 @@ export class StoreRpcLocal implements IStoreRpc {
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         const ttl = Math.min(request.ttl, this.config.maxTtl)
         const { key, data, createdAt, creator } = request
+        const selfIsOneOfClosestPeers = this.config.selfIsOneOfClosestPeers(key)
         this.config.localDataStore.storeEntry({ 
             key, 
             data,
@@ -39,10 +40,10 @@ export class StoreRpcLocal implements IStoreRpc {
             createdAt,
             storedAt: Timestamp.now(),
             ttl,
-            stale: !this.config.selfIsOneOfClosestPeers(key),
+            stale: !selfIsOneOfClosestPeers,
             deleted: false
         })
-        if (!this.config.selfIsOneOfClosestPeers(key)) {
+        if (!selfIsOneOfClosestPeers) {
             this.config.localDataStore.setAllEntriesAsStale(key)
         }
         logger.trace('storeData()')
