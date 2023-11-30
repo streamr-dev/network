@@ -69,19 +69,19 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     onNewContact(peerDescriptor: PeerDescriptor): void {
-        this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
-            dataMap.forEach(async (dataEntry) => {
-                const shouldReplicate = this.shouldReplicateDataToNewNode(dataEntry.dataEntry, peerDescriptor)
-                this.localDataStore.setStale(dataEntry.dataEntry.key, peerIdFromPeerDescriptor(dataEntry.dataEntry.creator!), !shouldReplicate)
+        for (const dataEntry of this.localDataStore.values()) {
+            setImmediate(async () => {
+                const shouldReplicate = this.shouldReplicateDataToNewNode(dataEntry, peerDescriptor)
+                this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), !shouldReplicate)
                 if (shouldReplicate) {
                     try {
-                        await this.replicateDataToContact(dataEntry.dataEntry, peerDescriptor)
+                        await this.replicateDataToContact(dataEntry, peerDescriptor)
                     } catch (e) {
                         logger.trace('replicateDataToContact() failed', { error: e })
                     }
                 }
             })
-        })    
+        }
     }
 
     private shouldReplicateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
@@ -204,9 +204,7 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     private async replicateDataToClosestNodes(): Promise<void> {
-        const dataEntries = Array.from(this.localDataStore.getStore().values())
-            .flatMap((dataMap) => Array.from(dataMap.values()))
-            .map((localData) => localData.dataEntry)
+        const dataEntries = Array.from(this.localDataStore.values())
         await Promise.all(dataEntries.map(async (dataEntry) => {
             const dhtNodeRemotes = this.getNodesClosestToIdFromBucket(dataEntry.key, this.redundancyFactor)
             await Promise.all(dhtNodeRemotes.map(async (remoteDhtNode) => {

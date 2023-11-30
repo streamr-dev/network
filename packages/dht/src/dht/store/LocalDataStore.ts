@@ -1,11 +1,12 @@
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DataEntry } from '../../proto/packages/dht/protos/DhtRpc'
-import { peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { MapWithTtl } from '../../helpers/MapWithTtl'
 
 const MIN_TTL = 1 * 1000
 const MAX_TTL = 300 * 1000
 
-const createTtlValue = (ttl: number): number => {
+const createTtl = (entry: DataEntry): number => {
+    const ttl = entry.ttl
     if (ttl < MIN_TTL) {
         return MIN_TTL
     } else if (ttl > MAX_TTL) {
@@ -15,43 +16,30 @@ const createTtlValue = (ttl: number): number => {
     }
 }
 
-interface LocalDataEntry {
-    dataEntry: DataEntry
-    ttlTimeout: NodeJS.Timeout
-}
-
 type Key = Uint8Array
 
 export class LocalDataStore {
     // A map into which each node can store one value per data key
     // The first key is the key of the data, the second key is the
     // PeerID of the creator of the data
-    private store: Map<PeerIDKey, Map<PeerIDKey, LocalDataEntry>> = new Map()
+    private store: Map<PeerIDKey, MapWithTtl<PeerIDKey, DataEntry>> = new Map()
 
     public storeEntry(dataEntry: DataEntry): boolean {
         const dataKey = PeerID.fromValue(dataEntry.key).toKey()
         const creatorKey = PeerID.fromValue(dataEntry.creator!.nodeId).toKey()
         if (!this.store.has(dataKey)) {
-            this.store.set(dataKey, new Map())
+            this.store.set(dataKey, new MapWithTtl(createTtl))
         }
         if (this.store.get(dataKey)!.has(creatorKey)) {
             const storedMillis = (dataEntry.createdAt!.seconds * 1000) + (dataEntry.createdAt!.nanos / 1000000)
             const oldLocalEntry = this.store.get(dataKey)!.get(creatorKey)!
-            const oldStoredMillis = (oldLocalEntry.dataEntry.createdAt!.seconds * 1000) + (oldLocalEntry.dataEntry.createdAt!.nanos / 1000000)
-        
+            const oldStoredMillis = (oldLocalEntry.createdAt!.seconds * 1000) + (oldLocalEntry.createdAt!.nanos / 1000000)
             // do nothing if old entry is newer than the one being replicated
             if (oldStoredMillis >= storedMillis) {
                 return false
-            } else {
-                clearTimeout(oldLocalEntry.ttlTimeout)
             }
         }
-        this.store.get(dataKey)!.set(creatorKey, {
-            dataEntry,
-            ttlTimeout: setTimeout(() => {
-                this.deleteEntry(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!))
-            }, createTtlValue(dataEntry.ttl))
-        })
+        this.store.get(dataKey)!.set(creatorKey, dataEntry)
         return true
     }
 
@@ -62,19 +50,21 @@ export class LocalDataStore {
             return false
         }
         const storedEntry = item.get(creator.toKey())
-        storedEntry!.dataEntry.deleted = true
+        storedEntry!.deleted = true
         return true
     }
 
-    public getStore(): Map<PeerIDKey, Map<PeerIDKey, LocalDataEntry>> {
-        return this.store
+    public* values(): IterableIterator<DataEntry> {
+        for (const v of this.store.values()) {
+            yield* v.values()
+        }
     }
 
     public getEntries(key: Key): Map<PeerIDKey, DataEntry> {
         const dataEntries = new Map<PeerIDKey, DataEntry>
         const mapKey = PeerID.fromValue(key).toKey()
         this.store.get(mapKey)?.forEach((value, key) => {
-            dataEntries.set(key, value.dataEntry)
+            dataEntries.set(key, value)
         })
         return dataEntries
     }
@@ -84,14 +74,14 @@ export class LocalDataStore {
         const creatorKey = creator.toKey()
         const storedEntry = this.store.get(mapKey)?.get(creatorKey)
         if (storedEntry) {
-            storedEntry.dataEntry.stale = stale
+            storedEntry.stale = stale
         }
     }
 
     public setAllEntriesAsStale(key: Key): void {
         const mapKey = PeerID.fromValue(key).toKey()
         this.store.get(mapKey)?.forEach((value) => {
-            value.dataEntry.stale = true
+            value.stale = true
         })
     }
 
@@ -100,20 +90,15 @@ export class LocalDataStore {
         const creatorKey = creator.toKey()
         const storedEntry = this.store.get(mapKey)?.get(creatorKey)
         if (storedEntry) {
-            clearTimeout(storedEntry.ttlTimeout)
             this.store.get(mapKey)?.delete(creatorKey)
-            if (this.store.get(mapKey)?.size === 0) {
+            if (this.store.get(mapKey)?.size() === 0) {
                 this.store.delete(mapKey)
             }
         }
     }
 
     public clear(): void {
-        this.store.forEach((value) => {
-            value.forEach((value) => {
-                clearTimeout(value.ttlTimeout)
-            })
-        })
+        this.store.forEach((value) => value.clear())
         this.store.clear()
     }
 }
