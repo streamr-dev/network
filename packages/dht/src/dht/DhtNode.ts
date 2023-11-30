@@ -38,7 +38,7 @@ import {
 } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
 import { Finder, FindResult } from './find/Finder'
-import { StoreRpcLocal } from './store/StoreRpcLocal'
+import { StoreManager } from './store/StoreManager'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/webrtc/WebrtcConnector'
@@ -140,7 +140,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private transport?: ITransport
     private localPeerDescriptor?: PeerDescriptor
     public router?: Router
-    private storeRpcLocal?: StoreRpcLocal
+    private storeManager?: StoreManager
     private localDataStore = new LocalDataStore()
     private finder?: Finder
     private peerDiscovery?: PeerDiscovery
@@ -272,7 +272,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
             localDataStore: this.localDataStore
         })
-        this.storeRpcLocal = new StoreRpcLocal({
+        this.storeManager = new StoreManager({
             rpcCommunicator: this.rpcCommunicator,
             finder: this.finder,
             localPeerDescriptor: this.localPeerDescriptor!,
@@ -287,7 +287,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             rpcRequestTimeout: this.config.rpcRequestTimeout
         })
         this.on('newContact', (peerDescriptor: PeerDescriptor) => {
-            this.storeRpcLocal!.onNewContact(peerDescriptor)
+            this.storeManager!.onNewContact(peerDescriptor)
         })
         this.bindRpcLocalMethods()
         if ((this.connectionManager !== undefined) && (this.config.entryPoints !== undefined) && this.config.entryPoints.length > 0
@@ -461,7 +461,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
         }
-        return this.storeRpcLocal!.storeDataToDht(key, data, creator ?? this.localPeerDescriptor!)
+        return this.storeManager!.storeDataToDht(key, data, creator ?? this.localPeerDescriptor!)
     }
 
     public async storeDataViaPeer(key: Uint8Array, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
@@ -544,7 +544,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         logger.trace('stop()')
         this.stopped = true
-        await this.storeRpcLocal!.destroy()
+        await this.storeManager!.destroy()
         if (this.entryPointDisconnectTimeout) {
             clearTimeout(this.entryPointDisconnectTimeout)
         }
