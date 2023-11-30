@@ -116,7 +116,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             operation
         })
         if (this.connections.size === 0) {
-            const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
+            const data = this.localDataStore.getEntries(idToFind)
             session.doSendResponse(
                 [this.localPeerDescriptor],
                 [this.localPeerDescriptor],
@@ -188,7 +188,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         sourcePeer: PeerDescriptor,
         sessionId: string
     ): void {
-        const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
+        const data = this.localDataStore.getEntries(idToFind)
         if (data.size > 0) {
             this.sendResponse(routingPath, sourcePeer, sessionId, [], data, true)
         }
@@ -196,7 +196,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
 
     private findLocalData(idToFind: Uint8Array, fetchData: boolean): Map<PeerIDKey, DataEntry> | undefined {
         if (fetchData) {
-            return this.localDataStore.getEntry(PeerID.fromValue(idToFind))
+            return this.localDataStore.getEntries(idToFind)
         }
         return undefined
     }

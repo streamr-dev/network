@@ -4,11 +4,12 @@ import type { ExternalProvider } from '@ethersproject/providers'
 import type { ConnectionInfo } from '@ethersproject/web'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
-import { LogLevel } from '@streamr/utils'
+import { LogLevel, merge } from '@streamr/utils'
 import { IceServer, PortRange, TlsCertificate } from '@streamr/dht'
 import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
 import { GapFillStrategy } from './subscribe/ordering/GapFiller'
+import { config as CHAIN_CONFIG } from '@streamr/config'
 
 export interface ProviderAuthConfig {
     ethereum: ExternalProvider
@@ -206,10 +207,22 @@ export interface EthereumNetworkConfig {
     highGasPriceStrategy?: boolean
 }
 
+// a subset of config ids which are available in @streamr/config
+// - do not include legacy configs, which no longer work, e.g. "dev0"
+// - and no need to include configs, which users won't use in practice
+// - note that there is no special handling for empty arrays in the applyConfig and therefore
+//   empty arrays will be applied as-is: we may want to remove "enthereum.rpcEndpoints" key 
+//   from @streamr/config as the intention is to use system-defaults (e.g. Metamask defaults)
+//   in Ethereum network
+export type PresetId = 'polygon' | 'mumbai' | 'dev2'
+
 /**
  * @category Important
  */
 export interface StreamrClientConfig {
+
+    config?: PresetId
+
     /** Custom human-readable debug id for client. Used in logging. */
     id?: string
 
@@ -344,7 +357,6 @@ export interface StreamrClientConfig {
         streamRegistryChainAddress?: string
         streamStorageRegistryChainAddress?: string
         storageNodeRegistryChainAddress?: string
-        mainChainRPCs?: ChainConnectionInfo
         streamRegistryChainRPCs?: ChainConnectionInfo
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
         ethereumNetworks?: Record<string, EthereumNetworkConfig>
@@ -394,7 +406,7 @@ export interface StreamrClientConfig {
     }
 }
 
-export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'auth' | 'metrics'> & {
+export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'config' | 'auth' | 'metrics'> & {
     network: Exclude<Required<StreamrClientConfig['network']>, undefined>
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
     encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>
@@ -407,8 +419,46 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 
 export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
     // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?
-    const config: StrictStreamrClientConfig = validateConfig(cloneDeep(input))
-    config.id ??= generateClientId()
+    let config = cloneDeep(input)
+    const preset = config.config ?? 'polygon'
+    config = applyPreset(preset, config)
+    const strictConfig = validateConfig(config)
+    strictConfig.id ??= generateClientId()
+    return strictConfig
+}
+
+const applyPreset = (presetId: PresetId, data: StreamrClientConfig): StreamrClientConfig => {
+    const preset = CHAIN_CONFIG[presetId]
+    const config = merge(data, {
+        network: {
+            ...data.network,
+            controlLayer: {
+                entryPoints: preset.entryPoints,
+                ...data.network?.controlLayer,
+            }
+        } as any,
+        contracts: {
+            streamRegistryChainAddress: preset.contracts.StreamRegistry,
+            streamStorageRegistryChainAddress: preset.contracts.StreamStorageRegistry,
+            storageNodeRegistryChainAddress: preset.contracts.StorageNodeRegistry,
+            streamRegistryChainRPCs: {
+                name: preset.name,
+                chainId: preset.id,
+                rpcs: preset.rpcEndpoints
+            },
+            theGraphUrl: preset.theGraphUrl,
+            ...data.contracts,
+        } as any
+    }) as any
+    if (presetId === 'dev2') {
+        // TODO config the 30s default for "dev2 in" @streamr/config and remove this explicit timeout
+        const toNumber = (value: any): number | undefined => {
+            return (value !== undefined) ? Number(value) : undefined
+        }
+        config.contracts.streamRegistryChainRPCs.rpcs.forEach((rpc: ConnectionInfo) => {
+            rpc.timeout = toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
+        })
+    }
     return config
 }
 

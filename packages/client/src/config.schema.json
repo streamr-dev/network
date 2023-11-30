@@ -5,6 +5,15 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
+        "config": {
+            "type": "string",
+            "enum": [
+                "polygon",
+                "mumbai",
+                "dev2"
+            ],
+            "description": "config preset id"
+        },
         "id": {
             "type": "string"
         },
@@ -79,25 +88,7 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/peerDescriptor"
-                            },
-                            "default": [
-                                {
-                                    "nodeId": "eee1",
-                                    "websocket": {
-                                        "host": "polygon-entrypoint-1.streamr.network",
-                                        "port": 40401,
-                                        "tls": true
-                                    }
-                                },
-                                {
-                                    "nodeId": "eee2",
-                                    "websocket": {
-                                        "host": "polygon-entrypoint-2.streamr.network",
-                                        "port": 40401,
-                                        "tls": true
-                                    }
-                                }
-                            ]
+                            }
                         },
                         "websocketPortRange": {
                             "$ref": "#/definitions/portRange",
@@ -260,61 +251,18 @@
             "properties": {
                 "streamRegistryChainAddress": {
                     "type": "string",
-                    "format": "ethereum-address",
-                    "default": "0x0D483E10612F327FC11965Fc82E90dC19b141641"
+                    "format": "ethereum-address"
                 },
                 "streamStorageRegistryChainAddress": {
                     "type": "string",
-                    "format": "ethereum-address",
-                    "default": "0xe8e2660CeDf2a59C917a5ED05B72df4146b58399"
+                    "format": "ethereum-address"
                 },
                 "storageNodeRegistryChainAddress": {
                     "type": "string",
-                    "format": "ethereum-address",
-                    "default": "0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6"
-                },
-                "mainChainRPCs": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/definitions/chainConnectionInfoList"
-                        },
-                        {
-                            "type": "string",
-                            "format": "uri"
-                        }
-                    ],
-                    "default": {
-                        "name": "ethereum",
-                        "chainId": 1,
-                        "rpcs": [
-                            {
-                                "url": "https://eth-rpc.gateway.pokt.network",
-                                "timeout": 120000
-                            },
-                            {
-                                "url": "https://ethereum.publicnode.com",
-                                "timeout": 120000
-                            },
-                            {
-                                "url": "https://rpc.ankr.com/eth",
-                                "timeout": 120000
-                            }
-                        ]
-                    }
+                    "format": "ethereum-address"
                 },
                 "streamRegistryChainRPCs": {
-                    "$ref": "#/definitions/chainConnectionInfoList",
-                    "default": {
-                        "name": "polygon",
-                        "chainId": 137,
-                        "rpcs": [{
-                            "url": "https://polygon-rpc.com",
-                            "timeout": 120000
-                        }, {
-                            "url": "https://poly-rpc.gateway.pokt.network/",
-                            "timeout": 120000
-                        }]
-                    }
+                    "$ref": "#/definitions/chainConnectionInfoList"
                 },
                 "ethereumNetworks": {
                     "type": "object",
@@ -327,8 +275,7 @@
                 },
                 "theGraphUrl": {
                     "type": "string",
-                    "format": "uri",
-                    "default": "https://gateway-arbitrum.network.thegraph.com/api/dd0022f5d4d06f3bd55e0c757912fb7d/subgraphs/id/EGWFdhhiWypDuz22Uy7b3F69E9MEkyfU9iAQMttkH5Rj"
+                    "format": "uri"
                 },
                 "maxConcurrentCalls": {
                     "type": "number",

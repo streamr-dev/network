@@ -1,26 +1,50 @@
-import { Any } from '../../src/proto/google/protobuf/any'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { wait, randomString } from '@streamr/utils'
+import crypto from 'crypto'
+import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import {
-    areEqualPeerDescriptors,
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
-import { wait } from '@streamr/utils'
+import { Any } from '../../src/proto/google/protobuf/any'
 import { Timestamp } from '../../src/proto/google/protobuf/timestamp'
+import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { createMockPeerDescriptor } from '../utils/utils'
+import { MessageType as MessageType$, ScalarType } from '@protobuf-ts/runtime'
+
+const MockData = new class extends MessageType$<{ foo: string }> {
+    constructor() {
+        super('MockData', [
+            { no: 1, name: 'foo', kind: 'scalar', opt: false, T: ScalarType.STRING }
+        ])
+    }
+}
+
+const createMockEntry = (entry: Partial<DataEntry>): DataEntry => {
+    return { 
+        key: crypto.randomBytes(10),
+        data: Any.pack({ foo: randomString(5) }, MockData),
+        creator: entry.creator ?? createMockPeerDescriptor(),
+        ttl: 10000,
+        stale: false,
+        deleted: false,
+        createdAt: Timestamp.now(),
+        ...entry
+    }
+}
 
 describe('LocalDataStore', () => {
+
     let localDataStore: LocalDataStore
-    const creator1: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS
+
+    const getEntryArray = (key: Uint8Array) => {
+        return Array.from(localDataStore.getEntries(key).values())
     }
-    const creator2: PeerDescriptor = {
-        nodeId: new Uint8Array([3, 2, 1]),
-        type: NodeType.NODEJS
+
+    const expectEqualData = (entry1: DataEntry, entry2: DataEntry) => {
+        const entity1 = Any.unpack(entry1.data!, MockData)
+        const entity2 = Any.unpack(entry2.data!, MockData)
+        expect(entity1.foo).toBe(entity2.foo)
     }
-    const data1 = Any.pack(creator1, PeerDescriptor)
-    const data2 = Any.pack(creator2, PeerDescriptor)
 
     beforeEach(() => {
         localDataStore = new LocalDataStore()
@@ -31,91 +55,86 @@ describe('LocalDataStore', () => {
     })
 
     it('can store', () => {
-        const dataKey = peerIdFromPeerDescriptor(creator1)
-        localDataStore.storeEntry({ creator: creator1, key: dataKey.value, data: data1, 
-            ttl: 10000, stale: false, deleted: false, createdAt: Timestamp.now() })
-        const fetchedData = localDataStore.getEntry(dataKey)
-        fetchedData.forEach((entry) => {
-            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(areEqualPeerDescriptors(fetchedDescriptor, creator1)).toBeTrue()
-        })
+        const storedEntry = createMockEntry({})
+        localDataStore.storeEntry(storedEntry)
+        const fetchedEntries = getEntryArray(storedEntry.key)
+        expect(fetchedEntries).toHaveLength(1)
+        expectEqualData(fetchedEntries[0], storedEntry)
     })
 
     it('multiple storers behind one key', () => {
-        const dataKey = peerIdFromPeerDescriptor(creator1)
-        localDataStore.storeEntry({ creator: creator1, key: dataKey.value, data: data1,
-            ttl: 10000, stale: false, deleted: false, createdAt: Timestamp.now() })
-        localDataStore.storeEntry({ creator: creator2, key: dataKey.value, 
-            data: data1, ttl: 10000, stale: false, deleted: false, createdAt: Timestamp.now() })
-        const fetchedData = localDataStore.getEntry(dataKey)
-        fetchedData.forEach((entry) => {
-            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(areEqualPeerDescriptors(fetchedDescriptor, creator1)).toBeTrue()
-        })
+        const creator1 = createMockPeerDescriptor()
+        const creator2 = createMockPeerDescriptor()
+        const key = peerIdFromPeerDescriptor(creator1).value
+        const storedEntry1 = createMockEntry({ key, creator: creator1 })
+        const storedEntry2 = createMockEntry({ key, creator: creator2 })
+        localDataStore.storeEntry(storedEntry1)
+        localDataStore.storeEntry(storedEntry2)
+        const fetchedEntries = localDataStore.getEntries(key)
+        expect(fetchedEntries.size).toBe(2)
+        expectEqualData(fetchedEntries.get(keyFromPeerDescriptor(creator1))!, storedEntry1)
+        expectEqualData(fetchedEntries.get(keyFromPeerDescriptor(creator2))!, storedEntry2)
     })
 
     it('can remove data entries', () => {
-        const dataKey = peerIdFromPeerDescriptor(creator1)
-        localDataStore.storeEntry({ creator: creator1, key: dataKey.value, data: data1,
-            ttl: 10000, stale: false, deleted: false, createdAt: Timestamp.now() })
-        localDataStore.storeEntry({ creator: creator2, key: dataKey.value, data: data2,
-            ttl: 10000, stale: false, deleted: false, createdAt: Timestamp.now() })
-        localDataStore.deleteEntry(dataKey, creator1)
-        const fetchedData = localDataStore.getEntry(dataKey)
-        fetchedData.forEach((entry) => {
-            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(areEqualPeerDescriptors(fetchedDescriptor, creator2)).toBeTrue()
-        })
+        const creator1 = createMockPeerDescriptor()
+        const creator2 = createMockPeerDescriptor()
+        const key = peerIdFromPeerDescriptor(creator1).value
+        const storedEntry1 = createMockEntry({ key, creator: creator1 })
+        const storedEntry2 = createMockEntry({ key, creator: creator2 })
+        localDataStore.storeEntry(storedEntry1)
+        localDataStore.storeEntry(storedEntry2)
+        localDataStore.deleteEntry(key, peerIdFromPeerDescriptor(creator1))
+        const fetchedEntries = getEntryArray(key)
+        expect(fetchedEntries).toHaveLength(1)
+        expectEqualData(fetchedEntries[0], storedEntry2)
     })
 
     it('can remove all data entries', () => {
-        const dataKey = peerIdFromPeerDescriptor(creator1)
-        localDataStore.storeEntry({ creator: creator1, key: dataKey.value, data: data1,
-            ttl: 10000, stale: false, deleted: false, createdAt: Timestamp.now() })
-        localDataStore.storeEntry({ creator: creator2, key: dataKey.value, data: data2,
-            ttl: 10000, stale: false, deleted: false, createdAt: Timestamp.now() })
-        localDataStore.deleteEntry(dataKey, creator1)
-        localDataStore.deleteEntry(dataKey, creator2)
-        const fetchedData = localDataStore.getEntry(dataKey)
-        expect(fetchedData.size).toBe(0)
+        const creator1 = createMockPeerDescriptor()
+        const creator2 = createMockPeerDescriptor()
+        const key = peerIdFromPeerDescriptor(creator1).value
+        const storedEntry1 = createMockEntry({ key, creator: creator1 })
+        const storedEntry2 = createMockEntry({ key, creator: creator2 })
+        localDataStore.storeEntry(storedEntry1)
+        localDataStore.storeEntry(storedEntry2)
+        localDataStore.deleteEntry(key, peerIdFromPeerDescriptor(creator1))
+        localDataStore.deleteEntry(key, peerIdFromPeerDescriptor(creator2))
+        expect(getEntryArray(key)).toHaveLength(0)
     })
 
     it('data is deleted after TTL', async () => {
-        const dataKey = peerIdFromPeerDescriptor(creator1)
-        localDataStore.storeEntry({ creator: creator1, key: dataKey.value, data: data1,
-            ttl: 1000, stale: false, deleted: false, createdAt: Timestamp.now() })
-        const intitialStore = localDataStore.getEntry(dataKey)
-        expect(intitialStore.size).toBe(1)
+        const storedEntry = createMockEntry({ ttl: 1000 })
+        localDataStore.storeEntry(storedEntry)
+        expect(getEntryArray(storedEntry.key)).toHaveLength(1)
         await wait(1100)
-        const fetchedData = localDataStore.getEntry(dataKey)
-        expect(fetchedData.size).toBe(0)
+        expect(getEntryArray(storedEntry.key)).toHaveLength(0)
     })
 
     describe('mark data as deleted', () => {
 
         it('happy path', () => {
-            const dataKey = peerIdFromPeerDescriptor(creator1)
-            localDataStore.storeEntry({ creator: creator1, key: dataKey.value, data: data1,
-                ttl: 10000, stale: false, deleted: false, createdAt: Timestamp.now() })
-            const notDeletedData = localDataStore.getEntry(dataKey)
+            const creator1 = createMockPeerDescriptor()
+            const storedEntry = createMockEntry({ creator: creator1 })
+            localDataStore.storeEntry(storedEntry)
+            const notDeletedData = localDataStore.getEntries(storedEntry.key)
             expect(notDeletedData.get(keyFromPeerDescriptor(creator1))!.deleted).toBeFalse()
-            const returnValue = localDataStore.markAsDeleted(dataKey.value, peerIdFromPeerDescriptor(creator1))
+            const returnValue = localDataStore.markAsDeleted(storedEntry.key, peerIdFromPeerDescriptor(creator1))
             expect(returnValue).toBe(true)
-            const deletedData = localDataStore.getEntry(dataKey)
+            const deletedData = localDataStore.getEntries(storedEntry.key)
             expect(deletedData.get(keyFromPeerDescriptor(creator1))!.deleted).toBeTrue()
         })
 
         it('data not stored', () => {
-            const dataKey = peerIdFromPeerDescriptor(creator1)
-            const returnValue = localDataStore.markAsDeleted(dataKey.value, peerIdFromPeerDescriptor(creator2))
+            const dataKey = peerIdFromPeerDescriptor(createMockPeerDescriptor())
+            const returnValue = localDataStore.markAsDeleted(dataKey.value, peerIdFromPeerDescriptor(createMockPeerDescriptor()))
             expect(returnValue).toBe(false)
         })
 
         it('data not stored by the given creator', () => {
-            const dataKey = peerIdFromPeerDescriptor(creator1)
-            localDataStore.storeEntry({ creator: creator1, key: dataKey.value, data: data1,
-                ttl: 10000, stale: false, deleted: false, createdAt: Timestamp.now() })
-            const returnValue = localDataStore.markAsDeleted(dataKey.value, peerIdFromPeerDescriptor(creator2))
+            const storedEntry = createMockEntry({})
+            localDataStore.storeEntry(storedEntry)
+            const returnValue = localDataStore.markAsDeleted(storedEntry.key, peerIdFromPeerDescriptor(createMockPeerDescriptor()))
             expect(returnValue).toBe(false)
         })
     })
