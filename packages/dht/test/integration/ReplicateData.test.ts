@@ -138,7 +138,6 @@ describe('Replicate data from node to node in DHT', () => {
             let hasDataMarker = ''
 
             // @ts-expect-error private field
-
             if (node.localDataStore.getEntries(dataKey.value)) {
                 hasDataMarker = '<-'
             }
