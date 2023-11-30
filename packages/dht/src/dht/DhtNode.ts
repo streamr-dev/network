@@ -279,7 +279,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
             highestTtl: this.config.storeHighestTtl,
-            maxTtl: this.config.storeMaxTtl,
             redundancyFactor: this.config.storageRedundancyFactor,
             localDataStore: this.localDataStore,
             getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
