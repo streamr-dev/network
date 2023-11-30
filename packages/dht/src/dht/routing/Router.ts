@@ -46,7 +46,7 @@ export class Router implements IRouter {
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
-    private readonly forwardingTable: Map<string, ForwardingTableEntry> = new Map()
+    private readonly forwardingTable: Map<PeerIDKey, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
     private stopped = false
