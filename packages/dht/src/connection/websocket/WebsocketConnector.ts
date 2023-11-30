@@ -93,7 +93,7 @@ export class WebsocketConnector {
         this.autoCertifierConfigFile = config.autoCertifierConfigFile
         this.serverEnableTls = config.serverEnableTls
         this.rpcCommunicator = new ListeningRpcCommunicator(WebsocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.transport, {
-            rpcRequestTimeout: 15000
+            rpcRequestTimeout: 15000  // TODO use config option or named constant?
         })
         this.registerLocalRpcMethods(config)
     }

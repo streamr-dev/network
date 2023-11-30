@@ -46,10 +46,11 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
         this.nodeIdToFind = config.nodeIdToFind
         this.localPeerId = config.localPeerId
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
+        // TODO use config option or named constant?
         this.results = new SortedContactList(PeerID.fromValue(this.nodeIdToFind), 10, undefined, true)
         this.action = config.action
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
-            rpcRequestTimeout: 15000
+            rpcRequestTimeout: 15000  // TODO use config option or named constant?
         })
         this.registerLocalRpcMethods()
     }
@@ -157,7 +158,7 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
                         this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
                         this.findCompletedEmitted = true
                     }
-                }, 4000)
+                }, 4000)  // TODO use config option or named constant?
             }
         }
     }

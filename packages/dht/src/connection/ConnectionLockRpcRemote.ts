@@ -55,7 +55,7 @@ export class ConnectionLockRpcRemote extends RpcRemote<IConnectionLockRpcClient>
         const options = this.formDhtRpcOptions({
             doNotConnect: true,
             doNotMindStopped: true,
-            timeout: 2000
+            timeout: 2000  // TODO use config option or named constant?
         })
         await this.getClient().gracefulDisconnect(request, options)
     }

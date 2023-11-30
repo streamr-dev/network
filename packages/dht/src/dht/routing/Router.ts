@@ -51,6 +51,7 @@ export class Router implements IRouter {
     private readonly serviceId: ServiceID
     private readonly forwardingTable: Map<string, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
+    // TODO use config option or named constant?
     private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
     private stopped = false
 
@@ -157,6 +158,7 @@ export class Router implements IRouter {
             })
             setImmediate(async () => {
                 try {
+                    // TODO use config option or named constant?
                     await withTimeout(eventReceived, 10000)
                     logger.trace('raceEvents ended from routingSession: ' + session.sessionId)
                 } catch (e) {
@@ -180,6 +182,7 @@ export class Router implements IRouter {
             this.localPeerDescriptor,
             routedMessage,
             this.connections,
+            // TODO use config option or named constant?
             areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
             routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
@@ -231,7 +234,7 @@ export class Router implements IRouter {
                 peerDescriptors: reachableThroughWithoutSelf,
                 timeout: setTimeout(() => {
                     this.forwardingTable.delete(sourceKey)
-                }, 10000)
+                }, 10000)  // TODO use config option or named constant?
             }
             this.forwardingTable.set(sourceKey, forwardingEntry)
         }

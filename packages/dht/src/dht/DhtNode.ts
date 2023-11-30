@@ -372,14 +372,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             ExternalFindDataResponse,
             'externalFindData',
             (req: ExternalFindDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalFindData(req, context),
-            { timeout: 10000 }
+            { timeout: 10000 }  // TODO use config option or named constant?
         )
         this.rpcCommunicator!.registerRpcMethod(
             ExternalStoreDataRequest,
             ExternalStoreDataResponse,
             'externalStoreData',
             (req: ExternalStoreDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalStoreData(req, context),
-            { timeout: 10000 }
+            { timeout: 10000 }  // TODO use config option or named constant?
         )
     }
 
@@ -426,7 +426,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.connectionManager!.lockConnection(entryPoint, 'temporary-layer0-connection')
         this.entryPointDisconnectTimeout = setTimeout(() => {
             this.connectionManager!.unlockConnection(entryPoint, 'temporary-layer0-connection')
-        }, 10 * 1000)
+        }, 10 * 1000)  // TODO use config option or named constant?
     }
 
     public removeContact(contact: PeerDescriptor): void {

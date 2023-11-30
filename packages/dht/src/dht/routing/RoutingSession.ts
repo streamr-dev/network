@@ -100,6 +100,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousId = previousPeer ? PeerID.fromValue(previousPeer.nodeId) : undefined
         this.contactList = new SortedContactList(
             PeerID.fromValue(this.messageToRoute.destinationPeer!.nodeId),
+            // TODO use config option or named constant?
             10000,
             undefined,
             true,

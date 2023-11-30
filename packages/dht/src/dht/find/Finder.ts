@@ -112,6 +112,7 @@ export class Finder implements IFinder {
             transport: this.sessionTransport,
             nodeIdToFind: idToFind,
             localPeerId: peerIdFromPeerDescriptor(this.localPeerDescriptor),
+            // TODO use config option or named constant?
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
             action
         })
@@ -132,6 +133,7 @@ export class Finder implements IFinder {
                 await runAndWaitForEvents3<FindSessionEvents>(
                     [() => this.doRouteFindRequest(routeMessage, excludedPeer)],
                     [[session, 'findCompleted']],
+                    // TODO use config option or named constant?
                     15000
                 )
             } catch (err) {
@@ -215,12 +217,14 @@ export class Finder implements IFinder {
             this.ongoingSessions.get(serviceId)!
                 .doSendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         } else {
+            // TODO use config option or named constant?
             const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.sessionTransport, { rpcRequestTimeout: 15000 })
             const rpcRemote = new FindSessionRpcRemote(
                 this.localPeerDescriptor,
                 targetPeerDescriptor,
                 serviceId,
                 toProtoRpcClient(new FindSessionRpcClient(remoteCommunicator.getRpcClientTransport())),
+                // TODO use config option or named constant?
                 10000
             )
             rpcRemote.sendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
@@ -235,6 +239,7 @@ export class Finder implements IFinder {
         const idToFind = peerIdFromPeerDescriptor(routedMessage.destinationPeer!)
         const msg = routedMessage.message
         const findRequest = msg?.body.oneofKind === 'findRequest' ? msg.body.findRequest : undefined
+        // TODO use config option or named constant?
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.nodeId, 5)
         const data = this.findLocalData(idToFind.value, findRequest!.action === FindAction.FETCH_DATA)
         if (findRequest!.action === FindAction.DELETE_DATA) {
