@@ -115,13 +115,7 @@ export class StoreManager {
     }
 
     private async replicateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor, doNotConnect: boolean = false): Promise<void> {
-        const rpcRemote = new StoreRpcRemote(
-            this.localPeerDescriptor,
-            contact,
-            this.serviceId,
-            toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport())),
-            this.rpcRequestTimeout
-        )
+        const rpcRemote = this.createRpcRemote(contact)
         try {
             await rpcRemote.replicateData({ entry: dataEntry }, doNotConnect)
         } catch (e) {
@@ -151,13 +145,7 @@ export class StoreManager {
                 successfulNodes.push(closestNodes[i])
                 continue
             }
-            const rpcRemote = new StoreRpcRemote(
-                this.localPeerDescriptor,
-                closestNodes[i],
-                this.serviceId,
-                toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport())),
-                this.rpcRequestTimeout
-            )
+            const rpcRemote = this.createRpcRemote(closestNodes[i])
             try {
                 const response = await rpcRemote.storeData({
                     key,
@@ -193,13 +181,7 @@ export class StoreManager {
         await Promise.all(dataEntries.map(async (dataEntry) => {
             const dhtNodeRemotes = this.getNodesClosestToIdFromBucket(dataEntry.key, this.redundancyFactor)
             await Promise.all(dhtNodeRemotes.map(async (remoteDhtNode) => {
-                const rpcRemote = new StoreRpcRemote(
-                    this.localPeerDescriptor,
-                    remoteDhtNode.getPeerDescriptor(),
-                    this.serviceId,
-                    toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport())),
-                    this.rpcRequestTimeout
-                )
+                const rpcRemote = this.createRpcRemote(remoteDhtNode.getPeerDescriptor())
                 try {
                     await rpcRemote.replicateData({ entry: dataEntry })
                 } catch (err) {
@@ -240,6 +222,16 @@ export class StoreManager {
                 })
             }
         })
+    }
+
+    private createRpcRemote(contact: PeerDescriptor): StoreRpcRemote {
+        return new StoreRpcRemote(
+            this.localPeerDescriptor,
+            contact,
+            this.serviceId,
+            toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport())),
+            this.rpcRequestTimeout
+        )
     }
 
     async destroy(): Promise<void> {
