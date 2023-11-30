@@ -52,6 +52,7 @@ import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager } from './PeerManager'
+import { ServiceID } from '../types/ServiceID'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -62,7 +63,7 @@ export interface DhtNodeEvents {
 }
 
 export interface DhtNodeOptions {
-    serviceId?: string
+    serviceId?: ServiceID
     joinParallelism?: number
     maxNeighborListSize?: number
     numberOfNodesPerKBucket?: number
