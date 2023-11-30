@@ -258,7 +258,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connections: this.peerManager!.connections,
             localPeerDescriptor: this.localPeerDescriptor!,
             addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.handleNewPeers([contact], setActive),
-            serviceId: this.config.serviceId,
             connectionManager: this.connectionManager
         })
         this.finder = new Finder({
