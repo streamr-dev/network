@@ -141,7 +141,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private localPeerDescriptor?: PeerDescriptor
     public router?: Router
     private storeRpcLocal?: StoreRpcLocal
-    private localDataStore = new LocalDataStore()
+    private localDataStore: LocalDataStore
     private finder?: Finder
     private peerDiscovery?: PeerDiscovery
     private peerManager?: PeerManager
@@ -169,6 +169,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             metricsContext: new MetricsContext(),
             peerId: new UUID().toHex()
         }, conf)
+        this.localDataStore = new LocalDataStore(this.config.storeMaxTtl) 
         this.send = this.send.bind(this)
     }
 

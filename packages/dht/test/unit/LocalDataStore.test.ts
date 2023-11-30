@@ -47,7 +47,7 @@ describe('LocalDataStore', () => {
     }
 
     beforeEach(() => {
-        localDataStore = new LocalDataStore()
+        localDataStore = new LocalDataStore(30 * 1000)
     })
 
     afterEach(() => {
