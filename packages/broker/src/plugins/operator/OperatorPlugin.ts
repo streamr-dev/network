@@ -209,6 +209,13 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             ) => {
                 try {
                     if (isLeader()) {
+                        logger.info('Process review request', {
+                            sponsorshipAddress,
+                            targetOperator,
+                            partition,
+                            votingPeriodStartTimestamp,
+                            votingPeriodEndTimestamp
+                        }) // TODO: remove when missing votes issue is solved
                         await reviewSuspectNode({
                             sponsorshipAddress,
                             targetOperator,

@@ -416,6 +416,13 @@ export class ContractFacade {
                 voteEndTimestampInSecs: number,
                 metadataAsString?: string
             ) => {
+                logger.info('Receive raw review request', {
+                    sponsorship,
+                    targetOperator,
+                    voteStartTimestampInSecs,
+                    voteEndTimestampInSecs,
+                    metadataAsString
+                }) // TODO: remove when missing votes issue is solved
                 let partition: number
                 try {
                     partition = parsePartitionFromReviewRequestMetadata(metadataAsString)
