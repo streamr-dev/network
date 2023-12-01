@@ -40,7 +40,7 @@ describe('RandomGraphNode', () => {
             connectionLocker: mockConnectionLocker,
             handshaker: new MockHandshaker() as any,
             neighborUpdateManager: new MockNeighborUpdateManager(),
-            neighborFinder: new MockNeighborFinder(),
+            neighborFinder: new MockNeighborFinder() as any,
             streamPartId: StreamPartIDUtils.parse('stream#0')
         })
         await randomGraphNode.start()
