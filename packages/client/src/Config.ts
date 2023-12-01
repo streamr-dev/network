@@ -30,6 +30,13 @@ export interface ControlLayerConfig {
     entryPoints?: NetworkPeerDescriptor[]
 
     /**
+     * If true, an attempt is made to discover additional network entrypoint nodes
+     * by querying them from The Graph. If false, only the nodes
+     * listed in entryPoints are used.
+     */
+    entrypointDiscovery?: EntrypointDiscovery
+
+    /**
      * The list of STUN and TURN servers to use in ICE protocol when
      * forming WebRTC connections.
     */
@@ -187,6 +194,11 @@ export interface NetworkPeerDescriptor {
     region?: number
 }
 
+export interface EntrypointDiscovery {
+    enabled?: boolean
+    limit?: number
+}
+
 export interface ConnectivityMethod {
     host: string
     port: number
@@ -265,6 +277,7 @@ export interface StreamrClientConfig {
      * Config for the decentralized network layer.
      */
     network?: NetworkConfig
+
     /**
      * When gap filling is enabled and a gap is encountered, a resend request
      * may eventually be sent to a storage node in an attempt to _actively_

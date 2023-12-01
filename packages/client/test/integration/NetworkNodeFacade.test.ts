@@ -1,8 +1,10 @@
 import 'reflect-metadata'
 
 import { fastPrivateKey } from '@streamr/test-utils'
+import { peerDescriptorTranslator } from '../../src/utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { fakeEntrypoint } from '../test-utils/fake/FakeOperatorRegistry'
 
 describe('NetworkNodeFacade', () => {
 
@@ -79,6 +81,40 @@ describe('NetworkNodeFacade', () => {
                     await Promise.all(tasks)
                 }).rejects.toThrowStreamrError({ code: 'CLIENT_DESTROYED' })
             })
+        })
+    })
+
+    describe('endpoint discovery', () => {
+        it('queries endpoints if discoverEndpoints is true', async () => {
+            const client = environment.createClient({
+                network: {
+                    controlLayer: {
+                        entrypointDiscovery: {
+                            enabled: true
+                        }
+                    }
+                }
+            })
+            const node = await client.getNode()
+            expect(node.getOptions().layer0?.entryPoints).toContainEqual(
+                peerDescriptorTranslator(fakeEntrypoint)
+            )
+        })
+
+        it('does not query endpoints if discoverEndpoints is false', async () => {
+            const client = environment.createClient({
+                network: {
+                    controlLayer: {
+                        entrypointDiscovery: {
+                            enabled: false
+                        }
+                    }
+                }
+            })
+            const node = await client.getNode()
+            expect(node.getOptions().layer0?.entryPoints).not.toContainEqual(
+                peerDescriptorTranslator(fakeEntrypoint)
+            )
         })
     })
 })

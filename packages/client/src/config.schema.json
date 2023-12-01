@@ -99,6 +99,22 @@
                                 }
                             ]
                         },
+                        "entrypointDiscovery": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean"
+                                },
+                                "limit": {
+                                    "type": "number"
+                                }
+                            },
+                            "default": {
+                                "enabled": true,
+                                "limit": 20
+                            }
+                        },
                         "websocketPortRange": {
                             "$ref": "#/definitions/portRange",
                             "default": {
