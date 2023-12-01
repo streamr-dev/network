@@ -91,6 +91,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         if (this.stopped) {
             return
         }
+        // TODO use config option or named constant?
         const sortingList: SortedContactList<DhtNodeRpcRemote> = new SortedContactList(this.config.ownPeerId, 100)
         sortingList.addContacts(oldContacts)
         const sortedContacts = sortingList.getAllContacts()

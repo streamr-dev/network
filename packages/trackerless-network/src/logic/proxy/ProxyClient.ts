@@ -27,6 +27,7 @@ import { markAndCheckDuplicate } from '../utils'
 import { ProxyConnectionRpcRemote } from './ProxyConnectionRpcRemote'
 import { formStreamPartDeliveryServiceId } from '../formStreamPartDeliveryServiceId'
 
+// TODO use config option or named constant?
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -77,6 +78,7 @@ export class ProxyClient extends EventEmitter {
         super()
         this.config = config
         this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(config.streamPartId), config.transport)
+        // TODO use config option or named constant?
         this.targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor), 1000)
         this.deliveryRpcLocal = new DeliveryRpcLocal({
             localPeerDescriptor: this.config.localPeerDescriptor,
@@ -94,6 +96,7 @@ export class ProxyClient extends EventEmitter {
             markForInspection: () => {}
         })
         this.propagation = new Propagation({
+            // TODO use config option or named constant?
             minPropagationTargets: config.minPropagationTargets ?? 2,
             sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
                 const remote = this.targetNeighbors.get(neighborId)
