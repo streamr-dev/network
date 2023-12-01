@@ -29,7 +29,7 @@ export class ConnectionLockRpcRemote extends RpcRemote<IConnectionLockRpcClient>
             const res = await this.getClient().lockRequest(request, options)
             return res.accepted
         } catch (err) {
-            logger.debug(new Err.ConnectionLocker('Connection lock rejected', err).stack!)
+            logger.debug('Connection lock rejected', { error: err })
             return false
         }
     }
