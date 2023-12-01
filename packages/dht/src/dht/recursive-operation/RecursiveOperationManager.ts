@@ -112,6 +112,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             transport: this.sessionTransport,
             targetId,
             localPeerId: peerIdFromPeerDescriptor(this.localPeerDescriptor),
+            // TODO use config option or named constant?
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
             operation
         })
@@ -132,6 +133,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
                 await runAndWaitForEvents3<RecursiveOperationSessionEvents>(
                     [() => this.doRouteRequest(routeMessage, excludedPeer)],
                     [[session, 'completed']],
+                    // TODO use config option or named constant?
                     15000
                 )
             } catch (err) {
@@ -199,12 +201,14 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             this.ongoingSessions.get(serviceId)!
                 .doSendResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         } else {
+            // TODO use config option or named constant?
             const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.sessionTransport, { rpcRequestTimeout: 15000 })
             const rpcRemote = new RecursiveOperationSessionRpcRemote(
                 this.localPeerDescriptor,
                 targetPeerDescriptor,
                 serviceId,
                 toProtoRpcClient(new RecursiveOperationSessionRpcClient(remoteCommunicator.getRpcClientTransport())),
+                // TODO use config option or named constant?
                 10000
             )
             rpcRemote.sendResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
@@ -219,6 +223,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         const targetId = peerIdFromPeerDescriptor(routedMessage.destinationPeer!)
         const msg = routedMessage.message
         const recursiveOperationRequest = msg?.body.oneofKind === 'recursiveOperationRequest' ? msg.body.recursiveOperationRequest : undefined
+        // TODO use config option or named constant?
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.nodeId, 5)
         const data = (recursiveOperationRequest!.operation === RecursiveOperation.FETCH_DATA) 
             ? this.localDataStore.getEntries(targetId.value) 
