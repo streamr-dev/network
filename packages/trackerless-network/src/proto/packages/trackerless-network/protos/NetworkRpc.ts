@@ -207,9 +207,9 @@ export interface LeaveStreamPartNotice {
      */
     streamPartId: string;
     /**
-     * @generated from protobuf field: bool localNodeIsEntryPoint = 2;
+     * @generated from protobuf field: bool sourceIsStreamEntryPoint = 2;
      */
-    localNodeIsEntryPoint: boolean;
+    sourceIsStreamEntryPoint: boolean;
 }
 /**
  * @generated from protobuf message NeighborUpdate
@@ -460,7 +460,7 @@ class LeaveStreamPartNotice$Type extends MessageType<LeaveStreamPartNotice> {
     constructor() {
         super("LeaveStreamPartNotice", [
             { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "localNodeIsEntryPoint", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 2, name: "sourceIsStreamEntryPoint", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }

@@ -82,7 +82,10 @@ export class RandomGraphNode extends EventEmitter<Events> {
             rpcCommunicator: this.config.rpcCommunicator,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
-            onLeaveNotice: (senderId: NodeID, isStrelocalNodeIsEntryPoint: boolean) => {
+            onLeaveNotice: (senderId: NodeID, sourceIsStreamEntryPoint: boolean) => {
+                if (this.abortController.signal.aborted) {
+                    return
+                }
                 const contact = this.config.nearbyNodeView.get(senderId)
                 || this.config.randomNodeView.get(senderId)
                 || this.config.targetNeighbors.get(senderId)
@@ -96,7 +99,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                     this.config.neighborFinder.start([senderId])
                     this.config.proxyConnectionRpcLocal?.removeConnection(senderId)
                 }
-                if (isStrelocalNodeIsEntryPoint) {
+                if (sourceIsStreamEntryPoint) {
                     setImmediate(() => this.config.onEntryPointLeaveDetected())
                 }
             },
