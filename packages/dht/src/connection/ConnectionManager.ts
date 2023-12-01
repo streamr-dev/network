@@ -55,9 +55,6 @@ interface ConnectionManagerMetrics extends MetricsDefinition {
     connectionTotalFailureCount: Metric
 }
 
-// TODO move this type identifiers.ts and use also in other classes (and rename to ServiceID)
-type ServiceId = string
-
 const logger = new Logger(module)
 
 enum ConnectionManagerState {
@@ -68,8 +65,8 @@ enum ConnectionManagerState {
 }
 
 export interface ConnectionLocker {
-    lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void
-    unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void
+    lockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void
+    unlockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void
     weakLockConnection(targetDescriptor: PeerDescriptor): void
     weakUnlockConnection(targetDescriptor: PeerDescriptor): void
 }
@@ -107,6 +104,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
 
     private config: ConnectionManagerConfig
     private readonly metricsContext: MetricsContext
+    // TODO use config option or named constant?
     private readonly duplicateMessageDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
     private readonly metrics: ConnectionManagerMetrics
     private locks = new ConnectionLockHandler()
@@ -135,11 +133,11 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.connectorFacade = this.config.createConnectorFacade()
         this.send = this.send.bind(this)
         this.rpcCommunicator = new RoutingRpcCommunicator(INTERNAL_SERVICE_ID, this.send, {
-            rpcRequestTimeout: 10000
+            rpcRequestTimeout: 10000  // TODO use config option or named constant?
         })
         const lockRpcLocal = new ConnectionLockRpcLocal({
-            addRemoteLocked: (id: PeerIDKey, serviceId: string) => this.locks.addRemoteLocked(id, serviceId),
-            removeRemoteLocked: (id: PeerIDKey, serviceId: string) => this.locks.removeRemoteLocked(id, serviceId),
+            addRemoteLocked: (id: PeerIDKey, lockId: LockID) => this.locks.addRemoteLocked(id, lockId),
+            removeRemoteLocked: (id: PeerIDKey, lockId: LockID) => this.locks.removeRemoteLocked(id, lockId),
             closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => {
                 // TODO should we have some handling for this floating promise?
                 this.closeConnection(peerDescriptor, gracefulLeave, reason)
@@ -158,6 +156,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (this.connections.size <= maxConnections) {
             return
         }
+        // TODO use config option or named constant?
         const disconnectionCandidates = new SortedContactList<Contact>(peerIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 100000)
         this.connections.forEach((connection) => {
             if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
@@ -190,7 +189,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             logger.trace('disconnectorInterval')
             const LAST_USED_LIMIT = 20000
             this.garbageCollectConnections(this.config.maxConnections ?? 80, LAST_USED_LIMIT)
-        }, 5000)
+        }, 5000)  // TODO use config option or named constant?
     }
 
     public async stop(): Promise<void> {
@@ -213,6 +212,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 }
             } else {
                 logger.trace('handshake of connection not completed, force-closing')
+                // TODO use config option or named constant?
                 const eventReceived = waitForEvent3<ManagedConnectionEvents>(peer, 'disconnected', 2000)
                 // TODO should we have some handling for this floating promise?
                 peer.close(true)
@@ -517,6 +517,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }
 
         const promise = new Promise<void>((resolve, _reject) => {
+            // TODO use config option or named constant?
             // eslint-disable-next-line promise/catch-or-return
             waitForEvent3<ManagedConnectionEvents>(connection, 'disconnected', 2000).then(() => {
                 logger.trace('disconnected event received in gracefullyDisconnectAsync()')

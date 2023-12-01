@@ -21,7 +21,8 @@ const DATA_VALUE = Any.pack({ nodeId: crypto.randomBytes(10), type: NodeType.NOD
 
 const getDataValues = (node: DhtNode): PeerDescriptor[] => {
     // @ts-expect-error private field
-    return Array.from(node.localDataStore.getEntry(DATA_KEY).values())
+    const store = node.localDataStore
+    return Array.from(store.getEntries(DATA_KEY.value).values())
         .map((value) => Any.unpack(value.data!, PeerDescriptor))
 }
 

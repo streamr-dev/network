@@ -11,8 +11,8 @@ import {
     StoreDataRequest,
     StoreDataResponse,
     WebsocketConnectionResponse,
-    FindRequest, 
-    FindAction
+    RecursiveOperationRequest, 
+    RecursiveOperation
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -123,11 +123,9 @@ export const createWrappedClosestPeersRequest = (
     return rpcWrapper
 }
 
-export const createFindRequest = (
-    action: FindAction
-): FindRequest => {
-    const request: FindRequest = {
-        action,
+export const createFindRequest = (): RecursiveOperationRequest => {
+    const request: RecursiveOperationRequest = {
+        operation: RecursiveOperation.FIND_NODE,
         sessionId: v4()
     }
     return request

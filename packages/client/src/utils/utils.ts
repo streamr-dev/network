@@ -21,7 +21,6 @@ import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
 import { NodeType, PeerDescriptor } from '@streamr/dht'
-import omit from 'lodash/omit'
 
 const logger = new Logger(module)
 
@@ -135,7 +134,6 @@ export class MaxSizedSet<T> {
 // - remove "temporary compatibility" test case from Broker's config.test.ts 
 // - remove "id" property from config.schema.json (line 536) and make "nodeId" property required
 // - remove "id" property handling from this method
-// - (not strictly related to this, but could also rename id -> nodeId for each entry point in '@streamr/config')
 export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescriptor {
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
@@ -155,7 +153,7 @@ export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDes
         throw new Error('nodeType "virtual" not supported')
     }
     return {
-        ...omit(descriptor, 'nodeId'),
+        ...descriptor,
         nodeId: binaryToHex(descriptor.nodeId),
         type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
     }

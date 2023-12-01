@@ -1,4 +1,5 @@
-import { createStrictConfig, NetworkPeerDescriptor, redactConfig, NetworkNodeType } from '../../src/Config'
+import { config as CHAIN_CONFIG } from '@streamr/config'
+import { NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -20,13 +21,13 @@ describe('Config', () => {
             expect(() => {
                 return createStrictConfig({
                     contracts: {
-                        mainChainRPCs: {
+                        streamRegistryChainRPCs: {
                             chainId: 123,
                             rpcs: []
                         }
                     }
                 } as any)
-            }).toThrow('/contracts/mainChainRPCs/rpcs must NOT have fewer than 1 items')
+            }).toThrow('/contracts/streamRegistryChainRPCs/rpcs must NOT have fewer than 1 items')
         })
 
         describe('invalid property format', () => {
@@ -95,7 +96,7 @@ describe('Config', () => {
             const clientDefaults = createStrictConfig()
             const clientOverrides = createStrictConfig(CONFIG_TEST)
             expect(clientOverrides.network.controlLayer.entryPoints).not.toEqual(clientDefaults.network.controlLayer.entryPoints)
-            expect(clientOverrides.network.controlLayer.entryPoints).toEqual(CONFIG_TEST.network!.controlLayer!.entryPoints)
+            expect(clientOverrides.network.controlLayer.entryPoints).toEqual(CHAIN_CONFIG.dev2.entryPoints)
         })
 
         it('network can be empty', () => {
@@ -138,5 +139,50 @@ describe('Config', () => {
         }
         redactConfig(config)
         expect(config.auth.privateKey).toBe('(redacted)')
+    })
+
+    describe('environment defaults', () => {
+
+        it('happy path', () => {
+            const environmentId = 'mumbai'  // some environment id
+            const config: any = {
+                environment: environmentId
+            }
+            expect(createStrictConfig(config)).toMatchObject({
+                network: {
+                    controlLayer: {
+                        entryPoints: CHAIN_CONFIG[environmentId].entryPoints
+                    }
+                },
+                contracts: {
+                    streamRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StreamRegistry,
+                    streamStorageRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StreamStorageRegistry,
+                    storageNodeRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StorageNodeRegistry,
+                    streamRegistryChainRPCs: {
+                        name: CHAIN_CONFIG[environmentId].name,
+                        chainId: CHAIN_CONFIG[environmentId].id,
+                        rpcs: CHAIN_CONFIG[environmentId].rpcEndpoints
+                    },
+                    theGraphUrl: CHAIN_CONFIG[environmentId].theGraphUrl
+                }
+            })
+        })
+
+        it('override', () => {
+            const environmentId = 'mumbai'  // some environment id
+            const config: any = {
+                environment: environmentId,
+                contracts: {
+                    streamStorageRegistryChainAddress: '0x1234567890123456789012345678901234567890'
+                }
+            }
+            expect(createStrictConfig(config)).toMatchObject({
+                contracts: {
+                    streamRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StreamRegistry,
+                    streamStorageRegistryChainAddress: '0x1234567890123456789012345678901234567890',
+                    storageNodeRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StorageNodeRegistry
+                }
+            })
+        })
     })
 })

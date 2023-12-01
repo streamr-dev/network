@@ -250,7 +250,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             try {
                 result = await runAndRaceEvents3<OutpuBufferEvents>([() => { this.outputBuffer.push(data) }],
-                    this.outputBufferEmitter, ['bufferSent', 'bufferSendingFailed'], 15000)
+                    this.outputBufferEmitter, ['bufferSent', 'bufferSendingFailed'], 15000)  // TODO use config option or named constant?
             } catch (e) {
                 logger.debug(`Connection to ${getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor)} timed out`)
                 throw new Err.SendFailed('Sending buffer timed out')

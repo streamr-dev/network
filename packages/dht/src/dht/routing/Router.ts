@@ -14,14 +14,12 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
-import { ServiceID } from '../../types/ServiceID'
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
     connections: Map<PeerIDKey, DhtNodeRpcRemote>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
-    serviceId: ServiceID
     connectionManager?: ConnectionManager
     rpcRequestTimeout?: number
 
@@ -48,9 +46,9 @@ export class Router implements IRouter {
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
-    private readonly serviceId: ServiceID
-    private readonly forwardingTable: Map<string, ForwardingTableEntry> = new Map()
+    private readonly forwardingTable: Map<PeerIDKey, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
+    // TODO use config option or named constant?
     private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
     private stopped = false
 
@@ -58,7 +56,6 @@ export class Router implements IRouter {
         this.rpcCommunicator = config.rpcCommunicator
         this.localPeerDescriptor = config.localPeerDescriptor
         this.connections = config.connections
-        this.serviceId = config.serviceId
         this.registerLocalRpcMethods(config)
     }
 
@@ -134,13 +131,13 @@ export class Router implements IRouter {
         }
     }
 
-    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE): RouteMessageAck {
+    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE, excludedPeer?: PeerDescriptor): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
         logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
             + `to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`)
-        const session = this.createRoutingSession(routedMessage, mode)
+        const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         const contacts = session.updateAndGetRoutablePeers()
         if (contacts.length > 0) {
             this.addRoutingSession(session)
@@ -157,6 +154,7 @@ export class Router implements IRouter {
             })
             setImmediate(async () => {
                 try {
+                    // TODO use config option or named constant?
                     await withTimeout(eventReceived, 10000)
                     logger.trace('raceEvents ended from routingSession: ' + session.sessionId)
                 } catch (e) {
@@ -173,16 +171,21 @@ export class Router implements IRouter {
         }
     }
 
-    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode): RoutingSession {
+    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RoutingSession {
+        const excludedPeers = routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
+        if (excludedPeer) {
+            excludedPeers.push(peerIdFromPeerDescriptor(excludedPeer))
+        }
         logger.trace('routing session created with connections: ' + this.connections.size)
         return new RoutingSession(
             this.rpcCommunicator,
             this.localPeerDescriptor,
             routedMessage,
             this.connections,
+            // TODO use config option or named constant?
             areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
-            routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
+            excludedPeers
         )
     }
 
@@ -231,7 +234,7 @@ export class Router implements IRouter {
                 peerDescriptors: reachableThroughWithoutSelf,
                 timeout: setTimeout(() => {
                     this.forwardingTable.delete(sourceKey)
-                }, 10000)
+                }, 10000)  // TODO use config option or named constant?
             }
             this.forwardingTable.set(sourceKey, forwardingEntry)
         }

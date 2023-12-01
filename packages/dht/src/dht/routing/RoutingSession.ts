@@ -8,10 +8,10 @@ import { v4 } from 'uuid'
 import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { RouterRpcRemote } from './RouterRpcRemote'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { FindRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { RecursiveOperationRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Contact } from '../contact/Contact'
-import { FindRpcRemote } from './FindRpcRemote'
+import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 
@@ -22,7 +22,7 @@ const MAX_FAILED_HOPS = 2
 class RemoteContact extends Contact {
 
     private routerRpcRemote: RouterRpcRemote
-    private findRpcRemote: FindRpcRemote
+    private RecursiveOperationRpcRemote: RecursiveOperationRpcRemote
 
     constructor(peer: DhtNodeRpcRemote, localPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
         super(peer.getPeerDescriptor())
@@ -33,11 +33,11 @@ class RemoteContact extends Contact {
             toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport())),
             EXISTING_CONNECTION_TIMEOUT
         )
-        this.findRpcRemote = new FindRpcRemote(
+        this.RecursiveOperationRpcRemote = new RecursiveOperationRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
-            toProtoRpcClient(new FindRpcClient(rpcCommunicator.getRpcClientTransport())),
+            toProtoRpcClient(new RecursiveOperationRpcClient(rpcCommunicator.getRpcClientTransport())),
             EXISTING_CONNECTION_TIMEOUT
         )
     }
@@ -46,8 +46,8 @@ class RemoteContact extends Contact {
         return this.routerRpcRemote
     }
 
-    getFindRpcRemote(): FindRpcRemote {
-        return this.findRpcRemote
+    getRecursiveOperationRpcRemote(): RecursiveOperationRpcRemote {
+        return this.RecursiveOperationRpcRemote
     }
 }
 
@@ -63,7 +63,7 @@ export interface RoutingSessionEvents {
     stopped: (sessionId: string) => void
 }
 
-export enum RoutingMode { ROUTE, FORWARD, FIND }
+export enum RoutingMode { ROUTE, FORWARD, RECURSIVE }
 
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
@@ -100,6 +100,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousId = previousPeer ? PeerID.fromValue(previousPeer.nodeId) : undefined
         this.contactList = new SortedContactList(
             PeerID.fromValue(this.messageToRoute.destinationPeer!.nodeId),
+            // TODO use config option or named constant?
             10000,
             undefined,
             true,
@@ -163,8 +164,8 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         if (this.mode === RoutingMode.FORWARD) {
             return contact.getRouterRpcRemote().forwardMessage(msg)
-        } else if (this.mode === RoutingMode.FIND) {
-            return contact.getFindRpcRemote().routeFindRequest(msg)
+        } else if (this.mode === RoutingMode.RECURSIVE) {
+            return contact.getRecursiveOperationRpcRemote().routeRequest(msg)
         } else {
             return contact.getRouterRpcRemote().routeMessage(msg)
         }
