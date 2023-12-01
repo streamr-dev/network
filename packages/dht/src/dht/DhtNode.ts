@@ -296,7 +296,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private initPeerManager() {
         this.peerManager = new PeerManager({
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
-            maxNeighborListSize: this.config.maxNeighborListSize,
+            maxContactListSize: this.config.maxNeighborListSize,
             ownPeerId: this.getNodeId(),
             connectionManager: this.connectionManager!,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,

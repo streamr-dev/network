@@ -42,7 +42,8 @@
     "node-datachannel": "^0.4.3",
     "sinon": "15.1.2",
     "uuid": "^9.0.1",
-    "websocket": "^1.0.34"
+    "websocket": "^1.0.34",
+    "wtfnode": "^0.9.1"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",

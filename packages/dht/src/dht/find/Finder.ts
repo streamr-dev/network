@@ -264,13 +264,12 @@ export class Finder implements IFinder {
 
     private getClosestConnections(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
         const connectedPeers = Array.from(this.connections.values())
-        const closestPeers = new SortedContactList<DhtNodeRpcRemote>(
-            PeerID.fromValue(kademliaId),
-            limit,
-            undefined,
-            true,
-            undefined
-        )
+        const closestPeers = new SortedContactList<DhtNodeRpcRemote>({
+            referenceId: PeerID.fromValue(kademliaId),
+            maxSize: limit,
+            allowToContainReferenceId: true,
+            emitEvents: false
+        })
         closestPeers.addContacts(connectedPeers)
         return closestPeers.getClosestContacts(limit).map((peer) => peer.getPeerDescriptor())
     }

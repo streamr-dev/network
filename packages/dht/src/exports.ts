@@ -17,3 +17,5 @@ export { ClientWebsocket } from './connection/websocket/ClientWebsocket'
 export { ManagedConnection } from './connection/ManagedConnection'
 export { ConnectionType } from './connection/IConnection'
 export { PeerID } from './helpers/PeerID'
+export { PeerManager } from './dht/PeerManager'
+

@@ -60,10 +60,10 @@ export class DiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(peerId.toKey())
-        const oldClosestContact = this.config.peerManager.getClosestPeersTo(this.config.targetId, 1)[0]
+        const oldClosestContact = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
         const oldClosestDistance = KBucket.distance(this.config.targetId, oldClosestContact.getPeerId().value)
         this.addNewContacts(contacts)
-        const newClosestContact = this.config.peerManager.getClosestPeersTo(this.config.targetId, 1)[0]
+        const newClosestContact = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
         const newClosestDistance = KBucket.distance(this.config.targetId, newClosestContact.getPeerId().value)
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
@@ -84,7 +84,7 @@ export class DiscoverySession {
         if (this.stopped) {
             return
         }
-        const uncontacted = this.config.peerManager.getClosestPeersTo(this.config.targetId, this.config.parallelism, this.contactedPeers)
+        const uncontacted = this.config.peerManager.getClosestContactsTo(this.config.targetId, this.config.parallelism, this.contactedPeers)
         if (uncontacted.length === 0 || this.noProgressCounter >= this.config.noProgressLimit) {
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
@@ -107,7 +107,7 @@ export class DiscoverySession {
     }
 
     public async findClosestNodes(timeout: number): Promise<void> {
-        if (this.config.peerManager.getNumberOfPeers(this.contactedPeers) === 0) {
+        if (this.config.peerManager.getNumberOfContacts(this.contactedPeers) === 0) {
             return
         }
         await runAndWaitForEvents3<DiscoverySessionEvents>(

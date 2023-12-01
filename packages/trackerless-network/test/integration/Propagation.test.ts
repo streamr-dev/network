@@ -1,4 +1,4 @@
-import { LatencyType, Simulator } from '@streamr/dht'
+import { Simulator } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
@@ -16,7 +16,7 @@ describe('Propagation', () => {
     const NUM_OF_NODES = 256
 
     beforeEach(async () => {
-        const simulator = new Simulator(LatencyType.FIXED, 10)
+        const simulator = new Simulator()
         totalReceived = 0
         layer1Nodes = []
         randomGraphNodes = []

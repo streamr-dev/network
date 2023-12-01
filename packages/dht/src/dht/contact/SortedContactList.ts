@@ -1,26 +1,29 @@
 import KBucket from 'k-bucket'
-import { PeerID } from '../../helpers/PeerID'
-import { ContactList, ContactState } from './ContactList'
+import { PeerID, PeerIDKey } from '../../helpers/PeerID'
+import { ContactState, Events } from './ContactList'
+import { sortedIndexBy } from 'lodash'
+import EventEmitter from 'eventemitter3'
 
-export class SortedContactList<C extends { getPeerId: () => PeerID }> extends ContactList<C> {
+export interface SortedContactListConfig {
+    referenceId: PeerID
+    allowToContainReferenceId: boolean
+    emitEvents: boolean
+    maxSize?: number
+    peerIdDistanceLimit?: PeerID
+    excludedPeerIDs?: PeerID[]
+}
+export class SortedContactList<C extends { getPeerId: () => PeerID }> extends EventEmitter<Events<C>> {
+    private config: SortedContactListConfig
 
-    private allowLocalPeerId: boolean
-    private peerIdDistanceLimit?: PeerID
-    private excludedPeerIDs?: PeerID[]
+    private contactsById: Map<PeerIDKey, ContactState<C>> = new Map()
+    private contactIds: PeerID[] = []
 
     constructor(
-        ownId: PeerID,
-        maxSize?: number,
-        defaultContactQueryLimit?: number,
-        allowLocalPeerId = false,
-        peerIdDistanceLimit?: PeerID,
-        excludedPeerIDs?: PeerID[]
+        config: SortedContactListConfig
     ) {
-        super(ownId, maxSize, defaultContactQueryLimit)
+        super()
+        this.config = config
         this.compareIds = this.compareIds.bind(this)
-        this.allowLocalPeerId = allowLocalPeerId
-        this.peerIdDistanceLimit = peerIdDistanceLimit
-        this.excludedPeerIDs = excludedPeerIDs
     }
 
     public getClosestContactId(): PeerID {
@@ -32,43 +35,55 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Co
     }
 
     public addContact(contact: C): void {
-        if (this.excludedPeerIDs
-            && this.excludedPeerIDs.some((peerId) => contact.getPeerId().equals(peerId))) {
+        if (this.config.excludedPeerIDs !== undefined
+            && this.config.excludedPeerIDs.some((peerId) => contact.getPeerId().equals(peerId))) {
             return
         }
-        
-        if ((!this.allowLocalPeerId && this.ownId.equals(contact.getPeerId())) ||
-            (this.peerIdDistanceLimit !== undefined && this.compareIds(this.peerIdDistanceLimit, contact.getPeerId()) < 0)) {
+
+        if ((!this.config.allowToContainReferenceId && this.config.referenceId.equals(contact.getPeerId())) ||
+            (this.config.peerIdDistanceLimit !== undefined && this.compareIds(this.config.peerIdDistanceLimit, contact.getPeerId()) < 0)) {
             return
         }
         if (!this.contactsById.has(contact.getPeerId().toKey())) {
-            if ((this.maxSize === undefined) || (this.contactIds.length < this.maxSize)) {
+            if ((this.config.maxSize === undefined) || (this.contactIds.length < this.config.maxSize)) {
                 this.contactsById.set(contact.getPeerId().toKey(), new ContactState(contact))
-                this.contactIds.push(contact.getPeerId())
-                this.contactIds.sort(this.compareIds)
-            } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.getPeerId()) > 0) {
+
+                const index = sortedIndexBy(this.contactIds, contact.getPeerId(), (id: PeerID) => { return this.distanceToReferenceId(id) })
+                this.contactIds.splice(index, 0, contact.getPeerId())
+            } else if (this.compareIds(this.contactIds[this.config.maxSize - 1], contact.getPeerId()) > 0) {
                 const removedId = this.contactIds.pop()
                 const removedContact = this.contactsById.get(removedId!.toKey())!.contact
                 this.contactsById.delete(removedId!.toKey())
                 this.contactsById.set(contact.getPeerId().toKey(), new ContactState(contact))
-                this.contactIds.push(contact.getPeerId())
-                this.contactIds.sort(this.compareIds)
+
+                const index = sortedIndexBy(this.contactIds, contact.getPeerId(), (id: PeerID) => { return this.distanceToReferenceId(id) })
+                this.contactIds.splice(index, 0, contact.getPeerId())
+                if (this.config.emitEvents) {
+                    this.emit(
+                        'contactRemoved',
+                        removedContact,
+                        this.getClosestContacts()
+                    )
+                }
+            }
+            if (this.config.emitEvents) {
                 this.emit(
-                    'contactRemoved',
-                    removedContact,
+                    'newContact',
+                    contact,
                     this.getClosestContacts()
                 )
             }
-            this.emit(
-                'newContact',
-                contact,
-                this.getClosestContacts()
-            )
         }
     }
 
     public addContacts(contacts: C[]): void {
-        contacts.forEach((contact) => this.addContact(contact))
+        contacts.forEach((contact) => {
+            this.addContact(contact)
+        })
+    }
+
+    public getContact(id: PeerID): ContactState<C> | undefined {
+        return this.contactsById.get(id.toKey())
     }
 
     public setContacted(contactId: PeerID): void {
@@ -83,7 +98,7 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Co
         }
     }
 
-    public getClosestContacts(limit = this.defaultContactQueryLimit): C[] {
+    public getClosestContacts(limit?: number): C[] {
         const ret: C[] = []
         this.contactIds.forEach((contactId) => {
             const contact = this.contactsById.get(contactId.toKey())
@@ -91,7 +106,11 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Co
                 ret.push(contact.contact)
             }
         })
-        return ret.slice(0, limit)
+        if (limit === undefined) {
+            return ret
+        } else {
+            return ret.slice(0, limit)
+        }
     }
 
     public getUncontactedContacts(num: number): C[] {
@@ -124,9 +143,13 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Co
     }
 
     public compareIds(id1: PeerID, id2: PeerID): number {
-        const distance1 = KBucket.distance(this.ownId.value, id1.value)
-        const distance2 = KBucket.distance(this.ownId.value, id2.value)
+        const distance1 = KBucket.distance(this.config.referenceId.value, id1.value)
+        const distance2 = KBucket.distance(this.config.referenceId.value, id2.value)
         return distance1 - distance2
+    }
+
+    private distanceToReferenceId(id: PeerID): number {
+        return KBucket.distance(this.config.referenceId.value, id.value)
     }
 
     public removeContact(id: PeerID): boolean {
@@ -135,11 +158,13 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Co
             const index = this.contactIds.findIndex((element) => element.equals(id))
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id.toKey())
-            this.emit(
-                'contactRemoved',
-                removed,
-                this.getClosestContacts()
-            )
+            if (this.config.emitEvents) {
+                this.emit(
+                    'contactRemoved',
+                    removed,
+                    this.getClosestContacts()
+                )
+            }
             return true
         }
         return false
@@ -151,5 +176,19 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Co
 
     public getAllContacts(): C[] {
         return this.contactIds.map((peerId) => this.contactsById.get(peerId.toKey())!.contact)
+    }
+
+    public getSize(): number {
+        return this.contactIds.length
+    }
+
+    public clear(): void {
+        this.contactsById.clear()
+        this.contactIds = []
+    }
+
+    public stop(): void {
+        this.removeAllListeners()
+        this.clear()
     }
 }
