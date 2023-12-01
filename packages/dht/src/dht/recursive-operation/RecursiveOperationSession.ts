@@ -35,7 +35,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     private foundData: Map<PeerIDKey, DataEntry> = new Map()
     private allKnownHops: Set<PeerIDKey> = new Set()
     private reportedHops: Set<PeerIDKey> = new Set()
-    private reportFindCompletedTimeout?: NodeJS.Timeout
+    private timeoutTask?: NodeJS.Timeout 
     private completionEventEmitted = false
     private noCloserNodesReceivedCounter = 0
 
@@ -120,9 +120,9 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         }
         if (this.isCompleted()) {
             if (!this.completionEventEmitted && this.isCompleted()) {
-                if (this.reportFindCompletedTimeout) {
-                    clearTimeout(this.reportFindCompletedTimeout)
-                    this.reportFindCompletedTimeout = undefined
+                if (this.timeoutTask) {
+                    clearTimeout(this.timeoutTask)
+                    this.timeoutTask = undefined
                 }
                 this.emit('completed', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
                 this.completionEventEmitted = true
@@ -146,13 +146,13 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         if (this.isCompleted()) {
             this.emit('completed', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
             this.completionEventEmitted = true
-            if (this.reportFindCompletedTimeout) {
-                clearTimeout(this.reportFindCompletedTimeout)
-                this.reportFindCompletedTimeout = undefined
+            if (this.timeoutTask) {
+                clearTimeout(this.timeoutTask)
+                this.timeoutTask = undefined
             }
         } else {
-            if (!this.reportFindCompletedTimeout && !this.completionEventEmitted) {
-                this.reportFindCompletedTimeout = setTimeout(() => {
+            if (!this.timeoutTask && !this.completionEventEmitted) {
+                this.timeoutTask = setTimeout(() => {
                     if (!this.completionEventEmitted) {
                         this.emit('completed', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
                         this.completionEventEmitted = true
@@ -168,9 +168,9 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     })
 
     public stop(): void {
-        if (this.reportFindCompletedTimeout) {
-            clearTimeout(this.reportFindCompletedTimeout)
-            this.reportFindCompletedTimeout = undefined
+        if (this.timeoutTask) {
+            clearTimeout(this.timeoutTask)
+            this.timeoutTask = undefined
         }
         this.rpcCommunicator.destroy()
         this.emit('completed', [])
