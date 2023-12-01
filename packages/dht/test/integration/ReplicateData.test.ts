@@ -33,28 +33,23 @@ const hasData = (node: DhtNode): boolean => {
 describe('Replicate data from node to node in DHT', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
+    let nodesById: Map<string, DhtNode> = new Map()
     let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.FIXED, 20)
     const NUM_NODES = 100
     const MAX_CONNECTIONS = 80
     const K = 8
 
-    const nodesById: Map<string, DhtNode> = new Map()
-
     beforeEach(async () => {
-        nodes = []
         entryPoint = await createMockConnectionDhtNode('dummy', simulator, createRandomNodeId(), K, MAX_CONNECTIONS)
-        nodes.push(entryPoint)
-        nodesById.set(entryPoint.getNodeId().toKey(), entryPoint)
+        await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
 
-        entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
-
-        await entryPoint.joinDht([entrypointDescriptor])
-
+        nodes = []
+        nodesById.clear()
         for (let i = 0; i < NUM_NODES; i++) {
             const node = await createMockConnectionDhtNode('dummy', simulator, createRandomNodeId(), K, MAX_CONNECTIONS, undefined, [entrypointDescriptor])
-            nodesById.set(node.getNodeId().toKey(), node)
             nodes.push(node)
+            nodesById.set(node.getNodeId().toKey(), node)
         }
     })
 
