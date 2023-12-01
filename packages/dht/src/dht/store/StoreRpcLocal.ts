@@ -18,7 +18,6 @@ interface StoreRpcLocalConfig {
     localDataStore: LocalDataStore
     replicateDataToNeighbors: (incomingPeer: PeerDescriptor, dataEntry: DataEntry) => void
     selfIsOneOfClosestPeers: (key: Uint8Array) => boolean
-    maxTtl: number
 }
 
 export class StoreRpcLocal implements IStoreRpc {
@@ -30,8 +29,7 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
-        const ttl = Math.min(request.ttl, this.config.maxTtl)
-        const { key, data, createdAt, creator } = request
+        const { key, data, creator, createdAt, ttl } = request
         const selfIsOneOfClosestPeers = this.config.selfIsOneOfClosestPeers(key)
         this.config.localDataStore.storeEntry({ 
             key, 

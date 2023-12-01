@@ -2,23 +2,16 @@ import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DataEntry } from '../../proto/packages/dht/protos/DhtRpc'
 import { MapWithTtl } from '../../helpers/MapWithTtl'
 
-const MIN_TTL = 1 * 1000
-const MAX_TTL = 300 * 1000
-
-const createTtl = (entry: DataEntry): number => {
-    const ttl = entry.ttl
-    if (ttl < MIN_TTL) {
-        return MIN_TTL
-    } else if (ttl > MAX_TTL) {
-        return MAX_TTL
-    } else {
-        return ttl
-    }
-}
-
 type Key = Uint8Array
 
 export class LocalDataStore {
+
+    private readonly maxTtl: number
+
+    constructor(maxTtl: number) {
+        this.maxTtl = maxTtl
+    }
+
     // A map into which each node can store one value per data key
     // The first key is the key of the data, the second key is the
     // PeerID of the creator of the data
@@ -28,7 +21,7 @@ export class LocalDataStore {
         const dataKey = PeerID.fromValue(dataEntry.key).toKey()
         const creatorKey = PeerID.fromValue(dataEntry.creator!.nodeId).toKey()
         if (!this.store.has(dataKey)) {
-            this.store.set(dataKey, new MapWithTtl(createTtl))
+            this.store.set(dataKey, new MapWithTtl((e) => Math.min(e.ttl, this.maxTtl)))
         }
         if (this.store.get(dataKey)!.has(creatorKey)) {
             const storedMillis = (dataEntry.createdAt!.seconds * 1000) + (dataEntry.createdAt!.nanos / 1000000)

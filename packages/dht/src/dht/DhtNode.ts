@@ -52,6 +52,7 @@ import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager } from './PeerManager'
+import { ServiceID } from '../types/ServiceID'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -62,7 +63,7 @@ export interface DhtNodeEvents {
 }
 
 export interface DhtNodeOptions {
-    serviceId?: string
+    serviceId?: ServiceID
     joinParallelism?: number
     maxNeighborListSize?: number
     numberOfNodesPerKBucket?: number
@@ -141,7 +142,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private localPeerDescriptor?: PeerDescriptor
     public router?: Router
     private storeManager?: StoreManager
-    private localDataStore = new LocalDataStore()
+    private localDataStore: LocalDataStore
     private finder?: Finder
     private peerDiscovery?: PeerDiscovery
     private peerManager?: PeerManager
@@ -169,6 +170,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             metricsContext: new MetricsContext(),
             peerId: new UUID().toHex()
         }, conf)
+        this.localDataStore = new LocalDataStore(this.config.storeMaxTtl) 
         this.send = this.send.bind(this)
     }
 
@@ -258,7 +260,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connections: this.peerManager!.connections,
             localPeerDescriptor: this.localPeerDescriptor!,
             addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.handleNewPeers([contact], setActive),
-            serviceId: this.config.serviceId,
             connectionManager: this.connectionManager
         })
         this.finder = new Finder({
@@ -278,7 +279,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
             highestTtl: this.config.storeHighestTtl,
-            maxTtl: this.config.storeMaxTtl,
             redundancyFactor: this.config.storageRedundancyFactor,
             localDataStore: this.localDataStore,
             getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
@@ -350,7 +350,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
             bucket: this.peerManager!.bucket!,
-            serviceId: this.config.serviceId,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             addNewContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
             removeContact: (contact: PeerDescriptor) => this.removeContact(contact)

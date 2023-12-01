@@ -27,7 +27,6 @@ interface StoreManagerConfig {
     localPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
     serviceId: ServiceID
-    maxTtl: number
     highestTtl: number
     redundancyFactor: number
     getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
@@ -65,8 +64,7 @@ export class StoreManager {
         const rpcLocal = new StoreRpcLocal({
             localDataStore: config.localDataStore,
             replicateDataToNeighbors: (incomingPeer: PeerDescriptor, dataEntry: DataEntry) => this.replicateDataToNeighbors(incomingPeer, dataEntry),
-            selfIsOneOfClosestPeers: (key: Uint8Array): boolean => this.selfIsOneOfClosestPeers(key),
-            maxTtl: config.maxTtl
+            selfIsOneOfClosestPeers: (key: Uint8Array): boolean => this.selfIsOneOfClosestPeers(key)
         })
         this.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
             (request: StoreDataRequest) => rpcLocal.storeData(request))

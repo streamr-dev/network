@@ -57,7 +57,7 @@ export abstract class RpcRemote<T> {
         return this.localPeerDescriptor
     }
 
-    getServiceId(): string {
+    getServiceId(): ServiceID {
         return this.serviceId
     }
 
