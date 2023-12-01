@@ -17,7 +17,7 @@ import {
     ExternalFindDataResponse,
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
-    FindAction,
+    RecursiveOperation,
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
@@ -37,7 +37,7 @@ import {
     peerIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
-import { Finder, FindResult } from './find/Finder'
+import { RecursiveOperationManager, RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
 import { StoreRpcLocal } from './store/StoreRpcLocal'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
@@ -143,7 +143,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public router?: Router
     private storeRpcLocal?: StoreRpcLocal
     private localDataStore: LocalDataStore
-    private finder?: Finder
+    private recursiveOperationManager?: RecursiveOperationManager
     private peerDiscovery?: PeerDiscovery
     private peerManager?: PeerManager
 
@@ -262,7 +262,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.handleNewPeers([contact], setActive),
             connectionManager: this.connectionManager
         })
-        this.finder = new Finder({
+        this.recursiveOperationManager = new RecursiveOperationManager({
             rpcCommunicator: this.rpcCommunicator,
             router: this.router,
             sessionTransport: this,
@@ -275,7 +275,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         })
         this.storeRpcLocal = new StoreRpcLocal({
             rpcCommunicator: this.rpcCommunicator,
-            finder: this.finder,
+            recursiveOperationManager: this.recursiveOperationManager,
             localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
             highestTtl: this.config.storeHighestTtl,
@@ -361,8 +361,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
             (req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(req, context))
         const externalApiRpcLocal = new ExternalApiRpcLocal({
-            startFind: (key: Uint8Array, action: FindAction, excludedPeer: PeerDescriptor) => {
-                return this.startFind(key, action, excludedPeer)
+            executeRecursiveOperation: (key: Uint8Array, operation: RecursiveOperation, excludedPeer: PeerDescriptor) => {
+                return this.executeRecursiveOperation(key, operation, excludedPeer)
             },
             storeDataToDht: (key: Uint8Array, data: Any, creator?: PeerDescriptor) => this.storeDataToDht(key, data, creator)
         })
@@ -452,8 +452,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         ))
     }
 
-    public async startFind(key: Uint8Array, action?: FindAction, excludedPeer?: PeerDescriptor): Promise<FindResult> {
-        return this.finder!.startFind(key, action, excludedPeer)
+    // TODO make this private and unify the public API of find/fetch/store/delete methods
+    // (we already have storeDataToDht etc. here)
+    public async executeRecursiveOperation(
+        key: Uint8Array,
+        operation: RecursiveOperation,
+        excludedPeer?: PeerDescriptor
+    ): Promise<RecursiveOperationResult> {
+        return this.recursiveOperationManager!.execute(key, operation, excludedPeer)
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any, creator?: PeerDescriptor): Promise<PeerDescriptor[]> {
@@ -477,13 +483,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.findDataViaPeer(key, sample(this.config.entryPoints)!)
         }
-        const result = await this.finder!.startFind(key, FindAction.FETCH_DATA)
+        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FETCH_DATA)
         return result.dataEntries ?? []  // TODO is this fallback needed?
     }
 
     public async deleteDataFromDht(key: Uint8Array, waitForCompletion: boolean): Promise<void> {
         if (!this.stopped) {
-            await this.finder!.startFind(key, FindAction.DELETE_DATA, undefined, waitForCompletion)
+            await this.recursiveOperationManager!.execute(key, RecursiveOperation.DELETE_DATA, undefined, waitForCompletion)
         }
     }
 
@@ -551,7 +557,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.peerManager?.stop()
         this.rpcCommunicator!.stop()
         this.router!.stop()
-        this.finder!.stop()
+        this.recursiveOperationManager!.stop()
         this.peerDiscovery!.stop()
         if (this.config.transport === undefined) {
             // if the transport was not given in config, the instance was created in start() and
