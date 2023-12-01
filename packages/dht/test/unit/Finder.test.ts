@@ -73,7 +73,7 @@ describe('Finder', () => {
             router,
             connections: new Map(),
             serviceId: 'Finder',
-            localDataStore: new LocalDataStore(),
+            localDataStore: new LocalDataStore(30 * 100),
             sessionTransport: transport,
             addContact: () => {},
             isPeerCloserToIdThanSelf: (_peer1, _compareToId) => true,

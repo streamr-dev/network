@@ -141,46 +141,46 @@ describe('Config', () => {
         expect(config.auth.privateKey).toBe('(redacted)')
     })
 
-    describe('preset', () => {
+    describe('environment defaults', () => {
 
         it('happy path', () => {
-            const presetId = 'mumbai'  // some preset id
+            const environmentId = 'mumbai'  // some environment id
             const config: any = {
-                config: presetId
+                environment: environmentId
             }
             expect(createStrictConfig(config)).toMatchObject({
                 network: {
                     controlLayer: {
-                        entryPoints: CHAIN_CONFIG[presetId].entryPoints
+                        entryPoints: CHAIN_CONFIG[environmentId].entryPoints
                     }
                 },
                 contracts: {
-                    streamRegistryChainAddress: CHAIN_CONFIG[presetId].contracts.StreamRegistry,
-                    streamStorageRegistryChainAddress: CHAIN_CONFIG[presetId].contracts.StreamStorageRegistry,
-                    storageNodeRegistryChainAddress: CHAIN_CONFIG[presetId].contracts.StorageNodeRegistry,
+                    streamRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StreamRegistry,
+                    streamStorageRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StreamStorageRegistry,
+                    storageNodeRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StorageNodeRegistry,
                     streamRegistryChainRPCs: {
-                        name: CHAIN_CONFIG[presetId].name,
-                        chainId: CHAIN_CONFIG[presetId].id,
-                        rpcs: CHAIN_CONFIG[presetId].rpcEndpoints
+                        name: CHAIN_CONFIG[environmentId].name,
+                        chainId: CHAIN_CONFIG[environmentId].id,
+                        rpcs: CHAIN_CONFIG[environmentId].rpcEndpoints
                     },
-                    theGraphUrl: CHAIN_CONFIG[presetId].theGraphUrl
+                    theGraphUrl: CHAIN_CONFIG[environmentId].theGraphUrl
                 }
             })
         })
 
         it('override', () => {
-            const presetId = 'mumbai'  // some preset id
+            const environmentId = 'mumbai'  // some environment id
             const config: any = {
-                config: presetId,
+                environment: environmentId,
                 contracts: {
                     streamStorageRegistryChainAddress: '0x1234567890123456789012345678901234567890'
                 }
             }
             expect(createStrictConfig(config)).toMatchObject({
                 contracts: {
-                    streamRegistryChainAddress: CHAIN_CONFIG[presetId].contracts.StreamRegistry,
+                    streamRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StreamRegistry,
                     streamStorageRegistryChainAddress: '0x1234567890123456789012345678901234567890',
-                    storageNodeRegistryChainAddress: CHAIN_CONFIG[presetId].contracts.StorageNodeRegistry
+                    storageNodeRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StorageNodeRegistry
                 }
             })
         })
