@@ -9,7 +9,7 @@ import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { IRecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
+import { RecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, executeSafePromise } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
@@ -25,7 +25,7 @@ import { findIndex } from 'lodash'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
-    recursiveOperationManager: IRecursiveOperationManager
+    recursiveOperationManager: RecursiveOperationManager
     localPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
     serviceId: ServiceID
@@ -40,7 +40,7 @@ const logger = new Logger(module)
 export class StoreRpcLocal implements IStoreRpc {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
-    private readonly recursiveOperationManager: IRecursiveOperationManager
+    private readonly recursiveOperationManager: RecursiveOperationManager
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly localDataStore: LocalDataStore
     private readonly serviceId: ServiceID

@@ -43,15 +43,11 @@ interface RecursiveOperationManagerConfig {
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
 }
 
-export interface IRecursiveOperationManager {
-    execute(targetId: Uint8Array, operation: RecursiveOperation): Promise<RecursiveOperationResult>
-}
-
 export interface RecursiveOperationResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
 
 const logger = new Logger(module)
 
-export class RecursiveOperationManager implements IRecursiveOperationManager {
+export class RecursiveOperationManager {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly sessionTransport: ITransport
