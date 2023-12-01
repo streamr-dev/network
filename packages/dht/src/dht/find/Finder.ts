@@ -7,13 +7,14 @@ import {
     FindRequest,
     RouteMessageAck,
     RouteMessageWrapper,
-    RouteMessageError
+    RouteMessageError,
+    FindAction
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { areEqualPeerDescriptors, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
+import { Logger, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { FindSessionRpcRemote } from './FindSessionRpcRemote'
 import { v4 } from 'uuid'
@@ -43,7 +44,7 @@ interface FinderConfig {
 }
 
 export interface IFinder {
-    startFind(idToFind: Uint8Array, fetchData?: boolean): Promise<FindResult>
+    startFind(idToFind: Uint8Array, action?: FindAction): Promise<FindResult>
 }
 
 export interface FindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
@@ -98,8 +99,9 @@ export class Finder implements IFinder {
 
     public async startFind(
         idToFind: Uint8Array,
-        fetchData: boolean = false,
-        excludedPeer?: PeerDescriptor
+        action: FindAction = FindAction.NODE,
+        excludedPeer?: PeerDescriptor,
+        waitForCompletion = true
     ): Promise<FindResult> {
         if (this.stopped) {
             return { closestNodes: [] }
@@ -108,10 +110,10 @@ export class Finder implements IFinder {
         const session = new FindSession({
             serviceId: sessionId,
             transport: this.sessionTransport,
-            kademliaIdToFind: idToFind,
+            nodeIdToFind: idToFind,
             localPeerId: peerIdFromPeerDescriptor(this.localPeerDescriptor),
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
-            fetchData
+            action
         })
         if (this.connections.size === 0) {
             const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
@@ -123,31 +125,42 @@ export class Finder implements IFinder {
             )
             return session.getResults()
         }
-        const routeMessage = this.wrapFindRequest(idToFind, sessionId, fetchData)
+        const routeMessage = this.wrapFindRequest(idToFind, sessionId, action)
         this.ongoingSessions.set(sessionId, session)
-        try {
-            await runAndWaitForEvents3<FindSessionEvents>(
-                [() => this.doRouteFindRequest(routeMessage, excludedPeer)],
-                [[session, 'findCompleted']],
-                15000
-            )
-        } catch (err) {
-            logger.debug(`doRouteFindRequest failed with error ${err}`)
+        if (waitForCompletion === true) {
+            try {
+                await runAndWaitForEvents3<FindSessionEvents>(
+                    [() => this.doRouteFindRequest(routeMessage, excludedPeer)],
+                    [[session, 'findCompleted']],
+                    15000
+                )
+            } catch (err) {
+                logger.debug(`doRouteFindRequest failed with error ${err}`)
+            }
+        } else {
+            this.doRouteFindRequest(routeMessage, excludedPeer)
+            // Wait for delete operation to be sent out by the router
+            // TODO: Add a feature to wait for the router to pass the message?
+            await wait(50)
         }
-        this.findAndReportLocalData(idToFind, fetchData, [], this.localPeerDescriptor, sessionId)
+        if (action === FindAction.FETCH_DATA) {
+            this.findAndReportLocalData(idToFind, [], this.localPeerDescriptor, sessionId)
+        } else if (action === FindAction.DELETE_DATA) {
+            this.localDataStore.markAsDeleted(idToFind, peerIdFromPeerDescriptor(this.localPeerDescriptor))
+        }
         this.ongoingSessions.delete(sessionId)
         session.stop()
         return session.getResults()
     }
 
-    private wrapFindRequest(idToFind: Uint8Array, sessionId: string, fetchData: boolean): RouteMessageWrapper {
+    private wrapFindRequest(idToFind: Uint8Array, sessionId: string, action: FindAction): RouteMessageWrapper {
         const targetDescriptor: PeerDescriptor = {
-            kademliaId: idToFind,
+            nodeId: idToFind,
             type: NodeType.VIRTUAL
         }
         const request: FindRequest = {
             sessionId,
-            fetchData
+            action
         }
         const msg: Message = {
             messageType: MessageType.FIND_REQUEST,
@@ -171,19 +184,14 @@ export class Finder implements IFinder {
 
     private findAndReportLocalData(
         idToFind: Uint8Array,
-        fetchData: boolean,
         routingPath: PeerDescriptor[],
         sourcePeer: PeerDescriptor,
         sessionId: string
-    ): boolean {
-        if (fetchData) {
-            const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
-            if (data.size > 0) {
-                this.sendFindResponse(routingPath, sourcePeer, sessionId, [], data, true)
-                return true
-            }
+    ): void {
+        const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
+        if (data.size > 0) {
+            this.sendFindResponse(routingPath, sourcePeer, sessionId, [], data, true)
         }
-        return false
     }
 
     private findLocalData(idToFind: Uint8Array, fetchData: boolean): Map<PeerIDKey, DataEntry> | undefined {
@@ -227,8 +235,11 @@ export class Finder implements IFinder {
         const idToFind = peerIdFromPeerDescriptor(routedMessage.destinationPeer!)
         const msg = routedMessage.message
         const findRequest = msg?.body.oneofKind === 'findRequest' ? msg.body.findRequest : undefined
-        const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.kademliaId, 5)
-        const data = this.findLocalData(idToFind.value, findRequest!.fetchData)
+        const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.nodeId, 5)
+        const data = this.findLocalData(idToFind.value, findRequest!.action === FindAction.FETCH_DATA)
+        if (findRequest!.action === FindAction.DELETE_DATA) {
+            this.localDataStore.markAsDeleted(idToFind.value, peerIdFromPeerDescriptor(routedMessage.sourcePeer!))
+        }
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
             // TODO this is also very similar case to what we do at line 255, could simplify the code paths?
             this.sendFindResponse(
@@ -262,10 +273,10 @@ export class Finder implements IFinder {
         }    
     }
 
-    private getClosestConnections(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
+    private getClosestConnections(nodeId: Uint8Array, limit: number): PeerDescriptor[] {
         const connectedPeers = Array.from(this.connections.values())
         const closestPeers = new SortedContactList<DhtNodeRpcRemote>({
-            referenceId: PeerID.fromValue(kademliaId),
+            referenceId: PeerID.fromValue(nodeId),
             maxSize: limit,
             allowToContainReferenceId: true,
             emitEvents: false

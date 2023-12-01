@@ -97,9 +97,9 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.parallelism = parallelism
         this.mode = mode
         const previousPeer = getPreviousPeer(messageToRoute)
-        const previousId = previousPeer ? PeerID.fromValue(previousPeer.kademliaId) : undefined
+        const previousId = previousPeer ? PeerID.fromValue(previousPeer.nodeId) : undefined
         this.contactList = new SortedContactList({
-            referenceId: PeerID.fromValue(this.messageToRoute.destinationPeer!.kademliaId),
+            referenceId: PeerID.fromValue(this.messageToRoute.destinationPeer!.nodeId),
             maxSize: 10000,
             allowToContainReferenceId: true,
             peerIdDistanceLimit: previousId,

@@ -13,7 +13,7 @@ describe('Layer1', () => {
     const layer0EntryPointId = new UUID().toString()
 
     const entryPoint0Descriptor = {
-        kademliaId: PeerID.fromString(layer0EntryPointId).value,
+        nodeId: PeerID.fromString(layer0EntryPointId).value,
         type: NodeType.NODEJS
     }
 
@@ -155,7 +155,7 @@ describe('Layer1', () => {
     //             layer1CleanUp.push(layer1)
     //             receivedMessages.set(layer0.getNodeId().toKey(), new Set())
     //             layer1.on('message', (msg: Message) => {
-    //                 const peerId = PeerID.fromValue(msg.sourceDescriptor!.kademliaId)
+    //                 const peerId = PeerID.fromValue(msg.sourceDescriptor!.nodeId)
     //                 receivedMessages.get(layer0.getNodeId().toKey())!.add(peerId.toKey())
     //             })
     //         }

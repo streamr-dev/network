@@ -51,7 +51,7 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         layer1Node4 = await createMockConnectionLayer1Node(layer0Node4Id, layer0Node4)
 
         entryPointDescriptor = {
-            kademliaId: layer0EntryPoint.getNodeId().value,
+            nodeId: layer0EntryPoint.getNodeId().value,
             type: NodeType.NODEJS
         }
 
