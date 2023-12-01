@@ -34,12 +34,7 @@ const logger = new Logger(module)
 
 const PARALLEL_HANDSHAKE_COUNT = 2
 
-export interface IHandshaker {
-    attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]>
-    getOngoingHandshakes(): Set<NodeID>
-}
-
-export class Handshaker implements IHandshaker {
+export class Handshaker {
 
     private readonly ongoingHandshakes: Set<NodeID> = new Set()
     private config: HandshakerConfig

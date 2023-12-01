@@ -38,7 +38,7 @@ describe('RandomGraphNode', () => {
             localPeerDescriptor: peerDescriptor,
             layer1Node,
             connectionLocker: mockConnectionLocker,
-            handshaker: new MockHandshaker(),
+            handshaker: new MockHandshaker() as any,
             neighborUpdateManager: new MockNeighborUpdateManager(),
             neighborFinder: new MockNeighborFinder(),
             streamPartId: StreamPartIDUtils.parse('stream#0')

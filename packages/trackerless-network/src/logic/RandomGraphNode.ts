@@ -20,7 +20,7 @@ import { IDeliveryRpc } from '../proto/packages/trackerless-network/protos/Netwo
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
 import { Logger, addManagedEventListener } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { IHandshaker } from './neighbor-discovery/Handshaker'
+import { Handshaker } from './neighbor-discovery/Handshaker'
 import { Propagation } from './propagation/Propagation'
 import { INeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { INeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
@@ -48,7 +48,7 @@ export interface StrictRandomGraphNodeConfig {
     nearbyNodeView: NodeList
     randomNodeView: NodeList
     targetNeighbors: NodeList
-    handshaker: IHandshaker
+    handshaker: Handshaker
     neighborFinder: INeighborFinder
     neighborUpdateManager: INeighborUpdateManager
     propagation: Propagation
