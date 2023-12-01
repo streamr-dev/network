@@ -76,7 +76,7 @@ describe('RecursiveOperationManager', () => {
             router,
             connections: new Map(),
             serviceId: 'RecursiveOperationManager',
-            localDataStore: new LocalDataStore(),
+            localDataStore: new LocalDataStore(30 * 100),
             sessionTransport: transport,
             addContact: () => {},
             isPeerCloserToIdThanSelf: (_peer1, _compareToId) => true,

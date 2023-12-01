@@ -29,7 +29,6 @@ interface DataStoreConfig {
     localPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
     serviceId: ServiceID
-    maxTtl: number
     highestTtl: number
     redundancyFactor: number
     getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
@@ -45,7 +44,6 @@ export class StoreRpcLocal implements IStoreRpc {
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly localDataStore: LocalDataStore
     private readonly serviceId: ServiceID
-    private readonly maxTtl: number
     private readonly highestTtl: number
     private readonly redundancyFactor: number
     private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
@@ -57,7 +55,6 @@ export class StoreRpcLocal implements IStoreRpc {
         this.localPeerDescriptor = config.localPeerDescriptor
         this.localDataStore = config.localDataStore
         this.serviceId = config.serviceId
-        this.maxTtl = config.maxTtl
         this.highestTtl = config.highestTtl
         this.redundancyFactor = config.redundancyFactor
         this.rpcRequestTimeout = config.rpcRequestTimeout
@@ -184,8 +181,7 @@ export class StoreRpcLocal implements IStoreRpc {
 
     // RPC service implementation
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
-        const ttl = Math.min(request.ttl, this.maxTtl)
-        const { key, data, createdAt, creator } = request
+        const { key, data, creator, createdAt, ttl } = request
         this.localDataStore.storeEntry({ 
             key, 
             data,
