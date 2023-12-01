@@ -14,7 +14,7 @@ import { Any } from '../proto/google/protobuf/any'
 
 interface ExternalApiRpcLocalConfig {
     executeRecursiveOperation: (
-        idToFind: Uint8Array,
+        targetId: Uint8Array,
         operation: RecursiveOperation,
         excludedPeer: PeerDescriptor
     ) => Promise<RecursiveOperationResult>

@@ -77,11 +77,11 @@ describe('Find correctness', () => {
             + ', weakLocked: ' + node.getNumberOfWeakLockedConnections()))
 
         logger.info('starting find')
-        const nodeIdToFind = Uint8Array.from(dhtIds[9].data)
-        const results = await nodes[159].executeRecursiveOperation(nodeIdToFind, RecursiveOperation.FIND_NODE)
+        const targetId = Uint8Array.from(dhtIds[9].data)
+        const results = await nodes[159].executeRecursiveOperation(targetId, RecursiveOperation.FIND_NODE)
         logger.info('find over')
         expect(results.closestNodes).toBeGreaterThanOrEqual(5)
-        expect(PeerID.fromValue(nodeIdToFind).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))
+        expect(PeerID.fromValue(targetId).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))
 
     }, 180000)
 })

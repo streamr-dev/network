@@ -17,7 +17,7 @@ export interface RecursiveOperationSessionEvents {
 export interface RecursiveOperationSessionConfig {
     serviceId: ServiceID
     transport: ITransport
-    nodeIdToFind: Uint8Array
+    targetId: Uint8Array
     localPeerId: PeerID
     waitedRoutingPathCompletions: number
     operation: RecursiveOperation
@@ -26,7 +26,7 @@ export interface RecursiveOperationSessionConfig {
 export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSessionEvents> {
     private readonly serviceId: ServiceID
     private readonly transport: ITransport
-    private readonly nodeIdToFind: Uint8Array
+    private readonly targetId: Uint8Array
     private readonly localPeerId: PeerID
     private readonly waitedRoutingPathCompletions: number
     private readonly rpcCommunicator: ListeningRpcCommunicator
@@ -43,10 +43,10 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         super()
         this.serviceId = config.serviceId
         this.transport = config.transport
-        this.nodeIdToFind = config.nodeIdToFind
+        this.targetId = config.targetId
         this.localPeerId = config.localPeerId
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
-        this.results = new SortedContactList(PeerID.fromValue(this.nodeIdToFind), 10, undefined, true)
+        this.results = new SortedContactList(PeerID.fromValue(this.targetId), 10, undefined, true)
         this.operation = config.operation
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
             rpcRequestTimeout: 15000

@@ -38,10 +38,10 @@ describe('Find correctness', () => {
     })
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
-        const nodeIdToFind = nodes[45].getNodeId().value
-        const results = await entryPoint.executeRecursiveOperation(nodeIdToFind, RecursiveOperation.FIND_NODE)
+        const targetId = nodes[45].getNodeId().value
+        const results = await entryPoint.executeRecursiveOperation(targetId, RecursiveOperation.FIND_NODE)
         expect(results.closestNodes.length).toBeGreaterThanOrEqual(5)
-        expect(PeerID.fromValue(nodeIdToFind).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))
+        expect(PeerID.fromValue(targetId).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))
     }, 30000)
 
 })

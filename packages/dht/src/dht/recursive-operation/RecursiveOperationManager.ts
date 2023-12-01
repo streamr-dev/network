@@ -44,7 +44,7 @@ interface RecursiveOperationManagerConfig {
 }
 
 export interface IRecursiveOperationManager {
-    execute(idToFind: Uint8Array, operation: RecursiveOperation): Promise<RecursiveOperationResult>
+    execute(targetId: Uint8Array, operation: RecursiveOperation): Promise<RecursiveOperationResult>
 }
 
 export interface RecursiveOperationResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
@@ -98,7 +98,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
     }
 
     public async execute(
-        idToFind: Uint8Array,
+        targetId: Uint8Array,
         operation: RecursiveOperation,
         excludedPeer?: PeerDescriptor,
         waitForCompletion = true
@@ -110,13 +110,13 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         const session = new RecursiveOperationSession({
             serviceId: sessionId,
             transport: this.sessionTransport,
-            nodeIdToFind: idToFind,
+            targetId,
             localPeerId: peerIdFromPeerDescriptor(this.localPeerDescriptor),
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
             operation
         })
         if (this.connections.size === 0) {
-            const data = this.localDataStore.getEntries(idToFind)
+            const data = this.localDataStore.getEntries(targetId)
             session.doSendResponse(
                 [this.localPeerDescriptor],
                 [this.localPeerDescriptor],
@@ -125,7 +125,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             )
             return session.getResults()
         }
-        const routeMessage = this.wrapRequest(idToFind, sessionId, operation)
+        const routeMessage = this.wrapRequest(targetId, sessionId, operation)
         this.ongoingSessions.set(sessionId, session)
         if (waitForCompletion === true) {
             try {
@@ -144,18 +144,18 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             await wait(50)
         }
         if (operation === RecursiveOperation.FETCH_DATA) {
-            this.findAndReportLocalData(idToFind, [], this.localPeerDescriptor, sessionId)
+            this.findAndReportLocalData(targetId, [], this.localPeerDescriptor, sessionId)
         } else if (operation === RecursiveOperation.DELETE_DATA) {
-            this.localDataStore.markAsDeleted(idToFind, peerIdFromPeerDescriptor(this.localPeerDescriptor))
+            this.localDataStore.markAsDeleted(targetId, peerIdFromPeerDescriptor(this.localPeerDescriptor))
         }
         this.ongoingSessions.delete(sessionId)
         session.stop()
         return session.getResults()
     }
 
-    private wrapRequest(idToFind: Uint8Array, sessionId: string, operation: RecursiveOperation): RouteMessageWrapper {
+    private wrapRequest(targetId: Uint8Array, sessionId: string, operation: RecursiveOperation): RouteMessageWrapper {
         const targetDescriptor: PeerDescriptor = {
-            nodeId: idToFind,
+            nodeId: targetId,
             type: NodeType.VIRTUAL
         }
         const request: RecursiveOperationRequest = {
@@ -183,20 +183,20 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
     }
 
     private findAndReportLocalData(
-        idToFind: Uint8Array,
+        targetId: Uint8Array,
         routingPath: PeerDescriptor[],
         sourcePeer: PeerDescriptor,
         sessionId: string
     ): void {
-        const data = this.localDataStore.getEntries(idToFind)
+        const data = this.localDataStore.getEntries(targetId)
         if (data.size > 0) {
             this.sendResponse(routingPath, sourcePeer, sessionId, [], data, true)
         }
     }
 
-    private findLocalData(idToFind: Uint8Array, fetchData: boolean): Map<PeerIDKey, DataEntry> | undefined {
+    private findLocalData(targetId: Uint8Array, fetchData: boolean): Map<PeerIDKey, DataEntry> | undefined {
         if (fetchData) {
-            return this.localDataStore.getEntries(idToFind)
+            return this.localDataStore.getEntries(targetId)
         }
         return undefined
     }
@@ -232,13 +232,13 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
-        const idToFind = peerIdFromPeerDescriptor(routedMessage.destinationPeer!)
+        const targetId = peerIdFromPeerDescriptor(routedMessage.destinationPeer!)
         const msg = routedMessage.message
         const recursiveOperationRequest = msg?.body.oneofKind === 'recursiveOperationRequest' ? msg.body.recursiveOperationRequest : undefined
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.nodeId, 5)
-        const data = this.findLocalData(idToFind.value, recursiveOperationRequest!.operation === RecursiveOperation.FETCH_DATA)
+        const data = this.findLocalData(targetId.value, recursiveOperationRequest!.operation === RecursiveOperation.FETCH_DATA)
         if (recursiveOperationRequest!.operation === RecursiveOperation.DELETE_DATA) {
-            this.localDataStore.markAsDeleted(idToFind.value, peerIdFromPeerDescriptor(routedMessage.sourcePeer!))
+            this.localDataStore.markAsDeleted(targetId.value, peerIdFromPeerDescriptor(routedMessage.sourcePeer!))
         }
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
             // TODO this is also very similar case to what we do at line 255, could simplify the code paths?
@@ -258,7 +258,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
                     (
                         closestPeersToDestination.length > 0 
                         && getPreviousPeer(routedMessage) 
-                        && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
+                        && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], targetId)
                     )
                 this.sendResponse(
                     routedMessage.routingPath,
