@@ -11,7 +11,7 @@ import {
     RouteMessageWrapper
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { IRouter } from '../routing/Router'
+import { Router } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { areEqualPeerDescriptors, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, runAndWaitForEvents3, wait } from '@streamr/utils'
@@ -35,7 +35,7 @@ interface RecursiveOperationManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
     connections: Map<PeerIDKey, DhtNodeRpcRemote>
-    router: IRouter
+    router: Router
     localPeerDescriptor: PeerDescriptor
     serviceId: ServiceID
     localDataStore: LocalDataStore
@@ -56,7 +56,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly sessionTransport: ITransport
     private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
-    private readonly router: IRouter
+    private readonly router: Router
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly serviceId: ServiceID
     private readonly localDataStore: LocalDataStore
@@ -238,6 +238,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             )
             return createRouteMessageAck(routedMessage)
         } else {
+            // @ts-expect-error will be fixed in https://github.com/streamr-dev/network/pull/2148
             const ack = this.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE, excludedPeer)
             if ((ack.error === undefined) || (ack.error === RouteMessageError.NO_TARGETS)) {
                 const noCloserContactsFound = (ack.error === RouteMessageError.NO_TARGETS) ||
