@@ -4,11 +4,11 @@ import {
     MessageType,
     NodeType,
     PeerDescriptor,
+    RecursiveOperation,
     RecursiveOperationRequest,
     RouteMessageAck,
-    RouteMessageWrapper,
     RouteMessageError,
-    RecursiveOperation
+    RouteMessageWrapper
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { IRouter } from '../routing/Router'
@@ -144,7 +144,10 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             await wait(50)
         }
         if (operation === RecursiveOperation.FETCH_DATA) {
-            this.findAndReportLocalData(targetId, [], this.localPeerDescriptor, sessionId)
+            const data = this.localDataStore.getEntries(targetId)
+            if (data.size > 0) {
+                this.sendResponse([], this.localPeerDescriptor, sessionId, [], data, true)
+            }
         } else if (operation === RecursiveOperation.DELETE_DATA) {
             this.localDataStore.markAsDeleted(targetId, peerIdFromPeerDescriptor(this.localPeerDescriptor))
         }
@@ -181,19 +184,6 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         }
         return routeMessage
     }
-
-    private findAndReportLocalData(
-        targetId: Uint8Array,
-        routingPath: PeerDescriptor[],
-        sourcePeer: PeerDescriptor,
-        sessionId: string
-    ): void {
-        const data = this.localDataStore.getEntries(targetId)
-        if (data.size > 0) {
-            this.sendResponse(routingPath, sourcePeer, sessionId, [], data, true)
-        }
-    }
-
     private findLocalData(targetId: Uint8Array, fetchData: boolean): Map<PeerIDKey, DataEntry> | undefined {
         if (fetchData) {
             return this.localDataStore.getEntries(targetId)
