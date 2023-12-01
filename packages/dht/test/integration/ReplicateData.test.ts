@@ -115,7 +115,7 @@ describe('Replicate data from node to node in DHT', () => {
             let hasDataMarker = ''
             
             // @ts-expect-error private field
-            if (node.localDataStore.getEntry(dataKey)) {
+            if (node.localDataStore.getEntries(dataKey.value)) {
                 hasDataMarker = '<-'
             }
 
@@ -143,8 +143,7 @@ describe('Replicate data from node to node in DHT', () => {
             let hasDataMarker = ''
 
             // @ts-expect-error private field
-
-            if (node.localDataStore.getEntry(dataKey)) {
+            if (node.localDataStore.getEntries(dataKey.value)) {
                 hasDataMarker = '<-'
             }
 
@@ -154,7 +153,7 @@ describe('Replicate data from node to node in DHT', () => {
         const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().nodeId).toKey())!
 
         // @ts-expect-error private field
-        expect(closestNode.localDataStore.getEntry(dataKey).size).toBeGreaterThanOrEqual(1)
+        expect(closestNode.localDataStore.getEntries(dataKey.value).size).toBeGreaterThanOrEqual(1)
     }, 180000)
 
     it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
@@ -192,7 +191,7 @@ describe('Replicate data from node to node in DHT', () => {
 
             logger.info('Stopping node ' + nodeIndex + ' ' +
                 // @ts-expect-error private field
-                (nodes[nodeIndex].localDataStore.getEntry(dataKey) ? ', has data' : ' does not have data'))
+                (nodes[nodeIndex].localDataStore.getEntries(dataKey.value) ? ', has data' : ' does not have data'))
 
             await nodes[nodeIndex].stop()
         }
@@ -200,10 +199,10 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('after random graceful leaving, node ' + randomIndices[0] + ' is left')
 
         // @ts-expect-error private field
-        logger.info('data of ' + randomIndices[0] + ' was ' + nodes[randomIndices[0]].localDataStore.getEntry(dataKey))
+        logger.info('data of ' + randomIndices[0] + ' was ' + nodes[randomIndices[0]].localDataStore.getEntries(dataKey.value))
 
         // @ts-expect-error private field
-        expect(nodes[randomIndices[0]].localDataStore.getEntry(dataKey).size).toBeGreaterThanOrEqual(1)
+        expect(nodes[randomIndices[0]].localDataStore.getEntries(dataKey.value).size).toBeGreaterThanOrEqual(1)
 
     }, 180000)
 })

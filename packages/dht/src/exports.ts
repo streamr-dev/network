@@ -7,6 +7,7 @@ export { getRandomRegion, getRegionDelayMatrix } from './connection/simulator/pi
 export { PeerDescriptor, Message, NodeType, DataEntry } from './proto/packages/dht/protos/DhtRpc'
 export { ITransport } from './transport/ITransport'
 export { ConnectionManager, ConnectionLocker, PortRange, TlsCertificate } from './connection/ConnectionManager'
+export { LockID } from './connection/ConnectionLockHandler'
 export { DefaultConnectorFacade } from './connection/ConnectorFacade'
 export { DhtRpcOptions } from './rpc-protocol/DhtRpcOptions'
 export { RpcRemote, EXISTING_CONNECTION_TIMEOUT } from './dht/contact/RpcRemote'
@@ -18,4 +19,4 @@ export { ManagedConnection } from './connection/ManagedConnection'
 export { ConnectionType } from './connection/IConnection'
 export { PeerID } from './helpers/PeerID'
 export { PeerManager } from './dht/PeerManager'
-
+export { ServiceID } from './types/ServiceID'

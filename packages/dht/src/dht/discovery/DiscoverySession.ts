@@ -28,7 +28,7 @@ export class DiscoverySession {
     private emitter = new EventEmitter<DiscoverySessionEvents>()
     private outgoingClosestPeersRequestsCounter = 0
     private noProgressCounter = 0
-    private ongoingClosestPeersRequests: Set<string> = new Set()
+    private ongoingClosestPeersRequests: Set<PeerIDKey> = new Set()
     private readonly config: DiscoverySessionConfig
     private contactedPeers: Set<PeerIDKey> = new Set()
 

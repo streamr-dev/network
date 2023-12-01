@@ -3,7 +3,7 @@ import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../
 import { connection as WsConnection } from 'websocket'
 import { Logger } from '@streamr/utils'
 import { Url } from 'url'
-import { GOING_AWAY } from './ClientWebsocket'
+import { CUSTOM_GOING_AWAY, GOING_AWAY } from './ClientWebsocket'
 
 const logger = new Logger(module)
 
@@ -59,7 +59,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.stopped = true
         this.socket?.removeAllListeners()
         this.socket = undefined
-        const gracefulLeave = reasonCode === GOING_AWAY
+        const gracefulLeave = (reasonCode === GOING_AWAY) || (reasonCode === CUSTOM_GOING_AWAY)
         this.emit('disconnected', gracefulLeave, reasonCode, description)
     }
 
@@ -83,7 +83,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.emit('disconnected', gracefulLeave, undefined, 'close() called')
         this.removeAllListeners()
         if (!this.stopped) {
-            this.socket?.close(gracefulLeave === true ? GOING_AWAY : undefined)
+            this.socket?.close(gracefulLeave ? GOING_AWAY : undefined)
         } else {
             logger.debug('Tried to close a stopped connection')
         }

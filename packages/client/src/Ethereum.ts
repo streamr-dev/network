@@ -17,10 +17,6 @@ export const generateEthereumAccount = (): { address: string, privateKey: string
     }
 }
 
-export const getMainnetProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
-    return getRpcProviders(config.contracts.mainChainRPCs, config.contracts.pollInterval)
-}
-
 export const getStreamRegistryChainProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
     return getRpcProviders(config.contracts.streamRegistryChainRPCs, config.contracts.pollInterval)
 }
