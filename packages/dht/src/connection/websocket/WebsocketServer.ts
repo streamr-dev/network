@@ -137,7 +137,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         this.removeAllListeners()
         return new Promise((resolve, _reject) => {
             this.wsServer?.shutDown()
-            this.httpServer?.on('close', () => {
+            this.httpServer?.once('close', () => {
                 this.httpServer?.removeAllListeners()
                 resolve()
             })
