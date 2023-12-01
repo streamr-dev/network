@@ -91,7 +91,9 @@ export class StoreManager {
     private shouldReplicateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
         const newNodeId = PeerID.fromValue(newNode.nodeId)
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
+        // TODO use config option or named constant?
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
+        // TODO use config option or named constant?
         const sortedList = new SortedContactList<Contact>(PeerID.fromValue(dataEntry.key), 20, undefined, true)
         sortedList.addContact(new Contact(this.localPeerDescriptor))
         closestToData.forEach((con) => {
@@ -194,6 +196,7 @@ export class StoreManager {
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
         const dataId = PeerID.fromValue(dataEntry.key)
         const incomingPeerId = PeerID.fromValue(incomingPeer.nodeId)
+        // TODO use config option or named constant?
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
         const sortedList = new SortedContactList<Contact>(dataId, this.redundancyFactor, undefined, true)
         sortedList.addContact(new Contact(this.localPeerDescriptor))
