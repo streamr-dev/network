@@ -22,12 +22,7 @@ interface NeighborUpdateManagerConfig {
 
 const logger = new Logger(module)
 
-export interface INeighborUpdateManager {
-    start(): Promise<void>
-    stop(): void
-}
-
-export class NeighborUpdateManager implements INeighborUpdateManager {
+export class NeighborUpdateManager {
 
     private readonly abortController: AbortController
     private readonly config: NeighborUpdateManagerConfig

@@ -39,7 +39,7 @@ describe('RandomGraphNode', () => {
             layer1Node,
             connectionLocker: mockConnectionLocker,
             handshaker: new MockHandshaker() as any,
-            neighborUpdateManager: new MockNeighborUpdateManager(),
+            neighborUpdateManager: new MockNeighborUpdateManager() as any,
             neighborFinder: new MockNeighborFinder() as any,
             streamPartId: StreamPartIDUtils.parse('stream#0')
         })

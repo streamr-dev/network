@@ -23,7 +23,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from './neighbor-discovery/Handshaker'
 import { Propagation } from './propagation/Propagation'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
-import { INeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
+import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
 import { DeliveryRpcLocal } from './DeliveryRpcLocal'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'
@@ -50,7 +50,7 @@ export interface StrictRandomGraphNodeConfig {
     targetNeighbors: NodeList
     handshaker: Handshaker
     neighborFinder: NeighborFinder
-    neighborUpdateManager: INeighborUpdateManager
+    neighborUpdateManager: NeighborUpdateManager
     propagation: Propagation
     rpcCommunicator: ListeningRpcCommunicator
     numOfTargetNeighbors: number
