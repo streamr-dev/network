@@ -59,7 +59,6 @@ describe('Router', () => {
             localPeerDescriptor: peerDescriptor1,
             rpcCommunicator: rpcCommunicator as any,
             addContact: (_contact) => {},
-            serviceId: 'router',
             connections
         })
     })
