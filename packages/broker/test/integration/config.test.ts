@@ -9,7 +9,7 @@ describe('Config', () => {
     it('start with minimal config', async () => {
         const broker = await createBroker({
             client: {
-                config: 'dev2',
+                environment: 'dev2',
                 network: {
                     controlLayer: {
                         websocketServerEnableTls: false

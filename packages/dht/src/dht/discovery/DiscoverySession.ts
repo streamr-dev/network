@@ -1,7 +1,7 @@
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
-import { PeerID } from '../../helpers/PeerID'
+import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { SortedContactList } from '../contact/SortedContactList'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
@@ -29,7 +29,7 @@ export class DiscoverySession {
     private emitter = new EventEmitter<DiscoverySessionEvents>()
     private outgoingClosestPeersRequestsCounter = 0
     private noProgressCounter = 0
-    private ongoingClosestPeersRequests: Set<string> = new Set()
+    private ongoingClosestPeersRequests: Set<PeerIDKey> = new Set()
     private readonly config: DiscoverySessionConfig
 
     constructor(config: DiscoverySessionConfig) {

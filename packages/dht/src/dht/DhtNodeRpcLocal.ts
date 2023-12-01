@@ -17,7 +17,6 @@ import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 
 interface DhtNodeRpcLocalConfig {
     bucket: KBucket<DhtNodeRpcRemote>
-    serviceId: string
     peerDiscoveryQueryBatchSize: number
     addNewContact: (contact: PeerDescriptor) => void
     removeContact: (contact: PeerDescriptor) => void

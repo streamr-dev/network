@@ -32,7 +32,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly operation: RecursiveOperation
     private results: SortedContactList<Contact>
-    private foundData: Map<string, DataEntry> = new Map()
+    private foundData: Map<PeerIDKey, DataEntry> = new Map()
     private allKnownHops: Set<PeerIDKey> = new Set()
     private reportedHops: Set<PeerIDKey> = new Set()
     private reportFindCompletedTimeout?: NodeJS.Timeout

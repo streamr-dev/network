@@ -55,9 +55,6 @@ interface ConnectionManagerMetrics extends MetricsDefinition {
     connectionTotalFailureCount: Metric
 }
 
-// TODO move this type identifiers.ts and use also in other classes (and rename to ServiceID)
-type ServiceId = string
-
 const logger = new Logger(module)
 
 enum ConnectionManagerState {
@@ -68,8 +65,8 @@ enum ConnectionManagerState {
 }
 
 export interface ConnectionLocker {
-    lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void
-    unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void
+    lockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void
+    unlockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void
     weakLockConnection(targetDescriptor: PeerDescriptor): void
     weakUnlockConnection(targetDescriptor: PeerDescriptor): void
 }
@@ -138,8 +135,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             rpcRequestTimeout: 10000
         })
         const lockRpcLocal = new ConnectionLockRpcLocal({
-            addRemoteLocked: (id: PeerIDKey, serviceId: string) => this.locks.addRemoteLocked(id, serviceId),
-            removeRemoteLocked: (id: PeerIDKey, serviceId: string) => this.locks.removeRemoteLocked(id, serviceId),
+            addRemoteLocked: (id: PeerIDKey, lockId: LockID) => this.locks.addRemoteLocked(id, lockId),
+            removeRemoteLocked: (id: PeerIDKey, lockId: LockID) => this.locks.removeRemoteLocked(id, lockId),
             closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => {
                 // TODO should we have some handling for this floating promise?
                 this.closeConnection(peerDescriptor, gracefulLeave, reason)

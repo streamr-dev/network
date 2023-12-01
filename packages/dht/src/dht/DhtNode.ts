@@ -52,6 +52,7 @@ import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager } from './PeerManager'
+import { ServiceID } from '../types/ServiceID'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -62,7 +63,7 @@ export interface DhtNodeEvents {
 }
 
 export interface DhtNodeOptions {
-    serviceId?: string
+    serviceId?: ServiceID
     joinParallelism?: number
     maxNeighborListSize?: number
     numberOfNodesPerKBucket?: number
@@ -258,7 +259,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connections: this.peerManager!.connections,
             localPeerDescriptor: this.localPeerDescriptor!,
             addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.handleNewPeers([contact], setActive),
-            serviceId: this.config.serviceId,
             connectionManager: this.connectionManager
         })
         this.recursiveOperationManager = new RecursiveOperationManager({
@@ -350,7 +350,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
             bucket: this.peerManager!.bucket!,
-            serviceId: this.config.serviceId,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             addNewContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
             removeContact: (contact: PeerDescriptor) => this.removeContact(contact)
