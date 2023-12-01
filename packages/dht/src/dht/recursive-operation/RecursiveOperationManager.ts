@@ -184,12 +184,6 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         }
         return routeMessage
     }
-    private findLocalData(targetId: Uint8Array, fetchData: boolean): Map<PeerIDKey, DataEntry> | undefined {
-        if (fetchData) {
-            return this.localDataStore.getEntries(targetId)
-        }
-        return undefined
-    }
 
     private sendResponse(
         routingPath: PeerDescriptor[],
@@ -226,7 +220,9 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         const msg = routedMessage.message
         const recursiveOperationRequest = msg?.body.oneofKind === 'recursiveOperationRequest' ? msg.body.recursiveOperationRequest : undefined
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.nodeId, 5)
-        const data = this.findLocalData(targetId.value, recursiveOperationRequest!.operation === RecursiveOperation.FETCH_DATA)
+        const data = (recursiveOperationRequest!.operation === RecursiveOperation.FETCH_DATA) 
+            ? this.localDataStore.getEntries(targetId.value) 
+            : undefined
         if (recursiveOperationRequest!.operation === RecursiveOperation.DELETE_DATA) {
             this.localDataStore.markAsDeleted(targetId.value, peerIdFromPeerDescriptor(routedMessage.sourcePeer!))
         }
