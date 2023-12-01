@@ -234,7 +234,6 @@ export class RecursiveOperationManager {
             )
             return createRouteMessageAck(routedMessage)
         } else {
-            // @ts-expect-error will be fixed in https://github.com/streamr-dev/network/pull/2148
             const ack = this.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE, excludedPeer)
             if ((ack.error === undefined) || (ack.error === RouteMessageError.NO_TARGETS)) {
                 const noCloserContactsFound = (ack.error === RouteMessageError.NO_TARGETS) ||
