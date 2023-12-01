@@ -89,7 +89,7 @@ describe('NetworkNodeFacade', () => {
             const client = environment.createClient({
                 network: {
                     controlLayer: {
-                        entrypointDiscovery: {
+                        entryPointDiscovery: {
                             enabled: true
                         }
                     }
@@ -105,7 +105,7 @@ describe('NetworkNodeFacade', () => {
             const client = environment.createClient({
                 network: {
                     controlLayer: {
-                        entrypointDiscovery: {
+                        entryPointDiscovery: {
                             enabled: false
                         }
                     }

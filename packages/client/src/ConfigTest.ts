@@ -24,7 +24,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
         controlLayer: {
             // TODO rename 'id' -> 'nodeId' in '@streamr/config' and remove the use of withRenamedProperty
             entryPoints: CHAIN_CONFIG.dev2.entryPoints.map((item) => withRenamedProperty(item, 'id', 'nodeId')),
-            entrypointDiscovery: {
+            entryPointDiscovery: {
                 enabled: false,
             },
             websocketPortRange: {

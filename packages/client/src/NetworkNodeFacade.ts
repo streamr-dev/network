@@ -70,7 +70,7 @@ export class NetworkNodeFactory {
 export class NetworkNodeFacade {
 
     private cachedNode?: NetworkNodeStub
-    private cachedEntrypoints?: NetworkPeerDescriptor[]
+    private cachedEntryPoints?: NetworkPeerDescriptor[]
     private startNodeCalled = false
     private startNodeComplete = false
     private readonly networkNodeFactory: NetworkNodeFactory
@@ -243,10 +243,10 @@ export class NetworkNodeFacade {
     }
 
     async getEntryPoints(): Promise<PeerDescriptor[]> {
-        if (this.config.network.controlLayer.entrypointDiscovery?.enabled && this.cachedEntrypoints === undefined) {
-            this.cachedEntrypoints = await this.operatorRegistry.findNetworkEntrypoints(this.config.network.controlLayer.entrypointDiscovery.limit)
+        if (this.config.network.controlLayer.entryPointDiscovery?.enabled && this.cachedEntryPoints === undefined) {
+            this.cachedEntryPoints = await this.operatorRegistry.findNetworkEntrypoints(this.config.network.controlLayer.entryPointDiscovery.limit)
         }
-        const entrypoints = [...this.config.network.controlLayer.entryPoints!, ...this.cachedEntrypoints || []]
+        const entrypoints = [...this.config.network.controlLayer.entryPoints!, ...this.cachedEntryPoints || []]
         return entrypoints.map(peerDescriptorTranslator)
     }
 }

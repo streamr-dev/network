@@ -34,7 +34,7 @@ export interface ControlLayerConfig {
      * by querying them from The Graph. If false, only the nodes
      * listed in entryPoints are used.
      */
-    entrypointDiscovery?: EntrypointDiscovery
+    entryPointDiscovery?: EntryPointDiscovery
 
     /**
      * The list of STUN and TURN servers to use in ICE protocol when
@@ -194,7 +194,7 @@ export interface NetworkPeerDescriptor {
     region?: number
 }
 
-export interface EntrypointDiscovery {
+export interface EntryPointDiscovery {
     enabled?: boolean
     limit?: number
 }

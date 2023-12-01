@@ -99,7 +99,7 @@
                                 }
                             ]
                         },
-                        "entrypointDiscovery": {
+                        "entryPointDiscovery": {
                             "type": "object",
                             "additionalProperties": false,
                             "properties": {
