@@ -2,19 +2,6 @@ import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DataEntry } from '../../proto/packages/dht/protos/DhtRpc'
 import { peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
-const MIN_TTL = 1 * 1000
-const MAX_TTL = 300 * 1000
-
-const createTtlValue = (ttl: number): number => {
-    if (ttl < MIN_TTL) {
-        return MIN_TTL
-    } else if (ttl > MAX_TTL) {
-        return MAX_TTL
-    } else {
-        return ttl
-    }
-}
-
 interface LocalDataEntry {
     dataEntry: DataEntry
     ttlTimeout: NodeJS.Timeout
@@ -23,6 +10,13 @@ interface LocalDataEntry {
 type Key = Uint8Array
 
 export class LocalDataStore {
+
+    private readonly maxTtl: number
+
+    constructor(maxTtl: number) {
+        this.maxTtl = maxTtl
+    }
+
     // A map into which each node can store one value per data key
     // The first key is the key of the data, the second key is the
     // PeerID of the creator of the data
@@ -50,7 +44,7 @@ export class LocalDataStore {
             dataEntry,
             ttlTimeout: setTimeout(() => {
                 this.deleteEntry(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!))
-            }, createTtlValue(dataEntry.ttl))
+            }, Math.min(dataEntry.ttl, this.maxTtl))
         })
         return true
     }

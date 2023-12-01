@@ -138,22 +138,22 @@ export interface ClosestPeersResponse {
     requestId: string;
 }
 /**
- * @generated from protobuf message dht.FindRequest
+ * @generated from protobuf message dht.RecursiveOperationRequest
  */
-export interface FindRequest {
+export interface RecursiveOperationRequest {
     /**
      * @generated from protobuf field: string sessionId = 1;
      */
     sessionId: string;
     /**
-     * @generated from protobuf field: dht.FindAction action = 2;
+     * @generated from protobuf field: dht.RecursiveOperation operation = 2;
      */
-    action: FindAction;
+    operation: RecursiveOperation;
 }
 /**
- * @generated from protobuf message dht.FindResponse
+ * @generated from protobuf message dht.RecursiveOperationResponse
  */
-export interface FindResponse {
+export interface RecursiveOperationResponse {
     /**
      * @generated from protobuf field: repeated dht.PeerDescriptor closestConnectedPeers = 1;
      */
@@ -410,11 +410,11 @@ export interface Message {
          */
         rpcMessage: RpcMessage;
     } | {
-        oneofKind: "findRequest";
+        oneofKind: "recursiveOperationRequest";
         /**
-         * @generated from protobuf field: dht.FindRequest findRequest = 11;
+         * @generated from protobuf field: dht.RecursiveOperationRequest recursiveOperationRequest = 11;
          */
-        findRequest: FindRequest;
+        recursiveOperationRequest: RecursiveOperationRequest;
     } | {
         oneofKind: undefined;
     };
@@ -547,13 +547,13 @@ export interface ExternalFindDataResponse {
     entries: DataEntry[];
 }
 /**
- * @generated from protobuf enum dht.FindAction
+ * @generated from protobuf enum dht.RecursiveOperation
  */
-export enum FindAction {
+export enum RecursiveOperation {
     /**
-     * @generated from protobuf enum value: NODE = 0;
+     * @generated from protobuf enum value: FIND_NODE = 0;
      */
-    NODE = 0,
+    FIND_NODE = 0,
     /**
      * @generated from protobuf enum value: FETCH_DATA = 1;
      */
@@ -661,9 +661,9 @@ export enum MessageType {
      */
     HANDSHAKE_RESPONSE = 4,
     /**
-     * @generated from protobuf enum value: FIND_REQUEST = 5;
+     * @generated from protobuf enum value: RECURSIVE_OPERATION_REQUEST = 5;
      */
-    FIND_REQUEST = 5
+    RECURSIVE_OPERATION_REQUEST = 5
 }
 /**
  * @generated from protobuf enum dht.DisconnectMode
@@ -789,22 +789,22 @@ class ClosestPeersResponse$Type extends MessageType$<ClosestPeersResponse> {
  */
 export const ClosestPeersResponse = new ClosestPeersResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class FindRequest$Type extends MessageType$<FindRequest> {
+class RecursiveOperationRequest$Type extends MessageType$<RecursiveOperationRequest> {
     constructor() {
-        super("dht.FindRequest", [
+        super("dht.RecursiveOperationRequest", [
             { no: 1, name: "sessionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "action", kind: "enum", T: () => ["dht.FindAction", FindAction] }
+            { no: 2, name: "operation", kind: "enum", T: () => ["dht.RecursiveOperation", RecursiveOperation] }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.FindRequest
+ * @generated MessageType for protobuf message dht.RecursiveOperationRequest
  */
-export const FindRequest = new FindRequest$Type();
+export const RecursiveOperationRequest = new RecursiveOperationRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class FindResponse$Type extends MessageType$<FindResponse> {
+class RecursiveOperationResponse$Type extends MessageType$<RecursiveOperationResponse> {
     constructor() {
-        super("dht.FindResponse", [
+        super("dht.RecursiveOperationResponse", [
             { no: 1, name: "closestConnectedPeers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 2, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
             { no: 3, name: "noCloserNodesFound", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
@@ -813,9 +813,9 @@ class FindResponse$Type extends MessageType$<FindResponse> {
     }
 }
 /**
- * @generated MessageType for protobuf message dht.FindResponse
+ * @generated MessageType for protobuf message dht.RecursiveOperationResponse
  */
-export const FindResponse = new FindResponse$Type();
+export const RecursiveOperationResponse = new RecursiveOperationResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class PingRequest$Type extends MessageType$<PingRequest> {
     constructor() {
@@ -982,7 +982,7 @@ class Message$Type extends MessageType$<Message> {
             { no: 8, name: "handshakeRequest", kind: "message", oneof: "body", T: () => HandshakeRequest },
             { no: 9, name: "handshakeResponse", kind: "message", oneof: "body", T: () => HandshakeResponse },
             { no: 10, name: "rpcMessage", kind: "message", oneof: "body", T: () => RpcMessage },
-            { no: 11, name: "findRequest", kind: "message", oneof: "body", T: () => FindRequest }
+            { no: 11, name: "recursiveOperationRequest", kind: "message", oneof: "body", T: () => RecursiveOperationRequest }
         ]);
     }
 }
@@ -1160,10 +1160,10 @@ export const RouterRpc = new ServiceType("dht.RouterRpc", [
     { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.FindRpc
+ * @generated ServiceType for protobuf service dht.RecursiveOperationRpc
  */
-export const FindRpc = new ServiceType("dht.FindRpc", [
-    { name: "routeFindRequest", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
+export const RecursiveOperationRpc = new ServiceType("dht.RecursiveOperationRpc", [
+    { name: "routeRequest", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.StoreRpc
@@ -1173,10 +1173,10 @@ export const StoreRpc = new ServiceType("dht.StoreRpc", [
     { name: "replicateData", options: {}, I: ReplicateDataRequest, O: Empty }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.FindSessionRpc
+ * @generated ServiceType for protobuf service dht.RecursiveOperationSessionRpc
  */
-export const FindSessionRpc = new ServiceType("dht.FindSessionRpc", [
-    { name: "sendFindResponse", options: {}, I: FindResponse, O: Empty }
+export const RecursiveOperationSessionRpc = new ServiceType("dht.RecursiveOperationSessionRpc", [
+    { name: "sendResponse", options: {}, I: RecursiveOperationResponse, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.WebsocketConnectorRpc

@@ -1,6 +1,6 @@
 import {
     DataEntry, ReplicateDataRequest, PeerDescriptor,
-    StoreDataRequest, StoreDataResponse
+    StoreDataRequest, StoreDataResponse, RecursiveOperation
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../helpers/PeerID'
 import { Any } from '../../proto/google/protobuf/any'
@@ -9,7 +9,7 @@ import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { IFinder } from '../find/Finder'
+import { IRecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, executeSafePromise } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
@@ -25,11 +25,10 @@ import { findIndex } from 'lodash'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
-    finder: IFinder
+    recursiveOperationManager: IRecursiveOperationManager
     localPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
     serviceId: ServiceID
-    maxTtl: number
     highestTtl: number
     redundancyFactor: number
     getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
@@ -41,11 +40,10 @@ const logger = new Logger(module)
 export class StoreRpcLocal implements IStoreRpc {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
-    private readonly finder: IFinder
+    private readonly recursiveOperationManager: IRecursiveOperationManager
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly localDataStore: LocalDataStore
     private readonly serviceId: ServiceID
-    private readonly maxTtl: number
     private readonly highestTtl: number
     private readonly redundancyFactor: number
     private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
@@ -53,11 +51,10 @@ export class StoreRpcLocal implements IStoreRpc {
 
     constructor(config: DataStoreConfig) {
         this.rpcCommunicator = config.rpcCommunicator
-        this.finder = config.finder
+        this.recursiveOperationManager = config.recursiveOperationManager
         this.localPeerDescriptor = config.localPeerDescriptor
         this.localDataStore = config.localDataStore
         this.serviceId = config.serviceId
-        this.maxTtl = config.maxTtl
         this.highestTtl = config.highestTtl
         this.redundancyFactor = config.redundancyFactor
         this.rpcRequestTimeout = config.rpcRequestTimeout
@@ -127,7 +124,7 @@ export class StoreRpcLocal implements IStoreRpc {
 
     public async storeDataToDht(key: Uint8Array, data: Any, creator: PeerDescriptor): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.serviceId}`)
-        const result = await this.finder.startFind(key)
+        const result = await this.recursiveOperationManager.execute(key, RecursiveOperation.FIND_NODE)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         const ttl = this.highestTtl // ToDo: make TTL decrease according to some nice curve
@@ -186,8 +183,7 @@ export class StoreRpcLocal implements IStoreRpc {
 
     // RPC service implementation
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
-        const ttl = Math.min(request.ttl, this.maxTtl)
-        const { key, data, createdAt, creator } = request
+        const { key, data, creator, createdAt, ttl } = request
         this.localDataStore.storeEntry({ 
             key, 
             data,
