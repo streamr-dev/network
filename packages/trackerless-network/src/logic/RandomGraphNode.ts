@@ -260,6 +260,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.config.layer1Node.getClosestContacts(this.config.nodeViewSize).forEach((peer: PeerDescriptor) => {
             uniqueNodes.add(peer)
         })
+        this.config.layer1Node.getAllNeighborPeerDescriptors().forEach((peer: PeerDescriptor) => {
+            uniqueNodes.add(peer)
+        })
         return Array.from(uniqueNodes)
     }
 
