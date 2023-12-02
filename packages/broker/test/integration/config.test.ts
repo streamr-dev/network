@@ -24,6 +24,7 @@ describe('Config', () => {
     it('temporary compatibility', async () => {
         const broker = await createBroker({
             client: {
+                environment: 'dev2',
                 network: {
                     controlLayer: {
                         entryPoints: [{

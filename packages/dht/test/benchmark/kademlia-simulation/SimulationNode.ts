@@ -26,7 +26,12 @@ export class SimulationNode {
             numberOfNodesPerKBucket: this.numberOfNodesPerKBucket
         })
 
-        this.neighborList = new SortedContactList(this.ownId, 1000)
+        this.neighborList = new SortedContactList({ 
+            referenceId: this.ownId, 
+            maxSize: 1000,
+            allowToContainReferenceId: false,
+            emitEvents: false
+        })
     }
 
     // For simulation use
