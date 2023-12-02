@@ -70,7 +70,6 @@ export class NetworkNodeFactory {
 export class NetworkNodeFacade {
 
     private cachedNode?: NetworkNodeStub
-    private cachedEntryPoints?: NetworkPeerDescriptor[]
     private startNodeCalled = false
     private startNodeComplete = false
     private readonly networkNodeFactory: NetworkNodeFactory
@@ -107,7 +106,7 @@ export class NetworkNodeFacade {
         return {
             layer0: {
                 ...this.config.network.controlLayer,
-                entryPoints,
+                entryPoints: entryPoints.map(peerDescriptorTranslator),
                 peerDescriptor: localPeerDescriptor
             },
             networkNode: this.config.network.node,
@@ -242,16 +241,15 @@ export class NetworkNodeFacade {
         this.eventEmitter.once(eventName, listener as any)
     }
 
-    private async getEntryPoints(): Promise<PeerDescriptor[]> {
+    private async getEntryPoints(): Promise<NetworkPeerDescriptor[]> {
         const discoveryConfig = this.config.network.controlLayer.entryPointDiscovery
-        if (discoveryConfig?.enabled && this.cachedEntryPoints === undefined) {
-            this.cachedEntryPoints = await this.operatorRegistry.findRandomNetworkEntrypoints(
+        const discoveredEntryPoints = (discoveryConfig?.enabled)
+            ? await this.operatorRegistry.findRandomNetworkEntrypoints(
                 discoveryConfig.maxEntryPoints,
                 discoveryConfig.maxQueryResults,
                 discoveryConfig.maxHeartbeatAgeHours,
             )
-        }
-        const entrypoints = [...this.config.network.controlLayer.entryPoints!, ...this.cachedEntryPoints || []]
-        return entrypoints.map(peerDescriptorTranslator)
+            : []
+        return [...this.config.network.controlLayer.entryPoints!, ...discoveredEntryPoints]
     }
 }
