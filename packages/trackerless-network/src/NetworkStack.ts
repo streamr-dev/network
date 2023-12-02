@@ -105,6 +105,10 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         return this.metricsContext
     }
 
+    getOptions(): NetworkOptions {
+        return this.options
+    }
+
     async stop(): Promise<void> {
         await this.streamrNode!.destroy()
         await this.layer0Node!.stop()

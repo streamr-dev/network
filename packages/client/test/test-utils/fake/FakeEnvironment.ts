@@ -1,4 +1,5 @@
 import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
+import { NetworkOptions } from '@streamr/trackerless-network'
 import merge from 'lodash/merge'
 import { DependencyContainer, container } from 'tsyringe'
 import { StreamrClientConfig } from '../../../src/Config'
@@ -8,6 +9,7 @@ import { MIN_KEY_LENGTH } from '../../../src/encryption/RSAKeyPair'
 import { StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
+import { OperatorRegistry } from '../../../src/registry/OperatorRegistry'
 import { LoggerFactory } from './../../../src/utils/LoggerFactory'
 import { FakeChain } from './FakeChain'
 import { FakeLogger } from './FakeLogger'
@@ -17,6 +19,7 @@ import { FakeStorageNode } from './FakeStorageNode'
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
+import { FakeOperatorRegistry } from './FakeOperatorRegistry'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     encryption: {
@@ -47,6 +50,7 @@ export class FakeEnvironment {
         this.dependencyContainer.register(StreamRegistry, FakeStreamRegistry as any)
         this.dependencyContainer.register(StreamStorageRegistry, FakeStreamStorageRegistry as any)
         this.dependencyContainer.register(StorageNodeRegistry, FakeStorageNodeRegistry as any)
+        this.dependencyContainer.register(OperatorRegistry, FakeOperatorRegistry as any)
     }
 
     createClient(opts?: StreamrClientConfig): StreamrClient {
@@ -64,8 +68,8 @@ export class FakeEnvironment {
         return client
     }
 
-    startNode(): FakeNetworkNode {
-        const node = new FakeNetworkNode(this.network)
+    startNode(options: NetworkOptions = {}): FakeNetworkNode {
+        const node = new FakeNetworkNode(this.network, options)
         node.start()
         return node
     }

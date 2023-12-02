@@ -23,6 +23,7 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
 
     constructor(config: TemporaryConnectionRpcLocalConfig) {
         this.config = config
+        // TODO use config option or named constant?
         this.temporaryNodes = new NodeList(getNodeIdFromPeerDescriptor(config.localPeerDescriptor), 10)
     }
 

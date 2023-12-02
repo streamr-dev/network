@@ -68,6 +68,7 @@ describe('memory leak', () => {
 
         const detector1 = new LeakDetector(entryPoint)
         entryPoint = undefined
+        await detector1.isLeaking()
         expect(await detector1.isLeaking()).toBe(false)
 
         const detector2 = new LeakDetector(sender)

@@ -16,8 +16,8 @@ describe('Propagation', () => {
     const NUM_OF_NODES = 256
 
     beforeEach(async () => {
-        totalReceived = 0
         const simulator = new Simulator()
+        totalReceived = 0
         layer1Nodes = []
         randomGraphNodes = []
         const [entryPoint, node1] = await createMockRandomGraphNodeAndDhtNode(entryPointDescriptor, entryPointDescriptor, STREAM_PART_ID, simulator)

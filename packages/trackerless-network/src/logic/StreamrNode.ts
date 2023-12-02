@@ -193,9 +193,9 @@ export class StreamrNode extends EventEmitter<Events> {
             serviceId: 'layer1::' + streamPartId,
             peerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             entryPoints,
-            numberOfNodesPerKBucket: 4,
+            numberOfNodesPerKBucket: 4,  // TODO use config option or named constant?
             rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
-            dhtJoinTimeout: 20000
+            dhtJoinTimeout: 20000  // TODO use config option or named constant?
         })
     }
 
