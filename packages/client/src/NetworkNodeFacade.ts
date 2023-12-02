@@ -245,9 +245,9 @@ export class NetworkNodeFacade {
         const discoveryConfig = this.config.network.controlLayer.entryPointDiscovery
         const discoveredEntryPoints = (discoveryConfig?.enabled)
             ? await this.operatorRegistry.findRandomNetworkEntrypoints(
-                discoveryConfig.maxEntryPoints,
-                discoveryConfig.maxQueryResults,
-                discoveryConfig.maxHeartbeatAgeHours,
+                discoveryConfig.maxEntryPoints!,
+                discoveryConfig.maxQueryResults!,
+                discoveryConfig.maxHeartbeatAgeHours!,
             )
             : []
         return [...this.config.network.controlLayer.entryPoints!, ...discoveredEntryPoints]

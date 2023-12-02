@@ -18,9 +18,9 @@ export class OperatorRegistry {
     }
 
     async findRandomNetworkEntrypoints(
-        maxEntryPoints: number = 5,
-        maxQueryResults: number = 50, 
-        maxHeartbeatAgeHours: number = 24,
+        maxEntryPoints: number,
+        maxQueryResults: number, 
+        maxHeartbeatAgeHours: number,
     ): Promise<NetworkPeerDescriptor[]> {
         interface OperatorMetadata {
             id: string
