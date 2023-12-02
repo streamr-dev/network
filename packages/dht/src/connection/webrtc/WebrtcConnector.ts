@@ -73,7 +73,7 @@ export class WebrtcConnector {
         this.config = config
         this.iceServers = config.iceServers ?? []
         this.rpcCommunicator = new ListeningRpcCommunicator(WebrtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.transport, {
-            rpcRequestTimeout: 15000
+            rpcRequestTimeout: 15000  // TODO use config option or named constant?
         })
         this.registerLocalRpcMethods(config, onNewConnection)
     }

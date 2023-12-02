@@ -5,14 +5,14 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-        "config": {
+        "environment": {
             "type": "string",
             "enum": [
                 "polygon",
                 "mumbai",
                 "dev2"
             ],
-            "description": "config preset id"
+            "description": "applies all environment-specific defaults for the given environment"
         },
         "id": {
             "type": "string"
@@ -88,6 +88,30 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/peerDescriptor"
+                            }
+                        },
+                        "entryPointDiscovery": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean"
+                                },
+                                "maxEntryPoints": {
+                                    "type": "number"
+                                },
+                                "maxQueryResults": {
+                                    "type": "number"
+                                },
+                                "maxHeartbeatAgeHours": {
+                                    "type": "number"
+                                }
+                            },
+                            "default": {
+                                "enabled": true,
+                                "maxEntryPoints": 5,
+                                "maxQueryResults": 50,
+                                "maxHeartbeatAgeHours": 24
                             }
                         },
                         "websocketPortRange": {

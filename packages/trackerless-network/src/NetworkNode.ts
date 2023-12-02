@@ -113,6 +113,10 @@ export class NetworkNode {
         return this.stack.getDeliveryLayer().getNodeId()
     }
 
+    getOptions(): NetworkOptions {
+        return this.stack.getOptions()
+    }
+
     getStreamParts(): StreamPartID[] {
         return this.stack.getDeliveryLayer().getStreamParts()
     }

@@ -265,7 +265,7 @@ export class ContractFacade {
         const operators = await this.getOperatorAddresses(latestBlock)
         const excluded = this.getOperatorContractAddress()
         const operatorAddresses = operators.filter((id) => id !== excluded)
-        logger.debug(`Found ${operatorAddresses.length} operators`, { operatorAddresses })
+        logger.debug(`Found ${operatorAddresses.length} operators`)
         return sample(operatorAddresses)
     }
 

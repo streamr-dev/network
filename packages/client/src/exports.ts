@@ -37,7 +37,8 @@ export {
     ConnectivityMethod,
     NetworkNodeType,
     StrictStreamrClientConfig,
-    PresetId
+    EnvironmentId,
+    EntryPointDiscovery
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
