@@ -298,8 +298,8 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return this.bucket!.count()
     }
 
-    public getNeighbors(): DhtNodeRpcRemote[] {
-        return this.bucket!.toArray()
+    public getNeighbors(): PeerDescriptor[] {
+        return this.bucket!.toArray().map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
     }
 
     public handlePeerActive(peerId: PeerID): void {

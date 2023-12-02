@@ -520,8 +520,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return Array.from(this.peerManager!.connections.values()).map((peer) => peer.getPeerDescriptor())
     }
 
+    // TODO rename to getNeighbors
     public getAllNeighborPeerDescriptors(): PeerDescriptor[] {
-        return this.peerManager!.getNeighbors().map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
+        return this.peerManager!.getNeighbors()
     }
 
     public getNumberOfConnections(): number {
