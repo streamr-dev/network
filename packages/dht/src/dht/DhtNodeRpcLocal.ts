@@ -15,7 +15,6 @@ import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 
 interface DhtNodeRpcLocalConfig {
-    serviceId: string
     peerDiscoveryQueryBatchSize: number
     getClosestPeersTo: (nodeId: Uint8Array, limit: number) => DhtNodeRpcRemote[]
     addNewContact: (contact: PeerDescriptor) => void

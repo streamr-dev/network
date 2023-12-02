@@ -349,7 +349,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             return
         }
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
-            serviceId: this.config.serviceId,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             getClosestPeersTo: (kademliaId: Uint8Array, limit: number) => this.peerManager!.getClosestNeighborsTo(kademliaId, limit),
             addNewContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
