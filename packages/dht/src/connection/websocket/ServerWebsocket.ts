@@ -99,8 +99,8 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         if (!this.stopped) {
             this.removeAllListeners()
             if (this.socket) {
-                this.socket.removeAllListeners()
                 this.socket.close()
+                this.socket.removeAllListeners()
                 this.socket = undefined
             }
             this.stopped = true
