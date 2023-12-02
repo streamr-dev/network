@@ -109,6 +109,7 @@ export class DiscoverySession {
         if (this.config.peerManager.getNumberOfContacts(this.contactedPeers) === 0) {
             return
         }
+        // TODO add abortController and signal it in stop()
         await runAndWaitForEvents3<DiscoverySessionEvents>(
             [this.findMoreContacts.bind(this)],
             [[this.emitter, 'discoveryCompleted']],
