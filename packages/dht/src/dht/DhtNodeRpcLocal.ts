@@ -12,11 +12,10 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { IDhtNodeRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 
 interface DhtNodeRpcLocalConfig {
     peerDiscoveryQueryBatchSize: number
-    getClosestPeersTo: (nodeId: Uint8Array, limit: number) => DhtNodeRpcRemote[]
+    getClosestPeersTo: (nodeId: Uint8Array, limit: number) => PeerDescriptor[]
     addNewContact: (contact: PeerDescriptor) => void
     removeContact: (contact: PeerDescriptor) => void
 }
@@ -34,15 +33,10 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
         this.config.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
         const response = {
-            peers: this.getClosestPeerDescriptors(request.nodeId, this.config.peerDiscoveryQueryBatchSize),
+            peers: this.config.getClosestPeersTo(request.nodeId, this.config.peerDiscoveryQueryBatchSize),
             requestId: request.requestId
         }
         return response
-    }
-
-    private getClosestPeerDescriptors(nodeId: Uint8Array, limit: number): PeerDescriptor[] {
-        const closestPeers = this.config.getClosestPeersTo(nodeId, limit)
-        return closestPeers.map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
     }
 
     async ping(request: PingRequest, context: ServerCallContext): Promise<PingResponse> {
