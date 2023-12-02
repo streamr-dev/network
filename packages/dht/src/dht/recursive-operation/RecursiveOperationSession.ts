@@ -45,10 +45,10 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         this.transport = config.transport
         this.targetId = config.targetId
         this.localPeerId = config.localPeerId
-        this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions?
+        this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
         this.results = new SortedContactList({
             referenceId: PeerID.fromValue(this.targetId), 
-            maxSize: 10,  // TODO use config option or named constant
+            maxSize: 10,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             emitEvents: false
         })
