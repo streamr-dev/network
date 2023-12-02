@@ -45,13 +45,14 @@ export const sendConnectivityRequest = async (
         tls: entryPoint.websocket!.tls,
     }
     const url = connectivityMethodToWebsocketUrl(wsServerInfo, 'connectivityRequest')
+    logger.debug(`Attempting connectivity check with entrypoint ${url}`)
     try {
         outgoingConnection = await connectAsync({
             url,
             selfSigned: request.selfSigned
         })
     } catch (e) {
-        throw new Err.ConnectionFailed(`Failed to connect to the entrypoint ${url}`, e)
+        throw new Err.ConnectionFailed(`Failed to connect to entrypoint for connectivity check: ${url}`, e)
     }
     // send connectivity request
     const msg: Message = {
@@ -75,7 +76,7 @@ export const sendConnectivityRequest = async (
                 try {
                     const message: Message = Message.fromBinary(bytes)
                     if (message.body.oneofKind === 'connectivityResponse') {
-                        logger.trace('ConnectivityResponse received: ' + JSON.stringify(Message.toJson(message)))
+                        logger.debug('ConnectivityResponse received: ' + JSON.stringify(Message.toJson(message)))
                         const connectivityResponseMessage = message.body.connectivityResponse
                         outgoingConnection!.off('data', listener)
                         clearTimeout(timeoutId)

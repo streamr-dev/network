@@ -98,15 +98,14 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.mode = mode
         const previousPeer = getPreviousPeer(messageToRoute)
         const previousId = previousPeer ? PeerID.fromValue(previousPeer.nodeId) : undefined
-        this.contactList = new SortedContactList(
-            PeerID.fromValue(this.messageToRoute.destinationPeer!.nodeId),
-            // TODO use config option or named constant?
-            10000,
-            undefined,
-            true,
-            previousId,
-            excludedPeerIDs
-        )
+        this.contactList = new SortedContactList({
+            referenceId: PeerID.fromValue(this.messageToRoute.destinationPeer!.nodeId),
+            maxSize: 10000,  // TODO use config option or named constant?
+            allowToContainReferenceId: true,
+            peerIdDistanceLimit: previousId,
+            excludedPeerIDs: excludedPeerIDs,
+            emitEvents: false
+        })
     }
 
     private onRequestFailed(peerId: PeerID) {

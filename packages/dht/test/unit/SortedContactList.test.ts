@@ -13,7 +13,7 @@ describe('SortedContactList', () => {
     const item4 = createItem(new Uint8Array([0, 0, 0, 4]))
 
     it('compares Ids correctly', async () => {
-        const list = new SortedContactList(item0.getPeerId(), 10)
+        const list = new SortedContactList({ referenceId: item0.getPeerId(), maxSize: 10, allowToContainReferenceId: true, emitEvents: false })
         expect(list.compareIds(item0.getPeerId(), item0.getPeerId())).toBe(0)
         expect(list.compareIds(item1.getPeerId(), item1.getPeerId())).toBe(0)
         expect(list.compareIds(item0.getPeerId(), item1.getPeerId())).toBe(-1)
@@ -23,9 +23,9 @@ describe('SortedContactList', () => {
         expect(list.compareIds(item2.getPeerId(), item3.getPeerId())).toBe(-1)
         expect(list.compareIds(item1.getPeerId(), item4.getPeerId())).toBe(-3)
     })
-    
+
     it('orders itself correctly', async () => {
-        const list = new SortedContactList(item0.getPeerId(), 10)
+        const list = new SortedContactList({ referenceId: item0.getPeerId(), maxSize: 10, allowToContainReferenceId: true, emitEvents: false })
         list.addContact(item3)
         list.addContact(item2)
         list.addContact(item1)
@@ -35,9 +35,9 @@ describe('SortedContactList', () => {
         expect(contacts[1]).toEqual(item2)
         expect(contacts[2]).toEqual(item3)
     })
-    
+
     it('handles contacted nodes correctly', async () => {
-        const list = new SortedContactList(item0.getPeerId(), 10)
+        const list = new SortedContactList({ referenceId: item0.getPeerId(), maxSize: 10, allowToContainReferenceId: false, emitEvents: false })
         list.addContact(item3)
         list.addContact(item2)
         list.addContact(item1)
@@ -49,7 +49,7 @@ describe('SortedContactList', () => {
     })
 
     it('cannot exceed maxSize', async () => {
-        const list = new SortedContactList(item0.getPeerId(), 3)
+        const list = new SortedContactList({ referenceId: item0.getPeerId(), maxSize: 3, allowToContainReferenceId: false, emitEvents: true })
         const onContactRemoved = jest.fn()
         list.on('contactRemoved', onContactRemoved)
         list.addContact(item1)
@@ -62,7 +62,7 @@ describe('SortedContactList', () => {
     })
 
     it('removing contacts', async () => {
-        const list = new SortedContactList(item0.getPeerId(), 8)
+        const list = new SortedContactList({ referenceId: item0.getPeerId(), maxSize: 8, allowToContainReferenceId: false, emitEvents: true })
         const onContactRemoved = jest.fn()
         list.on('contactRemoved', onContactRemoved)
         list.addContact(item4)
@@ -79,8 +79,13 @@ describe('SortedContactList', () => {
         expect(ret).toEqual(false)
     })
 
-    it('get closes contacts', () => {
-        const list = new SortedContactList(item0.getPeerId(), 8)
+    it('get closest contacts', () => {
+        const list = new SortedContactList({
+            referenceId: item0.getPeerId(), 
+            maxSize: 8, 
+            allowToContainReferenceId: false, 
+            emitEvents: false 
+        })
         list.addContact(item1)
         list.addContact(item3)
         list.addContact(item4)
@@ -90,7 +95,7 @@ describe('SortedContactList', () => {
     })
 
     it('get active contacts', () => {
-        const list = new SortedContactList(item0.getPeerId(), 8)
+        const list = new SortedContactList({ referenceId: item0.getPeerId(), maxSize: 8, allowToContainReferenceId: false, emitEvents: false })
         list.addContact(item1)
         list.addContact(item3)
         list.addContact(item4)
