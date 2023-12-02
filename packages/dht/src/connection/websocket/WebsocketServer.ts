@@ -137,9 +137,18 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         this.removeAllListeners()
         return new Promise((resolve, _reject) => {
             this.wsServer?.shutDown()
-            this.httpServer?.close(() => {
+            this.httpServer?.once('close', () => {
+                // removeAllListeners is maybe not needed?
+                this.httpServer?.removeAllListeners()
                 resolve()
             })
+            this.httpServer?.close()
+            // the close method "Stops the server from accepting new connections and closes all 
+            // connections connected to this server which are not sending a request or waiting for a 
+            // response." (https://nodejs.org/api/http.html#serverclosecallback)
+            // i.e. we need to call closeAllConnections() to close the rest of the connections
+            // (in practice this closes the active websocket connections)
+            this.httpServer?.closeAllConnections()
         })
     }
 

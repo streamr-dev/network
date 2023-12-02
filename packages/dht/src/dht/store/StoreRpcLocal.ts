@@ -93,8 +93,12 @@ export class StoreRpcLocal implements IStoreRpc {
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
 
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
-
-        const sortedList = new SortedContactList<Contact>(dataId, 20, undefined, true)
+        const sortedList = new SortedContactList<Contact>({
+            referenceId: PeerID.fromValue(dataEntry.key), 
+            maxSize: 20,  // TODO use config option or named constant?
+            allowToContainReferenceId: true,
+            emitEvents: false
+        })
         sortedList.addContact(new Contact(this.localPeerDescriptor))
 
         closestToData.forEach((con) => {
@@ -201,7 +205,12 @@ export class StoreRpcLocal implements IStoreRpc {
     private selfIsOneOfClosestPeers(dataId: Uint8Array): boolean {
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
         const closestPeers = this.getNodesClosestToIdFromBucket(dataId, this.redundancyFactor)
-        const sortedList = new SortedContactList<Contact>(localPeerId, this.redundancyFactor, undefined, true)
+        const sortedList = new SortedContactList<Contact>({
+            referenceId: localPeerId, 
+            maxSize: this.redundancyFactor, 
+            allowToContainReferenceId: true, 
+            emitEvents: false
+        })
         sortedList.addContact(new Contact(this.localPeerDescriptor))
         closestPeers.forEach((con) => sortedList.addContact(new Contact(con.getPeerDescriptor())))
         return sortedList.getClosestContacts().some((node) => node.getPeerId().equals(localPeerId))
@@ -282,8 +291,12 @@ export class StoreRpcLocal implements IStoreRpc {
         const dataId = PeerID.fromValue(dataEntry.key)
         const incomingPeerId = PeerID.fromValue(incomingPeer.nodeId)
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
-
-        const sortedList = new SortedContactList<Contact>(dataId, this.redundancyFactor, undefined, true)
+        const sortedList = new SortedContactList<Contact>({
+            referenceId: dataId, 
+            maxSize: this.redundancyFactor, 
+            allowToContainReferenceId: true, 
+            emitEvents: false
+        })
         sortedList.addContact(new Contact(this.localPeerDescriptor))
 
         closestToData.forEach((con) => {

@@ -51,7 +51,7 @@ import { MarkRequired } from 'ts-essentials'
 import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
-import { PeerManager } from './PeerManager'
+import { PeerManager, getDistance } from './PeerManager'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -148,7 +148,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public connectionManager?: ConnectionManager
     private started = false
-    private stopped = false
+    private abortController = new AbortController()
     private entryPointDisconnectTimeout?: NodeJS.Timeout
 
     constructor(conf: DhtNodeOptions) {
@@ -173,7 +173,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async start(): Promise<void> {
-        if (this.started || this.stopped) {
+        if (this.started || this.abortController.signal.aborted) {
             return
         }
         logger.trace(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
@@ -283,7 +283,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             localDataStore: this.localDataStore,
             dhtNodeEmitter: this,
             getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
-                return this.peerManager!.bucket!.closest(id, n)
+                return this.peerManager!.getClosestNeighborsTo(id, n)
             },
             rpcRequestTimeout: this.config.rpcRequestTimeout
         })
@@ -297,7 +297,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private initPeerManager() {
         this.peerManager = new PeerManager({
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
-            maxNeighborListSize: this.config.maxNeighborListSize,
+            maxContactListSize: this.config.maxNeighborListSize,
             ownPeerId: this.getNodeId(),
             connectionManager: this.connectionManager!,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
@@ -343,13 +343,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private bindRpcLocalMethods(): void {
-        if (!this.started || this.stopped) {
+        if (!this.started || this.abortController.signal.aborted) {
             return
         }
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
-            bucket: this.peerManager!.bucket!,
             serviceId: this.config.serviceId,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
+            getClosestPeersTo: (kademliaId: Uint8Array, limit: number) => {
+                return this.peerManager!.getClosestNeighborsTo(kademliaId, limit)
+                    .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
+            },
             addNewContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
             removeContact: (contact: PeerDescriptor) => this.removeContact(contact)
         })
@@ -382,8 +385,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
-        const distance1 = this.peerManager!.bucket!.distance(peer1.nodeId, compareToId.value)
-        const distance2 = this.peerManager!.bucket!.distance(this.localPeerDescriptor!.nodeId, compareToId.value)
+        const distance1 = getDistance(peer1.nodeId, compareToId.value)
+        const distance2 = getDistance(this.localPeerDescriptor!.nodeId, compareToId.value)
         return distance1 < distance2
     }
 
@@ -408,16 +411,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.localPeerDescriptor
     }
 
-    public getClosestContacts(maxCount?: number): PeerDescriptor[] {
-        return this.peerManager!.neighborList!.getClosestContacts(maxCount).map((c) => c.getPeerDescriptor())
+    public getClosestContacts(limit?: number): PeerDescriptor[] {
+        return this.peerManager!.getClosestContactsTo(this.localPeerDescriptor!.nodeId, limit).map((peer) => peer.getPeerDescriptor())
     }
-
+    
     public getNodeId(): PeerID {
         return peerIdFromPeerDescriptor(this.localPeerDescriptor!)
     }
 
-    public getBucketSize(): number {
-        return this.peerManager!.bucket!.count()
+    public getNumberOfNeighbors(): number {
+        return this.peerManager!.getNumberOfNeighbors()
     }
 
     private connectToEntryPoint(entryPoint: PeerDescriptor): void {
@@ -435,7 +438,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async send(msg: Message): Promise<void> {
-        if (!this.started || this.stopped) {
+        if (!this.started || this.abortController.signal.aborted) {
             return
         }
         const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints ?? [] : []
@@ -481,7 +484,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async deleteDataFromDht(key: Uint8Array, waitForCompletion: boolean): Promise<void> {
-        if (!this.stopped) {
+        if (!this.abortController.signal.aborted) {
             await this.finder!.startFind(key, FindAction.DELETE_DATA, undefined, waitForCompletion)
         }
     }
@@ -508,8 +511,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return Array.from(this.peerManager!.connections.values()).map((peer) => peer.getPeerDescriptor())
     }
 
-    public getKBucketPeers(): PeerDescriptor[] {
-        return this.peerManager!.bucket!.toArray().map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
+    // TODO rename to getNeighbors
+    public getAllNeighborPeerDescriptors(): PeerDescriptor[] {
+        return this.peerManager!.getNeighbors()
     }
 
     public getNumberOfConnections(): number {
@@ -529,7 +533,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async waitForNetworkConnectivity(): Promise<void> {
-        await waitForCondition(() => this.peerManager!.connections.size > 0, this.config.networkConnectivityTimeout)
+        await waitForCondition(() => {
+            if (!this.peerManager) {
+                return false
+            } else {
+                return (this.peerManager.getNumberOfConnections() > 0)
+            }
+        }, this.config.networkConnectivityTimeout, 100, this.abortController.signal)
     }
 
     public hasJoined(): boolean {
@@ -537,11 +547,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async stop(): Promise<void> {
-        if (this.stopped || !this.started) {
+        if (this.abortController.signal.aborted || !this.started) {
             return
         }
         logger.trace('stop()')
-        this.stopped = true
+        this.abortController.abort()
         await this.storeRpcLocal!.destroy()
         if (this.entryPointDisconnectTimeout) {
             clearTimeout(this.entryPointDisconnectTimeout)

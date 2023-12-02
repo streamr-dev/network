@@ -46,7 +46,12 @@ export class FindSession extends EventEmitter<FindSessionEvents> {
         this.nodeIdToFind = config.nodeIdToFind
         this.localPeerId = config.localPeerId
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
-        this.results = new SortedContactList(PeerID.fromValue(this.nodeIdToFind), 10, undefined, true)
+        this.results = new SortedContactList({
+            referenceId: PeerID.fromValue(this.nodeIdToFind), 
+            maxSize: 10,  // TODO use config option or named constant?
+            allowToContainReferenceId: true,
+            emitEvents: false
+        })
         this.action = config.action
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
             rpcRequestTimeout: 15000
