@@ -241,10 +241,8 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             allowToContainReferenceId: true,
             emitEvents: false
         }) 
-        const arrayFromBucket = this.bucket!.toArray()
-        arrayFromBucket.map((contact) => closest.addContact(contact))
-        const sortedContactsResult = closest.getClosestContacts(limit)
-        return sortedContactsResult.filter((contact) => {
+        this.bucket!.toArray().map((contact) => closest.addContact(contact))
+        return closest.getClosestContacts(limit).filter((contact) => {
             if (!excludeSet) {
                 return true
             } else {
