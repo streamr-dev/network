@@ -146,8 +146,8 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Ev
     }
 
     public compareIds(id1: PeerID, id2: PeerID): number {
-        const distance1 = KBucket.distance(this.config.referenceId.value, id1.value)
-        const distance2 = KBucket.distance(this.config.referenceId.value, id2.value)
+        const distance1 = this.distanceToReferenceId(id1)
+        const distance2 = this.distanceToReferenceId(id2)
         return distance1 - distance2
     }
 
