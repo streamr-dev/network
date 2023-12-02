@@ -1,18 +1,18 @@
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { SortedContactList } from '../contact/SortedContactList'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
 import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { RouterRpcRemote } from './RouterRpcRemote'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { FindRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { RecursiveOperationRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Contact } from '../contact/Contact'
-import { FindRpcRemote } from './FindRpcRemote'
-import { EXISTING_CONNECTION_TIMEOUT } from '../contact/Remote'
+import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
+import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 
 const logger = new Logger(module)
@@ -22,7 +22,7 @@ const MAX_FAILED_HOPS = 2
 class RemoteContact extends Contact {
 
     private routerRpcRemote: RouterRpcRemote
-    private findRpcRemote: FindRpcRemote
+    private RecursiveOperationRpcRemote: RecursiveOperationRpcRemote
 
     constructor(peer: DhtNodeRpcRemote, localPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
         super(peer.getPeerDescriptor())
@@ -33,11 +33,11 @@ class RemoteContact extends Contact {
             toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport())),
             EXISTING_CONNECTION_TIMEOUT
         )
-        this.findRpcRemote = new FindRpcRemote(
+        this.RecursiveOperationRpcRemote = new RecursiveOperationRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
-            toProtoRpcClient(new FindRpcClient(rpcCommunicator.getRpcClientTransport())),
+            toProtoRpcClient(new RecursiveOperationRpcClient(rpcCommunicator.getRpcClientTransport())),
             EXISTING_CONNECTION_TIMEOUT
         )
     }
@@ -46,8 +46,8 @@ class RemoteContact extends Contact {
         return this.routerRpcRemote
     }
 
-    getFindRpcRemote(): FindRpcRemote {
-        return this.findRpcRemote
+    getRecursiveOperationRpcRemote(): RecursiveOperationRpcRemote {
+        return this.RecursiveOperationRpcRemote
     }
 }
 
@@ -63,7 +63,7 @@ export interface RoutingSessionEvents {
     stopped: (sessionId: string) => void
 }
 
-export enum RoutingMode { ROUTE, FORWARD, FIND }
+export enum RoutingMode { ROUTE, FORWARD, RECURSIVE }
 
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
@@ -97,15 +97,15 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.parallelism = parallelism
         this.mode = mode
         const previousPeer = getPreviousPeer(messageToRoute)
-        const previousId = previousPeer ? PeerID.fromValue(previousPeer.kademliaId) : undefined
-        this.contactList = new SortedContactList(
-            PeerID.fromValue(this.messageToRoute.destinationPeer!.kademliaId),
-            10000,
-            undefined,
-            true,
-            previousId,
-            excludedPeerIDs
-        )
+        const previousId = previousPeer ? PeerID.fromValue(previousPeer.nodeId) : undefined
+        this.contactList = new SortedContactList({
+            referenceId: PeerID.fromValue(this.messageToRoute.destinationPeer!.nodeId),
+            maxSize: 10000,  // TODO use config option or named constant?
+            allowToContainReferenceId: true,
+            peerIdDistanceLimit: previousId,
+            excludedPeerIDs: excludedPeerIDs,
+            emitEvents: false
+        })
     }
 
     private onRequestFailed(peerId: PeerID) {
@@ -116,7 +116,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (this.ongoingRequests.has(peerId.toKey())) {
             this.ongoingRequests.delete(peerId.toKey())
         }
-        const contacts = this.findMoreContacts()
+        const contacts = this.updateAndGetRoutablePeers()
         if (contacts.length === 0 && this.ongoingRequests.size === 0) {
             logger.trace('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
             // TODO should call this.stop() so that we do cleanup? (after the emitFailure call)
@@ -143,7 +143,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             return
         }
         this.successfulHopCounter += 1
-        const contacts = this.findMoreContacts()
+        const contacts = this.updateAndGetRoutablePeers()
         if (this.successfulHopCounter >= this.parallelism || contacts.length === 0) {
             // TODO should call this.stop() so that we do cleanup? (after the routingSucceeded call)
             this.stopped = true
@@ -163,17 +163,22 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         if (this.mode === RoutingMode.FORWARD) {
             return contact.getRouterRpcRemote().forwardMessage(msg)
-        } else if (this.mode === RoutingMode.FIND) {
-            return contact.getFindRpcRemote().routeFindRequest(msg)
+        } else if (this.mode === RoutingMode.RECURSIVE) {
+            return contact.getRecursiveOperationRpcRemote().routeRequest(msg)
         } else {
             return contact.getRouterRpcRemote().routeMessage(msg)
         }
     }
 
-    findMoreContacts(): RemoteContact[] {
-        logger.trace('findMoreContacts() sessionId: ' + this.sessionId)
-        // the contents of the connections might have changed between the rounds
-        // addContacts() will only add new contacts that were not there yet
+    updateAndGetRoutablePeers(): RemoteContact[] {
+        logger.trace('getRoutablePeers() sessionId: ' + this.sessionId)
+        // Remove stale contacts that may have been removed from connections
+        this.contactList.getAllContacts().forEach((contact) => {
+            const peerId = peerIdFromPeerDescriptor(contact.getPeerDescriptor())
+            if (this.connections.has(peerId.toKey()) === false) {
+                this.contactList.removeContact(peerId)
+            }
+        })
         const contacts = Array.from(this.connections.values())
             .map((peer) => new RemoteContact(peer, this.localPeerDescriptor, this.rpcCommunicator))
         this.contactList.addContacts(contacts)

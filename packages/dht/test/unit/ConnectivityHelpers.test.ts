@@ -5,7 +5,7 @@ import { ConnectionType } from '../../src/connection/IConnection'
 describe('Connectivity helpers', () => {
 
     const tlsServerPeerDescriptor = {
-        kademliaId: new Uint8Array(1),
+        nodeId: new Uint8Array(1),
         type: NodeType.NODEJS,
         websocket: {
             host: 'mock',
@@ -15,7 +15,7 @@ describe('Connectivity helpers', () => {
     }
 
     const noTlsServerPeerDescriptor = {
-        kademliaId: new Uint8Array(1),
+        nodeId: new Uint8Array(1),
         type: NodeType.NODEJS,
         websocket: {
             host: 'mock',
@@ -25,12 +25,12 @@ describe('Connectivity helpers', () => {
     }
 
     const browserPeerDescriptor = {
-        kademliaId: new Uint8Array(2),
+        nodeId: new Uint8Array(2),
         type: NodeType.BROWSER
     }
 
     const noServerPeerDescriptor = {
-        kademliaId: new Uint8Array(3),
+        nodeId: new Uint8Array(3),
         type: NodeType.NODEJS
     }
 

@@ -7,11 +7,11 @@ import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Remote } from '../../dht/contact/Remote'
+import { RpcRemote } from '../../dht/contact/RpcRemote'
 
 const logger = new Logger(module)
 
-export class WebsocketConnectorRpcRemote extends Remote<IWebsocketConnectorRpcClient> {
+export class WebsocketConnectorRpcRemote extends RpcRemote<IWebsocketConnectorRpcClient> {
 
     constructor(
         localPeerDescriptor: PeerDescriptor,

@@ -19,7 +19,7 @@ export class Contact {
 
     getPeerDescriptor(): PeerDescriptor {
         const peerDescriptor: PeerDescriptor = {
-            kademliaId: this.peerId.value,
+            nodeId: this.peerId.value,
             type: NodeType.NODEJS
         }
         return peerDescriptor

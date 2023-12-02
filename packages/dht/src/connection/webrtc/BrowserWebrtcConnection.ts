@@ -50,7 +50,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         this.peerConnection = new RTCPeerConnection({ iceServers: urls })
 
         this.peerConnection.onicecandidate = (event) => {
-            if (event.candidate && event.candidate.sdpMid) {
+            if ((event.candidate !== null) && (event.candidate.sdpMid !== null)) {
                 this.emit('localCandidate', event.candidate.candidate, event.candidate.sdpMid)
             }
         }
@@ -62,14 +62,14 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         if (isOffering) {
             this.peerConnection.onnegotiationneeded = async () => {
                 try {
-                    if (this.peerConnection) {
+                    if (this.peerConnection !== undefined) {
                         this.makingOffer = true
                         try {
                             await this.peerConnection.setLocalDescription()
                         } catch (err) {
                             logger.warn('error', { err })
                         }
-                        if (this.peerConnection.localDescription) {
+                        if (this.peerConnection.localDescription !== null) {
                             this.emit('localDescription', this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
                         }
                     }
@@ -92,7 +92,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     }
 
     public async setRemoteDescription(description: string, type: string): Promise<void> {
-        const offerCollision = (type.toLowerCase() === RtcDescription.OFFER) && (this.makingOffer || !this.peerConnection ||
+        const offerCollision = (type.toLowerCase() === RtcDescription.OFFER) && (this.makingOffer || (this.peerConnection === undefined) ||
             this.peerConnection.signalingState != 'stable')
 
         const ignoreOffer = this.isOffering && offerCollision
@@ -105,13 +105,13 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             logger.warn('error', { err })
         }
 
-        if (type.toLowerCase() === RtcDescription.OFFER && this.peerConnection) {
+        if ((type.toLowerCase() === RtcDescription.OFFER) && (this.peerConnection !== undefined)) {
             try {
                 await this.peerConnection.setLocalDescription()
             } catch (err) {
                 logger.warn('error', { err })
             }
-            if (this.peerConnection.localDescription) {
+            if (this.peerConnection.localDescription !== null) {
                 this.emit('localDescription', this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type)
             }
         }
@@ -147,7 +147,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             
             this.removeAllListeners()
 
-            if (this.dataChannel) {
+            if (this.dataChannel !== undefined) {
                 try {
                     this.dataChannel.close()
                 } catch (e) {
@@ -157,7 +157,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
             this.dataChannel = undefined
 
-            if (this.peerConnection) {
+            if (this.peerConnection !== undefined) {
                 try {
                     this.peerConnection.close()
                 } catch (e) {
@@ -208,7 +208,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     }
 
     private stopListening() {
-        if (this.dataChannel) {
+        if (this.dataChannel !== undefined) {
             this.dataChannel.onopen = null
             this.dataChannel.onclose = null
             this.dataChannel.onerror = null
@@ -216,7 +216,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             this.dataChannel.onmessage = null
         }
 
-        if (this.peerConnection) {
+        if (this.peerConnection !== undefined) {
             this.peerConnection.onicecandidate = null
             this.peerConnection.onicegatheringstatechange = null
             this.peerConnection.onnegotiationneeded = null

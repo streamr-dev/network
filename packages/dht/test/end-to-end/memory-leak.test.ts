@@ -11,7 +11,7 @@ describe('memory leak', () => {
 
     it('send message', async () => {
         const entryPointDescriptor = {
-            kademliaId: randomBytes(10),
+            nodeId: randomBytes(10),
             type: NodeType.NODEJS,
             websocket: {
                 host: '127.0.0.1',
@@ -20,7 +20,7 @@ describe('memory leak', () => {
             }
         }
         let entryPoint: DhtNode | undefined = new DhtNode({
-            peerId: binaryToHex(entryPointDescriptor.kademliaId),
+            peerId: binaryToHex(entryPointDescriptor.nodeId),
             websocketHost: entryPointDescriptor.websocket!.host,
             websocketPortRange: {
                 min: entryPointDescriptor.websocket.port,
@@ -33,20 +33,16 @@ describe('memory leak', () => {
         await entryPoint.joinDht([entryPointDescriptor])
         let sender: DhtNode | undefined = new DhtNode({})
         let receiver: DhtNode | undefined = new DhtNode({})
-        /*TODO should this work? await Promise.all([
-            async () => {
+        await Promise.all([
+            (async () => {
                 await sender.start()
                 await sender.joinDht([entryPointDescriptor])
-            },
-            async () => {
+            })(),
+            (async () => {
                 await receiver.start()
                 await receiver.joinDht([entryPointDescriptor])
-            }
-        ])*/
-        await sender.start()
-        await sender.joinDht([entryPointDescriptor])
-        await receiver.start()
-        await receiver.joinDht([entryPointDescriptor])
+            })()
+        ])
 
         let receivedMessage: Message | undefined = undefined
         receiver.on('message', (msg: Message) => receivedMessage = msg)
@@ -72,6 +68,7 @@ describe('memory leak', () => {
 
         const detector1 = new LeakDetector(entryPoint)
         entryPoint = undefined
+        await detector1.isLeaking()
         expect(await detector1.isLeaking()).toBe(false)
 
         const detector2 = new LeakDetector(sender)

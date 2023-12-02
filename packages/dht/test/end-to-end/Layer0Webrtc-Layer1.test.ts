@@ -4,7 +4,7 @@ import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dh
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
     const entrypointDescriptor: PeerDescriptor = {
-        kademliaId: new Uint8Array([0]),
+        nodeId: new Uint8Array([0]),
         type: NodeType.NODEJS,
         websocket: {
             host: '127.0.0.1',
@@ -53,7 +53,7 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         })
 
         layer1EntryPoint = new DhtNode({
-            peerId: binaryToHex(entrypointDescriptor.kademliaId),
+            peerId: binaryToHex(entrypointDescriptor.nodeId),
             transport: layer0EntryPoint,
             serviceId: 'layer1'
         })
@@ -125,9 +125,9 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         await layer1Node3.joinDht([entrypointDescriptor])
         await layer1Node4.joinDht([entrypointDescriptor])
 
-        expect(layer1Node1.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(layer1Node2.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(layer1Node3.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(layer1Node4.getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(layer1Node1.getNumberOfNeighbors()).toBeGreaterThanOrEqual(2)
+        expect(layer1Node2.getNumberOfNeighbors()).toBeGreaterThanOrEqual(2)
+        expect(layer1Node3.getNumberOfNeighbors()).toBeGreaterThanOrEqual(2)
+        expect(layer1Node4.getNumberOfNeighbors()).toBeGreaterThanOrEqual(2)
     }, 60000)
 })

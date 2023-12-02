@@ -140,12 +140,7 @@ export class StreamrNode extends EventEmitter<Events> {
             layer1Node,
             getEntryPointData: (key) => this.layer0Node!.getDataFromDht(key),
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
-            deleteEntryPointData: async (key) => {
-                if (this.destroyed) {
-                    return 
-                }
-                return this.layer0Node!.deleteDataFromDht(key)
-            }
+            deleteEntryPointData: async (key: Uint8Array) => this.layer0Node!.deleteDataFromDht(key, false)
         })
         streamPart = {
             proxied: false,
@@ -198,9 +193,9 @@ export class StreamrNode extends EventEmitter<Events> {
             serviceId: 'layer1::' + streamPartId,
             peerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             entryPoints,
-            numberOfNodesPerKBucket: 4,
+            numberOfNodesPerKBucket: 4,  // TODO use config option or named constant?
             rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
-            dhtJoinTimeout: 20000
+            dhtJoinTimeout: 20000  // TODO use config option or named constant?
         })
     }
 
@@ -225,6 +220,7 @@ export class StreamrNode extends EventEmitter<Events> {
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
+        // TODO explicit default value for "acceptProxyConnections" or make it required
         if (this.config.acceptProxyConnections) {
             throw new Error('cannot set proxies when acceptProxyConnections=true')
         }
@@ -313,6 +309,7 @@ export class StreamrNode extends EventEmitter<Events> {
 
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {
     process.on(term, async () => {
+        // TODO should we catch possible promise rejection?
         await cleanUp()
         process.exit()
     })

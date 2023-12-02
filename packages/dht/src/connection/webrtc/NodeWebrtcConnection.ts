@@ -160,7 +160,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         if (!this.closed) {
             logger.trace(
                 `Closing Node WebRTC Connection to ${getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)}`
-                + `${reason ? `, reason: ${reason}` : ''}`
+                + `${(reason !== undefined) ? `, reason: ${reason}` : ''}`
             )
 
             this.closed = true

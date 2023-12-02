@@ -4,7 +4,7 @@ import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescrip
 
 describe('Layer0-Layer1', () => {
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: Uint8Array.from([1, 2, 3]),
+        nodeId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
         websocket: { host: '127.0.0.1', port: 10016, tls: false }
     }

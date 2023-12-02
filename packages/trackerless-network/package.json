@@ -42,14 +42,14 @@
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@types/lodash": "^4.14.201",
+    "@types/lodash": "^4.14.202",
     "@types/uuid": "^9.0.7",
     "@types/yallist": "^4.0.1",
     "commander": "^11.1.0",
     "expect": "^29.6.2",
     "express": "^4.17.1",
     "ts-essentials": "^9.4.1",
-    "ts-loader": "^9.5.0",
+    "ts-loader": "^9.5.1",
     "ts-node": "^10.9.1"
   }
 }

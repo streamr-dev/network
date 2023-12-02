@@ -8,6 +8,9 @@ const logger = new Logger(module)
 // https://kapeli.com/cheat_sheets/WebSocket_Status_Codes.docset/Contents/Resources/Documents/index
 // Browsers send this automatically when closing a tab
 export const GOING_AWAY = 1001
+// The GOING_AWAY is a reserved code and we shouldn't send that from the application. Therefore
+// we have a custom counterpart
+export const CUSTOM_GOING_AWAY = 3001
 
 const BINARY_TYPE = 'arraybuffer'
 
@@ -22,6 +25,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.connectionId = new ConnectionID()
     }
 
+    // TODO explicit default value for "selfSigned" or make it required
     public connect(address: string, selfSigned?: boolean): void {
         if (!this.destroyed) {
             this.socket = new Websocket(address, undefined, undefined, undefined, { rejectUnauthorized: !selfSigned })
@@ -67,7 +71,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.destroyed = true
         this.stopListening()
         this.socket = undefined
-        const gracefulLeave = code === GOING_AWAY
+        const gracefulLeave = (code === GOING_AWAY) || (code === CUSTOM_GOING_AWAY)
         this.emit('disconnected', gracefulLeave, code, reason)
         this.removeAllListeners()
     }
@@ -90,7 +94,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.removeAllListeners()
         if (!this.destroyed) {
             logger.trace(`Closing socket for connection ${this.connectionId.toString()}`)
-            this.socket?.close(gracefulLeave === true ? GOING_AWAY : undefined)
+            this.socket?.close(gracefulLeave ? CUSTOM_GOING_AWAY : undefined)
         } else {
             logger.debug('Tried to close() a stopped connection')
         }

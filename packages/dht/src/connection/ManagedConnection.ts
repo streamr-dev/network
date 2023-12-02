@@ -82,6 +82,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             this.handshaker.once('handshakeFailed', (error) => {
                 if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR) {
+                    // TODO should we have some handling for this floating promise?
                     this.close(false)
                 } else {
                     logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' handshakeFailed: ' + error)
@@ -246,7 +247,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             try {
                 result = await runAndRaceEvents3<OutpuBufferEvents>([() => { this.outputBuffer.push(data) }],
-                    this.outputBufferEmitter, ['bufferSent', 'bufferSendingFailed'], 15000)
+                    this.outputBufferEmitter, ['bufferSent', 'bufferSendingFailed'], 15000)  // TODO use config option or named constant?
             } catch (e) {
                 logger.debug(`Connection to ${getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor)} timed out`)
                 throw new Err.SendFailed('Sending buffer timed out')

@@ -2,14 +2,13 @@ import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { IConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice, DisconnectMode } from '../proto/packages/dht/protos/DhtRpc'
-import * as Err from '../helpers/errors'
 import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
-import { Remote } from '../dht/contact/Remote'
+import { RpcRemote } from '../dht/contact/RpcRemote'
 import { LockID } from './ConnectionLockHandler'
 
 const logger = new Logger(module)
 
-export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
+export class ConnectionLockRpcRemote extends RpcRemote<IConnectionLockRpcClient> {
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
@@ -29,7 +28,7 @@ export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
             const res = await this.getClient().lockRequest(request, options)
             return res.accepted
         } catch (err) {
-            logger.debug(new Err.ConnectionLocker('Connection lock rejected', err).stack!)
+            logger.debug('Connection lock rejected', { error: err })
             return false
         }
     }
@@ -55,7 +54,7 @@ export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
         const options = this.formDhtRpcOptions({
             doNotConnect: true,
             doNotMindStopped: true,
-            timeout: 2000
+            timeout: 2000  // TODO use config option or named constant?
         })
         await this.getClient().gracefulDisconnect(request, options)
     }

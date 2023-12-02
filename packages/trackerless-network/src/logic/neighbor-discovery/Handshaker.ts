@@ -66,6 +66,7 @@ export class Handshaker implements IHandshaker {
     }
 
     async attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]> {
+        // TODO use config option or named constant? or why the value 2?
         if (this.config.targetNeighbors.size() + this.ongoingHandshakes.size < this.config.maxNeighborCount - 2) {
             logger.trace(`Attempting parallel handshakes with ${PARALLEL_HANDSHAKE_COUNT} targets`)
             return this.selectParallelTargetsAndHandshake(excludedIds)
@@ -98,6 +99,7 @@ export class Handshaker implements IHandshaker {
         const results = await Promise.allSettled(
             Array.from(targets.values()).map(async (target: HandshakeRpcRemote, i) => {
                 const otherNode = i === 0 ? targets[1] : targets[0]
+                // TODO better check (currently this condition is always true)
                 const otherNodeId = otherNode ? getNodeIdFromPeerDescriptor(otherNode.getPeerDescriptor()) : undefined
                 return this.handshakeWithTarget(target, otherNodeId)
             })

@@ -51,7 +51,7 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         layer1Node4 = await createMockConnectionLayer1Node(layer0Node4Id, layer0Node4)
 
         entryPointDescriptor = {
-            kademliaId: layer0EntryPoint.getNodeId().value,
+            nodeId: layer0EntryPoint.getNodeId().value,
             type: NodeType.NODEJS
         }
 
@@ -85,21 +85,21 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         await layer1Node3.joinDht([entryPointDescriptor])
         await layer1Node4.joinDht([entryPointDescriptor])
 
-        logger.info('layer1EntryPoint.getBucketSize() ' + layer1EntryPoint.getBucketSize())
-        logger.info('layer1Node1.getBucketSize()' + layer1Node1.getBucketSize())
-        logger.info('layer1Node2.getBucketSize()' + layer1Node2.getBucketSize())
-        logger.info('layer1Node3.getBucketSize()' + layer1Node3.getBucketSize())
-        logger.info('layer1Node4.getBucketSize()' + layer1Node4.getBucketSize())
+        logger.info('layer1EntryPoint.getNumberOfNeighbors() ' + layer1EntryPoint.getNumberOfNeighbors())
+        logger.info('layer1Node1.getNumberOfNeighbors()' + layer1Node1.getNumberOfNeighbors())
+        logger.info('layer1Node2.getNumberOfNeighbors()' + layer1Node2.getNumberOfNeighbors())
+        logger.info('layer1Node3.getNumberOfNeighbors()' + layer1Node3.getNumberOfNeighbors())
+        logger.info('layer1Node4.getNumberOfNeighbors()' + layer1Node4.getNumberOfNeighbors())
 
-        expect(layer1Node1.getBucketSize()).toEqual(layer0Node1.getBucketSize())
-        expect(layer1Node2.getBucketSize()).toEqual(layer0Node2.getBucketSize())
-        expect(layer1Node3.getBucketSize()).toEqual(layer0Node3.getBucketSize())
-        expect(layer1Node4.getBucketSize()).toEqual(layer0Node4.getBucketSize())
+        expect(layer1Node1.getNumberOfNeighbors()).toEqual(layer0Node1.getNumberOfNeighbors())
+        expect(layer1Node2.getNumberOfNeighbors()).toEqual(layer0Node2.getNumberOfNeighbors())
+        expect(layer1Node3.getNumberOfNeighbors()).toEqual(layer0Node3.getNumberOfNeighbors())
+        expect(layer1Node4.getNumberOfNeighbors()).toEqual(layer0Node4.getNumberOfNeighbors())
 
-        expect(layer1Node1.getKBucketPeers()).toContainValues(layer0Node1.getKBucketPeers())
-        expect(layer1Node2.getKBucketPeers()).toContainValues(layer0Node2.getKBucketPeers())
-        expect(layer1Node3.getKBucketPeers()).toContainValues(layer0Node3.getKBucketPeers())
-        expect(layer1Node4.getKBucketPeers()).toContainValues(layer0Node4.getKBucketPeers())
+        expect(layer1Node1.getAllNeighborPeerDescriptors()).toContainValues(layer0Node1.getAllNeighborPeerDescriptors())
+        expect(layer1Node2.getAllNeighborPeerDescriptors()).toContainValues(layer0Node2.getAllNeighborPeerDescriptors())
+        expect(layer1Node3.getAllNeighborPeerDescriptors()).toContainValues(layer0Node3.getAllNeighborPeerDescriptors())
+        expect(layer1Node4.getAllNeighborPeerDescriptors()).toContainValues(layer0Node4.getAllNeighborPeerDescriptors())
 
     }, 60000)
 })

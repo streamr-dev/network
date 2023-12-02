@@ -1,6 +1,6 @@
 import {
-    DataEntry, DeleteDataRequest, DeleteDataResponse, MigrateDataRequest, MigrateDataResponse, PeerDescriptor,
-    StoreDataRequest, StoreDataResponse
+    DataEntry, ReplicateDataRequest, PeerDescriptor,
+    StoreDataRequest, StoreDataResponse, RecursiveOperation
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../helpers/PeerID'
 import { Any } from '../../proto/google/protobuf/any'
@@ -9,30 +9,28 @@ import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { IFinder } from '../find/Finder'
+import { IRecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Logger } from '@streamr/utils'
+import { Logger, executeSafePromise } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { StoreRpcRemote } from './StoreRpcRemote'
 import { Timestamp } from '../../proto/google/protobuf/timestamp'
-import EventEmitter from 'eventemitter3'
-import { Events } from '../DhtNode'
 import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ServiceID } from '../../types/ServiceID'
+import { Empty } from '../../proto/google/protobuf/empty'
+import { findIndex } from 'lodash'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
-    finder: IFinder
+    recursiveOperationManager: IRecursiveOperationManager
     localPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
     serviceId: ServiceID
-    maxTtl: number
     highestTtl: number
     redundancyFactor: number
-    dhtNodeEmitter: EventEmitter<Events>
     getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
     rpcRequestTimeout?: number
 }
@@ -42,95 +40,78 @@ const logger = new Logger(module)
 export class StoreRpcLocal implements IStoreRpc {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
-    private readonly finder: IFinder
+    private readonly recursiveOperationManager: IRecursiveOperationManager
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly localDataStore: LocalDataStore
     private readonly serviceId: ServiceID
-    private readonly maxTtl: number
     private readonly highestTtl: number
     private readonly redundancyFactor: number
-    private readonly dhtNodeEmitter: EventEmitter<Events>
     private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
     private readonly rpcRequestTimeout?: number
 
     constructor(config: DataStoreConfig) {
         this.rpcCommunicator = config.rpcCommunicator
-        this.finder = config.finder
+        this.recursiveOperationManager = config.recursiveOperationManager
         this.localPeerDescriptor = config.localPeerDescriptor
         this.localDataStore = config.localDataStore
         this.serviceId = config.serviceId
-        this.maxTtl = config.maxTtl
         this.highestTtl = config.highestTtl
         this.redundancyFactor = config.redundancyFactor
-        this.dhtNodeEmitter = config.dhtNodeEmitter
         this.rpcRequestTimeout = config.rpcRequestTimeout
         this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
         this.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
-            (request: StoreDataRequest, context: ServerCallContext) => this.storeData(request, context))
-        this.rpcCommunicator.registerRpcMethod(MigrateDataRequest, MigrateDataResponse, 'migrateData',
-            (request: MigrateDataRequest, context: ServerCallContext) => this.migrateData(request, context))
-        this.rpcCommunicator.registerRpcMethod(DeleteDataRequest, DeleteDataResponse, 'deleteData',
-            (request: DeleteDataRequest, context: ServerCallContext) => this.deleteData(request, context))
-
-        this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor) => {
-            this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
-                dataMap.forEach((dataEntry) => {
-                    if (this.shouldMigrateDataToNewNode(dataEntry.dataEntry, peerDescriptor)) {
-                        this.migrateDataToContact(dataEntry.dataEntry, peerDescriptor)
-                    }
-                })
-            })
-        })
+            (request: StoreDataRequest) => this.storeData(request))
+        this.rpcCommunicator.registerRpcNotification(ReplicateDataRequest, 'replicateData',
+            (request: ReplicateDataRequest, context: ServerCallContext) => this.replicateData(request, context))
     }
 
-    private shouldMigrateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
+    onNewContact(peerDescriptor: PeerDescriptor): void {
+        this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
+            dataMap.forEach(async (dataEntry) => {
+                const shouldReplicate = this.shouldReplicateDataToNewNode(dataEntry.dataEntry, peerDescriptor)
+                this.localDataStore.setStale(dataEntry.dataEntry.key, peerIdFromPeerDescriptor(dataEntry.dataEntry.creator!), !shouldReplicate)
+                if (shouldReplicate) {
+                    try {
+                        await this.replicateDataToContact(dataEntry.dataEntry, peerDescriptor)
+                    } catch (e) {
+                        logger.trace('replicateDataToContact() failed', { error: e })
+                    }
+                }
+            })
+        })    
+    }
 
-        const dataId = PeerID.fromValue(dataEntry.kademliaId)
-        const newNodeId = PeerID.fromValue(newNode.kademliaId)
-        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.kademliaId)
-
-        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
-
-        const sortedList = new SortedContactList<Contact>(dataId, 20, undefined, true)
+    private shouldReplicateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
+        const newNodeId = PeerID.fromValue(newNode.nodeId)
+        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
+        // TODO use config option or named constant?
+        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
+        const sortedList = new SortedContactList<Contact>({
+            referenceId: PeerID.fromValue(dataEntry.key), 
+            maxSize: 20,  // TODO use config option or named constant?
+            allowToContainReferenceId: true,
+            emitEvents: false
+        })
         sortedList.addContact(new Contact(this.localPeerDescriptor))
-
         closestToData.forEach((con) => {
-            if (!newNodeId.equals(PeerID.fromValue(con.getPeerDescriptor().kademliaId))) {
+            if (!newNodeId.equals(PeerID.fromValue(con.getPeerDescriptor().nodeId))) {
                 sortedList.addContact(new Contact(con.getPeerDescriptor()))
             }
         })
-
-        if (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)) {
-            // If we are not the closes node to the data, do not migrate
+        const isClosest = sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)
+        if (!isClosest) {
             return false
         }
-
-        const newPeerId = PeerID.fromValue(newNode.kademliaId)
+        const newPeerId = PeerID.fromValue(newNode.nodeId)
         sortedList.addContact(new Contact(newNode))
-
         const sorted = sortedList.getAllContacts()
-
-        let index = 0
-
-        for (index = 0; index < sorted.length; index++) {
-            if (sorted[index].getPeerId().equals(newPeerId)) {
-                break
-            }
-        }
-
+        const index = findIndex(sorted, (contact) => contact.getPeerId().equals(newPeerId))
         // if new node is within the storageRedundancyFactor closest nodes to the data
-        // do migrate data to it
-
-        if (index < this.redundancyFactor) {
-            this.localDataStore.setStale(dataId, dataEntry.storer!, false)
-            return true
-        } else {
-            this.localDataStore.setStale(dataId, dataEntry.storer!, true)
-            return false
-        }
+        // do replicate data to it
+        return (index < this.redundancyFactor)
     }
 
-    private async migrateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor, doNotConnect: boolean = false): Promise<void> {
+    private async replicateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor, doNotConnect: boolean = false): Promise<void> {
         const rpcRemote = new StoreRpcRemote(
             this.localPeerDescriptor,
             contact,
@@ -139,33 +120,30 @@ export class StoreRpcLocal implements IStoreRpc {
             this.rpcRequestTimeout
         )
         try {
-            const response = await rpcRemote.migrateData({ dataEntry }, doNotConnect)
-            if (response.error) {
-                logger.trace('migrateData() returned error: ' + response.error)
-            }
+            await rpcRemote.replicateData({ entry: dataEntry }, doNotConnect)
         } catch (e) {
-            logger.trace('migrateData() threw an exception ' + e)
+            logger.trace('replicateData() threw an exception ' + e)
         }
     }
 
-    public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
+    public async storeDataToDht(key: Uint8Array, data: Any, creator: PeerDescriptor): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.serviceId}`)
-        const result = await this.finder.startFind(key)
+        const result = await this.recursiveOperationManager.execute(key, RecursiveOperation.FIND_NODE)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         const ttl = this.highestTtl // ToDo: make TTL decrease according to some nice curve
-        const storerTime = Timestamp.now()
+        const createdAt = Timestamp.now()
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.redundancyFactor; i++) {
             if (areEqualPeerDescriptors(this.localPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
-                    kademliaId: key, 
-                    storer: this.localPeerDescriptor,
-                    ttl, 
-                    storedAt: Timestamp.now(), 
+                    key, 
                     data,
+                    creator,
+                    createdAt,
+                    storedAt: Timestamp.now(), 
+                    ttl, 
                     stale: false,
                     deleted: false,
-                    storerTime
                 })
                 successfulNodes.push(closestNodes[i])
                 continue
@@ -178,7 +156,13 @@ export class StoreRpcLocal implements IStoreRpc {
                 this.rpcRequestTimeout
             )
             try {
-                const response = await rpcRemote.storeData({ kademliaId: key, data, ttl, storerTime })
+                const response = await rpcRemote.storeData({
+                    key,
+                    data,
+                    creator,
+                    createdAt,
+                    ttl
+                })
                 if (!response.error) {
                     successfulNodes.push(closestNodes[i])
                     logger.trace('remote.storeData() returned success')
@@ -193,143 +177,117 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     private selfIsOneOfClosestPeers(dataId: Uint8Array): boolean {
-        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.kademliaId)
+        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
         const closestPeers = this.getNodesClosestToIdFromBucket(dataId, this.redundancyFactor)
-        const sortedList = new SortedContactList<Contact>(localPeerId, this.redundancyFactor, undefined, true)
+        const sortedList = new SortedContactList<Contact>({
+            referenceId: localPeerId, 
+            maxSize: this.redundancyFactor, 
+            allowToContainReferenceId: true, 
+            emitEvents: false
+        })
         sortedList.addContact(new Contact(this.localPeerDescriptor))
         closestPeers.forEach((con) => sortedList.addContact(new Contact(con.getPeerDescriptor())))
         return sortedList.getClosestContacts().some((node) => node.getPeerId().equals(localPeerId))
     }
 
-    public async deleteDataFromDht(key: Uint8Array): Promise<void> {
-        logger.debug(`Deleting data from DHT ${this.serviceId}`)
-        const result = await this.finder.startFind(key)
-        const closestNodes = result.closestNodes
-        const successfulNodes: PeerDescriptor[] = []
-        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.redundancyFactor; i++) {
-            if (areEqualPeerDescriptors(this.localPeerDescriptor, closestNodes[i])) {
-                this.localDataStore.markAsDeleted(key, peerIdFromPeerDescriptor(this.localPeerDescriptor))
-                successfulNodes.push(closestNodes[i])
-                continue
-            }
-            const rpcRemote = new StoreRpcRemote(
-                this.localPeerDescriptor,
-                closestNodes[i],
-                this.serviceId,
-                toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport())),
-                this.rpcRequestTimeout
-            )
-            try {
-                const response = await rpcRemote.deleteData({ kademliaId: key })
-                if (response.deleted) {
-                    logger.trace('remote.deleteData() returned success')
-                } else {
-                    logger.trace('could not delete data from ' + getNodeIdFromPeerDescriptor(closestNodes[i]))
-                }
-                successfulNodes.push(closestNodes[i])
-            } catch (e) {
-                logger.trace('remote.deleteData() threw an exception ' + e)
-            }
-        }
-    }
-
     // RPC service implementation
-    async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {
-        const ttl = Math.min(request.ttl, this.maxTtl)
-        const { incomingSourceDescriptor } = context as DhtCallContext
-        const { kademliaId, data, storerTime } = request
+    async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
+        const { key, data, creator, createdAt, ttl } = request
         this.localDataStore.storeEntry({ 
-            kademliaId, 
-            storer: incomingSourceDescriptor!, 
-            ttl,
-            storedAt: Timestamp.now(),
-            storerTime,
+            key, 
             data,
-            stale: !this.selfIsOneOfClosestPeers(kademliaId),
+            creator, 
+            createdAt,
+            storedAt: Timestamp.now(),
+            ttl,
+            stale: !this.selfIsOneOfClosestPeers(key),
             deleted: false
         })
-        
-        if (!this.selfIsOneOfClosestPeers(kademliaId)) {
-            this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(kademliaId))
+        if (!this.selfIsOneOfClosestPeers(key)) {
+            this.localDataStore.setAllEntriesAsStale(key)
         }
-
         logger.trace('storeData()')
         return StoreDataResponse.create()
     }
 
-    // RPC service implementation
-    async deleteData(request: DeleteDataRequest, context: ServerCallContext): Promise<DeleteDataResponse> {
-        const { incomingSourceDescriptor } = context as DhtCallContext
-        const { kademliaId } = request
-        const deleted = this.localDataStore.markAsDeleted(kademliaId, peerIdFromPeerDescriptor(incomingSourceDescriptor!))
-        return DeleteDataResponse.create({ deleted })
+    private async replicateDataToClosestNodes(): Promise<void> {
+        const dataEntries = Array.from(this.localDataStore.getStore().values())
+            .flatMap((dataMap) => Array.from(dataMap.values()))
+            .map((localData) => localData.dataEntry)
+        await Promise.all(dataEntries.map(async (dataEntry) => {
+            const dhtNodeRemotes = this.getNodesClosestToIdFromBucket(dataEntry.key, this.redundancyFactor)
+            await Promise.all(dhtNodeRemotes.map(async (remoteDhtNode) => {
+                const rpcRemote = new StoreRpcRemote(
+                    this.localPeerDescriptor,
+                    remoteDhtNode.getPeerDescriptor(),
+                    this.serviceId,
+                    toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport())),
+                    this.rpcRequestTimeout
+                )
+                try {
+                    await rpcRemote.replicateData({ entry: dataEntry })
+                } catch (err) {
+                    logger.trace('Failed to replicate data in replicateDataToClosestNodes', { error: err })
+                }
+            }))
+        }))
     }
 
     // RPC service implementation
-    public async migrateData(request: MigrateDataRequest, context: ServerCallContext): Promise<MigrateDataResponse> {
-        logger.trace('server-side migrateData()')
-        const dataEntry = request.dataEntry!
-
+    public async replicateData(request: ReplicateDataRequest, context: ServerCallContext): Promise<Empty> {
+        logger.trace('server-side replicateData()')
+        const dataEntry = request.entry!
         const wasStored = this.localDataStore.storeEntry(dataEntry)
-        
         if (wasStored) {
-            this.migrateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.dataEntry!)
+            this.replicateDataToNeighbors((context as DhtCallContext).incomingSourceDescriptor!, request.entry!)
         }
-        if (!this.selfIsOneOfClosestPeers(dataEntry.kademliaId)) {
-            this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.kademliaId))
+        if (!this.selfIsOneOfClosestPeers(dataEntry.key)) {
+            this.localDataStore.setAllEntriesAsStale(dataEntry.key)
         }
-        logger.trace('server-side migrateData() at end')
-        return MigrateDataResponse.create()
+        logger.trace('server-side replicateData() at end')
+        return {}
     }
 
-    private migrateDataToNeighborsIfNeeded(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
-
+    private replicateDataToNeighbors(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
         // sort own contact list according to data id
-        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.kademliaId)
-        const dataId = PeerID.fromValue(dataEntry.kademliaId)
-        const incomingPeerId = PeerID.fromValue(incomingPeer.kademliaId)
-        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
-
-        const sortedList = new SortedContactList<Contact>(dataId, this.redundancyFactor, undefined, true)
+        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
+        const dataId = PeerID.fromValue(dataEntry.key)
+        const incomingPeerId = PeerID.fromValue(incomingPeer.nodeId)
+        // TODO use config option or named constant?
+        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
+        const sortedList = new SortedContactList<Contact>({
+            referenceId: dataId, 
+            maxSize: this.redundancyFactor, 
+            allowToContainReferenceId: true, 
+            emitEvents: false
+        })
         sortedList.addContact(new Contact(this.localPeerDescriptor))
-
         closestToData.forEach((con) => {
             sortedList.addContact(new Contact(con.getPeerDescriptor()))
         })
-
-        if (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)) {
-            // If we are not the closest node to the data, migrate only to the 
-            // closest one to the data
-
-            const contact = sortedList.getAllContacts()[0]
-            const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
+        const replicateOnlyToClosest = (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId))
+        const targets = replicateOnlyToClosest
+            // If we are not the closest node to the data, replicate only to the closest one to the data
+            ? [sortedList.getAllContacts()[0]]
+            // if we are the closest to the data, replicate to all storageRedundancyFactor nearest
+            : sortedList.getAllContacts()
+        targets.forEach((contact) => {
+            const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().nodeId)
             if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
-                setImmediate(async () => {
-                    try {
-                        await this.migrateDataToContact(dataEntry, contact.getPeerDescriptor())
-                        logger.trace('migrateDataToContact() returned when migrating to only the closest contact')
-                    } catch (e) {
-                        logger.error('migrating data to only the closest contact failed ' + e)
-                    }
+                setImmediate(() => {
+                    executeSafePromise(async () => {
+                        await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())
+                        logger.trace('replicateDataToContact() returned', { 
+                            node: getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()),
+                            replicateOnlyToClosest
+                        })
+                    })
                 })
             }
-        } else {
-            // if we are the closest to the data, migrate to all storageRedundancyFactor nearest
-            sortedList.getAllContacts().forEach((contact) => {
-                const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
-                if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
-                    if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
-                        setImmediate(async () => {
-                            try {
-                                await this.migrateDataToContact(dataEntry, contact.getPeerDescriptor())
-                                logger.trace('migrateDataToContact() returned')
-                            } catch (e) {
-                                logger.error('migrating data to one of the closest contacts failed ' + e)
-                            }
-                        })
-                    }
-                }
-            })
-        }
+        })
+    }
+
+    async destroy(): Promise<void> {
+        await this.replicateDataToClosestNodes()
     }
 }

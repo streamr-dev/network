@@ -6,7 +6,7 @@ import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dh
 
 describe('Layer0 with WebRTC connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
+        nodeId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
         websocket: { host: '127.0.0.1', port: 10029, tls: false }
     }
@@ -60,7 +60,7 @@ describe('Layer0 with WebRTC connections', () => {
                 'connected',
                 20000,
                 (peerDescriptor: PeerDescriptor) => {
-                    return areEqualBinaries(peerDescriptor.kademliaId, node1.getLocalPeerDescriptor().kademliaId)
+                    return areEqualBinaries(peerDescriptor.nodeId, node1.getLocalPeerDescriptor().nodeId)
                 }
             ),
             node2.joinDht([epPeerDescriptor]),

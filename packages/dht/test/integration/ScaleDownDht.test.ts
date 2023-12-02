@@ -4,6 +4,7 @@ import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dh
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
+import { getRandomRegion } from '../../src/connection/simulator/pings'
 
 const logger = new Logger(module)
 
@@ -24,8 +25,9 @@ describe('Scaling down a Dht network', () => {
         nodes.push(entryPoint)
 
         entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS
+            nodeId: entryPoint.getNodeId().value,
+            type: NodeType.NODEJS,
+            region: getRandomRegion()
         }
 
         for (let i = 1; i < NUM_NODES; i++) {
