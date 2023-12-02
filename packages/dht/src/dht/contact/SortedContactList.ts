@@ -5,16 +5,21 @@ import { sortedIndexBy } from 'lodash'
 import EventEmitter from 'eventemitter3'
 
 export interface SortedContactListConfig {
-    referenceId: PeerID
+    referenceId: PeerID  // all contacts in this list are in sorted by the distance to this ID
     allowToContainReferenceId: boolean
+    // TODO could maybe optimize this by removing the flag and then we'd check whether we have 
+    // any listeners before we emit the event
     emitEvents: boolean
     maxSize?: number
+    // if set, the list can't contain any contacts which are futher away than this limit
     peerIdDistanceLimit?: PeerID
+    // if set, the list can't contain contacts with these ids
     excludedPeerIDs?: PeerID[]
 }
-export class SortedContactList<C extends { getPeerId: () => PeerID }> extends EventEmitter<Events<C>> {
-    private config: SortedContactListConfig
 
+export class SortedContactList<C extends { getPeerId: () => PeerID }> extends EventEmitter<Events<C>> {
+
+    private config: SortedContactListConfig
     private contactsById: Map<PeerIDKey, ContactState<C>> = new Map()
     private contactIds: PeerID[] = []
 
@@ -77,9 +82,7 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Ev
     }
 
     public addContacts(contacts: C[]): void {
-        contacts.forEach((contact) => {
-            this.addContact(contact)
-        })
+        contacts.forEach((contact) => this.addContact(contact))
     }
 
     public getContact(id: PeerID): ContactState<C> | undefined {
