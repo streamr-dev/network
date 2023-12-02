@@ -1,26 +1,26 @@
-import { Lifecycle, inject, scoped } from 'tsyringe'
+import { Lifecycle, scoped } from 'tsyringe'
 import { TheGraphClient, Logger } from '@streamr/utils'
-import { ConfigInjectionToken, StrictStreamrClientConfig, NetworkPeerDescriptor } from '../Config'
+import { shuffle } from 'lodash'
+import { NetworkPeerDescriptor } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
 @scoped(Lifecycle.ContainerScoped)
 export class OperatorRegistry {
     private readonly theGraphClient: TheGraphClient
-    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
     private readonly logger: Logger
 
     constructor(
         theGraphClient: TheGraphClient,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
         loggerFactory: LoggerFactory
     ) {
         this.theGraphClient = theGraphClient
-        this.config = config
         this.logger = loggerFactory.createLogger(module)
     }
 
-    async findNetworkEntrypoints(
-        limit: number = 20,
+    async findRandomNetworkEntrypoints(
+        maxEntryPoints: number = 5,
+        maxQueryResults: number = 50, 
+        maxHeartbeatAgeHours: number = 24,
     ): Promise<NetworkPeerDescriptor[]> {
         interface OperatorMetadata {
             id: string
@@ -32,8 +32,11 @@ export class OperatorRegistry {
                     operators(
                         orderBy: latestHeartbeatTimestamp
                         orderDirection: desc
-                        first: ${limit}
-                        where: {latestHeartbeatMetadata_contains: "\\"tls\\":true"}
+                        first: ${maxQueryResults}
+                        where: {
+                            latestHeartbeatMetadata_contains: "\\"tls\\":true", 
+                            latestHeartbeatTimestamp_gt: "${Math.floor(Date.now() / 1000) - (maxHeartbeatAgeHours * 60 * 60)}"
+                        }
                     ) {
                         id
                         latestHeartbeatMetadata
@@ -46,7 +49,8 @@ export class OperatorRegistry {
         for await (const operator of operatorMetadatas) {
             peerDescriptors.push(JSON.parse(operator.latestHeartbeatMetadata))
         }
-        this.logger.debug(`Discovered ${peerDescriptors.length} network entrypoints`, { entryPoints: peerDescriptors})
-        return peerDescriptors
+        const picked = shuffle(peerDescriptors).slice(0, maxEntryPoints)
+        this.logger.debug(`Found ${peerDescriptors.length} network entrypoints, picked ${picked.length}`, { picked })
+        return picked
     }
 }

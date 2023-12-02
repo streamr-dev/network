@@ -243,8 +243,13 @@ export class NetworkNodeFacade {
     }
 
     async getEntryPoints(): Promise<PeerDescriptor[]> {
-        if (this.config.network.controlLayer.entryPointDiscovery?.enabled && this.cachedEntryPoints === undefined) {
-            this.cachedEntryPoints = await this.operatorRegistry.findNetworkEntrypoints(this.config.network.controlLayer.entryPointDiscovery.limit)
+        const discoveryConfig = this.config.network.controlLayer.entryPointDiscovery
+        if (discoveryConfig?.enabled && this.cachedEntryPoints === undefined) {
+            this.cachedEntryPoints = await this.operatorRegistry.findRandomNetworkEntrypoints(
+                discoveryConfig.maxEntryPoints,
+                discoveryConfig.maxQueryResults,
+                discoveryConfig.maxHeartbeatAgeHours,
+            )
         }
         const entrypoints = [...this.config.network.controlLayer.entryPoints!, ...this.cachedEntryPoints || []]
         return entrypoints.map(peerDescriptorTranslator)

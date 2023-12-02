@@ -106,13 +106,21 @@
                                 "enabled": {
                                     "type": "boolean"
                                 },
-                                "limit": {
+                                "maxEntryPoints": {
+                                    "type": "number"
+                                },
+                                "maxQueryResults": {
+                                    "type": "number"
+                                },
+                                "maxHeartbeatAgeHours": {
                                     "type": "number"
                                 }
                             },
                             "default": {
                                 "enabled": true,
-                                "limit": 20
+                                "maxEntryPoints": 5,
+                                "maxQueryResults": 50,
+                                "maxHeartbeatAgeHours": 24
                             }
                         },
                         "websocketPortRange": {

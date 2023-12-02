@@ -196,7 +196,9 @@ export interface NetworkPeerDescriptor {
 
 export interface EntryPointDiscovery {
     enabled?: boolean
-    limit?: number
+    maxEntryPoints?: number
+    maxQueryResults?: number
+    maxHeartbeatAgeHours?: number
 }
 
 export interface ConnectivityMethod {
