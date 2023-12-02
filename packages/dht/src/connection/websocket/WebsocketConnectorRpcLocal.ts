@@ -7,7 +7,9 @@ import {
 import { IWebsocketConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ManagedConnection } from '../ManagedConnection'
+import { Logger } from '@streamr/utils'
 
+const logger = new Logger(module)
 interface WebsocketConnectorRpcLocalConfig {
     canConnect: (peerDescriptor: PeerDescriptor) => boolean
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection
@@ -33,8 +35,10 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
                 const connection = this.config.connect(senderPeerDescriptor)
                 this.config.onNewConnection(connection)
             })
+            logger.debug('WebsocketConnectorRpcLocal::requestConnection: trying to return accepted: true to ', { senderPeerDescriptor })
             return { accepted: true }
         } else {
+            logger.debug('WebsocketConnectorRpcLocal::requestConnection: trying to return accepted: false to ', { senderPeerDescriptor })
             return { accepted: false }
         }
     }
