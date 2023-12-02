@@ -92,7 +92,7 @@ const INTERNAL_SERVICE_ID = 'system/connection-manager'
 // - if we create stricter types for incoming messages (message.sourceDescriptor or
 //   disconnectNotice.peerDescriptor)
 // - if ManagedConnection#peerDescriptor is never undefined
-export const getNodeIdOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescriptor | undefined): string => { 
+export const getNodeIdOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescriptor | undefined): string => {
     if (peerDescriptor !== undefined) {
         return getNodeIdFromPeerDescriptor(peerDescriptor)
     } else {
@@ -156,8 +156,12 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (this.connections.size <= maxConnections) {
             return
         }
-        // TODO use config option or named constant?
-        const disconnectionCandidates = new SortedContactList<Contact>(peerIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 100000)
+        const disconnectionCandidates = new SortedContactList<Contact>({
+            referenceId: peerIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 
+            maxSize: 100000,  // TODO use config option or named constant?
+            allowToContainReferenceId: false,
+            emitEvents: false
+        })
         this.connections.forEach((connection) => {
             if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
                 logger.trace('disconnecting in timeout interval: ' + getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
@@ -275,14 +279,14 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         return connection.send(binary, doNotConnect)
     }
 
-    private isConnectionToSelf(peerDescriptor: PeerDescriptor): boolean { 
+    private isConnectionToSelf(peerDescriptor: PeerDescriptor): boolean {
         return areEqualPeerDescriptors(peerDescriptor, this.getLocalPeerDescriptor()) || this.isOwnWebsocketServer(peerDescriptor)
     }
 
     private isOwnWebsocketServer(peerDescriptor: PeerDescriptor): boolean {
         const localPeerDescriptor = this.getLocalPeerDescriptor()
         if ((peerDescriptor.websocket !== undefined) && (localPeerDescriptor.websocket !== undefined)) {
-            return ((peerDescriptor.websocket.port === localPeerDescriptor.websocket.port) 
+            return ((peerDescriptor.websocket.port === localPeerDescriptor.websocket.port)
                 && (peerDescriptor.websocket.host === localPeerDescriptor.websocket.host))
         } else {
             return false
@@ -325,7 +329,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             return
         }
         if (this.duplicateMessageDetector.isMostLikelyDuplicate(message.messageId)) {
-            logger.trace('handleMessage filtered duplicate ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!) 
+            logger.trace('handleMessage filtered duplicate ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!)
                 + ' ' + message.serviceId + ' ' + message.messageId)
             return
         }
@@ -333,7 +337,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (message.serviceId === INTERNAL_SERVICE_ID) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
-            logger.trace('emit "message" ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!) 
+            logger.trace('emit "message" ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!)
                 + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
@@ -376,16 +380,16 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (storedConnection && storedConnection.connectionId.equals(connection.connectionId)) {
             this.locks.clearAllLocks(peerIdKey)
             this.connections.delete(peerIdKey)
-            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
+            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
                 + ' deleted connection in onDisconnected() gracefulLeave: ' + gracefulLeave)
             this.emit('disconnected', connection.getPeerDescriptor()!, gracefulLeave)
             this.onConnectionCountChange()
         } else {
-            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
+            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
                 + ' onDisconnected() did nothing, no such connection in connectionManager')
             if (storedConnection) {
                 logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
-                + ' connectionIds do not match ' + storedConnection.connectionId.toString() + ' ' + connection.connectionId.toString())
+                    + ' connectionIds do not match ' + storedConnection.connectionId.toString() + ' ' + connection.connectionId.toString())
             }
         }
 
@@ -426,11 +430,11 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 const oldConnection = this.connections.get(newPeerID.toKey())!
                 logger.trace('replaced: ' + getNodeIdFromPeerDescriptor(newConnection.getPeerDescriptor()!))
                 const buffer = oldConnection.stealOutputBuffer()
-                
+
                 for (const data of buffer) {
                     newConnection.sendNoWait(data)
                 }
-                
+
                 oldConnection.reportBufferSentByOtherConnection()
                 oldConnection.replacedByOtherConnection = true
             } else {

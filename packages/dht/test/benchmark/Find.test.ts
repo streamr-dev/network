@@ -71,7 +71,7 @@ describe('Find correctness', () => {
         logger.info('waiting over')
 
         nodes.forEach((node) => logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + ': connections:' +
-            node.getNumberOfConnections() + ', kbucket: ' + node.getBucketSize()
+            node.getNumberOfConnections() + ', kbucket: ' + node.getNumberOfNeighbors()
             + ', localLocked: ' + node.getNumberOfLocalLockedConnections()
             + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()
             + ', weakLocked: ' + node.getNumberOfWeakLockedConnections()))

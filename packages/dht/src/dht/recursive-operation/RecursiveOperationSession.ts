@@ -46,8 +46,12 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         this.targetId = config.targetId
         this.localPeerId = config.localPeerId
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
-        // TODO use config option or named constant?
-        this.results = new SortedContactList(PeerID.fromValue(this.targetId), 10, undefined, true)
+        this.results = new SortedContactList({
+            referenceId: PeerID.fromValue(this.targetId), 
+            maxSize: 10,  // TODO use config option or named constant?
+            allowToContainReferenceId: true,
+            emitEvents: false
+        })
         this.operation = config.operation
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
             rpcRequestTimeout: 15000  // TODO use config option or named constant?

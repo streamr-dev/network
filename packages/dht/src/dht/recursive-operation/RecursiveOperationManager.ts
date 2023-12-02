@@ -266,13 +266,12 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
 
     private getClosestConnections(nodeId: Uint8Array, limit: number): PeerDescriptor[] {
         const connectedPeers = Array.from(this.connections.values())
-        const closestPeers = new SortedContactList<DhtNodeRpcRemote>(
-            PeerID.fromValue(nodeId),
-            limit,
-            undefined,
-            true,
-            undefined
-        )
+        const closestPeers = new SortedContactList<DhtNodeRpcRemote>({
+            referenceId: PeerID.fromValue(nodeId),
+            maxSize: limit,
+            allowToContainReferenceId: true,
+            emitEvents: false
+        })
         closestPeers.addContacts(connectedPeers)
         return closestPeers.getClosestContacts(limit).map((peer) => peer.getPeerDescriptor())
     }
