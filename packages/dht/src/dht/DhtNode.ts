@@ -413,7 +413,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getClosestContacts(limit?: number): PeerDescriptor[] {
-        return this.peerManager!.getClosestNeighborsTo(this.localPeerDescriptor!.nodeId, limit).map((peer) => peer.getPeerDescriptor())
+        return this.peerManager!.getClosestContactsTo(this.localPeerDescriptor!.nodeId, limit).map((peer) => peer.getPeerDescriptor())
     }
     
     public getNodeId(): PeerID {
