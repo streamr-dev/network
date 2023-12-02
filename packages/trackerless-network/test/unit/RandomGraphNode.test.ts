@@ -89,7 +89,6 @@ describe('RandomGraphNode', () => {
         layer1Node.addNewRandomPeerToKBucket()
         layer1Node.emit('newContact', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
         await waitForCondition(() => {
-            //console.log('nearbyNodeView.size()', nearbyNodeView.size())
             return nearbyNodeView.size() === 3
         }, 20000)
         expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
