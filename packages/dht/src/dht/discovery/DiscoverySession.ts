@@ -59,11 +59,11 @@ export class DiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(peerId.toKey())
-        const oldClosestContact = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
-        const oldClosestDistance = getDistance(this.config.targetId, oldClosestContact.getPeerId().value)
+        const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
+        const oldClosestDistance = getDistance(this.config.targetId, oldClosestNeighbor.getPeerId().value)
         this.addNewContacts(contacts)
-        const newClosestContact = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
-        const newClosestDistance = getDistance(this.config.targetId, newClosestContact.getPeerId().value)
+        const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
+        const newClosestDistance = getDistance(this.config.targetId, newClosestNeighbor.getPeerId().value)
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
         } else {
