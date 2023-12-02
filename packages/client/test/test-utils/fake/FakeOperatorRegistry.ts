@@ -17,7 +17,7 @@ export class FakeOperatorRegistry implements Methods<OperatorRegistry> {
 
     // eslint-disable-next-line class-methods-use-this
     async findRandomNetworkEntrypoints(): Promise<NetworkPeerDescriptor[]> {
-        return new Promise((resolve) => resolve([fakeEntrypoint]))
+        return [fakeEntrypoint]
     }
 
 }
