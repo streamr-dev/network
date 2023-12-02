@@ -255,12 +255,12 @@ export class StoreRpcLocal implements IStoreRpc {
         const incomingPeerId = PeerID.fromValue(incomingPeer.nodeId)
         // TODO use config option or named constant?
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
-
         const sortedList = new SortedContactList<Contact>({
             referenceId: dataId, 
             maxSize: this.redundancyFactor, 
             allowToContainReferenceId: true, 
-            emitEvents: false })
+            emitEvents: false
+        })
         sortedList.addContact(new Contact(this.localPeerDescriptor))
         closestToData.forEach((con) => {
             sortedList.addContact(new Contact(con.getPeerDescriptor()))
