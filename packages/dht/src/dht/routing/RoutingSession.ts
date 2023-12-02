@@ -100,7 +100,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousId = previousPeer ? PeerID.fromValue(previousPeer.nodeId) : undefined
         this.contactList = new SortedContactList({
             referenceId: PeerID.fromValue(this.messageToRoute.destinationPeer!.nodeId),
-            maxSize: 10000,
+            maxSize: 10000,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             peerIdDistanceLimit: previousId,
             excludedPeerIDs: excludedPeerIDs,

@@ -84,11 +84,11 @@ export class StoreRpcLocal implements IStoreRpc {
     private shouldReplicateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
         const newNodeId = PeerID.fromValue(newNode.nodeId)
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
+        // TODO use config option or named constant?
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
-
         const sortedList = new SortedContactList<Contact>({
             referenceId: PeerID.fromValue(dataEntry.key), 
-            maxSize: 20, 
+            maxSize: 20,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             emitEvents: false
         })
@@ -253,6 +253,7 @@ export class StoreRpcLocal implements IStoreRpc {
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
         const dataId = PeerID.fromValue(dataEntry.key)
         const incomingPeerId = PeerID.fromValue(incomingPeer.nodeId)
+        // TODO use config option or named constant?
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
 
         const sortedList = new SortedContactList<Contact>({

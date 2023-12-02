@@ -80,6 +80,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
             } else if (!tls) {
                 this.httpServer = createHttpServer(requestListener)
             } else {
+                // TODO use config option or named constant?
                 const certificate = createSelfSignedCertificate('streamr-self-signed-' + new UUID().toString(), 1000)
                 this.httpServer = createHttpsServer({
                     key: certificate.serverKey,

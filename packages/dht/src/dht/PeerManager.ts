@@ -105,7 +105,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
         const sortingList: SortedContactList<DhtNodeRpcRemote> = new SortedContactList({
             referenceId: this.config.ownPeerId, 
-            maxSize: 100,
+            maxSize: 100,  // TODO use config option or named constant?
             allowToContainReferenceId: false,
             emitEvents: false
         })

@@ -10,6 +10,7 @@ export class ExternalApiRpcRemote extends RpcRemote<IExternalApiRpcClient> {
             key
         }
         const options = this.formDhtRpcOptions({
+            // TODO use config option or named constant?
             timeout: 10000
         })
         try {
@@ -26,6 +27,7 @@ export class ExternalApiRpcRemote extends RpcRemote<IExternalApiRpcClient> {
             data
         }
         const options = this.formDhtRpcOptions({
+            // TODO use config option or named constant?
             timeout: 10000
         })
         try {

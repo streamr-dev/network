@@ -43,6 +43,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         } else if (this.config.targetNeighbors.size() + this.config.ongoingHandshakes.size < this.config.maxNeighborCount) {
             return this.acceptHandshake(request, senderDescriptor)
         } else if (this.config.targetNeighbors.size(getInterleaveSourceIds()) >= 2) {
+            // TODO use config option or named constant? (or is this always >1?)
             return this.acceptHandshakeWithInterleaving(request, senderDescriptor)
         } else {
             return this.rejectHandshake(request)

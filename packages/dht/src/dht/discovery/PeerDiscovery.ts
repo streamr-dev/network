@@ -83,6 +83,7 @@ export class PeerDiscovery {
                 if (this.config.peerManager.getNumberOfNeighbors() === 0) {
                     if (retry) {
                         // TODO should we catch possible promise rejection?
+                        // TODO use config option or named constant?
                         setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.abortController.signal)
                     }
                 } else {
@@ -106,6 +107,7 @@ export class PeerDiscovery {
             logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)
             if (!this.isStopped()) {
                 // TODO should we catch possible promise rejection?
+                // TODO use config option or named constant?
                 setAbortableTimeout(() => this.rejoinDht(entryPoint), 5000, this.abortController.signal)
             }
         } finally {
@@ -116,6 +118,7 @@ export class PeerDiscovery {
     private async ensureRecoveryIntervalIsRunning(): Promise<void> {
         if (!this.recoveryIntervalStarted) {
             this.recoveryIntervalStarted = true
+            // TODO use config option or named constant?
             await scheduleAtInterval(() => this.fetchClosestPeersFromBucket(), 60000, true, this.abortController.signal)
         }
     }

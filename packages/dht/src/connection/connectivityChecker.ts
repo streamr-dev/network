@@ -11,6 +11,7 @@ import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector
 
 const logger = new Logger(module)
 
+// TODO use config option or named constant?
 export const connectAsync = async ({ url, selfSigned, timeoutMs = 1000 }:
     { url: string, selfSigned: boolean, timeoutMs?: number }
 ): Promise<IConnection> => {
