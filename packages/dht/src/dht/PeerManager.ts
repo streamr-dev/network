@@ -37,6 +37,10 @@ export interface PeerManagerEvents {
     kBucketEmpty: () => void
 }
 
+export const getDistance = (peerId1: Uint8Array, peerId2: Uint8Array): number => {
+    return KBucket.distance(peerId1, peerId2)
+}
+
 export class PeerManager extends EventEmitter<PeerManagerEvents> {
 
     // Glossary: 
@@ -296,10 +300,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
 
     public getNeighbors(): DhtNodeRpcRemote[] {
         return this.bucket!.toArray()
-    }
-
-    public getDistance(peerId1: Uint8Array, peerId2: Uint8Array): number {
-        return this.bucket!.distance(peerId1, peerId2)
     }
 
     public handlePeerActive(peerId: PeerID): void {

@@ -3,10 +3,9 @@ import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { PeerManager } from '../PeerManager'
+import { PeerManager, getDistance } from '../PeerManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import KBucket from 'k-bucket'
 
 const logger = new Logger(module)
 
@@ -61,10 +60,10 @@ export class DiscoverySession {
         }
         this.ongoingClosestPeersRequests.delete(peerId.toKey())
         const oldClosestContact = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
-        const oldClosestDistance = KBucket.distance(this.config.targetId, oldClosestContact.getPeerId().value)
+        const oldClosestDistance = getDistance(this.config.targetId, oldClosestContact.getPeerId().value)
         this.addNewContacts(contacts)
         const newClosestContact = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
-        const newClosestDistance = KBucket.distance(this.config.targetId, newClosestContact.getPeerId().value)
+        const newClosestDistance = getDistance(this.config.targetId, newClosestContact.getPeerId().value)
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
         } else {

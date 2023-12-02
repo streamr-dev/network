@@ -3,6 +3,7 @@ import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { ContactState, Events } from './ContactList'
 import { sortedIndexBy } from 'lodash'
 import EventEmitter from 'eventemitter3'
+import { getDistance } from '../PeerManager'
 
 export interface SortedContactListConfig {
     referenceId: PeerID  // all contacts in this list are in sorted by the distance to this ID
@@ -151,8 +152,9 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Ev
         return distance1 - distance2
     }
 
+    // TODO inline this method?
     private distanceToReferenceId(id: PeerID): number {
-        return KBucket.distance(this.config.referenceId.value, id.value)
+        return getDistance(this.config.referenceId.value, id.value)
     }
 
     public removeContact(id: PeerID): boolean {
