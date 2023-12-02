@@ -35,6 +35,7 @@ import { Publisher } from './publish/Publisher'
 import { StorageNodeMetadata, StorageNodeRegistry } from './registry/StorageNodeRegistry'
 import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
+import { OperatorRegistry } from './registry/OperatorRegistry'
 import { SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
 import { ResendOptions, Resends } from './subscribe/Resends'
@@ -77,6 +78,7 @@ export class StreamrClient {
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
+    private readonly operatorRegistry: OperatorRegistry
     private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly config: StrictStreamrClientConfig
@@ -108,6 +110,7 @@ export class StreamrClient {
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
+        this.operatorRegistry = container.resolve<OperatorRegistry>(OperatorRegistry)
         this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
