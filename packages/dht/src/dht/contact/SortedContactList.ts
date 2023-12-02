@@ -1,4 +1,3 @@
-import KBucket from 'k-bucket'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { ContactState, Events } from './ContactList'
 import { sortedIndexBy } from 'lodash'
