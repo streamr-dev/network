@@ -94,6 +94,8 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
             this.wsServer = this.createWsServer(this.httpServer)
             
             this.wsServer.on('request', (request) => {
+                logger.debug('Request received', { request })
+
                 if (!originIsAllowed()) {
                     // Make sure we only accept requests from an allowed origin
                     request.reject()
