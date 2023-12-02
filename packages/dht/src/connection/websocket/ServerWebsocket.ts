@@ -23,6 +23,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
     public readonly connectionId: ConnectionID
     public readonly connectionType = ConnectionType.WEBSOCKET_SERVER
     public readonly resourceURL: Url
+    public readonly remoteAddress: string
     private socket?: WsConnection
     private stopped = false
 
@@ -31,6 +32,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
 
         this.resourceURL = resourceURL
         this.connectionId = new ConnectionID()
+        this.remoteAddress = socket.remoteAddress
 
         socket.on('message', (message) => {
             logger.trace('ServerWebsocket::onMessage')
@@ -44,15 +46,17 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
             }
         })
         socket.on('close', (reasonCode, description) => {
-            logger.trace('Peer ' + socket.remoteAddress + ' disconnected.')            
+            logger.debug(`Peer ${socket.remoteAddress} disconnected.`)
             this.doDisconnect(reasonCode, description)
         })
 
         socket.on('error', (error) => {
+            logger.debug(`Peer ${socket.remoteAddress} errored: ${error}`)
             this.emit('error', error.name)
         })
 
         this.socket = socket
+        logger.debug(`ServerWebsocket created for ${this.remoteAddress}`)
     }
 
     private doDisconnect(reasonCode: number, description: string): void {
@@ -80,16 +84,18 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {
+        logger.debug(`close(${gracefulLeave}) called for ${this.remoteAddress}`)
         this.emit('disconnected', gracefulLeave, undefined, 'close() called')
         this.removeAllListeners()
         if (!this.stopped) {
             this.socket?.close(gracefulLeave ? GOING_AWAY : undefined)
         } else {
-            logger.debug('Tried to close a stopped connection')
+            logger.debug(`Tried to close a stopped connection to ${this.remoteAddress}`)
         }
     }
 
     public destroy(): void {
+        logger.debug(`destroy() called for ${this.remoteAddress}`)
         if (!this.stopped) {
             this.removeAllListeners()
             if (this.socket) {
@@ -99,7 +105,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
             }
             this.stopped = true
         } else {
-            logger.debug('Tried to destroy() a stopped connection')
+            logger.debug(`Tried to destroy a stopped connection to ${this.remoteAddress}`)
         }
     }
 
