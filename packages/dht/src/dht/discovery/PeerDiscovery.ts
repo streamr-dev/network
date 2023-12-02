@@ -50,8 +50,8 @@ export class PeerDiscovery {
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         this.config.peerManager.handleNewPeers([entryPointDescriptor])
-
-        const sessions = [this.createSession(peerIdFromPeerDescriptor(this.config.localPeerDescriptor).value)]
+        const targetId = peerIdFromPeerDescriptor(this.config.localPeerDescriptor).value
+        const sessions = [this.createSession(targetId)]
         if (doAdditionalRandomPeerDiscovery) {
             sessions.push(this.createSession(createRandomNodeId()))
         }
@@ -128,10 +128,12 @@ export class PeerDiscovery {
             return
         }
         const nodes = this.config.peerManager.getClosestNeighborsTo(this.config.localPeerDescriptor.nodeId, this.config.parallelism)
-        await Promise.allSettled(nodes.map(async (peer: DhtNodeRpcRemote) => {
-            const contacts = await peer.getClosestPeers(this.config.localPeerDescriptor.nodeId!)
-            this.config.peerManager.handleNewPeers(contacts)    
-        }))
+        await Promise.allSettled(
+            nodes.map(async (peer: DhtNodeRpcRemote) => {
+                const contacts = await peer.getClosestPeers(this.config.localPeerDescriptor.nodeId!)
+                this.config.peerManager.handleNewPeers(contacts)    
+            })
+        )
     }
 
     public isJoinOngoing(): boolean {
@@ -152,7 +154,7 @@ export class PeerDiscovery {
             clearTimeout(this.rejoinTimeoutRef)
             this.rejoinTimeoutRef = undefined
         }
-        this.ongoingDiscoverySessions.forEach((session, _id) => {
+        this.ongoingDiscoverySessions.forEach((session) => {
             session.stop()
         })
     }
