@@ -242,6 +242,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             emitEvents: false
         }) 
         this.bucket!.toArray().map((contact) => closest.addContact(contact))
+        // TODO should set the excludeSet and limit to SortedContactList constructor and remove these line
         return closest.getClosestContacts(limit).filter((contact) => {
             if (!excludeSet) {
                 return true
@@ -251,6 +252,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         })
     }
 
+    // TODO reduce copy-paste?
     getClosestContactsTo(kademliaId: Uint8Array, limit?: number, excludeSet?: Set<PeerIDKey>): DhtNodeRpcRemote[] {
         const closest = new SortedContactList<DhtNodeRpcRemote>({
             referenceId: PeerID.fromValue(kademliaId),
@@ -258,6 +260,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             emitEvents: false
         })
         this.contacts!.getAllContacts().map((contact) => closest.addContact(contact))
+        // TODO should set the excludeSet and limit to SortedContactList constructor and remove these line
         return closest.getClosestContacts(limit).filter((contact) => {
             if (!excludeSet) {
                 return true
