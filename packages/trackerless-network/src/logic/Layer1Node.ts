@@ -14,7 +14,6 @@ export interface Layer1Node {
     removeContact: (peerDescriptor: PeerDescriptor) => void
     getClosestContacts: (maxCount?: number) => PeerDescriptor[]
     getAllNeighborPeerDescriptors: () => PeerDescriptor[]
-    getNumberOfContacts(): number
     getNumberOfNeighbors(): number
     joinDht: (entryPoints: PeerDescriptor[], doRandomJoin?: boolean, retry?: boolean) => Promise<void>
     start: () => Promise<void>
