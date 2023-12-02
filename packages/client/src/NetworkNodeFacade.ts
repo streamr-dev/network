@@ -242,7 +242,7 @@ export class NetworkNodeFacade {
         this.eventEmitter.once(eventName, listener as any)
     }
 
-    async getEntryPoints(): Promise<PeerDescriptor[]> {
+    private async getEntryPoints(): Promise<PeerDescriptor[]> {
         const discoveryConfig = this.config.network.controlLayer.entryPointDiscovery
         if (discoveryConfig?.enabled && this.cachedEntryPoints === undefined) {
             this.cachedEntryPoints = await this.operatorRegistry.findRandomNetworkEntrypoints(
