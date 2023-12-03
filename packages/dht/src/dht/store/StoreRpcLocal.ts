@@ -101,10 +101,9 @@ export class StoreRpcLocal implements IStoreRpc {
         if (!isClosest) {
             return false
         }
-        const newPeerId = PeerID.fromValue(newNode.nodeId)
         sortedList.addContact(new Contact(newNode))
         const sorted = sortedList.getAllContacts()
-        const index = findIndex(sorted, (contact) => contact.getPeerId().equals(newPeerId))
+        const index = findIndex(sorted, (contact) => contact.getPeerId().equals(newNodeId))
         // if new node is within the storageRedundancyFactor closest nodes to the data
         // do replicate data to it
         return (index < this.redundancyFactor)
