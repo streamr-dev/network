@@ -31,7 +31,6 @@ import { WebsocketServerStartError } from '../../helpers/errors'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
 import * as Err from '../../helpers/errors'
-import { Empty } from '../../proto/google/protobuf/empty'
 
 const logger = new Logger(module)
 
@@ -275,7 +274,9 @@ export class WebsocketConnector {
                 logger.trace('Sent WebsocketConnectionRequest request to peer', { targetPeerDescriptor })
                 return
             }, (err) => {
-                logger.debug('Failed to send WebsocketConnectionRequest request to peer of failed to get the response ', { error: err, targetPeerDescriptor })
+                logger.debug('Failed to send WebsocketConnectionRequest request to peer of failed to get the response ', { 
+                    error: err, targetPeerDescriptor 
+                })
             })
         })
         const managedConnection = new ManagedConnection(

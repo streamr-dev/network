@@ -7,7 +7,6 @@ import {
 import { IWebsocketConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ManagedConnection } from '../ManagedConnection'
-import { Empty } from '../../proto/google/protobuf/empty'
 
 interface WebsocketConnectorRpcLocalConfig {
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection
@@ -25,13 +24,13 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
 
     public async requestConnection(_request: WebsocketConnectionRequest, context: ServerCallContext): Promise<WebsocketConnectionResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-            setImmediate(() => {
-                if (this.config.abortSignal.aborted) {
-                    return
-                }
-                const connection = this.config.connect(senderPeerDescriptor)
-                this.config.onNewConnection(connection)
-            })
+        setImmediate(() => {
+            if (this.config.abortSignal.aborted) {
+                return
+            }
+            const connection = this.config.connect(senderPeerDescriptor)
+            this.config.onNewConnection(connection)
+        })
         return { accepted: true }
     }
 }
