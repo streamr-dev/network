@@ -83,7 +83,6 @@ export class StoreRpcLocal implements IStoreRpc {
 
     private shouldReplicateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
         const newNodeId = PeerID.fromValue(newNode.nodeId)
-        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
         // TODO use config option or named constant?
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
         const sortedList = new SortedContactList<Contact>({
@@ -98,7 +97,7 @@ export class StoreRpcLocal implements IStoreRpc {
                 sortedList.addContact(new Contact(con.getPeerDescriptor()))
             }
         })
-        const isClosest = sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)
+        const isClosest = sortedList.getAllContacts()[0].getPeerId().equals(PeerID.fromValue(this.localPeerDescriptor.nodeId))
         if (!isClosest) {
             return false
         }
