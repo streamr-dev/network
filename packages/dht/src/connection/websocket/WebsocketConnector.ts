@@ -228,6 +228,9 @@ export class WebsocketConnector {
         if (this.localPeerDescriptor!.websocket && !targetPeerDescriptor.websocket) {
             return this.requestConnectionFromPeer(this.localPeerDescriptor!, targetPeerDescriptor)
         } else {
+
+            console.error('WebsocketConnector.connect() localPeerDescriptor', JSON.stringify(this.localPeerDescriptor))
+            console.error('WebsocketConnector.connect() targetPeerDescriptor', JSON.stringify(targetPeerDescriptor))    
             const socket = new ClientWebsocket()
 
             const url = connectivityMethodToWebsocketUrl(targetPeerDescriptor.websocket!)
