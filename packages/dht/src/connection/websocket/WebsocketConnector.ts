@@ -231,7 +231,6 @@ export class WebsocketConnector {
         if (this.localPeerDescriptor!.websocket && !targetPeerDescriptor.websocket) {
             return this.requestConnectionFromPeer(this.localPeerDescriptor!, targetPeerDescriptor)
         } else {
-    
             const socket = new ClientWebsocket()
 
             const url = connectivityMethodToWebsocketUrl(targetPeerDescriptor.websocket!)
@@ -270,7 +269,6 @@ export class WebsocketConnector {
                 targetPeerDescriptor,
                 toProtoRpcClient(new WebsocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
-
             remoteConnector.requestConnection().then((_response: WebsocketConnectionResponse) => {
                 logger.trace('Sent WebsocketConnectionRequest request to peer', { targetPeerDescriptor })
                 return
@@ -303,10 +301,8 @@ export class WebsocketConnector {
         if (this.ongoingConnectRequests.has(peerId.toKey())) {
             const ongoingConnectRequest = this.ongoingConnectRequests.get(peerId.toKey())!
             ongoingConnectRequest.attachImplementation(serverWebsocket)
-
             ongoingConnectRequest.acceptHandshake()
             this.ongoingConnectRequests.delete(peerId.toKey())
-
         } else {
             const managedConnection = new ManagedConnection(
                 this.localPeerDescriptor!,
