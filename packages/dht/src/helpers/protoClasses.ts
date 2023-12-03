@@ -18,14 +18,14 @@ import {
     RouteMessageAck, 
     RouteMessageWrapper,
     WebsocketConnectionRequest,
+    WebsocketConnectionResponse,
     WebrtcConnectionRequest,
     RtcOffer,
     RtcAnswer,
     IceCandidate,
     LockRequest,
     UnlockRequest,
-    LockResponse,
-    WebsocketConnectionResponse
+    LockResponse
 
 } from '../proto/packages/dht/protos/DhtRpc'
 
