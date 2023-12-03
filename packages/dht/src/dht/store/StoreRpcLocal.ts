@@ -67,17 +67,17 @@ export class StoreRpcLocal implements IStoreRpc {
 
     onNewContact(peerDescriptor: PeerDescriptor): void {
         for (const dataEntry of this.localDataStore.values()) {
-            setImmediate(async () => {
-                const shouldReplicate = this.shouldReplicateDataToNewNode(dataEntry, peerDescriptor)
-                this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), !shouldReplicate)
-                if (shouldReplicate) {
+            const shouldReplicate = this.shouldReplicateDataToNewNode(dataEntry, peerDescriptor)
+            this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), !shouldReplicate)
+            if (shouldReplicate) {
+                setImmediate(async () => {
                     try {
                         await this.replicateDataToContact(dataEntry, peerDescriptor)
                     } catch (e) {
                         logger.trace('replicateDataToContact() failed', { error: e })
                     }
-                }
-            })
+                })
+            }
         }
     }
 
