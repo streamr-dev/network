@@ -107,7 +107,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                     connection = request.accept(undefined, request.origin)
                     logger.trace('Connection accepted.', { remoteAddress: request.remoteAddress })
                 } catch (err) {
-                    logger.debug(`Accepting websocket connection from ${request.remoteAddress} failed`, { err })
+                    logger.debug('Accepting websocket connection failed', { remoteAddress: request.remoteAddress, err })
                 }
 
                 if (connection) {
