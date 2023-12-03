@@ -24,7 +24,8 @@ import {
     IceCandidate,
     LockRequest,
     UnlockRequest,
-    LockResponse
+    LockResponse,
+    WebsocketConnectionResponse
 
 } from '../proto/packages/dht/protos/DhtRpc'
 
@@ -47,6 +48,7 @@ export const protoClasses: Array<IMessageType<any>> = [
     HandshakeResponse,
     Message,
     WebsocketConnectionRequest,
+    WebsocketConnectionResponse,
     WebrtcConnectionRequest,
     RtcOffer,
     RtcAnswer,

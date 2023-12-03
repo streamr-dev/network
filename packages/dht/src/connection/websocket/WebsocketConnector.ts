@@ -9,7 +9,8 @@ import {
     ConnectivityResponse,
     HandshakeError,
     PeerDescriptor,
-    WebsocketConnectionRequest
+    WebsocketConnectionRequest,
+    WebsocketConnectionResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { WebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger, binaryToHex, wait } from '@streamr/utils'
@@ -103,14 +104,15 @@ export class WebsocketConnector {
             onNewConnection: (connection: ManagedConnection) => config.onNewConnection(connection),
             abortSignal: this.abortController.signal
         })
-        this.rpcCommunicator.registerRpcNotification(
+        this.rpcCommunicator.registerRpcMethod(
             WebsocketConnectionRequest,
+            WebsocketConnectionResponse,
             'requestConnection',
-            async (req: WebsocketConnectionRequest, context: ServerCallContext): Promise<Empty> => {
+            async (req: WebsocketConnectionRequest, context: ServerCallContext): Promise<WebsocketConnectionResponse> => {
                 if (!this.abortController.signal.aborted) {
                     return rpcLocal.requestConnection(req, context)
                 } else {
-                    return {}
+                    return { accepted: false }
                 }
             }
         )
@@ -266,11 +268,11 @@ export class WebsocketConnector {
             )
 
             remoteConnector.requestConnection(localPeerDescriptor.websocket!.host,
-                    localPeerDescriptor.websocket!.port).then(() => {
-                logger.trace('Sent WebsocketConnectionRequest notification to peer', { targetPeerDescriptor })
+                    localPeerDescriptor.websocket!.port).then((_response: WebsocketConnectionResponse) => {
+                logger.trace('Sent WebsocketConnectionRequest request to peer', { targetPeerDescriptor })
                 return
             }, (err) => {
-                logger.debug('Failed to send WebsocketConnectionRequest notification to peer ', { error: err, targetPeerDescriptor })
+                logger.debug('Failed to send WebsocketConnectionRequest request to peer of failed to get the response ', { error: err, targetPeerDescriptor })
             })
         })
         const managedConnection = new ManagedConnection(

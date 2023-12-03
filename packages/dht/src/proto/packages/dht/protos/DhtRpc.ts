@@ -429,6 +429,15 @@ export interface Message {
 export interface WebsocketConnectionRequest {
 }
 /**
+ * @generated from protobuf message dht.WebsocketConnectionResponse
+ */
+export interface WebsocketConnectionResponse {
+    /**
+     * @generated from protobuf field: bool accepted = 1;
+     */
+    accepted: boolean;
+}
+/**
  * WebRTC
  *
  * @generated from protobuf message dht.WebrtcConnectionRequest
@@ -992,6 +1001,18 @@ class WebsocketConnectionRequest$Type extends MessageType$<WebsocketConnectionRe
  */
 export const WebsocketConnectionRequest = new WebsocketConnectionRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class WebsocketConnectionResponse$Type extends MessageType$<WebsocketConnectionResponse> {
+    constructor() {
+        super("dht.WebsocketConnectionResponse", [
+            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.WebsocketConnectionResponse
+ */
+export const WebsocketConnectionResponse = new WebsocketConnectionResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class WebrtcConnectionRequest$Type extends MessageType$<WebrtcConnectionRequest> {
     constructor() {
         super("dht.WebrtcConnectionRequest", []);
@@ -1161,7 +1182,7 @@ export const RecursiveOperationSessionRpc = new ServiceType("dht.RecursiveOperat
  * @generated ServiceType for protobuf service dht.WebsocketConnectorRpc
  */
 export const WebsocketConnectorRpc = new ServiceType("dht.WebsocketConnectorRpc", [
-    { name: "requestConnection", options: {}, I: WebsocketConnectionRequest, O: Empty }
+    { name: "requestConnection", options: {}, I: WebsocketConnectionRequest, O: WebsocketConnectionResponse }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.WebrtcConnectorRpc
