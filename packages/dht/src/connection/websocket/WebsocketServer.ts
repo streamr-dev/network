@@ -102,11 +102,17 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                     return
                 }
                 
-                const connection = request.accept(undefined, request.origin)
-                
-                logger.trace('IConnection accepted.')
+                let connection
+                try {
+                    connection = request.accept(undefined, request.origin)
+                    logger.trace('Connection accepted.', { remoteAddress: request.remoteAddress })
+                } catch (err) {
+                    logger.debug(`Accepting websocket connection from ${request.remoteAddress} failed`, { err })
+                }
 
-                this.emit('connected', new ServerWebsocket(connection, request.resourceURL))
+                if (connection) {
+                    this.emit('connected', new ServerWebsocket(connection, request.resourceURL))
+                }
             })
             this.httpServer.once('error', (err: Error) => {
                 reject(new WebsocketServerStartError('Starting Websocket server failed', err))
