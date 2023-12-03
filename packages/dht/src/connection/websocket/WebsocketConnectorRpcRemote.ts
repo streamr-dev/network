@@ -21,12 +21,9 @@ export class WebsocketConnectorRpcRemote extends RpcRemote<IWebsocketConnectorRp
         super(localPeerDescriptor, remotePeerDescriptor, 'DUMMY', client)
     }
 
-    async requestConnection(ip: string, port: number): Promise<WebsocketConnectionResponse> {
+    async requestConnection(): Promise<WebsocketConnectionResponse> {
         logger.trace(`Requesting WebSocket connection from ${getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor())}`)
-        const request: WebsocketConnectionRequest = {
-            ip,
-            port
-        }
+        const request: WebsocketConnectionRequest = {}
         const options = this.formDhtRpcOptions()
         return this.getClient().requestConnection(request, options)
     }

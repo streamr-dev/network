@@ -100,6 +100,10 @@ export class WebsocketConnector {
     private registerLocalRpcMethods(config: WebsocketConnectorConfig) {
         const rpcLocal = new WebsocketConnectorRpcLocal({
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
+            hasConnection: (targetPeerDescriptor: PeerDescriptor): boolean => {
+                const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
+                return this.connectingConnections.has(peerKey)
+            },
             onNewConnection: (connection: ManagedConnection) => config.onNewConnection(connection),
             abortSignal: this.abortController.signal
         })
@@ -227,9 +231,7 @@ export class WebsocketConnector {
         if (this.localPeerDescriptor!.websocket && !targetPeerDescriptor.websocket) {
             return this.requestConnectionFromPeer(this.localPeerDescriptor!, targetPeerDescriptor)
         } else {
-
-            console.error('WebsocketConnector.connect() localPeerDescriptor', JSON.stringify(this.localPeerDescriptor))
-            console.error('WebsocketConnector.connect() targetPeerDescriptor', JSON.stringify(targetPeerDescriptor))    
+    
             const socket = new ClientWebsocket()
 
             const url = connectivityMethodToWebsocketUrl(targetPeerDescriptor.websocket!)
@@ -269,8 +271,7 @@ export class WebsocketConnector {
                 toProtoRpcClient(new WebsocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
 
-            remoteConnector.requestConnection(localPeerDescriptor.websocket!.host,
-                    localPeerDescriptor.websocket!.port).then((_response: WebsocketConnectionResponse) => {
+            remoteConnector.requestConnection().then((_response: WebsocketConnectionResponse) => {
                 logger.trace('Sent WebsocketConnectionRequest request to peer', { targetPeerDescriptor })
                 return
             }, (err) => {
