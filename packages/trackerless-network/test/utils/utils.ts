@@ -111,6 +111,7 @@ export const createNetworkNodeWithSimulator = (
     entryPoints: PeerDescriptor[]
 ): NetworkNode => {
     const transport = new SimulatorTransport(peerDescriptor, simulator)
+    transport.start()
     return createNetworkNode({
         layer0: {
             peerDescriptor,
