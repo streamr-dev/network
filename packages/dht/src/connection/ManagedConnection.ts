@@ -258,6 +258,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                     type: this.connectionType,
                     lifetime: Date.now() - this.created
                 })
+                await this.close(false)
                 throw new Err.SendFailed('Sending buffer timed out')
             }
 
@@ -312,6 +313,9 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {
+        if (this.closing) {
+            return
+        }
         if (this.replacedByOtherConnection) {
             logger.trace('close() called on replaced connection')
         }
