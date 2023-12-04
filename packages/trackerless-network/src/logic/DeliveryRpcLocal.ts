@@ -42,7 +42,7 @@ export class DeliveryRpcLocal implements IDeliveryRpc {
         if (message.streamPartId === this.config.streamPartId) {
             const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
             const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
-            this.config.onLeaveNotice(senderId, message.sourceIsStreamEntryPoint)
+            this.config.onLeaveNotice(senderId, message.isEntryPoint)
         }
         return Empty
     }
