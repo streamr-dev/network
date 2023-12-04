@@ -96,15 +96,16 @@ export class StoreRpcLocal implements IStoreRpc {
             const index = findIndex(sorted, (contact) => contact.getPeerId().equals(newNodeId))
             // if new node is within the storageRedundancyFactor closest nodes to the data
             // do replicate data to it
-            const shouldReplicate = (index < this.redundancyFactor)
-            this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), !shouldReplicate)
-            if (shouldReplicate) {
+            this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), false)
+            if (index < this.redundancyFactor) {
                 try {
                     await this.replicateDataToContact(dataEntry, newNode)
                 } catch (e) {
                     logger.trace('replicateDataToContact() failed', { error: e })
                 }
             }
+        } else {
+            this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), !this.selfIsOneOfClosestPeers(dataEntry.key))
         }
     }
 
