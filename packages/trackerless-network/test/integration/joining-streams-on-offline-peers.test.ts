@@ -12,31 +12,31 @@ const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 describe('Joining stream parts on offline nodes', () => {
 
     const entryPointPeerDescriptor: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 2, 3]),
+        nodeId: new Uint8Array([1, 2, 3]),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
 
     const node1PeerDescriptor: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 1, 1]),
+        nodeId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
 
     const node2PeerDescriptor: PeerDescriptor = {
-        kademliaId: new Uint8Array([2, 2, 2]),
+        nodeId: new Uint8Array([2, 2, 2]),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
 
     const offlineDescriptor1: PeerDescriptor = {
-        kademliaId: new Uint8Array([3, 3, 3]),
+        nodeId: new Uint8Array([3, 3, 3]),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
 
     const offlineDescriptor2: PeerDescriptor = {
-        kademliaId: new Uint8Array([4, 4, 4]),
+        nodeId: new Uint8Array([4, 4, 4]),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }

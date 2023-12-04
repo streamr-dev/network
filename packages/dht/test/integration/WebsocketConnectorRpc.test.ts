@@ -17,12 +17,12 @@ describe('WebsocketConnectorRpc', () => {
     let client2: ProtoRpcClient<WebsocketConnectorRpcClient>
 
     const peerDescriptor1: PeerDescriptor = {
-        kademliaId: generateId('peer1'),
+        nodeId: generateId('peer1'),
         type: NodeType.NODEJS
     }
 
     const peerDescriptor2: PeerDescriptor = {
-        kademliaId: generateId('peer2'),
+        nodeId: generateId('peer2'),
         type: NodeType.NODEJS
     }
 
@@ -67,16 +67,14 @@ describe('WebsocketConnectorRpc', () => {
         },
         { targetDescriptor: peerDescriptor2 },
         )
-        const res1 = await response1
-        expect(res1.accepted).toEqual(true)
-
+        await response1
+        
         const response2 = client2.requestConnection({
             ip: '127.0.0.1',
             port: 9111
         },
         { targetDescriptor: peerDescriptor1 },
         )
-        const res2 = await response2
-        expect(res2.accepted).toEqual(true)
+        await response2
     })
 })

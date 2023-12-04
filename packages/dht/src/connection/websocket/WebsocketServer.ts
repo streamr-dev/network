@@ -80,6 +80,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
             } else if (!tls) {
                 this.httpServer = createHttpServer(requestListener)
             } else {
+                // TODO use config option or named constant?
                 const certificate = createSelfSignedCertificate('streamr-self-signed-' + new UUID().toString(), 1000)
                 this.httpServer = createHttpsServer({
                     key: certificate.serverKey,
@@ -101,11 +102,17 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                     return
                 }
                 
-                const connection = request.accept(undefined, request.origin)
-                
-                logger.trace('IConnection accepted.')
+                let connection
+                try {
+                    connection = request.accept(undefined, request.origin)
+                    logger.trace('Connection accepted.', { remoteAddress: request.remoteAddress })
+                } catch (err) {
+                    logger.debug('Accepting websocket connection failed', { remoteAddress: request.remoteAddress, err })
+                }
 
-                this.emit('connected', new ServerWebsocket(connection, request.resourceURL))
+                if (connection) {
+                    this.emit('connected', new ServerWebsocket(connection, request.resourceURL))
+                }
             })
             this.httpServer.once('error', (err: Error) => {
                 reject(new WebsocketServerStartError('Starting Websocket server failed', err))
@@ -137,9 +144,18 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         this.removeAllListeners()
         return new Promise((resolve, _reject) => {
             this.wsServer?.shutDown()
-            this.httpServer?.close(() => {
+            this.httpServer?.once('close', () => {
+                // removeAllListeners is maybe not needed?
+                this.httpServer?.removeAllListeners()
                 resolve()
             })
+            this.httpServer?.close()
+            // the close method "Stops the server from accepting new connections and closes all 
+            // connections connected to this server which are not sending a request or waiting for a 
+            // response." (https://nodejs.org/api/http.html#serverclosecallback)
+            // i.e. we need to call closeAllConnections() to close the rest of the connections
+            // (in practice this closes the active websocket connections)
+            this.httpServer?.closeAllConnections()
         })
     }
 

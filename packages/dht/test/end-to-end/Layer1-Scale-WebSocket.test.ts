@@ -6,7 +6,7 @@ const NUM_OF_NODES_PER_KBUCKET = 8
 
 describe('Layer1 Scale', () => {
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
+        nodeId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
         websocket: { host: '127.0.0.1', port: 43225, tls: false }
     }
@@ -75,10 +75,10 @@ describe('Layer1 Scale', () => {
     // TODO: fix flaky test in NET-1021
     it('bucket sizes', async () => {
         layer0Nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
+            expect(node.getNumberOfNeighbors()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
         })
         layer1Nodes.forEach((node ) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+            expect(node.getNumberOfNeighbors()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
         })
     })
 })

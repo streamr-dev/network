@@ -4,7 +4,7 @@ import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, createMockPeerDescriptor, waitConnectionManagersReadyForTesting } from '../utils/utils'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
-import { createRandomKademliaId } from '../../src/helpers/kademliaId'
+import { createRandomNodeId } from '../../src/helpers/nodeId'
 
 describe('Storing data in DHT', () => {
     let entryPoint: DhtNode
@@ -46,7 +46,7 @@ describe('Storing data in DHT', () => {
 
     it('Storing data works', async () => {
         const storingNodeIndex = 34
-        const dataKey = createRandomKademliaId()
+        const dataKey = createRandomNodeId()
         const storedData = createMockPeerDescriptor()
         const data = Any.pack(storedData, PeerDescriptor)
         const successfulStorers = await nodes[storingNodeIndex].storeDataToDht(dataKey, data)
@@ -55,7 +55,7 @@ describe('Storing data in DHT', () => {
 
     it('Storing and getting data works', async () => {
         const storingNode = getRandomNode()
-        const dataKey = createRandomKademliaId()
+        const dataKey = createRandomNodeId()
         const storedData = createMockPeerDescriptor()
         const data = Any.pack(storedData, PeerDescriptor)
         const successfulStorers = await storingNode.storeDataToDht(dataKey, data)
@@ -69,9 +69,9 @@ describe('Storing data in DHT', () => {
         })
     }, 30000)
 
-    it('storing with explicit storer PeerDescriptor', async () => {
+    it('storing with explicit creator', async () => {
         const storingNode = getRandomNode()
-        const dataKey = createRandomKademliaId()
+        const dataKey = createRandomNodeId()
         const storedData = createMockPeerDescriptor()
         const data = Any.pack(storedData, PeerDescriptor)
         const requestor = createMockPeerDescriptor()
@@ -83,7 +83,7 @@ describe('Storing data in DHT', () => {
         results.forEach((entry) => {
             const foundData = Any.unpack(entry.data!, PeerDescriptor)
             expect(areEqualPeerDescriptors(foundData, storedData)).toBeTrue()
-            expect(areEqualPeerDescriptors(entry.storer!, requestor)).toBeTrue()
+            expect(areEqualPeerDescriptors(entry.creator!, requestor)).toBeTrue()
         })
     }, 30000)
 })

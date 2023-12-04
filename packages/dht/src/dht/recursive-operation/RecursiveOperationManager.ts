@@ -4,33 +4,34 @@ import {
     MessageType,
     NodeType,
     PeerDescriptor,
-    FindRequest,
+    RecursiveOperation,
+    RecursiveOperationRequest,
     RouteMessageAck,
-    RouteMessageWrapper,
-    RouteMessageError
+    RouteMessageError,
+    RouteMessageWrapper
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { areEqualPeerDescriptors, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
+import { Logger, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { FindSessionRpcRemote } from './FindSessionRpcRemote'
+import { RecursiveOperationSessionRpcRemote } from './RecursiveOperationSessionRpcRemote'
 import { v4 } from 'uuid'
-import { FindSession, FindSessionEvents } from './FindSession'
+import { RecursiveOperationSession, RecursiveOperationSessionEvents } from './RecursiveOperationSession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { FindSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { RecursiveOperationSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { SortedContactList } from '../contact/SortedContactList'
 import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
-import { FindRpcLocal } from './FindRpcLocal'
+import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
 
-interface FinderConfig {
+interface RecursiveOperationManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
     connections: Map<PeerIDKey, DhtNodeRpcRemote>
@@ -42,15 +43,15 @@ interface FinderConfig {
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
 }
 
-export interface IFinder {
-    startFind(idToFind: Uint8Array, fetchData?: boolean): Promise<FindResult>
+export interface IRecursiveOperationManager {
+    execute(targetId: Uint8Array, operation: RecursiveOperation): Promise<RecursiveOperationResult>
 }
 
-export interface FindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
+export interface RecursiveOperationResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
 
 const logger = new Logger(module)
 
-export class Finder implements IFinder {
+export class RecursiveOperationManager implements IRecursiveOperationManager {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly sessionTransport: ITransport
@@ -60,10 +61,10 @@ export class Finder implements IFinder {
     private readonly serviceId: ServiceID
     private readonly localDataStore: LocalDataStore
     private readonly isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
-    private ongoingSessions: Map<string, FindSession> = new Map()
+    private ongoingSessions: Map<string, RecursiveOperationSession> = new Map()
     private stopped = false
 
-    constructor(config: FinderConfig) {
+    constructor(config: RecursiveOperationManagerConfig) {
         this.rpcCommunicator = config.rpcCommunicator
         this.sessionTransport = config.sessionTransport
         this.connections = config.connections
@@ -75,9 +76,9 @@ export class Finder implements IFinder {
         this.registerLocalRpcMethods(config)
     }
 
-    private registerLocalRpcMethods(config: FinderConfig) {
-        const rpcLocal = new FindRpcLocal({
-            doRouteFindRequest: (routedMessage: RouteMessageWrapper) => this.doRouteFindRequest(routedMessage),
+    private registerLocalRpcMethods(config: RecursiveOperationManagerConfig) {
+        const rpcLocal = new RecursiveOperationRpcLocal({
+            doRouteRequest: (routedMessage: RouteMessageWrapper) => this.doRouteRequest(routedMessage),
             addContact: (contact: PeerDescriptor) => config.addContact(contact),
             isMostLikelyDuplicate: (requestId: string) => this.router.isMostLikelyDuplicate(requestId),
             addToDuplicateDetector: (requestId: string) => this.router.addToDuplicateDetector(requestId)
@@ -85,37 +86,39 @@ export class Finder implements IFinder {
         this.rpcCommunicator.registerRpcMethod(
             RouteMessageWrapper,
             RouteMessageAck,
-            'routeFindRequest',
+            'routeRequest',
             async (routedMessage: RouteMessageWrapper) => {
                 if (this.stopped) {
                     return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
                 } else {
-                    return rpcLocal.routeFindRequest(routedMessage)
+                    return rpcLocal.routeRequest(routedMessage)
                 }
             }
         )
     }
 
-    public async startFind(
-        idToFind: Uint8Array,
-        fetchData: boolean = false,
-        excludedPeer?: PeerDescriptor
-    ): Promise<FindResult> {
+    public async execute(
+        targetId: Uint8Array,
+        operation: RecursiveOperation,
+        excludedPeer?: PeerDescriptor,
+        waitForCompletion = true
+    ): Promise<RecursiveOperationResult> {
         if (this.stopped) {
             return { closestNodes: [] }
         }
         const sessionId = v4()
-        const session = new FindSession({
+        const session = new RecursiveOperationSession({
             serviceId: sessionId,
             transport: this.sessionTransport,
-            kademliaIdToFind: idToFind,
+            targetId,
             localPeerId: peerIdFromPeerDescriptor(this.localPeerDescriptor),
+            // TODO use config option or named constant?
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
-            fetchData
+            operation
         })
         if (this.connections.size === 0) {
-            const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
-            session.doSendFindResponse(
+            const data = this.localDataStore.getEntries(targetId)
+            session.doSendResponse(
                 [this.localPeerDescriptor],
                 [this.localPeerDescriptor],
                 Array.from(data.values()),
@@ -123,39 +126,54 @@ export class Finder implements IFinder {
             )
             return session.getResults()
         }
-        const routeMessage = this.wrapFindRequest(idToFind, sessionId, fetchData)
+        const routeMessage = this.wrapRequest(targetId, sessionId, operation)
         this.ongoingSessions.set(sessionId, session)
-        try {
-            await runAndWaitForEvents3<FindSessionEvents>(
-                [() => this.doRouteFindRequest(routeMessage, excludedPeer)],
-                [[session, 'findCompleted']],
-                15000
-            )
-        } catch (err) {
-            logger.debug(`doRouteFindRequest failed with error ${err}`)
+        if (waitForCompletion === true) {
+            try {
+                await runAndWaitForEvents3<RecursiveOperationSessionEvents>(
+                    [() => this.doRouteRequest(routeMessage, excludedPeer)],
+                    [[session, 'completed']],
+                    // TODO use config option or named constant?
+                    15000
+                )
+            } catch (err) {
+                logger.debug(`doRouteRequest failed with error ${err}`)
+            }
+        } else {
+            this.doRouteRequest(routeMessage, excludedPeer)
+            // Wait for delete operation to be sent out by the router
+            // TODO: Add a feature to wait for the router to pass the message?
+            await wait(50)
         }
-        this.findAndReportLocalData(idToFind, fetchData, [], this.localPeerDescriptor, sessionId)
+        if (operation === RecursiveOperation.FETCH_DATA) {
+            const data = this.localDataStore.getEntries(targetId)
+            if (data.size > 0) {
+                this.sendResponse([], this.localPeerDescriptor, sessionId, [], data, true)
+            }
+        } else if (operation === RecursiveOperation.DELETE_DATA) {
+            this.localDataStore.markAsDeleted(targetId, peerIdFromPeerDescriptor(this.localPeerDescriptor))
+        }
         this.ongoingSessions.delete(sessionId)
         session.stop()
         return session.getResults()
     }
 
-    private wrapFindRequest(idToFind: Uint8Array, sessionId: string, fetchData: boolean): RouteMessageWrapper {
+    private wrapRequest(targetId: Uint8Array, sessionId: string, operation: RecursiveOperation): RouteMessageWrapper {
         const targetDescriptor: PeerDescriptor = {
-            kademliaId: idToFind,
+            nodeId: targetId,
             type: NodeType.VIRTUAL
         }
-        const request: FindRequest = {
+        const request: RecursiveOperationRequest = {
             sessionId,
-            fetchData
+            operation
         }
         const msg: Message = {
-            messageType: MessageType.FIND_REQUEST,
+            messageType: MessageType.RECURSIVE_OPERATION_REQUEST,
             messageId: v4(),
             serviceId: this.serviceId,
             body: {
-                oneofKind: 'findRequest',
-                findRequest: request
+                oneofKind: 'recursiveOperationRequest',
+                recursiveOperationRequest: request
             }
         }
         const routeMessage: RouteMessageWrapper = {
@@ -169,31 +187,7 @@ export class Finder implements IFinder {
         return routeMessage
     }
 
-    private findAndReportLocalData(
-        idToFind: Uint8Array,
-        fetchData: boolean,
-        routingPath: PeerDescriptor[],
-        sourcePeer: PeerDescriptor,
-        sessionId: string
-    ): boolean {
-        if (fetchData) {
-            const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
-            if (data.size > 0) {
-                this.sendFindResponse(routingPath, sourcePeer, sessionId, [], data, true)
-                return true
-            }
-        }
-        return false
-    }
-
-    private findLocalData(idToFind: Uint8Array, fetchData: boolean): Map<PeerIDKey, DataEntry> | undefined {
-        if (fetchData) {
-            return this.localDataStore.getEntry(PeerID.fromValue(idToFind))
-        }
-        return undefined
-    }
-
-    private sendFindResponse(
+    private sendResponse(
         routingPath: PeerDescriptor[],
         targetPeerDescriptor: PeerDescriptor,
         serviceId: ServiceID,
@@ -205,54 +199,62 @@ export class Finder implements IFinder {
         const isOwnNode = areEqualPeerDescriptors(this.localPeerDescriptor, targetPeerDescriptor)
         if (isOwnNode && this.ongoingSessions.has(serviceId)) {
             this.ongoingSessions.get(serviceId)!
-                .doSendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+                .doSendResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         } else {
+            // TODO use config option or named constant?
             const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.sessionTransport, { rpcRequestTimeout: 15000 })
-            const rpcRemote = new FindSessionRpcRemote(
+            const rpcRemote = new RecursiveOperationSessionRpcRemote(
                 this.localPeerDescriptor,
                 targetPeerDescriptor,
                 serviceId,
-                toProtoRpcClient(new FindSessionRpcClient(remoteCommunicator.getRpcClientTransport())),
+                toProtoRpcClient(new RecursiveOperationSessionRpcClient(remoteCommunicator.getRpcClientTransport())),
+                // TODO use config option or named constant?
                 10000
             )
-            rpcRemote.sendFindResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+            rpcRemote.sendResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
             remoteCommunicator.destroy()
         }
     }
 
-    private doRouteFindRequest(routedMessage: RouteMessageWrapper, excludedPeer?: PeerDescriptor): RouteMessageAck {
+    private doRouteRequest(routedMessage: RouteMessageWrapper, excludedPeer?: PeerDescriptor): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
-        const idToFind = peerIdFromPeerDescriptor(routedMessage.destinationPeer!)
+        const targetId = peerIdFromPeerDescriptor(routedMessage.destinationPeer!)
         const msg = routedMessage.message
-        const findRequest = msg?.body.oneofKind === 'findRequest' ? msg.body.findRequest : undefined
-        const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.kademliaId, 5)
-        const data = this.findLocalData(idToFind.value, findRequest!.fetchData)
+        const recursiveOperationRequest = msg?.body.oneofKind === 'recursiveOperationRequest' ? msg.body.recursiveOperationRequest : undefined
+        // TODO use config option or named constant?
+        const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.nodeId, 5)
+        const data = (recursiveOperationRequest!.operation === RecursiveOperation.FETCH_DATA) 
+            ? this.localDataStore.getEntries(targetId.value) 
+            : undefined
+        if (recursiveOperationRequest!.operation === RecursiveOperation.DELETE_DATA) {
+            this.localDataStore.markAsDeleted(targetId.value, peerIdFromPeerDescriptor(routedMessage.sourcePeer!))
+        }
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
             // TODO this is also very similar case to what we do at line 255, could simplify the code paths?
-            this.sendFindResponse(
+            this.sendResponse(
                 routedMessage.routingPath,
                 routedMessage.sourcePeer!,
-                findRequest!.sessionId,
+                recursiveOperationRequest!.sessionId,
                 closestPeersToDestination,
                 data,
                 true
             )
             return createRouteMessageAck(routedMessage)
         } else {
-            const ack = this.router.doRouteMessage(routedMessage, RoutingMode.FIND, excludedPeer)
+            const ack = this.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE, excludedPeer)
             if ((ack.error === undefined) || (ack.error === RouteMessageError.NO_TARGETS)) {
                 const noCloserContactsFound = (ack.error === RouteMessageError.NO_TARGETS) ||
                     (
                         closestPeersToDestination.length > 0 
                         && getPreviousPeer(routedMessage) 
-                        && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
+                        && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], targetId)
                     )
-                this.sendFindResponse(
+                this.sendResponse(
                     routedMessage.routingPath,
                     routedMessage.sourcePeer!,
-                    findRequest!.sessionId,
+                    recursiveOperationRequest!.sessionId,
                     closestPeersToDestination,
                     data,
                     noCloserContactsFound
@@ -262,15 +264,14 @@ export class Finder implements IFinder {
         }    
     }
 
-    private getClosestConnections(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
+    private getClosestConnections(nodeId: Uint8Array, limit: number): PeerDescriptor[] {
         const connectedPeers = Array.from(this.connections.values())
-        const closestPeers = new SortedContactList<DhtNodeRpcRemote>(
-            PeerID.fromValue(kademliaId),
-            limit,
-            undefined,
-            true,
-            undefined
-        )
+        const closestPeers = new SortedContactList<DhtNodeRpcRemote>({
+            referenceId: PeerID.fromValue(nodeId),
+            maxSize: limit,
+            allowToContainReferenceId: true,
+            emitEvents: false
+        })
         closestPeers.addContacts(connectedPeers)
         return closestPeers.getClosestContacts(limit).map((peer) => peer.getPeerDescriptor())
     }

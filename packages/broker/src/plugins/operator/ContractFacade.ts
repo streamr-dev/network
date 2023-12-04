@@ -265,7 +265,7 @@ export class ContractFacade {
         const operators = await this.getOperatorAddresses(latestBlock)
         const excluded = this.getOperatorContractAddress()
         const operatorAddresses = operators.filter((id) => id !== excluded)
-        logger.debug(`Found ${operatorAddresses.length} operators`, { operatorAddresses })
+        logger.debug(`Found ${operatorAddresses.length} operators`)
         return sample(operatorAddresses)
     }
 
@@ -321,11 +321,12 @@ export class ContractFacade {
     }
 
     private async getOperatorAddresses(requiredBlockNumber: number): Promise<EthereumAddress[]> {
+        // TODO: use pagination or find a clever efficient way of selecting a random operator (NET-1113)
         const createQuery = () => {
             return {
                 query: `
                     {
-                        operators {
+                        operators(first: 1000) {
                             id
                         }
                     }

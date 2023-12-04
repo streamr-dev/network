@@ -1,4 +1,4 @@
-import { PeerDescriptor, ConnectionLocker } from '@streamr/dht'
+import { PeerDescriptor, ConnectionLocker, LockID } from '@streamr/dht'
 import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -14,7 +14,7 @@ interface InspectorConfig {
     rpcCommunicator: RpcCommunicator
     connectionLocker: ConnectionLocker
     inspectionTimeout?: number
-    openInspectConnection?: (peerDescriptor: PeerDescriptor, lockId: string) => Promise<void>
+    openInspectConnection?: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
 }
 
 export interface IInspector {
@@ -35,7 +35,7 @@ export class Inspector implements IInspector {
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly connectionLocker: ConnectionLocker
     private readonly inspectionTimeout: number
-    private readonly openInspectConnection: (peerDescriptor: PeerDescriptor, lockId: string) => Promise<void>
+    private readonly openInspectConnection: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
 
     constructor(config: InspectorConfig) {
         this.streamPartId = config.streamPartId
@@ -46,7 +46,7 @@ export class Inspector implements IInspector {
         this.openInspectConnection = config.openInspectConnection ?? this.defaultOpenInspectConnection
     }
 
-    async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: string): Promise<void> {
+    async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: LockID): Promise<void> {
         const rpcRemote = new TemporaryConnectionRpcRemote(this.localPeerDescriptor, peerDescriptor, this.streamPartId, this.client)
         await rpcRemote.openConnection()
         this.connectionLocker.lockConnection(peerDescriptor, lockId)

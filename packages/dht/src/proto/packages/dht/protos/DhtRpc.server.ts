@@ -16,9 +16,7 @@ import { RtcOffer } from "./DhtRpc";
 import { WebrtcConnectionRequest } from "./DhtRpc";
 import { WebsocketConnectionResponse } from "./DhtRpc";
 import { WebsocketConnectionRequest } from "./DhtRpc";
-import { FindResponse } from "./DhtRpc";
-import { DeleteDataResponse } from "./DhtRpc";
-import { DeleteDataRequest } from "./DhtRpc";
+import { RecursiveOperationResponse } from "./DhtRpc";
 import { ReplicateDataRequest } from "./DhtRpc";
 import { StoreDataResponse } from "./DhtRpc";
 import { StoreDataRequest } from "./DhtRpc";
@@ -62,13 +60,13 @@ export interface IRouterRpc<T = ServerCallContext> {
     forwardMessage(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
 }
 /**
- * @generated from protobuf service dht.FindRpc
+ * @generated from protobuf service dht.RecursiveOperationRpc
  */
-export interface IFindRpc<T = ServerCallContext> {
+export interface IRecursiveOperationRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: routeFindRequest(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
+     * @generated from protobuf rpc: routeRequest(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
-    routeFindRequest(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
+    routeRequest(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
 }
 /**
  * @generated from protobuf service dht.StoreRpc
@@ -82,19 +80,15 @@ export interface IStoreRpc<T = ServerCallContext> {
      * @generated from protobuf rpc: replicateData(dht.ReplicateDataRequest) returns (google.protobuf.Empty);
      */
     replicateData(request: ReplicateDataRequest, context: T): Promise<Empty>;
-    /**
-     * @generated from protobuf rpc: deleteData(dht.DeleteDataRequest) returns (dht.DeleteDataResponse);
-     */
-    deleteData(request: DeleteDataRequest, context: T): Promise<DeleteDataResponse>;
 }
 /**
- * @generated from protobuf service dht.FindSessionRpc
+ * @generated from protobuf service dht.RecursiveOperationSessionRpc
  */
-export interface IFindSessionRpc<T = ServerCallContext> {
+export interface IRecursiveOperationSessionRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: sendFindResponse(dht.FindResponse) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendResponse(dht.RecursiveOperationResponse) returns (google.protobuf.Empty);
      */
-    sendFindResponse(request: FindResponse, context: T): Promise<Empty>;
+    sendResponse(request: RecursiveOperationResponse, context: T): Promise<Empty>;
 }
 /**
  * @generated from protobuf service dht.WebsocketConnectorRpc
