@@ -102,7 +102,14 @@ export class WebsocketConnector {
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
             hasConnection: (targetPeerDescriptor: PeerDescriptor): boolean => {
                 const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
-                return this.connectingConnections.has(peerKey)
+                if (this.connectingConnections.has(peerKey)
+                    || this.connectingConnections.has(peerKey)
+                    || this.ongoingConnectRequests.has(peerKey)
+                ) {
+                    return true
+                } else {
+                    return false
+                }
             },
             onNewConnection: (connection: ManagedConnection) => config.onNewConnection(connection),
             abortSignal: this.abortController.signal
@@ -231,7 +238,7 @@ export class WebsocketConnector {
         if (this.localPeerDescriptor!.websocket && !targetPeerDescriptor.websocket) {
             return this.requestConnectionFromPeer(this.localPeerDescriptor!, targetPeerDescriptor)
         } else {
-    
+
             const socket = new ClientWebsocket()
 
             const url = connectivityMethodToWebsocketUrl(targetPeerDescriptor.websocket!)
@@ -275,8 +282,8 @@ export class WebsocketConnector {
                 logger.trace('Sent WebsocketConnectionRequest request to peer', { targetPeerDescriptor })
                 return
             }, (err) => {
-                logger.debug('Failed to send WebsocketConnectionRequest request to peer of failed to get the response ', { 
-                    error: err, targetPeerDescriptor 
+                logger.debug('Failed to send WebsocketConnectionRequest request to peer of failed to get the response ', {
+                    error: err, targetPeerDescriptor
                 })
             })
         })
