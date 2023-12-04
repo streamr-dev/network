@@ -277,6 +277,7 @@ export class WebsocketConnector {
             undefined,
             targetPeerDescriptor
         )
+        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor)))
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
         this.ongoingConnectRequests.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
         const onRejected = async () => {
@@ -303,7 +304,7 @@ export class WebsocketConnector {
                 logger.debug('Failed to send WebsocketConnectionRequest request to peer of failed to get the response ', {
                     error: err, targetPeerDescriptor
                 })
-                onRejected()
+                await onRejected()
             }
         })
         return managedConnection
