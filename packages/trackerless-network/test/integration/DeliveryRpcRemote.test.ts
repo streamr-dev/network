@@ -97,7 +97,7 @@ describe('DeliveryRpcRemote', () => {
     })
 
     it('leaveNotice', async () => {
-        rpcRemote.leaveStreamPartNotice(false)
+        rpcRemote.leaveStreamPartNotice()
         await waitForCondition(() => recvCounter === 1)
     })
 

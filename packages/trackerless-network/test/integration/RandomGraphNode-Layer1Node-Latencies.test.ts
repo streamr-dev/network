@@ -43,18 +43,14 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             layer1Node: layer1Nodes[i],
             transport: cms[i],
             connectionLocker: cms[i],
-            localPeerDescriptor: peerDescriptors[i],
-            localNodeIsEntryPoint: () => false,
-            onEntryPointLeaveDetected: async () => {}
+            localPeerDescriptor: peerDescriptors[i]
         }))
         entryPointRandomGraphNode = createRandomGraphNode({
             streamPartId,
             layer1Node: dhtEntryPoint,
             transport: entrypointCm,
             connectionLocker: entrypointCm,
-            localPeerDescriptor: entrypointDescriptor,
-            localNodeIsEntryPoint: () => false,
-            onEntryPointLeaveDetected: async () => {}
+            localPeerDescriptor: entrypointDescriptor
         })
 
         await dhtEntryPoint.start()

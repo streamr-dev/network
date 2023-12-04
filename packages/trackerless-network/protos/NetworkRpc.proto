@@ -111,7 +111,6 @@ message InterleaveNotice {
 
 message LeaveStreamPartNotice {
   string streamPartId = 1;
-  bool sourceIsStreamEntryPoint = 2;
 }
 
 message NeighborUpdate {
