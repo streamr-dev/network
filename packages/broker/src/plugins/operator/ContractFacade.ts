@@ -265,7 +265,7 @@ export class ContractFacade {
         const operators = await this.getOperatorAddresses(latestBlock)
         const excluded = this.getOperatorContractAddress()
         const operatorAddresses = operators.filter((id) => id !== excluded)
-        logger.debug(`Found ${operatorAddresses.length} operators`, { operatorAddresses })
+        logger.debug(`Found ${operatorAddresses.length} operators`)
         return sample(operatorAddresses)
     }
 
@@ -416,6 +416,13 @@ export class ContractFacade {
                 voteEndTimestampInSecs: number,
                 metadataAsString?: string
             ) => {
+                logger.info('Receive raw review request', {
+                    sponsorship,
+                    targetOperator,
+                    voteStartTimestampInSecs,
+                    voteEndTimestampInSecs,
+                    metadataAsString
+                }) // TODO: remove when missing votes issue is solved
                 let partition: number
                 try {
                     partition = parsePartitionFromReviewRequestMetadata(metadataAsString)

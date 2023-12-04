@@ -4,9 +4,9 @@ import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, peerIdFromPeerDes
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
+import { PeerManager } from '../PeerManager'
 import { createRandomNodeId } from '../../helpers/nodeId'
 import { ServiceID } from '../../types/ServiceID'
-import { PeerManager } from '../PeerManager'
 
 interface PeerDiscoveryConfig {
     localPeerDescriptor: PeerDescriptor
@@ -51,8 +51,6 @@ export class PeerDiscovery {
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         this.config.peerManager.handleNewPeers([entryPointDescriptor])
         const targetId = peerIdFromPeerDescriptor(this.config.localPeerDescriptor).value
-        const closest = this.config.peerManager.bucket!.closest(targetId, this.config.peerDiscoveryQueryBatchSize)
-        this.config.peerManager.neighborList!.addContacts(closest)
         const sessions = [this.createSession(targetId)]
         if (doAdditionalRandomPeerDiscovery) {
             sessions.push(this.createSession(createRandomNodeId()))
@@ -65,7 +63,6 @@ export class PeerDiscovery {
     private createSession(targetId: Uint8Array): DiscoverySession {
         const sessionOptions = {
             targetId,
-            localPeerDescriptor: this.config.localPeerDescriptor,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
             peerManager: this.config.peerManager
@@ -83,7 +80,7 @@ export class PeerDiscovery {
             logger.debug(`DHT join on ${this.config.serviceId} timed out`)
         } finally {
             if (!this.isStopped()) {
-                if (this.config.peerManager.bucket!.count() === 0) {
+                if (this.config.peerManager.getNumberOfNeighbors() === 0) {
                     if (retry) {
                         // TODO should we catch possible promise rejection?
                         setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.abortController.signal)
@@ -103,7 +100,6 @@ export class PeerDiscovery {
         logger.debug(`Rejoining DHT ${this.config.serviceId}`)
         this.rejoinOngoing = true
         try {
-            this.config.peerManager.neighborList!.clear()
             await this.joinDht(entryPoint)
             logger.debug(`Rejoined DHT successfully ${this.config.serviceId}!`)
         } catch (err) {
@@ -128,16 +124,13 @@ export class PeerDiscovery {
         if (this.isStopped()) {
             return
         }
-        const nodes = this.config.peerManager.bucket!.closest(
-            peerIdFromPeerDescriptor(this.config.localPeerDescriptor).value,
-            this.config.parallelism
-        )
-        await Promise.allSettled(nodes.map(async (peer: DhtNodeRpcRemote) => {
-            const contacts = await peer.getClosestPeers(this.config.localPeerDescriptor.nodeId)
-            contacts.forEach((contact) => {
-                this.config.peerManager.handleNewPeers([contact])
+        const nodes = this.config.peerManager.getClosestNeighborsTo(this.config.localPeerDescriptor.nodeId, this.config.parallelism)
+        await Promise.allSettled(
+            nodes.map(async (peer: DhtNodeRpcRemote) => {
+                const contacts = await peer.getClosestPeers(this.config.localPeerDescriptor.nodeId!)
+                this.config.peerManager.handleNewPeers(contacts)    
             })
-        }))
+        )
     }
 
     public isJoinOngoing(): boolean {
@@ -158,7 +151,7 @@ export class PeerDiscovery {
             clearTimeout(this.rejoinTimeoutRef)
             this.rejoinTimeoutRef = undefined
         }
-        this.ongoingDiscoverySessions.forEach((session, _id) => {
+        this.ongoingDiscoverySessions.forEach((session) => {
             session.stop()
         })
     }

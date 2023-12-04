@@ -134,13 +134,13 @@ export class Router implements IRouter {
         }
     }
 
-    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE): RouteMessageAck {
+    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE, excludedPeer?: PeerDescriptor): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
         logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
             + `to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`)
-        const session = this.createRoutingSession(routedMessage, mode)
+        const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         const contacts = session.updateAndGetRoutablePeers()
         if (contacts.length > 0) {
             this.addRoutingSession(session)
@@ -173,7 +173,11 @@ export class Router implements IRouter {
         }
     }
 
-    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode): RoutingSession {
+    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RoutingSession {
+        const excludedPeers = routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
+        if (excludedPeer) {
+            excludedPeers.push(peerIdFromPeerDescriptor(excludedPeer))
+        }
         logger.trace('routing session created with connections: ' + this.connections.size)
         return new RoutingSession(
             this.rpcCommunicator,
@@ -182,7 +186,7 @@ export class Router implements IRouter {
             this.connections,
             areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
-            routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
+            excludedPeers
         )
     }
 
