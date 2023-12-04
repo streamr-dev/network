@@ -104,7 +104,7 @@ export class StoreRpcLocal implements IStoreRpc {
                     logger.trace('replicateDataToContact() failed', { error: e })
                 }
             }
-        } else if (!this.selfIsOneOfClosestPeers(dataEntry.key)){
+        } else if (!this.selfIsOneOfClosestPeers(dataEntry.key)) {
             this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), true)
         }
     }
