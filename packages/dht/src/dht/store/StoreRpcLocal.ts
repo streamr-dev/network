@@ -109,7 +109,6 @@ export class StoreRpcLocal implements IStoreRpc {
 
         if (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)) {
             // If we are not the closes node to the data, do not replicate
-            this.localDataStore.setStale(dataId, dataEntry.creator!, !this.selfIsOneOfClosestPeers(dataEntry.key))
             return false
         }
 
