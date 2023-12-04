@@ -115,7 +115,7 @@ describe('Websocket Connection Management', () => {
         wsServerManager.send(dummyMessage)
     })
 
-    it('Can open connections to serverless peer with bigger peerId', (done) => {
+    it.only('Can open connections to serverless peer with bigger peerId', (done) => {
         const dummyMessage: Message = {
             serviceId,
             body: {

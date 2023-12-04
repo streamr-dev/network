@@ -1,12 +1,12 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     PeerDescriptor,
-    WebsocketConnectionRequest,
-    WebsocketConnectionResponse
+    WebsocketConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { IWebsocketConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ManagedConnection } from '../ManagedConnection'
+import { Empty } from '../../proto/google/protobuf/empty'
 
 interface WebsocketConnectorRpcLocalConfig {
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection
@@ -23,7 +23,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
         this.config = config
     }
 
-    public async requestConnection(_request: WebsocketConnectionRequest, context: ServerCallContext): Promise<WebsocketConnectionResponse> {
+    public async requestConnection(_request: WebsocketConnectionRequest, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         setImmediate(() => {
             if (this.config.abortSignal.aborted) {
@@ -34,6 +34,6 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
                 this.config.onNewConnection(connection)
             }
         })
-        return { accepted: true }
+        return {}
     }
 }
