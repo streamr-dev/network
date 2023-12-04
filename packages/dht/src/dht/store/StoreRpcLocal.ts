@@ -109,9 +109,11 @@ export class StoreRpcLocal implements IStoreRpc {
 
         if (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId)) {
             // If we are not the closes node to the data, do not replicate
+            this.localDataStore.setStale(dataId, dataEntry.creator!, !this.selfIsOneOfClosestPeers(dataEntry.key))
             return false
         }
 
+        this.localDataStore.setStale(dataId, dataEntry.creator!, false)
         const newPeerId = PeerID.fromValue(newNode.nodeId)
         sortedList.addContact(new Contact(newNode))
 
@@ -129,10 +131,8 @@ export class StoreRpcLocal implements IStoreRpc {
         // do replicate data to it
 
         if (index < this.redundancyFactor) {
-            this.localDataStore.setStale(dataId, dataEntry.creator!, false)
             return true
         } else {
-            this.localDataStore.setStale(dataId, dataEntry.creator!, true)
             return false
         }
     }
