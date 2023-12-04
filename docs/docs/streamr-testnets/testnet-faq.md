@@ -274,3 +274,9 @@ You'll no longer be earning from the Sponsorship and no longer required to do th
 
 #### I force unstaked from a Sponsorship, what happens?
 You'll need to pay the early exit fee of 5k DATA. The unwithdrawn earnings from that Sponsorship are automatically sent out, along with the remaining stake after slashing.
+
+## Safety
+#### What are some tips for staying safe on Streamr?
+- Consider starting small with your stake amount during the testnets and use common sense to never stake more than you can afford to lose. A professional audit of the incentive layer has been completed by Cyfrin, but nothing can be guaranteed of course. 
+- If you want to stake on a sponsorship, DO NOT click on the "Sponsor". That's for funding the sponsorship, not staking! Instead, go to the sponsorship you want to stake on and click "Join as an operator” and enter the amount. 
+- There may be an increase in activity by scammers during the testnets. A common approach is to pretend to offer help or tech support in direct messages (something we never do). Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens. It’s advised you disable DMs on Discord. More tips can be found in #server-safety-guide.
