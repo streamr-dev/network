@@ -37,7 +37,12 @@ export class PeerDiscovery {
         this.abortController = new AbortController()
     }
 
-    async joinDht(entryPointDescriptor: PeerDescriptor, contactedPeers: Set<PeerIDKey>, doAdditionalRandomPeerDiscovery = true, retry = true): Promise<void> {
+    async joinDht(
+        entryPointDescriptor: PeerDescriptor,
+        contactedPeers: Set<PeerIDKey>,
+        doAdditionalRandomPeerDiscovery = true,
+        retry = true
+    ): Promise<void> {
         if (this.isStopped()) {
             return
         }
