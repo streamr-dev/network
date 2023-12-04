@@ -67,11 +67,11 @@ export class StoreRpcLocal implements IStoreRpc {
 
     onNewContact(peerDescriptor: PeerDescriptor): void {
         for (const dataEntry of this.localDataStore.values()) {
-            this.replicateAndUpdateStaleStateIfClosest(dataEntry, peerDescriptor)
+            this.replicateAndUpdateStaleState(dataEntry, peerDescriptor)
         }
     }
 
-    private replicateAndUpdateStaleStateIfClosest(dataEntry: DataEntry, newNode: PeerDescriptor): void {
+    private replicateAndUpdateStaleState(dataEntry: DataEntry, newNode: PeerDescriptor): void {
         const newNodeId = PeerID.fromValue(newNode.nodeId)
         // TODO use config option or named constant?
         const closestToData = this.getClosestNeighborsTo(dataEntry.key, 10)
