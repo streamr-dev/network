@@ -1,6 +1,6 @@
 {
   "name": "streamr-broker",
-  "version": "100.0.0-testnet-one.0",
+  "version": "100.0.0-testnet-one.1",
   "description": "A full-featured broker node implementation for the Streamr Network",
   "repository": {
     "type": "git",
@@ -31,8 +31,8 @@
     "@ethersproject/hdnode": "^5.4.0",
     "@streamr/config": "^5.0.1",
     "@streamr/network-contracts": "^7.0.5",
-    "@streamr/protocol": "100.0.0-testnet-one.0",
-    "@streamr/utils": "100.0.0-testnet-one.0",
+    "@streamr/protocol": "100.0.0-testnet-one.1",
+    "@streamr/utils": "100.0.0-testnet-one.1",
     "aedes": "^0.50.0",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
@@ -51,14 +51,14 @@
     "node-fetch": "^2.7.0",
     "p-limit": "^3.1.0",
     "qs": "^6.10.1",
-    "streamr-client": "100.0.0-testnet-one.0",
+    "streamr-client": "100.0.0-testnet-one.1",
     "uuid": "^9.0.1",
     "ws": "^8.14.2",
     "zod": "^3.22.2"
   },
   "devDependencies": {
-    "@streamr/dht": "100.0.0-testnet-one.0",
-    "@streamr/test-utils": "100.0.0-testnet-one.0",
+    "@streamr/dht": "100.0.0-testnet-one.1",
+    "@streamr/test-utils": "100.0.0-testnet-one.1",
     "@types/cors": "^2.8.16",
     "@types/express": "^4.17.21",
     "@types/heap": "^0.2.34",
