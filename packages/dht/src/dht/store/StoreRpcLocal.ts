@@ -89,14 +89,14 @@ export class StoreRpcLocal implements IStoreRpc {
                 sortedList.addContact(new Contact(con.getPeerDescriptor()))
             }
         })
-        const isClosest = sortedList.getAllContacts()[0].getPeerId().equals(PeerID.fromValue(this.localPeerDescriptor.nodeId))
-        if (isClosest) {
+        const selfIsPrimaryStorer = sortedList.getAllContacts()[0].getPeerId().equals(PeerID.fromValue(this.localPeerDescriptor.nodeId))
+        if (selfIsPrimaryStorer) {
             sortedList.addContact(new Contact(newNode))
             const sorted = sortedList.getAllContacts()
+            // findIndex should never return -1 here because we just added the new node to the list
             const index = findIndex(sorted, (contact) => contact.getPeerId().equals(newNodeId))
             // if new node is within the storageRedundancyFactor closest nodes to the data
             // do replicate data to it
-            this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), false)
             if (index < this.redundancyFactor) {
                 try {
                     await this.replicateDataToContact(dataEntry, newNode)
@@ -104,8 +104,8 @@ export class StoreRpcLocal implements IStoreRpc {
                     logger.trace('replicateDataToContact() failed', { error: e })
                 }
             }
-        } else {
-            this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), !this.selfIsOneOfClosestPeers(dataEntry.key))
+        } else if (!this.selfIsOneOfClosestPeers(dataEntry.key)){
+            this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), true)
         }
     }
 
@@ -263,8 +263,8 @@ export class StoreRpcLocal implements IStoreRpc {
         closestToData.forEach((con) => {
             sortedList.addContact(new Contact(con.getPeerDescriptor()))
         })
-        const replicateOnlyToClosest = (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId))
-        const targets = replicateOnlyToClosest
+        const selfIsPrimaryStorer = (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId))
+        const targets = selfIsPrimaryStorer
             // If we are not the closest node to the data, replicate only to the closest one to the data
             ? [sortedList.getAllContacts()[0]]
             // if we are the closest to the data, replicate to all storageRedundancyFactor nearest
@@ -277,7 +277,7 @@ export class StoreRpcLocal implements IStoreRpc {
                         await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())
                         logger.trace('replicateDataToContact() returned', { 
                             node: getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()),
-                            replicateOnlyToClosest
+                            replicateOnlyToClosest: selfIsPrimaryStorer
                         })
                     })
                 })
