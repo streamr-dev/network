@@ -56,6 +56,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     private localPeerDescriptor: PeerDescriptor
     protected outgoingConnection?: IConnection
     protected incomingConnection?: IConnection
+    private created: number = Date.now()
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
@@ -252,7 +253,11 @@ export class ManagedConnection extends EventEmitter<Events> {
                 result = await runAndRaceEvents3<OutpuBufferEvents>([() => { this.outputBuffer.push(data) }],
                     this.outputBufferEmitter, ['bufferSent', 'bufferSendingFailed'], 15000)
             } catch (e) {
-                logger.debug(`Connection to ${getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor)} timed out`)
+                logger.debug(`Connection to ${getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor)} timed out`, {
+                    peerDescriptor: this.remotePeerDescriptor,
+                    type: this.connectionType,
+                    lifetime: Date.now() - this.created
+                })
                 throw new Err.SendFailed('Sending buffer timed out')
             }
 
