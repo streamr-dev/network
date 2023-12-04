@@ -5,6 +5,10 @@ import crypto from 'crypto'
 
 export type PeerIDKey = BrandedString<'PeerIDKey'>
 
+export const createPeerIDKey = (nodeId: Uint8Array) => {
+    return Buffer.from(nodeId).toString('hex') as PeerIDKey
+}
+
 export class PeerID {
     // avoid creating a new instance for every operation
     private static readonly textEncoder = new TextEncoder() 
@@ -30,7 +34,7 @@ export class PeerID {
             throw new IllegalArguments('Constructor of PeerID must be given either ip, value or stringValue')
         }
 
-        this.key = Buffer.from(this.data).toString('hex') as PeerIDKey
+        this.key = createPeerIDKey(this.data)
     }
 
     static fromIp(ip: string): PeerID {
