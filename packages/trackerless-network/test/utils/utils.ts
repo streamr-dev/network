@@ -45,7 +45,9 @@ export const createMockRandomGraphNodeAndDhtNode = async (
         layer1Node,
         connectionLocker: mockCm,
         localPeerDescriptor,
-        rpcRequestTimeout: 5000
+        rpcRequestTimeout: 5000,
+        localNodeIsEntryPoint: () => false,
+        onEntryPointLeaveDetected: async () => {}
     })
     return [layer1Node, randomGraphNode]
 }

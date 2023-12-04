@@ -207,7 +207,7 @@ export class ProxyClient extends EventEmitter {
                 nodeId
             })
             const server = this.targetNeighbors.get(nodeId)
-            server?.leaveStreamPartNotice()
+            server?.leaveStreamPartNotice(false)
             this.removeConnection(nodeId)
         }
     }
@@ -256,7 +256,7 @@ export class ProxyClient extends EventEmitter {
     stop(): void {
         this.targetNeighbors.getAll().map((remote) => {
             this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), SERVICE_ID)
-            remote.leaveStreamPartNotice()
+            remote.leaveStreamPartNotice(false)
         })
         this.targetNeighbors.stop()
         this.rpcCommunicator.destroy()
