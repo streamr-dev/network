@@ -31,7 +31,7 @@ interface DataStoreConfig {
     serviceId: ServiceID
     highestTtl: number
     redundancyFactor: number
-    getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
+    getClosestNeighborsTo: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
     rpcRequestTimeout?: number
 }
 
@@ -46,7 +46,7 @@ export class StoreRpcLocal implements IStoreRpc {
     private readonly serviceId: ServiceID
     private readonly highestTtl: number
     private readonly redundancyFactor: number
-    private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
+    private readonly getClosestNeighborsTo: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
     private readonly rpcRequestTimeout?: number
 
     constructor(config: DataStoreConfig) {
@@ -58,7 +58,7 @@ export class StoreRpcLocal implements IStoreRpc {
         this.highestTtl = config.highestTtl
         this.redundancyFactor = config.redundancyFactor
         this.rpcRequestTimeout = config.rpcRequestTimeout
-        this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
+        this.getClosestNeighborsTo = config.getClosestNeighborsTo
         this.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
             (request: StoreDataRequest) => this.storeData(request))
         this.rpcCommunicator.registerRpcNotification(ReplicateDataRequest, 'replicateData',
@@ -84,7 +84,7 @@ export class StoreRpcLocal implements IStoreRpc {
     private shouldReplicateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
         const newNodeId = PeerID.fromValue(newNode.nodeId)
         // TODO use config option or named constant?
-        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
+        const closestToData = this.getClosestNeighborsTo(dataEntry.key, 10)
         const sortedList = new SortedContactList<Contact>({
             referenceId: PeerID.fromValue(dataEntry.key), 
             maxSize: 20,  // TODO use config option or named constant?
@@ -176,7 +176,7 @@ export class StoreRpcLocal implements IStoreRpc {
 
     private selfIsOneOfClosestPeers(dataId: Uint8Array): boolean {
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
-        const closestPeers = this.getNodesClosestToIdFromBucket(dataId, this.redundancyFactor)
+        const closestPeers = this.getClosestNeighborsTo(dataId, this.redundancyFactor)
         const sortedList = new SortedContactList<Contact>({
             referenceId: localPeerId, 
             maxSize: this.redundancyFactor, 
@@ -213,7 +213,7 @@ export class StoreRpcLocal implements IStoreRpc {
             .flatMap((dataMap) => Array.from(dataMap.values()))
             .map((localData) => localData.dataEntry)
         await Promise.all(dataEntries.map(async (dataEntry) => {
-            const dhtNodeRemotes = this.getNodesClosestToIdFromBucket(dataEntry.key, this.redundancyFactor)
+            const dhtNodeRemotes = this.getClosestNeighborsTo(dataEntry.key, this.redundancyFactor)
             await Promise.all(dhtNodeRemotes.map(async (remoteDhtNode) => {
                 const rpcRemote = new StoreRpcRemote(
                     this.localPeerDescriptor,
@@ -252,7 +252,7 @@ export class StoreRpcLocal implements IStoreRpc {
         const dataId = PeerID.fromValue(dataEntry.key)
         const incomingPeerId = PeerID.fromValue(incomingPeer.nodeId)
         // TODO use config option or named constant?
-        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.key, 10)
+        const closestToData = this.getClosestNeighborsTo(dataEntry.key, 10)
         const sortedList = new SortedContactList<Contact>({
             referenceId: dataId, 
             maxSize: this.redundancyFactor, 
