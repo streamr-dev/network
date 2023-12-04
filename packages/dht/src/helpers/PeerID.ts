@@ -1,4 +1,4 @@
-import { BrandedString } from '@streamr/utils'
+import { BrandedString, binaryToHex } from '@streamr/utils'
 import { UUID } from './UUID'
 import { IllegalArguments } from './errors'
 import crypto from 'crypto'
@@ -6,7 +6,7 @@ import crypto from 'crypto'
 export type PeerIDKey = BrandedString<'PeerIDKey'>
 
 export const createPeerIDKey = (nodeId: Uint8Array) => {
-    return Buffer.from(nodeId).toString('hex') as PeerIDKey
+    return binaryToHex(nodeId) as PeerIDKey
 }
 
 export class PeerID {
