@@ -118,7 +118,7 @@
                             },
                             "default": {
                                 "enabled": true,
-                                "maxEntryPoints": 5,
+                                "maxEntryPoints": 3,
                                 "maxQueryResults": 50,
                                 "maxHeartbeatAgeHours": 24
                             }
