@@ -74,13 +74,11 @@ export class StoreManager {
 
     onNewContact(peerDescriptor: PeerDescriptor): void {
         for (const dataEntry of this.localDataStore.values()) {
-            setImmediate(async () => {
-                await this.replicateAndUpdateStaleStateIfClosest(dataEntry, peerDescriptor)
-            })
+            this.replicateAndUpdateStaleState(dataEntry, peerDescriptor)
         }
     }
 
-    private async replicateAndUpdateStaleStateIfClosest(dataEntry: DataEntry, newNode: PeerDescriptor): Promise<void> {
+    private async replicateAndUpdateStaleState(dataEntry: DataEntry, newNode: PeerDescriptor): Promise<void> {
         const newNodeId = PeerID.fromValue(newNode.nodeId)
         // TODO use config option or named constant?
         const closestToData = this.getClosestNeighborsTo(dataEntry.key, 10)
@@ -105,11 +103,9 @@ export class StoreManager {
             // if new node is within the storageRedundancyFactor closest nodes to the data
             // do replicate data to it
             if (index < this.redundancyFactor) {
-                try {
+                setImmediate(async () => {
                     await this.replicateDataToContact(dataEntry, newNode)
-                } catch (e) {
-                    logger.trace('replicateDataToContact() failed', { error: e })
-                }
+                })
             }
         } else if (!this.selfIsOneOfClosestPeers(dataEntry.key)) {
             this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), true)
