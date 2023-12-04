@@ -10,6 +10,10 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 
 The 1.0 testnets will be launched with the technical parameters set out in: [SIP-16](https://snapshot.org/#/streamr.eth/proposal/0xf95e691103efc4ce9ebd2ed22da3df6df446f982e6e34df1180a9a5366b3060f)
 
+:::info Important
+To earn DATA tokens on Polygon you must be willing to hold and stake DATA tokens on Polygon smart contracts that we call Sponsorships.
+:::
+
 ### How to participate & earn
 1. [Become a node Operator](../guides/become-an-operator.md)
 2. Stake your [Operator](../streamr-network/network-roles/operators.md) on [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md), and/or,
@@ -20,9 +24,6 @@ Use node version: `v100.0.0-testnet-one.1`. Do not use the `latest` tag release.
 
 ## Schedules
 Keep a close eye on this page as these dates may change based on the findings of each testnet.
-
-### Mumbai Operator testing
-- Live! Checkout the [Mumbai Streamr Hub](https://mumbai.streamr.network)
 
 ### Testnet 1
 - Start date: 4PM CET / 15:00 UTC, 5th December to 12th December
