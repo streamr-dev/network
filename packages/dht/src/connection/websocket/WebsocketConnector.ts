@@ -270,21 +270,6 @@ export class WebsocketConnector {
     }
 
     private requestConnectionFromPeer(localPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        setImmediate(() => {
-            const remoteConnector = new WebsocketConnectorRpcRemote(
-                localPeerDescriptor,
-                targetPeerDescriptor,
-                toProtoRpcClient(new WebsocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
-            )
-            remoteConnector.requestConnection().then((_response: WebsocketConnectionResponse) => {
-                logger.trace('Sent WebsocketConnectionRequest request to peer', { targetPeerDescriptor })
-                return
-            }, (err) => {
-                logger.debug('Failed to send WebsocketConnectionRequest request to peer of failed to get the response ', {
-                    error: err, targetPeerDescriptor
-                })
-            })
-        })
         const managedConnection = new ManagedConnection(
             this.localPeerDescriptor!,
             ConnectionType.WEBSOCKET_SERVER,
@@ -295,6 +280,35 @@ export class WebsocketConnector {
         managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor)))
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
         this.ongoingConnectRequests.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
+        const onRejected = async () => {
+            try {
+                if (!managedConnection.isHandshakeCompleted()) {
+                    await managedConnection.close(false)
+                }
+            } catch (error) {
+                logger.error('Failed to close connection after failed connection request', { targetPeerDescriptor, error })
+            }
+        }
+
+        setImmediate(async () => {
+            const remoteConnector = new WebsocketConnectorRpcRemote(
+                localPeerDescriptor,
+                targetPeerDescriptor,
+                toProtoRpcClient(new WebsocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+            )
+            try {
+                const response = await remoteConnector.requestConnection()
+                logger.trace('Sent WebsocketConnectionRequest request to peer', { targetPeerDescriptor })
+                if (response.accepted === false) {
+                    await onRejected()
+                }
+            } catch (err) {
+                logger.debug('Failed to send WebsocketConnectionRequest request to peer of failed to get the response ', {
+                    error: err, targetPeerDescriptor
+                })
+                await onRejected()
+            }
+        })
         return managedConnection
     }
 

@@ -10,6 +10,8 @@ import { PeerID } from '../../src/helpers/PeerID'
 import * as Err from '../../src/helpers/errors'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { waitForEvent3 } from '@streamr/utils/dist/src/waitForEvent3'
+import { TransportEvents } from '../../src/transport/ITransport'
 
 const createConfig = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
     return {
@@ -136,6 +138,28 @@ describe('Websocket Connection Management', () => {
 
         wsServerManager.send(dummyMessage)
     })
+
+    it('Failed connection requests are cleaned up', async () => {
+        const dummyMessage: Message = {
+            serviceId,
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
+            messageType: MessageType.RPC,
+            messageId: 'mockerer',
+            targetDescriptor: {
+                nodeId: new Uint8Array([1, 2, 4]),
+                type: NodeType.NODEJS
+            }
+        }
+
+        await Promise.allSettled([
+            waitForEvent3<TransportEvents>(wsServerManager, 'disconnected', 15000),
+            wsServerManager.send(dummyMessage)
+        ])
+        expect(wsServerManager.getConnection(dummyMessage.targetDescriptor!)).toBeUndefined()
+    }, 20000)
 
     it('Can open connections to peer with server', async () => {
         const dummyMessage: Message = {
