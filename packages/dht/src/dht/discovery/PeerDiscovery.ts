@@ -7,6 +7,7 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { PeerManager } from '../PeerManager'
 import { createRandomNodeId } from '../../helpers/nodeId'
 import { ServiceID } from '../../types/ServiceID'
+import { PeerIDKey } from '../../helpers/PeerID'
 
 interface PeerDiscoveryConfig {
     localPeerDescriptor: PeerDescriptor
@@ -36,7 +37,7 @@ export class PeerDiscovery {
         this.abortController = new AbortController()
     }
 
-    async joinDht(entryPointDescriptor: PeerDescriptor, doAdditionalRandomPeerDiscovery = true, retry = true): Promise<void> {
+    async joinDht(entryPointDescriptor: PeerDescriptor, contactedPeers: Set<PeerIDKey>, doAdditionalRandomPeerDiscovery = true, retry = true): Promise<void> {
         if (this.isStopped()) {
             return
         }
@@ -51,21 +52,22 @@ export class PeerDiscovery {
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         this.config.peerManager.handleNewPeers([entryPointDescriptor])
         const targetId = peerIdFromPeerDescriptor(this.config.localPeerDescriptor).value
-        const sessions = [this.createSession(targetId)]
+        const sessions = [this.createSession(targetId, contactedPeers)]
         if (doAdditionalRandomPeerDiscovery) {
-            sessions.push(this.createSession(createRandomNodeId()))
+            sessions.push(this.createSession(createRandomNodeId(), contactedPeers))
         }
         await this.runSessions(sessions, entryPointDescriptor, retry)
         this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
 
     }
 
-    private createSession(targetId: Uint8Array): DiscoverySession {
+    private createSession(targetId: Uint8Array, contactedPeers: Set<PeerIDKey>): DiscoverySession {
         const sessionOptions = {
             targetId,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
-            peerManager: this.config.peerManager
+            peerManager: this.config.peerManager,
+            contactedPeers
         }
         return new DiscoverySession(sessionOptions)
     }
@@ -100,7 +102,7 @@ export class PeerDiscovery {
         logger.debug(`Rejoining DHT ${this.config.serviceId}`)
         this.rejoinOngoing = true
         try {
-            await this.joinDht(entryPoint)
+            await this.joinDht(entryPoint, new Set())
             logger.debug(`Rejoined DHT successfully ${this.config.serviceId}!`)
         } catch (err) {
             logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)
