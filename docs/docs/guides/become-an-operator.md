@@ -38,7 +38,7 @@ In the [Streamr Hub](https://streamr.network/hub), connect your wallet (top-righ
 
 The wallet/account that you use to make the Operator creation transaction will be known as the **Owner wallet**. It's the wallet you'll use to control your Operator business. The owner wallet controls the Operator and is able to stake and unstake on Sponsorships, update the Operator settings, and withdraw the owner's share of the Operator's stake and earnings. This should be a very secure wallet as it controls the whole Operator. A hardware wallet (Ledger, etc) is recommended, although a software wallet (Metamask) will work too - just be sure to keep the account private and never share your private key or seed phrase with anyone.
 
-You'll need to decide on your [owner's cut](../streamr-network/network-roles/operators#owners-cut) at the time of your Operator deployment. You'll be able to change this value later on, as long as you unstake from all Sponsorships first.
+You'll need to decide on your [owner's cut](../streamr-network/network-roles/operators.md#owners-cut) at the time of your Operator deployment. You'll be able to change this value later on, as long as you unstake from all Sponsorships first.
 
 You can also practice your Operator deployment in the Mumbai environment with the [Mumbai Streamr Hub](https://mumbai.streamr.network/hub) (rather than switching networks on the Streamr Hub). You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 

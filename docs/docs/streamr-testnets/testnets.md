@@ -25,7 +25,7 @@ Keep a close eye on this page as these dates may change based on the findings of
 - Live! Checkout the [Mumbai Streamr Hub](https://mumbai.streamr.network)
 
 ### Testnet 1
-- Start date: 4PM CET / 15:00 UTC, 4th December to 11th December
+- Start date: 4PM CET / 15:00 UTC, 5th December to 12th December
 - Reward pool: 1 million DATA
 - Duration: 7 days
 - **Testnet 1 will have reduced slashing penalties of 1% instead of 10%**

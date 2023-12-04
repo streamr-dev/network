@@ -183,6 +183,19 @@ Could not synchronize with thegraph blockchain indexing service.
 This is likely to only be an issue on the Mumbai environment where The Graph support is limited. Check that your internet connection is active and try to restart the Streamr node. If this doesn’t help, try again in a while, The Graph service may be updating.
 
 ## Staking on, and earning from Sponsorships
+#### How many sponsorships should I stake on as an operator?
+Operators will want to stake on whatever pays best (within the limits of how much data volume their nodes can handle, of course). Example:
+- You have 1M DATA and want to allocate it to Sponsorships
+- Let's imagine there are two sponsorships: Sponsorship 1 is paying 50% APY and has 1M DATA staked, and Sponsorship 2 is paying 40% APY and has 10M staked
+- On first glance, Sponsorship 1 pays a better yield, but it isn't paying much in absolute terms and the APY gets quickly diluted as more stake is placed. If you staked all your 1M DATA on it, the staked amount would double and therefore the APY would halve, becoming 25%. It would then pay worse than the second one.
+- Sponsorship 2 is paying 40% on 10M staked, so you adding all of your tokens there wouldn't change the APY that much (to 36%)
+- Assuming the volume of data in both streams can be handled by the operator's nodes, an Optimal Operator would compute how much tokens they should stake on each Sponsorship to earn the best combined yield. In the optimal end result, both Sponsorships will be paying the same APY, therefore removing the "anomaly" of the first Sponsorship and returning the market to equilibrium.
+
+#### Can Operators get all their tokens out, if they for example want to stop running nodes? What happens to delegations then?
+Normally owners need to provide at least 5% of the operator’s total value and keep it in the operator, while 95% can come from delegators. Owners can’t withdraw below this limit and keep operating. However, if they want to quit, they can unstake from all sponsorships and then withdraw all their tokens from the Operator. This is allowed as a special case.
+
+The delegators will then simply leave and delegate to someone else, as they are no longer earning anything with that operator.
+
 #### Will my rewards automatically be sent to my wallet?
 No, you will need to periodically check and claim your uncollected earnings from the Operator(s) that you have staked/delegated on.
 
