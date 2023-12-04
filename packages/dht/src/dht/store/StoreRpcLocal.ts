@@ -12,13 +12,13 @@ import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { LocalDataStore } from './LocalDataStore'
 
-const logger = new Logger(module)
-
 interface StoreRpcLocalConfig {
     localDataStore: LocalDataStore
     replicateDataToNeighbors: (incomingPeer: PeerDescriptor, dataEntry: DataEntry) => void
     selfIsOneOfClosestPeers: (key: Uint8Array) => boolean
 }
+
+const logger = new Logger(module)
 
 export class StoreRpcLocal implements IStoreRpc {
 

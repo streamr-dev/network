@@ -67,16 +67,14 @@ describe('WebsocketConnectorRpc', () => {
         },
         { targetDescriptor: peerDescriptor2 },
         )
-        const res1 = await response1
-        expect(res1.accepted).toEqual(true)
-
+        await response1
+        
         const response2 = client2.requestConnection({
             ip: '127.0.0.1',
             port: 9111
         },
         { targetDescriptor: peerDescriptor1 },
         )
-        const res2 = await response2
-        expect(res2.accepted).toEqual(true)
+        await response2
     })
 })
