@@ -5,7 +5,7 @@ import crypto from 'crypto'
 
 export type PeerIDKey = BrandedString<'PeerIDKey'>
 
-export const createPeerIDKey = (nodeId: Uint8Array) => {
+export const createPeerIDKey = (nodeId: Uint8Array): PeerIDKey => {
     return binaryToHex(nodeId) as PeerIDKey
 }
 
