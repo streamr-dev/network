@@ -117,7 +117,7 @@ export class EntryPointDiscovery {
     }
 
     async storeSelfAsEntryPointIfNecessary(currentEntrypointCount: number): Promise<void> {
-        if (this.abortController.signal.aborted || this.localPeerDescriptorStored) {
+        if (this.abortController.signal.aborted) {
             return
         }
         const possibleNetworkSplitDetected = this.config.layer1Node.getNumberOfNeighbors() < NETWORK_SPLIT_AVOIDANCE_LIMIT
