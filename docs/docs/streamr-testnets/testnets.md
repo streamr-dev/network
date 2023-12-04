@@ -16,7 +16,7 @@ The 1.0 testnets will be launched with the technical parameters set out in: [SIP
 3. [Delegate](../streamr-network/network-roles/delegators.md) your `DATA` tokens onto other Operators
 
 ## Current node software version
-Use node version: `v100.0.0-testnet-one.0`. Do not use the `latest` tag release.
+Use node version: `v100.0.0-testnet-one.1`. Do not use the `latest` tag release.
 
 ## Schedules
 Keep a close eye on this page as these dates may change based on the findings of each testnet.
@@ -49,9 +49,9 @@ The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your O
 You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 **What are the differences between Mumbai and Testnet 1?**
-This `v100.0.0-testnet-one.0` version can be used to connect to Testnet 1 **or** the Mumbai network. 
+This `v100.0.0-testnet-one.1` version can be used to connect to Testnet 1 **or** the Mumbai network. 
 
-The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator#testnet-node-config) is a much shorter version.
+The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator.md#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator.md#testnet-node-config) is a much shorter version.
 
 Don’t use the `pretestnet` releases anymore.
 
@@ -68,6 +68,6 @@ We're offering DATA prizes for quality contributions to the following categories
 - Fine grained monitoring tools such as email notifications
 
 ### Safety
-Your tokens are at risk by participating in these testnets - [the risks are real](../streamr-network/network-roles/operators#operator-risks).
+Your tokens are at risk by participating in these testnets - [the risks are real](../streamr-network/network-roles/operators.md#operator-risks).
 
 Please do not engage with any accounts claiming to be Support, Admin or Help. Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens.

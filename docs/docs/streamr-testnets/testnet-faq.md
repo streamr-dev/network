@@ -5,9 +5,9 @@ sidebar_position: 2
 # Testnet FAQs
 ## General
 #### What are the differences between the "pretestnet" and Testnet 1?
-This `v100.0.0-testnet-one.0` version can be used to connect to Testnet 1 **or** the Mumbai testing environment. 
+This `v100.0.0-testnet-one.1` version can be used to connect to Testnet 1 **or** the Mumbai testing environment. 
 
-The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator#testnet-node-config) is a much shorter version.
+The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator.md#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator.md#testnet-node-config) is a much shorter version.
 
 Don’t use the `pretestnet` releases anymore.
 
@@ -133,7 +133,7 @@ Add given nodes public key to operator node addresses.
 I’m receiving the following warning message.
 
 ```JSON
-INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version v100.0.0-testnet-one.0
+INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version v100.0.0-testnet-one.1
 Error: call revert exception [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="metadata()", data="0x", errorArgs=null, errorName=null, errorSignature=null, reason=null, code=CALL_EXCEPTION, version=abi/5.7.0)
 ```
 
@@ -224,7 +224,7 @@ So as you can see, if the Operator valuation is not correct, it can lead to mone
 
 *Note this example was simplified and did not include an Operator's cut or protocol fee.
 
-For more, see [Operator maintenance](../streamr-network/network-roles/operators#operator-maintenance).
+For more, see [Operator maintenance](../streamr-network/network-roles/operators.md#operator-maintenance).
 
 #### As an Operator can I always withdraw tokens from my Operator?
 It depends. If you're staked on Sponsorships with minimum stake periods then you'll need to wait for those periods to elapse or pay the 5k DATA early withdrawal penalty. Once unstaked from all Sponsorships and if there is no undelegation que to fulfill then you will be able to withdraw tokens from your Operator.

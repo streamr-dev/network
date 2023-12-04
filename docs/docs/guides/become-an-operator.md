@@ -20,21 +20,21 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 - You can run ~~up to 5 nodes per IP address~~ any number of nodes from the same IP address, although one node per machine is recommended
 - Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships at any time
 - You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
-- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `v100.0.0-testnet-one.0`. The `latest` tag still points to the previous milestone (Brubeck) software.
+- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `v100.0.0-testnet-one.1`. The `latest` tag still points to the previous milestone (Brubeck) software.
 - There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
 :::
 
 ## Migrating from Mumbai
 If you've created your node in the Mumbai testing environment and you want to participate in the incentivized testnets with real token rewards and risks, then you'll need to recreate your Operator using the Streamr Network [Hub](https://streamr.network/hub). The same funding and pairing steps that you did for your Mumbai Operator need to be repeated here too. The testnets and the future 1.0 mainnet will run on the Polygon Blockchain.
 
-- **Node version:** The `pretestnet` tagged releases shouldn't be used anymore, instead use `v100.0.0-testnet-one.0`. 
+- **Node version:** The `pretestnet` tagged releases shouldn't be used anymore, instead use `v100.0.0-testnet-one.1`. 
 - **Node config:** Your node config should resemble the [Testnet 1 config template](#testnet-node-config).
 
 ## Operator setup instructions
 Follow these steps below to setup your Operator so that you can participate in the protocol and collect rewards. 
 
 ### Step 1: Deploy your Operator Contract
-In the [Streamr Hub](https://streamr.network/hub), connect your wallet (top-right corner), navigate to Network -> Operators, then click "Become an Operator" and complete the dialog. The [Operator contract](../streamr-network/network-roles/operators#the-operator-contract) is deployed on the Polygon blockchain.
+In the [Streamr Hub](https://streamr.network/hub), connect your wallet (top-right corner), navigate to Network -> Operators, then click "Become an Operator" and complete the dialog. The [Operator contract](../streamr-network/network-roles/operators.md#the-operator-contract) is deployed on the Polygon blockchain.
 
 The wallet/account that you use to make the Operator creation transaction will be known as the **Owner wallet**. It's the wallet you'll use to control your Operator business. The owner wallet controls the Operator and is able to stake and unstake on Sponsorships, update the Operator settings, and withdraw the owner's share of the Operator's stake and earnings. This should be a very secure wallet as it controls the whole Operator. A hardware wallet (Ledger, etc) is recommended, although a software wallet (Metamask) will work too - just be sure to keep the account private and never share your private key or seed phrase with anyone.
 
@@ -81,7 +81,7 @@ After the config file changes, restart your node(s). **If you run several nodes,
 If you're building your Operator in Mumbai, copy and paste [this config snippet](#mumbai-node-config) instead.
 
 ### Step 4: Fund your nodes
-You’ll need a bit of `MATIC` (the gas token of Polygon) in your node’s wallets as Streamr nodes that participate in sponsored streams will periodically make transactions. 1 to 5 `MATIC` is recommended since the nodes will be making a few transactions per day. If the node runs out of gas while they’re a part of an active Sponsorship, then a penalty may be applied to your unclaimed earnings. See [Operator value maintenance](../streamr-network/network-roles/operators#operator-maintenance).
+You’ll need a bit of `MATIC` (the gas token of Polygon) in your node’s wallets as Streamr nodes that participate in sponsored streams will periodically make transactions. 1 to 5 `MATIC` is recommended since the nodes will be making a few transactions per day. If the node runs out of gas while they’re a part of an active Sponsorship, then a penalty may be applied to your unclaimed earnings. See [Operator value maintenance](../streamr-network/network-roles/operators.md#operator-maintenance).
 
 ### Step 5: Fund your Operator
 Now, on your Operator page in the Streamr Hub UI, fund your Operator with DATA tokens (or if you're in Mumbai, then TEST tokens). There's no minimum amount, but note that the more tokens you fund your Operator with, the more you can accept delegations. The owner (you) must have at least a 5% stake in the Operator.
@@ -204,9 +204,9 @@ Below is the template you can use to override and replace the contents of your c
 
 This happens if you have not added your [node address to your Operator](#step-3-pair-your-node-with-your-operator-contract). Please complete this step and restart your node.
 
-Also make sure to check the [Streamr node troubleshooting section](./how-to-run-streamr-node#troubleshooting).
+Also make sure to check the [Streamr node troubleshooting section](./how-to-run-streamr-node.md#troubleshooting).
 
 ## Safety
-Your tokens are at risk by participating in these testnets - [the risks are real](../streamr-network/network-roles/operators#operator-risks).
+Your tokens are at risk by participating in these testnets - [the risks are real](../streamr-network/network-roles/operators.md#operator-risks).
 
 Please do not engage with any accounts claiming to be Support, Admin or Help. Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens.
