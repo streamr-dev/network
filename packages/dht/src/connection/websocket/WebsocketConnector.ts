@@ -277,10 +277,12 @@ export class WebsocketConnector {
             undefined,
             targetPeerDescriptor
         )
-        managedConnection.on('disconnected', () => {
+        const disconnectListener = () => {
             logger.info('are we ever here?', { targetPeerDescriptor })
             this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor))
-        })
+        }
+        managedConnection.once('disconnected', disconnectListener)
+        managedConnection.once('handshakeCompleted', () => managedConnection.off('disconnected', disconnectListener))
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
         this.ongoingConnectRequests.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
         const onRejected = async () => {
