@@ -1,9 +1,13 @@
-import { BrandedString } from '@streamr/utils'
+import { BrandedString, binaryToHex } from '@streamr/utils'
 import { UUID } from './UUID'
 import { IllegalArguments } from './errors'
 import crypto from 'crypto'
 
 export type PeerIDKey = BrandedString<'PeerIDKey'>
+
+export const createPeerIDKey = (nodeId: Uint8Array): PeerIDKey => {
+    return binaryToHex(nodeId) as PeerIDKey
+}
 
 export class PeerID {
     // avoid creating a new instance for every operation
@@ -30,7 +34,7 @@ export class PeerID {
             throw new IllegalArguments('Constructor of PeerID must be given either ip, value or stringValue')
         }
 
-        this.key = Buffer.from(this.data).toString('hex') as PeerIDKey
+        this.key = createPeerIDKey(this.data)
     }
 
     static fromIp(ip: string): PeerID {
