@@ -230,6 +230,8 @@ export interface EthereumNetworkConfig {
 //   in Ethereum network
 export type EnvironmentId = 'polygon' | 'mumbai' | 'dev2'
 
+export const DEFAULT_ENVIRONMENT: EnvironmentId = 'polygon'
+
 /**
  * @category Important
  */
@@ -435,7 +437,7 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
     // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?
     let config = cloneDeep(input)
-    const environment = config.environment ?? 'polygon'
+    const environment = config.environment ?? DEFAULT_ENVIRONMENT
     config = applyEnvironmentDefaults(environment, config)
     const strictConfig = validateConfig(config)
     strictConfig.id ??= generateClientId()
