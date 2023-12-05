@@ -7,6 +7,7 @@ import { RestClient } from './RestClient'
 import { CertifiedSubdomain } from './data/CertifiedSubdomain'
 import fs from 'fs'
 import path from 'path'
+import os from 'os'
 import * as forge from 'node-forge'
 import { Logger } from '@streamr/utils'
 
@@ -17,6 +18,24 @@ interface AutoCertifierClientEvents {
 export type HasSession = (request: HasSessionRequest, context: ServerCallContext) => Promise<HasSessionResponse>
 
 const logger = new Logger(module)
+
+const ensureConfigFileWritable = (directory: string): void => {
+    const baseDirectory = getBaseDirectory(directory)
+    if (!fs.access(baseDirectory, fs.CONSTANTS.W_OK)) {
+        throw new Error(`Directory ${baseDirectory} is not writable`)
+    }
+}
+
+const getBaseDirectory = (directory: string): string => {
+    const subDirs = directory.split(os.separator)
+    while (subDirs.length > 0) {
+        const current = subDirs.pop()
+        if (fs.existsSync(current)) {
+           return subDirs.join(os.separator)
+        }
+    }
+    return os.separator
+}
 
 export const SERVICE_ID = 'system/auto-certificer'
 const ONE_DAY = 1000 * 60 * 60 * 24
@@ -108,6 +127,9 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     }
 
     private createCertificate = async (): Promise<void> => {
+        const dir = path.dirname(this.configFile)
+        ensureConfigFileWritable(dir)
+
         const sessionId = await this.restClient.createSession()
         let certifiedSubdomain: CertifiedSubdomain
 
@@ -118,7 +140,6 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         } finally {
             this.ongoingSessions.delete(sessionId)
         }
-        const dir = path.dirname(this.configFile)
         // TODO: use async fs methods?
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true })
