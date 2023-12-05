@@ -7,7 +7,6 @@ import { RestClient } from './RestClient'
 import { CertifiedSubdomain } from './data/CertifiedSubdomain'
 import fs from 'fs'
 import path from 'path'
-import os from 'os'
 import * as forge from 'node-forge'
 import { Logger } from '@streamr/utils'
 
@@ -21,20 +20,23 @@ const logger = new Logger(module)
 
 const ensureConfigFileWritable = (directory: string): void => {
     const baseDirectory = getBaseDirectory(directory)
-    if (!fs.access(baseDirectory, fs.CONSTANTS.W_OK)) {
+    try {
+        fs.accessSync(baseDirectory, fs.constants.W_OK)
+    } catch (err) {
+        logger.error(err)
         throw new Error(`Directory ${baseDirectory} is not writable`)
     }
 }
 
 const getBaseDirectory = (directory: string): string => {
-    const subDirs = directory.split(os.separator)
+    const subDirs = directory.split(path.sep)
     while (subDirs.length > 0) {
         const current = subDirs.pop()
-        if (fs.existsSync(current)) {
-           return subDirs.join(os.separator)
+        if (fs.existsSync(current!)) {
+           return subDirs.join(path.sep)
         }
     }
-    return os.separator
+    return path.sep
 }
 
 export const SERVICE_ID = 'system/auto-certificer'
