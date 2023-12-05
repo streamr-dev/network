@@ -33,13 +33,13 @@ const ensureConfigFileWritable = (directory: string): void => {
 
 const getBaseDirectory = (directory: string): string => {
     const subDirs = directory.split(path.sep)
-    while (subDirs.length > 0) {
-        subDirs.pop()
+    do {
         const current = subDirs.join(path.sep)
         if (fs.existsSync(current)) {
            return current
         }
-    }
+        subDirs.pop()
+    } while (subDirs.length > 0)
     return path.sep
 }
 
