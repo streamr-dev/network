@@ -18,6 +18,7 @@ interface DiscoverySessionConfig {
     parallelism: number
     noProgressLimit: number
     peerManager: PeerManager
+    // Note that contacted peers will be mutated by the DiscoverySession or other parallel sessions
     contactedPeers: Set<PeerIDKey>
 }
 

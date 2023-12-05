@@ -38,7 +38,22 @@ export class PeerDiscovery {
     }
 
     async joinDht(
+        entryPoints: PeerDescriptor[],
+        doAdditionalRandomPeerDiscovery = true,
+        retry = true
+    ): Promise<void> {
+        const contactedPeers = new Set<PeerIDKey>()
+        await Promise.all(entryPoints.map((entryPoint) => this.joinThroughEntryPoint(
+            entryPoint,
+            contactedPeers,
+            doAdditionalRandomPeerDiscovery,
+            retry
+        )))
+    }
+
+    async joinThroughEntryPoint(
         entryPointDescriptor: PeerDescriptor,
+        // Note that this set is mutated by DiscoverySession
         contactedPeers: Set<PeerIDKey>,
         doAdditionalRandomPeerDiscovery = true,
         retry = true
@@ -107,7 +122,7 @@ export class PeerDiscovery {
         logger.debug(`Rejoining DHT ${this.config.serviceId}`)
         this.rejoinOngoing = true
         try {
-            await this.joinDht(entryPoint, new Set())
+            await this.joinThroughEntryPoint(entryPoint, new Set())
             logger.debug(`Rejoined DHT successfully ${this.config.serviceId}!`)
         } catch (err) {
             logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)
