@@ -5,6 +5,7 @@ import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { Layer0Node } from './logic/Layer0Node'
+import { pull } from 'lodash'
 import { getNodeIdFromPeerDescriptor } from './identifiers'
 
 export interface NetworkOptions {
@@ -17,12 +18,34 @@ export interface NetworkStackEvents {
     stopped: () => void
 }
 
+const instances: NetworkStack[] = []
+const stopInstances = async () => {
+    // make a clone so that it is ok for each instance.stop() to remove itself from the list (at line 139)
+    // while the map function is iterating the list
+    const clonedInstances = [...instances]
+    await Promise.all(clonedInstances.map((instance) => instance.stop()))
+}
+const EXIT_EVENTS = [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`]
+EXIT_EVENTS.forEach((event) => {
+    process.on(event, async () => {
+        await stopInstances()
+        process.exit()
+    })
+})
+declare let window: any
+if (typeof window === 'object') {
+    window.addEventListener('unload', async () => {
+        await stopInstances()
+    })
+}
+
 const logger = new Logger(module)
 
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     private layer0Node?: Layer0Node
     private deliveryLayer?: DeliveryLayer
+    private stopped = false
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
 
@@ -38,6 +61,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             ...options.networkNode,
             metricsContext: this.metricsContext
         })
+        instances.push(this)
     }
 
     async joinStreamPart(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
@@ -114,11 +138,14 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     async stop(): Promise<void> {
-        await this.deliveryLayer!.destroy()
-        await this.layer0Node!.stop()
-        this.deliveryLayer = undefined
-        this.layer0Node = undefined
-        this.emit('stopped')
+        if (!this.stopped) {
+            this.stopped = true
+            pull(instances, this)
+            await this.deliveryLayer!.destroy()
+            await this.layer0Node!.stop()
+            this.deliveryLayer = undefined
+            this.layer0Node = undefined
+        }
     }
 
 }

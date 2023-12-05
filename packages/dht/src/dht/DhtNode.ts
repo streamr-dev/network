@@ -281,7 +281,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             highestTtl: this.config.storeHighestTtl,
             redundancyFactor: this.config.storageRedundancyFactor,
             localDataStore: this.localDataStore,
-            getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
+            getClosestNeighborsTo: (id: Uint8Array, n?: number) => {
                 return this.peerManager!.getClosestNeighborsTo(id, n)
             },
             rpcRequestTimeout: this.config.rpcRequestTimeout

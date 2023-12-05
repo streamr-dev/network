@@ -185,7 +185,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         logger.trace(`Starting ConnectionManager...`)
         await this.connectorFacade.start(
             (connection: ManagedConnection) => this.onNewConnection(connection),
-            (peerDescriptor: PeerDescriptor) => this.canConnect(peerDescriptor),
             this
         )
         // Garbage collection of connections
@@ -315,11 +314,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     public hasRemoteLockedConnection(peerDescriptor: PeerDescriptor): boolean {
         const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
         return this.locks.isRemoteLocked(peerIdKey)
-    }
-
-    private canConnect(peerDescriptor: PeerDescriptor): boolean {
-        // Perhaps the connection's state should be checked here
-        return !this.hasConnection(peerDescriptor) // TODO: Add port range check
     }
 
     public handleMessage(message: Message): void {

@@ -209,4 +209,33 @@ describe('WebRTC Connection Management', () => {
         await disconnectedPromise1
 
     }, 20000)
+
+    it('failed connections are cleaned up', async () => {
+        const msg: Message = {
+            serviceId,
+            messageType: MessageType.RPC,
+            messageId: '1',
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
+        }
+
+        const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
+            manager1.on('disconnected', () => {
+                resolve()
+            })
+        })
+
+        msg.targetDescriptor = {
+            nodeId: new Uint8Array([0, 0, 0, 0, 0]),
+            type: NodeType.NODEJS,
+        }
+        
+        await Promise.allSettled([
+            manager1.send(msg),
+            disconnectedPromise1
+        ])
+        expect(manager1.getConnection(msg.targetDescriptor!)).toBeUndefined()
+    }, 20000)
 })
