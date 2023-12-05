@@ -10,8 +10,11 @@ describe('Config', () => {
     it('start with minimal config', async () => {
         const broker = await createBroker({
             client: {
+                ...CONFIG_TEST,
                 network: {
+                    ...CONFIG_TEST.network,
                     controlLayer: {
+                        ...CONFIG_TEST.network!.controlLayer,
                         entryPoints: CONFIG_TEST.network!.controlLayer!.entryPoints,
                         websocketServerEnableTls: false
                     }
@@ -25,8 +28,11 @@ describe('Config', () => {
     it('temporary compatibility', async () => {
         const broker = await createBroker({
             client: {
+                ...CONFIG_TEST,
                 network: {
+                    ...CONFIG_TEST.network,
                     controlLayer: {
+                        ...CONFIG_TEST.network!.controlLayer,
                         entryPoints: [{
                             id: 'eeeeeeeeee',
                             websocket: {
