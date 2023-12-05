@@ -44,8 +44,6 @@ export interface Events {
 
 const logger = new Logger(module)
 
-let cleanUp: () => Promise<void> = async () => { }
-
 interface Metrics extends MetricsDefinition {
     broadcastMessagesPerSecond: Metric
     broadcastBytesPerSecond: Metric
@@ -93,7 +91,6 @@ export class StreamrNode extends EventEmitter<Events> {
         this.layer0Node = startedAndJoinedLayer0Node
         this.transport = transport
         this.connectionLocker = connectionLocker
-        cleanUp = () => this.destroy()
     }
 
     async destroy(): Promise<void> {
@@ -305,19 +302,4 @@ export class StreamrNode extends EventEmitter<Events> {
     getStreamParts(): StreamPartID[] {
         return Array.from(this.streamParts.keys()).map((id) => StreamPartIDUtils.parse(id))
     }
-}
-
-[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {
-    process.on(term, async () => {
-        // TODO should we catch possible promise rejection?
-        await cleanUp()
-        process.exit()
-    })
-})
-
-declare let window: any
-if (typeof window === 'object') {
-    window.addEventListener('unload', async () => {
-        await cleanUp()
-    })
 }

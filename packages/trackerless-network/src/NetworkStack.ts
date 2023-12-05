@@ -1,6 +1,6 @@
 import { ConnectionManager, DhtNode, DhtNodeOptions, areEqualPeerDescriptors } from '@streamr/dht'
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
-import { MetricsContext, waitForCondition } from '@streamr/utils'
+import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
@@ -16,10 +16,16 @@ export interface NetworkStackEvents {
     stopped: () => void
 }
 
+const logger = new Logger(module)
+
+// eslint-disable-next-line @typescript-eslint/prefer-function-type
+const cleanUp: { (): Promise<void> }[] = []
+
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     private layer0Node?: Layer0Node
     private streamrNode?: StreamrNode
+    private stopped = false
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
 
@@ -63,6 +69,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     async start(doJoin = true): Promise<void> {
+        cleanUp.push(() => this.stop())
         await this.layer0Node!.start()
         const connectionManager = this.layer0Node!.getTransport() as ConnectionManager
         if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
@@ -110,11 +117,29 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     async stop(): Promise<void> {
-        await this.streamrNode!.destroy()
-        await this.layer0Node!.stop()
-        this.streamrNode = undefined
-        this.layer0Node = undefined
-        this.emit('stopped')
+        if (!this.stopped) {
+            this.stopped = true
+            await this.streamrNode!.destroy()
+            await this.layer0Node!.stop()
+            this.streamrNode = undefined
+            this.layer0Node = undefined
+            logger.info('stopped')
+        }
     }
 
+}
+
+[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {
+    process.on(term, async () => {
+        // TODO should we catch possible promise rejection?
+        await Promise.all(cleanUp.map((fn) => fn()))
+        process.exit()
+    })
+})
+
+declare let window: any
+if (typeof window === 'object') {
+    window.addEventListener('unload', async () => {
+        await Promise.all(cleanUp.map((fn) => fn()))
+    })
 }
