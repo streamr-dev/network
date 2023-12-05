@@ -20,7 +20,7 @@ const logger = new Logger(module)
 
 const ensureConfigFileWritable = (directory: string): void => {
     const baseDirectory = getBaseDirectory(directory)
-    fs.accessSync(baseDirectory, fs.constants.W_OK)
+    fs.accessSync(baseDirectory, fs.constants.W_OK | fs.constants.R_OK)
     logger.trace(`Directory ${baseDirectory} is writable`)
 }
 
@@ -29,7 +29,7 @@ const getBaseDirectory = (directory: string): string => {
     do {
         const current = subDirs.join(path.sep)
         if (fs.existsSync(current)) {
-           return current
+            return current
         }
         subDirs.pop()
     } while (subDirs.length > 0)
