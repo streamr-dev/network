@@ -19,6 +19,7 @@ export type HasSession = (request: HasSessionRequest, context: ServerCallContext
 const logger = new Logger(module)
 
 const ensureConfigFileWritable = (directory: string): void => {
+    logger.info(`Checking if directory ${directory} is writable`)
     const baseDirectory = getBaseDirectory(directory)
     logger.info(`Found base directory ${baseDirectory}`)
     try {
