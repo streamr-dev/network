@@ -19,16 +19,9 @@ export type HasSession = (request: HasSessionRequest, context: ServerCallContext
 const logger = new Logger(module)
 
 const ensureConfigFileWritable = (directory: string): void => {
-    logger.info(`Checking if directory ${directory} is writable`)
     const baseDirectory = getBaseDirectory(directory)
-    logger.info(`Found base directory ${baseDirectory}`)
-    try {
-        fs.accessSync(baseDirectory, fs.constants.W_OK)
-        logger.info(`Directory ${baseDirectory} is writable`)
-    } catch (err) {
-        logger.error(err)
-        throw new Error(`Directory ${baseDirectory} is not writable`)
-    }
+    fs.accessSync(baseDirectory, fs.constants.W_OK)
+    logger.trace(`Directory ${baseDirectory} is writable`)
 }
 
 const getBaseDirectory = (directory: string): string => {
