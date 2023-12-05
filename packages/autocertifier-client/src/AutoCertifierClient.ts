@@ -21,7 +21,7 @@ const logger = new Logger(module)
 const ensureConfigFileWritable = (directory: string): void => {
     const baseDirectory = getBaseDirectory(directory)
     fs.accessSync(baseDirectory, fs.constants.W_OK | fs.constants.R_OK)
-    logger.trace(`Directory ${baseDirectory} is writable`)
+    logger.trace(`Directory ${baseDirectory} is readable and writable`)
 }
 
 const getBaseDirectory = (directory: string): string => {
