@@ -34,9 +34,10 @@ const ensureConfigFileWritable = (directory: string): void => {
 const getBaseDirectory = (directory: string): string => {
     const subDirs = directory.split(path.sep)
     while (subDirs.length > 0) {
-        const current = subDirs.pop()
-        if (fs.existsSync(current!)) {
-           return subDirs.join(path.sep)
+        subDirs.pop()
+        const current = subDirs.join(path.sep)
+        if (fs.existsSync(current)) {
+           return current
         }
     }
     return path.sep
