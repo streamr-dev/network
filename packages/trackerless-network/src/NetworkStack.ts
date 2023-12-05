@@ -5,6 +5,7 @@ import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { Layer0Node } from './logic/Layer0Node'
+import { pull } from 'lodash'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
@@ -16,9 +17,26 @@ export interface NetworkStackEvents {
     stopped: () => void
 }
 
+const instances: NetworkStack[] = []
+const stopInstances = async () => {
+    // make a clone so that it is ok for each instance.stop() to remove itself from the list (at line 139)
+    // while the map function is iterating the list
+    const clonedInstances = [...instances]
+    await Promise.all(clonedInstances.map((instance) => instance.stop()))
+}
 const EXIT_EVENTS = [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`]
-
+EXIT_EVENTS.forEach((event) => {
+    process.on(event, async () => {
+        await stopInstances()
+        process.exit()
+    })
+})
 declare let window: any
+if (typeof window === 'object') {
+    window.addEventListener('unload', async () => {
+        await stopInstances()
+    })
+}
 
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
@@ -40,6 +58,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             ...options.networkNode,
             metricsContext: this.metricsContext
         })
+        instances.push(this)
     }
 
     async joinStreamPart(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
@@ -81,14 +100,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             }
         }
         await this.streamrNode?.start(this.layer0Node!, connectionManager, connectionManager)
-    
-        EXIT_EVENTS.forEach((term) => {
-            process.on(term, this.onExit)
-        })
-        
-        if (typeof window === 'object') {
-            window.addEventListener('unload', () => this.stop())
-        }
     }
 
     private async ensureConnectedToControlLayer(): Promise<void> {
@@ -122,18 +133,10 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         return this.options
     }
 
-    // Purposely an arrow function to maintain this context
-    onExit = async (): Promise<void> => {
-        await this.stop()
-        process.exit()
-    }
-
     async stop(): Promise<void> {
         if (!this.stopped) {
             this.stopped = true
-            EXIT_EVENTS.forEach((term) => {
-                process.off(term, this.onExit)
-            })
+            pull(instances, this)
             await this.streamrNode!.destroy()
             await this.layer0Node!.stop()
             this.streamrNode = undefined
