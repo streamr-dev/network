@@ -1,6 +1,6 @@
 import { ConnectionManager, DhtNode, DhtNodeOptions, areEqualPeerDescriptors } from '@streamr/dht'
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
-import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
+import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
@@ -16,10 +16,9 @@ export interface NetworkStackEvents {
     stopped: () => void
 }
 
-const logger = new Logger(module)
+const EXIT_EVENTS = [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`]
 
-// eslint-disable-next-line @typescript-eslint/prefer-function-type
-const cleanUp: { (): Promise<void> }[] = []
+declare let window: any
 
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
@@ -69,7 +68,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     async start(doJoin = true): Promise<void> {
-        cleanUp.push(() => this.stop())
         await this.layer0Node!.start()
         const connectionManager = this.layer0Node!.getTransport() as ConnectionManager
         if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
@@ -83,6 +81,14 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             }
         }
         await this.streamrNode?.start(this.layer0Node!, connectionManager, connectionManager)
+    
+        EXIT_EVENTS.forEach((term) => {
+            process.on(term, this.onExit)
+        })
+        
+        if (typeof window === 'object') {
+            window.addEventListener('unload', () => this.stop())
+        }
     }
 
     private async ensureConnectedToControlLayer(): Promise<void> {
@@ -116,30 +122,23 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         return this.options
     }
 
+    // Purposely an arrow function to maintain this context
+    onExit = async (): Promise<void> => {
+        await this.stop()
+        process.exit()
+    }
+
     async stop(): Promise<void> {
         if (!this.stopped) {
             this.stopped = true
+            EXIT_EVENTS.forEach((term) => {
+                process.off(term, this.onExit)
+            })
             await this.streamrNode!.destroy()
             await this.layer0Node!.stop()
             this.streamrNode = undefined
             this.layer0Node = undefined
-            logger.info('stopped')
         }
     }
 
-}
-
-[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {
-    process.on(term, async () => {
-        // TODO should we catch possible promise rejection?
-        await Promise.all(cleanUp.map((fn) => fn()))
-        process.exit()
-    })
-})
-
-declare let window: any
-if (typeof window === 'object') {
-    window.addEventListener('unload', async () => {
-        await Promise.all(cleanUp.map((fn) => fn()))
-    })
 }
