@@ -18,6 +18,8 @@ interface DiscoverySessionConfig {
     parallelism: number
     noProgressLimit: number
     peerManager: PeerManager
+    // Note that contacted peers will be mutated by the DiscoverySession or other parallel sessions
+    contactedPeers: Set<PeerIDKey>
 }
 
 export class DiscoverySession {
@@ -29,7 +31,6 @@ export class DiscoverySession {
     private noProgressCounter = 0
     private ongoingClosestPeersRequests: Set<string> = new Set()
     private readonly config: DiscoverySessionConfig
-    private contactedPeers: Set<PeerIDKey> = new Set()
 
     constructor(config: DiscoverySessionConfig) {
         this.config = config
@@ -48,7 +49,7 @@ export class DiscoverySession {
         }
         logger.trace(`Getting closest peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
         this.outgoingClosestPeersRequestsCounter++
-        this.contactedPeers.add(contact.getPeerId().toKey())
+        this.config.contactedPeers.add(contact.getPeerId().toKey())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)
         this.config.peerManager.handlePeerActive(contact.getPeerId())
         return returnedContacts
@@ -83,7 +84,7 @@ export class DiscoverySession {
         if (this.stopped) {
             return
         }
-        const uncontacted = this.config.peerManager.getClosestContactsTo(this.config.targetId, this.config.parallelism, this.contactedPeers)
+        const uncontacted = this.config.peerManager.getClosestContactsTo(this.config.targetId, this.config.parallelism, this.config.contactedPeers)
         if (uncontacted.length === 0 || this.noProgressCounter >= this.config.noProgressLimit) {
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
@@ -106,7 +107,7 @@ export class DiscoverySession {
     }
 
     public async findClosestNodes(timeout: number): Promise<void> {
-        if (this.config.peerManager.getNumberOfContacts(this.contactedPeers) === 0) {
+        if (this.config.peerManager.getNumberOfContacts(this.config.contactedPeers) === 0) {
             return
         }
         // TODO add abortController and signal it in stop()

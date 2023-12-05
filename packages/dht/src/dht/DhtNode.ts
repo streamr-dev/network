@@ -449,9 +449,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started) {
             throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
-        await Promise.all(entryPointDescriptors.map((entryPoint) =>
-            this.peerDiscovery!.joinDht(entryPoint, doAdditionalRandomPeerDiscovery, retry)
-        ))
+        await this.peerDiscovery!.joinDht(entryPointDescriptors, doAdditionalRandomPeerDiscovery, retry)
     }
 
     public async startFind(key: Uint8Array, action?: FindAction, excludedPeer?: PeerDescriptor): Promise<FindResult> {
