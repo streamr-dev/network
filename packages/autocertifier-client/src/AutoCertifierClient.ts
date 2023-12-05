@@ -22,6 +22,7 @@ const ensureConfigFileWritable = (directory: string): void => {
     const baseDirectory = getBaseDirectory(directory)
     try {
         fs.accessSync(baseDirectory, fs.constants.W_OK)
+        logger.info(`Directory ${baseDirectory} is writable`)
     } catch (err) {
         logger.error(err)
         throw new Error(`Directory ${baseDirectory} is not writable`)
