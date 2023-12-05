@@ -56,8 +56,10 @@ export class ManagedConnection extends EventEmitter<Events> {
     private localPeerDescriptor: PeerDescriptor
     protected outgoingConnection?: IConnection
     protected incomingConnection?: IConnection
+
+    // TODO: Temporary debug variable, should be removed in the future.
     private created = Date.now()
-    
+
     constructor(
         localPeerDescriptor: PeerDescriptor,
         connectionType: ConnectionType,
