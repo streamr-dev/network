@@ -66,17 +66,25 @@ describe('RpcCommunicator', () => {
     it('Resolves Promises', async () => {
         // @ts-expect-error private 
         rpcCommunicator.onOutgoingMessage(request, promises)
+            // @ts-expect-error private 
+            expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         rpcCommunicator.handleIncomingMessage(responseRpcMessage)
         const pong = await promises.message.promise
         expect(pong).toEqual({ requestId: 'requestId' })
+        // @ts-expect-error private 
+        expect(rpcCommunicator.ongoingRequests.size).toEqual(0)
     })
 
     it('Timeouts Promises', async () => {
         // @ts-expect-error private 
         rpcCommunicator.onOutgoingMessage(request, promises)
+        // @ts-expect-error private 
+        expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         await expect(promises.message.promise)
             .rejects
             .toEqual(new Err.RpcTimeout('Rpc request timed out'))
+        // @ts-expect-error private 
+        expect(rpcCommunicator.ongoingRequests.size).toEqual(0)
     })
 
     it('Rejects on error response', async () => {
@@ -92,6 +100,8 @@ describe('RpcCommunicator', () => {
         await expect(promises.message.promise)
             .rejects
             .toEqual(new Err.RpcServerError('Server error on request'))
+        // @ts-expect-error private 
+        expect(rpcCommunicator.ongoingRequests.size).toEqual(0)
     })
 
     it('Rejects on server timeout response', async () => {
@@ -106,6 +116,8 @@ describe('RpcCommunicator', () => {
         await expect(promises.message.promise)
             .rejects
             .toEqual(new Err.RpcTimeout('Server timed out on request'))
+        // @ts-expect-error private 
+        expect(rpcCommunicator.ongoingRequests.size).toEqual(0)
     })
 
     it('Rejects on unknown method', async () => {
@@ -120,6 +132,8 @@ describe('RpcCommunicator', () => {
         await expect(promises.message.promise)
             .rejects
             .toEqual(new Err.RpcRequest(`Server does not implement method ping`))
+        // @ts-expect-error private 
+        expect(rpcCommunicator.ongoingRequests.size).toEqual(0)
     })
 
     it('Success responses to requests', async () => {

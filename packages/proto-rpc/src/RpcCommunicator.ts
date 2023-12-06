@@ -40,12 +40,12 @@ class OngoingRequest {
     private deferredPromises: ResultParts
     private timeoutRef: NodeJS.Timeout
 
-    constructor(deferredPromises: ResultParts,
-        timeout: number) {
+    constructor(deferredPromises: ResultParts, timeout: number, onTimeout: () => void) {
         this.deferredPromises = deferredPromises
         this.timeoutRef = setTimeout(() => {
             const error = new Err.RpcTimeout('Rpc request timed out', new Error())
             this.rejectDeferredPromises(error, StatusCode.DEADLINE_EXCEEDED)
+            onTimeout()
         }, timeout)
     }
 
@@ -188,7 +188,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
     private onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: ResultParts, callContext?: ProtoCallContext): void {
         if (this.stopped) {
             if (deferredPromises) {
-                const ongoingRequest = new OngoingRequest(deferredPromises, 1000)
+                const ongoingRequest = new OngoingRequest(deferredPromises, 1000, () => {})
                 ongoingRequest.rejectRequest(new Error('stopped'), StatusCode.STOPPED)
             }
             return
@@ -211,7 +211,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
                         if (this.ongoingRequests.has(rpcMessage.requestId)) {
                             this.handleClientError(rpcMessage.requestId, clientSideException)
                         } else {
-                            const ongoingRequest = new OngoingRequest(deferredPromises, 1000)
+                            const ongoingRequest = new OngoingRequest(deferredPromises, 1000, () => {})
                             ongoingRequest.rejectRequest(clientSideException, StatusCode.SERVER_ERROR)
                         }
                     }
@@ -219,7 +219,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
                 .then(() => {
                     if (deferredPromises) {
                         if (!this.ongoingRequests.has(rpcMessage.requestId)) {
-                            const ongoingRequest = new OngoingRequest(deferredPromises, 1000)
+                            const ongoingRequest = new OngoingRequest(deferredPromises, 1000, () => {})
                             ongoingRequest.resolveNotification()
                         }
                     }
@@ -228,7 +228,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
         } else {
             if (deferredPromises) {
                 if (!this.ongoingRequests.has(rpcMessage.requestId)) {
-                    const ongoingRequest = new OngoingRequest(deferredPromises, 1000)
+                    const ongoingRequest = new OngoingRequest(deferredPromises, 1000, () => {})
                     ongoingRequest.resolveNotification()
                 }
             }
@@ -304,7 +304,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
             return
         }
 
-        const ongoingRequest = new OngoingRequest(deferredPromises, timeout)
+        const ongoingRequest = new OngoingRequest(deferredPromises, timeout, () => this.ongoingRequests.delete(requestId))
 
         this.ongoingRequests.set(requestId, ongoingRequest)
     }
