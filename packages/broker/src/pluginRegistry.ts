@@ -7,6 +7,7 @@ import { StoragePlugin } from './plugins/storage/StoragePlugin'
 import { BrubeckMinerPlugin } from './plugins/brubeckMiner/BrubeckMinerPlugin'
 import { SubscriberPlugin } from './plugins/subscriber/SubscriberPlugin'
 import { InfoPlugin } from './plugins/info/InfoPlugin'
+import { SRTPlugin } from './plugins/srt/SRTPlugin'
 
 export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin<any> | never => {
     switch (name) {
@@ -26,6 +27,8 @@ export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin
             return new SubscriberPlugin(pluginOptions)
         case 'info':
             return new InfoPlugin(pluginOptions)
+        case 'srt':
+            return new SRTPlugin(pluginOptions) 
         default:
             throw new Error(`Unknown plugin: ${name}`)
     }
