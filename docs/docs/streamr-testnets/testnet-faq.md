@@ -5,7 +5,7 @@ sidebar_position: 2
 # Testnet FAQs
 ## General
 #### What are the differences between the "pretestnet" and Testnet 1?
-This `v100.0.0-testnet-one.1` version can be used to connect to Testnet 1 **or** the Mumbai testing environment. 
+This `v100.0.0-testnet-one.2` version can be used to connect to Testnet 1 **or** the Mumbai testing environment. 
 
 The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator.md#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator.md#testnet-node-config) is a much shorter version.
 
@@ -25,6 +25,9 @@ In the old Brubeck network, people would cram multiple Streamr nodes into the ch
 From the 'network strength' perspective (interpreted to mean from the decentralization and security perspective), it might actually be a net positive change. Example: If I had a stream and wanted to incentivize node operators to relay and secure it, for my money I'd rather get 100 independent operators, with 2 nodes each working on my stream (for a total of 200 nodes), rather than just 200 whatever nodes, out of which 100% might be run by the same person in the same data center, which wouldn't offer much improvement in terms of decentralization or robustness. 
 
 So, it's not wrong to think that more nodes in a stream is better, but it's an oversimplification that completely ignores any quality aspect. The goal in 1.0 is to give sponsors what they pay for, which is essentially robustness and security for their stream, and those are achieved through a sufficient amount of decentralized nodes doing the work.
+
+#### How do I get DATA tokens?
+You'll need at least 5k `DATA` tokens to participate in any Sponsorship. The `DATA` token is traded on [exchanges](https://coinmarketcap.com/currencies/streamr/#Markets). You'll need to either withdraw to Polygon, or bridge Ethereum mainnet tokens using the [Polygon bridge](https://wallet.polygon.technology/polygon/bridge/deposit). Please [stay safe](#safety)! 
 
 ## Technical
 #### What are the hardware requirements for running nodes?
@@ -133,7 +136,7 @@ Add given nodes public key to operator node addresses.
 I’m receiving the following warning message.
 
 ```JSON
-INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version v100.0.0-testnet-one.1
+INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version v100.0.0-testnet-one.2
 Error: call revert exception [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="metadata()", data="0x", errorArgs=null, errorName=null, errorSignature=null, reason=null, code=CALL_EXCEPTION, version=abi/5.7.0)
 ```
 
@@ -209,7 +212,7 @@ No. You must manually unstake your Operator.
 Anyone getting to 'buy' Operator shares too cheap harms the other parties involved. 
 Here's an example where the Operator self-delegates while there's a relatively large amount of pending earnings:
 
-**Operator self-delegates with pending earnings**:
+*Operator self-delegates with pending earnings*:
 - Operator self-delegated (funds) 10k DATA (Operator on-chain value: 10k, 100% owned by Operator)
 - Delegator delegates 10k DATA to Operator (Operator on-chain value: 20k, 50% owned by Operator, 50% by Delegator)
 - Operator works on some Sponsorship(s) for a while, say now there's 1k DATA in uncollected earnings (Operator on-chain value: 20k, "realtime" value: 21k)
@@ -244,7 +247,7 @@ Eventually, yes. If there's not enough available balance on the Operator you hav
 
 ## Slashing & kicking
 #### What are the penalties for Testnet 1?
-Testnet 1 will have reduced slashing penalties of 1% instead of the usual 10%.
+Testnet 1 will have reduced slashing penalties of 0.01% instead of the usual 10%.
 
 #### How and when does slashing occurs? When exactly will operators be slashed?
 There are two kinds of slashing events that Operators need to pay attention to. These are "Normal slashing" and "False flag" slashing. The short answer is that normal slashing occurs when nodes are caught being offline or unreachable when they should be online and doing work. It's a similar story for false flag voting, though the penalties are smaller. 

@@ -11,7 +11,7 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 The 1.0 testnets will be launched with the technical parameters set out in: [SIP-16](https://snapshot.org/#/streamr.eth/proposal/0xf95e691103efc4ce9ebd2ed22da3df6df446f982e6e34df1180a9a5366b3060f)
 
 :::info Important
-To earn DATA tokens on Polygon you must be willing to hold and stake DATA tokens on Polygon smart contracts that we call Sponsorships.
+To earn DATA tokens on Polygon you must be willing to hold and stake DATA tokens on Polygon smart contracts that we call [Sponsorships](../streamr-network/incentives/stream-sponsorships.md). See [how to get DATA](../streamr-testnets/testnet-faq.md#how-do-i-get-data-tokens)
 :::
 
 ### How to participate & earn
@@ -20,7 +20,7 @@ To earn DATA tokens on Polygon you must be willing to hold and stake DATA tokens
 3. [Delegate](../streamr-network/network-roles/delegators.md) your `DATA` tokens onto other Operators
 
 ## Current node software version
-Use node version: `v100.0.0-testnet-one.1`. Do not use the `latest` tag release.
+Use node version: `v100.0.0-testnet-one.2`. Do not use the `latest` tag release.
 
 ## Schedules
 Keep a close eye on this page as these dates may change based on the findings of each testnet.
@@ -29,7 +29,7 @@ Keep a close eye on this page as these dates may change based on the findings of
 - Start date: 4PM CET / 15:00 UTC, 5th December to 12th December
 - Reward pool: 1 million DATA
 - Duration: 7 days
-- **Testnet 1 will have reduced slashing penalties of 1% instead of 10%**
+- **Testnet 1 will have reduced slashing penalties of 0.01% instead of 10%**
 
 ### Testnet 2
 - Start date: 18th December to 8th January
@@ -50,7 +50,7 @@ The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your O
 You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 **What are the differences between Mumbai and Testnet 1?**
-This `v100.0.0-testnet-one.1` version can be used to connect to Testnet 1 **or** the Mumbai network. 
+This `v100.0.0-testnet-one.2` version can be used to connect to Testnet 1 **or** the Mumbai network. 
 
 The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator.md#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator.md#testnet-node-config) is a much shorter version.
 

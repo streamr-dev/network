@@ -84,7 +84,7 @@ Start the config wizard with the below command. Docker will download the node im
 **Linux / macOS**
 
 ```
-sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.1 bin/config-wizard
+sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.2 bin/config-wizard
 ```
 
 **Windows PowerShell**
@@ -98,7 +98,7 @@ cd ~/.streamrDocker
 Then run the config wizard:
 
 ```
-docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.1 bin/config-wizard
+docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.2 bin/config-wizard
 ```
 
 **Using the config wizard**
@@ -131,7 +131,7 @@ If you're running a node to become an Operator, then you could now jump back to 
 **Linux / macOS**
 
 ```
-sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.1
+sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.2
 ```
 
 **Windows PowerShell**
@@ -145,7 +145,7 @@ cd ~/.streamrDocker
 Start your node:
 
 ```
-docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.1
+docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.2
 ```
 
 **The `docker run` command, deconstructed:**
@@ -224,10 +224,10 @@ See [Docker's documentation](https://docs.docker.com/engine/reference/commandlin
 If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Broker requires at least Node.js version 16.x. Once installed, you can download, configure, and start the Streamr Broker.
 
 ### Step 1: Install the latest testnet version using npm
--   Run `npm install -g streamr-broker@100.0.0-testnet-one.1` to download and install the package. You may need administrative access to run this command. The latest testnet version may be different to the version listed here, if in doubt, check the [npm registry](https://www.npmjs.com/package/streamr-broker?activeTab=versions).
+-   Run `npm install -g streamr-broker@100.0.0-testnet-one.2` to download and install the package. You may need administrative access to run this command. The latest testnet version may be different to the version listed here, if in doubt, check the [npm registry](https://www.npmjs.com/package/streamr-broker?activeTab=versions).
 
 ```
-npm install -g streamr-broker@100.0.0-testnet-one.1
+npm install -g streamr-broker@100.0.0-testnet-one.2
 ```
 
 There can be plenty of output from npm. If the installation fails with an error, you should address it before continuing.
@@ -319,7 +319,7 @@ For extra logging on your Streamr node, add the `LOG_LEVEL` environmental variab
 
 For example,
 ```shell
-sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -e LOG_LEVEL=trace -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.1
+sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -e LOG_LEVEL=trace -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.2
 ```
 
 ## Mumbai node config
