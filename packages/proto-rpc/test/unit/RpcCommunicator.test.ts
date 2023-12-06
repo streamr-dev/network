@@ -66,8 +66,8 @@ describe('RpcCommunicator', () => {
     it('Resolves Promises', async () => {
         // @ts-expect-error private 
         rpcCommunicator.onOutgoingMessage(request, promises)
-            // @ts-expect-error private 
-            expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
+        // @ts-expect-error private 
+        expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         rpcCommunicator.handleIncomingMessage(responseRpcMessage)
         const pong = await promises.message.promise
         expect(pong).toEqual({ requestId: 'requestId' })
@@ -96,6 +96,8 @@ describe('RpcCommunicator', () => {
         //response.body = RpcMessage.toBinary(errorResponse)
         // @ts-expect-error private 
         rpcCommunicator.onOutgoingMessage(request, promises)
+        // @ts-expect-error private 
+        expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         rpcCommunicator.handleIncomingMessage(errorResponse)
         await expect(promises.message.promise)
             .rejects
@@ -112,6 +114,8 @@ describe('RpcCommunicator', () => {
         //response.body = RpcMessage.toBinary(errorResponse)
         // @ts-expect-error private 
         rpcCommunicator.onOutgoingMessage(request, promises)
+        // @ts-expect-error private 
+        expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         rpcCommunicator.handleIncomingMessage(errorResponse)
         await expect(promises.message.promise)
             .rejects
@@ -128,6 +132,8 @@ describe('RpcCommunicator', () => {
         //response.body = RpcMessage.toBinary(errorResponse)
         // @ts-expect-error private 
         rpcCommunicator.onOutgoingMessage(request, promises)
+        // @ts-expect-error private 
+        expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         rpcCommunicator.handleIncomingMessage(errorResponse)
         await expect(promises.message.promise)
             .rejects
