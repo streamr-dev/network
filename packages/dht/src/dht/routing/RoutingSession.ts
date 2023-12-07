@@ -103,7 +103,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             maxSize: 10000,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             nodeIdDistanceLimit: previousId,
-            excludedNodeIds: excludedNodeIds,
+            excludedNodeIds,
             emitEvents: false
         })
     }
