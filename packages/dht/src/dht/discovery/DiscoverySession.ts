@@ -1,7 +1,6 @@
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
-import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerManager, getDistance } from '../PeerManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
@@ -28,7 +27,7 @@ export class DiscoverySession {
     private emitter = new EventEmitter<DiscoverySessionEvents>()
     private outgoingClosestPeersRequestsCounter = 0
     private noProgressCounter = 0
-    private ongoingClosestPeersRequests: Set<PeerIDKey> = new Set()
+    private ongoingClosestPeersRequests: Set<NodeID> = new Set()
     private readonly config: DiscoverySessionConfig
     private contactedPeers: Set<NodeID> = new Set()
 
@@ -55,11 +54,11 @@ export class DiscoverySession {
         return returnedContacts
     }
 
-    private onClosestPeersRequestSucceeded(peerId: PeerID, contacts: PeerDescriptor[]) {
-        if (!this.ongoingClosestPeersRequests.has(peerId.toKey())) {
+    private onClosestPeersRequestSucceeded(nodeId: NodeID, contacts: PeerDescriptor[]) {
+        if (!this.ongoingClosestPeersRequests.has(nodeId)) {
             return
         }
-        this.ongoingClosestPeersRequests.delete(peerId.toKey())
+        this.ongoingClosestPeersRequests.delete(nodeId)
         const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromBinary(this.config.targetId), 1)[0]
         const oldClosestDistance = getDistance(getNodeIdFromBinary(this.config.targetId), oldClosestNeighbor.getPeerId().toNodeId())
         this.addNewContacts(contacts)
@@ -73,10 +72,10 @@ export class DiscoverySession {
     }
 
     private onClosestPeersRequestFailed(peer: DhtNodeRpcRemote) {
-        if (!this.ongoingClosestPeersRequests.has(peer.getPeerId().toKey())) {
+        if (!this.ongoingClosestPeersRequests.has(peer.getPeerId().toNodeId())) {
             return
         }
-        this.ongoingClosestPeersRequests.delete(peer.getPeerId().toKey())
+        this.ongoingClosestPeersRequests.delete(peer.getPeerId().toNodeId())
         this.config.peerManager.handlePeerUnresponsive(peer.getPeerId().toNodeId())
     }
 
@@ -98,10 +97,10 @@ export class DiscoverySession {
             if (this.ongoingClosestPeersRequests.size >= this.config.parallelism) {
                 break
             }
-            this.ongoingClosestPeersRequests.add(nextPeer.getPeerId().toKey())
+            this.ongoingClosestPeersRequests.add(nextPeer.getPeerId().toNodeId())
             // eslint-disable-next-line promise/catch-or-return
             this.getClosestPeersFromContact(nextPeer)
-                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer.getPeerId(), contacts))
+                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer.getPeerId().toNodeId(), contacts))
                 .catch(() => this.onClosestPeersRequestFailed(nextPeer))
                 .finally(() => {
                     this.outgoingClosestPeersRequestsCounter--
