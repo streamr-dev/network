@@ -1,6 +1,6 @@
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { SortedContactList } from '../contact/SortedContactList'
-import { PeerID, PeerIDKey } from '../../helpers/PeerID'
+import { PeerID } from '../../helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
@@ -70,7 +70,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     public readonly sessionId = v4()
     private readonly rpcCommunicator: RoutingRpcCommunicator
-    private ongoingRequests: Set<PeerIDKey> = new Set()
+    private ongoingRequests: Set<NodeID> = new Set()
     private contactList: SortedContactList<RemoteContact>
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly messageToRoute: RouteMessageWrapper
@@ -109,13 +109,13 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         })
     }
 
-    private onRequestFailed(peerId: PeerID) {
+    private onRequestFailed(nodeId: NodeID) {
         logger.trace('onRequestFailed() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
         }
-        if (this.ongoingRequests.has(peerId.toKey())) {
-            this.ongoingRequests.delete(peerId.toKey())
+        if (this.ongoingRequests.has(nodeId)) {
+            this.ongoingRequests.delete(nodeId)
         }
         const contacts = this.updateAndGetRoutablePeers()
         if (contacts.length === 0 && this.ongoingRequests.size === 0) {
@@ -205,14 +205,14 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             // eslint-disable-next-line max-len
             logger.trace(`Sending routeMessage request to contact: ${getNodeIdFromPeerDescriptor(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
             this.contactList.setContacted(nextPeer!.getPeerId().toNodeId())
-            this.ongoingRequests.add(nextPeer!.getPeerId().toKey())
+            this.ongoingRequests.add(nextPeer!.getPeerId().toNodeId())
             setImmediate(async () => {
                 try {
                     const succeeded = await this.sendRouteMessageRequest(nextPeer!)
                     if (succeeded) {
                         this.onRequestSucceeded()
                     } else {
-                        this.onRequestFailed(nextPeer!.getPeerId())
+                        this.onRequestFailed(nextPeer!.getPeerId().toNodeId())
                     }
                 } catch (e) {
                     logger.debug('Unable to route message ', { error: e })

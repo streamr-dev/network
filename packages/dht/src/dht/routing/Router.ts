@@ -2,13 +2,11 @@ import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessa
 import {
     areEqualPeerDescriptors,
     getNodeIdFromPeerDescriptor,
-    keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
 import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { PeerIDKey } from '../../helpers/PeerID'
 import { DuplicateDetector } from './DuplicateDetector'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
@@ -47,7 +45,7 @@ export class Router implements IRouter {
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly connections: Map<NodeID, DhtNodeRpcRemote>
-    private readonly forwardingTable: Map<PeerIDKey, ForwardingTableEntry> = new Map()
+    private readonly forwardingTable: Map<NodeID, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     // TODO use config option or named constant?
     private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
@@ -97,7 +95,7 @@ export class Router implements IRouter {
     public send(msg: Message, reachableThrough: PeerDescriptor[]): void {
         msg.sourceDescriptor = this.localPeerDescriptor
         const targetPeerDescriptor = msg.targetDescriptor!
-        const forwardingEntry = this.forwardingTable.get(keyFromPeerDescriptor(targetPeerDescriptor))
+        const forwardingEntry = this.forwardingTable.get(getNodeIdFromPeerDescriptor(targetPeerDescriptor))
         if (forwardingEntry && forwardingEntry.peerDescriptors.length > 0) {
             const forwardingPeer = forwardingEntry.peerDescriptors[0]
             const forwardedMessage: RouteMessageWrapper = {
@@ -225,19 +223,19 @@ export class Router implements IRouter {
         })
         
         if (reachableThroughWithoutSelf.length > 0) {
-            const sourceKey = keyFromPeerDescriptor(routedMessage.sourcePeer!)
-            if (this.forwardingTable.has(sourceKey)) {
-                const oldEntry = this.forwardingTable.get(sourceKey)
+            const sourceNodeId = getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)
+            if (this.forwardingTable.has(sourceNodeId)) {
+                const oldEntry = this.forwardingTable.get(sourceNodeId)
                 clearTimeout(oldEntry!.timeout)
-                this.forwardingTable.delete(sourceKey)
+                this.forwardingTable.delete(sourceNodeId)
             }
             const forwardingEntry: ForwardingTableEntry = {
                 peerDescriptors: reachableThroughWithoutSelf,
                 timeout: setTimeout(() => {
-                    this.forwardingTable.delete(sourceKey)
+                    this.forwardingTable.delete(sourceNodeId)
                 }, 10000)  // TODO use config option or named constant?
             }
-            this.forwardingTable.set(sourceKey, forwardingEntry)
+            this.forwardingTable.set(sourceNodeId, forwardingEntry)
         }
     }
 }
