@@ -10,10 +10,10 @@ import {
     RouteMessageError,
     RouteMessageWrapper
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { PeerID, PeerIDKey } from '../../helpers/PeerID'
+import { PeerID } from '../../helpers/PeerID'
 import { IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
-import { areEqualPeerDescriptors, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationSessionRpcRemote } from './RecursiveOperationSessionRpcRemote'
@@ -152,7 +152,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
                 this.sendResponse([], this.localPeerDescriptor, sessionId, [], data, true)
             }
         } else if (operation === RecursiveOperation.DELETE_DATA) {
-            this.localDataStore.markAsDeleted(targetId, peerIdFromPeerDescriptor(this.localPeerDescriptor))
+            this.localDataStore.markAsDeleted(targetId, getNodeIdFromPeerDescriptor(this.localPeerDescriptor))
         }
         this.ongoingSessions.delete(sessionId)
         session.stop()
@@ -193,7 +193,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         targetPeerDescriptor: PeerDescriptor,
         serviceId: ServiceID,
         closestNodes: PeerDescriptor[],
-        data: Map<PeerIDKey, DataEntry> | undefined,
+        data: Map<NodeID, DataEntry> | undefined,
         noCloserNodesFound: boolean = false
     ): void {
         const dataEntries = data ? Array.from(data.values(), DataEntry.create.bind(DataEntry)) : []
@@ -230,7 +230,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             ? this.localDataStore.getEntries(targetId.value) 
             : undefined
         if (recursiveOperationRequest!.operation === RecursiveOperation.DELETE_DATA) {
-            this.localDataStore.markAsDeleted(targetId.value, peerIdFromPeerDescriptor(routedMessage.sourcePeer!))
+            this.localDataStore.markAsDeleted(targetId.value, getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!))
         }
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
             // TODO this is also very similar case to what we do at line 255, could simplify the code paths?
