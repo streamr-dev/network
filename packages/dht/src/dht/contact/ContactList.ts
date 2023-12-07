@@ -1,4 +1,3 @@
-import { PeerID } from '../../helpers/PeerID'
 import EventEmitter from 'eventemitter3'
 import { NodeID } from '../../helpers/nodeId'
 
@@ -17,7 +16,7 @@ export interface Events<C> {
     newContact: (newContact: C, closestContacts: C[]) => void
 }
 
-export class ContactList<C extends { getPeerId: () => PeerID }> extends EventEmitter<Events<C>> {
+export class ContactList<C extends { getNodeId: () => NodeID }> extends EventEmitter<Events<C>> {
 
     protected contactsById: Map<NodeID, ContactState<C>> = new Map()
     // TODO move this to SortedContactList

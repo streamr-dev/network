@@ -48,9 +48,9 @@ export class DiscoverySession {
         }
         logger.trace(`Getting closest peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
         this.outgoingClosestPeersRequestsCounter++
-        this.contactedPeers.add(contact.getPeerId().toNodeId())
+        this.contactedPeers.add(contact.getNodeId())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)
-        this.config.peerManager.handlePeerActive(contact.getPeerId().toNodeId())
+        this.config.peerManager.handlePeerActive(contact.getNodeId())
         return returnedContacts
     }
 
@@ -60,10 +60,10 @@ export class DiscoverySession {
         }
         this.ongoingClosestPeersRequests.delete(nodeId)
         const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromBinary(this.config.targetId), 1)[0]
-        const oldClosestDistance = getDistance(getNodeIdFromBinary(this.config.targetId), oldClosestNeighbor.getPeerId().toNodeId())
+        const oldClosestDistance = getDistance(getNodeIdFromBinary(this.config.targetId), oldClosestNeighbor.getNodeId())
         this.addNewContacts(contacts)
         const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromBinary(this.config.targetId), 1)[0]
-        const newClosestDistance = getDistance(getNodeIdFromBinary(this.config.targetId), newClosestNeighbor.getPeerId().toNodeId())
+        const newClosestDistance = getDistance(getNodeIdFromBinary(this.config.targetId), newClosestNeighbor.getNodeId())
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
         } else {
@@ -72,11 +72,11 @@ export class DiscoverySession {
     }
 
     private onClosestPeersRequestFailed(peer: DhtNodeRpcRemote) {
-        if (!this.ongoingClosestPeersRequests.has(peer.getPeerId().toNodeId())) {
+        if (!this.ongoingClosestPeersRequests.has(peer.getNodeId())) {
             return
         }
-        this.ongoingClosestPeersRequests.delete(peer.getPeerId().toNodeId())
-        this.config.peerManager.handlePeerUnresponsive(peer.getPeerId().toNodeId())
+        this.ongoingClosestPeersRequests.delete(peer.getNodeId())
+        this.config.peerManager.handlePeerUnresponsive(peer.getNodeId())
     }
 
     private findMoreContacts(): void {
@@ -97,10 +97,10 @@ export class DiscoverySession {
             if (this.ongoingClosestPeersRequests.size >= this.config.parallelism) {
                 break
             }
-            this.ongoingClosestPeersRequests.add(nextPeer.getPeerId().toNodeId())
+            this.ongoingClosestPeersRequests.add(nextPeer.getNodeId())
             // eslint-disable-next-line promise/catch-or-return
             this.getClosestPeersFromContact(nextPeer)
-                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer.getPeerId().toNodeId(), contacts))
+                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer.getNodeId(), contacts))
                 .catch(() => this.onClosestPeersRequestFailed(nextPeer))
                 .finally(() => {
                     this.outgoingClosestPeersRequestsCounter--

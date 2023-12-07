@@ -2,7 +2,6 @@ import {
     DataEntry, ReplicateDataRequest, PeerDescriptor,
     StoreDataRequest, StoreDataResponse, RecursiveOperation
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { PeerID } from '../../helpers/PeerID'
 import { Any } from '../../proto/google/protobuf/any'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
@@ -75,7 +74,7 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     private async replicateAndUpdateStaleStateIfClosest(dataEntry: DataEntry, newNode: PeerDescriptor): Promise<void> {
-        const newNodeId = PeerID.fromValue(newNode.nodeId)
+        const newNodeId = getNodeIdFromPeerDescriptor(newNode)
         // TODO use config option or named constant?
         const closestToData = this.getClosestNeighborsTo(dataEntry.key, 10)
         const sortedList = new SortedContactList<Contact>({
@@ -86,16 +85,16 @@ export class StoreRpcLocal implements IStoreRpc {
         })
         sortedList.addContact(new Contact(this.localPeerDescriptor))
         closestToData.forEach((con) => {
-            if (!newNodeId.equals(PeerID.fromValue(con.getPeerDescriptor().nodeId))) {
+            if (!areEqualNodeIds(newNodeId, getNodeIdFromPeerDescriptor(con.getPeerDescriptor()))) {
                 sortedList.addContact(new Contact(con.getPeerDescriptor()))
             }
         })
-        const selfIsPrimaryStorer = sortedList.getAllContacts()[0].getPeerId().equals(PeerID.fromValue(this.localPeerDescriptor.nodeId))
+        const selfIsPrimaryStorer = areEqualNodeIds(sortedList.getAllContacts()[0].getNodeId(), getNodeIdFromPeerDescriptor(this.localPeerDescriptor))
         if (selfIsPrimaryStorer) {
             sortedList.addContact(new Contact(newNode))
             const sorted = sortedList.getAllContacts()
             // findIndex should never return -1 here because we just added the new node to the list
-            const index = findIndex(sorted, (contact) => contact.getPeerId().equals(newNodeId))
+            const index = findIndex(sorted, (contact) => areEqualNodeIds(contact.getNodeId(), newNodeId))
             // if new node is within the storageRedundancyFactor closest nodes to the data
             // do replicate data to it
             if (index < this.redundancyFactor) {
@@ -186,7 +185,7 @@ export class StoreRpcLocal implements IStoreRpc {
         })
         sortedList.addContact(new Contact(this.localPeerDescriptor))
         closestPeers.forEach((con) => sortedList.addContact(new Contact(con.getPeerDescriptor())))
-        return sortedList.getClosestContacts().some((node) => areEqualNodeIds(node.getPeerId().toNodeId(), localNodeId))
+        return sortedList.getClosestContacts().some((node) => areEqualNodeIds(node.getNodeId(), localNodeId))
     }
 
     // RPC service implementation
@@ -249,8 +248,8 @@ export class StoreRpcLocal implements IStoreRpc {
 
     private replicateDataToNeighbors(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
         // sort own contact list according to data id
-        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
-        const incomingPeerId = PeerID.fromValue(incomingPeer.nodeId)
+        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
+        const incomingNodeId = getNodeIdFromPeerDescriptor(incomingPeer)
         // TODO use config option or named constant?
         const closestToData = this.getClosestNeighborsTo(dataEntry.key, 10)
         const sortedList = new SortedContactList<Contact>({
@@ -263,15 +262,15 @@ export class StoreRpcLocal implements IStoreRpc {
         closestToData.forEach((con) => {
             sortedList.addContact(new Contact(con.getPeerDescriptor()))
         })
-        const selfIsPrimaryStorer = (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId))
+        const selfIsPrimaryStorer = (!areEqualNodeIds(sortedList.getAllContacts()[0].getNodeId(), localNodeId))
         const targets = selfIsPrimaryStorer
             // If we are not the closest node to the data, replicate only to the closest one to the data
             ? [sortedList.getAllContacts()[0]]
             // if we are the closest to the data, replicate to all storageRedundancyFactor nearest
             : sortedList.getAllContacts()
         targets.forEach((contact) => {
-            const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().nodeId)
-            if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
+            const contactNodeId = getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())
+            if (!areEqualNodeIds(incomingNodeId, contactNodeId) && !areEqualNodeIds(localNodeId, contactNodeId)) {
                 setImmediate(() => {
                     executeSafePromise(async () => {
                         await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())

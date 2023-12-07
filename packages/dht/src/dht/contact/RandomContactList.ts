@@ -1,8 +1,7 @@
-import { PeerID } from '../../helpers/PeerID'
 import { NodeID, areEqualNodeIds } from '../../helpers/nodeId'
 import { ContactList, ContactState } from './ContactList'
 
-export class RandomContactList<C extends { getPeerId: () => PeerID }> extends ContactList<C> {
+export class RandomContactList<C extends { getNodeId: () => NodeID }> extends ContactList<C> {
 
     private randomness: number
 
@@ -17,18 +16,18 @@ export class RandomContactList<C extends { getPeerId: () => PeerID }> extends Co
     }
 
     addContact(contact: C): void {
-        if (areEqualNodeIds(this.localNodeId, contact.getPeerId().toNodeId())) {
+        if (areEqualNodeIds(this.localNodeId, contact.getNodeId())) {
             return
         }
-        if (!this.contactsById.has(contact.getPeerId().toNodeId())) {
+        if (!this.contactsById.has(contact.getNodeId())) {
             const roll = Math.random()
             if (roll < this.randomness) {
                 if (this.getSize() === this.maxSize && this.getSize() > 0) {
                     const toRemove = this.contactIds[0]
                     this.removeContact(toRemove)
                 }
-                this.contactIds.push(contact.getPeerId().toNodeId())
-                this.contactsById.set(contact.getPeerId().toNodeId(), new ContactState(contact))
+                this.contactIds.push(contact.getNodeId())
+                this.contactsById.set(contact.getNodeId(), new ContactState(contact))
                 this.emit(
                     'newContact',
                     contact,

@@ -114,7 +114,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         sortingList.addContacts(oldContacts)
         const sortedContacts = sortingList.getAllContacts()
         this.config.connectionManager?.weakUnlockConnection(sortedContacts[sortedContacts.length - 1].getPeerDescriptor())
-        this.bucket?.remove(sortedContacts[sortedContacts.length - 1].getPeerId().value)    
+        this.bucket?.remove(hexToBinary(sortedContacts[sortedContacts.length - 1].getNodeId()))
         this.bucket!.add(newContact)
     }
 
@@ -133,10 +133,10 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         if (this.stopped) {
             return
         }
-        if (!areEqualNodeIds(contact.getPeerId().toNodeId(), this.config.localNodeId)) {
+        if (!areEqualNodeIds(contact.getNodeId(), this.config.localNodeId)) {
             // Important to lock here, before the ping result is known
             this.config.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
-            if (this.connections.has(contact.getPeerId().toNodeId())) {
+            if (this.connections.has(contact.getNodeId())) {
                 logger.trace(`Added new contact ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
             } else {    // open connection by pinging
                 logger.trace('starting ping ' + getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
@@ -246,7 +246,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             if (!excludeSet) {
                 return true
             } else {
-                return !excludeSet.has(contact.getPeerId().toNodeId())
+                return !excludeSet.has(contact.getNodeId())
             } 
         })
     }
@@ -264,7 +264,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             if (!excludeSet) {
                 return true
             } else {
-                return !excludeSet.has(contact.getPeerId().toNodeId())
+                return !excludeSet.has(contact.getNodeId())
             } 
         })
     }
@@ -274,7 +274,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             if (!excludeSet) {
                 return true
             } else {
-                return !excludeSet.has(contact.getPeerId().toNodeId())
+                return !excludeSet.has(contact.getNodeId())
             } 
         }).length
     }

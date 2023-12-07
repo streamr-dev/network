@@ -204,15 +204,15 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             const nextPeer = uncontacted.shift()
             // eslint-disable-next-line max-len
             logger.trace(`Sending routeMessage request to contact: ${getNodeIdFromPeerDescriptor(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
-            this.contactList.setContacted(nextPeer!.getPeerId().toNodeId())
-            this.ongoingRequests.add(nextPeer!.getPeerId().toNodeId())
+            this.contactList.setContacted(nextPeer!.getNodeId())
+            this.ongoingRequests.add(nextPeer!.getNodeId())
             setImmediate(async () => {
                 try {
                     const succeeded = await this.sendRouteMessageRequest(nextPeer!)
                     if (succeeded) {
                         this.onRequestSucceeded()
                     } else {
-                        this.onRequestFailed(nextPeer!.getPeerId().toNodeId())
+                        this.onRequestFailed(nextPeer!.getNodeId())
                     }
                 } catch (e) {
                     logger.debug('Unable to route message ', { error: e })
