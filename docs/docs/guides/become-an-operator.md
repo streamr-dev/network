@@ -20,14 +20,14 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 - You can run ~~up to 5 nodes per IP address~~ any number of nodes from the same IP address, although one node per machine is recommended
 - Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships at any time
 - You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
-- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `v100.0.0-testnet-one.2`. The `latest` tag still points to the previous milestone (Brubeck) software.
+- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `v100.0.0-testnet-one.3`. The `latest` tag still points to the previous milestone (Brubeck) software.
 - There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
 :::
 
 ## Migrating from Mumbai
 If you've created your node in the Mumbai testing environment and you want to participate in the incentivized testnets with real token rewards and risks, then you'll need to recreate your Operator using the Streamr Network [Hub](https://streamr.network/hub). The same funding and pairing steps that you did for your Mumbai Operator need to be repeated here too. The testnets and the future 1.0 mainnet will run on the Polygon Blockchain.
 
-- **Node version:** The `pretestnet` tagged releases shouldn't be used anymore, instead use `v100.0.0-testnet-one.2`. 
+- **Node version:** The `pretestnet` tagged releases shouldn't be used anymore, instead use `v100.0.0-testnet-one.3`. 
 - **Node config:** Your node config should resemble the [Testnet 1 config template](#testnet-node-config).
 
 ## Operator setup instructions

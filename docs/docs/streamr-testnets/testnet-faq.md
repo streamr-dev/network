@@ -5,7 +5,7 @@ sidebar_position: 2
 # Testnet FAQs
 ## General
 #### What are the differences between the "pretestnet" and Testnet 1?
-This `v100.0.0-testnet-one.2` version can be used to connect to Testnet 1 **or** the Mumbai testing environment. 
+This `v100.0.0-testnet-one.3` version can be used to connect to Testnet 1 **or** the Mumbai testing environment. 
 
 The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator.md#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator.md#testnet-node-config) is a much shorter version.
 
@@ -40,7 +40,7 @@ Running a fleet of nodes with a redundancy factor greater than one is recommende
 
 Nodes will be doing real work on real streams, and the amount one can stake/earn is not directly limited by the number of nodes. Still of course, more nodes can do more work and that potentially allows you to earn more, so the relationship is more indirect.
 
-Learn more about [node redundancy](../streamr-network/network-roles/operators#node-redundancy-factor).
+Learn more about [node redundancy](../streamr-network/network-roles/operators.md#node-redundancy-factor).
 
 #### What is the advantage of Operators running multiple nodes?
 With more nodes, Operators can do more work and/or have more redundancy to protect from slashing. Theoretical example:
@@ -136,7 +136,7 @@ Add given nodes public key to operator node addresses.
 I’m receiving the following warning message.
 
 ```JSON
-INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version v100.0.0-testnet-one.2
+INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version v100.0.0-testnet-one.3
 Error: call revert exception [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="metadata()", data="0x", errorArgs=null, errorName=null, errorSignature=null, reason=null, code=CALL_EXCEPTION, version=abi/5.7.0)
 ```
 
