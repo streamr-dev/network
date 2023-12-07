@@ -48,28 +48,23 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     // * 'contacts' are all non-unresponsive nodes that we know about
 
     // The kademlia k-bucket
-    private bucket?: KBucket<DhtNodeRpcRemote>
+    private bucket: KBucket<DhtNodeRpcRemote>
     // Nodes that are connected to this node on Layer0
     public readonly connections: Map<NodeID, DhtNodeRpcRemote> = new Map()
     // All nodes that we know about
-    private contacts?: SortedContactList<DhtNodeRpcRemote>
-    private randomPeers?: RandomContactList<DhtNodeRpcRemote>
+    private contacts: SortedContactList<DhtNodeRpcRemote>
+    private randomPeers: RandomContactList<DhtNodeRpcRemote>
     private readonly config: PeerManagerConfig
     private stopped: boolean = false
 
     constructor(config: PeerManagerConfig) {
         super()
         this.config = config
-        this.initKBuckets()
-    }
-
-    private initKBuckets() {
         this.bucket = new KBucket<DhtNodeRpcRemote>({
             localNodeId: hexToBinary(this.config.localNodeId),
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
             numberOfNodesToPing: this.config.numberOfNodesPerKBucket
         })
-
         this.bucket.on('ping', (oldContacts: DhtNodeRpcRemote[], newContact: DhtNodeRpcRemote) => this.onKBucketPing(oldContacts, newContact))
         this.bucket.on('removed', (contact: DhtNodeRpcRemote) => this.onKBucketRemoved(contact))
         this.bucket.on('added', (contact: DhtNodeRpcRemote) => this.onKBucketAdded(contact))
@@ -87,7 +82,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
                 return
             }
             this.emit('contactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
-            this.randomPeers!.addContact(this.config.createDhtNodeRpcRemote(removedContact.getPeerDescriptor()))
+            this.randomPeers.addContact(this.config.createDhtNodeRpcRemote(removedContact.getPeerDescriptor()))
         })
         this.contacts.on('newContact', (newContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
             this.emit('newContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
@@ -114,8 +109,8 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         sortingList.addContacts(oldContacts)
         const sortedContacts = sortingList.getAllContacts()
         this.config.connectionManager?.weakUnlockConnection(sortedContacts[sortedContacts.length - 1].getPeerDescriptor())
-        this.bucket?.remove(hexToBinary(sortedContacts[sortedContacts.length - 1].getNodeId()))
-        this.bucket!.add(newContact)
+        this.bucket.remove(hexToBinary(sortedContacts[sortedContacts.length - 1].getNodeId()))
+        this.bucket.add(newContact)
     }
 
     private onKBucketRemoved(contact: DhtNodeRpcRemote): void {
@@ -124,7 +119,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
         this.config.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
         logger.trace(`Removed contact ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
-        if (this.bucket!.count() === 0) {
+        if (this.bucket.count() === 0) {
             this.emit('kBucketEmpty')
         }
     }
@@ -170,9 +165,9 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     }
 
     private getClosestActiveContactNotInBucket(): DhtNodeRpcRemote | undefined {
-        for (const contactId of this.contacts!.getContactIds()) {
-            if (!this.bucket!.get(hexToBinary(contactId)) && this.contacts!.isActive(contactId)) {
-                return this.contacts!.getContact(contactId)!.contact
+        for (const contactId of this.contacts.getContactIds()) {
+            if (!this.bucket.get(hexToBinary(contactId)) && this.contacts.isActive(contactId)) {
+                return this.contacts.getContact(contactId)!.contact
             }
         }
         return undefined
@@ -197,7 +192,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         logger.trace('disconnected: ' + getNodeIdFromPeerDescriptor(peerDescriptor))
         this.connections.delete(getNodeIdFromPeerDescriptor(peerDescriptor))
         if (this.config.isLayer0) {
-            this.bucket!.remove(peerDescriptor.nodeId)
+            this.bucket.remove(peerDescriptor.nodeId)
             if (gracefulLeave === true) {
                 logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
                 this.removeContact(peerDescriptor)
@@ -217,20 +212,20 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
         logger.trace(`Removing contact ${getNodeIdFromPeerDescriptor(contact)}`)
         const nodeId = getNodeIdFromPeerDescriptor(contact)
-        this.bucket!.remove(hexToBinary(nodeId))
-        this.contacts!.removeContact(nodeId)
-        this.randomPeers!.removeContact(nodeId)
+        this.bucket.remove(hexToBinary(nodeId))
+        this.contacts.removeContact(nodeId)
+        this.randomPeers.removeContact(nodeId)
     }
 
     stop(): void {
         this.stopped = true
-        this.bucket!.toArray().forEach((rpcRemote: DhtNodeRpcRemote) => {
+        this.bucket.toArray().forEach((rpcRemote: DhtNodeRpcRemote) => {
             rpcRemote.leaveNotice()
-            this.bucket!.remove(rpcRemote.id)
+            this.bucket.remove(rpcRemote.id)
         })
-        this.bucket!.removeAllListeners()
-        this.contacts!.stop()
-        this.randomPeers!.stop()
+        this.bucket.removeAllListeners()
+        this.contacts.stop()
+        this.randomPeers.stop()
         this.connections.clear()
     }
 
@@ -240,7 +235,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             allowToContainReferenceId: true,
             emitEvents: false
         }) 
-        this.bucket!.toArray().map((contact) => closest.addContact(contact))
+        this.bucket.toArray().map((contact) => closest.addContact(contact))
         // TODO should set the excludeSet and limit to SortedContactList constructor and remove these line
         return closest.getClosestContacts(limit).filter((contact) => {
             if (!excludeSet) {
@@ -258,7 +253,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             allowToContainReferenceId: true,
             emitEvents: false
         })
-        this.contacts!.getAllContacts().map((contact) => closest.addContact(contact))
+        this.contacts.getAllContacts().map((contact) => closest.addContact(contact))
         // TODO should set the excludeSet and limit to SortedContactList constructor and remove these line
         return closest.getClosestContacts(limit).filter((contact) => {
             if (!excludeSet) {
@@ -270,7 +265,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     }
 
     getNumberOfContacts(excludeSet?: Set<NodeID>): number {
-        return this.contacts!.getAllContacts().filter((contact) => {
+        return this.contacts.getAllContacts().filter((contact) => {
             if (!excludeSet) {
                 return true
             } else {
@@ -284,20 +279,20 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     }
 
     getNumberOfNeighbors(): number {
-        return this.bucket!.count()
+        return this.bucket.count()
     }
 
     getNeighbors(): PeerDescriptor[] {
-        return this.bucket!.toArray().map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
+        return this.bucket.toArray().map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
     }
 
     handlePeerActive(nodeId: NodeID): void {
-        this.contacts!.setActive(nodeId)
+        this.contacts.setActive(nodeId)
     }
 
     handlePeerUnresponsive(nodeId: NodeID): void {
-        this.bucket!.remove(hexToBinary(nodeId))
-        this.contacts!.removeContact(nodeId)
+        this.bucket.remove(hexToBinary(nodeId))
+        this.contacts.removeContact(nodeId)
     }
 
     handleNewPeers(peerDescriptors: PeerDescriptor[], setActive?: boolean): void { 
@@ -309,19 +304,19 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             if (!areEqualNodeIds(nodeId, this.config.localNodeId)) {
                 logger.trace(`Adding new contact ${nodeId}`)
                 const remote = this.config.createDhtNodeRpcRemote(contact)
-                const isInBucket = (this.bucket!.get(contact.nodeId) !== null)
-                const isInNeighborList = (this.contacts!.getContact(nodeId) !== undefined)
-                if (isInBucket || isInNeighborList) {
-                    this.randomPeers!.addContact(remote)
+                const isInBucket = (this.bucket.get(contact.nodeId) !== null)
+                const isInContacts = (this.contacts.getContact(nodeId) !== undefined)
+                if (isInBucket || isInContacts) {
+                    this.randomPeers.addContact(remote)
                 }
                 if (!isInBucket) {
-                    this.bucket!.add(remote)
+                    this.bucket.add(remote)
                 } 
-                if (!isInNeighborList) {
-                    this.contacts!.addContact(remote)
+                if (!isInContacts) {
+                    this.contacts.addContact(remote)
                 } 
                 if (setActive) {
-                    this.contacts!.setActive(nodeId)
+                    this.contacts.setActive(nodeId)
                 }
             }
         })
