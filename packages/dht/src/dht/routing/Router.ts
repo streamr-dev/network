@@ -170,9 +170,9 @@ export class Router implements IRouter {
     }
 
     private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedNode?: PeerDescriptor): RoutingSession {
-        const excludedPeers = routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor))
+        const excludedPeers = new Set<NodeID>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
         if (excludedNode) {
-            excludedPeers.push(getNodeIdFromPeerDescriptor(excludedNode))
+            excludedPeers.add(getNodeIdFromPeerDescriptor(excludedNode))
         }
         logger.trace('routing session created with connections: ' + this.connections.size)
         return new RoutingSession(
