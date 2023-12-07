@@ -161,8 +161,7 @@ export class SortedContactList<C extends { getNodeId: () => NodeID }> extends Ev
     public removeContact(id: NodeID): boolean {
         if (this.contactsById.has(id)) {
             const removed = this.contactsById.get(id)!.contact
-            // TODO use sortedIndexBy?
-            const index = this.contactIds.findIndex((nodeId) => areEqualNodeIds(nodeId, id))
+            const index = sortedIndexBy(this.contactIds, id, (id: NodeID) => { return this.distanceToReferenceId(id) })
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id)
             if (this.config.emitEvents) {
