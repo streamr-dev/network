@@ -1,6 +1,5 @@
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { SortedContactList } from '../contact/SortedContactList'
-import { PeerID } from '../../helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
@@ -88,7 +87,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         connections: Map<NodeID, DhtNodeRpcRemote>,
         parallelism: number,
         mode: RoutingMode = RoutingMode.ROUTE,
-        excludedPeerIDs?: PeerID[]
+        excludedNodeIDs?: NodeID[]
     ) {
         super()
         this.rpcCommunicator = rpcCommunicator
@@ -104,7 +103,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             maxSize: 10000,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             nodeIdDistanceLimit: previousId,
-            excludedNodeIDs: excludedPeerIDs?.map((p) => p.toNodeId()),
+            excludedNodeIDs,
             emitEvents: false
         })
     }

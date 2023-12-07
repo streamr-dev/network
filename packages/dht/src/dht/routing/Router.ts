@@ -1,8 +1,7 @@
 import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import {
     areEqualPeerDescriptors,
-    getNodeIdFromPeerDescriptor,
-    peerIdFromPeerDescriptor
+    getNodeIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
 import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
@@ -170,10 +169,10 @@ export class Router implements IRouter {
         }
     }
 
-    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RoutingSession {
-        const excludedPeers = routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
-        if (excludedPeer) {
-            excludedPeers.push(peerIdFromPeerDescriptor(excludedPeer))
+    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedNode?: PeerDescriptor): RoutingSession {
+        const excludedPeers = routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor))
+        if (excludedNode) {
+            excludedPeers.push(getNodeIdFromPeerDescriptor(excludedNode))
         }
         logger.trace('routing session created with connections: ' + this.connections.size)
         return new RoutingSession(
