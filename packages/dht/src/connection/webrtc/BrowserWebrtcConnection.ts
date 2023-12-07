@@ -185,7 +185,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         this.dataChannel = dataChannel
         dataChannel.onopen = () => {
             logger.trace('dc.onOpen')
-            this.openDataChannel()
+            this.onDataChannelOpen()
         }
 
         dataChannel.onclose = () => {
@@ -224,7 +224,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         }
     }
 
-    private openDataChannel(): void {
+    private onDataChannelOpen(): void {
         this.lastState = 'connected'
         this.emit('connected')
     }

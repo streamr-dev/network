@@ -204,7 +204,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
         dataChannel.onOpen(() => {
             logger.trace(`dc.onOpened`)
-            this.openDataChannel()
+            this.onDataChannelOpen()
         })
 
         dataChannel.onClosed(() => {
@@ -224,7 +224,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         })
     }
 
-    private openDataChannel(): void {
+    private onDataChannelOpen(): void {
         if (this.connectingTimeoutRef) {
             clearTimeout(this.connectingTimeoutRef)
         }
