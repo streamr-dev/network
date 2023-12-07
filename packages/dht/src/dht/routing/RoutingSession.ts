@@ -22,7 +22,7 @@ const MAX_FAILED_HOPS = 2
 class RemoteContact extends Contact {
 
     private routerRpcRemote: RouterRpcRemote
-    private RecursiveOperationRpcRemote: RecursiveOperationRpcRemote
+    private recursiveOperationRpcRemote: RecursiveOperationRpcRemote
 
     constructor(peer: DhtNodeRpcRemote, localPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
         super(peer.getPeerDescriptor())
@@ -33,7 +33,7 @@ class RemoteContact extends Contact {
             toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport())),
             EXISTING_CONNECTION_TIMEOUT
         )
-        this.RecursiveOperationRpcRemote = new RecursiveOperationRpcRemote(
+        this.recursiveOperationRpcRemote = new RecursiveOperationRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
@@ -47,7 +47,7 @@ class RemoteContact extends Contact {
     }
 
     getRecursiveOperationRpcRemote(): RecursiveOperationRpcRemote {
-        return this.RecursiveOperationRpcRemote
+        return this.recursiveOperationRpcRemote
     }
 }
 
