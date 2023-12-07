@@ -7,7 +7,7 @@ import { execSync } from 'child_process'
 import fs from 'fs'
 import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { Logger, wait } from '@streamr/utils'
+import { Logger, hexToBinary, wait } from '@streamr/utils'
 import { debugVars } from '../../src/helpers/debugHelpers'
 
 const logger = new Logger(module)
@@ -18,8 +18,6 @@ describe('Find correctness', () => {
     let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.NONE)
     const NUM_NODES = 1000
-
-    const nodeIndicesById: Record<string, number> = {}
 
     if (!fs.existsSync('test/data/nodeids.json')) {
         console.log('ground truth data does not exist yet, generating..')
@@ -34,9 +32,8 @@ describe('Find correctness', () => {
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data), undefined)
         nodes.push(entryPoint)
-        nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
-            nodeId: entryPoint.getNodeId().value,
+            nodeId: hexToBinary(entryPoint.getNodeId()),
             type: NodeType.NODEJS
         }
 
@@ -44,7 +41,6 @@ describe('Find correctness', () => {
             const nodeId = `${i}`
 
             const node = await createMockConnectionDhtNode(nodeId, simulator, Uint8Array.from(dhtIds[i].data), undefined)
-            nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }
     })
@@ -71,7 +67,7 @@ describe('Find correctness', () => {
         logger.info('waiting over')
 
         nodes.forEach((node) => logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + ': connections:' +
-            node.getNumberOfConnections() + ', kbucket: ' + node.getBucketSize()
+            node.getNumberOfConnections() + ', kbucket: ' + node.getNumberOfNeighbors()
             + ', localLocked: ' + node.getNumberOfLocalLockedConnections()
             + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()
             + ', weakLocked: ' + node.getNumberOfWeakLockedConnections()))

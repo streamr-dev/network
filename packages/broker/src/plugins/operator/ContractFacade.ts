@@ -265,7 +265,7 @@ export class ContractFacade {
         const operators = await this.getOperatorAddresses(latestBlock)
         const excluded = this.getOperatorContractAddress()
         const operatorAddresses = operators.filter((id) => id !== excluded)
-        logger.debug(`Found ${operatorAddresses.length} operators`, { operatorAddresses })
+        logger.debug(`Found ${operatorAddresses.length} operators`)
         return sample(operatorAddresses)
     }
 
@@ -456,7 +456,8 @@ export class ContractFacade {
 
     async voteOnFlag(sponsorship: string, targetOperator: string, kick: boolean): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
-        await (await this.operatorContract.voteOnFlag(sponsorship, targetOperator, voteData)).wait()
+        // typical gas cost 99336, but this has shown insufficient sometimes
+        await (await this.operatorContract.voteOnFlag(sponsorship, targetOperator, voteData, { gasLimit: '200000' })).wait()
     }
 
     async closeFlag(sponsorship: string, targetOperator: string): Promise<void> {

@@ -31,6 +31,13 @@ export interface ControlLayerConfig {
     entryPoints?: NetworkPeerDescriptor[]
 
     /**
+     * If true, an attempt is made to discover additional network entrypoint nodes
+     * by querying them from The Graph. If false, only the nodes
+     * listed in entryPoints are used.
+     */
+    entryPointDiscovery?: EntryPointDiscovery
+
+    /**
      * The list of STUN and TURN servers to use in ICE protocol when
      * forming WebRTC connections.
     */
@@ -188,6 +195,13 @@ export interface NetworkPeerDescriptor {
     region?: number
 }
 
+export interface EntryPointDiscovery {
+    enabled?: boolean
+    maxEntryPoints?: number
+    maxQueryResults?: number
+    maxHeartbeatAgeHours?: number
+}
+
 export interface ConnectivityMethod {
     host: string
     port: number
@@ -215,6 +229,8 @@ export interface EthereumNetworkConfig {
 //   from @streamr/config as the intention is to use system-defaults (e.g. Metamask defaults)
 //   in Ethereum network
 export type EnvironmentId = 'polygon' | 'mumbai' | 'dev2'
+
+export const DEFAULT_ENVIRONMENT: EnvironmentId = 'polygon'
 
 /**
  * @category Important
@@ -278,6 +294,7 @@ export interface StreamrClientConfig {
      * Config for the decentralized network layer.
      */
     network?: NetworkConfig
+
     /**
      * When gap filling is enabled and a gap is encountered, a resend request
      * may eventually be sent to a storage node in an attempt to _actively_
@@ -420,7 +437,7 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
     // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?
     let config = cloneDeep(input)
-    const environment = config.environment ?? 'polygon'
+    const environment = config.environment ?? DEFAULT_ENVIRONMENT
     config = applyEnvironmentDefaults(environment, config)
     const strictConfig = validateConfig(config)
     strictConfig.id ??= generateClientId()

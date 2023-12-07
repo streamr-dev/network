@@ -1,7 +1,7 @@
 import { v4 } from 'uuid'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { Router } from '../../src/dht/routing/Router'
-import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
+import { PeerID } from '../../src/helpers/PeerID'
 import { 
     Message,
     MessageType,
@@ -13,6 +13,7 @@ import {
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createWrappedClosestPeersRequest } from '../utils/utils'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
+import { NodeID } from '../../src/helpers/nodeId'
 
 describe('Router', () => {
     let router: Router
@@ -46,7 +47,7 @@ describe('Router', () => {
         destinationPeer: peerDescriptor1,
         sourcePeer: peerDescriptor2
     }
-    let connections: Map<PeerIDKey, DhtNodeRpcRemote>
+    let connections: Map<NodeID, DhtNodeRpcRemote>
     const rpcCommunicator = new FakeRpcCommunicator()
 
     const createMockDhtNodeRpcRemote = (destination: PeerDescriptor): DhtNodeRpcRemote => {
@@ -80,7 +81,7 @@ describe('Router', () => {
     })
 
     it('doRouteMessage with connections', async () => {
-        connections.set(PeerID.fromString('test').toKey(), createMockDhtNodeRpcRemote(peerDescriptor2))
+        connections.set(PeerID.fromString('test').toNodeId(), createMockDhtNodeRpcRemote(peerDescriptor2))
         const ack = await rpcCommunicator.callRpcMethod('routeMessage', {
             message,
             destinationPeer: peerDescriptor2,
@@ -98,7 +99,7 @@ describe('Router', () => {
     })
 
     it('route server with connections', async () => {
-        connections.set(PeerID.fromString('test').toKey(), createMockDhtNodeRpcRemote(peerDescriptor2))
+        connections.set(PeerID.fromString('test').toNodeId(), createMockDhtNodeRpcRemote(peerDescriptor2))
         const ack = await rpcCommunicator.callRpcMethod('routeMessage', routedMessage) as RouteMessageAck
         expect(ack.error).toBeUndefined()
     })
@@ -115,7 +116,7 @@ describe('Router', () => {
     })
 
     it('forward server with connections', async () => {
-        connections.set(PeerID.fromString('test').toKey(), createMockDhtNodeRpcRemote(peerDescriptor2))
+        connections.set(PeerID.fromString('test').toNodeId(), createMockDhtNodeRpcRemote(peerDescriptor2))
         const ack = await rpcCommunicator.callRpcMethod('forwardMessage', routedMessage) as RouteMessageAck
         expect(ack.error).toBeUndefined()
     })

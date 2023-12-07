@@ -14,7 +14,6 @@ describe('Storing data in DHT', () => {
     const NUM_NODES = 100
     const MAX_CONNECTIONS = 20
     const K = 4
-    const nodeIndicesById: Record<string, number> = {}
 
     const getRandomNode = () => {
         return nodes[Math.floor(Math.random() * nodes.length)]
@@ -26,14 +25,12 @@ describe('Storing data in DHT', () => {
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
             undefined, K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
-        nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
             const node = await createMockConnectionDhtNode(nodeId, simulator, 
                 undefined, K, MAX_CONNECTIONS, 60000)
-            nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
@@ -42,7 +39,7 @@ describe('Storing data in DHT', () => {
 
     afterEach(async () => {
         await Promise.all(nodes.map((node) => node.stop()))
-    })
+    }, 15000)
 
     it('Storing data works', async () => {
         const storingNodeIndex = 34

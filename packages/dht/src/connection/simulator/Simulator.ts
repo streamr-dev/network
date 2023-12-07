@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/parameter-properties */
 import EventEmitter from 'eventemitter3'
-import { PeerIDKey } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { ConnectionSourceEvents } from '../IConnectionSource'
 import { SimulatorConnector } from './SimulatorConnector'
@@ -8,10 +7,11 @@ import { SimulatorConnection } from './SimulatorConnection'
 import { ConnectionID } from '../IConnection'
 import { Logger } from '@streamr/utils'
 import { getRegionDelayMatrix } from './pings'
-import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import Heap from 'heap'
 import { debugVars } from '../../helpers/debugHelpers'
 import * as sinon from 'sinon'
+import { NodeID } from '../../helpers/nodeId'
 
 // TODO take this from @streamr/test-utils (we can't access devDependencies as Simulator
 // is currently in "src" directory instead of "test" directory)
@@ -102,7 +102,7 @@ class CloseOperation extends SimulatorOperation {
 
 export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private stopped = false
-    private connectors: Map<PeerIDKey, SimulatorConnector> = new Map()
+    private connectors: Map<NodeID, SimulatorConnector> = new Map()
     private latencyTable?: Array<Array<number>>
     private associations: Map<ConnectionID, Association> = new Map()
 
@@ -214,11 +214,11 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     }
 
     public addConnector(connector: SimulatorConnector): void {
-        this.connectors.set(keyFromPeerDescriptor(connector.getPeerDescriptor()), connector)
+        this.connectors.set(getNodeIdFromPeerDescriptor(connector.getPeerDescriptor()), connector)
     }
 
     private executeConnectOperation(operation: ConnectOperation): void {
-        const target = this.connectors.get(keyFromPeerDescriptor(operation.targetDescriptor))
+        const target = this.connectors.get(getNodeIdFromPeerDescriptor(operation.targetDescriptor))
 
         if (!target) {
             logger.error('Target connector not found when executing connect operation')

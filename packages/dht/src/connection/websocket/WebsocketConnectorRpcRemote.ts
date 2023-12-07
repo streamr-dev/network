@@ -1,10 +1,10 @@
 import {
     PeerDescriptor,
-    WebsocketConnectionRequest
+    WebsocketConnectionRequest,
+    WebsocketConnectionResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { IWebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger } from '@streamr/utils'
-import * as Err from '../../helpers/errors'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { RpcRemote } from '../../dht/contact/RpcRemote'
@@ -21,19 +21,10 @@ export class WebsocketConnectorRpcRemote extends RpcRemote<IWebsocketConnectorRp
         super(localPeerDescriptor, remotePeerDescriptor, 'DUMMY', client)
     }
 
-    async requestConnection(ip: string, port: number): Promise<boolean> {
+    async requestConnection(): Promise<WebsocketConnectionResponse> {
         logger.trace(`Requesting WebSocket connection from ${getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor())}`)
-        const request: WebsocketConnectionRequest = {
-            ip,
-            port
-        }
+        const request: WebsocketConnectionRequest = {}
         const options = this.formDhtRpcOptions()
-        try {
-            const res = await this.getClient().requestConnection(request, options)
-            return res.accepted
-        } catch (err) {
-            logger.debug(new Err.WebsocketConnectionRequestRejected('WebsocketConnectionRequest rejected', err).stack!)
-            return false
-        }
+        return this.getClient().requestConnection(request, options)
     }
 }
