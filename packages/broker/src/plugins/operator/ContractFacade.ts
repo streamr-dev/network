@@ -9,7 +9,7 @@ import {
     toEthereumAddress,
     collect
 } from '@streamr/utils'
-import { Contract } from 'ethers'
+import { Contract, BigNumber, utils } from 'ethers'
 import sample from 'lodash/sample'
 import fetch from 'node-fetch'
 import { NetworkPeerDescriptor } from 'streamr-client'
@@ -461,10 +461,20 @@ export class ContractFacade {
         return toStreamID(await sponsorship.streamId())
     }
 
+    private async bumpGasPrice(byHowManyGwei: number): Promise<BigNumber> {
+        const gasPrice = await this.getProvider().getGasPrice()
+        const newGasPrice: BigNumber = gasPrice.add(utils.parseUnits(byHowManyGwei.toString(), 'gwei'))
+        return newGasPrice
+    }
+
     async voteOnFlag(sponsorship: string, targetOperator: string, kick: boolean): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
+
+        // Voting is time-sensitive, so bid a bit above market rate for gas
+        const gasPrice = this.bumpGasPrice(10)
+
         // typical gas cost 99336, but this has shown insufficient sometimes
-        await (await this.operatorContract.voteOnFlag(sponsorship, targetOperator, voteData, { gasLimit: '200000' })).wait()
+        await (await this.operatorContract.voteOnFlag(sponsorship, targetOperator, voteData, { gasLimit: '200000', gasPrice })).wait()
     }
 
     async closeFlag(sponsorship: string, targetOperator: string): Promise<void> {
