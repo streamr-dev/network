@@ -2,8 +2,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
-import { PeerIDKey } from '../../helpers/PeerID'
-import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Empty } from '../../proto/google/protobuf/empty'
 import {
     IceCandidate,
@@ -19,6 +18,7 @@ import { ManagedConnection } from '../ManagedConnection'
 import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
+import { NodeID } from '../../helpers/nodeId'
 
 const logger = new Logger(module)
 
@@ -26,7 +26,7 @@ interface WebrtcConnectorRpcLocalConfig {
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection 
     onNewConnection: (connection: ManagedConnection) => boolean
     // TODO pass accessor methods instead of passing a mutable entity
-    ongoingConnectAttempts: Map<PeerIDKey, ManagedWebrtcConnection>
+    ongoingConnectAttempts: Map<NodeID, ManagedWebrtcConnection>
     rpcCommunicator: ListeningRpcCommunicator
     getLocalPeerDescriptor: () => PeerDescriptor
     allowPrivateAddresses: boolean
@@ -42,7 +42,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
 
     async requestConnection(context: ServerCallContext): Promise<Empty> {
         const targetPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        if (this.config.ongoingConnectAttempts.has(keyFromPeerDescriptor(targetPeerDescriptor))) {
+        if (this.config.ongoingConnectAttempts.has(getNodeIdFromPeerDescriptor(targetPeerDescriptor))) {
             return {}
         }
         const managedConnection = this.config.connect(targetPeerDescriptor)
@@ -53,15 +53,15 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
 
     async rtcOffer(request: RtcOffer, context: ServerCallContext): Promise<Empty> {
         const remotePeer = (context as DhtCallContext).incomingSourceDescriptor!
-        const peerKey = keyFromPeerDescriptor(remotePeer)
-        let managedConnection = this.config.ongoingConnectAttempts.get(peerKey)
+        const nodeId = getNodeIdFromPeerDescriptor(remotePeer)
+        let managedConnection = this.config.ongoingConnectAttempts.get(nodeId)
         let connection = managedConnection?.getWebrtcConnection()
 
         if (!managedConnection) {
             connection = new NodeWebrtcConnection({ remotePeerDescriptor: remotePeer })
             managedConnection = new ManagedWebrtcConnection(this.config.getLocalPeerDescriptor(), undefined, connection)
             managedConnection.setRemotePeerDescriptor(remotePeer)
-            this.config.ongoingConnectAttempts.set(peerKey, managedConnection)
+            this.config.ongoingConnectAttempts.set(nodeId, managedConnection)
             this.config.onNewConnection(managedConnection)
             const remoteConnector = new WebrtcConnectorRpcRemote(
                 this.config.getLocalPeerDescriptor(),
@@ -82,8 +82,8 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         connection!.setRemoteDescription(request.description, 'offer')
 
         managedConnection.on('handshakeRequest', () => {
-            if (this.config.ongoingConnectAttempts.has(peerKey)) {
-                this.config.ongoingConnectAttempts.delete(peerKey)
+            if (this.config.ongoingConnectAttempts.has(nodeId)) {
+                this.config.ongoingConnectAttempts.delete(nodeId)
             }
             managedConnection!.acceptHandshake()
         })
@@ -92,8 +92,8 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
 
     async rtcAnswer(request: RtcAnswer, context: ServerCallContext): Promise<Empty> {
         const remotePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const peerKey = keyFromPeerDescriptor(remotePeerDescriptor)
-        const connection = this.config.ongoingConnectAttempts.get(peerKey)?.getWebrtcConnection()
+        const nodeId = getNodeIdFromPeerDescriptor(remotePeerDescriptor)
+        const connection = this.config.ongoingConnectAttempts.get(nodeId)?.getWebrtcConnection()
         if (!connection) {
             return {}
         } else if (connection.connectionId.toString() !== request.connectionId) {
@@ -106,9 +106,8 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
 
     async iceCandidate(request: IceCandidate, context: ServerCallContext): Promise<Empty> {
         const remotePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const peerKey = keyFromPeerDescriptor(remotePeerDescriptor)
-        const connection = this.config.ongoingConnectAttempts.get(peerKey)?.getWebrtcConnection()
-
+        const nodeId = getNodeIdFromPeerDescriptor(remotePeerDescriptor)
+        const connection = this.config.ongoingConnectAttempts.get(nodeId)?.getWebrtcConnection()
         if (!connection) {
             return {}
         } else if (connection.connectionId.toString() !== request.connectionId) {
