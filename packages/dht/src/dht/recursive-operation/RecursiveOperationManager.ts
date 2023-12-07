@@ -112,7 +112,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             serviceId: sessionId,
             transport: this.sessionTransport,
             targetId,
-            localPeerId: peerIdFromPeerDescriptor(this.localPeerDescriptor),
+            localNodeId: getNodeIdFromPeerDescriptor(this.localPeerDescriptor),
             // TODO use config option or named constant?
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
             operation

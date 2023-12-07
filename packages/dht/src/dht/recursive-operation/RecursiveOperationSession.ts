@@ -1,15 +1,14 @@
 import EventEmitter from 'eventemitter3'
-import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DataEntry, PeerDescriptor, RecursiveOperationResponse, RecursiveOperation } from '../../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Contact } from '../contact/Contact'
 import { SortedContactList } from '../contact/SortedContactList'
 import { RecursiveOperationResult } from './RecursiveOperationManager'
-import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
-import { getNodeIdFromBinary } from '../../helpers/nodeId'
+import { NodeID, areEqualNodeIds, getNodeIdFromBinary } from '../../helpers/nodeId'
 
 export interface RecursiveOperationSessionEvents {
     completed: (results: PeerDescriptor[]) => void
@@ -19,7 +18,7 @@ export interface RecursiveOperationSessionConfig {
     serviceId: ServiceID
     transport: ITransport
     targetId: Uint8Array
-    localPeerId: PeerID
+    localNodeId: NodeID
     waitedRoutingPathCompletions: number
     operation: RecursiveOperation
 }
@@ -28,14 +27,14 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     private readonly serviceId: ServiceID
     private readonly transport: ITransport
     private readonly targetId: Uint8Array
-    private readonly localPeerId: PeerID
+    private readonly localNodeId: NodeID
     private readonly waitedRoutingPathCompletions: number
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly operation: RecursiveOperation
     private results: SortedContactList<Contact>
-    private foundData: Map<PeerIDKey, DataEntry> = new Map()
-    private allKnownHops: Set<PeerIDKey> = new Set()
-    private reportedHops: Set<PeerIDKey> = new Set()
+    private foundData: Map<NodeID, DataEntry> = new Map()
+    private allKnownHops: Set<NodeID> = new Set()
+    private reportedHops: Set<NodeID> = new Set()
     private timeoutTask?: NodeJS.Timeout 
     private completionEventEmitted = false
     private noCloserNodesReceivedCounter = 0
@@ -45,7 +44,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         this.serviceId = config.serviceId
         this.transport = config.transport
         this.targetId = config.targetId
-        this.localPeerId = config.localPeerId
+        this.localNodeId = config.localNodeId
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
         this.results = new SortedContactList({
             referenceId: getNodeIdFromBinary(this.targetId), 
@@ -71,7 +70,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     }
 
     private isCompleted(): boolean {
-        const unreportedHops: Set<PeerIDKey> = new Set(this.allKnownHops)
+        const unreportedHops: Set<NodeID> = new Set(this.allKnownHops)
         this.reportedHops.forEach((id) => {
             unreportedHops.delete(id)
         })
@@ -112,17 +111,17 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     private addKnownHops(routingPath: PeerDescriptor[]) {
         routingPath.forEach((desc) => {
-            const newPeerId = PeerID.fromValue(desc.nodeId)
-            if (!this.localPeerId.equals(newPeerId)) {
-                this.allKnownHops.add(newPeerId.toKey())
+            const newNodeId = getNodeIdFromPeerDescriptor(desc)
+            if (!areEqualNodeIds(this.localNodeId, newNodeId)) {
+                this.allKnownHops.add(newNodeId)
             }
         })
     }
 
     private setHopAsReported(desc: PeerDescriptor) {
-        const newPeerId = PeerID.fromValue(desc.nodeId)
-        if (!this.localPeerId.equals(newPeerId)) {
-            this.reportedHops.add(newPeerId.toKey())
+        const newNodeId = getNodeIdFromPeerDescriptor(desc)
+        if (!areEqualNodeIds(this.localNodeId, newNodeId)) {
+            this.reportedHops.add(newNodeId)
         }
         if (this.isCompleted()) {
             if (!this.completionEventEmitted && this.isCompleted()) {
@@ -138,7 +137,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     private processFoundData(dataEntries: DataEntry[]): void {
         dataEntries.forEach((entry) => {
-            const creatorKey = keyFromPeerDescriptor(entry.creator!)
+            const creatorKey = getNodeIdFromPeerDescriptor(entry.creator!)
             const existingEntry = this.foundData.get(creatorKey)
             if (!existingEntry || existingEntry.createdAt! < entry.createdAt! 
                 || (existingEntry.createdAt! <= entry.createdAt! && entry.deleted)) {
