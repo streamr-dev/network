@@ -9,9 +9,9 @@ import { v4 } from 'uuid'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { RpcRemote } from './contact/RpcRemote'
-import { PeerID } from '../helpers/PeerID'
-import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../types/ServiceID'
+import { NodeID } from '../helpers/nodeId'
 
 const logger = new Logger(module)
 
@@ -35,7 +35,7 @@ export class DhtNodeRpcRemote extends RpcRemote<IDhtNodeRpcClient> implements KB
         rpcRequestTimeout?: number
     ) {
         super(localPeerDescriptor, peerDescriptor, serviceId, client, rpcRequestTimeout)
-        this.id = this.getPeerId().value
+        this.id = this.getPeerDescriptor().nodeId
         this.vectorClock = DhtNodeRpcRemote.counter++
     }
 
@@ -84,7 +84,7 @@ export class DhtNodeRpcRemote extends RpcRemote<IDhtNodeRpcClient> implements KB
         })
     }
 
-    getPeerId(): PeerID {
-        return peerIdFromPeerDescriptor(this.getPeerDescriptor())
+    getNodeId(): NodeID {
+        return getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
     }
 }

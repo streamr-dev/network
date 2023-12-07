@@ -1,4 +1,4 @@
-import { Logger } from '@streamr/utils'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -51,7 +51,7 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         layer1Node4 = await createMockConnectionLayer1Node(layer0Node4Id, layer0Node4)
 
         entryPointDescriptor = {
-            nodeId: layer0EntryPoint.getNodeId().value,
+            nodeId: hexToBinary(layer0EntryPoint.getNodeId()),
             type: NodeType.NODEJS
         }
 
