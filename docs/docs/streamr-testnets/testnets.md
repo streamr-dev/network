@@ -19,6 +19,10 @@ To earn DATA tokens on Polygon you must be willing to hold and stake DATA tokens
 2. Stake your [Operator](../streamr-network/network-roles/operators.md) on [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md), and/or,
 3. [Delegate](../streamr-network/network-roles/delegators.md) your `DATA` tokens onto other Operators
 
+:::info Important
+- **Do NOT** create or sponsor Sponsorships. If you do tokens will be irreversibly sent to that Sponsorship contract. There is no undo for this.
+:::
+
 ## Current node software version
 Use node version: `v100.0.0-testnet-one.2`. Do not use the `latest` tag release.
 
@@ -67,6 +71,7 @@ Don’t use the `pretestnet` releases anymore.
 We're offering DATA prizes for quality contributions to the following categories:
 - On-chain metric dashboards
 - Fine grained monitoring tools such as email notifications
+- 📸 Show off your setup by posting it to the #StreamrNodeContest on X. If it's the prettiest 😍, greenest 🍃, most sophisticated 🎛️, or uniquely different 🌀, you could snag $100 in DATA as a bonus reward at the month's end!
 
 ### Safety
 **Please be aware of some important safety tips during the testnets:**

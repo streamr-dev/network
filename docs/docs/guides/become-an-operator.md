@@ -95,6 +95,10 @@ All the checkmarks in the Operator status section on your Operator page should n
  In the Hub, go to Network -> Sponsorships and find a Sponsorship you want your Operator to start working on. Click the "Join as Operator" button and select your stake. Note there is a minimum stake of 5000 `DATA` tokens for each Sponsorship that you join. Joining Sponsorships locks your tokens for a period of time, defined in the Sponsorship contract.
 
 :::info Important
+- **Do NOT** create or sponsor Sponsorships. If you do tokens will be irreversibly sent to that Sponsorship contract. There is no undo for this.
+:::
+
+:::info Important
 - There's a known connectivity issue using Brave browser. Your node connectivity status may report incorrectly on the Streamr Hub.
 :::
 

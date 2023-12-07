@@ -124,7 +124,7 @@ Replace the node config file (typically located at `~/.streamrDocker/config/defa
 
 If you intend to test your Operator in the Mumbai environment, then the above advice applies, but use instead the [Mumbai testnet config](./become-an-operator.md#mumbai-node-config).
 
-If you're running a node to become an Operator, then you could now jump back to [Step 3 of becoming an Operator](./become-an-operator/#step-3-pair-your-node-with-your-operator-contract) to add your Operator contract address into the node config before starting your node.
+If you're running a node to become an Operator, then you could now jump back to [Step 3 of becoming an Operator](./become-an-operator.md#step-3-pair-your-node-with-your-operator-contract) to add your Operator contract address into the node config before starting your node.
 
 ### Step 4: Start your Streamr node using Docker
 

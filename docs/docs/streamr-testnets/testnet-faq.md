@@ -202,6 +202,11 @@ The delegators will then simply leave and delegate to someone else, as they are 
 #### Will my rewards automatically be sent to my wallet?
 No, you will need to periodically check and claim your uncollected earnings from the Operator(s) that you have staked/delegated on.
 
+#### How does the auto collect earnings work?
+Nodes work on a collection trigger which is based on how much value there is to collect. The limit to decide whether the earnings are collected upon checking is configurable, and this is defined relative to the limit. The default is halfway to the limit, meaning that uncollected earnings are collected when they equal at least 2.5% of Operator stake. If nodes are running and have enough `MATIC` to pay for gas, then the 5% uncollected limit should not be exceeded.
+
+These check runs every hour by default. 
+
 #### Does staking mean holding tokens on a beneficiary address?
 You'll be staking into a smart contract rather than holding tokens on a beneficiary address. The Operator Contract is synonymous to your beneficiary address.
 
@@ -244,6 +249,9 @@ No, you only need `DATA` tokens.
 
 #### As a Delegator can I always withdraw tokens from the Operators that I have delegated to?
 Eventually, yes. If there's not enough available balance on the Operator you have delegated on then your withdrawal gets entered into the delegation que. When the Operator has an available balance, your tokens will be withdrawn. This will take at maximum 30 days and will happen automatically with no further action required.
+
+#### Do uncollected earnings impact my undelegation amount (Operator withdrawal)?
+Yes. Uncollected earnings are not counted in the undelegation process. If these uncollected earnings are significant and you want them to be counted then you could manually trigger the collection of earnings before undelegating.
 
 ## Slashing & kicking
 #### What are the penalties for Testnet 1?
