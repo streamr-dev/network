@@ -2,7 +2,6 @@ import {
     DataEntry, ReplicateDataRequest, PeerDescriptor,
     StoreDataRequest, StoreDataResponse, RecursiveOperation
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { PeerID } from '../../helpers/PeerID'
 import { Any } from '../../proto/google/protobuf/any'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
@@ -10,7 +9,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IRecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, executeSafePromise } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
@@ -22,6 +21,7 @@ import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ServiceID } from '../../types/ServiceID'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { findIndex } from 'lodash'
+import { areEqualNodeIds, getNodeIdFromDataKey } from '../../helpers/nodeId'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -72,27 +72,27 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     private replicateAndUpdateStaleState(dataEntry: DataEntry, newNode: PeerDescriptor): void {
-        const newNodeId = PeerID.fromValue(newNode.nodeId)
+        const newNodeId = getNodeIdFromPeerDescriptor(newNode)
         // TODO use config option or named constant?
         const closestToData = this.getClosestNeighborsTo(dataEntry.key, 10)
         const sortedList = new SortedContactList<Contact>({
-            referenceId: PeerID.fromValue(dataEntry.key), 
+            referenceId: getNodeIdFromDataKey(dataEntry.key), 
             maxSize: 20,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             emitEvents: false
         })
         sortedList.addContact(new Contact(this.localPeerDescriptor))
         closestToData.forEach((con) => {
-            if (!newNodeId.equals(PeerID.fromValue(con.getPeerDescriptor().nodeId))) {
+            if (!areEqualNodeIds(newNodeId, getNodeIdFromPeerDescriptor(con.getPeerDescriptor()))) {
                 sortedList.addContact(new Contact(con.getPeerDescriptor()))
             }
         })
-        const selfIsPrimaryStorer = sortedList.getAllContacts()[0].getPeerId().equals(PeerID.fromValue(this.localPeerDescriptor.nodeId))
+        const selfIsPrimaryStorer = areEqualNodeIds(sortedList.getAllContacts()[0].getNodeId(), getNodeIdFromPeerDescriptor(this.localPeerDescriptor))
         if (selfIsPrimaryStorer) {
             sortedList.addContact(new Contact(newNode))
             const sorted = sortedList.getAllContacts()
             // findIndex should never return -1 here because we just added the new node to the list
-            const index = findIndex(sorted, (contact) => contact.getPeerId().equals(newNodeId))
+            const index = findIndex(sorted, (contact) => areEqualNodeIds(contact.getNodeId(), newNodeId))
             // if new node is within the storageRedundancyFactor closest nodes to the data
             // do replicate data to it
             if (index < this.redundancyFactor) {
@@ -101,7 +101,7 @@ export class StoreRpcLocal implements IStoreRpc {
                 })
             }
         } else if (!this.selfIsOneOfClosestPeers(dataEntry.key)) {
-            this.localDataStore.setStale(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!), true)
+            this.localDataStore.setStale(dataEntry.key, getNodeIdFromPeerDescriptor(dataEntry.creator!), true)
         }
     }
 
@@ -171,17 +171,17 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     private selfIsOneOfClosestPeers(dataId: Uint8Array): boolean {
-        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
         const closestPeers = this.getClosestNeighborsTo(dataId, this.redundancyFactor)
+        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
         const sortedList = new SortedContactList<Contact>({
-            referenceId: localPeerId, 
+            referenceId: localNodeId, 
             maxSize: this.redundancyFactor, 
             allowToContainReferenceId: true, 
             emitEvents: false
         })
         sortedList.addContact(new Contact(this.localPeerDescriptor))
         closestPeers.forEach((con) => sortedList.addContact(new Contact(con.getPeerDescriptor())))
-        return sortedList.getClosestContacts().some((node) => node.getPeerId().equals(localPeerId))
+        return sortedList.getClosestContacts().some((node) => areEqualNodeIds(node.getNodeId(), localNodeId))
     }
 
     // RPC service implementation
@@ -242,13 +242,12 @@ export class StoreRpcLocal implements IStoreRpc {
 
     private replicateDataToNeighbors(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
         // sort own contact list according to data id
-        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
-        const dataId = PeerID.fromValue(dataEntry.key)
-        const incomingPeerId = PeerID.fromValue(incomingPeer.nodeId)
+        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
+        const incomingNodeId = getNodeIdFromPeerDescriptor(incomingPeer)
         // TODO use config option or named constant?
         const closestToData = this.getClosestNeighborsTo(dataEntry.key, 10)
         const sortedList = new SortedContactList<Contact>({
-            referenceId: dataId, 
+            referenceId: getNodeIdFromDataKey(dataEntry.key), 
             maxSize: this.redundancyFactor, 
             allowToContainReferenceId: true, 
             emitEvents: false
@@ -257,15 +256,15 @@ export class StoreRpcLocal implements IStoreRpc {
         closestToData.forEach((con) => {
             sortedList.addContact(new Contact(con.getPeerDescriptor()))
         })
-        const selfIsPrimaryStorer = (!sortedList.getAllContacts()[0].getPeerId().equals(localPeerId))
+        const selfIsPrimaryStorer = (!areEqualNodeIds(sortedList.getAllContacts()[0].getNodeId(), localNodeId))
         const targets = selfIsPrimaryStorer
             // If we are not the closest node to the data, replicate only to the closest one to the data
             ? [sortedList.getAllContacts()[0]]
             // if we are the closest to the data, replicate to all storageRedundancyFactor nearest
             : sortedList.getAllContacts()
         targets.forEach((contact) => {
-            const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().nodeId)
-            if (!incomingPeerId.equals(contactPeerId) && !localPeerId.equals(contactPeerId)) {
+            const contactNodeId = getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())
+            if (!areEqualNodeIds(incomingNodeId, contactNodeId) && !areEqualNodeIds(localNodeId, contactNodeId)) {
                 setImmediate(() => {
                     executeSafePromise(async () => {
                         await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())

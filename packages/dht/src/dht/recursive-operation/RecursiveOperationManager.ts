@@ -10,11 +10,10 @@ import {
     RouteMessageError,
     RouteMessageWrapper
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
-import { areEqualPeerDescriptors, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Logger, runAndWaitForEvents3, wait } from '@streamr/utils'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { Logger, hexToBinary, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationSessionRpcRemote } from './RecursiveOperationSessionRpcRemote'
 import { v4 } from 'uuid'
@@ -30,17 +29,18 @@ import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
+import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
 
 interface RecursiveOperationManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
-    connections: Map<PeerIDKey, DhtNodeRpcRemote>
+    connections: Map<NodeID, DhtNodeRpcRemote>
     router: IRouter
     localPeerDescriptor: PeerDescriptor
     serviceId: ServiceID
     localDataStore: LocalDataStore
     addContact: (contact: PeerDescriptor) => void
-    isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
+    isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: NodeID) => boolean
 }
 
 export interface IRecursiveOperationManager {
@@ -55,12 +55,12 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly sessionTransport: ITransport
-    private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
+    private readonly connections: Map<NodeID, DhtNodeRpcRemote>
     private readonly router: IRouter
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly serviceId: ServiceID
     private readonly localDataStore: LocalDataStore
-    private readonly isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
+    private readonly isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: NodeID) => boolean
     private ongoingSessions: Map<string, RecursiveOperationSession> = new Map()
     private stopped = false
 
@@ -111,7 +111,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             serviceId: sessionId,
             transport: this.sessionTransport,
             targetId,
-            localPeerId: peerIdFromPeerDescriptor(this.localPeerDescriptor),
+            localNodeId: getNodeIdFromPeerDescriptor(this.localPeerDescriptor),
             // TODO use config option or named constant?
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
             operation
@@ -151,7 +151,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
                 this.sendResponse([], this.localPeerDescriptor, sessionId, [], data, true)
             }
         } else if (operation === RecursiveOperation.DELETE_DATA) {
-            this.localDataStore.markAsDeleted(targetId, peerIdFromPeerDescriptor(this.localPeerDescriptor))
+            this.localDataStore.markAsDeleted(targetId, getNodeIdFromPeerDescriptor(this.localPeerDescriptor))
         }
         this.ongoingSessions.delete(sessionId)
         session.stop()
@@ -192,7 +192,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         targetPeerDescriptor: PeerDescriptor,
         serviceId: ServiceID,
         closestNodes: PeerDescriptor[],
-        data: Map<PeerIDKey, DataEntry> | undefined,
+        data: Map<NodeID, DataEntry> | undefined,
         noCloserNodesFound: boolean = false
     ): void {
         const dataEntries = data ? Array.from(data.values(), DataEntry.create.bind(DataEntry)) : []
@@ -220,16 +220,16 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
-        const targetId = peerIdFromPeerDescriptor(routedMessage.destinationPeer!)
+        const targetId = getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)
         const msg = routedMessage.message
         const recursiveOperationRequest = msg?.body.oneofKind === 'recursiveOperationRequest' ? msg.body.recursiveOperationRequest : undefined
         // TODO use config option or named constant?
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.nodeId, 5)
         const data = (recursiveOperationRequest!.operation === RecursiveOperation.FETCH_DATA) 
-            ? this.localDataStore.getEntries(targetId.value) 
+            ? this.localDataStore.getEntries(hexToBinary(targetId))
             : undefined
         if (recursiveOperationRequest!.operation === RecursiveOperation.DELETE_DATA) {
-            this.localDataStore.markAsDeleted(targetId.value, peerIdFromPeerDescriptor(routedMessage.sourcePeer!))
+            this.localDataStore.markAsDeleted(hexToBinary(targetId), getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!))
         }
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
             // TODO this is also very similar case to what we do at line 255, could simplify the code paths?
@@ -267,7 +267,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
     private getClosestConnections(nodeId: Uint8Array, limit: number): PeerDescriptor[] {
         const connectedPeers = Array.from(this.connections.values())
         const closestPeers = new SortedContactList<DhtNodeRpcRemote>({
-            referenceId: PeerID.fromValue(nodeId),
+            referenceId: getNodeIdFromBinary(nodeId),
             maxSize: limit,
             allowToContainReferenceId: true,
             emitEvents: false
