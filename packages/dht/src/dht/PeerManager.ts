@@ -310,14 +310,14 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
                 logger.trace(`Adding new contact ${nodeId}`)
                 const remote = this.config.createDhtNodeRpcRemote(contact)
                 const isInBucket = (this.bucket!.get(contact.nodeId) !== null)
-                const isInNeighborList = (this.contacts!.getContact(nodeId) !== undefined)
-                if (isInBucket || isInNeighborList) {
+                const isInContacts = (this.contacts!.getContact(nodeId) !== undefined)
+                if (isInBucket || isInContacts) {
                     this.randomPeers!.addContact(remote)
                 }
                 if (!isInBucket) {
                     this.bucket!.add(remote)
                 } 
-                if (!isInNeighborList) {
+                if (!isInContacts) {
                     this.contacts!.addContact(remote)
                 } 
                 if (setActive) {
