@@ -60,16 +60,11 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     constructor(config: PeerManagerConfig) {
         super()
         this.config = config
-        this.initKBuckets()
-    }
-
-    private initKBuckets() {
         this.bucket = new KBucket<DhtNodeRpcRemote>({
             localNodeId: hexToBinary(this.config.localNodeId),
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
             numberOfNodesToPing: this.config.numberOfNodesPerKBucket
         })
-
         this.bucket.on('ping', (oldContacts: DhtNodeRpcRemote[], newContact: DhtNodeRpcRemote) => this.onKBucketPing(oldContacts, newContact))
         this.bucket.on('removed', (contact: DhtNodeRpcRemote) => this.onKBucketRemoved(contact))
         this.bucket.on('added', (contact: DhtNodeRpcRemote) => this.onKBucketAdded(contact))
