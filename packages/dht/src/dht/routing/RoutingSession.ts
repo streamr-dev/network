@@ -87,7 +87,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         connections: Map<NodeID, DhtNodeRpcRemote>,
         parallelism: number,
         mode: RoutingMode = RoutingMode.ROUTE,
-        excludedNodeIDs?: Set<NodeID>
+        excludedNodeIds?: Set<NodeID>
     ) {
         super()
         this.rpcCommunicator = rpcCommunicator
@@ -103,7 +103,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             maxSize: 10000,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             nodeIdDistanceLimit: previousId,
-            excludedNodeIDs,
+            excludedNodeIds: excludedNodeIds,
             emitEvents: false
         })
     }

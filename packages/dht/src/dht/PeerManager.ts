@@ -234,36 +234,36 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.connections.clear()
     }
 
-    getClosestNeighborsTo(referenceId: NodeID, limit?: number, excludedNodeIDs?: Set<NodeID>): DhtNodeRpcRemote[] {
+    getClosestNeighborsTo(referenceId: NodeID, limit?: number, excludedNodeIds?: Set<NodeID>): DhtNodeRpcRemote[] {
         const closest = new SortedContactList<DhtNodeRpcRemote>({
             referenceId,
             allowToContainReferenceId: true,
             emitEvents: false,
-            excludedNodeIDs
+            excludedNodeIds
         }) 
         this.bucket!.toArray().map((contact) => closest.addContact(contact))
         return closest.getClosestContacts(limit)
     }
 
     // TODO reduce copy-paste?
-    getClosestContactsTo(referenceId: NodeID, limit?: number, excludedNodeIDs?: Set<NodeID>): DhtNodeRpcRemote[] {
+    getClosestContactsTo(referenceId: NodeID, limit?: number, excludedNodeIds?: Set<NodeID>): DhtNodeRpcRemote[] {
         const closest = new SortedContactList<DhtNodeRpcRemote>({
             referenceId,
             allowToContainReferenceId: true,
             emitEvents: false,
-            excludedNodeIDs
+            excludedNodeIds
         })
         this.contacts!.getAllContacts().map((contact) => closest.addContact(contact))
         // TODO should set the excludeSet and limit to SortedContactList constructor and remove these line
         return closest.getClosestContacts(limit)
     }
 
-    getNumberOfContacts(excludedNodeIDs?: Set<NodeID>): number {
+    getNumberOfContacts(excludedNodeIds?: Set<NodeID>): number {
         return this.contacts!.getAllContacts().filter((contact) => {
-            if (!excludedNodeIDs) {
+            if (!excludedNodeIds) {
                 return true
             } else {
-                return !excludedNodeIDs.has(contact.getNodeId())
+                return !excludedNodeIds.has(contact.getNodeId())
             } 
         }).length
     }
