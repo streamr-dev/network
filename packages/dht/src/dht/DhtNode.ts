@@ -53,7 +53,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager, getDistance } from './PeerManager'
 import { ServiceID } from '../types/ServiceID'
-import { getNodeIdFromBinary } from '../helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../helpers/nodeId'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -386,9 +386,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         )
     }
 
-    private isPeerCloserToIdThanSelf(peer: PeerDescriptor, compareToId: PeerID): boolean {
-        const distance1 = getDistance(getNodeIdFromPeerDescriptor(peer), compareToId.toNodeId())
-        const distance2 = getDistance(this.getNodeId().toNodeId(), compareToId.toNodeId())
+    private isPeerCloserToIdThanSelf(peer: PeerDescriptor, compareToId: NodeID): boolean {
+        const distance1 = getDistance(getNodeIdFromPeerDescriptor(peer), compareToId)
+        const distance2 = getDistance(this.getNodeId().toNodeId(), compareToId)
         return distance1 < distance2
     }
 
