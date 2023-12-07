@@ -33,8 +33,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Any } from '../proto/google/protobuf/any'
 import {
     areEqualPeerDescriptors,
-    getNodeIdFromPeerDescriptor,
-    peerIdFromPeerDescriptor
+    getNodeIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
 import { RecursiveOperationManager, RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
@@ -301,7 +300,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.peerManager = new PeerManager({
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
             maxContactListSize: this.config.maxNeighborListSize,
-            localNodeId: this.getNodeId().toNodeId(),
+            localNodeId: this.getNodeId(),
             connectionManager: this.connectionManager!,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             isLayer0: (this.connectionManager !== undefined),
@@ -388,7 +387,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private isPeerCloserToIdThanSelf(peer: PeerDescriptor, compareToId: NodeID): boolean {
         const distance1 = getDistance(getNodeIdFromPeerDescriptor(peer), compareToId)
-        const distance2 = getDistance(this.getNodeId().toNodeId(), compareToId)
+        const distance2 = getDistance(this.getNodeId(), compareToId)
         return distance1 < distance2
     }
 
@@ -420,8 +419,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         )
     }
     
-    public getNodeId(): PeerID {
-        return peerIdFromPeerDescriptor(this.localPeerDescriptor!)
+    public getNodeId(): NodeID {
+        return getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
     }
 
     public getNumberOfNeighbors(): number {

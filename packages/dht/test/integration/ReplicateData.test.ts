@@ -5,12 +5,13 @@ import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dh
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
-import { Logger } from '@streamr/utils'
+import { Logger, hexToBinary } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
+import { NodeID } from '../../src/helpers/nodeId'
 
 const logger = new Logger(module)
 
@@ -25,7 +26,7 @@ describe('Replicate data from node to node in DHT', () => {
     const MAX_CONNECTIONS = 80
     const K = 8
 
-    const nodesById: Map<string, DhtNode> = new Map()
+    const nodesById: Map<NodeID, DhtNode> = new Map()
 
     if (!fs.existsSync('test/data/nodeids.json')) {
         console.log('ground truth data does not exist yet, generating..')
@@ -44,10 +45,10 @@ describe('Replicate data from node to node in DHT', () => {
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
             Uint8Array.from(dhtIds[0].data), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
-        nodesById.set(entryPoint.getNodeId().toKey(), entryPoint)
+        nodesById.set(entryPoint.getNodeId(), entryPoint)
 
         entrypointDescriptor = {
-            nodeId: entryPoint.getNodeId().value,
+            nodeId: hexToBinary(entryPoint.getNodeId()),
             type: NodeType.NODEJS
         }
 
@@ -58,7 +59,7 @@ describe('Replicate data from node to node in DHT', () => {
 
             const node = await createMockConnectionDhtNode(nodeId, simulator,
                 Uint8Array.from(dhtIds[i].data), K, MAX_CONNECTIONS)
-            nodesById.set(node.getNodeId().toKey(), node)
+            nodesById.set(node.getNodeId(), node)
             nodes.push(node)
         }
     })
@@ -111,7 +112,7 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('Nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().nodeId).toKey())!
+            const node = nodesById.get(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))!
             let hasDataMarker = ''
             
             // @ts-expect-error private field
@@ -139,7 +140,7 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('After join of 99 nodes: nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().nodeId).toKey())!
+            const node = nodesById.get(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))!
             let hasDataMarker = ''
 
             // @ts-expect-error private field
@@ -150,7 +151,7 @@ describe('Replicate data from node to node in DHT', () => {
             logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
         })
 
-        const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().nodeId).toKey())!
+        const closestNode = nodesById.get(getNodeIdFromPeerDescriptor(closest[0].getPeerDescriptor()))!
 
         // @ts-expect-error private field
         expect(closestNode.localDataStore.getEntries(dataKey.value).size).toBeGreaterThanOrEqual(1)
