@@ -97,13 +97,13 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.parallelism = parallelism
         this.mode = mode
         const previousPeer = getPreviousPeer(messageToRoute)
-        const previousId = previousPeer ? PeerID.fromValue(previousPeer.nodeId) : undefined
+        const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
         this.contactList = new SortedContactList({
-            referenceId: PeerID.fromValue(this.messageToRoute.destinationPeer!.nodeId),
+            referenceId: getNodeIdFromPeerDescriptor(this.messageToRoute.destinationPeer!),
             maxSize: 10000,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
-            peerIdDistanceLimit: previousId,
-            excludedPeerIDs: excludedPeerIDs,
+            nodeIdDistanceLimit: previousId,
+            excludedNodeIDs: excludedPeerIDs?.map((p) => p.toNodeId()),
             emitEvents: false
         })
     }
@@ -176,7 +176,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.contactList.getAllContacts().forEach((contact) => {
             const peerId = peerIdFromPeerDescriptor(contact.getPeerDescriptor())
             if (this.connections.has(peerId.toKey()) === false) {
-                this.contactList.removeContact(peerId)
+                this.contactList.removeContact(peerId.toNodeId())
             }
         })
         const contacts = Array.from(this.connections.values())
@@ -203,7 +203,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             const nextPeer = uncontacted.shift()
             // eslint-disable-next-line max-len
             logger.trace(`Sending routeMessage request to contact: ${getNodeIdFromPeerDescriptor(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
-            this.contactList.setContacted(nextPeer!.getPeerId())
+            this.contactList.setContacted(nextPeer!.getPeerId().toNodeId())
             this.ongoingRequests.add(nextPeer!.getPeerId().toKey())
             setImmediate(async () => {
                 try {

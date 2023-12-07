@@ -22,6 +22,7 @@ import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ServiceID } from '../../types/ServiceID'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { findIndex } from 'lodash'
+import { areEqualNodeIds, getNodeIdFromDataKey } from '../../helpers/nodeId'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -78,7 +79,7 @@ export class StoreRpcLocal implements IStoreRpc {
         // TODO use config option or named constant?
         const closestToData = this.getClosestNeighborsTo(dataEntry.key, 10)
         const sortedList = new SortedContactList<Contact>({
-            referenceId: PeerID.fromValue(dataEntry.key), 
+            referenceId: getNodeIdFromDataKey(dataEntry.key), 
             maxSize: 20,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             emitEvents: false
@@ -175,17 +176,17 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     private selfIsOneOfClosestPeers(dataId: Uint8Array): boolean {
-        const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
         const closestPeers = this.getClosestNeighborsTo(dataId, this.redundancyFactor)
+        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
         const sortedList = new SortedContactList<Contact>({
-            referenceId: localPeerId, 
+            referenceId: localNodeId, 
             maxSize: this.redundancyFactor, 
             allowToContainReferenceId: true, 
             emitEvents: false
         })
         sortedList.addContact(new Contact(this.localPeerDescriptor))
         closestPeers.forEach((con) => sortedList.addContact(new Contact(con.getPeerDescriptor())))
-        return sortedList.getClosestContacts().some((node) => node.getPeerId().equals(localPeerId))
+        return sortedList.getClosestContacts().some((node) => areEqualNodeIds(node.getPeerId().toNodeId(), localNodeId))
     }
 
     // RPC service implementation
@@ -249,12 +250,11 @@ export class StoreRpcLocal implements IStoreRpc {
     private replicateDataToNeighbors(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
         // sort own contact list according to data id
         const localPeerId = PeerID.fromValue(this.localPeerDescriptor.nodeId)
-        const dataId = PeerID.fromValue(dataEntry.key)
         const incomingPeerId = PeerID.fromValue(incomingPeer.nodeId)
         // TODO use config option or named constant?
         const closestToData = this.getClosestNeighborsTo(dataEntry.key, 10)
         const sortedList = new SortedContactList<Contact>({
-            referenceId: dataId, 
+            referenceId: getNodeIdFromDataKey(dataEntry.key), 
             maxSize: this.redundancyFactor, 
             allowToContainReferenceId: true, 
             emitEvents: false

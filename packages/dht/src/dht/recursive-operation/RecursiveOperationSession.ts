@@ -9,6 +9,7 @@ import { RecursiveOperationResult } from './RecursiveOperationManager'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
+import { getNodeIdFromBinary } from '../../helpers/nodeId'
 
 export interface RecursiveOperationSessionEvents {
     completed: (results: PeerDescriptor[]) => void
@@ -47,7 +48,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         this.localPeerId = config.localPeerId
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
         this.results = new SortedContactList({
-            referenceId: PeerID.fromValue(this.targetId), 
+            referenceId: getNodeIdFromBinary(this.targetId), 
             maxSize: 10,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             emitEvents: false

@@ -30,6 +30,7 @@ import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
+import { getNodeIdFromBinary } from '../../helpers/nodeId'
 
 interface RecursiveOperationManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -267,7 +268,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
     private getClosestConnections(nodeId: Uint8Array, limit: number): PeerDescriptor[] {
         const connectedPeers = Array.from(this.connections.values())
         const closestPeers = new SortedContactList<DhtNodeRpcRemote>({
-            referenceId: PeerID.fromValue(nodeId),
+            referenceId: getNodeIdFromBinary(nodeId),
             maxSize: limit,
             allowToContainReferenceId: true,
             emitEvents: false

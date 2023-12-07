@@ -1,5 +1,5 @@
 import {
-    Logger
+    Logger, hexToBinary
 } from '@streamr/utils'
 import KBucket from 'k-bucket'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
@@ -16,6 +16,7 @@ import { RandomContactList } from './contact/RandomContactList'
 import { SortedContactList } from './contact/SortedContactList'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import EventEmitter from 'eventemitter3'
+import { areEqualNodeIds, getNodeIdFromBinary } from '../helpers/nodeId'
 
 const logger = new Logger(module)
 
@@ -79,7 +80,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             // TODO: Update contact info to the connection manager and reconnect
         })
         this.contacts = new SortedContactList({
-            referenceId: this.config.ownPeerId, 
+            referenceId: this.config.ownPeerId.toNodeId(), 
             maxSize: this.config.maxContactListSize,
             allowToContainReferenceId: false,
             emitEvents: true
@@ -94,7 +95,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.contacts.on('newContact', (newContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
             this.emit('newContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
-        this.randomPeers = new RandomContactList(this.config.ownPeerId, this.config.maxContactListSize)
+        this.randomPeers = new RandomContactList(this.config.ownPeerId.toNodeId(), this.config.maxContactListSize)
         this.randomPeers.on('contactRemoved', (removedContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
             this.emit('randomContactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
@@ -108,7 +109,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             return
         }
         const sortingList: SortedContactList<DhtNodeRpcRemote> = new SortedContactList({
-            referenceId: this.config.ownPeerId, 
+            referenceId: this.config.ownPeerId.toNodeId(), 
             maxSize: 100,  // TODO use config option or named constant?
             allowToContainReferenceId: false,
             emitEvents: false
@@ -173,7 +174,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
 
     private getClosestActiveContactNotInBucket(): DhtNodeRpcRemote | undefined {
         for (const contactId of this.contacts!.getContactIds()) {
-            if (!this.bucket!.get(contactId.value) && this.contacts!.isActive(contactId)) {
+            if (!this.bucket!.get(hexToBinary(contactId)) && this.contacts!.isActive(contactId)) {
                 return this.contacts!.getContact(contactId)!.contact
             }
         }
@@ -219,8 +220,8 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         logger.trace(`Removing contact ${getNodeIdFromPeerDescriptor(contact)}`)
         const peerId = peerIdFromPeerDescriptor(contact)
         this.bucket!.remove(peerId.value)
-        this.contacts!.removeContact(peerId)
-        this.randomPeers!.removeContact(peerId)
+        this.contacts!.removeContact(peerId.toNodeId())
+        this.randomPeers!.removeContact(peerId.toNodeId())
     }
 
     stop(): void {
@@ -237,7 +238,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
 
     getClosestNeighborsTo(kademliaId: Uint8Array, limit?: number, excludeSet?: Set<PeerIDKey>): DhtNodeRpcRemote[] {
         const closest = new SortedContactList<DhtNodeRpcRemote>({
-            referenceId: PeerID.fromValue(kademliaId),
+            referenceId: getNodeIdFromBinary(kademliaId),
             allowToContainReferenceId: true,
             emitEvents: false
         }) 
@@ -255,7 +256,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     // TODO reduce copy-paste?
     getClosestContactsTo(kademliaId: Uint8Array, limit?: number, excludeSet?: Set<PeerIDKey>): DhtNodeRpcRemote[] {
         const closest = new SortedContactList<DhtNodeRpcRemote>({
-            referenceId: PeerID.fromValue(kademliaId),
+            referenceId: getNodeIdFromBinary(kademliaId),
             allowToContainReferenceId: true,
             emitEvents: false
         })
@@ -293,12 +294,12 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     }
 
     handlePeerActive(peerId: PeerID): void {
-        this.contacts!.setActive(peerId)
+        this.contacts!.setActive(peerId.toNodeId())
     }
 
     handlePeerUnresponsive(peerId: PeerID): void {
         this.bucket!.remove(peerId.value)
-        this.contacts!.removeContact(peerId)
+        this.contacts!.removeContact(peerId.toNodeId())
     }
 
     handleNewPeers(peerDescriptors: PeerDescriptor[], setActive?: boolean): void { 
@@ -306,12 +307,12 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             return
         }
         peerDescriptors.forEach((contact) => {
-            const peerId = peerIdFromPeerDescriptor(contact)
-            if (!peerId.equals(this.config.ownPeerId)) {
+            const nodeId = getNodeIdFromPeerDescriptor(contact)
+            if (!areEqualNodeIds(nodeId, this.config.ownPeerId.toNodeId())) {
                 logger.trace(`Adding new contact ${getNodeIdFromPeerDescriptor(contact)}`)
                 const remote = this.config.createDhtNodeRpcRemote(contact)
                 const isInBucket = (this.bucket!.get(contact.nodeId) !== null)
-                const isInNeighborList = (this.contacts!.getContact(peerId) !== undefined)
+                const isInNeighborList = (this.contacts!.getContact(nodeId) !== undefined)
                 if (isInBucket || isInNeighborList) {
                     this.randomPeers!.addContact(remote)
                 }
@@ -322,7 +323,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
                     this.contacts!.addContact(remote)
                 } 
                 if (setActive) {
-                    this.contacts!.setActive(peerId)
+                    this.contacts!.setActive(nodeId)
                 }
             }
         })

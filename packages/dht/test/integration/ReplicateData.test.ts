@@ -81,7 +81,7 @@ describe('Replicate data from node to node in DHT', () => {
         // calculate offline which node is closest to the data
 
         const sortedList = new SortedContactList<Contact>({ 
-            referenceId: dataKey, 
+            referenceId: dataKey.toNodeId(),
             maxSize: 10000, 
             allowToContainReferenceId: true, 
             emitEvents: false 

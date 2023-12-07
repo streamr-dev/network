@@ -157,7 +157,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             return
         }
         const disconnectionCandidates = new SortedContactList<Contact>({
-            referenceId: peerIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 
+            referenceId: getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 
             maxSize: 100000,  // TODO use config option or named constant?
             allowToContainReferenceId: false,
             emitEvents: false
