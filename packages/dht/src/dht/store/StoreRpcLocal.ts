@@ -66,14 +66,12 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     onNewContact(peerDescriptor: PeerDescriptor): void {
-        this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
-            dataMap.forEach(async (dataEntry) => {
-                await this.replicateAndUpdateStaleStateIfClosest(dataEntry.dataEntry, peerDescriptor)
-            })
-        })
+        for (const dataEntry of this.localDataStore.values()) {
+            this.replicateAndUpdateStaleState(dataEntry, peerDescriptor)
+        }
     }
 
-    private async replicateAndUpdateStaleStateIfClosest(dataEntry: DataEntry, newNode: PeerDescriptor): Promise<void> {
+    private replicateAndUpdateStaleState(dataEntry: DataEntry, newNode: PeerDescriptor): void {
         const newNodeId = getNodeIdFromPeerDescriptor(newNode)
         // TODO use config option or named constant?
         const closestToData = this.getClosestNeighborsTo(dataEntry.key, 10)
@@ -98,11 +96,9 @@ export class StoreRpcLocal implements IStoreRpc {
             // if new node is within the storageRedundancyFactor closest nodes to the data
             // do replicate data to it
             if (index < this.redundancyFactor) {
-                try {
+                setImmediate(async () => {
                     await this.replicateDataToContact(dataEntry, newNode)
-                } catch (e) {
-                    logger.trace('replicateDataToContact() failed', { error: e })
-                }
+                })
             }
         } else if (!this.selfIsOneOfClosestPeers(dataEntry.key)) {
             this.localDataStore.setStale(dataEntry.key, getNodeIdFromPeerDescriptor(dataEntry.creator!), true)
@@ -209,9 +205,7 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     private async replicateDataToClosestNodes(): Promise<void> {
-        const dataEntries = Array.from(this.localDataStore.getStore().values())
-            .flatMap((dataMap) => Array.from(dataMap.values()))
-            .map((localData) => localData.dataEntry)
+        const dataEntries = Array.from(this.localDataStore.values())
         await Promise.all(dataEntries.map(async (dataEntry) => {
             const dhtNodeRemotes = this.getClosestNeighborsTo(dataEntry.key, this.redundancyFactor)
             await Promise.all(dhtNodeRemotes.map(async (remoteDhtNode) => {
