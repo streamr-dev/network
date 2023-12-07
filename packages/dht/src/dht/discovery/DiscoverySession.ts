@@ -6,6 +6,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerManager, getDistance } from '../PeerManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
 
 const logger = new Logger(module)
 
@@ -29,7 +30,7 @@ export class DiscoverySession {
     private noProgressCounter = 0
     private ongoingClosestPeersRequests: Set<PeerIDKey> = new Set()
     private readonly config: DiscoverySessionConfig
-    private contactedPeers: Set<PeerIDKey> = new Set()
+    private contactedPeers: Set<NodeID> = new Set()
 
     constructor(config: DiscoverySessionConfig) {
         this.config = config
@@ -48,9 +49,9 @@ export class DiscoverySession {
         }
         logger.trace(`Getting closest peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
         this.outgoingClosestPeersRequestsCounter++
-        this.contactedPeers.add(contact.getPeerId().toKey())
+        this.contactedPeers.add(contact.getPeerId().toNodeId())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)
-        this.config.peerManager.handlePeerActive(contact.getPeerId())
+        this.config.peerManager.handlePeerActive(contact.getPeerId().toNodeId())
         return returnedContacts
     }
 
@@ -59,11 +60,11 @@ export class DiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(peerId.toKey())
-        const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
-        const oldClosestDistance = getDistance(this.config.targetId, oldClosestNeighbor.getPeerId().value)
+        const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromBinary(this.config.targetId), 1)[0]
+        const oldClosestDistance = getDistance(getNodeIdFromBinary(this.config.targetId), oldClosestNeighbor.getPeerId().toNodeId())
         this.addNewContacts(contacts)
-        const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
-        const newClosestDistance = getDistance(this.config.targetId, newClosestNeighbor.getPeerId().value)
+        const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromBinary(this.config.targetId), 1)[0]
+        const newClosestDistance = getDistance(getNodeIdFromBinary(this.config.targetId), newClosestNeighbor.getPeerId().toNodeId())
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
         } else {
@@ -76,14 +77,18 @@ export class DiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(peer.getPeerId().toKey())
-        this.config.peerManager.handlePeerUnresponsive(peer.getPeerId())
+        this.config.peerManager.handlePeerUnresponsive(peer.getPeerId().toNodeId())
     }
 
     private findMoreContacts(): void {
         if (this.stopped) {
             return
         }
-        const uncontacted = this.config.peerManager.getClosestContactsTo(this.config.targetId, this.config.parallelism, this.contactedPeers)
+        const uncontacted = this.config.peerManager.getClosestContactsTo(
+            getNodeIdFromBinary(this.config.targetId),
+            this.config.parallelism,
+            this.contactedPeers
+        )
         if (uncontacted.length === 0 || this.noProgressCounter >= this.config.noProgressLimit) {
             this.emitter.emit('discoveryCompleted')
             this.stopped = true

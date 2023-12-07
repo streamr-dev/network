@@ -14,6 +14,7 @@ import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
+import { NodeID } from '../../helpers/nodeId'
 
 const logger = new Logger(module)
 
@@ -73,7 +74,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     private contactList: SortedContactList<RemoteContact>
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly messageToRoute: RouteMessageWrapper
-    private connections: Map<PeerIDKey, DhtNodeRpcRemote>
+    private connections: Map<NodeID, DhtNodeRpcRemote>
     private readonly parallelism: number
     private failedHopCounter = 0
     private successfulHopCounter = 0
@@ -84,7 +85,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         rpcCommunicator: RoutingRpcCommunicator,
         localPeerDescriptor: PeerDescriptor,
         messageToRoute: RouteMessageWrapper,
-        connections: Map<PeerIDKey, DhtNodeRpcRemote>,
+        connections: Map<NodeID, DhtNodeRpcRemote>,
         parallelism: number,
         mode: RoutingMode = RoutingMode.ROUTE,
         excludedPeerIDs?: PeerID[]
@@ -175,7 +176,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         // Remove stale contacts that may have been removed from connections
         this.contactList.getAllContacts().forEach((contact) => {
             const peerId = peerIdFromPeerDescriptor(contact.getPeerDescriptor())
-            if (this.connections.has(peerId.toKey()) === false) {
+            if (this.connections.has(peerId.toNodeId()) === false) {
                 this.contactList.removeContact(peerId.toNodeId())
             }
         })

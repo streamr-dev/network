@@ -30,12 +30,12 @@ import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
-import { getNodeIdFromBinary } from '../../helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
 
 interface RecursiveOperationManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
-    connections: Map<PeerIDKey, DhtNodeRpcRemote>
+    connections: Map<NodeID, DhtNodeRpcRemote>
     router: IRouter
     localPeerDescriptor: PeerDescriptor
     serviceId: ServiceID
@@ -56,7 +56,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly sessionTransport: ITransport
-    private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
+    private readonly connections: Map<NodeID, DhtNodeRpcRemote>
     private readonly router: IRouter
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly serviceId: ServiceID

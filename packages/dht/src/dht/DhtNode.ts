@@ -53,6 +53,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager, getDistance } from './PeerManager'
 import { ServiceID } from '../types/ServiceID'
+import { getNodeIdFromBinary } from '../helpers/nodeId'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -282,7 +283,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             redundancyFactor: this.config.storageRedundancyFactor,
             localDataStore: this.localDataStore,
             getClosestNeighborsTo: (id: Uint8Array, n?: number) => {
-                return this.peerManager!.getClosestNeighborsTo(id, n)
+                return this.peerManager!.getClosestNeighborsTo(getNodeIdFromBinary(id), n)
             },
             rpcRequestTimeout: this.config.rpcRequestTimeout
         })
@@ -300,7 +301,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.peerManager = new PeerManager({
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
             maxContactListSize: this.config.maxNeighborListSize,
-            ownPeerId: this.getNodeId(),
+            localNodeId: this.getNodeId().toNodeId(),
             connectionManager: this.connectionManager!,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             isLayer0: (this.connectionManager !== undefined),
@@ -351,7 +352,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             getClosestPeersTo: (kademliaId: Uint8Array, limit: number) => {
-                return this.peerManager!.getClosestNeighborsTo(kademliaId, limit)
+                return this.peerManager!.getClosestNeighborsTo(getNodeIdFromBinary(kademliaId), limit)
                     .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
             },
             addNewContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
@@ -385,9 +386,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         )
     }
 
-    private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
-        const distance1 = getDistance(peer1.nodeId, compareToId.value)
-        const distance2 = getDistance(this.localPeerDescriptor!.nodeId, compareToId.value)
+    private isPeerCloserToIdThanSelf(peer: PeerDescriptor, compareToId: PeerID): boolean {
+        const distance1 = getDistance(getNodeIdFromPeerDescriptor(peer), compareToId.toNodeId())
+        const distance2 = getDistance(this.getNodeId().toNodeId(), compareToId.toNodeId())
         return distance1 < distance2
     }
 
@@ -413,7 +414,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getClosestContacts(limit?: number): PeerDescriptor[] {
-        return this.peerManager!.getClosestContactsTo(this.localPeerDescriptor!.nodeId, limit).map((peer) => peer.getPeerDescriptor())
+        return this.peerManager!.getClosestContactsTo(
+            getNodeIdFromPeerDescriptor(this.localPeerDescriptor!),
+            limit).map((peer) => peer.getPeerDescriptor()
+        )
     }
     
     public getNodeId(): PeerID {

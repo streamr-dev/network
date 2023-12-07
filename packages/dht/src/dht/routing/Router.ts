@@ -14,11 +14,12 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
+import { NodeID } from '../../helpers/nodeId'
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
-    connections: Map<PeerIDKey, DhtNodeRpcRemote>
+    connections: Map<NodeID, DhtNodeRpcRemote>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     connectionManager?: ConnectionManager
     rpcRequestTimeout?: number
@@ -45,7 +46,7 @@ const logger = new Logger(module)
 export class Router implements IRouter {
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly localPeerDescriptor: PeerDescriptor
-    private readonly connections: Map<PeerIDKey, DhtNodeRpcRemote>
+    private readonly connections: Map<NodeID, DhtNodeRpcRemote>
     private readonly forwardingTable: Map<PeerIDKey, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     // TODO use config option or named constant?
