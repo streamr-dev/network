@@ -210,12 +210,12 @@ export class StoreManager {
         closestToData.forEach((con) => {
             sortedList.addContact(new Contact(con.getPeerDescriptor()))
         })
-        const selfIsPrimaryStorer = (!areEqualNodeIds(sortedList.getAllContacts()[0].getNodeId(), localNodeId))
+        const selfIsPrimaryStorer = areEqualNodeIds(sortedList.getAllContacts()[0].getNodeId(), localNodeId)
         const targets = selfIsPrimaryStorer
-            // If we are not the closest node to the data, replicate only to the closest one to the data
-            ? [sortedList.getAllContacts()[0]]
             // if we are the closest to the data, replicate to all storageRedundancyFactor nearest
-            : sortedList.getAllContacts()
+            ? sortedList.getAllContacts()
+            // if we are not the closest node to the data, replicate only to the closest one to the data
+            : [sortedList.getAllContacts()[0]]
         targets.forEach((contact) => {
             const contactNodeId = getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())
             if (!areEqualNodeIds(incomingNodeId, contactNodeId) && !areEqualNodeIds(localNodeId, contactNodeId)) {
@@ -224,7 +224,7 @@ export class StoreManager {
                         await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())
                         logger.trace('replicateDataToContact() returned', { 
                             node: getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()),
-                            replicateOnlyToClosest: selfIsPrimaryStorer
+                            replicateOnlyToClosest: !selfIsPrimaryStorer
                         })
                     })
                 })
