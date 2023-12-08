@@ -1,7 +1,7 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { NodeType } from '@streamr/dht'
 import { StreamID, toStreamPartID } from '@streamr/protocol'
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fastWallet, fetchPrivateKeyWithGas, KeyServer } from '@streamr/test-utils'
 import { createNetworkNode } from '@streamr/trackerless-network'
 import { hexToBinary, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
@@ -81,6 +81,10 @@ describe('publish-subscribe', () => {
             subscriberClient?.destroy(),
         ])
     }, TIMEOUT)
+
+    afterAll(async () => {
+        await KeyServer.stopIfRunning()
+    })
 
     describe('private stream', () => {
         let stream: Stream

@@ -1,4 +1,4 @@
-import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas, KeyServer } from '@streamr/test-utils'
 import { createTestStream, createTestClient } from '../test-utils/utils'
 import range from 'lodash/range'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
@@ -26,6 +26,10 @@ describe('resend', () => {
             resendClient?.destroy(),
         ])
     }, TIMEOUT)
+
+    afterAll(async () => {
+        await KeyServer.stopIfRunning()
+    })
 
     describe('non-public stream', () => {
         let stream: Stream

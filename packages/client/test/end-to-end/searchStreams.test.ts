@@ -1,4 +1,4 @@
-import { fastWallet, fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
+import { fastWallet, fetchPrivateKeyWithGas, randomEthereumAddress, KeyServer } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
@@ -77,6 +77,7 @@ describe('searchStreams', () => {
 
     afterAll(async () => {
         await client?.destroy()
+        await KeyServer.stopIfRunning()
     })
 
     it('search term matches', async () => {

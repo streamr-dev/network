@@ -1,6 +1,6 @@
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
-import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, randomEthereumAddress, KeyServer } from '@streamr/test-utils'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -31,6 +31,7 @@ describe('StorageNodeRegistry2', () => {
             client?.destroy(),
             storageNodeClient?.destroy()
         ])
+        await KeyServer.stopIfRunning()
     })
 
     it('creates a node', async () => {

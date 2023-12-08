@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, KeyServer } from '@streamr/test-utils'
 import { Defer, wait } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
@@ -60,6 +60,7 @@ describe('MemoryLeaks', () => {
     })
 
     afterEach(async () => {
+        await KeyServer.stopIfRunning()
         expect(leaksDetector).toBeTruthy()
         if (!leaksDetector) { return }
         const detector = leaksDetector

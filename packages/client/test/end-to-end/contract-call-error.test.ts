@@ -1,9 +1,13 @@
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fastWallet, fetchPrivateKeyWithGas, KeyServer } from '@streamr/test-utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('contract call error', () => {
 
+    afterAll(async () => {
+        await KeyServer.stopIfRunning()
+    })
+    
     // TODO: see NET-1007, could improve error messages in fast-chain
     it('insufficient funds', async () => {
         const client = new StreamrClient({

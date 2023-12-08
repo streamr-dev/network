@@ -1,5 +1,5 @@
 import { Wallet } from '@ethersproject/wallet'
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fastWallet, fetchPrivateKeyWithGas, KeyServer } from '@streamr/test-utils'
 import { ProxyDirection } from '@streamr/trackerless-network'
 import { collect, wait, withTimeout } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
@@ -29,6 +29,10 @@ describe('publish/subscribe via proxy', () => {
 
     afterEach(async () => {
         await client.destroy()
+    })
+
+    afterAll(async () => {
+        await KeyServer.stopIfRunning()
     })
 
     it('publish', async () => {

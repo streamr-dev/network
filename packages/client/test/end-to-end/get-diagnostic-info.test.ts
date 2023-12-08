@@ -1,4 +1,4 @@
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, KeyServer } from '@streamr/test-utils'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -25,6 +25,7 @@ describe('getDiagnosticInfo', () => {
             client.destroy(),
             otherClient.destroy()
         ])
+        await KeyServer.stopIfRunning()
     })
 
     it('does not reject', async () => {

@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
 import { toStreamID } from '@streamr/protocol'
-import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, randomEthereumAddress, KeyServer } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
@@ -48,6 +48,10 @@ describe('StreamRegistry', () => {
         createdStream = await createTestStream(client, module, {
             partitions: PARTITION_COUNT
         })
+    })
+
+    afterAll(async () => {
+        await KeyServer.stopIfRunning()
     })
 
     describe('createStream', () => {
