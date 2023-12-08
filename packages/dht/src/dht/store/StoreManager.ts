@@ -18,6 +18,7 @@ import { ServiceID } from '../../types/ServiceID'
 import { findIndex } from 'lodash'
 import { areEqualNodeIds, getNodeIdFromDataKey } from '../../helpers/nodeId'
 import { StoreRpcLocal } from './StoreRpcLocal'
+import { getDistance } from '../PeerManager'
 
 interface StoreManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -150,18 +151,17 @@ export class StoreManager {
         return successfulNodes
     }
 
-    private selfIsOneOfClosestPeers(dataId: Uint8Array): boolean {
-        const closestPeers = this.config.getClosestNeighborsTo(dataId, this.config.redundancyFactor)
-        const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
-        const sortedList = new SortedContactList<Contact>({
-            referenceId: localNodeId, 
-            maxSize: this.config.redundancyFactor, 
-            allowToContainReferenceId: true, 
-            emitEvents: false
-        })
-        sortedList.addContact(new Contact(this.config.localPeerDescriptor))
-        closestPeers.forEach((neighbor) => sortedList.addContact(new Contact(neighbor)))
-        return sortedList.getClosestContacts().some((node) => areEqualNodeIds(node.getNodeId(), localNodeId))
+    // TODO rename to selfIsWithinRedundancyFactor
+    private selfIsOneOfClosestPeers(dataKey: Uint8Array): boolean {
+        const closestNeighbors = this.config.getClosestNeighborsTo(dataKey, this.config.redundancyFactor)
+        if (closestNeighbors.length === 0) {
+            return true
+        } else {
+            const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
+            const furthestCloseNeighbor = getNodeIdFromPeerDescriptor(closestNeighbors[closestNeighbors.length - 1])
+            const dataId = getNodeIdFromDataKey(dataKey)
+            return getDistance(dataId, localNodeId) < getDistance(dataId, furthestCloseNeighbor)
+        }
     }
 
     private async replicateDataToClosestNodes(): Promise<void> {
