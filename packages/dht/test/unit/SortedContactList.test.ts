@@ -10,6 +10,7 @@ const createItem = (nodeId: Uint8Array): { getNodeId: () => NodeID, getPeerId: (
 }
 
 describe('SortedContactList', () => {
+
     const item0 = createItem(new Uint8Array([0, 0, 0, 0]))
     const item1 = createItem(new Uint8Array([0, 0, 0, 1]))
     const item2 = createItem(new Uint8Array([0, 0, 0, 2]))

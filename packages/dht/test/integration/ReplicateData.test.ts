@@ -17,15 +17,16 @@ const logger = new Logger(module)
 
 jest.setTimeout(60000)
 
+const NUM_NODES = 100
+const MAX_CONNECTIONS = 80
+const K = 8
+
 describe('Replicate data from node to node in DHT', () => {
+
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.FIXED, 20)
-    const NUM_NODES = 100
-    const MAX_CONNECTIONS = 80
-    const K = 8
-
     const nodesById: Map<NodeID, DhtNode> = new Map()
 
     if (!fs.existsSync('test/data/nodeids.json')) {

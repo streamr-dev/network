@@ -11,7 +11,6 @@ describe('Storing data in DHT with two peers', () => {
 
     let entryPoint: DhtNode
     let otherNode: DhtNode
-
     let simulator: Simulator | undefined
 
     beforeEach(async () => {

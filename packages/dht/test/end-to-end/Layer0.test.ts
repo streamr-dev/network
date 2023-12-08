@@ -1,5 +1,7 @@
 import { DhtNode } from '../../src/dht/DhtNode'
 
+const WEBSOCKET_PORT_RANGE = { min: 10012, max: 10015 } 
+
 describe('Layer0', () => {
 
     let epDhtNode: DhtNode
@@ -8,8 +10,6 @@ describe('Layer0', () => {
     let node3: DhtNode
     let node4: DhtNode
 
-    const websocketPortRange = { min: 10012, max: 10015 } 
-
     beforeEach(async () => {
         
         epDhtNode = new DhtNode({ websocketHost: '127.0.0.1', websocketPortRange: { min: 10011, max: 10011 }, websocketServerEnableTls: false })
@@ -17,25 +17,25 @@ describe('Layer0', () => {
         await epDhtNode.joinDht([epDhtNode.getLocalPeerDescriptor()])
 
         node1 = new DhtNode({ 
-            websocketPortRange,
+            websocketPortRange: WEBSOCKET_PORT_RANGE,
             websocketHost: '127.0.0.1',
             entryPoints: [epDhtNode.getLocalPeerDescriptor()],
             websocketServerEnableTls: false
         })
         node2 = new DhtNode({ 
-            websocketPortRange,
+            websocketPortRange: WEBSOCKET_PORT_RANGE,
             websocketHost: '127.0.0.1',
             entryPoints: [epDhtNode.getLocalPeerDescriptor()],
             websocketServerEnableTls: false
         })
         node3 = new DhtNode({ 
-            websocketPortRange,
+            websocketPortRange: WEBSOCKET_PORT_RANGE,
             websocketHost: '127.0.0.1',
             entryPoints: [epDhtNode.getLocalPeerDescriptor()],
             websocketServerEnableTls: false
         })
         node4 = new DhtNode({ 
-            websocketPortRange, 
+            websocketPortRange: WEBSOCKET_PORT_RANGE, 
             websocketHost: '127.0.0.1',
             entryPoints: [epDhtNode.getLocalPeerDescriptor()],
             websocketServerEnableTls: false

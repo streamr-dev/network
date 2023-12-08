@@ -7,24 +7,19 @@ import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../
 const logger = new Logger(module)
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
+
     const simulator = new Simulator()
     const layer0EntryPointId = 'layer0entrypoint'
-
     let layer0EntryPoint: DhtNode
     let layer1Node1: DhtNode
-
     let layer0Node1: DhtNode
     let layer1EntryPoint: DhtNode
-
     let layer0Node2: DhtNode
     let layer1Node2: DhtNode
-
     let layer0Node3: DhtNode
     let layer1Node3: DhtNode
-
     let layer0Node4: DhtNode
     let layer1Node4: DhtNode
-
     let entryPointDescriptor: PeerDescriptor
 
     beforeEach(async () => {

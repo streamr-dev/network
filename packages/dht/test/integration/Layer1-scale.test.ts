@@ -1,33 +1,23 @@
 import { Simulator } from '../../src/connection/simulator/Simulator'
-import { PeerID } from '../../src/helpers/PeerID'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
+import { createMockConnectionDhtNode, createMockConnectionLayer1Node, createMockPeerDescriptor } from '../utils/utils'
 import { UUID } from '../../src/helpers/UUID'
-import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { areEqualNodeIds } from '../../src/helpers/nodeId'
 
+const NODE_COUNT = 48
 const NUM_OF_NODES_PER_KBUCKET = 8
 
 describe('Layer1', () => {
 
     let simulator: Simulator
-    const layer0EntryPointId = new UUID().toString()
-
-    const entryPoint0Descriptor = {
-        nodeId: PeerID.fromString(layer0EntryPointId).value,
-        type: NodeType.NODEJS
-    }
-
+    const entryPoint0Descriptor = createMockPeerDescriptor()
     let layer0EntryPoint: DhtNode
-
-    const NODE_COUNT = 48
     let nodes: DhtNode[]
-
     let layer1CleanUp: DhtNode[]
 
     beforeEach(async () => {
         simulator = new Simulator()
-        layer0EntryPoint = await createMockConnectionDhtNode(layer0EntryPointId, simulator)
+        layer0EntryPoint = await createMockConnectionDhtNode('dummy', simulator, entryPoint0Descriptor.nodeId)
         await layer0EntryPoint.joinDht([entryPoint0Descriptor])
 
         nodes = []

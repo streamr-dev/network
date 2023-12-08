@@ -1,9 +1,7 @@
 /* eslint-disable no-console */
-import { hexToBinary } from '@streamr/utils'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
@@ -33,10 +31,6 @@ describe('Kademlia correctness', () => {
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data), 8)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId()] = 0
-        entrypointDescriptor = {
-            nodeId: hexToBinary(entryPoint.getNodeId()),
-            type: NodeType.NODEJS
-        }
 
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`

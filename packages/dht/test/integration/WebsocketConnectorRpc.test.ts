@@ -1,9 +1,7 @@
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { WebsocketConnectorRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { generateId } from '../utils/utils'
+import { createMockPeerDescriptor } from '../utils/utils'
 import {
-    NodeType,
-    PeerDescriptor,
     WebsocketConnectionRequest,
     WebsocketConnectionResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -11,20 +9,13 @@ import { mockWebsocketConnectorRpc } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 describe('WebsocketConnectorRpc', () => {
+
     let rpcCommunicator1: RpcCommunicator
     let rpcCommunicator2: RpcCommunicator
     let client1: ProtoRpcClient<WebsocketConnectorRpcClient>
     let client2: ProtoRpcClient<WebsocketConnectorRpcClient>
-
-    const peerDescriptor1: PeerDescriptor = {
-        nodeId: generateId('peer1'),
-        type: NodeType.NODEJS
-    }
-
-    const peerDescriptor2: PeerDescriptor = {
-        nodeId: generateId('peer2'),
-        type: NodeType.NODEJS
-    }
+    const peerDescriptor1 = createMockPeerDescriptor()
+    const peerDescriptor2 = createMockPeerDescriptor()
 
     beforeEach(() => {
         rpcCommunicator1 = new RpcCommunicator()

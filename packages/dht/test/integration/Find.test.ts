@@ -6,14 +6,15 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { hexToBinary } from '@streamr/utils'
 
+const NUM_NODES = 100
+const K = 2
+
 describe('Find correctness', () => {
 
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.REAL)
-    const NUM_NODES = 100
-    const K = 2
 
     beforeEach(async () => {
         nodes = []
