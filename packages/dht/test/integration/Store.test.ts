@@ -39,7 +39,7 @@ describe('Storing data in DHT', () => {
 
     afterEach(async () => {
         await Promise.all(nodes.map((node) => node.stop()))
-    }, 15000)
+    })
 
     it('Storing data works', async () => {
         const storingNodeIndex = 34
