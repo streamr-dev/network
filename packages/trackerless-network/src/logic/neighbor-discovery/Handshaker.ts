@@ -7,7 +7,8 @@ import {
     IHandshakeRpcClient, DeliveryRpcClient
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
-    InterleaveNotice,
+    InterleaveRequest,
+    InterleaveResponse,
     StreamPartHandshakeRequest,
     StreamPartHandshakeResponse
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
@@ -59,8 +60,8 @@ export class Handshaker implements IHandshaker {
             createRpcRemote: (target: PeerDescriptor) => this.createRpcRemote(target),
             createDeliveryRpcRemote: (target: PeerDescriptor) => this.createDeliveryRpcRemote(target)
         })
-        this.config.rpcCommunicator.registerRpcNotification(InterleaveNotice, 'interleaveNotice',
-            (req: InterleaveNotice, context) => this.rpcLocal.interleaveNotice(req, context))
+        this.config.rpcCommunicator.registerRpcMethod(InterleaveRequest, InterleaveResponse, 'interleaveRequest',
+            (req: InterleaveRequest, context) => this.rpcLocal.interleaveRequest(req, context))
         this.config.rpcCommunicator.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake',
             (req: StreamPartHandshakeRequest, context) => this.rpcLocal.handshake(req, context))
     }

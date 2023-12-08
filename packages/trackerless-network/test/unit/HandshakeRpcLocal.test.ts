@@ -3,7 +3,7 @@ import { hexToBinary } from '@streamr/utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { NodeList } from '../../src/logic/NodeList'
 import { HandshakeRpcLocal } from '../../src/logic/neighbor-discovery/HandshakeRpcLocal'
-import { InterleaveNotice, StreamPartHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { InterleaveRequest, StreamPartHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor, createMockHandshakeRpcRemote, createMockDeliveryRpcRemote, mockConnectionLocker } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
@@ -85,32 +85,29 @@ describe('HandshakeRpcLocal', () => {
     })
 
     it('handshakeWithInterleaving success', async () => {
-        const req: InterleaveNotice = {
-            streamPartId: STREAM_PART_ID,
+        const req: InterleaveRequest = {
             interleaveTargetDescriptor: {
                 nodeId: hexToBinary('0x2222'),
                 type: NodeType.NODEJS
             }
-
         }
-        await rpcLocal.interleaveNotice(req, {
+        await rpcLocal.interleaveRequest(req, {
             incomingSourceDescriptor: createMockPeerDescriptor()
         } as any)
         expect(handshakeWithInterleaving).toHaveBeenCalledTimes(1)
     })
 
     it('handshakeWithInterleaving success', async () => {
-        const req: InterleaveNotice = {
-            streamPartId: StreamPartIDUtils.parse('other-stream#0'),
+        const req: InterleaveRequest = {
             interleaveTargetDescriptor: {
                 nodeId: hexToBinary('0x2222'),
                 type: NodeType.NODEJS
             }
         }
-        await rpcLocal.interleaveNotice(req, {
+        await rpcLocal.interleaveRequest(req, {
             incomingSourceDescriptor: createMockPeerDescriptor()
         } as any)
-        expect(handshakeWithInterleaving).toHaveBeenCalledTimes(0)
+        expect(handshakeWithInterleaving).toHaveBeenCalledTimes(1)
     })
 
 })

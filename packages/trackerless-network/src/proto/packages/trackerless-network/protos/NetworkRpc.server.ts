@@ -4,7 +4,8 @@
 import { TemporaryConnectionResponse } from "./NetworkRpc";
 import { TemporaryConnectionRequest } from "./NetworkRpc";
 import { NeighborUpdate } from "./NetworkRpc";
-import { InterleaveNotice } from "./NetworkRpc";
+import { InterleaveResponse } from "./NetworkRpc";
+import { InterleaveRequest } from "./NetworkRpc";
 import { StreamPartHandshakeResponse } from "./NetworkRpc";
 import { StreamPartHandshakeRequest } from "./NetworkRpc";
 import { ProxyConnectionResponse } from "./NetworkRpc";
@@ -44,9 +45,9 @@ export interface IHandshakeRpc<T = ServerCallContext> {
      */
     handshake(request: StreamPartHandshakeRequest, context: T): Promise<StreamPartHandshakeResponse>;
     /**
-     * @generated from protobuf rpc: interleaveNotice(InterleaveNotice) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: interleaveRequest(InterleaveRequest) returns (InterleaveResponse);
      */
-    interleaveNotice(request: InterleaveNotice, context: T): Promise<Empty>;
+    interleaveRequest(request: InterleaveRequest, context: T): Promise<InterleaveResponse>;
 }
 /**
  * @generated from protobuf service NeighborUpdateRpc

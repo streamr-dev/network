@@ -2,7 +2,7 @@ import { PeerDescriptor, RpcRemote } from '@streamr/dht'
 import { Logger, hexToBinary } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { InterleaveNotice, StreamPartHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { InterleaveRequest, InterleaveResponse, StreamPartHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IHandshakeRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 
 const logger = new Logger(module)
@@ -40,16 +40,22 @@ export class HandshakeRpcRemote extends RpcRemote<IHandshakeRpcClient> {
         }
     }
 
-    interleaveNotice(originatorDescriptor: PeerDescriptor): void {
-        const notification: InterleaveNotice = {
-            streamPartId: this.getServiceId(),
+    async interleaveRequest(originatorDescriptor: PeerDescriptor): Promise<InterleaveResponse> {
+        const request: InterleaveRequest = {
             interleaveTargetDescriptor: originatorDescriptor
         }
-        const options = this.formDhtRpcOptions({
-            notification: true
-        })
-        this.getClient().interleaveNotice(notification, options).catch(() => {
-            logger.debug('Failed to send interleaveNotice')
-        })
+        const options = this.formDhtRpcOptions({})
+        try {
+            const res = await this.getClient().interleaveRequest(request, options)
+            return {
+                accepted: res.accepted
+            }
+        } catch (err) {
+            logger.debug(`interleaveRequest to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
+            return {
+                accepted: false
+            }
+        }
+        
     }
 }
