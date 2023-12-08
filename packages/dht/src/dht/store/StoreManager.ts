@@ -13,7 +13,6 @@ import { StoreRpcRemote } from './StoreRpcRemote'
 import { Timestamp } from '../../proto/google/protobuf/timestamp'
 import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
-import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ServiceID } from '../../types/ServiceID'
 import { findIndex } from 'lodash'
 import { areEqualNodeIds, getNodeIdFromDataKey } from '../../helpers/nodeId'
@@ -28,7 +27,7 @@ interface StoreManagerConfig {
     serviceId: ServiceID
     highestTtl: number
     redundancyFactor: number
-    getClosestNeighborsTo: (id: Uint8Array, n?: number) => PeerDescriptor[],
+    getClosestNeighborsTo: (id: Uint8Array, n?: number) => PeerDescriptor[]
     createRpcRemote: (contact: PeerDescriptor) => StoreRpcRemote
 }
 
