@@ -27,15 +27,12 @@ describe('Kademlia correctness', () => {
     beforeEach(async () => {
 
         nodes = []
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data), 8)
+        entryPoint = await createMockConnectionDhtNode(simulator, Uint8Array.from(dhtIds[0].data), 8)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId()] = 0
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-
-            const node = await createMockConnectionDhtNode(nodeId, simulator, Uint8Array.from(dhtIds[i].data))
+            const node = await createMockConnectionDhtNode(simulator, Uint8Array.from(dhtIds[i].data))
             nodeIndicesById[node.getNodeId()] = i
             nodes.push(node)
         }

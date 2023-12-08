@@ -15,7 +15,6 @@ import {
     RecursiveOperation
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { PeerID } from '../../src/helpers/PeerID'
 import {
     IDhtNodeRpc,
     IRouterRpc,
@@ -41,21 +40,14 @@ export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'no
 }
 
 export const createMockConnectionDhtNode = async (
-    stringId: string,
     simulator: Simulator,
-    binaryId?: Uint8Array,
+    nodeId?: Uint8Array,
     numberOfNodesPerKBucket?: number,
     maxConnections = 80,
     dhtJoinTimeout = 45000
 ): Promise<DhtNode> => {
-    let id: PeerID
-    if (binaryId) {
-        id = PeerID.fromValue(binaryId)
-    } else {
-        id = PeerID.fromString(stringId)
-    }
     const peerDescriptor: PeerDescriptor = {
-        nodeId: id.value,
+        nodeId: nodeId ?? createRandomNodeId(),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
@@ -80,14 +72,12 @@ export const createMockConnectionDhtNode = async (
 }
 
 export const createMockConnectionLayer1Node = async (
-    stringId: string,
     layer0Node: DhtNode,
     serviceId?: string,
     numberOfNodesPerKBucket = 8
 ): Promise<DhtNode> => {
-    const id = PeerID.fromString(stringId)
     const descriptor: PeerDescriptor = {
-        nodeId: id.value,
+        nodeId: layer0Node.getLocalPeerDescriptor().nodeId,
         type: NodeType.NODEJS,
     }
     const node = new DhtNode({

@@ -18,13 +18,11 @@ describe('Find correctness', () => {
 
     beforeEach(async () => {
         nodes = []
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, undefined, K)
+        entryPoint = await createMockConnectionDhtNode(simulator, undefined, K)
         nodes.push(entryPoint)
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, 20, 60000)
+            const node = await createMockConnectionDhtNode(simulator, undefined, K, 20, 60000)
             nodes.push(node)
         }
         await entryPoint.joinDht([entrypointDescriptor])

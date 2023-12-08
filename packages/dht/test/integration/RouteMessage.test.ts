@@ -33,19 +33,18 @@ describe('Route Message With Mock Connections', () => {
     beforeEach(async () => {
         routerNodes = []
         simulator = new Simulator()
-        entryPoint = await createMockConnectionDhtNode('dummy', simulator, createRandomNodeId())
+        entryPoint = await createMockConnectionDhtNode(simulator, createRandomNodeId())
 
         entryPointDescriptor = {
             nodeId: hexToBinary(entryPoint.getNodeId()),
             type: NodeType.NODEJS
         }
 
-        sourceNode = await createMockConnectionDhtNode('dummy', simulator, createRandomNodeId())
-        destinationNode = await createMockConnectionDhtNode('dummy', simulator, createRandomNodeId())
+        sourceNode = await createMockConnectionDhtNode(simulator, createRandomNodeId())
+        destinationNode = await createMockConnectionDhtNode(simulator, createRandomNodeId())
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId, simulator)
+            const node = await createMockConnectionDhtNode(simulator, PeerID.fromString(`${i}`).value)
             routerNodes.push(node)
         }
 

@@ -42,8 +42,7 @@ describe('Replicate data from node to node in DHT', () => {
     */
     beforeEach(async () => {
         nodes = []
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
+        entryPoint = await createMockConnectionDhtNode(simulator,
             Uint8Array.from(dhtIds[0].data), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodesById.set(entryPoint.getNodeId(), entryPoint)
@@ -56,9 +55,7 @@ describe('Replicate data from node to node in DHT', () => {
         nodes.push(entryPoint)
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-
-            const node = await createMockConnectionDhtNode(nodeId, simulator,
+            const node = await createMockConnectionDhtNode(simulator,
                 Uint8Array.from(dhtIds[i].data), K, MAX_CONNECTIONS)
             nodesById.set(node.getNodeId(), node)
             nodes.push(node)

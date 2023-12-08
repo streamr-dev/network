@@ -22,13 +22,12 @@ describe('Storing data in DHT', () => {
 
     beforeEach(async () => {
         nodes = []
-        entryPoint = await createMockConnectionDhtNode('dummy', simulator,
+        entryPoint = await createMockConnectionDhtNode(simulator,
             createRandomNodeId(), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId, simulator, 
+            const node = await createMockConnectionDhtNode(simulator, 
                 undefined, K, MAX_CONNECTIONS, 60000)
             nodes.push(node)
         }
