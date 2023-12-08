@@ -184,5 +184,18 @@ describe('Config', () => {
                 }
             })
         })
+
+        it('highGasPrice', () => {
+            const config: any = {
+                environment: 'polygon'
+            }
+            expect(createStrictConfig(config)).toMatchObject({
+                contracts: {
+                    ethereumNetwork: {
+                        highGasPriceStrategy: true
+                    }
+                }
+            })
+        })
     })
 })

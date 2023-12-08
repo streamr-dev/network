@@ -288,14 +288,18 @@
                 "streamRegistryChainRPCs": {
                     "$ref": "#/definitions/chainConnectionInfoList"
                 },
-                "ethereumNetworks": {
+                "ethereumNetwork": {
                     "type": "object",
-                    "default": {
-                        "polygon": {
-                            "chainId": 137,
-                            "highGasPriceStrategy": true
+                    "additionalProperties": false,
+                    "properties": {
+                        "overrides": {
+                            "type": "object"
+                        },
+                        "highGasPriceStrategy": {
+                            "type": "boolean"
                         }
-                    }
+                    },
+                    "default": {}
                 },
                 "theGraphUrl": {
                     "type": "string",
