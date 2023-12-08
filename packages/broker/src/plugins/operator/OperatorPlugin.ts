@@ -1,5 +1,6 @@
 import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
+import { Overrides } from 'ethers'
 import { StreamrClient, SignerWithProvider } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { maintainOperatorValue } from './maintainOperatorValue'
@@ -53,6 +54,7 @@ export interface OperatorServiceConfig {
     signer: SignerWithProvider
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
+    getEthersOverrides?: () => Overrides | undefined
 }
 
 const logger = new Logger(module)
@@ -67,7 +69,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         const serviceConfig = {
             signer,
             operatorContractAddress,
-            theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl
+            theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl,
+            ethersOverrides: () => streamrClient.getEthersOverrides()
         }
 
         const redundancyFactor = await fetchRedundancyFactor(serviceConfig)
