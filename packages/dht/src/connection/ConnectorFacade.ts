@@ -99,7 +99,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         this.setLocalPeerDescriptor(localPeerDescriptor)
         if (localPeerDescriptor.websocket && !this.config.tlsCertificate && this.config.websocketServerEnableTls) {
             try {
-                await this.websocketConnector.autoCertify()
+                await this.websocketConnector.startAutocertifierClient()
                 const connectivityResponse = await this.websocketConnector.checkConnectivity(false)
                 const autocertifiedLocalPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
                 if (autocertifiedLocalPeerDescriptor.websocket !== undefined) {

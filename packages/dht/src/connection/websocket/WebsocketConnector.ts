@@ -135,7 +135,7 @@ export class WebsocketConnector {
         })
     }
 
-    public async autoCertify(): Promise<void> {
+    public async startAutocertifierClient(): Promise<void> {
         this.autoCertifierClient = new AutoCertifierClientFacade({
             configFile: this.autoCertifierConfigFile,
             transport: this.autoCertifierTransport,
@@ -144,7 +144,7 @@ export class WebsocketConnector {
             setHost: (hostName: string) => this.setHost(hostName),
             updateCertificate: (certificate: string, privateKey: string) => this.websocketServer!.updateCertificate(certificate, privateKey)
         })
-        logger.trace(`AutoCertifying subdomain...`)
+        logger.trace(`Starting autocertifier client...`)
         await this.autoCertifierClient.start()
     }
 
@@ -334,10 +334,12 @@ export class WebsocketConnector {
 
     public async destroy(): Promise<void> {
         this.abortController.abort()
-        this.rpcCommunicator.destroy()
 
-        const requests = Array.from(this.ongoingConnectRequests.values())
-        await Promise.allSettled(requests.map((conn) => conn.close(false)))
+        if (this.autoCertifierClient) {
+            await this.autoCertifierClient.stop()
+        }
+        
+        this.rpcCommunicator.destroy()
 
         const attempts = Array.from(this.connectingConnections.values())
         await Promise.allSettled(attempts.map((conn) => conn.close(false)))
