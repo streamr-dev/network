@@ -27,7 +27,7 @@ interface StoreManagerConfig {
     serviceId: ServiceID
     highestTtl: number
     redundancyFactor: number
-    getClosestNeighborsTo: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[],
+    getClosestNeighborsTo: (id: Uint8Array, n?: number) => PeerDescriptor[],
     createRpcRemote: (contact: PeerDescriptor) => StoreRpcRemote
 }
 
@@ -71,9 +71,9 @@ export class StoreManager {
             emitEvents: false
         })
         sortedList.addContact(new Contact(this.config.localPeerDescriptor))
-        closestToData.forEach((con) => {
-            if (!areEqualNodeIds(newNodeId, getNodeIdFromPeerDescriptor(con.getPeerDescriptor()))) {
-                sortedList.addContact(new Contact(con.getPeerDescriptor()))
+        closestToData.forEach((neighbor) => {
+            if (!areEqualNodeIds(newNodeId, getNodeIdFromPeerDescriptor(neighbor))) {
+                sortedList.addContact(new Contact(neighbor))
             }
         })
         const selfIsPrimaryStorer = areEqualNodeIds(
@@ -160,16 +160,16 @@ export class StoreManager {
             emitEvents: false
         })
         sortedList.addContact(new Contact(this.config.localPeerDescriptor))
-        closestPeers.forEach((con) => sortedList.addContact(new Contact(con.getPeerDescriptor())))
+        closestPeers.forEach((neighbor) => sortedList.addContact(new Contact(neighbor)))
         return sortedList.getClosestContacts().some((node) => areEqualNodeIds(node.getNodeId(), localNodeId))
     }
 
     private async replicateDataToClosestNodes(): Promise<void> {
         const dataEntries = Array.from(this.config.localDataStore.values())
         await Promise.all(dataEntries.map(async (dataEntry) => {
-            const dhtNodeRemotes = this.config.getClosestNeighborsTo(dataEntry.key, this.config.redundancyFactor)
-            await Promise.all(dhtNodeRemotes.map(async (remoteDhtNode) => {
-                const rpcRemote = this.config.createRpcRemote(remoteDhtNode.getPeerDescriptor())
+            const neighbors = this.config.getClosestNeighborsTo(dataEntry.key, this.config.redundancyFactor)
+            await Promise.all(neighbors.map(async (neighbor) => {
+                const rpcRemote = this.config.createRpcRemote(neighbor)
                 try {
                     await rpcRemote.replicateData({ entry: dataEntry })
                 } catch (err) {
@@ -192,8 +192,8 @@ export class StoreManager {
             emitEvents: false
         })
         sortedList.addContact(new Contact(this.config.localPeerDescriptor))
-        closestToData.forEach((con) => {
-            sortedList.addContact(new Contact(con.getPeerDescriptor()))
+        closestToData.forEach((neighbor) => {
+            sortedList.addContact(new Contact(neighbor))
         })
         const selfIsPrimaryStorer = areEqualNodeIds(sortedList.getAllContacts()[0].getNodeId(), localNodeId)
         const targets = selfIsPrimaryStorer

@@ -283,7 +283,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             redundancyFactor: this.config.storageRedundancyFactor,
             localDataStore: this.localDataStore,
             getClosestNeighborsTo: (id: Uint8Array, n?: number) => {
-                return this.peerManager!.getClosestNeighborsTo(getNodeIdFromBinary(id), n)
+                return this.peerManager!.getClosestNeighborsTo(getNodeIdFromBinary(id), n).map((n) => n.getPeerDescriptor())
             },
             createRpcRemote: (contact: PeerDescriptor) => {
                 return new StoreRpcRemote(
