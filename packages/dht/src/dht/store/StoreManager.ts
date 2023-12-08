@@ -97,10 +97,10 @@ export class StoreManager {
         }
     }
 
-    private async replicateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor, doNotConnect: boolean = false): Promise<void> {
+    private async replicateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor): Promise<void> {
         const rpcRemote = this.config.createRpcRemote(contact)
         try {
-            await rpcRemote.replicateData({ entry: dataEntry }, doNotConnect)
+            await rpcRemote.replicateData({ entry: dataEntry })
         } catch (e) {
             logger.trace('replicateData() threw an exception ' + e)
         }
