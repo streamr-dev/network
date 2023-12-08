@@ -21,7 +21,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
-import { DhtNodeRpcClient, ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { DhtNodeRpcClient, ExternalApiRpcClient, StoreRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
     MetricsContext,
@@ -53,6 +53,7 @@ import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager, getDistance } from './PeerManager'
 import { ServiceID } from '../types/ServiceID'
 import { NodeID, getNodeIdFromBinary } from '../helpers/nodeId'
+import { StoreRpcRemote } from './store/StoreRpcRemote'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -284,7 +285,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             getClosestNeighborsTo: (id: Uint8Array, n?: number) => {
                 return this.peerManager!.getClosestNeighborsTo(getNodeIdFromBinary(id), n)
             },
-            rpcRequestTimeout: this.config.rpcRequestTimeout
+            createRpcRemote: (contact: PeerDescriptor) => {
+                return new StoreRpcRemote(
+                    this.localPeerDescriptor!,
+                    contact,
+                    this.config.serviceId,
+                    toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
+                    this.config.rpcRequestTimeout
+                )
+            }
         })
         this.on('newContact', (peerDescriptor: PeerDescriptor) => {
             this.storeManager!.onNewContact(peerDescriptor)

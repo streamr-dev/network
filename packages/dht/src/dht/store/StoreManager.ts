@@ -4,8 +4,6 @@ import {
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { Any } from '../../proto/google/protobuf/any'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { IRecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
@@ -29,8 +27,8 @@ interface StoreManagerConfig {
     serviceId: ServiceID
     highestTtl: number
     redundancyFactor: number
-    rpcRequestTimeout?: number
-    getClosestNeighborsTo: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
+    getClosestNeighborsTo: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[],
+    createRpcRemote: (contact: PeerDescriptor) => StoreRpcRemote
 }
 
 const logger = new Logger(module)
@@ -44,8 +42,8 @@ export class StoreManager {
     private readonly serviceId: ServiceID
     private readonly highestTtl: number
     private readonly redundancyFactor: number
-    private readonly rpcRequestTimeout?: number
     private readonly getClosestNeighborsTo: (id: Uint8Array, n?: number) => DhtNodeRpcRemote[]
+    private readonly config: StoreManagerConfig
 
     constructor(config: StoreManagerConfig) {
         this.rpcCommunicator = config.rpcCommunicator
@@ -55,8 +53,8 @@ export class StoreManager {
         this.serviceId = config.serviceId
         this.highestTtl = config.highestTtl
         this.redundancyFactor = config.redundancyFactor
-        this.rpcRequestTimeout = config.rpcRequestTimeout
         this.getClosestNeighborsTo = config.getClosestNeighborsTo
+        this.config = config
         this.registerLocalRpcMethods(config)
     }
 
@@ -113,7 +111,7 @@ export class StoreManager {
     }
 
     private async replicateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor, doNotConnect: boolean = false): Promise<void> {
-        const rpcRemote = this.createRpcRemote(contact)
+        const rpcRemote = this.config.createRpcRemote(contact)
         try {
             await rpcRemote.replicateData({ entry: dataEntry }, doNotConnect)
         } catch (e) {
@@ -143,7 +141,7 @@ export class StoreManager {
                 successfulNodes.push(closestNodes[i])
                 continue
             }
-            const rpcRemote = this.createRpcRemote(closestNodes[i])
+            const rpcRemote = this.config.createRpcRemote(closestNodes[i])
             try {
                 const response = await rpcRemote.storeData({
                     key,
@@ -184,7 +182,7 @@ export class StoreManager {
         await Promise.all(dataEntries.map(async (dataEntry) => {
             const dhtNodeRemotes = this.getClosestNeighborsTo(dataEntry.key, this.redundancyFactor)
             await Promise.all(dhtNodeRemotes.map(async (remoteDhtNode) => {
-                const rpcRemote = this.createRpcRemote(remoteDhtNode.getPeerDescriptor())
+                const rpcRemote = this.config.createRpcRemote(remoteDhtNode.getPeerDescriptor())
                 try {
                     await rpcRemote.replicateData({ entry: dataEntry })
                 } catch (err) {
@@ -230,16 +228,6 @@ export class StoreManager {
                 })
             }
         })
-    }
-
-    private createRpcRemote(contact: PeerDescriptor): StoreRpcRemote {
-        return new StoreRpcRemote(
-            this.localPeerDescriptor,
-            contact,
-            this.serviceId,
-            toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator.getRpcClientTransport())),
-            this.rpcRequestTimeout
-        )
     }
 
     async destroy(): Promise<void> {
