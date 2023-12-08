@@ -20,7 +20,6 @@ describe('Network RPC', () => {
     let recvCounter = 0
 
     beforeEach(() => {
-        Simulator.useFakeTimers()
         rpcCommunicator1 = new RpcCommunicator()
         rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {
@@ -40,7 +39,6 @@ describe('Network RPC', () => {
     afterEach(() => {
         rpcCommunicator1.stop()
         rpcCommunicator2.stop()
-        Simulator.useFakeTimers(false)
     })
 
     it('sends Data', async () => {
