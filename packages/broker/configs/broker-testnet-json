@@ -1,0 +1,38 @@
+{
+    "client": {
+        "metrics": false,
+        "auth": {
+            "privateKey": "c53499ade8e4aad12148014f3601d8228f537cccf4d030dcd8217f4d02af8dce"
+        }
+    },
+    "plugins": {
+       "subscriber": {
+            "streams": [
+                 {
+                     "streamId": "streams.dimo.eth/firehose/weather",
+                     "streamPartition": 0
+                 },
+                 {
+                     "streamId": "streams.dimo.eth/firehose/weather",
+                     "streamPartition": 1
+                 },
+                 {
+                     "streamId": "streams.dimo.eth/firehose/weather",
+                     "streamPartition": 2
+                 },
+                 {
+                     "streamId": "eth-watch.eth/ethereum/blocks",
+                     "streamPartition": 0
+                 },
+                 {
+                     "streamId": "0xbafb06e3d7546742c6b1f2945b74ce0b3edc201a/nodle",
+                     "streamPartition": 0
+                 },
+                 {
+                     "streamId": "streamr.eth/demos/helsinki-trams",
+                     "streamPartition": 0
+                 }
+           ]
+        }
+    }
+}
