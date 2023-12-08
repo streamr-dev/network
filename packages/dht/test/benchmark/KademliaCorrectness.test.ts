@@ -3,7 +3,7 @@ import { hexToBinary } from '@streamr/utils'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
@@ -12,7 +12,6 @@ import { NodeID } from '../../src/helpers/nodeId'
 describe('Kademlia correctness', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-    let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator()
     const NUM_NODES = 1000
 
@@ -56,10 +55,10 @@ describe('Kademlia correctness', () => {
     })
 
     it('Can find correct neighbors', async () => {
-        await entryPoint.joinDht([entrypointDescriptor])
+        await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
 
         await Promise.allSettled(
-            nodes.map((node) => node.joinDht([entrypointDescriptor]))
+            nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()]))
         )
 
         let minimumCorrectNeighbors = Number.MAX_SAFE_INTEGER

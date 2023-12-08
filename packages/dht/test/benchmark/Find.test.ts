@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor, RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { NodeType, RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
@@ -15,7 +15,6 @@ const logger = new Logger(module)
 describe('Find correctness', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-    let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.NONE)
     const NUM_NODES = 1000
 
@@ -53,10 +52,10 @@ describe('Find correctness', () => {
     })
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
-        await entryPoint.joinDht([entrypointDescriptor])
+        await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
 
         await Promise.all(
-            nodes.map((node) => node.joinDht([entrypointDescriptor]))
+            nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()]))
         )
 
         logger.info('waiting 120s')

@@ -9,7 +9,6 @@ import { createRandomNodeId } from '../../src/helpers/nodeId'
 describe('Storing data in DHT', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-    let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.REAL)
     const NUM_NODES = 5
     const MAX_CONNECTIONS = 5
@@ -25,7 +24,6 @@ describe('Storing data in DHT', () => {
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
             undefined, K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
-        entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
@@ -33,7 +31,7 @@ describe('Storing data in DHT', () => {
                 undefined, K, MAX_CONNECTIONS, 60000)
             nodes.push(node)
         }
-        await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
+        await Promise.all(nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()])))
         await waitConnectionManagersReadyForTesting(nodes.map((node) => node.connectionManager!), MAX_CONNECTIONS)
     }, 90000)
 
