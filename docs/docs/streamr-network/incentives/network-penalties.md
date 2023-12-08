@@ -11,9 +11,9 @@ Operators will lose **10%** of their staked tokens if they are found to be viola
 To avoid being slashed ensure that your node is connectable and up to the challenge of distributing data on the sponsored stream. Running [redundant nodes](../network-roles/operators#node-redundancy-factor) is an excellent way to protect yourself against slashing.
 
 ## False flag slashing
-Nodes spot test each other in Sponsorships. A false flag slashing happens when a node that votes in the minority of the reviewing nodes.
-
-For example, 7 nodes spot test a node. If you vote "no" and the other 6 vote "yes" then you will receive a small penalty. Voting incorrectly may indicate a problem with your node's connectivity.
+Nodes regularly spot test each other in Sponsorships, and raise flags if they think another Operator is not online and doing the work. A flag stake is placed to back up the claim. A number of reviewers are selected to validate the flag by also testing the flagged Operator and voting.
+The flagger loses the flag stake due to a false flag when the majority of flag reviewers vote that the flagged Operator is actually fine, and the flag was therefore deemed invalid.
+See node inspections for more information on the node flagging process and parameters.
 
 See [node inspections](./node-inspection.md) for more information on the node flagging process and parameters.
 
