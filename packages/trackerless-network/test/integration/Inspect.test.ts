@@ -30,7 +30,8 @@ describe('inspect', () => {
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor,
-                transport
+                transport,
+                stopGivenTransport: true
             }
         })
         await node.start()
@@ -51,9 +52,9 @@ describe('inspect', () => {
             inspectedNodes.push(node)
         }))
         await Promise.all([
-            publisherNode.joinStreamPart(streamPartId, { minCount: 4, timeout: 15000 }),
-            inspectorNode.joinStreamPart(streamPartId, { minCount: 4, timeout: 15000 }),
-            ...inspectedNodes.map((node) => node.joinStreamPart(streamPartId, { minCount: 4, timeout: 15000 }))
+            publisherNode.joinStreamPart(streamPartId, { minCount: 4, timeout: 15004 }),
+            inspectorNode.joinStreamPart(streamPartId, { minCount: 4, timeout: 15005 }),
+            ...inspectedNodes.map((node) => node.joinStreamPart(streamPartId, { minCount: 4, timeout: 15006 }))
         ])
         sequenceNumber = 0
     }, 30000)
@@ -66,6 +67,10 @@ describe('inspect', () => {
             ...inspectedNodes.map((node) => node.stop())
         ])
         Simulator.useFakeTimers(false)
+    })
+
+    afterAll(() => {
+        simulator.stop()
     })
 
     it('gets successful inspections from all suspects', async () => {

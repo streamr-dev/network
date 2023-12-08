@@ -40,7 +40,9 @@ describe('StreamrNode', () => {
     afterEach(async () => {
         await Promise.all([
             node1.destroy(),
-            node2.destroy()
+            node2.destroy(),
+            layer0Node1.stop(),
+            layer0Node2.stop()
         ])
     })
 
@@ -52,11 +54,13 @@ describe('StreamrNode', () => {
         await transport2.start()
         layer0Node1 = new DhtNode({
             transport: transport1,
+            stopGivenTransport: true,
             peerDescriptor: peerDescriptor1,
             entryPoints: [peerDescriptor1]
         })
         layer0Node2 = new DhtNode({
             transport: transport2,
+            stopGivenTransport: true,
             peerDescriptor: peerDescriptor2,
             entryPoints: [peerDescriptor1]
         })

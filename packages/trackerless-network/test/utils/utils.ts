@@ -34,6 +34,7 @@ export const createMockRandomGraphNodeAndDhtNode = async (
     await mockCm.start()
     const layer1Node = new DhtNode({
         transport: mockCm,
+        stopGivenTransport: true,
         peerDescriptor: localPeerDescriptor,
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor],

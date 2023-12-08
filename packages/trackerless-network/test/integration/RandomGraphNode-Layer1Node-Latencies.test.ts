@@ -30,11 +30,13 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
 
         dhtEntryPoint = new DhtNode({
             transport: entrypointCm,
+            stopGivenTransport: true,
             peerDescriptor: entrypointDescriptor,
             serviceId: streamPartId
         })
         layer1Nodes = range(numOfNodes).map((i) => new DhtNode({
             transport: cms[i],
+            stopGivenTransport: true,
             peerDescriptor: peerDescriptors[i],
             serviceId: streamPartId
         }))

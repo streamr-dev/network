@@ -14,7 +14,6 @@ import { protoToString } from '../helpers/protoToString'
 import {
     DisconnectMode,
     DisconnectNotice,
-    DisconnectNoticeResponse,
     LockRequest,
     LockResponse,
     Message,
@@ -147,7 +146,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             (req: LockRequest, context: ServerCallContext) => lockRpcLocal.lockRequest(req, context))
         this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest',
             (req: UnlockRequest, context: ServerCallContext) => lockRpcLocal.unlockRequest(req, context))
-        this.rpcCommunicator.registerRpcMethod(DisconnectNotice, DisconnectNoticeResponse, 'gracefulDisconnect',
+        this.rpcCommunicator.registerRpcNotification(DisconnectNotice, 'gracefulDisconnect',
             (req: DisconnectNotice, context: ServerCallContext) => lockRpcLocal.gracefulDisconnect(req, context))
     }
 
@@ -156,7 +155,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             return
         }
         const disconnectionCandidates = new SortedContactList<Contact>({
-            referenceId: getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 
+            referenceId: getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()),
             maxSize: 100000,  // TODO use config option or named constant?
             allowToContainReferenceId: false,
             emitEvents: false
@@ -251,7 +250,10 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     }
 
     public async send(message: Message, doNotConnect = false, doNotMindStopped = false): Promise<void> {
-        if (this.state === ConnectionManagerState.STOPPED && !doNotMindStopped) {
+        if (
+            (this.state === ConnectionManagerState.STOPPED
+                || this.state === ConnectionManagerState.STOPPING)
+            && !doNotMindStopped) {
             return
         }
         const peerDescriptor = message.targetDescriptor!

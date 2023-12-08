@@ -54,7 +54,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         })
         this.operation = config.operation
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
-            rpcRequestTimeout: 15000  // TODO use config option or named constant?
+            rpcRequestTimeout: 15001  // TODO use config option or named constant?
         })
         this.registerLocalRpcMethods()
     }

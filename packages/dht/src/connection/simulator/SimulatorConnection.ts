@@ -55,6 +55,9 @@ export class SimulatorConnection extends Connection implements IConnection {
             + ', ' + getNodeIdFromPeerDescriptor(this.targetPeerDescriptor) + ' close()')
 
         if (!this.stopped) {
+            this.emit('disconnected', gracefulLeave, undefined, 'close() called')
+            this.removeAllListeners()
+            
             logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ', '
                 + getNodeIdFromPeerDescriptor(this.targetPeerDescriptor) + ' close() not stopped')
             this.stopped = true

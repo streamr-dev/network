@@ -32,6 +32,9 @@ export class SimulatorConnector {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+        if (this.stopped) {
+            console.error('connect() called on stopped SimulatorConnector')
+        }
         logger.trace('connect() ' + getNodeIdFromPeerDescriptor(targetPeerDescriptor))
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(nodeId)

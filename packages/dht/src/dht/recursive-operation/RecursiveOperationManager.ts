@@ -134,7 +134,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
                     [() => this.doRouteRequest(routeMessage, excludedPeer)],
                     [[session, 'completed']],
                     // TODO use config option or named constant?
-                    15000
+                    15003
                 )
             } catch (err) {
                 logger.debug(`doRouteRequest failed with error ${err}`)
@@ -202,7 +202,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
                 .doSendResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         } else {
             // TODO use config option or named constant?
-            const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.sessionTransport, { rpcRequestTimeout: 15000 })
+            const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.sessionTransport, { rpcRequestTimeout: 15007 })
             const rpcRemote = new RecursiveOperationSessionRpcRemote(
                 this.localPeerDescriptor,
                 targetPeerDescriptor,

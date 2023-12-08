@@ -41,14 +41,16 @@ describe('NetworkNode', () => {
             layer0: {
                 entryPoints: [pd1],
                 peerDescriptor: pd1,
-                transport: transport1
+                transport: transport1,
+                stopGivenTransport: true
             }
         })
         node2 = createNetworkNode({
             layer0: {
                 entryPoints: [pd1],
                 peerDescriptor: pd2,
-                transport: transport2
+                transport: transport2,
+                stopGivenTransport: true
             }
         })
 

@@ -14,9 +14,10 @@ describe('Propagation', () => {
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number
     const NUM_OF_NODES = 256
+    let simulator: Simulator
 
     beforeEach(async () => {
-        const simulator = new Simulator()
+        simulator = new Simulator()
         totalReceived = 0
         layer1Nodes = []
         randomGraphNodes = []
@@ -50,6 +51,7 @@ describe('Propagation', () => {
     afterEach(async () => {
         await Promise.all(randomGraphNodes.map((node) => node.stop()))
         await Promise.all(layer1Nodes.map((node) => node.stop()))
+        simulator.stop()
     })
 
     it('All nodes receive messages', async () => {

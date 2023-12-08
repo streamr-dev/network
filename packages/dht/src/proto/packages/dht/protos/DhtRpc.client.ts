@@ -7,7 +7,6 @@ import type { ExternalStoreDataRequest } from "./DhtRpc";
 import type { ExternalFindDataResponse } from "./DhtRpc";
 import type { ExternalFindDataRequest } from "./DhtRpc";
 import { ConnectionLockRpc } from "./DhtRpc";
-import type { DisconnectNoticeResponse } from "./DhtRpc";
 import type { DisconnectNotice } from "./DhtRpc";
 import type { UnlockRequest } from "./DhtRpc";
 import type { LockResponse } from "./DhtRpc";
@@ -314,9 +313,9 @@ export interface IConnectionLockRpcClient {
      */
     unlockRequest(input: UnlockRequest, options?: RpcOptions): UnaryCall<UnlockRequest, Empty>;
     /**
-     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (dht.DisconnectNoticeResponse);
+     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (google.protobuf.Empty);
      */
-    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, DisconnectNoticeResponse>;
+    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, Empty>;
 }
 /**
  * @generated from protobuf service dht.ConnectionLockRpc
@@ -342,11 +341,11 @@ export class ConnectionLockRpcClient implements IConnectionLockRpcClient, Servic
         return stackIntercept<UnlockRequest, Empty>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (dht.DisconnectNoticeResponse);
+     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (google.protobuf.Empty);
      */
-    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, DisconnectNoticeResponse> {
+    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, Empty> {
         const method = this.methods[2], opt = this._transport.mergeOptions(options);
-        return stackIntercept<DisconnectNotice, DisconnectNoticeResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<DisconnectNotice, Empty>("unary", this._transport, method, opt, input);
     }
 }
 /**
