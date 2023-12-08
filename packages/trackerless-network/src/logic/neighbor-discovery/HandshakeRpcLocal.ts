@@ -11,7 +11,7 @@ import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/N
 import { HandshakeRpcRemote } from './HandshakeRpcRemote'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { binaryToHex } from '@streamr/utils'
+import { Logger, binaryToHex } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
 
 interface HandshakeRpcLocalConfig {
@@ -24,6 +24,8 @@ interface HandshakeRpcLocalConfig {
     createDeliveryRpcRemote: (peerDescriptor: PeerDescriptor) => DeliveryRpcRemote
     handshakeWithInterleaving: (target: PeerDescriptor, senderId: NodeID) => Promise<boolean>
 }
+
+const logger = new Logger(module)
 
 export class HandshakeRpcLocal implements IHandshakeRpc {
 
@@ -88,7 +90,9 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
                     this.config.targetNeighbors.remove(furthest.getPeerDescriptor())
                     this.config.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.config.streamPartId)
                 }
-            }).catch((err) => {console.error('interleaveRequest failed', err)})
+            }).catch((err) => {
+                logger.trace('interleaveRequest failed', err)
+            })
         }
         this.config.targetNeighbors.add(this.config.createDeliveryRpcRemote(requester))
         this.config.connectionLocker.lockConnection(requester, this.config.streamPartId)
@@ -110,7 +114,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
             }
             return { accepted: true }
         } catch (err) {
-            console.error(`interleaveRequest to ${getNodeIdFromPeerDescriptor(message.interleaveTargetDescriptor!)} failed: ${err}`)
+            logger.debug(`interleaveRequest to ${getNodeIdFromPeerDescriptor(message.interleaveTargetDescriptor!)} failed: ${err}`)
             return { accepted: false }
         }
     }
