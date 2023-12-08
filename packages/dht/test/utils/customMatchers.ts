@@ -1,4 +1,3 @@
-import { expect } from '@jest/globals'
 import { areEqualBinaries, binaryToHex } from '@streamr/utils'
 import { printExpected, printReceived } from 'jest-matcher-utils'
 import { isEqual } from 'lodash'
