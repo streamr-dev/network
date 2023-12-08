@@ -112,7 +112,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
                     })
                 }
             } catch (err) {
-                logger.warn('Failed to auto-certify, disabling WebSocket server TLS')
+                logger.warn('Failed to auto-certify, disabling WebSocket server TLS', { error: err })
                 await this.restartWebsocketConnector({
                     ...webSocketConnectorConfig,
                     serverEnableTls: false

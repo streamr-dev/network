@@ -1,3 +1,4 @@
+import { hexToBinary } from '@streamr/utils'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { DhtNode } from '../../src/dht/DhtNode'
@@ -11,7 +12,7 @@ const runTest = async (latencyType: LatencyType) => {
     const entryPointId = '0'
     const entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, undefined, NUM_OF_NODES_PER_KBUCKET)
     const entrypointDescriptor = {
-        nodeId: entryPoint.getNodeId().value,
+        nodeId: hexToBinary(entryPoint.getNodeId()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }

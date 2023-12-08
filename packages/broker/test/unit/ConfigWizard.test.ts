@@ -7,7 +7,7 @@ import {
     createStorageFile,
     getConfig,
     getPrivateKey,
-    getNodeIdentity,
+    getNodeMnemonic,
     start,
     PluginAnswers,
     PrivateKeyAnswers,
@@ -185,9 +185,8 @@ describe('ConfigWizard', () => {
     describe('identity', () => {
         it('happy path', () => {
             const privateKey = '0x9a2f3b058b9b457f9f954e62ea9fd2cefe2978736ffb3ef2c1782ccfad9c411d'
-            const identity = getNodeIdentity(privateKey)
-            expect(identity.mnemonic).toBe('Mountain Until Gun')
-            expect(identity.networkExplorerUrl).toBe('https://streamr.network/network-explorer/nodes/0x909DC59FF7A3b23126bc6F86ad44dD808fd424Dc')
+            const mnemonic = getNodeMnemonic(privateKey)
+            expect(mnemonic).toBe('Mountain Until Gun')
         })
     })
 
@@ -212,8 +211,6 @@ describe('ConfigWizard', () => {
             expect(logger.messages).toEqual([
                 'Welcome to the Streamr Network',
                 'Your node\'s generated name is Company Session Mix.',
-                'View your node in the Network Explorer:',
-                'https://streamr.network/network-explorer/nodes/0x2e988A386a799F506693793c6A5AF6B54dfAaBfB',
                 'You can start the broker now with',
                 `streamr-broker ${storageAnswers.storagePath}`,
             ])

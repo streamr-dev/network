@@ -244,7 +244,7 @@ If you're running a node to become an Operator, then you could now jump to [Step
 -   Run `streamr-broker` to start the node! You should start to see logging similar to this:
 
 ```
-INFO [2023-10-31T17:42:30.897] (broker              ): Start broker version ...
+INFO [2023-10-31T17:42:30.897] (broker              ): Start Streamr node version ...
 INFO [2023-10-31T17:42:32.660] (StreamrNode         ): Starting new StreamrNode with id 251cdad515544d7e863602413a5d91b2
 INFO [2023-10-31T17:42:33.131] (OperatorPlugin      ): Fetched redundancy factor {"redundancyFactor":1}
 INFO [2023-10-31T17:42:33.152] (MaintainTopologyHelp): Starting
