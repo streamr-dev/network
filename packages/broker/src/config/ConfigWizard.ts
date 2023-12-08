@@ -68,7 +68,7 @@ export const start = async () => {
 
         persistConfig(
             storagePath,
-            network === 'polygon' ? config : decorateMumbaiConfig(config)
+            network === 'polygon' ? config : getMumbaiConfig(config)
         )
 
         const lines = [
@@ -307,7 +307,7 @@ function persistConfig(storagePath: string, config: ConfigFile) {
 /**
  * Adjusts the given config for the Mumbai test environment.
  */
-function decorateMumbaiConfig(config: ConfigFile): ConfigFile {
+function getMumbaiConfig(config: ConfigFile): ConfigFile {
     return produce(config, (draft) => {
         draft.client || (draft.client = {})
 
