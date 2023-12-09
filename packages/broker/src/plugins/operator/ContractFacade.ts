@@ -9,7 +9,7 @@ import {
     toEthereumAddress,
     collect
 } from '@streamr/utils'
-import { Contract, BigNumber, utils } from 'ethers'
+import { Contract, BigNumber } from 'ethers'
 import sample from 'lodash/sample'
 import fetch from 'node-fetch'
 import { NetworkPeerDescriptor } from 'streamr-client'
