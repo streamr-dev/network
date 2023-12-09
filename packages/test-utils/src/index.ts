@@ -251,7 +251,7 @@ export class KeyServer {
         })
         console.info(`starting up keyserver on port ${this.port}...`)
         this.ready = new Promise((resolve, reject) => {
-            this.server = app.listen(this.port)
+            this.server = app.listen(this.port, '0.0.0.0')
                 .once('listening', () => {
                     console.info(`keyserver started on port ${this.port} to serve keys ${this.firstId} to ${this.lastId}`)
                     resolve(true)
@@ -282,7 +282,7 @@ export class KeyServer {
 export async function fetchPrivateKeyWithGas(keyServerPort: number): Promise<string> {
     let response
     try {
-        response = await fetch(`http://localhost:${keyServerPort}/key`, {
+        response = await fetch(`http://127.0.0.1:${keyServerPort}/key`, {
             timeout: 5 * 1000
         })
     } catch (e) {
