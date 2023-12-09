@@ -22,6 +22,9 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
+import { pOnce } from '../utils/promises'
+import { DestroySignal } from '../DestroySignal'
+import { NetworkNodeStub } from '../NetworkNodeFacade'
 
 /*
  * Sends group key responses
@@ -31,6 +34,7 @@ import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 export class PublisherKeyExchange {
 
     private readonly networkNodeFacade: NetworkNodeFacade
+    private networkNodeStub?: NetworkNodeStub
     private readonly streamRegistry: StreamRegistry
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
@@ -41,19 +45,29 @@ export class PublisherKeyExchange {
         streamRegistry: StreamRegistry,
         store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        loggerFactory: LoggerFactory
+        loggerFactory: LoggerFactory,
+        destroySignal: DestroySignal
     ) {
+        this.onMessage = this.onMessage.bind(this)
         this.networkNodeFacade = networkNodeFacade
         this.streamRegistry = streamRegistry
         this.store = store
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
-        networkNodeFacade.once('start', async () => {
-            const node = await networkNodeFacade.getNode()
-            node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
+        this.networkNodeFacade.once('start', async () => {
+            this.networkNodeStub = await networkNodeFacade.getNode()
+            this.networkNodeStub.addMessageListener(this.onMessage)
             this.logger.debug('Started')
         })
+        destroySignal.onDestroy.once(this.destroy)
     }
+
+    private destroy = pOnce(async () => {
+        if (this.networkNodeStub) {
+            this.networkNodeStub.removeMessageListener(this.onMessage)
+        }
+        this.networkNodeStub = undefined
+    })
 
     private async onMessage(request: StreamMessage): Promise<void> {
         if (GroupKeyRequest.is(request)) {

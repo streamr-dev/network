@@ -642,7 +642,6 @@ export class StreamrClient {
 
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
-        this.container.reset()
     })
 
     async getPeerDescriptor(): Promise<NetworkPeerDescriptor> {

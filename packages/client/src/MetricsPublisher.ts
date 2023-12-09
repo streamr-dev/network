@@ -54,6 +54,7 @@ export class MetricsPublisher {
     private readonly node: NetworkNodeFacade
     private readonly config: NormalizedConfig
     private readonly eventEmitter: StreamrClientEventEmitter
+    private readonly authentication: Authentication
     private readonly destroySignal: DestroySignal
 
     constructor(
@@ -68,22 +69,31 @@ export class MetricsPublisher {
         this.node = node
         this.config = getNormalizedConfig(config)
         this.eventEmitter = eventEmitter
+        this.authentication = authentication
         this.destroySignal = destroySignal
-        const ensureStarted = pOnce(async () => {
-            const node = await this.node.getNode()
-            const metricsContext = node.getMetricsContext()
-            const partitionKey = await authentication.getAddress()
-            this.config.periods.forEach((config) => {
-                return metricsContext.createReportProducer(async (report: MetricsReport) => {
-                    await this.publish(report, config.streamId, partitionKey)
-                }, config.duration, this.destroySignal.abortSignal)
-            })
-        })
+        
         if (this.config.periods.length > 0) {
-            this.eventEmitter.on('publish', () => ensureStarted())
-            this.eventEmitter.on('subscribe', () => ensureStarted())
+            this.eventEmitter.on('publish', this.ensureStarted)
+            this.eventEmitter.on('subscribe', this.ensureStarted)
         }
+        this.destroySignal.onDestroy.once(this.destroy)
     }
+
+    private ensureStarted = pOnce(async () => {
+        const node = await this.node.getNode()
+        const metricsContext = node.getMetricsContext()
+        const partitionKey = await this.authentication.getAddress()
+        this.config.periods.forEach((config) => {
+            return metricsContext.createReportProducer(async (report: MetricsReport) => {
+                await this.publish(report, config.streamId, partitionKey)
+            }, config.duration, this.destroySignal.abortSignal)
+        })
+    })
+
+    private destroy = pOnce(async () => {
+        this.eventEmitter.off('publish', this.ensureStarted)
+        this.eventEmitter.off('subscribe', this.ensureStarted)
+    })
 
     private async publish(report: MetricsReport, streamId: string, partitionKey: string): Promise<void> {
         await wait(Math.random() * this.config.maxPublishDelay)
