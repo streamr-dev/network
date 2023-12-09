@@ -257,7 +257,11 @@ export class ContractFacade {
 
     async flag(sponsorship: EthereumAddress, operator: EthereumAddress, partition: number): Promise<void> {
         const metadata = JSON.stringify({ partition })
-        await (await this.operatorContract.flag(sponsorship, operator, metadata)).wait()
+
+        // Flagging is time-sensitive, so bid a bit above market rate for gas
+        const gasPrice = this.bumpGasPrice(30)
+
+        await (await this.operatorContract.flag(sponsorship, operator, metadata, { gasPrice })).wait()
     }
 
     async getRandomOperator(): Promise<EthereumAddress | undefined> {
@@ -461,17 +465,17 @@ export class ContractFacade {
         return toStreamID(await sponsorship.streamId())
     }
 
-    private async bumpGasPrice(byHowManyGwei: number): Promise<BigNumber> {
+    private async bumpGasPrice(increasePercentage: number): Promise<BigNumber> {
         const gasPrice = await this.getProvider().getGasPrice()
-        const newGasPrice: BigNumber = gasPrice.add(utils.parseUnits(byHowManyGwei.toString(), 'gwei'))
+        const newGasPrice: BigNumber = gasPrice.mul(100 + increasePercentage).div(100)
         return newGasPrice
     }
 
-    async voteOnFlag(sponsorship: string, targetOperator: string, kick: boolean): Promise<void> {
+    async voteOnFlag(sponsorship: string, targetOperator: string, kick: boolean, gasPriceBumpPercentage = 30): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
 
         // Voting is time-sensitive, so bid a bit above market rate for gas
-        const gasPrice = this.bumpGasPrice(10)
+        const gasPrice = this.bumpGasPrice(gasPriceBumpPercentage)
 
         // typical gas cost 99336, but this has shown insufficient sometimes
         await (await this.operatorContract.voteOnFlag(sponsorship, targetOperator, voteData, { gasLimit: '200000', gasPrice })).wait()
@@ -480,7 +484,7 @@ export class ContractFacade {
     async closeFlag(sponsorship: string, targetOperator: string): Promise<void> {
         // voteOnFlag is not used to vote here but to close the expired flag. The vote data gets ignored.
         // Anyone can call this function at this point.
-        await this.voteOnFlag(sponsorship, targetOperator, false)
+        await this.voteOnFlag(sponsorship, targetOperator, false, 0)
     }
 
     addOperatorContractStakeEventListener(eventName: 'Staked' | 'Unstaked', listener: (sponsorship: string) => unknown): void {
