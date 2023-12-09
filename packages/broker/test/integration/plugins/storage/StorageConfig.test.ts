@@ -65,7 +65,7 @@ describe('StorageConfig', () => {
         await waitForCondition(async () => {
             const result = await cassandraClient.execute('SELECT COUNT(*) FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
             return (result.first().count > 0)
-        })
+        }, 15000)
         const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
         const storeMessage = StreamMessage.deserialize(JSON.parse(result.first().payload.toString()))
         expect(storeMessage.signature).toEqual(publishMessage.signature)
