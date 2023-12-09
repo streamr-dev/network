@@ -1,6 +1,6 @@
-import { fastWallet, fetchPrivateKeyWithGas, randomEthereumAddress, KeyServer } from '@streamr/test-utils'
+import { fastWallet, fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
-import { CONFIG_TEST } from '../../src/ConfigTest'
+import { CONFIG_TEST, KEYSERVER_PORT } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
@@ -43,7 +43,7 @@ describe('searchStreams', () => {
         client = new StreamrClient({
             ...CONFIG_TEST,
             auth: {
-                privateKey: await fetchPrivateKeyWithGas(),
+                privateKey: await fetchPrivateKeyWithGas(KEYSERVER_PORT),
             }
         })
         const streams = await createTestStreams([
@@ -77,7 +77,6 @@ describe('searchStreams', () => {
 
     afterAll(async () => {
         await client?.destroy()
-        await KeyServer.stopIfRunning()
     })
 
     it('search term matches', async () => {

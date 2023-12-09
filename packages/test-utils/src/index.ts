@@ -202,14 +202,16 @@ export function isRunningInElectron(): boolean {
  */
 /* eslint-disable no-console */
 export class KeyServer {
-    public static readonly KEY_SERVER_PORT = 45454
+    private port: number // 45454
+    private firstId: number 
+    private lastId: number
     private static singleton: KeyServer | undefined
     private readonly ready: Promise<unknown>
     private server?: http.Server
 
-    public static async startIfNotRunning(): Promise<void> {
+    public static async startIfNotRunning(port: number, firstId: number, lastId: number): Promise<void> {
         if (KeyServer.singleton === undefined) {
-            KeyServer.singleton = new KeyServer()
+            KeyServer.singleton = new KeyServer(port, firstId, lastId)
             await KeyServer.singleton.ready
         }
     }
@@ -222,16 +224,20 @@ export class KeyServer {
         }
     }
 
-    private constructor() {
+    private constructor(port: number, firstId: number, lastId: number) {
+        this.port = port
+        this.firstId = firstId
+        this.lastId = lastId
+
         const app = express()
         app.use(cors())
-        let c = 1
+        let c = this.firstId
         app.get('/key', (_req, res) => {
             const hexString = c.toString(16)
             const privateKey = '0x' + hexString.padStart(64, '0')
             res.send(privateKey)
             c += 1
-            if (c > 1000) {
+            if (c > this.lastId) {
                 c = 1
             } else if (c === 10) {
                 /*
@@ -243,11 +249,11 @@ export class KeyServer {
                 c = 11
             }
         })
-        console.info(`starting up keyserver on port ${KeyServer.KEY_SERVER_PORT}...`)
+        console.info(`starting up keyserver on port ${this.port}...`)
         this.ready = new Promise((resolve, reject) => {
-            this.server = app.listen(KeyServer.KEY_SERVER_PORT)
+            this.server = app.listen(this.port)
                 .once('listening', () => {
-                    console.info(`keyserver started on port ${KeyServer.KEY_SERVER_PORT}`)
+                    console.info(`keyserver started on port ${this.port} to serve keys ${this.firstId} to ${this.lastId}`)
                     resolve(true)
                 })
                 .once('error', (err) => {
@@ -265,7 +271,7 @@ export class KeyServer {
                 if (err) {
                     reject(err)
                 } else {
-                    console.info(`closed keyserver on port ${KeyServer.KEY_SERVER_PORT}`)
+                    console.info(`closed keyserver on port ${this.port}`)
                     resolve(true)
                 }
             })
@@ -273,22 +279,14 @@ export class KeyServer {
     }
 }
 
-export async function fetchPrivateKeyWithGas(): Promise<string> {
+export async function fetchPrivateKeyWithGas(keyServerPort: number): Promise<string> {
     let response
     try {
-        response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
+        response = await fetch(`http://localhost:${keyServerPort}/key`, {
             timeout: 5 * 1000
         })
-    } catch (_e) {
-        try {
-            await KeyServer.startIfNotRunning() // may throw if parallel attempts at starting server
-        } catch (_e2) {
-            // no-op
-        } finally {
-            response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
-                timeout: 5 * 1000
-            })
-        }
+    } catch (e) {
+        throw new Error(`fetchPrivateKeyWithGas failed: ${e}`)
     }
 
     if (!response.ok) {

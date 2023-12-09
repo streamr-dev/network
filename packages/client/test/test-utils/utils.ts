@@ -12,7 +12,7 @@ import { AddressInfo } from 'net'
 import { DependencyContainer } from 'tsyringe'
 import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
 import { StreamrClientConfig } from '../../src/Config'
-import { CONFIG_TEST } from '../../src/ConfigTest'
+import { CONFIG_TEST, KEYSERVER_PORT } from '../../src/ConfigTest'
 import { DestroySignal } from '../../src/DestroySignal'
 import { PersistenceManager } from '../../src/PersistenceManager'
 import { Stream, StreamMetadata } from '../../src/Stream'
@@ -74,7 +74,7 @@ export const getCreateClient = (
         if (opts.auth && opts.auth.privateKey) {
             key = opts.auth.privateKey
         } else {
-            key = await fetchPrivateKeyWithGas()
+            key = await fetchPrivateKeyWithGas(KEYSERVER_PORT)
         }
         const client = new StreamrClient(merge(
             CONFIG_TEST,

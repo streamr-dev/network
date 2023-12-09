@@ -1,7 +1,7 @@
-import { fastPrivateKey, fetchPrivateKeyWithGas, KeyServer } from '@streamr/test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createTestStream, createTestClient } from '../test-utils/utils'
 import range from 'lodash/range'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { DOCKER_DEV_STORAGE_NODE, KEYSERVER_PORT } from '../../src/ConfigTest'
 import { wait, waitForCondition } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -16,7 +16,7 @@ describe('resend', () => {
     let resendClient: StreamrClient
 
     beforeEach(async () => {
-        publisherClient = createTestClient(await fetchPrivateKeyWithGas(), 43232)
+        publisherClient = createTestClient(await fetchPrivateKeyWithGas(KEYSERVER_PORT), 43232)
         resendClient = createTestClient(fastPrivateKey(), 43233)
     }, TIMEOUT)
 
@@ -26,10 +26,6 @@ describe('resend', () => {
             resendClient?.destroy(),
         ])
     }, TIMEOUT)
-
-    afterAll(async () => {
-        await KeyServer.stopIfRunning()
-    })
 
     describe('non-public stream', () => {
         let stream: Stream

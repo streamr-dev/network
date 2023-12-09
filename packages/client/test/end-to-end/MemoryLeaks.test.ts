@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { fetchPrivateKeyWithGas, KeyServer } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Defer, wait } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
@@ -8,7 +8,7 @@ import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, instanceId, createTheGraphClient } from '../../src/utils/utils'
-import { CONFIG_TEST } from '../../src/ConfigTest'
+import { CONFIG_TEST, KEYSERVER_PORT } from '../../src/ConfigTest'
 import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } from '../../src/Config'
 import * as ethersAbi from '@ethersproject/abi'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
@@ -60,7 +60,6 @@ describe('MemoryLeaks', () => {
     })
 
     afterEach(async () => {
-        await KeyServer.stopIfRunning()
         expect(leaksDetector).toBeTruthy()
         if (!leaksDetector) { return }
         const detector = leaksDetector
@@ -82,7 +81,7 @@ describe('MemoryLeaks', () => {
                         CONFIG_TEST,
                         {
                             auth: {
-                                privateKey: await fetchPrivateKeyWithGas(),
+                                privateKey: await fetchPrivateKeyWithGas(KEYSERVER_PORT),
                             }
                         },
                         opts
@@ -130,7 +129,7 @@ describe('MemoryLeaks', () => {
                         CONFIG_TEST,
                         {
                             auth: {
-                                privateKey: await fetchPrivateKeyWithGas(),
+                                privateKey: await fetchPrivateKeyWithGas(KEYSERVER_PORT),
                             }
                         },
                         opts
