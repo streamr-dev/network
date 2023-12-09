@@ -106,9 +106,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         if (this.stopped) {
             return { closestNodes: [] }
         }
-        const sessionId = v4()
         const session = new RecursiveOperationSession({
-            serviceId: sessionId,
             transport: this.sessionTransport,
             targetId,
             localNodeId: getNodeIdFromPeerDescriptor(this.localPeerDescriptor),
@@ -126,8 +124,8 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             )
             return session.getResults()
         }
-        const routeMessage = this.wrapRequest(targetId, sessionId, operation)
-        this.ongoingSessions.set(sessionId, session)
+        const routeMessage = this.wrapRequest(targetId, session.getId(), operation)
+        this.ongoingSessions.set(session.getId(), session)
         if (waitForCompletion === true) {
             try {
                 await runAndWaitForEvents3<RecursiveOperationSessionEvents>(
@@ -148,12 +146,12 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         if (operation === RecursiveOperation.FETCH_DATA) {
             const data = this.localDataStore.getEntries(targetId)
             if (data.size > 0) {
-                this.sendResponse([], this.localPeerDescriptor, sessionId, [], data, true)
+                this.sendResponse([], this.localPeerDescriptor, session.getId(), [], data, true)
             }
         } else if (operation === RecursiveOperation.DELETE_DATA) {
             this.localDataStore.markAsDeleted(targetId, getNodeIdFromPeerDescriptor(this.localPeerDescriptor))
         }
-        this.ongoingSessions.delete(sessionId)
+        this.ongoingSessions.delete(session.getId())
         session.stop()
         return session.getResults()
     }

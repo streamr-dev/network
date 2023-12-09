@@ -1,4 +1,5 @@
 import EventEmitter from 'eventemitter3'
+import { v4 } from 'uuid'
 import { DataEntry, PeerDescriptor, RecursiveOperationResponse, RecursiveOperation } from '../../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
@@ -15,7 +16,6 @@ export interface RecursiveOperationSessionEvents {
 }
 
 export interface RecursiveOperationSessionConfig {
-    serviceId: ServiceID
     transport: ITransport
     targetId: Uint8Array
     localNodeId: NodeID
@@ -24,7 +24,8 @@ export interface RecursiveOperationSessionConfig {
 }
 
 export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSessionEvents> {
-    private readonly serviceId: ServiceID
+
+    private readonly id = v4()
     private readonly transport: ITransport
     private readonly targetId: Uint8Array
     private readonly localNodeId: NodeID
@@ -41,7 +42,6 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     constructor(config: RecursiveOperationSessionConfig) {
         super()
-        this.serviceId = config.serviceId
         this.transport = config.transport
         this.targetId = config.targetId
         this.localNodeId = config.localNodeId
@@ -53,7 +53,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             emitEvents: false
         })
         this.operation = config.operation
-        this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.transport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(this.id, this.transport, {
             rpcRequestTimeout: 15000  // TODO use config option or named constant?
         })
         this.registerLocalRpcMethods()
@@ -171,6 +171,10 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
         dataEntries: Array.from(this.foundData.values())
     })
+
+    public getId() {
+        return this.id
+    }
 
     public stop(): void {
         if (this.timeoutTask) {
