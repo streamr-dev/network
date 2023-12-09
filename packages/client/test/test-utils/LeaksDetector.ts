@@ -28,11 +28,11 @@ export class LeaksDetector {
 
         this.resetGC()
         const leaksDetector = new LeakDetector(obj)
-        /*
+        
         // @ts-expect-error monkeypatching
         // eslint-disable-next-line no-underscore-dangle
-        //leaksDetector._runGarbageCollector = this.runGarbageCollectorOnce(leaksDetector._runGarbageCollector)
-        */
+        leaksDetector._runGarbageCollector = this.runGarbageCollectorOnce(leaksDetector._runGarbageCollector)
+        
         this.leakDetectors.set(name, leaksDetector)
     }
 
