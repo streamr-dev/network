@@ -13,6 +13,8 @@ import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
+export const KEYSERVER_PORT = 45455
+export const KEYSERVER_PORT_SEQUENTIAL = 45456
 
 interface TestConfig {
     privateKey: string

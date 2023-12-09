@@ -4,7 +4,8 @@ import { StreamrClient, Stream } from 'streamr-client'
 import {
     createClient,
     createTestStream,
-    startStorageNode
+    startStorageNode,
+    KEYSERVER_PORT
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
@@ -32,8 +33,8 @@ describe('dataMetadataEndpoints', () => {
     let storageNodeAccount: Wallet
 
     beforeAll(async () => {
-        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
-        client1 = createClient(await fetchPrivateKeyWithGas())
+        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
+        client1 = createClient(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
         storageNode = await startStorageNode(storageNodeAccount.privateKey, httpPort1)
     })
 

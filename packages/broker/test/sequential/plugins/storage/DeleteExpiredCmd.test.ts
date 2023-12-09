@@ -4,7 +4,7 @@ import { StreamrClient } from 'streamr-client'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { DeleteExpiredCmd } from '../../../../src/plugins/storage/DeleteExpiredCmd'
-import { STREAMR_DOCKER_DEV_HOST, createTestStream, createClient } from '../../../utils'
+import { STREAMR_DOCKER_DEV_HOST, createTestStream, createClient, KEYSERVER_PORT_SEQUENTIAL } from '../../../utils'
 const { TimeUuid } = cassandraTypes
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
@@ -62,7 +62,7 @@ describe('DeleteExpiredCmd', () => {
             localDataCenter,
             keyspace,
         })
-        const mockUser = new Wallet(await fetchPrivateKeyWithGas())
+        const mockUser = new Wallet(await fetchPrivateKeyWithGas(KEYSERVER_PORT_SEQUENTIAL))
         client = createClient(mockUser.privateKey, { orderMessages: false })
         deleteExpiredCmd = new DeleteExpiredCmd({
             streamrBaseUrl: `http://${STREAMR_DOCKER_DEV_HOST}`,

@@ -7,7 +7,8 @@ import {
     createClient,
     STREAMR_DOCKER_DEV_HOST,
     createTestStream,
-    startStorageNode
+    startStorageNode,
+    KEYSERVER_PORT
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
 import { StreamMessage } from '@streamr/protocol'
@@ -30,8 +31,8 @@ describe('StorageConfig', () => {
     let storageNodeAccount: Wallet
 
     beforeAll(async () => {
-        publisherAccount = new Wallet(await fetchPrivateKeyWithGas())
-        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
+        publisherAccount = new Wallet(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
+        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
         cassandraClient = new cassandra.Client({
             contactPoints,
             localDataCenter,

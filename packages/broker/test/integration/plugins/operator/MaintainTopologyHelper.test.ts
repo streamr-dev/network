@@ -4,7 +4,7 @@ import type { Operator } from '@streamr/network-contracts'
 import { eventsToArray, eventsWithArgsToArray, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
-import { createClient, createTestStream } from '../../../utils'
+import { createClient, createTestStream, KEYSERVER_PORT } from '../../../utils'
 import { delegate, deploySponsorshipContract, setupOperatorContract, stake, unstake } from './contractUtils'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 
@@ -28,7 +28,7 @@ describe(MaintainTopologyHelper, () => {
     let streamId2: string
 
     beforeAll(async () => {
-        const client = createClient(await fetchPrivateKeyWithGas())
+        const client = createClient(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
         streamId1 = (await createTestStream(client, module)).id
         streamId2 = (await createTestStream(client, module)).id
         await client.destroy()

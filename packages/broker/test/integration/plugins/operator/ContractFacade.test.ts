@@ -10,7 +10,7 @@ import {
     generateWalletWithGasAndTokens, getAdminWallet, setupOperatorContract, sponsor,
     stake
 } from './contractUtils'
-import { createClient, createTestStream } from '../../../utils'
+import { createClient, createTestStream, KEYSERVER_PORT } from '../../../utils'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 
 describe('ContractFacade', () => {
@@ -50,7 +50,7 @@ describe('ContractFacade', () => {
             signer: undefined as any
         })
 
-        const client = createClient(await fetchPrivateKeyWithGas())
+        const client = createClient(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
         const streamId1 = (await createTestStream(client, module)).id
         const streamId2 = (await createTestStream(client, module)).id
         await client.destroy()
@@ -88,7 +88,7 @@ describe('ContractFacade', () => {
         const flagger = await setupOperatorContract({ nodeCount: 1 })
         const target = await setupOperatorContract()
 
-        const client = createClient(await fetchPrivateKeyWithGas())
+        const client = createClient(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
         const streamId1 = (await createTestStream(client, module)).id
         await client.destroy()
         const sponsorship = await deploySponsorshipContract({ streamId: streamId1, deployer: await generateWalletWithGasAndTokens() })

@@ -4,7 +4,7 @@ import fetch from 'node-fetch'
 import { StreamPermission } from 'streamr-client'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream } from '../utils'
+import { startBroker, createClient, createTestStream, KEYSERVER_PORT } from '../utils'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { wait, waitForEvent, waitForCondition } from '@streamr/utils'
 import sample from 'lodash/sample'
@@ -103,7 +103,7 @@ describe('multiple publisher plugins', () => {
     let streamId: string
 
     beforeAll(async () => {
-        privateKey = await fetchPrivateKeyWithGas()
+        privateKey = await fetchPrivateKeyWithGas(KEYSERVER_PORT)
         const client = createClient(privateKey)
         const stream = await createTestStream(client, module)
         streamId = stream.id
