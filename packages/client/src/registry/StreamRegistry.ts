@@ -34,6 +34,7 @@ import { until } from '../utils/promises'
 import { StreamFactory } from './../StreamFactory'
 import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
 import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
+import { DestroySignal } from '../DestroySignal'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -95,7 +96,8 @@ export class StreamRegistry {
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         eventEmitter: StreamrClientEventEmitter,
-        loggerFactory: LoggerFactory
+        loggerFactory: LoggerFactory,
+        destroySignal: DestroySignal
     ) {
         this.streamFactory = streamFactory
         this.contractFactory = contractFactory
@@ -161,8 +163,16 @@ export class StreamRegistry {
                 return ['PublicSubscribe', streamId].join(CACHE_KEY_SEPARATOR)
             }
         })
+        destroySignal.onDestroy.once(this.destroy)
     }
 
+    private destroy = (): void => {
+        if (this.streamRegistryContract !== undefined) {
+            this.streamRegistryContract.eventEmitter.removeAllListeners()
+            this.streamRegistryContract = undefined
+        }
+    }
+    
     private parseStream(id: StreamID, metadata: string): Stream {
         const props = Stream.parseMetadata(metadata)
         return this.streamFactory.createStream(id, props)

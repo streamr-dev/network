@@ -9,7 +9,7 @@ import { StreamrClientError } from '../StreamrClientError'
 import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/NodeRegistry'
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
 import { queryAllReadonlyContracts, waitForTx } from '../utils/contract'
-
+import { DestroySignal } from '../DestroySignal'
 export interface StorageNodeMetadata {
     http: string
 }
@@ -30,6 +30,7 @@ export class StorageNodeRegistry {
         contractFactory: ContractFactory,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
+        destroySignal: DestroySignal
     ) {
         this.contractFactory = contractFactory
         this.config = config
@@ -42,6 +43,14 @@ export class StorageNodeRegistry {
                 'storageNodeRegistry'
             ) as NodeRegistryContract
         })
+        destroySignal.onDestroy.once(this.destroy)
+    }
+
+    private destroy = (): void => {
+        if (this.nodeRegistryContract !== undefined) {
+            this.nodeRegistryContract.eventEmitter.removeAllListeners()
+            this.nodeRegistryContract = undefined
+        }
     }
 
     private async connectToContract() {
