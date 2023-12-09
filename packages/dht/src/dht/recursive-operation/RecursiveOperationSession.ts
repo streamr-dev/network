@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
-import { DataEntry, PeerDescriptor, RecursiveOperationResponse, RecursiveOperation } from '../../proto/packages/dht/protos/DhtRpc'
+import { DataEntry, PeerDescriptor, RecursiveOperationResponse, RecursiveOperation, RouteMessageWrapper, RouteMessageAck, NodeType, RecursiveOperationRequest, Message, MessageType } from '../../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Contact } from '../contact/Contact'
@@ -18,9 +18,10 @@ export interface RecursiveOperationSessionEvents {
 export interface RecursiveOperationSessionConfig {
     transport: ITransport
     targetId: Uint8Array
-    localNodeId: NodeID
+    localPeerDescriptor: PeerDescriptor
     waitedRoutingPathCompletions: number
     operation: RecursiveOperation
+    doRouteRequest: (routedMessage: RouteMessageWrapper) => RouteMessageAck
 }
 
 export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSessionEvents> {
@@ -28,7 +29,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     private readonly id = v4()
     private readonly transport: ITransport
     private readonly targetId: Uint8Array
-    private readonly localNodeId: NodeID
+    private readonly localPeerDescriptor: PeerDescriptor
     private readonly waitedRoutingPathCompletions: number
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly operation: RecursiveOperation
@@ -39,12 +40,13 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     private timeoutTask?: NodeJS.Timeout 
     private completionEventEmitted = false
     private noCloserNodesReceivedCounter = 0
+    private doRouteRequest: (routedMessage: RouteMessageWrapper) => RouteMessageAck
 
     constructor(config: RecursiveOperationSessionConfig) {
         super()
         this.transport = config.transport
         this.targetId = config.targetId
-        this.localNodeId = config.localNodeId
+        this.localPeerDescriptor = config.localPeerDescriptor
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
         this.results = new SortedContactList({
             referenceId: getNodeIdFromBinary(this.targetId), 
@@ -56,6 +58,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         this.rpcCommunicator = new ListeningRpcCommunicator(this.id, this.transport, {
             rpcRequestTimeout: 15000  // TODO use config option or named constant?
         })
+        this.doRouteRequest = config.doRouteRequest
         this.registerLocalRpcMethods()
     }
 
@@ -67,6 +70,42 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         })
         this.rpcCommunicator.registerRpcNotification(RecursiveOperationResponse, 'sendResponse',
             (req: RecursiveOperationResponse) => rpcLocal.sendResponse(req))
+    }
+
+    // TODO why we use serviceId of RecursiveOperationManager? (could we use this.id,
+    // i.e. the same service we use when we create ListeningRpcCommunicator in this class)
+    public start(serviceId: ServiceID): void {
+        const routeMessage = this.wrapRequest(serviceId)
+        this.doRouteRequest(routeMessage)
+    }
+
+    private wrapRequest(serviceId: ServiceID): RouteMessageWrapper {
+        const targetDescriptor: PeerDescriptor = {
+            nodeId: this.targetId,
+            type: NodeType.VIRTUAL
+        }
+        const request: RecursiveOperationRequest = {
+            sessionId: this.getId(),
+            operation: this.operation
+        }
+        const msg: Message = {
+            messageType: MessageType.RECURSIVE_OPERATION_REQUEST,
+            messageId: v4(),
+            serviceId,
+            body: {
+                oneofKind: 'recursiveOperationRequest',
+                recursiveOperationRequest: request
+            }
+        }
+        const routeMessage: RouteMessageWrapper = {
+            message: msg,
+            requestId: v4(),
+            destinationPeer: targetDescriptor,
+            sourcePeer: this.localPeerDescriptor,
+            reachableThrough: [],
+            routingPath: []
+        }
+        return routeMessage
     }
 
     private isCompleted(): boolean {
@@ -110,17 +149,19 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     }
 
     private addKnownHops(routingPath: PeerDescriptor[]) {
+        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
         routingPath.forEach((desc) => {
             const newNodeId = getNodeIdFromPeerDescriptor(desc)
-            if (!areEqualNodeIds(this.localNodeId, newNodeId)) {
+            if (!areEqualNodeIds(localNodeId, newNodeId)) {
                 this.allKnownHops.add(newNodeId)
             }
         })
     }
 
     private setHopAsReported(desc: PeerDescriptor) {
+        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
         const newNodeId = getNodeIdFromPeerDescriptor(desc)
-        if (!areEqualNodeIds(this.localNodeId, newNodeId)) {
+        if (!areEqualNodeIds(localNodeId, newNodeId)) {
             this.reportedHops.add(newNodeId)
         }
         if (this.isCompleted()) {

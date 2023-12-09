@@ -109,10 +109,14 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         const session = new RecursiveOperationSession({
             transport: this.sessionTransport,
             targetId,
-            localNodeId: getNodeIdFromPeerDescriptor(this.localPeerDescriptor),
+            localPeerDescriptor: this.localPeerDescriptor,
             // TODO use config option or named constant?
             waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
-            operation
+            operation,
+            // TODO would it make sense to give excludedPeer as one of the fields RecursiveOperationSession?
+            doRouteRequest: (routedMessage: RouteMessageWrapper) => {
+                return this.doRouteRequest(routedMessage, excludedPeer)
+            }
         })
         if (this.connections.size === 0) {
             const data = this.localDataStore.getEntries(targetId)
@@ -124,21 +128,20 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             )
             return session.getResults()
         }
-        const routeMessage = this.wrapRequest(targetId, session.getId(), operation)
         this.ongoingSessions.set(session.getId(), session)
         if (waitForCompletion === true) {
             try {
                 await runAndWaitForEvents3<RecursiveOperationSessionEvents>(
-                    [() => this.doRouteRequest(routeMessage, excludedPeer)],
+                    [() => session.start(this.serviceId)],
                     [[session, 'completed']],
                     // TODO use config option or named constant?
                     15000
                 )
             } catch (err) {
-                logger.debug(`doRouteRequest failed with error ${err}`)
+                logger.debug(`start failed with error ${err}`)
             }
         } else {
-            this.doRouteRequest(routeMessage, excludedPeer)
+            session.start(this.serviceId)
             // Wait for delete operation to be sent out by the router
             // TODO: Add a feature to wait for the router to pass the message?
             await wait(50)
@@ -154,35 +157,6 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         this.ongoingSessions.delete(session.getId())
         session.stop()
         return session.getResults()
-    }
-
-    private wrapRequest(targetId: Uint8Array, sessionId: string, operation: RecursiveOperation): RouteMessageWrapper {
-        const targetDescriptor: PeerDescriptor = {
-            nodeId: targetId,
-            type: NodeType.VIRTUAL
-        }
-        const request: RecursiveOperationRequest = {
-            sessionId,
-            operation
-        }
-        const msg: Message = {
-            messageType: MessageType.RECURSIVE_OPERATION_REQUEST,
-            messageId: v4(),
-            serviceId: this.serviceId,
-            body: {
-                oneofKind: 'recursiveOperationRequest',
-                recursiveOperationRequest: request
-            }
-        }
-        const routeMessage: RouteMessageWrapper = {
-            message: msg,
-            requestId: v4(),
-            destinationPeer: targetDescriptor,
-            sourcePeer: this.localPeerDescriptor,
-            reachableThrough: [],
-            routingPath: []
-        }
-        return routeMessage
     }
 
     private sendResponse(
