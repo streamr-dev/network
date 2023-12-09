@@ -7,7 +7,7 @@ import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/uti
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
 import omit from 'lodash/omit'
-import { container as rootContainer } from 'tsyringe'
+import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { PublishMetadata } from '../src/publish/Publisher'
 import { Authentication, AuthenticationInjectionToken, SignerWithProvider, createAuthentication } from './Authentication'
 import {
@@ -86,6 +86,7 @@ export class StreamrClient {
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
     private readonly loggerFactory: LoggerFactory
+    private readonly container: DependencyContainer
 
     constructor(
         config: StreamrClientConfig = {},
@@ -95,29 +96,29 @@ export class StreamrClient {
         const strictConfig = createStrictConfig(config)
         const authentication = createAuthentication(strictConfig)
         redactConfig(strictConfig)
-        const container = parentContainer.createChildContainer()
-        container.register(AuthenticationInjectionToken, { useValue: authentication })
-        container.register(ConfigInjectionToken, { useValue: strictConfig })
+        this.container = parentContainer.createChildContainer()
+        this.container.register(AuthenticationInjectionToken, { useValue: authentication })
+        this.container.register(ConfigInjectionToken, { useValue: strictConfig })
         // eslint-disable-next-line max-len
-        container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
+        this.container.register(TheGraphClient, { useValue: createTheGraphClient(this.container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
         this.id = strictConfig.id
         this.config = strictConfig
         this.authentication = authentication
-        this.publisher = container.resolve<Publisher>(Publisher)
-        this.subscriber = container.resolve<Subscriber>(Subscriber)
-        this.resends = container.resolve<Resends>(Resends)
-        this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
-        this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
-        this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
-        this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
-        this.operatorRegistry = container.resolve<OperatorRegistry>(OperatorRegistry)
-        this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
-        this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
-        this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
-        this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
-        this.loggerFactory = container.resolve<LoggerFactory>(LoggerFactory)
-        container.resolve<PublisherKeyExchange>(PublisherKeyExchange) // side effect: activates publisher key exchange
-        container.resolve<MetricsPublisher>(MetricsPublisher) // side effect: activates metrics publisher
+        this.publisher = this.container.resolve<Publisher>(Publisher)
+        this.subscriber = this.container.resolve<Subscriber>(Subscriber)
+        this.resends = this.container.resolve<Resends>(Resends)
+        this.node = this.container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
+        this.streamRegistry = this.container.resolve<StreamRegistry>(StreamRegistry)
+        this.streamStorageRegistry = this.container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
+        this.storageNodeRegistry = this.container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
+        this.operatorRegistry = this.container.resolve<OperatorRegistry>(OperatorRegistry)
+        this.localGroupKeyStore = this.container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
+        this.streamIdBuilder = this.container.resolve<StreamIDBuilder>(StreamIDBuilder)
+        this.eventEmitter = this.container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
+        this.destroySignal = this.container.resolve<DestroySignal>(DestroySignal)
+        this.loggerFactory = this.container.resolve<LoggerFactory>(LoggerFactory)
+        this.container.resolve<PublisherKeyExchange>(PublisherKeyExchange) // side effect: activates publisher key exchange
+        this.container.resolve<MetricsPublisher>(MetricsPublisher) // side effect: activates metrics publisher
     }
 
     // --------------------------------------------------------------------------------------------
@@ -641,6 +642,7 @@ export class StreamrClient {
 
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
+        this.container.reset()
     })
 
     async getPeerDescriptor(): Promise<NetworkPeerDescriptor> {
