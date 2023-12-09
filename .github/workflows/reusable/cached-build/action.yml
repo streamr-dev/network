@@ -35,12 +35,7 @@ runs:
       shell: bash
     - name: build
       if: steps.cache-build.outputs.cache-hit != 'true'
-      run: npm run build
+      run: npm run build && npm ci --no-audit
       shell: bash
-    - name: clean
-      run: npm run clean
-      shell: bash
-    - name: reinstall
-      run: npm i --no-audit
-      shell: bash
+    
     
