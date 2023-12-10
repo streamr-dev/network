@@ -30,12 +30,12 @@ async function startNetworkNode(streamId: StreamID): Promise<NetworkNode> {
     })
     try {
         await networkNode.start()
-        await networkNode.join(toStreamPartID(streamId, 0))  
+        await networkNode.join(toStreamPartID(streamId, 0))
         return networkNode
     } catch (e) {
         logger.error('Failed starting NetworkNode or joining stream', { exception: e })
         throw e
-    } 
+    }
 }
 
 async function createStreamWithPermissions(
@@ -90,6 +90,30 @@ describe('publish-subscribe', () => {
             })
         }, TIMEOUT * 2)
 
+        describe('NetworkNode receiving', () => {
+            let networkNode: NetworkNode
+
+            beforeEach(async () => {
+                networkNode = await startNetworkNode(stream.id)
+            }, TIMEOUT)
+
+            afterEach(async () => {
+                await networkNode.stop()
+            }, TIMEOUT)
+
+            it('messages are published encrypted', (done) => {
+                networkNode.addMessageListener((msg) => {
+                    const message = msg.getContent()
+                    expect(message).toBeInstanceOf(Uint8Array)
+                    done()
+                })
+                publisherClient.publish(stream.id, PAYLOAD)
+                    .catch((e) => {
+                        done.fail(e)
+                    })
+            }, TIMEOUT)
+        })
+
         it('messages are published encrypted', (done) => {
             startNetworkNode(stream.id).then((node) => {
                 node.addMessageListener((msg) => {
@@ -130,21 +154,29 @@ describe('publish-subscribe', () => {
             })
         }, TIMEOUT)
 
-        it('messages are published unencrypted', (done) => {
-            startNetworkNode(stream.id).then((node) => {
-                node.addMessageListener((msg) => {
+        describe('NetworkNode receiving', () => {
+            let networkNode: NetworkNode
+
+            beforeEach(async () => {
+                networkNode = await startNetworkNode(stream.id)
+            }, TIMEOUT)
+
+            afterEach(async () => {
+                await networkNode.stop()
+            }, TIMEOUT)
+
+            it('messages are published unencrypted', (done) => {
+                networkNode.addMessageListener((msg) => {
                     const message = msg.getContent()
                     expect(message).toEqual(PAYLOAD)
                     done()
                 })
-            }).then(() => {
-                publisherClient.publish(stream.id, PAYLOAD).catch((e) => {
-                    done.fail(e)
-                })
-            }).catch((e2) => {
-                done.fail(e2)
-            })
-        }, TIMEOUT)
+                publisherClient.publish(stream.id, PAYLOAD)
+                    .catch((e) => {
+                        done.fail(e)
+                    })
+            }, TIMEOUT)
+        })
 
         it('subscriber is able to receive messages', async () => {
             const messages: unknown[] = []
