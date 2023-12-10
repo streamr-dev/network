@@ -111,13 +111,14 @@ describe('publish-subscribe', () => {
             }, TIMEOUT)
         })
 
-        it('subscriber is able to receive and decrypt messages', (done) => {
-            subscriberClient.subscribe(stream.id, (msg: any) => {
-                expect(msg).toEqual(PAYLOAD)
-                done()
-            }).then(() => {
-                publisherClient.publish(stream.id, PAYLOAD)
+        it('subscriber is able to receive and decrypt messages', async () => {
+            const messages: any[] = []
+            await publisherClient.publish(stream.id, PAYLOAD)
+            await subscriberClient.subscribe(stream.id, (msg: any) => {
+                messages.push(msg)
             })
+            await waitForCondition(() => messages.length > 0, TIMEOUT)
+            expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })
 
