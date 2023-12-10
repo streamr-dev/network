@@ -148,9 +148,9 @@ export class LeaksDetector {
         this.resetGC()
         const results: Record<string, string[]> = {}
         for (const [key, d] of this.leakDetectors.entries()) { 
-            const isLeaking = false
+            let isLeaking = false
             try {
-                await d.isLeaking()
+                isLeaking = await d.isLeaking()
             } catch (e) {
                 logger.error(`error checking for leak ${key}`, e)
             }
