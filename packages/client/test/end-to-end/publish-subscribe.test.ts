@@ -2,8 +2,8 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import { NodeType } from '@streamr/dht'
 import { StreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { createNetworkNode } from '@streamr/trackerless-network'
-import { hexToBinary, waitForCondition } from '@streamr/utils'
+import { createNetworkNode, NetworkNode } from '@streamr/trackerless-network'
+import { hexToBinary, waitForCondition, Logger } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { CONFIG_TEST, KEYSERVER_PORT } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
@@ -11,11 +11,13 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { createTestClient, createTestStream } from '../test-utils/utils'
 
+const logger = new Logger(module)
+
 const TIMEOUT = 15 * 1000
 
 const PAYLOAD = { hello: 'world' }
 
-async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
+async function startNetworkNode(streamId: StreamID): Promise<NetworkNode> {
     const entryPoints = CHAIN_CONFIG.dev2.entryPoints.map((entryPoint) => ({
         ...entryPoint,
         nodeId: hexToBinary(entryPoint.nodeId),
@@ -28,16 +30,12 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
     })
     try {
         await networkNode.start()
-        await networkNode.join(toStreamPartID(streamId, 0))
-        const messages: unknown[] = []
-        networkNode.addMessageListener((msg) => {
-            messages.push(msg.getContent())
-        })
-        await waitForCondition(() => messages.length > 0, TIMEOUT)
-        return messages
-    } finally {
-        await networkNode.stop()
-    }
+        await networkNode.join(toStreamPartID(streamId, 0))  
+        return networkNode
+    } catch (e) {
+        logger.error('Failed starting NetworkNode or joining stream', { exception: e })
+        throw e
+    } 
 }
 
 async function createStreamWithPermissions(
@@ -92,21 +90,33 @@ describe('publish-subscribe', () => {
             })
         }, TIMEOUT * 2)
 
-        it('messages are published encrypted', async () => {
-            await publisherClient.publish(stream.id, PAYLOAD)
-            const messages = await startNetworkNodeAndListenForAtLeastOneMessage(stream.id)
-            expect(messages).toHaveLength(1)
-            expect(messages[0]).toBeInstanceOf(Uint8Array)
+        it('messages are published encrypted', (done) => {
+            startNetworkNode(stream.id).then((node) => {
+                node.addMessageListener((msg) => {
+                    const message = msg.getContent()
+                    expect(message).toBeInstanceOf(Uint8Array)
+                    done()
+                })
+            }).then(() => {
+                publisherClient.publish(stream.id, PAYLOAD).catch((e) => {
+                    done.fail(e)
+                })
+            }).catch((e2) => {
+                done.fail(e2)
+            })
         }, TIMEOUT)
 
-        it('subscriber is able to receive and decrypt messages', async () => {
-            const messages: any[] = []
-            await publisherClient.publish(stream.id, PAYLOAD)
-            await subscriberClient.subscribe(stream.id, (msg: any) => {
-                messages.push(msg)
+        it('subscriber is able to receive and decrypt messages', (done) => {
+            subscriberClient.subscribe(stream.id, (msg: any) => {
+                expect(msg).toEqual(PAYLOAD)
+                done()
+            }).then(() => {
+                publisherClient.publish(stream.id, PAYLOAD).catch((e) => {
+                    done.fail(e)
+                })
+            }).catch((e2) => {
+                done.fail(e2)
             })
-            await waitForCondition(() => messages.length > 0, TIMEOUT)
-            expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })
 
@@ -120,10 +130,20 @@ describe('publish-subscribe', () => {
             })
         }, TIMEOUT)
 
-        it('messages are published unencrypted', async () => {
-            await publisherClient.publish(stream.id, PAYLOAD)
-            const messages = await startNetworkNodeAndListenForAtLeastOneMessage(stream.id)
-            expect(messages).toEqual([PAYLOAD])
+        it('messages are published unencrypted', (done) => {
+            startNetworkNode(stream.id).then((node) => {
+                node.addMessageListener((msg) => {
+                    const message = msg.getContent()
+                    expect(message).toEqual(PAYLOAD)
+                    done()
+                })
+            }).then(() => {
+                publisherClient.publish(stream.id, PAYLOAD).catch((e) => {
+                    done.fail(e)
+                })
+            }).catch((e2) => {
+                done.fail(e2)
+            })
         }, TIMEOUT)
 
         it('subscriber is able to receive messages', async () => {
