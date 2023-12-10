@@ -145,9 +145,9 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             await wait(50)
         }
         if (operation === RecursiveOperation.FETCH_DATA) {
-            const data = this.localDataStore.getEntries(targetId)
-            if (data.size > 0) {
-                this.sendResponse([], this.localPeerDescriptor, session.getId(), [], data, true)
+            const dataEntries = Array.from(this.localDataStore.getEntries(targetId).values())
+            if (dataEntries.length > 0) {
+                this.sendResponse([], this.localPeerDescriptor, session.getId(), [], dataEntries, true)
             }
         } else if (operation === RecursiveOperation.DELETE_DATA) {
             this.localDataStore.markAsDeleted(targetId, getNodeIdFromPeerDescriptor(this.localPeerDescriptor))
@@ -162,10 +162,9 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         targetPeerDescriptor: PeerDescriptor,
         serviceId: ServiceID,
         closestNodes: PeerDescriptor[],
-        data: Map<NodeID, DataEntry> | undefined,
+        dataEntries: DataEntry[],
         noCloserNodesFound: boolean = false
     ): void {
-        const dataEntries = data ? Array.from(data.values(), DataEntry.create.bind(DataEntry)) : []
         const isOwnNode = areEqualPeerDescriptors(this.localPeerDescriptor, targetPeerDescriptor)
         if (isOwnNode && this.ongoingSessions.has(serviceId)) {
             this.ongoingSessions.get(serviceId)!
@@ -194,9 +193,9 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         const request = (routedMessage.message!.body as { recursiveOperationRequest: RecursiveOperationRequest }).recursiveOperationRequest
         // TODO use config option or named constant?
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.nodeId, 5)
-        const data = (request.operation === RecursiveOperation.FETCH_DATA) 
-            ? this.localDataStore.getEntries(hexToBinary(targetId))
-            : undefined
+        const dataEntries = (request.operation === RecursiveOperation.FETCH_DATA) 
+            ? Array.from(this.localDataStore.getEntries(hexToBinary(targetId)).values())
+            : []
         if (request.operation === RecursiveOperation.DELETE_DATA) {
             this.localDataStore.markAsDeleted(hexToBinary(targetId), getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!))
         }
@@ -207,7 +206,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
                 routedMessage.sourcePeer!,
                 request.sessionId,
                 closestPeersToDestination,
-                data,
+                dataEntries,
                 true
             )
             return createRouteMessageAck(routedMessage)
@@ -225,7 +224,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
                     routedMessage.sourcePeer!,
                     request.sessionId,
                     closestPeersToDestination,
-                    data,
+                    dataEntries,
                     noCloserContactsFound
                 )
             }
