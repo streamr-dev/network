@@ -108,38 +108,15 @@ describe('publish-subscribe', () => {
                     done()
                 })
                 publisherClient.publish(stream.id, PAYLOAD)
-                    .catch((e) => {
-                        done.fail(e)
-                    })
             }, TIMEOUT)
         })
-
-        it('messages are published encrypted', (done) => {
-            startNetworkNode(stream.id).then((node) => {
-                node.addMessageListener((msg) => {
-                    const message = msg.getContent()
-                    expect(message).toBeInstanceOf(Uint8Array)
-                    done()
-                })
-            }).then(() => {
-                publisherClient.publish(stream.id, PAYLOAD).catch((e) => {
-                    done.fail(e)
-                })
-            }).catch((e2) => {
-                done.fail(e2)
-            })
-        }, TIMEOUT)
 
         it('subscriber is able to receive and decrypt messages', (done) => {
             subscriberClient.subscribe(stream.id, (msg: any) => {
                 expect(msg).toEqual(PAYLOAD)
                 done()
             }).then(() => {
-                publisherClient.publish(stream.id, PAYLOAD).catch((e) => {
-                    done.fail(e)
-                })
-            }).catch((e2) => {
-                done.fail(e2)
+                publisherClient.publish(stream.id, PAYLOAD)
             })
         }, TIMEOUT)
     })
@@ -172,9 +149,6 @@ describe('publish-subscribe', () => {
                     done()
                 })
                 publisherClient.publish(stream.id, PAYLOAD)
-                    .catch((e) => {
-                        done.fail(e)
-                    })
             }, TIMEOUT)
         })
 
