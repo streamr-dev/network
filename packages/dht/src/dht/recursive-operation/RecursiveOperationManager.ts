@@ -30,6 +30,7 @@ import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
 import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
+import { getDistance } from '../PeerManager'
 
 interface RecursiveOperationManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -40,7 +41,6 @@ interface RecursiveOperationManagerConfig {
     serviceId: ServiceID
     localDataStore: LocalDataStore
     addContact: (contact: PeerDescriptor) => void
-    isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: NodeID) => boolean
 }
 
 export interface IRecursiveOperationManager {
@@ -60,7 +60,6 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly serviceId: ServiceID
     private readonly localDataStore: LocalDataStore
-    private readonly isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: NodeID) => boolean
     private ongoingSessions: Map<string, RecursiveOperationSession> = new Map()
     private stopped = false
 
@@ -72,7 +71,6 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         this.localPeerDescriptor = config.localPeerDescriptor
         this.serviceId = config.serviceId
         this.localDataStore = config.localDataStore
-        this.isPeerCloserToIdThanSelf = config.isPeerCloserToIdThanSelf
         this.registerLocalRpcMethods(config)
     }
 
@@ -245,6 +243,12 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         })
         closestPeers.addContacts(connectedPeers)
         return closestPeers.getClosestContacts(limit).map((peer) => peer.getPeerDescriptor())
+    }
+
+    private isPeerCloserToIdThanSelf(peer: PeerDescriptor, compareToId: NodeID): boolean {
+        const distance1 = getDistance(getNodeIdFromPeerDescriptor(peer), compareToId)
+        const distance2 = getDistance(getNodeIdFromPeerDescriptor(this.localPeerDescriptor), compareToId)
+        return distance1 < distance2
     }
 
     public stop(): void {

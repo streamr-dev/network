@@ -270,7 +270,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
             addContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
-            isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
             localDataStore: this.localDataStore
         })
         this.storeManager = new StoreManager({
@@ -383,12 +382,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             (req: ExternalStoreDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalStoreData(req, context),
             { timeout: 10000 }  // TODO use config option or named constant?
         )
-    }
-
-    private isPeerCloserToIdThanSelf(peer: PeerDescriptor, compareToId: NodeID): boolean {
-        const distance1 = getDistance(getNodeIdFromPeerDescriptor(peer), compareToId)
-        const distance2 = getDistance(this.getNodeId(), compareToId)
-        return distance1 < distance2
     }
 
     private handleMessage(message: Message): void {
