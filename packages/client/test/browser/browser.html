@@ -210,7 +210,7 @@
     }
 
     async function getPrivateKey() {
-        const response = await fetch('http://127.0.0.1:45454/key', {credentials: 'omit'})
+        const response = await fetch('http://127.0.0.1:45457/key', {credentials: 'omit'})
         return response.text()
     }
     const publisherAuth = {

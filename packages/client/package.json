@@ -32,8 +32,8 @@
     "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
     "test-unit": "jest --useStderr test/unit/$npm_config_test",
     "test-integration": "jest --bail --useStderr --testTimeout=40000 test/integration/$npm_config_test",
-    "test-end-to-end": "streamr-keyserver 45454 1 499 & PID=$!; sleep 5 && jest --bail --useStderr --testTimeout=40000 test/end-to-end/$npm_config_test && kill $PID || (kill $PID; return 1)",
-    "test-browser": "npm run build-browser-production && concurrently -k --success=first 'node ./test/browser/server.js' 'sleep 5 && nightwatch --headless --verbose --timeout=30000 --config=nightwatch.conf.js ./test/browser/browser.js'",
+    "test-end-to-end": "streamr-keyserver 45454 1 399 & PID=$!; sleep 5 && jest --bail --useStderr --testTimeout=40000 test/end-to-end/$npm_config_test && kill $PID || (kill $PID; return 1)",
+    "test-browser": "streamr-keyserver 45457 400 499 & PIDB=$!; sleep 5 && npm run build-browser-production && concurrently -k --success=first 'node ./test/browser/server.js' 'sleep 5 && nightwatch --headless --verbose --timeout=30000 --config=nightwatch.conf.js ./test/browser/browser.js' && kill $PIDB || (kill $PIDB; return 1)",
     "test-exports": "cd test/exports && npm run link && tsc --noEmit --project ./tsconfig.json && npm test"
   },
   "author": "Streamr Network AG <contact@streamr.network>",

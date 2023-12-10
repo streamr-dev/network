@@ -115,7 +115,7 @@ jobs:
       package: broker
       docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
-      command: npm run test-integration
+      command: npm run test-sequential && npm run test-integration
   client-browser:
     needs: build
     uses: ./.github/workflows/test-setup.yml
