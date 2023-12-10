@@ -168,7 +168,7 @@ export class LeaksDetector {
         const leaks = await this.getLeaks()
         const numLeaks = Object.keys(leaks).length
         if (numLeaks) {
-            const msg = `Leaking ${numLeaks} of ${this.leakDetectors.size} items: ${JSON.stringify(leaks)}`
+            const msg = `Leaking ${numLeaks} of ${this.leakDetectors.size} items: ${JSON.stringify(Object.keys(leaks))}`
             this.clear()
             throw new Error(msg)
         }
