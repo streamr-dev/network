@@ -118,7 +118,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         })
         if (this.connections.size === 0) {
             const data = this.localDataStore.getEntries(targetId)
-            session.doSendResponse(
+            session.onResponseReceived(
                 [this.localPeerDescriptor],
                 [this.localPeerDescriptor],
                 Array.from(data.values()),
@@ -168,7 +168,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
         const isOwnNode = areEqualPeerDescriptors(this.localPeerDescriptor, targetPeerDescriptor)
         if (isOwnNode && this.ongoingSessions.has(serviceId)) {
             this.ongoingSessions.get(serviceId)!
-                .doSendResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+                .onResponseReceived(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         } else {
             // TODO use config option or named constant?
             const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.sessionTransport, { rpcRequestTimeout: 15000 })
