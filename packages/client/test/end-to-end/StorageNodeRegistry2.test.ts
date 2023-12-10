@@ -9,7 +9,6 @@ import { createTestStream, createTestClient } from '../test-utils/utils'
 jest.setTimeout(30000)
 
 /**
- * These tests should be run in sequential order!
  * TODO: combine with StorageNodeRegistry.test.ts ?
  */
 describe('StorageNodeRegistry2', () => {
@@ -33,44 +32,37 @@ describe('StorageNodeRegistry2', () => {
         ])
     })
 
-    it('creates a node', async () => {
+    it('storage node operations', async () => {
+        // set metadata 
         const url = `http://mock.com/${Date.now()}`
         await storageNodeClient.setStorageNodeMetadata({
             http: url
         })
         const metadata = await storageNodeClient.getStorageNodeMetadata(storageNodeAddress)
         expect(metadata.http).toEqual(url)
-    })
 
-    it('add stream to storage node', async () => {
+        // add stream to storage node
         await client.addStreamToStorageNode(createdStream.id, storageNodeAddress)
         expect(await client.isStoredStream(createdStream.id, storageNodeAddress)).toEqual(true)
-    })
 
-    describe('getStorageNodes', () => {
-        it('id', async () => {
-            const storageNodeUrls = await client.getStorageNodes(createdStream.id)
-            expect(storageNodeUrls).toEqual([storageNodeAddress])
-        })
+        // getById'
+        const urls = await client.getStorageNodes(createdStream.id)
+        expect(urls).toEqual([storageNodeAddress])
 
-        it('all', async () => {
-            const storageNodeUrls = await client.getStorageNodes()
-            return expect(storageNodeUrls).toContain(storageNodeAddress)
-        })
-    })
+        // getAll
+        const urls2 = await client.getStorageNodes()
+        expect(urls2).toContain(storageNodeAddress)
 
-    it('getStoredStreams', async () => {
+        // getStoredStreams
         const { streams, blockNumber } = await client.getStoredStreams(storageNodeAddress)
         expect(blockNumber).toBeGreaterThanOrEqual(0)
         expect(streams.find((el) => el.id === createdStream.id)).toBeDefined()
-    })
 
-    it('removeStreamFromStorageNode', async () => {
+        // removeStreamFromStorageNode
         await client.removeStreamFromStorageNode(createdStream.id, storageNodeAddress)
         expect(await client.isStoredStream(createdStream.id, storageNodeAddress)).toEqual(false)
-    })
 
-    it('addStreamToStorageNode through stream object', async () => {
+        // addStreamToStorageNode through stream object
         const stream = await createTestStream(client, module)
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         const isStored = await client.isStoredStream(stream.id, DOCKER_DEV_STORAGE_NODE)
@@ -79,11 +71,10 @@ describe('StorageNodeRegistry2', () => {
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         const isStored2 = await client.isStoredStream(stream.id, DOCKER_DEV_STORAGE_NODE)
         expect(isStored2).toEqual(true)
-    })
 
-    it('delete a node', async () => {
+        // delete a node'
         await storageNodeClient.setStorageNodeMetadata(undefined)
-        return expect(storageNodeClient.getStorageNodeMetadata(storageNodeAddress)).rejects.toThrow()
+        expect(storageNodeClient.getStorageNodeMetadata(storageNodeAddress)).rejects.toThrow()
     })
 
     it('metadata from non-existing node', async () => {
