@@ -12,7 +12,7 @@ import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRp
 import { NodeID, areEqualNodeIds, getNodeIdFromBinary } from '../../helpers/nodeId'
 
 export interface RecursiveOperationSessionEvents {
-    completed: (results: PeerDescriptor[]) => void
+    completed: () => void
 }
 
 export interface RecursiveOperationSessionConfig {
@@ -170,7 +170,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
                     clearTimeout(this.timeoutTask)
                     this.timeoutTask = undefined
                 }
-                this.emit('completed', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
+                this.emit('completed')
                 this.completionEventEmitted = true
             }
         }
@@ -190,7 +190,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     private onNoCloserPeersFound(): void {
         this.noCloserNodesReceivedCounter += 1
         if (this.isCompleted()) {
-            this.emit('completed', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
+            this.emit('completed')
             this.completionEventEmitted = true
             if (this.timeoutTask) {
                 clearTimeout(this.timeoutTask)
@@ -200,7 +200,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             if (!this.timeoutTask && !this.completionEventEmitted) {
                 this.timeoutTask = setTimeout(() => {
                     if (!this.completionEventEmitted) {
-                        this.emit('completed', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
+                        this.emit('completed')
                         this.completionEventEmitted = true
                     }
                 }, 4000)  // TODO use config option or named constant?
@@ -223,6 +223,6 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             this.timeoutTask = undefined
         }
         this.rpcCommunicator.destroy()
-        this.emit('completed', [])
+        this.emit('completed')
     }
 }
