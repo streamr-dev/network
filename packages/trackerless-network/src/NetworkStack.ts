@@ -38,6 +38,12 @@ if (typeof window === 'object') {
     })
 }
 
+function stopListeningToExitEvents(): void {
+    EXIT_EVENTS.forEach((event) => {
+        process.removeAllListeners(event)
+    })
+}
+
 export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     private layer0Node?: Layer0Node
@@ -136,7 +142,11 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     async stop(): Promise<void> {
         if (!this.stopped) {
             this.stopped = true
+            this.removeAllListeners()
             pull(instances, this)
+            if (instances.length === 0) {
+                stopListeningToExitEvents()
+            }
             await this.streamrNode!.destroy()
             await this.layer0Node!.stop()
             this.streamrNode = undefined

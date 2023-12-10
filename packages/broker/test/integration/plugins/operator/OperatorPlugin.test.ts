@@ -56,7 +56,7 @@ describe('OperatorPlugin', () => {
         })
         // wait for a while so that MaintainTopologyService has time to handle addStakedStreams
         // events emitted during Broker start
-        await wait(500)
+        await wait(5000)
         const brokerDescriptor = await broker.getStreamrClient().getPeerDescriptor()
         await subscriber.setProxies({ id: stream.id }, [brokerDescriptor], ProxyDirection.SUBSCRIBE)
         const subscription = await subscriber.subscribe(stream.id)
