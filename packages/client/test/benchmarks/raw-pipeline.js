@@ -13,7 +13,7 @@ const { StorageNode, ConfigTest: clientOptions } = StreamrClient
 const keyserver = new KeyServer()
 
 async function getPrivateKey() {
-    const response = await fetch('http://localhost:45454/key')
+    const response = await fetch('http://127.0.0.1:45454/key')
     return response.text()
 }
 

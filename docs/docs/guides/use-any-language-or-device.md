@@ -136,7 +136,7 @@ In the code sample below, we provide the URL (the IP or address to your Streamr 
 ```ts
 // Node.js example
 
-const mqttClient = mqtt.connect("mqtt://localhost:1883", {
+const mqttClient = mqtt.connect("mqtt://127.0.0.1:1883", {
     username: "",
     password: ApiKey,
 })

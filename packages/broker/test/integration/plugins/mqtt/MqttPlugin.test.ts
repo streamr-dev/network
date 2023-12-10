@@ -15,7 +15,7 @@ createMessagingPluginTest('mqtt',
                 username: '',
                 password: apiKey
             } : undefined
-            return mqtt.connectAsync(`mqtt://localhost:${MQTT_PORT}`, opts)
+            return mqtt.connectAsync(`mqtt://127.0.0.1:${MQTT_PORT}`, opts)
         },
         closeClient: async (client: AsyncMqttClient): Promise<void> => {
             await client.end(true)
@@ -24,7 +24,7 @@ createMessagingPluginTest('mqtt',
             await client.publish(streamId, JSON.stringify(msg))
         },
         subscribe: async (messageQueue: Queue<Message>, streamId: string, client: AsyncMqttClient): Promise<void> => {
-            client.once('message', (topic: string, message: Buffer) => {
+            client.on('message', (topic: string, message: Buffer) => {
                 if (topic === streamId) {
                     messageQueue.push(JSON.parse(message.toString()))
                 }

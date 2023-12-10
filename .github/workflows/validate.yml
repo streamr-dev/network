@@ -141,4 +141,4 @@ jobs:
       image_name: streamr/broker-node
       test_services_to_start: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain broker-node-storage-1 entry-point
       build_platforms: linux/amd64
-      test_script: bash ./.github/healthcheck.sh http://localhost:8891/info streamr-dev-broker-node-storage-1
+      test_script: bash ./.github/healthcheck.sh http://127.0.0.1:8891/info streamr-dev-broker-node-storage-1

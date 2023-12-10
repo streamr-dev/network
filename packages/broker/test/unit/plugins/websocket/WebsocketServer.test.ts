@@ -25,7 +25,7 @@ const createTestClient = (path: string, queryParams?: any): WebSocket => {
             queryParams
         )
     )
-    return new WebSocket(`ws://localhost:${PORT}${path}?${queryParamsSuffix}`)
+    return new WebSocket(`ws://127.0.0.1:${PORT}${path}?${queryParamsSuffix}`)
 }
 
 describe('WebsocketServer', () => {

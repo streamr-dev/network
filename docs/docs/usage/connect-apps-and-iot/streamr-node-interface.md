@@ -52,7 +52,7 @@ You can subscribe by creating a standard JavaScript WebSocket connection:
 
 ```ts
 const socket = new WebSocket(
-  `ws://localhost:${port}/streams/${encodeURIComponent(streamId)}/subscribe`
+  `ws://127.0.0.1:${port}/streams/${encodeURIComponent(streamId)}/subscribe`
 );
 socket.addEventListener('message', (message) => {
   console.log(JSON.parse(message.data));
@@ -63,7 +63,7 @@ And publish to a stream similarly:
 
 ```ts
 const socket = new WebSocket(
-  `ws://localhost:${port}/streams/${encodeURIComponent(streamId)}/publish`
+  `ws://127.0.0.1:${port}/streams/${encodeURIComponent(streamId)}/publish`
 );
 socket.addEventListener('open', () => {
   socket.send(JSON.stringify(message));
@@ -165,7 +165,7 @@ You can use any MQTT client to connect to the Streamr node. Here's an example of
 
 ```ts
 import mqtt from 'async-mqtt';
-const client = await mqtt.connectAsync(`mqtt://localhost:${port}`);
+const client = await mqtt.connectAsync(`mqtt://127.0.0.1:${port}`);
 client.on('message', (topic, message) => {
   console.log(JSON.parse(message.toString()));
 });
@@ -176,7 +176,7 @@ Publishing data with the same library:
 
 ```ts
 import mqtt from 'async-mqtt';
-const client = await mqtt.connectAsync(`mqtt://localhost:${port}`);
+const client = await mqtt.connectAsync(`mqtt://127.0.0.1:${port}`);
 await client.publish(streamId, JSON.stringify(msg));
 ```
 
@@ -185,7 +185,7 @@ await client.publish(streamId, JSON.stringify(msg));
 The authentication scheme of the MQTT protocol uses a username and password. When connecting to the MQTT plugin of Streamr node, you can provide anything you want as the username and the API key as the password:
 
 ```ts
-mqtt.connectAsync(`mqtt://localhost:${port}`, {
+mqtt.connectAsync(`mqtt://127.0.0.1:${port}`, {
   username: 'any-username',
   password: apiKey,
 });
@@ -194,7 +194,7 @@ mqtt.connectAsync(`mqtt://localhost:${port}`, {
 Some MQTT clients expect the username and password to be passed in the connection URL:
 
 ```ts
-mqtt://any-username:my-secret-api-key@localhost:1883
+mqtt://any-username:my-secret-api-key@127.0.0.1:1883
 ```
 
 #### Advanced usage
@@ -248,7 +248,7 @@ To publish a message to a stream, send the data as a POST payload:
 curl \
 --header 'Content-Type: application/json' \
 --data '{"foo":"bar"}' \
-http://localhost:7171/streams/foo.eth%2fbar
+http://127.0.0.1:7171/streams/foo.eth%2fbar
 ```
 
 The endpoint returns HTTP 200 status if the message was published successfully.
@@ -268,7 +268,7 @@ curl \
 --header 'Content-Type: application/json' \
 --header 'Authorization: bearer my-secret-api-key' \
 --data '{"foo":"bar"}' \
-http://localhost:7171/streams/foo.eth%2fbar
+http://127.0.0.1:7171/streams/foo.eth%2fbar
 ```
 
 #### Advanced usage

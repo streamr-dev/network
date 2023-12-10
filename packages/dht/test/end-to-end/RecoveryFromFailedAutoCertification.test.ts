@@ -21,7 +21,7 @@ describe('Failed autocertification', () => {
             entryPoints: [entryPointPeerDescriptor],
             websocketServerEnableTls: true,
             autoCertifierConfigFile: os.tmpdir() + '/failedAutoCertificationConfigFile.json',
-            autoCertifierUrl: 'http://localhost:44444'
+            autoCertifierUrl: 'http://127.0.0.1:44444'
         })
 
         node = new DhtNode({

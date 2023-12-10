@@ -12,7 +12,7 @@ const mqttPort1 = 13551
 const mqttPort2 = 13552
 
 const createMqttClient = (mqttPort: number) => {
-    return mqtt.connectAsync(`mqtt://localhost:${mqttPort}`)
+    return mqtt.connectAsync(`mqtt://127.0.0.1:${mqttPort}`)
 }
 
 const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {

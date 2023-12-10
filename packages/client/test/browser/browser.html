@@ -176,7 +176,7 @@
 
     const urlParams = new URLSearchParams(window.location.search)
     const streamName = urlParams.get('streamName') || Date.now()
-    const url = urlParams.get('WEBSOCKET_URL') || 'ws://localhost/api/v2/ws'
+    const url = urlParams.get('WEBSOCKET_URL') || 'ws://127.0.0.1/api/v2/ws'
     let firstTime
     let lastTime
     let lastMessage
@@ -210,7 +210,7 @@
     }
 
     async function getPrivateKey() {
-        const response = await fetch('http://localhost:45454/key', {credentials: 'omit'})
+        const response = await fetch('http://127.0.0.1:45454/key', {credentials: 'omit'})
         return response.text()
     }
     const publisherAuth = {

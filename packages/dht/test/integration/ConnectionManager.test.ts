@@ -404,7 +404,7 @@ describe('ConnectionManager', () => {
         const connectionManager1 = createConnectionManager({
             transport: mockTransport,
             websocketHost: '127.0.0.1',
-            autoCertifierUrl: 'https://localhost:12333',
+            autoCertifierUrl: 'https://127.0.0.1:12333',
             websocketServerEnableTls: true,
             websocketPortRange: { min: 10004, max: 10004 }
         })

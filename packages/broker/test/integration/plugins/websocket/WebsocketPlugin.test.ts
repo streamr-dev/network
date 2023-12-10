@@ -1,6 +1,6 @@
 import WebSocket from 'ws'
 import { Queue } from '@streamr/test-utils'
-import { waitForEvent } from '@streamr/utils'
+import { withTimeout } from '@streamr/utils'
 import { Message } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 
@@ -12,17 +12,16 @@ createMessagingPluginTest('websocket',
     {
         createClient: async (action: 'publish' | 'subscribe', streamId: string, apiKey?: string): Promise<WebSocket> => {
             const apiKeySuffix = (apiKey !== undefined) ? `?apiKey=${apiKey}` : ''
-            const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(streamId)}/${action}${apiKeySuffix}`)
-            return Promise.race([
-                (async () => {
-                    await waitForEvent(client, 'open')
-                    return client
-                })(),
-                (async () => {
-                    const errors = await waitForEvent(client, 'error')
-                    throw errors[0]
-                })()
-            ])
+            const promise = new Promise<WebSocket>((resolve, reject) => {
+                const client = new WebSocket(`ws://127.0.0.1:${WEBSOCKET_PORT}/${action}/${streamId}${apiKeySuffix}`)
+                client.on('open', () => {
+                    resolve(client)
+                })
+                client.on('error', (error) => {
+                    reject(error)
+                })
+            })
+            return withTimeout<WebSocket>(promise, 10000)
         },
         closeClient: async (client: WebSocket): Promise<void> => {
             client.close()
