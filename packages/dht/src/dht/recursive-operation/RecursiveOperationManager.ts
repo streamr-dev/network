@@ -193,14 +193,13 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
         const targetId = getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)
-        const msg = routedMessage.message
-        const recursiveOperationRequest = msg?.body.oneofKind === 'recursiveOperationRequest' ? msg.body.recursiveOperationRequest : undefined
+        const request = (routedMessage.message!.body as { recursiveOperationRequest: RecursiveOperationRequest }).recursiveOperationRequest
         // TODO use config option or named constant?
         const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.nodeId, 5)
-        const data = (recursiveOperationRequest!.operation === RecursiveOperation.FETCH_DATA) 
+        const data = (request.operation === RecursiveOperation.FETCH_DATA) 
             ? this.localDataStore.getEntries(hexToBinary(targetId))
             : undefined
-        if (recursiveOperationRequest!.operation === RecursiveOperation.DELETE_DATA) {
+        if (request.operation === RecursiveOperation.DELETE_DATA) {
             this.localDataStore.markAsDeleted(hexToBinary(targetId), getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!))
         }
         if (areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.destinationPeer!)) {
@@ -208,7 +207,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
             this.sendResponse(
                 routedMessage.routingPath,
                 routedMessage.sourcePeer!,
-                recursiveOperationRequest!.sessionId,
+                request.sessionId,
                 closestPeersToDestination,
                 data,
                 true
@@ -226,7 +225,7 @@ export class RecursiveOperationManager implements IRecursiveOperationManager {
                 this.sendResponse(
                     routedMessage.routingPath,
                     routedMessage.sourcePeer!,
-                    recursiveOperationRequest!.sessionId,
+                    request.sessionId,
                     closestPeersToDestination,
                     data,
                     noCloserContactsFound
