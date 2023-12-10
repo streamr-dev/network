@@ -1,12 +1,12 @@
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { randomString } from '@streamr/utils'
-import { createTestClient, runCommand, waitForTheGraphToHaveIndexed } from './utils'
+import { KEYSERVER_PORT, createTestClient, runCommand, waitForTheGraphToHaveIndexed } from './utils'
 
 describe('search streams', () => {
 
     it('happy path', async () => {
         const testId = randomString(10)
-        const client = createTestClient(await fetchPrivateKeyWithGas())
+        const client = createTestClient(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
         const stream1 = await client.createStream(`/${testId}-1`)
         const stream2 = await client.createStream(`/${testId}-2`)
         await Promise.all([

@@ -1,7 +1,7 @@
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import range from 'lodash/range'
 import { Message, Stream } from 'streamr-client'
-import { DOCKER_DEV_STORAGE_NODE, createTestClient, runCommand } from './utils'
+import { DOCKER_DEV_STORAGE_NODE, KEYSERVER_PORT, createTestClient, runCommand } from './utils'
 import { wait } from '@streamr/utils'
 
 const parseJSONs = (lines: string[]): any[] => {
@@ -15,7 +15,7 @@ describe('resend stream', () => {
     const messages: Message[] = []
 
     beforeAll(async () => {
-        privateKey = await fetchPrivateKeyWithGas()
+        privateKey = await fetchPrivateKeyWithGas(KEYSERVER_PORT)
         const client = createTestClient(privateKey)
         stream = await client.createStream(`/${Date.now()}`)
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
