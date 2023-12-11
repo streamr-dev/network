@@ -72,7 +72,6 @@ describe('RecursiveOperationManager', () => {
             localDataStore: new LocalDataStore(30 * 100),
             sessionTransport: transport,
             addContact: () => {},
-            isPeerCloserToIdThanSelf: (_peer1, _compareToId) => true,
             rpcCommunicator: rpcCommunicator as any
         })
     }

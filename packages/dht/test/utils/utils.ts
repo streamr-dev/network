@@ -10,7 +10,6 @@ import {
     RouteMessageWrapper,
     StoreDataRequest,
     StoreDataResponse,
-    WebsocketConnectionResponse,
     RecursiveOperationRequest, 
     RecursiveOperation
 } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -203,11 +202,8 @@ export const mockStoreRpc: IStoreRpcWithError = {
 }
 
 export const mockWebsocketConnectorRpc: IWebsocketConnectorRpc = {
-    async requestConnection(): Promise<WebsocketConnectionResponse> {
-        const responseConnection: WebsocketConnectionResponse = {
-            accepted: true
-        }
-        return responseConnection
+    async requestConnection(): Promise<Empty> {
+        return {}
     }
 }
 

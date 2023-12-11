@@ -62,6 +62,8 @@ describe('SortedContactList', () => {
         list.addContact(item3)
         list.addContact(item2)
         expect(list.getSize()).toEqual(3)
+        expect(list.getAllContacts()).toEqual([item1, item2, item3])
+        expect(list.getContactIds()).toEqual([item1.getNodeId(), item2.getNodeId(), item3.getNodeId()])
         expect(onContactRemoved).toBeCalledWith(item4, [item1, item2, item3])
         expect(list.getContact(item4.getNodeId())).toBeFalsy()
     })

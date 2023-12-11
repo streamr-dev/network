@@ -2,11 +2,11 @@ import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/prot
 import { WebsocketConnectorRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { createMockPeerDescriptor } from '../utils/utils'
 import {
-    WebsocketConnectionRequest,
-    WebsocketConnectionResponse
+    WebsocketConnectionRequest
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { mockWebsocketConnectorRpc } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { Empty } from '../../src/proto/google/protobuf/empty'
 
 describe('WebsocketConnectorRpc', () => {
 
@@ -21,7 +21,7 @@ describe('WebsocketConnectorRpc', () => {
         rpcCommunicator1 = new RpcCommunicator()
         rpcCommunicator1.registerRpcMethod(
             WebsocketConnectionRequest,
-            WebsocketConnectionResponse,
+            Empty,
             'requestConnection',
             mockWebsocketConnectorRpc.requestConnection
         )
@@ -29,7 +29,7 @@ describe('WebsocketConnectorRpc', () => {
         rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator2.registerRpcMethod(
             WebsocketConnectionRequest,
-            WebsocketConnectionResponse,
+            Empty,
             'requestConnection',
             mockWebsocketConnectorRpc.requestConnection
         )
