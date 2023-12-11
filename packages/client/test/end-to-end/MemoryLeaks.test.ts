@@ -232,8 +232,8 @@ describe('MemoryLeaks', () => {
                     const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
-                    const received: MessageMetadata[] = []
-                    const sub = await client.subscribe(stream, (content: any, metadata: MessageMetadata) => {
+                    let received: MessageMetadata[] = []
+                    let sub: Subscription | undefined = await client.subscribe(stream, (content: any, metadata: MessageMetadata) => {
                         leaksDetector.add('content', content)
                         leaksDetector.add('metadata', metadata)
                         received.push(metadata)
@@ -244,6 +244,9 @@ describe('MemoryLeaks', () => {
                     await publishTestMessages(MAX_MESSAGES)
                     await waitForCondition(() => received.length >= MAX_MESSAGES)
                     await sub.unsubscribe()
+                    await client.destroy()
+                    received = []
+                    sub = undefined
                 }, TIMEOUT)
 
                 test('subscriptions can be collected before all subscriptions removed', async () => {
@@ -292,7 +295,7 @@ describe('MemoryLeaks', () => {
                     expect(received1).toHaveLength(SOME_MESSAGES)
                     expect(received2).toHaveLength(MAX_MESSAGES)
                     await sub2.unsubscribe()
-                    await wait(1000)
+                    await client.destroy()
                 }, TIMEOUT * 2)
             })
         })
