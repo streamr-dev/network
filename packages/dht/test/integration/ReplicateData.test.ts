@@ -9,6 +9,7 @@ import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDes
 import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
+import { NodeID } from '../../src/helpers/nodeId'
 import crypto from 'crypto'
 import { createRandomNodeId } from '../../src/helpers/nodeId'
 
@@ -33,7 +34,7 @@ const hasData = (node: DhtNode): boolean => {
 describe('Replicate data from node to node in DHT', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-    const nodesById: Map<string, DhtNode> = new Map()
+    const nodesById: Map<NodeID, DhtNode> = new Map()
     const simulator = new Simulator(LatencyType.FIXED, 20)
     const NUM_NODES = 100
     const MAX_CONNECTIONS = 80
@@ -56,7 +57,7 @@ describe('Replicate data from node to node in DHT', () => {
                 [entryPoint.getLocalPeerDescriptor()]
             )
             nodes.push(node)
-            nodesById.set(node.getNodeId().toKey(), node)
+            nodesById.set(node.getNodeId(), node)
         }
     })
 
@@ -75,7 +76,7 @@ describe('Replicate data from node to node in DHT', () => {
     it('Data replicates to the closest node no matter where it is stored', async () => {
         // calculate offline which node is closest to the data
         const sortedList = new SortedContactList<Contact>({ 
-            referenceId: DATA_KEY, 
+            referenceId: DATA_KEY.toNodeId(),
             maxSize: 10000, 
             allowToContainReferenceId: true, 
             emitEvents: false 
@@ -98,7 +99,7 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('Nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().nodeId).toKey())!
+            const node = nodesById.get(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))!
             let hasDataMarker = ''
             
             if (hasData(node)) {
@@ -125,7 +126,7 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('After join of 99 nodes: nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().nodeId).toKey())!
+            const node = nodesById.get(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))!
             let hasDataMarker = ''
             if (hasData(node)) {
                 hasDataMarker = ' <-'
@@ -133,7 +134,7 @@ describe('Replicate data from node to node in DHT', () => {
             logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
         })
 
-        const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().nodeId).toKey())!
+        const closestNode = nodesById.get(getNodeIdFromPeerDescriptor(closest[0].getPeerDescriptor()))!
 
         // TODO assert the content?
         expect(hasData(closestNode)).toBe(true)

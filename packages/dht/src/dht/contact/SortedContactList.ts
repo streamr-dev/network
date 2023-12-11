@@ -1,27 +1,27 @@
-import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { ContactState, Events } from './ContactList'
 import { sortedIndexBy } from 'lodash'
 import EventEmitter from 'eventemitter3'
 import { getDistance } from '../PeerManager'
+import { NodeID, areEqualNodeIds } from '../../helpers/nodeId'
 
 export interface SortedContactListConfig {
-    referenceId: PeerID  // all contacts in this list are in sorted by the distance to this ID
+    referenceId: NodeID  // all contacts in this list are in sorted by the distance to this ID
     allowToContainReferenceId: boolean
     // TODO could maybe optimize this by removing the flag and then we'd check whether we have 
     // any listeners before we emit the event
     emitEvents: boolean
     maxSize?: number
     // if set, the list can't contain any contacts which are futher away than this limit
-    peerIdDistanceLimit?: PeerID
+    nodeIdDistanceLimit?: NodeID
     // if set, the list can't contain contacts with these ids
-    excludedPeerIDs?: PeerID[]
+    excludedNodeIDs?: Set<NodeID>
 }
 
-export class SortedContactList<C extends { getPeerId: () => PeerID }> extends EventEmitter<Events<C>> {
+export class SortedContactList<C extends { getNodeId: () => NodeID }> extends EventEmitter<Events<C>> {
 
     private config: SortedContactListConfig
-    private contactsById: Map<PeerIDKey, ContactState<C>> = new Map()
-    private contactIds: PeerID[] = []
+    private contactsById: Map<NodeID, ContactState<C>> = new Map()
+    private contactIds: NodeID[] = []
 
     constructor(
         config: SortedContactListConfig
@@ -31,38 +31,39 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Ev
         this.compareIds = this.compareIds.bind(this)
     }
 
-    public getClosestContactId(): PeerID {
+    public getClosestContactId(): NodeID {
         return this.contactIds[0]
     }
 
-    public getContactIds(): PeerID[] {
+    public getContactIds(): NodeID[] {
         return this.contactIds
     }
 
     public addContact(contact: C): void {
-        if (this.config.excludedPeerIDs !== undefined
-            && this.config.excludedPeerIDs.some((peerId) => contact.getPeerId().equals(peerId))) {
+        if (this.config.excludedNodeIDs !== undefined && this.config.excludedNodeIDs.has(contact.getNodeId())) {
             return
         }
 
-        if ((!this.config.allowToContainReferenceId && this.config.referenceId.equals(contact.getPeerId())) ||
-            (this.config.peerIdDistanceLimit !== undefined && this.compareIds(this.config.peerIdDistanceLimit, contact.getPeerId()) < 0)) {
+        if ((!this.config.allowToContainReferenceId && areEqualNodeIds(this.config.referenceId, contact.getNodeId())) ||
+            (this.config.nodeIdDistanceLimit !== undefined && this.compareIds(this.config.nodeIdDistanceLimit, contact.getNodeId()) < 0)) {
             return
         }
-        if (!this.contactsById.has(contact.getPeerId().toKey())) {
+        if (!this.contactsById.has(contact.getNodeId())) {
             if ((this.config.maxSize === undefined) || (this.contactIds.length < this.config.maxSize)) {
-                this.contactsById.set(contact.getPeerId().toKey(), new ContactState(contact))
+                this.contactsById.set(contact.getNodeId(), new ContactState(contact))
 
-                const index = sortedIndexBy(this.contactIds, contact.getPeerId(), (id: PeerID) => { return this.distanceToReferenceId(id) })
-                this.contactIds.splice(index, 0, contact.getPeerId())
-            } else if (this.compareIds(this.contactIds[this.config.maxSize - 1], contact.getPeerId()) > 0) {
+                // eslint-disable-next-line max-len
+                const index = sortedIndexBy(this.contactIds, contact.getNodeId(), (id: NodeID) => { return this.distanceToReferenceId(id) })
+                this.contactIds.splice(index, 0, contact.getNodeId())
+            } else if (this.compareIds(this.contactIds[this.config.maxSize - 1], contact.getNodeId()) > 0) {
                 const removedId = this.contactIds.pop()
-                const removedContact = this.contactsById.get(removedId!.toKey())!.contact
-                this.contactsById.delete(removedId!.toKey())
-                this.contactsById.set(contact.getPeerId().toKey(), new ContactState(contact))
+                const removedContact = this.contactsById.get(removedId!)!.contact
+                this.contactsById.delete(removedId!)
+                this.contactsById.set(contact.getNodeId(), new ContactState(contact))
 
-                const index = sortedIndexBy(this.contactIds, contact.getPeerId(), (id: PeerID) => { return this.distanceToReferenceId(id) })
-                this.contactIds.splice(index, 0, contact.getPeerId())
+                // eslint-disable-next-line max-len
+                const index = sortedIndexBy(this.contactIds, contact.getNodeId(), (id: NodeID) => { return this.distanceToReferenceId(id) })
+                this.contactIds.splice(index, 0, contact.getNodeId())
                 if (this.config.emitEvents) {
                     this.emit(
                         'contactRemoved',
@@ -85,26 +86,26 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Ev
         contacts.forEach((contact) => this.addContact(contact))
     }
 
-    public getContact(id: PeerID): ContactState<C> | undefined {
-        return this.contactsById.get(id.toKey())
+    public getContact(id: NodeID): ContactState<C> | undefined {
+        return this.contactsById.get(id)
     }
 
-    public setContacted(contactId: PeerID): void {
-        if (this.contactsById.has(contactId.toKey())) {
-            this.contactsById.get(contactId.toKey())!.contacted = true
+    public setContacted(contactId: NodeID): void {
+        if (this.contactsById.has(contactId)) {
+            this.contactsById.get(contactId)!.contacted = true
         }
     }
 
-    public setActive(contactId: PeerID): void {
-        if (this.contactsById.has(contactId.toKey())) {
-            this.contactsById.get(contactId.toKey())!.active = true
+    public setActive(contactId: NodeID): void {
+        if (this.contactsById.has(contactId)) {
+            this.contactsById.get(contactId)!.active = true
         }
     }
 
     public getClosestContacts(limit?: number): C[] {
         const ret: C[] = []
         this.contactIds.forEach((contactId) => {
-            const contact = this.contactsById.get(contactId.toKey())
+            const contact = this.contactsById.get(contactId)
             if (contact) {
                 ret.push(contact.contact)
             }
@@ -119,7 +120,7 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Ev
     public getUncontactedContacts(num: number): C[] {
         const ret: C[] = []
         for (const contactId of this.contactIds) {
-            const contact = this.contactsById.get(contactId.toKey())
+            const contact = this.contactsById.get(contactId)
             if (contact && !contact.contacted) {
                 ret.push(contact.contact)
                 if (ret.length >= num) {
@@ -133,7 +134,7 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Ev
     public getActiveContacts(limit?: number): C[] {
         const ret: C[] = []
         this.contactIds.forEach((contactId) => {
-            const contact = this.contactsById.get(contactId.toKey())
+            const contact = this.contactsById.get(contactId)
             if (contact && contact.active) {
                 ret.push(contact.contact)
             }
@@ -145,23 +146,25 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Ev
         }
     }
 
-    public compareIds(id1: PeerID, id2: PeerID): number {
+    public compareIds(id1: NodeID, id2: NodeID): number {
         const distance1 = this.distanceToReferenceId(id1)
         const distance2 = this.distanceToReferenceId(id2)
         return distance1 - distance2
     }
 
     // TODO inline this method?
-    private distanceToReferenceId(id: PeerID): number {
-        return getDistance(this.config.referenceId.value, id.value)
+    private distanceToReferenceId(id: NodeID): number {
+        // TODO maybe this class should store the referenceId also as UInt8Array so that we don't need to convert it here?
+        return getDistance(this.config.referenceId, id)
     }
 
-    public removeContact(id: PeerID): boolean {
-        if (this.contactsById.has(id.toKey())) {
-            const removed = this.contactsById.get(id.toKey())!.contact
-            const index = this.contactIds.findIndex((element) => element.equals(id))
+    public removeContact(id: NodeID): boolean {
+        if (this.contactsById.has(id)) {
+            const removed = this.contactsById.get(id)!.contact
+            // TODO use sortedIndexBy?
+            const index = this.contactIds.findIndex((nodeId) => areEqualNodeIds(nodeId, id))
             this.contactIds.splice(index, 1)
-            this.contactsById.delete(id.toKey())
+            this.contactsById.delete(id)
             if (this.config.emitEvents) {
                 this.emit(
                     'contactRemoved',
@@ -174,12 +177,12 @@ export class SortedContactList<C extends { getPeerId: () => PeerID }> extends Ev
         return false
     }
 
-    public isActive(id: PeerID): boolean {
-        return this.contactsById.has(id.toKey()) ? this.contactsById.get(id.toKey())!.active : false
+    public isActive(id: NodeID): boolean {
+        return this.contactsById.has(id) ? this.contactsById.get(id)!.active : false
     }
 
     public getAllContacts(): C[] {
-        return this.contactIds.map((peerId) => this.contactsById.get(peerId.toKey())!.contact)
+        return this.contactIds.map((nodeId) => this.contactsById.get(nodeId)!.contact)
     }
 
     public getSize(): number {

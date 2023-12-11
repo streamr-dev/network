@@ -4,11 +4,11 @@ import { generateId } from '../utils/utils'
 import {
     NodeType,
     PeerDescriptor,
-    WebsocketConnectionRequest,
-    WebsocketConnectionResponse
+    WebsocketConnectionRequest
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { mockWebsocketConnectorRpc } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { Empty } from '../../src/proto/google/protobuf/empty'
 
 describe('WebsocketConnectorRpc', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -30,7 +30,7 @@ describe('WebsocketConnectorRpc', () => {
         rpcCommunicator1 = new RpcCommunicator()
         rpcCommunicator1.registerRpcMethod(
             WebsocketConnectionRequest,
-            WebsocketConnectionResponse,
+            Empty,
             'requestConnection',
             mockWebsocketConnectorRpc.requestConnection
         )
@@ -38,7 +38,7 @@ describe('WebsocketConnectorRpc', () => {
         rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator2.registerRpcMethod(
             WebsocketConnectionRequest,
-            WebsocketConnectionResponse,
+            Empty,
             'requestConnection',
             mockWebsocketConnectorRpc.requestConnection
         )
@@ -67,16 +67,14 @@ describe('WebsocketConnectorRpc', () => {
         },
         { targetDescriptor: peerDescriptor2 },
         )
-        const res1 = await response1
-        expect(res1.accepted).toEqual(true)
-
+        await response1
+        
         const response2 = client2.requestConnection({
             ip: '127.0.0.1',
             port: 9111
         },
         { targetDescriptor: peerDescriptor1 },
         )
-        const res2 = await response2
-        expect(res2.accepted).toEqual(true)
+        await response2
     })
 })

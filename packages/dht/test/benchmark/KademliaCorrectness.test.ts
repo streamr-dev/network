@@ -1,12 +1,13 @@
 /* eslint-disable no-console */
+import { hexToBinary } from '@streamr/utils'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
+import { NodeID } from '../../src/helpers/nodeId'
 
 describe('Kademlia correctness', () => {
     let entryPoint: DhtNode
@@ -15,7 +16,7 @@ describe('Kademlia correctness', () => {
     const simulator = new Simulator()
     const NUM_NODES = 1000
 
-    const nodeIndicesById: Record<string, number> = {}
+    const nodeIndicesById: Record<NodeID, number> = {}
 
     if (!fs.existsSync('test/data/nodeids.json')) {
         console.log('gound truth data does not exist yet, generating..')
@@ -32,9 +33,9 @@ describe('Kademlia correctness', () => {
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data), 8)
         nodes.push(entryPoint)
-        nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
+        nodeIndicesById[entryPoint.getNodeId()] = 0
         entrypointDescriptor = {
-            nodeId: entryPoint.getNodeId().value,
+            nodeId: hexToBinary(entryPoint.getNodeId()),
             type: NodeType.NODEJS
         }
 
@@ -42,7 +43,7 @@ describe('Kademlia correctness', () => {
             const nodeId = `${i}`
 
             const node = await createMockConnectionDhtNode(nodeId, simulator, Uint8Array.from(dhtIds[i].data))
-            nodeIndicesById[node.getNodeId().toKey()] = i
+            nodeIndicesById[node.getNodeId()] = i
             nodes.push(node)
         }
     })
@@ -72,17 +73,17 @@ describe('Kademlia correctness', () => {
                 groundTruthString += groundTruth[i + ''][j].name + ','
             }
 
-            const kademliaNeighbors = nodes[i].getClosestContacts().map((p) => PeerID.fromValue(p.nodeId))
+            const kademliaNeighbors = nodes[i].getClosestContacts().map((p) => getNodeIdFromPeerDescriptor(p))
 
             let kadString = 'kademliaNeighbors: '
             kademliaNeighbors.forEach((neighbor) => {
-                kadString += nodeIndicesById[neighbor.toKey()] + ','
+                kadString += nodeIndicesById[neighbor] + ','
             })
 
             let correctNeighbors = 0
             try {
                 for (let j = 0; j < groundTruth[i + ''].length; j++) {
-                    if (groundTruth[i + ''][j].name != (nodeIndicesById[kademliaNeighbors[j].toKey()] + '')) {
+                    if (groundTruth[i + ''][j].name != (nodeIndicesById[kademliaNeighbors[j]] + '')) {
                         break
                     }
                     correctNeighbors++
