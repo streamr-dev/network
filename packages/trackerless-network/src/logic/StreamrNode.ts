@@ -143,7 +143,7 @@ export class StreamrNode extends EventEmitter<Events> {
             proxied: false,
             layer1Node,
             node,
-            entryPointDiscovery: entryPointDiscoverys,
+            entryPointDiscovery: entryPointDiscovery,
             broadcast: (msg: StreamMessage) => node!.broadcast(msg),
             stop: async () => {
                 await entryPointDiscovery.destroy()
