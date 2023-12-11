@@ -15,8 +15,8 @@ import {
 import { generateMnemonicFromAddress } from '../helpers/generateMnemonicFromAddress'
 import * as MqttConfigSchema from '../plugins/mqtt/config.schema.json'
 import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
-import { ConfigFile, getDefaultFile } from './config'
 import * as BrokerConfigSchema from './config.schema.json'
+import { ConfigFile, getDefaultFile } from './config'
 
 export const start = async () => {
     const logger = {
@@ -247,6 +247,24 @@ async function getPubsubPlugins() {
                             .int('Non-integer value provided')
                             .min(1024)
                             .max(49151)
+                            .superRefine((value, ctx) => {
+                                const [pluginKey] =
+                                    Object.entries(pubsubPlugins).find(
+                                        ([pluginKey, plugin]) =>
+                                            value ===
+                                            (plugin.port ||
+                                                DefaultPort[
+                                                    pluginKey as PubsubPluginKey
+                                                ])
+                                    ) || []
+
+                                if (pluginKey) {
+                                    ctx.addIssue({
+                                        code: z.ZodIssueCode.custom,
+                                        message: `Port ${value} is taken by ${pluginKey}`,
+                                    })
+                                }
+                            })
                             .parse(value)
                     } catch (e: unknown) {
                         return (e as z.ZodError).issues
