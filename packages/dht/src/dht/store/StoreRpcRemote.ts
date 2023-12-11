@@ -20,10 +20,10 @@ export class StoreRpcRemote extends RpcRemote<IStoreRpcClient> {
         }
     }
 
-    async replicateData(request: ReplicateDataRequest, doNotConnect: boolean = false): Promise<void> {
+    async replicateData(request: ReplicateDataRequest): Promise<void> {
         const options = this.formDhtRpcOptions({
             timeout: EXISTING_CONNECTION_TIMEOUT,
-            doNotConnect
+            doNotConnect: false
         })
         return this.getClient().replicateData(request, options)
     }
