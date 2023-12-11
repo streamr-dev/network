@@ -35,7 +35,7 @@
     "strict-event-emitter-types": "^2.0.0",
     "uuid": "^9.0.1",
     "websocket": "^1.0.34",
-    "ws": "^8.14.2",
+    "ws": "^8.15.0",
     "yallist": "^4.0.0"
   },
   "devDependencies": {

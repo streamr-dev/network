@@ -50,7 +50,7 @@
     "qs": "^6.10.1",
     "streamr-client": "8.5.5",
     "uuid": "^9.0.1",
-    "ws": "^8.14.2"
+    "ws": "^8.15.0"
   },
   "devDependencies": {
     "@streamr/test-utils": "8.5.5",
