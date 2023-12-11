@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Defer, wait } from '@streamr/utils'
+import { Defer, wait, waitForCondition } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -234,18 +234,16 @@ describe('MemoryLeaks', () => {
                     })
                     const received: MessageMetadata[] = []
                     const sub = await client.subscribe(stream, (content: any, metadata: MessageMetadata) => {
-                        received.push(metadata)
                         leaksDetector.add('content', content)
                         leaksDetector.add('metadata', metadata)
-                        if (received.length === MAX_MESSAGES) {
-                            sub.unsubscribe()
-                        }
+                        received.push(metadata)
                     })
 
                     leaksDetector.add(instanceId(sub), sub)
 
                     await publishTestMessages(MAX_MESSAGES)
-                    await wait(1000)
+                    await waitForCondition(() => received.length >= MAX_MESSAGES)
+                    await sub.unsubscribe()
                 }, TIMEOUT)
 
                 test('subscriptions can be collected before all subscriptions removed', async () => {
@@ -263,7 +261,7 @@ describe('MemoryLeaks', () => {
                         received1.push(msg)
                         if (received1.length === SOME_MESSAGES) {
                             if (!sub1) { return }
-                            sub1.unsubscribe()
+                            await sub1.unsubscribe()
                             // unsub early
                             sub1Done.resolve(undefined)
                         }
