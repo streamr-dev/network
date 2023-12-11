@@ -1,6 +1,6 @@
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { SortedContactList } from '../contact/SortedContactList'
-import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
@@ -173,10 +173,9 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     updateAndGetRoutablePeers(): RemoteContact[] {
         logger.trace('getRoutablePeers() sessionId: ' + this.sessionId)
         // Remove stale contacts that may have been removed from connections
-        this.contactList.getAllContacts().forEach((contact) => {
-            const peerId = peerIdFromPeerDescriptor(contact.getPeerDescriptor())
-            if (this.connections.has(peerId.toNodeId()) === false) {
-                this.contactList.removeContact(peerId.toNodeId())
+        this.contactList.getContactIds().forEach((nodeId) => {
+            if (!this.connections.has(nodeId)) {
+                this.contactList.removeContact(nodeId)
             }
         })
         const contacts = Array.from(this.connections.values())

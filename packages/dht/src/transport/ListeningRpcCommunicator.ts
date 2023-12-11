@@ -9,7 +9,7 @@ export class ListeningRpcCommunicator extends RoutingRpcCommunicator {
     private readonly listener: (msg: Message) => void
 
     constructor(ownServiceId: ServiceID, transport: ITransport, config?: RpcCommunicatorConfig) {
-        super(ownServiceId, transport.send, config)
+        super(ownServiceId, (msg, doNotConnect) => transport.send(msg, doNotConnect), config)
         this.listener = (msg: Message) => {
             this.handleMessageFromPeer(msg)
         }
