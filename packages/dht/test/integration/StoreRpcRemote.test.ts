@@ -9,7 +9,7 @@ import { generateId, mockStoreRpc } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { StoreRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { StoreRpcRemote } from '../../src/dht/store/StoreRpcRemote'
-import { Any } from '../../src/proto/google/protobuf/any'
+import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 
 describe('StoreRpcRemote', () => {
 
@@ -25,10 +25,10 @@ describe('StoreRpcRemote', () => {
         nodeId: generateId('server'),
         type: NodeType.NODEJS
     }
-    const data = Any.pack(clientPeerDescriptor, PeerDescriptor)
+    const data = createMockDataEntry()
     const request: StoreDataRequest = {
-        key: clientPeerDescriptor.nodeId,
-        data,
+        key: data.key,
+        data: data.data,
         ttl: 10
     }
 
