@@ -17,18 +17,20 @@ describe('HandshakeRpcLocal', () => {
 
     let targetNeighbors: NodeList
     let ongoingHandshakes: Set<NodeID>
+    let ongoingInterleaves: Set<NodeID>
     let handshakeWithInterleaving: jest.Mock
 
     beforeEach(() => {
         targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(localPeerDescriptor), 10)
         ongoingHandshakes = new Set()
-
+        ongoingInterleaves = new Set()
         handshakeWithInterleaving = jest.fn()
 
         rpcLocal = new HandshakeRpcLocal({
             streamPartId: STREAM_PART_ID,
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
+            ongoingInterleaves,
             createRpcRemote: (_p) => createMockHandshakeRpcRemote(),
             createDeliveryRpcRemote: (_p) => createMockDeliveryRpcRemote(),
             handshakeWithInterleaving: async (_p, _t) => {
@@ -108,6 +110,45 @@ describe('HandshakeRpcLocal', () => {
             incomingSourceDescriptor: createMockPeerDescriptor()
         } as any)
         expect(handshakeWithInterleaving).toHaveBeenCalledTimes(1)
+    })
+
+    it('rejects handshakes if interleaving is to the requestor is ongoing', async () => {
+        targetNeighbors.add(createMockDeliveryRpcRemote())
+        targetNeighbors.add(createMockDeliveryRpcRemote())
+        targetNeighbors.add(createMockDeliveryRpcRemote())
+        targetNeighbors.add(createMockDeliveryRpcRemote())
+        const requestor = createMockPeerDescriptor()
+        ongoingInterleaves.add(getNodeIdFromPeerDescriptor(requestor))
+        const req = StreamPartHandshakeRequest.create({
+            streamPartId: STREAM_PART_ID,
+            requestId: 'requestId'
+        })
+        const res = await rpcLocal.handshake(req, {
+            incomingSourceDescriptor: requestor
+        } as any)
+        expect(res.accepted).toEqual(false)
+    })
+
+    it('Rejects if interleaving is required and too many interleaving requests are ongoing', async () => {
+        const interleavingPeer1 = createMockPeerDescriptor()
+        const interleavingPeer2 = createMockPeerDescriptor()
+        const interleavingPeer3 = createMockPeerDescriptor()
+        targetNeighbors.add(createMockDeliveryRpcRemote(interleavingPeer1))
+        targetNeighbors.add(createMockDeliveryRpcRemote(interleavingPeer2))
+        targetNeighbors.add(createMockDeliveryRpcRemote(interleavingPeer3))
+        targetNeighbors.add(createMockDeliveryRpcRemote())
+        ongoingInterleaves.add(getNodeIdFromPeerDescriptor(interleavingPeer1))
+        ongoingInterleaves.add(getNodeIdFromPeerDescriptor(interleavingPeer2))
+        ongoingInterleaves.add(getNodeIdFromPeerDescriptor(interleavingPeer3))
+        const req = StreamPartHandshakeRequest.create({
+            streamPartId: STREAM_PART_ID,
+            requestId: 'requestId'
+        })
+        const res = await rpcLocal.handshake(req, {
+            incomingSourceDescriptor: createMockPeerDescriptor()
+        } as any)
+        expect(res.accepted).toEqual(false)
+        expect(handshakeWithInterleaving).toHaveBeenCalledTimes(0)
     })
 
 })
