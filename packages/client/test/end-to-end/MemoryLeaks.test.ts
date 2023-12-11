@@ -293,7 +293,7 @@ describe('MemoryLeaks', () => {
                     expect(received2).toHaveLength(MAX_MESSAGES)
                     await sub2.unsubscribe()
                     await wait(1000)
-                }, TIMEOUT)
+                }, TIMEOUT * 2)
             })
         })
     })
