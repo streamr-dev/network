@@ -1,6 +1,17 @@
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
-import { DataEntry, PeerDescriptor, RecursiveOperationResponse, RecursiveOperation, RouteMessageWrapper, RouteMessageAck, NodeType, RecursiveOperationRequest, Message, MessageType } from '../../proto/packages/dht/protos/DhtRpc'
+import { 
+    DataEntry,
+    PeerDescriptor,
+    RecursiveOperationResponse,
+    RecursiveOperation,
+    RouteMessageWrapper,
+    RouteMessageAck,
+    NodeType,
+    RecursiveOperationRequest,
+    Message,
+    MessageType
+} from '../../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Contact } from '../contact/Contact'
@@ -213,7 +224,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         dataEntries: Array.from(this.foundData.values())
     })
 
-    public getId() {
+    public getId(): string {
         return this.id
     }
 

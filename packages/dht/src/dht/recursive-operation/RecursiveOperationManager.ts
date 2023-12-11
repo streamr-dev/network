@@ -1,8 +1,5 @@
 import {
     DataEntry,
-    Message,
-    MessageType,
-    NodeType,
     PeerDescriptor,
     RecursiveOperation,
     RecursiveOperationRequest,
@@ -16,7 +13,6 @@ import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../help
 import { Logger, hexToBinary, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationSessionRpcRemote } from './RecursiveOperationSessionRpcRemote'
-import { v4 } from 'uuid'
 import { RecursiveOperationSession, RecursiveOperationSessionEvents } from './RecursiveOperationSession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ITransport } from '../../transport/ITransport'

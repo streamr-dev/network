@@ -50,7 +50,7 @@ import { MarkRequired } from 'ts-essentials'
 import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
-import { PeerManager, getDistance } from './PeerManager'
+import { PeerManager } from './PeerManager'
 import { ServiceID } from '../types/ServiceID'
 import { NodeID, getNodeIdFromBinary } from '../helpers/nodeId'
 

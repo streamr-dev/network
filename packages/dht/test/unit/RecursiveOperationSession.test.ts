@@ -49,7 +49,12 @@ describe('RecursiveOperationSession', () => {
         expect(doRouteRequest).toHaveBeenCalled()
         range(3).forEach(() => {
             const remote = createRpcRemote(session.getId())
-            remote.sendResponse([createMockPeerDescriptor(), createMockPeerDescriptor()], [createMockPeerDescriptor(), createMockPeerDescriptor()], [], true)    
+            remote.sendResponse(
+                [createMockPeerDescriptor(), createMockPeerDescriptor()],
+                [createMockPeerDescriptor(), createMockPeerDescriptor()],
+                [],
+                true
+            )
         })
 
         // TODO now waits for the 4s timeout, could setup test so that it completes by receiving
