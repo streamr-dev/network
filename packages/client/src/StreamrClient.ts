@@ -675,7 +675,7 @@ export class StreamrClient {
      * Get overrides for transaction options. Use as a parameter when submitting
      * transactions via ethers library.
      */
-    getEthersOverrides(): Overrides | undefined {
+    getEthersOverrides(): Overrides {
         return _getEthersOverrides(this.config)
     }
 

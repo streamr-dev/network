@@ -35,10 +35,10 @@ const getRpcProviders = (connectionInfo: ChainConnectionInfo, pollInterval?: num
  * Apply the gasPriceStrategy to the estimated gas price, if given
  * Ethers.js will resolve the gas price promise before sending the tx
  */
-export const getEthersOverrides = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Overrides | undefined => {
+export const getEthersOverrides = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Overrides => {
     const primaryProvider = getStreamRegistryChainProviders(config)[0]
     const chainConfig = config.contracts.ethereumNetwork
-    const overrides = chainConfig.overrides
+    const overrides = chainConfig.overrides ?? {}
     if (chainConfig.highGasPriceStrategy) {
         const gasPriceStrategy = (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000') 
         return {

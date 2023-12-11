@@ -54,7 +54,7 @@ export interface OperatorServiceConfig {
     signer: SignerWithProvider
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
-    getEthersOverrides?: () => Overrides | undefined
+    getEthersOverrides?: () => Overrides
 }
 
 const logger = new Logger(module)
