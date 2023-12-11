@@ -105,12 +105,13 @@ export const createMockHandshakeRpcRemote = (): HandshakeRpcRemote => {
     )
 }
 
-export const createNetworkNodeWithSimulator = (
+export const createNetworkNodeWithSimulator = async (
     peerDescriptor: PeerDescriptor,
     simulator: Simulator,
     entryPoints: PeerDescriptor[]
-): NetworkNode => {
+): Promise<NetworkNode> => {
     const transport = new SimulatorTransport(peerDescriptor, simulator)
+    await transport.start()
     return createNetworkNode({
         layer0: {
             peerDescriptor,

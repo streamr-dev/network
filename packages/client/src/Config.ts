@@ -230,6 +230,8 @@ export interface EthereumNetworkConfig {
 //   in Ethereum network
 export type EnvironmentId = 'polygon' | 'mumbai' | 'dev2'
 
+export const DEFAULT_ENVIRONMENT: EnvironmentId = 'polygon'
+
 /**
  * @category Important
  */
@@ -435,7 +437,7 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
     // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?
     let config = cloneDeep(input)
-    const environment = config.environment ?? 'polygon'
+    const environment = config.environment ?? DEFAULT_ENVIRONMENT
     config = applyEnvironmentDefaults(environment, config)
     const strictConfig = validateConfig(config)
     strictConfig.id ??= generateClientId()
@@ -443,25 +445,25 @@ export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStrea
 }
 
 const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrClientConfig): StreamrClientConfig => {
-    const defauls = CHAIN_CONFIG[environmentId]
+    const defaults = CHAIN_CONFIG[environmentId]
     const config = merge(data, {
         network: {
             ...data.network,
             controlLayer: {
-                entryPoints: defauls.entryPoints,
+                entryPoints: defaults.entryPoints,
                 ...data.network?.controlLayer,
             }
         } as any,
         contracts: {
-            streamRegistryChainAddress: defauls.contracts.StreamRegistry,
-            streamStorageRegistryChainAddress: defauls.contracts.StreamStorageRegistry,
-            storageNodeRegistryChainAddress: defauls.contracts.StorageNodeRegistry,
+            streamRegistryChainAddress: defaults.contracts.StreamRegistry,
+            streamStorageRegistryChainAddress: defaults.contracts.StreamStorageRegistry,
+            storageNodeRegistryChainAddress: defaults.contracts.StorageNodeRegistry,
             streamRegistryChainRPCs: {
-                name: defauls.name,
-                chainId: defauls.id,
-                rpcs: defauls.rpcEndpoints
+                name: defaults.name,
+                chainId: defaults.id,
+                rpcs: defaults.rpcEndpoints
             },
-            theGraphUrl: defauls.theGraphUrl,
+            theGraphUrl: defaults.theGraphUrl,
             ...data.contracts,
         } as any
     }) as any
