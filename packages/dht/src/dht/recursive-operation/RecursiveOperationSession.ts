@@ -219,10 +219,12 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         }
     }
 
-    public getResults = (): RecursiveOperationResult => ({
-        closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
-        dataEntries: Array.from(this.foundData.values())
-    })
+    public getResults(): RecursiveOperationResult {
+        return {
+            closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
+            dataEntries: Array.from(this.foundData.values())
+        }
+    }
 
     public getId(): string {
         return this.id
