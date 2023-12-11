@@ -46,7 +46,7 @@ To observe your Operator's heartbeat, paste in your Operator contract address in
 The redundancy factor sets the amount of duplicated work when running a fleet of multiple nodes. Doing redundant work protects against slashing in case some of your nodes experience failures. For example, setting this to 1 means that no duplication of work occurs (the feature is off), and setting it to 2 means that each stream assignment will be worked on by 2 nodes in your fleet.
 
 ### Owner's cut
-The Operator’s cut is the percentage taken by the Operator from all earnings. This percentage can be changed, but only while the Operator is not staked in any Sponsorships. The remainder percentage is shared among all Delegators, including the Operator's own stake (if the Operator has self-delegated).
+The Operator’s cut is the percentage taken by the Operator from all earnings. This percentage can be changed, but only while the Operator is not staked in any Sponsorships. The remainder percentage is shared among all Delegators, including the Operator's own stake wich must be at least [5% of the total delegations amount][../incentives/stream-sponsorships.md].
 
 ### Operator maintenance
 #### Operator uncollected earnings limit
