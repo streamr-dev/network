@@ -4,14 +4,15 @@ import { RpcCommunicator, RpcCommunicatorConfig } from '@streamr/proto-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RpcMessage } from '../proto/packages/proto-rpc/protos/ProtoRpc'
 import { ServiceID } from '../types/ServiceID'
+import { SendOptions } from './ITransport'
 
 export class RoutingRpcCommunicator extends RpcCommunicator {
     private ownServiceId: ServiceID
-    private sendFn: (msg: Message, doNotConnect?: boolean, doNotMindStopped?: boolean) => Promise<void>
+    private sendFn: (msg: Message, opts?: SendOptions) => Promise<void>
 
     constructor(
         ownServiceId: ServiceID,
-        sendFn: (msg: Message, doNotConnect?: boolean) => Promise<void>,
+        sendFn: (msg: Message, opts?: SendOptions) => Promise<void>,
         config?: RpcCommunicatorConfig
     ) {
         super(config)
@@ -40,9 +41,9 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
 
             // TODO is it possible to have explicit default values for "doNotConnect" and "doNotMindStopped"?
             if (msg.header.response || callContext && callContext.doNotConnect && callContext.doNotMindStopped ) {
-                return this.sendFn(message, true, true)
+                return this.sendFn(message, { doNotConnect: true, doNotMindStopped: true })
             } else if (msg.header.response || callContext && callContext.doNotConnect) {
-                return this.sendFn(message, true)
+                return this.sendFn(message, { doNotConnect: true })
             } else {
                 return this.sendFn(message)
             }
