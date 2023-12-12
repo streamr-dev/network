@@ -9,8 +9,7 @@ import {
     ConnectivityResponse,
     HandshakeError,
     PeerDescriptor,
-    WebsocketConnectionRequest,
-    WebsocketConnectionResponse
+    WebsocketConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { WebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger, binaryToHex, wait } from '@streamr/utils'
@@ -30,6 +29,7 @@ import { WebsocketServerStartError } from '../../helpers/errors'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
 import * as Err from '../../helpers/errors'
+import { Empty } from '../../proto/google/protobuf/empty'
 import { NodeID } from '../../helpers/nodeId'
 
 const logger = new Logger(module)
@@ -114,15 +114,14 @@ export class WebsocketConnector {
             onNewConnection: (connection: ManagedConnection) => config.onNewConnection(connection),
             abortSignal: this.abortController.signal
         })
-        this.rpcCommunicator.registerRpcMethod(
+        this.rpcCommunicator.registerRpcNotification(
             WebsocketConnectionRequest,
-            WebsocketConnectionResponse,
             'requestConnection',
-            async (req: WebsocketConnectionRequest, context: ServerCallContext): Promise<WebsocketConnectionResponse> => {
+            async (req: WebsocketConnectionRequest, context: ServerCallContext): Promise<Empty> => {
                 if (!this.abortController.signal.aborted) {
                     return rpcLocal.requestConnection(req, context)
                 } else {
-                    return { accepted: false }
+                    return {}
                 }
             }
         )
@@ -276,11 +275,11 @@ export class WebsocketConnector {
                 targetPeerDescriptor,
                 toProtoRpcClient(new WebsocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
             )
-            remoteConnector.requestConnection().then((_response: WebsocketConnectionResponse) => {
-                logger.trace('Sent WebsocketConnectionRequest request to peer', { targetPeerDescriptor })
+            remoteConnector.requestConnection().then(() => {
+                logger.trace('Sent WebsocketConnectionRequest notification to peer', { targetPeerDescriptor })
                 return
             }, (err) => {
-                logger.debug('Failed to send WebsocketConnectionRequest request to peer of failed to get the response ', {
+                logger.debug('Failed to send WebsocketConnectionRequest notification to peer ', {
                     error: err, targetPeerDescriptor
                 })
             })

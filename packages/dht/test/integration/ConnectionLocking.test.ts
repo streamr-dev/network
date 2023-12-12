@@ -4,9 +4,9 @@ import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { ITransport } from '../../src/exports'
-import { PeerID } from '../../src/helpers/PeerID'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { getRandomRegion } from '../../dist/src/connection/simulator/pings'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
@@ -20,23 +20,16 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport:
 
 describe('Connection Locking', () => {
 
-    const mockPeerDescriptor1: PeerDescriptor = {
-        nodeId: PeerID.fromString('mock1').value,
-        type: NodeType.NODEJS,
+    const mockPeerDescriptor1 = createMockPeerDescriptor({
         region: getRandomRegion()
-    }
-    const mockPeerDescriptor2: PeerDescriptor = {
-        nodeId: PeerID.fromString('mock2').value,
-        type: NodeType.NODEJS,
+    })
+    const mockPeerDescriptor2 = createMockPeerDescriptor({
         region: getRandomRegion()
-    }
-
+    })
     let mockConnectorTransport1: ConnectionManager
     let mockConnectorTransport2: ConnectionManager
-
     let connectionManager1: ConnectionManager
     let connectionManager2: ConnectionManager
-
     let simulator: Simulator
 
     beforeEach(async () => {

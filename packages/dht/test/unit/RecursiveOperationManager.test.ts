@@ -2,8 +2,6 @@ import {
     RecursiveOperation,
     Message,
     MessageType,
-    NodeType,
-    PeerDescriptor,
     RouteMessageAck,
     RouteMessageError,
     RouteMessageWrapper
@@ -11,7 +9,8 @@ import {
 import { PeerID } from '../../src/helpers/PeerID'
 import {
     createWrappedClosestPeersRequest,
-    createFindRequest
+    createFindRequest,
+    createMockPeerDescriptor
 } from '../utils/utils'
 import { RecursiveOperationManager } from '../../src/dht/recursive-operation/RecursiveOperationManager'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
@@ -37,14 +36,8 @@ const createMockRouter = (error?: RouteMessageError): Partial<IRouter> => {
 }
 describe('RecursiveOperationManager', () => {
 
-    const peerDescriptor1: PeerDescriptor = {
-        nodeId: PeerID.fromString('peerid').value,
-        type: NodeType.NODEJS
-    }
-    const peerDescriptor2: PeerDescriptor = {
-        nodeId: PeerID.fromString('destination').value,
-        type: NodeType.NODEJS
-    }
+    const peerDescriptor1 = createMockPeerDescriptor()
+    const peerDescriptor2 = createMockPeerDescriptor()
     const recursiveOperationRequest = createFindRequest()
     const message: Message = {
         serviceId: 'unknown',
@@ -79,7 +72,6 @@ describe('RecursiveOperationManager', () => {
             localDataStore: new LocalDataStore(30 * 100),
             sessionTransport: transport,
             addContact: () => {},
-            isPeerCloserToIdThanSelf: (_peer1, _compareToId) => true,
             rpcCommunicator: rpcCommunicator as any
         })
     }
