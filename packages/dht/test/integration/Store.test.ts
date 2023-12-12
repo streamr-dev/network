@@ -5,14 +5,16 @@ import { createMockConnectionDhtNode, createMockPeerDescriptor, waitConnectionMa
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 
+const NUM_NODES = 100
+const MAX_CONNECTIONS = 20
+const K = 4
+
 describe('Storing data in DHT', () => {
+
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.REAL)
-    const NUM_NODES = 100
-    const MAX_CONNECTIONS = 20
-    const K = 4
 
     const getRandomNode = () => {
         return nodes[Math.floor(Math.random() * nodes.length)]
@@ -20,15 +22,13 @@ describe('Storing data in DHT', () => {
 
     beforeEach(async () => {
         nodes = []
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
+        entryPoint = await createMockConnectionDhtNode(simulator,
             undefined, K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId, simulator, 
+            const node = await createMockConnectionDhtNode(simulator,
                 undefined, K, MAX_CONNECTIONS, 60000)
             nodes.push(node)
         }

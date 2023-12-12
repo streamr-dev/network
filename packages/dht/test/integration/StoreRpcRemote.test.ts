@@ -1,30 +1,24 @@
 import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import {
-    NodeType,
-    PeerDescriptor,
     StoreDataRequest,
     StoreDataResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { generateId, mockStoreRpc } from '../utils/utils'
+import { createMockPeerDescriptor, mockStoreRpc } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { StoreRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { StoreRpcRemote } from '../../src/dht/store/StoreRpcRemote'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
+import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+
+const SERVICE_ID = 'test'
 
 describe('StoreRpcRemote', () => {
 
     let rpcRemote: StoreRpcRemote
     let clientRpcCommunicator: RpcCommunicator
     let serverRpcCommunicator: RpcCommunicator
-    const serviceId = 'test'
-    const clientPeerDescriptor: PeerDescriptor = {
-        nodeId: generateId('client'),
-        type: NodeType.NODEJS
-    }
-    const serverPeerDescriptor: PeerDescriptor = {
-        nodeId: generateId('server'),
-        type: NodeType.NODEJS
-    }
+    const clientPeerDescriptor = createMockPeerDescriptor()
+    const serverPeerDescriptor = createMockPeerDescriptor()
     const data = createMockDataEntry()
     const request: StoreDataRequest = {
         key: data.key,
@@ -43,7 +37,7 @@ describe('StoreRpcRemote', () => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new StoreRpcClient(clientRpcCommunicator.getRpcClientTransport()))
-        rpcRemote = new StoreRpcRemote(clientPeerDescriptor, serverPeerDescriptor, serviceId, client)
+        rpcRemote = new StoreRpcRemote(clientPeerDescriptor, serverPeerDescriptor, SERVICE_ID, client)
     })
 
     it('storeData happy path', async () => {
@@ -53,8 +47,11 @@ describe('StoreRpcRemote', () => {
 
     it('storeData rejects', async () => {
         serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', mockStoreRpc.throwStoreDataError)
-        await expect(rpcRemote.storeData(request))
-            .rejects.toThrowError('Could not store data to 736572766572 from 636c69656e74 Error: Mock')
+        await expect(rpcRemote.storeData(request)).rejects.toThrowError(
+            'Could not store data to'
+            + ` ${getNodeIdFromPeerDescriptor(serverPeerDescriptor)} from ${getNodeIdFromPeerDescriptor(clientPeerDescriptor)}`
+            + ' Error: Mock'
+        )
     })
 
     it('storeData response error', async () => {

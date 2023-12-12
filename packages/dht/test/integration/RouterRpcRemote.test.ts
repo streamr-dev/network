@@ -1,24 +1,19 @@
 import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { RouterRpcRemote } from '../../src/dht/routing/RouterRpcRemote'
-import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, MessageType, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RouterRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { createWrappedClosestPeersRequest, generateId, mockRouterRpc } from '../utils/utils'
+import { createMockPeerDescriptor, createWrappedClosestPeersRequest, mockRouterRpc } from '../utils/utils'
+
+const SERVICE_ID = 'test'
 
 describe('RemoteRouter', () => {
 
     let remoteRouter: RouterRpcRemote
     let clientRpcCommunicator: RpcCommunicator
     let serverRpcCommunicator: RpcCommunicator
-    const serviceId = 'test'
-    const clientPeerDescriptor: PeerDescriptor = {
-        nodeId: generateId('client'),
-        type: NodeType.NODEJS
-    }
-    const serverPeerDescriptor: PeerDescriptor = {
-        nodeId: generateId('server'),
-        type: NodeType.NODEJS
-    }
+    const clientPeerDescriptor = createMockPeerDescriptor()
+    const serverPeerDescriptor = createMockPeerDescriptor()
 
     beforeEach(() => {
         clientRpcCommunicator = new RpcCommunicator()
@@ -31,13 +26,13 @@ describe('RemoteRouter', () => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new RouterRpcClient(clientRpcCommunicator.getRpcClientTransport()))
-        remoteRouter = new RouterRpcRemote(clientPeerDescriptor, serverPeerDescriptor, serviceId, client)
+        remoteRouter = new RouterRpcRemote(clientPeerDescriptor, serverPeerDescriptor, SERVICE_ID, client)
     })
 
     it('routeMessage happy path', async () => {
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor)
         const routed: Message = {
-            serviceId,
+            serviceId: SERVICE_ID,
             messageId: 'routed',
             messageType: MessageType.RPC,
             body: {
@@ -60,7 +55,7 @@ describe('RemoteRouter', () => {
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', mockRouterRpc.throwRouteMessageError)
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor)
         const routed: Message = {
-            serviceId,
+            serviceId: SERVICE_ID,
             messageId: 'routed',
             messageType: MessageType.RPC,
             body: {
