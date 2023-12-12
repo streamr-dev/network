@@ -18,7 +18,7 @@ import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
 import * as BrokerConfigSchema from './config.schema.json'
 import { ConfigFile, getDefaultFile } from './config'
 
-export const start = async () => {
+export const start = async (): Promise<void> => {
     const logger = {
         info: (...args: any[]) => {
             console.info(chalk.bgWhite.black(':'), ...args)
@@ -38,15 +38,17 @@ export const start = async () => {
 
         const operatorPlugins = await getOperatorPlugins()
 
-        const { http: httpServer, ...pubsubPlugins } = await getPubsubPlugins()
+        const { http, ...pubsubPlugins } = await getPubsubPlugins()
 
-        if (httpServer) {
+        if (http) {
             Object.assign(pubsubPlugins, {
                 http: {},
             })
         }
 
         const storagePath = await getStoragePath()
+
+        const httpServer = http?.port ? { port: http.port } : void 0
 
         const config: ConfigFile = {
             $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
@@ -59,11 +61,7 @@ export const start = async () => {
                 ...operatorPlugins,
                 ...pubsubPlugins,
             },
-            httpServer: httpServer?.port
-                ? {
-                      port: httpServer.port,
-                  }
-                : void 0,
+            httpServer,
         }
 
         persistConfig(
@@ -130,9 +128,9 @@ async function getPrivateKey() {
             validate(value) {
                 try {
                     return !!new Wallet(value)
-                } catch (_) {}
-
-                return 'Invalid private key provided.'
+                } catch (_) {
+                    return 'Invalid private key provided.'
+                }
             },
         })
     })()
@@ -140,6 +138,7 @@ async function getPrivateKey() {
     if (privateKeySource === 'Generate') {
         await confirm({
             message:
+                // eslint-disable-next-line max-len
                 'We strongly recommend backing up your private key. It will be written into the config file, but would you also like to see this sensitive information on screen now?',
             default: false,
             transformer(value) {
@@ -195,7 +194,9 @@ async function getOperatorPlugins() {
     }
 }
 
-type PubsubPlugin = { port?: number }
+interface PubsubPlugin {
+    port?: number
+}
 
 type PubsubPluginKey = 'websocket' | 'mqtt' | 'http'
 
@@ -285,6 +286,7 @@ async function getPubsubPlugins() {
  * Lets the user decide where to write the config file.
  */
 async function getStoragePath() {
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         const path = await input({
             message: 'Select a path to store the generated config in',
@@ -326,7 +328,9 @@ function persistConfig(storagePath: string, config: ConfigFile) {
  */
 function getMumbaiConfig(config: ConfigFile): ConfigFile {
     return produce(config, (draft) => {
-        draft.client || (draft.client = {})
+        if (!draft.client) {
+            draft.client = {}
+        }
 
         draft.client.metrics = false
 

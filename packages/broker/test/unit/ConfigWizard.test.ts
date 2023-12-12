@@ -36,7 +36,7 @@ jest.mock('@inquirer/prompts', () => {
     }
 })
 
-type AnswerMock = {
+interface AnswerMock {
     prompt: jest.MockedFunction<any>
     question: RegExp
     action: (r: Awaited<ReturnType<typeof render>>) => Promise<void>
@@ -52,8 +52,6 @@ const ImportedPrivateKey =
 const OperatorAddress = '0x54d68882d5329397928787ec496da3ba8e45c48c'
 
 describe('Config wizard', () => {
-    let logs: string[] = []
-
     let tempDir = mkdtempSync(path.join(os.tmpdir(), 'test-config-wizard'))
 
     let storagePath = path.join(tempDir, 'config.json')
@@ -65,19 +63,6 @@ describe('Config wizard', () => {
 
         storagePath = path.join(tempDir, 'config.json')
 
-        logs = []
-
-        jest.spyOn(console, 'info').mockImplementation((...args: unknown[]) => {
-            const log = args
-                .join('')
-                .replace(/\x1B\[\d+m/g, '')
-                .trim()
-
-            if (log) {
-                logs.push(log)
-            }
-        })
-
         jest.spyOn(Wallet, 'createRandom').mockImplementation(
             () => new Wallet(GeneratedPrivateKey)
         )
@@ -88,21 +73,23 @@ describe('Config wizard', () => {
     })
 
     it('creates a config file with a generates private key', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
             false,
             false,
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -134,32 +121,36 @@ describe('Config wizard', () => {
     })
 
     it('prints out the generated private key onto the screen if told to', async () => {
-        await expect([
+        const { answers } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey({ type: 'Y' }, 'enter', {
                 find: GeneratedPrivateKey,
             }),
             Step.network('enter'),
             Step.rewards('abort'),
-        ]).toMatchAnswers('Generate', true, 'polygon')
+        ])
+
+        expect(answers).toEqual(['Generate', true, 'polygon'])
     })
 
     it('creates a config file with an imported private key', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource({ keypress: 'down' }, 'enter'),
             Step.providePrivateKey({ type: ImportedPrivateKey }, 'enter'),
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Import',
             ImportedPrivateKey,
             'polygon',
             false,
             false,
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -191,7 +182,7 @@ describe('Config wizard', () => {
     })
 
     it('validates given private key', async () => {
-        await expect([
+        const { answers } = await scenario([
             Step.privateKeySource({ keypress: 'down' }, 'enter'),
             Step.providePrivateKey(
                 { type: 'zzz' },
@@ -204,13 +195,15 @@ describe('Config wizard', () => {
                 'enter'
             ),
             Step.network('abort'),
-        ]).toMatchAnswers('Import', ImportedPrivateKey)
+        ])
+
+        expect(answers).toEqual(['Import', ImportedPrivateKey])
 
         expect(existsSync(storagePath)).toBe(false)
     })
 
     it('enables rewards (operator plugin)', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -218,15 +211,17 @@ describe('Config wizard', () => {
             Step.operator({ type: OperatorAddress }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
             true,
             OperatorAddress,
             false,
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -264,7 +259,7 @@ describe('Config wizard', () => {
     })
 
     it('validates the operator address', async () => {
-        await expect([
+        const { answers } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -280,13 +275,21 @@ describe('Config wizard', () => {
                 'enter'
             ),
             Step.pubsub('abort'),
-        ]).toMatchAnswers('Generate', false, 'polygon', true, OperatorAddress)
+        ])
+
+        expect(answers).toEqual([
+            'Generate',
+            false,
+            'polygon',
+            true,
+            OperatorAddress,
+        ])
 
         expect(existsSync(storagePath)).toBe(false)
     })
 
     it('enables websocket plugin on the default port', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -295,7 +298,9 @@ describe('Config wizard', () => {
             Step.pubsubPlugins({ keypress: 'space' }, 'enter'),
             Step.pubsubPort('enter'),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
@@ -303,8 +308,8 @@ describe('Config wizard', () => {
             true,
             'websocket',
             '7170',
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -340,7 +345,7 @@ describe('Config wizard', () => {
     })
 
     it('enables websocket plugin on a custom port', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -349,7 +354,9 @@ describe('Config wizard', () => {
             Step.pubsubPlugins({ keypress: 'space' }, 'enter'),
             Step.pubsubPort({ type: '2000' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
@@ -357,8 +364,8 @@ describe('Config wizard', () => {
             true,
             'websocket',
             '2000',
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -394,7 +401,7 @@ describe('Config wizard', () => {
     })
 
     it('enables mqtt plugin on the default port', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -407,7 +414,9 @@ describe('Config wizard', () => {
             ),
             Step.pubsubPort('enter'),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
@@ -415,8 +424,8 @@ describe('Config wizard', () => {
             true,
             'mqtt',
             '1883',
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -452,7 +461,7 @@ describe('Config wizard', () => {
     })
 
     it('enables mqtt plugin on a custom port', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -465,7 +474,9 @@ describe('Config wizard', () => {
             ),
             Step.pubsubPort({ type: '3000' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
@@ -473,8 +484,8 @@ describe('Config wizard', () => {
             true,
             'mqtt',
             '3000',
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -510,7 +521,7 @@ describe('Config wizard', () => {
     })
 
     it('enables http plugin on the default port', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -524,7 +535,9 @@ describe('Config wizard', () => {
             ),
             Step.pubsubPort('enter'),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
@@ -532,8 +545,8 @@ describe('Config wizard', () => {
             true,
             'http',
             '7171',
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -569,7 +582,7 @@ describe('Config wizard', () => {
     })
 
     it('enables http plugin on a custom port', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -583,7 +596,9 @@ describe('Config wizard', () => {
             ),
             Step.pubsubPort({ type: '4000' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
@@ -591,8 +606,8 @@ describe('Config wizard', () => {
             true,
             'http',
             '4000',
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -628,7 +643,7 @@ describe('Config wizard', () => {
     })
 
     it('enables all pubsub plugins on default ports', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -646,7 +661,9 @@ describe('Config wizard', () => {
             Step.pubsubPort('enter'),
             Step.pubsubPort('enter'),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
@@ -656,8 +673,8 @@ describe('Config wizard', () => {
             '7170',
             '1883',
             '7171',
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -697,7 +714,7 @@ describe('Config wizard', () => {
     })
 
     it('enables all pubsub plugins on custom ports', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -715,7 +732,9 @@ describe('Config wizard', () => {
             Step.pubsubPort({ type: '3000' }, 'enter'),
             Step.pubsubPort({ type: '4000' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
@@ -725,8 +744,8 @@ describe('Config wizard', () => {
             '2000',
             '3000',
             '4000',
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -766,7 +785,7 @@ describe('Config wizard', () => {
     })
 
     it('validates port number values', async () => {
-        await expect([
+        const { answers } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -784,20 +803,22 @@ describe('Config wizard', () => {
                 { find: /less than or equal to 49151/i },
                 'abort'
             ),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
             false,
             true,
-            'websocket'
-        )
+            'websocket',
+        ])
 
         expect(existsSync(storagePath)).toBe(false)
     })
 
     it('disallows duplicated ports', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -822,7 +843,9 @@ describe('Config wizard', () => {
                 'enter'
             ),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
@@ -831,8 +854,8 @@ describe('Config wizard', () => {
             'websocket,mqtt',
             '2000',
             '2001',
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -870,7 +893,7 @@ describe('Config wizard', () => {
     })
 
     it('disallows taking default ports if they are inexplicitly used', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -895,7 +918,9 @@ describe('Config wizard', () => {
                 'enter'
             ),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
@@ -904,8 +929,8 @@ describe('Config wizard', () => {
             'websocket,mqtt',
             '7170',
             '7179',
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -947,21 +972,23 @@ describe('Config wizard', () => {
 
         expect(existsSync(storagePath)).toBe(false)
 
-        await expect([
+        const { answers } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
             false,
             false,
-            storagePath
-        )
+            storagePath,
+        ])
 
         expect(existsSync(storagePath)).toBe(true)
 
@@ -985,7 +1012,7 @@ describe('Config wizard', () => {
             FOOBAR: true,
         })
 
-        await expect([
+        const { answers } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -993,15 +1020,17 @@ describe('Config wizard', () => {
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
             Step.overwriteStorage({ type: 'y' }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
             false,
             false,
             storagePath,
-            true
-        )
+            true,
+        ])
 
         expect(existsSync(storagePath)).toBe(true)
 
@@ -1029,7 +1058,7 @@ describe('Config wizard', () => {
 
         expect(otherStoragePath).not.toEqual(storagePath)
 
-        await expect([
+        const { answers } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
@@ -1038,7 +1067,9 @@ describe('Config wizard', () => {
             Step.storage({ type: storagePath }, 'enter'),
             Step.overwriteStorage('enter'),
             Step.storage({ type: otherStoragePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'polygon',
@@ -1046,8 +1077,8 @@ describe('Config wizard', () => {
             false,
             storagePath,
             false,
-            otherStoragePath
-        )
+            otherStoragePath,
+        ])
 
         config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -1067,7 +1098,7 @@ describe('Config wizard', () => {
     })
 
     it('creates a Mumbai-flavoured config file', async () => {
-        await expect([
+        const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network({ keypress: 'down' }, 'enter'),
@@ -1086,7 +1117,9 @@ describe('Config wizard', () => {
             Step.pubsubPort('enter'),
             Step.pubsubPort('enter'),
             Step.storage({ type: storagePath }, 'enter'),
-        ]).toMatchAnswers(
+        ])
+
+        expect(answers).toEqual([
             'Generate',
             false,
             'mumbai',
@@ -1097,8 +1130,8 @@ describe('Config wizard', () => {
             '7170',
             '1883',
             '7171',
-            storagePath
-        )
+            storagePath,
+        ])
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
@@ -1127,9 +1160,11 @@ describe('Config wizard', () => {
 
         expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config.client.network.controlLayer.entryPoints[0]).toMatchObject({
-            nodeId: expect.stringMatching(/\w/),
-        })
+        expect(config.client.network.controlLayer.entryPoints[0]).toMatchObject(
+            {
+                nodeId: expect.stringMatching(/\w/),
+            }
+        )
 
         expect(config.client.contracts).toMatchObject({
             streamRegistryChainAddress:
@@ -1290,102 +1325,87 @@ const Step: Record<
     }),
 }
 
-declare global {
-    namespace jest {
-        interface Matchers<R> {
-            toMatchAnswers(...answers: (string | boolean)[]): Promise<void>
-        }
-        interface ExpectExtendMap {
-            toMatchAnswers: (
-                this: jest.MatcherContext,
-                actual: AnswerMock[],
-                ...params: (string | boolean)[]
-            ) => Promise<jest.CustomMatcherResult>
-        }
-    }
+interface Scenario {
+    answers: (string | boolean)[]
+    logs: string[]
 }
 
-expect.extend({
-    async toMatchAnswers(mocks, ...expectedAnswers) {
-        let mocksCopy = [...mocks]
+async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
+    let mocksCopy = [...mocks]
 
-        const answers: (string | boolean)[] = []
+    function getActualPrompt(promptMock: jest.MockedFunction<any>) {
+        const inquirer = jest.requireActual('@inquirer/prompts')
 
-        function getActualPrompt(promptMock: jest.MockedFunction<any>) {
-            const inquirer = jest.requireActual('@inquirer/prompts')
-
-            switch (promptMock) {
-                case checkbox:
-                    return inquirer.checkbox
-                case confirm:
-                    return inquirer.confirm
-                case input:
-                    return inquirer.input
-                case password:
-                    return inquirer.password
-                case select:
-                    return inquirer.select
-                default:
-                    throw 'Unknown prompt mock'
-            }
+        switch (promptMock) {
+            case checkbox:
+                return inquirer.checkbox
+            case confirm:
+                return inquirer.confirm
+            case input:
+                return inquirer.input
+            case password:
+                return inquirer.password
+            case select:
+                return inquirer.select
+            default:
+                throw 'Unknown prompt mock'
         }
+    }
 
-        void [checkbox, confirm, input, password, select].forEach((prompt) => {
-            prompt.mockImplementation(async (config: any) => {
-                const inq = mocksCopy.find(
-                    (inq) =>
-                        inq.prompt === prompt &&
-                        inq.question.test(config.message)
-                )
+    const { answers, logs }: Scenario = {
+        answers: [],
+        logs: [],
+    }
 
-                if (!inq) {
-                    throw `Missing mock for ${chalk.whiteBright(
-                        `"${config.message}"`
-                    )}`
-                }
+    jest.spyOn(console, 'info').mockImplementation((...args: unknown[]) => {
+        const log = args
+            .join('')
+            // eslint-disable-next-line no-control-regex
+            .replace(/\x1B\[\d+m/g, '')
+            .trim()
 
-                mocksCopy = mocksCopy.filter((i) => i !== inq)
+        if (log) {
+            logs.push(log)
+        }
+    })
 
-                const r = await render(getActualPrompt(prompt), config)
+    void [checkbox, confirm, input, password, select].forEach((prompt) => {
+        prompt.mockImplementation(async (config: any) => {
+            const inq = mocksCopy.find(
+                (inq) =>
+                    inq.prompt === prompt && inq.question.test(config.message)
+            )
 
-                await inq.action(r)
+            if (!inq) {
+                throw `Missing mock for ${chalk.whiteBright(
+                    `"${config.message}"`
+                )}`
+            }
 
-                const answer = await r.answer
+            mocksCopy = mocksCopy.filter((i) => i !== inq)
 
-                answers.push(Array.isArray(answer) ? answer.join() : answer)
+            const r = await render(getActualPrompt(prompt), config)
 
-                return answer
-            })
+            await inq.action(r)
+
+            const answer = await r.answer
+
+            answers.push(Array.isArray(answer) ? answer.join() : answer)
+
+            return answer
         })
+    })
 
-        try {
-            await start()
-        } catch (e) {
-            if (
-                typeof e === 'string' &&
-                (/missing mock/i.test(e) || /failed to find/i.test(e))
-            ) {
-                return {
-                    message: () => e,
-                    pass: false,
-                }
-            }
-
-            if (e !== 'abort') {
-                throw e
-            }
+    try {
+        await start()
+    } catch (e) {
+        if (e !== 'abort') {
+            throw e
         }
+    }
 
-        return {
-            message: () =>
-                `Expected answers: ${expectedAnswers.join(
-                    ', '
-                )}\nReceived answers: ${answers
-                    .map((a, i) =>
-                        a === expectedAnswers[i] ? a : chalk.redBright(a)
-                    )
-                    .join(', ')}.`,
-            pass: JSON.stringify(expectedAnswers) === JSON.stringify(answers),
-        }
-    },
-})
+    return {
+        answers,
+        logs,
+    }
+}
