@@ -17,12 +17,7 @@ export interface ManagedConnectionEvents {
     closing: () => void
 }
 
-interface OutpuBufferEvents {
-    bufferSent: () => void
-    bufferSendingFailed: () => void
-}
-
-interface OutpuBufferEvents {
+interface OutputBufferEvents {
     bufferSent: () => void
     bufferSendingFailed: () => void
 }
@@ -35,7 +30,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     private implementation?: IConnection
 
-    private outputBufferEmitter = new EventEmitter<OutpuBufferEvents>()
+    private outputBufferEmitter = new EventEmitter<OutputBufferEvents>()
     private outputBuffer: Uint8Array[] = []
 
     private inputBuffer: Uint8Array[] = []
@@ -249,10 +244,10 @@ export class ManagedConnection extends EventEmitter<Events> {
         } else {
             logger.trace('adding data to outputBuffer')
 
-            let result: RunAndRaceEventsReturnType<OutpuBufferEvents>
+            let result: RunAndRaceEventsReturnType<OutputBufferEvents>
 
             try {
-                result = await runAndRaceEvents3<OutpuBufferEvents>([() => { this.outputBuffer.push(data) }],
+                result = await runAndRaceEvents3<OutputBufferEvents>([() => { this.outputBuffer.push(data) }],
                     this.outputBufferEmitter, ['bufferSent', 'bufferSendingFailed'], 15000)  // TODO use config option or named constant?
             } catch (e) {
                 logger.debug(`Connection to ${getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor)} timed out`, {
