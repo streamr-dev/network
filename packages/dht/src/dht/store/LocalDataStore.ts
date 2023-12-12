@@ -20,7 +20,7 @@ export class LocalDataStore {
 
     public storeEntry(dataEntry: DataEntry): boolean {
         const dataKey = PeerID.fromValue(dataEntry.key).toKey()
-        const creatorNodeId = getNodeIdFromBinary(dataEntry.creator!)
+        const creatorNodeId = getNodeIdFromBinary(dataEntry.creator)
         if (!this.store.has(dataKey)) {
             this.store.set(dataKey, new MapWithTtl((e) => Math.min(e.ttl, this.maxTtl)))
         }

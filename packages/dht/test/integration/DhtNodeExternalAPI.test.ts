@@ -49,7 +49,7 @@ describe('DhtNodeExternalApi', () => {
         await remote.storeDataViaPeer(key, data, dhtNode1.getLocalPeerDescriptor())
         const foundData = await remote.findDataViaPeer(key, dhtNode1.getLocalPeerDescriptor())
         expect(areEqualPeerDescriptors(Any.unpack(foundData[0].data!, PeerDescriptor), storedPeerDescriptor)).toEqual(true)
-        expect(getNodeIdFromBinary(foundData[0].creator!)).toEqual(getNodeIdFromPeerDescriptor(remote.getLocalPeerDescriptor()))
+        expect(getNodeIdFromBinary(foundData[0].creator)).toEqual(getNodeIdFromPeerDescriptor(remote.getLocalPeerDescriptor()))
     })
   
 })

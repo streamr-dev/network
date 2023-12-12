@@ -189,7 +189,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     private processFoundData(dataEntries: DataEntry[]): void {
         dataEntries.forEach((entry) => {
-            const creatorNodeId = getNodeIdFromBinary(entry.creator!)
+            const creatorNodeId = getNodeIdFromBinary(entry.creator)
             const existingEntry = this.foundData.get(creatorNodeId)
             if (!existingEntry || existingEntry.createdAt! < entry.createdAt! 
                 || (existingEntry.createdAt! <= entry.createdAt! && entry.deleted)) {

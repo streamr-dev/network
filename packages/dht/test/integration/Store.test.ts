@@ -80,7 +80,7 @@ describe('Storing data in DHT', () => {
         results.forEach((entry) => {
             const foundData = Any.unpack(entry.data!, PeerDescriptor)
             expect(areEqualPeerDescriptors(foundData, storedData)).toBeTrue()
-            expect(getNodeIdFromBinary(entry.creator!)).toEqual(getNodeIdFromPeerDescriptor(requestor))
+            expect(getNodeIdFromBinary(entry.creator)).toEqual(getNodeIdFromPeerDescriptor(requestor))
         })
     }, 30000)
 })

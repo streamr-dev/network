@@ -93,7 +93,7 @@ export class StoreManager {
                 })
             }
         } else if (!this.selfIsOneOfClosestPeers(dataEntry.key)) {
-            this.config.localDataStore.setStale(dataEntry.key, getNodeIdFromBinary(dataEntry.creator!), true)
+            this.config.localDataStore.setStale(dataEntry.key, getNodeIdFromBinary(dataEntry.creator), true)
         }
     }
 
