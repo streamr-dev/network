@@ -8,10 +8,6 @@ import { chmodSync, existsSync, mkdirSync, writeFileSync } from 'fs'
 import { produce } from 'immer'
 import path from 'path'
 import { z } from 'zod'
-import {
-    CURRENT_CONFIGURATION_VERSION,
-    formSchemaUrl,
-} from '../config/migration'
 import { generateMnemonicFromAddress } from '../helpers/generateMnemonicFromAddress'
 import * as MqttConfigSchema from '../plugins/mqtt/config.schema.json'
 import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
@@ -67,7 +63,6 @@ export const start = async (): Promise<void> => {
         const httpServer = http?.port ? { port: http.port } : void 0
 
         const config: ConfigFile = {
-            $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
             client: {
                 auth: {
                     privateKey,
