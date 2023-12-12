@@ -33,7 +33,7 @@ service RecursiveOperationSessionRpc {
 }
 
 service WebsocketConnectorRpc {
-  rpc requestConnection (WebsocketConnectionRequest) returns (WebsocketConnectionResponse);
+  rpc requestConnection (WebsocketConnectionRequest) returns (google.protobuf.Empty);
 }
 
 service WebrtcConnectorRpc {
@@ -243,10 +243,6 @@ message Message {
 
 // WebSocket
 message WebsocketConnectionRequest {
-}
-
-message WebsocketConnectionResponse {
-  bool accepted = 1;
 }
 
 // WebRTC

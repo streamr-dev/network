@@ -27,8 +27,6 @@ describe('RandomGraphNode-DhtNode', () => {
         })
     })
     beforeEach(async () => {
-
-        Simulator.useFakeTimers()
         const simulator = new Simulator()
         const entrypointCm = new SimulatorTransport(
             entrypointDescriptor,
@@ -86,7 +84,6 @@ describe('RandomGraphNode-DhtNode', () => {
         entryPointRandomGraphNode.stop()
         await Promise.all(layer1Nodes.map((node) => node.stop()))
         await Promise.all(graphNodes.map((node) => node.stop()))
-        Simulator.useFakeTimers(false)
     })
 
     it('happy path single node ', async () => {

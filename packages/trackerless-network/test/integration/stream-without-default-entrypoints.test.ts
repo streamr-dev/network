@@ -43,7 +43,6 @@ describe('stream without default entrypoints', () => {
     })
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
         const simulator = new Simulator(LatencyType.REAL)
         nodes = []
         numOfReceivedMessages = 0
@@ -78,7 +77,6 @@ describe('stream without default entrypoints', () => {
     afterEach(async () => {
         await entrypoint.stop()
         await Promise.all(nodes.map((node) => node.stop()))
-        Simulator.useFakeTimers(false)
     })
 
     it('can join stream without configured entrypoints one by one', async () => {

@@ -10,12 +10,10 @@ import {
     RouteMessageWrapper,
     StoreDataRequest,
     StoreDataResponse,
-    WebsocketConnectionResponse,
     RecursiveOperationRequest, 
     RecursiveOperation
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { PeerID } from '../../src/helpers/PeerID'
 import {
     IDhtNodeRpc,
     IRouterRpc,
@@ -32,33 +30,23 @@ import { wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { createRandomNodeId } from '../../src/helpers/nodeId'
 
-export const generateId = (stringId: string): Uint8Array => {
-    return PeerID.fromString(stringId).value
-}
-
-export const createMockPeerDescriptor = (): PeerDescriptor => {
+export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'nodeId'>>): PeerDescriptor => {
     return {
         nodeId: createRandomNodeId(),
         type: NodeType.NODEJS,
-    }  
+        ...opts
+    }
 }
 
 export const createMockConnectionDhtNode = async (
-    stringId: string,
     simulator: Simulator,
-    binaryId?: Uint8Array,
+    nodeId?: Uint8Array,
     numberOfNodesPerKBucket?: number,
     maxConnections = 80,
     dhtJoinTimeout = 45000
 ): Promise<DhtNode> => {
-    let id: PeerID
-    if (binaryId) {
-        id = PeerID.fromValue(binaryId)
-    } else {
-        id = PeerID.fromString(stringId)
-    }
     const peerDescriptor: PeerDescriptor = {
-        nodeId: id.value,
+        nodeId: nodeId ?? createRandomNodeId(),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
@@ -83,14 +71,12 @@ export const createMockConnectionDhtNode = async (
 }
 
 export const createMockConnectionLayer1Node = async (
-    stringId: string,
     layer0Node: DhtNode,
     serviceId?: string,
     numberOfNodesPerKBucket = 8
 ): Promise<DhtNode> => {
-    const id = PeerID.fromString(stringId)
     const descriptor: PeerDescriptor = {
-        nodeId: id.value,
+        nodeId: layer0Node.getLocalPeerDescriptor().nodeId,
         type: NodeType.NODEJS,
     }
     const node = new DhtNode({
@@ -135,36 +121,37 @@ interface IDhtRpcWithError extends IDhtNodeRpc {
     throwGetClosestPeersError: (request: ClosestPeersRequest) => Promise<ClosestPeersResponse>
 }
 
-export const MockDhtRpc: IDhtRpcWithError = {
-    async getClosestPeers(): Promise<ClosestPeersResponse> {
-        const neighbors = getMockPeers()
-        const response: ClosestPeersResponse = {
-            peers: neighbors,
-            requestId: 'why am i still here'
+export const createMockDhtRpc = (neighbors: PeerDescriptor[]): IDhtRpcWithError => {
+    return {
+        async getClosestPeers(): Promise<ClosestPeersResponse> {
+            const response: ClosestPeersResponse = {
+                peers: neighbors,
+                requestId: 'why am i still here'
+            }
+            return response
+        },
+        async ping(request: PingRequest): Promise<PingResponse> {
+            const response: PingResponse = {
+                requestId: request.requestId
+            }
+            return response
+        },
+        async leaveNotice(): Promise<Empty> {
+            return {}
+        },
+        async throwPingError(): Promise<PingResponse> {
+            throw new Error()
+        },
+        async respondPingWithTimeout(request: PingRequest): Promise<PingResponse> {
+            const response: PingResponse = {
+                requestId: request.requestId
+            }
+            await wait(2000)
+            return response
+        },
+        async throwGetClosestPeersError(): Promise<ClosestPeersResponse> {
+            throw new Error('Closest peers error')
         }
-        return response
-    },
-    async ping(request: PingRequest): Promise<PingResponse> {
-        const response: PingResponse = {
-            requestId: request.requestId
-        }
-        return response
-    },
-    async leaveNotice(): Promise<Empty> {
-        return {}
-    },
-    async throwPingError(): Promise<PingResponse> {
-        throw new Error()
-    },
-    async respondPingWithTimeout(request: PingRequest): Promise<PingResponse> {
-        const response: PingResponse = {
-            requestId: request.requestId
-        }
-        await wait(2000)
-        return response
-    },
-    async throwGetClosestPeersError(): Promise<ClosestPeersResponse> {
-        throw new Error('Closest peers error')
     }
 }
 
@@ -215,31 +202,16 @@ export const mockStoreRpc: IStoreRpcWithError = {
 }
 
 export const mockWebsocketConnectorRpc: IWebsocketConnectorRpc = {
-    async requestConnection(): Promise<WebsocketConnectionResponse> {
-        const responseConnection: WebsocketConnectionResponse = {
-            accepted: true
-        }
-        return responseConnection
+    async requestConnection(): Promise<Empty> {
+        return {}
     }
 }
 
-export const getMockPeers = (): PeerDescriptor[] => {
-    const n1: PeerDescriptor = {
-        nodeId: generateId('Neighbor1'),
-        type: NodeType.NODEJS,
-    }
-    const n2: PeerDescriptor = {
-        nodeId: generateId('Neighbor2'),
-        type: NodeType.NODEJS,
-    }
-    const n3: PeerDescriptor = {
-        nodeId: generateId('Neighbor3'),
-        type: NodeType.NODEJS,
-    }
-    const n4: PeerDescriptor = {
-        nodeId: generateId('Neighbor4'),
-        type: NodeType.NODEJS,
-    }
+export const createMockPeers = (): PeerDescriptor[] => {
+    const n1 = createMockPeerDescriptor()
+    const n2 = createMockPeerDescriptor()
+    const n3 = createMockPeerDescriptor()
+    const n4 = createMockPeerDescriptor()
     return [
         n1, n2, n3, n4
     ]

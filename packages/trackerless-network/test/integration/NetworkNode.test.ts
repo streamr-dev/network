@@ -30,7 +30,6 @@ describe('NetworkNode', () => {
     }
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
         const simulator = new Simulator()
         transport1 = new SimulatorTransport(pd1, simulator)
         await transport1.start()
@@ -65,7 +64,6 @@ describe('NetworkNode', () => {
             node1.stop(),
             node2.stop()
         ])
-        Simulator.useFakeTimers(false)
     })
 
     it('wait for join + broadcast and subscribe', async () => {

@@ -13,7 +13,6 @@ import { IceCandidate } from "./DhtRpc";
 import { RtcAnswer } from "./DhtRpc";
 import { RtcOffer } from "./DhtRpc";
 import { WebrtcConnectionRequest } from "./DhtRpc";
-import { WebsocketConnectionResponse } from "./DhtRpc";
 import { WebsocketConnectionRequest } from "./DhtRpc";
 import { RecursiveOperationResponse } from "./DhtRpc";
 import { ReplicateDataRequest } from "./DhtRpc";
@@ -94,9 +93,9 @@ export interface IRecursiveOperationSessionRpc<T = ServerCallContext> {
  */
 export interface IWebsocketConnectorRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: requestConnection(dht.WebsocketConnectionRequest) returns (dht.WebsocketConnectionResponse);
+     * @generated from protobuf rpc: requestConnection(dht.WebsocketConnectionRequest) returns (google.protobuf.Empty);
      */
-    requestConnection(request: WebsocketConnectionRequest, context: T): Promise<WebsocketConnectionResponse>;
+    requestConnection(request: WebsocketConnectionRequest, context: T): Promise<Empty>;
 }
 /**
  * @generated from protobuf service dht.WebrtcConnectorRpc

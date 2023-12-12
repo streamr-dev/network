@@ -1,38 +1,31 @@
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { getMockPeers, MockDhtRpc } from '../utils/utils'
+import { createMockDhtRpc, createMockPeerDescriptor, createMockPeers } from '../utils/utils'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
-    NodeType,
-    PeerDescriptor,
     PingRequest,
     PingResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { generateId } from '../utils/utils'
+
+const SERVICE_ID = 'test'
 
 describe('DhtNodeRpcRemote', () => {
 
     let rpcRemote: DhtNodeRpcRemote
     let clientRpcCommunicator: RpcCommunicator
     let serverRpcCommunicator: RpcCommunicator
-    const serviceId = 'test'
-    const clientPeerDescriptor: PeerDescriptor = {
-        nodeId: generateId('client'),
-        type: NodeType.NODEJS
-    }
-    const serverPeerDescriptor: PeerDescriptor = {
-        nodeId: generateId('server'),
-        type: NodeType.NODEJS
-    }
+    const clientPeerDescriptor = createMockPeerDescriptor()
+    const serverPeerDescriptor = createMockPeerDescriptor()
+    const mockDhtRpc = createMockDhtRpc(createMockPeers())
 
     beforeEach(() => {
         clientRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator = new RpcCommunicator()
-        serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.getClosestPeers)
-        serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
+        serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.getClosestPeers)
+        serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', mockDhtRpc.ping)
         clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             serverRpcCommunicator.handleIncomingMessage(message)
         })
@@ -40,7 +33,7 @@ describe('DhtNodeRpcRemote', () => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         const client = toProtoRpcClient(new DhtNodeRpcClient(clientRpcCommunicator.getRpcClientTransport()))
-        rpcRemote = new DhtNodeRpcRemote(clientPeerDescriptor, serverPeerDescriptor, client, serviceId)
+        rpcRemote = new DhtNodeRpcRemote(clientPeerDescriptor, serverPeerDescriptor, client, SERVICE_ID)
     })
 
     afterEach(() => {
@@ -55,17 +48,17 @@ describe('DhtNodeRpcRemote', () => {
 
     it('getClosestPeers happy path', async () => {
         const neighbors = await rpcRemote.getClosestPeers(clientPeerDescriptor.nodeId)
-        expect(neighbors.length).toEqual(getMockPeers().length)
+        expect(neighbors.length).toEqual(createMockPeers().length)
     })
 
     it('ping error path', async () => {
-        serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.throwPingError)
+        serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', mockDhtRpc.throwPingError)
         const active = await rpcRemote.ping()
         expect(active).toEqual(false)
     })
 
     it('getClosestPeers error path', async () => {
-        serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.throwGetClosestPeersError)
+        serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.throwGetClosestPeersError)
         await expect(rpcRemote.getClosestPeers(clientPeerDescriptor.nodeId))
             .rejects.toThrow('Closest peers error')
     })
