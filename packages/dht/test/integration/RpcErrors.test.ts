@@ -1,6 +1,5 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
-import { PeerID } from '../../src/helpers/PeerID'
 import { ITransport } from '../../src/transport/ITransport'
 import { v4 } from 'uuid'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
@@ -8,9 +7,12 @@ import { DhtRpcOptions } from '../../src/rpc-protocol/DhtRpcOptions'
 import { ListeningRpcCommunicator } from '../../src/transport/ListeningRpcCommunicator'
 import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { NodeType, PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { MetricsContext } from '@streamr/utils'
+import { createMockPeerDescriptor } from '../utils/utils'
+
+const SERVICE_ID = 'test'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
@@ -26,29 +28,14 @@ describe('RPC errors', () => {
 
     let manager1: ConnectionManager
     let manager2: ConnectionManager
-
     let rpcCommunicator1: ListeningRpcCommunicator
     let rpcCommunicator2: ListeningRpcCommunicator
-
     let client1: ProtoRpcClient<DhtNodeRpcClient>
-    //let client2: ProtoRpcClient<DhtNodeRpcClient>
-
     let simulator: Simulator
-
-    const peerDescriptor1: PeerDescriptor = {
-        nodeId: PeerID.fromString('peer1').value,
-        type: NodeType.NODEJS,
-    }
-
-    const peerDescriptor2: PeerDescriptor = {
-        nodeId: PeerID.fromString('peer2').value,
-        type: NodeType.NODEJS,
-    }
-
+    const peerDescriptor1 = createMockPeerDescriptor()
+    const peerDescriptor2 = createMockPeerDescriptor()
     let connectorTransport1: SimulatorTransport
     let connectorTransport2: SimulatorTransport
-
-    const serviceId = 'test'
 
     beforeEach(async () => {
 
@@ -56,13 +43,13 @@ describe('RPC errors', () => {
         connectorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         await connectorTransport1.start()
         manager1 = createConnectionManager(peerDescriptor1, connectorTransport1)
-        rpcCommunicator1 = new ListeningRpcCommunicator(serviceId, manager1)
+        rpcCommunicator1 = new ListeningRpcCommunicator(SERVICE_ID, manager1)
         client1 = toProtoRpcClient(new DhtNodeRpcClient(rpcCommunicator1.getRpcClientTransport()))
 
         connectorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
         await connectorTransport2.start()
         manager2 = createConnectionManager(peerDescriptor2, connectorTransport2)
-        rpcCommunicator2 = new ListeningRpcCommunicator(serviceId, manager2)
+        rpcCommunicator2 = new ListeningRpcCommunicator(SERVICE_ID, manager2)
         //client2 = toProtoRpcClient(new DhtNodeRpcClient(rpcCommunicator2.getRpcClientTransport()))
 
         await manager1.start()

@@ -1,24 +1,19 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createMockConnectionDhtNode } from '../utils/utils'
+import { createMockConnectionDhtNode, createMockPeerDescriptor } from '../utils/utils'
 
 const NUM_OF_NODES_PER_KBUCKET = 8
 
 const runTest = async (latencyType: LatencyType) => {
     const simulator = new Simulator(latencyType)
-    const entryPointId = '0'
-    const entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, undefined, NUM_OF_NODES_PER_KBUCKET)
-    const entrypointDescriptor = {
-        nodeId: entryPoint.getNodeId().value,
-        type: NodeType.NODEJS,
+    const entrypointDescriptor = createMockPeerDescriptor({
         region: getRandomRegion()
-    }
+    })
+    const entryPoint = await createMockConnectionDhtNode(simulator, entrypointDescriptor.nodeId, NUM_OF_NODES_PER_KBUCKET)
     const nodes: DhtNode[] = []
     for (let i = 1; i < 100; i++) {
-        const nodeId = `${i}`
-        const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, NUM_OF_NODES_PER_KBUCKET)
+        const node = await createMockConnectionDhtNode(simulator, undefined, NUM_OF_NODES_PER_KBUCKET)
         nodes.push(node)
     }
 

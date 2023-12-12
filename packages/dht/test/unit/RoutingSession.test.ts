@@ -1,29 +1,19 @@
 import { v4 } from 'uuid'
 import { RoutingSession } from '../../src/dht/routing/RoutingSession'
-import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createWrappedClosestPeersRequest } from '../utils/utils'
-import { hexToBinary } from '@streamr/utils'
-import { PeerIDKey } from '../../src/helpers/PeerID'
+import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
-import { keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { NodeID } from '../../src/helpers/nodeId'
 
 describe('RoutingSession', () => {
 
     let session: RoutingSession
-    let connections: Map<PeerIDKey, DhtNodeRpcRemote>
+    let connections: Map<NodeID, DhtNodeRpcRemote>
     let rpcCommunicator: RoutingRpcCommunicator
-
-    const mockPeerDescriptor1: PeerDescriptor = {
-        nodeId: hexToBinary('eee1'),
-        type: NodeType.NODEJS
-    }
-
-    const mockPeerDescriptor2 = {
-        nodeId: hexToBinary('eee2'),
-        type: NodeType.NODEJS
-    }
-
+    const mockPeerDescriptor1 = createMockPeerDescriptor()
+    const mockPeerDescriptor2 = createMockPeerDescriptor()
     const rpcWrapper = createWrappedClosestPeersRequest(mockPeerDescriptor1)
     const message: Message = {
         serviceId: 'unknown',
@@ -61,15 +51,15 @@ describe('RoutingSession', () => {
     })
 
     it('findMoreContacts', () => {
-        connections.set(keyFromPeerDescriptor(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
+        connections.set(getNodeIdFromPeerDescriptor(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
         const contacts = session.updateAndGetRoutablePeers()
         expect(contacts.length).toBe(1)
     })
 
     it('findMoreContacts peer disconnects', () => {
-        connections.set(keyFromPeerDescriptor(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
+        connections.set(getNodeIdFromPeerDescriptor(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
         expect(session.updateAndGetRoutablePeers().length).toBe(1)
-        connections.delete(keyFromPeerDescriptor(mockPeerDescriptor2))
+        connections.delete(getNodeIdFromPeerDescriptor(mockPeerDescriptor2))
         expect(session.updateAndGetRoutablePeers().length).toBe(0)
     })
 

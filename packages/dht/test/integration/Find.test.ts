@@ -4,6 +4,10 @@ import { PeerDescriptor, RecursiveOperation } from '../../src/proto/packages/dht
 import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { hexToBinary } from '@streamr/utils'
+
+const NUM_NODES = 100
+const K = 2
 
 describe('Find correctness', () => {
 
@@ -11,18 +15,14 @@ describe('Find correctness', () => {
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.REAL)
-    const NUM_NODES = 100
-    const K = 2
 
     beforeEach(async () => {
         nodes = []
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, undefined, K)
+        entryPoint = await createMockConnectionDhtNode(simulator, undefined, K)
         nodes.push(entryPoint)
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, 20, 60000)
+            const node = await createMockConnectionDhtNode(simulator, undefined, K, 20, 60000)
             nodes.push(node)
         }
         await entryPoint.joinDht([entrypointDescriptor])
@@ -38,7 +38,7 @@ describe('Find correctness', () => {
     })
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
-        const targetId = nodes[45].getNodeId().value
+        const targetId = hexToBinary(nodes[45].getNodeId())
         const results = await entryPoint.executeRecursiveOperation(targetId, RecursiveOperation.FIND_NODE)
         expect(results.closestNodes.length).toBeGreaterThanOrEqual(5)
         expect(PeerID.fromValue(targetId).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))

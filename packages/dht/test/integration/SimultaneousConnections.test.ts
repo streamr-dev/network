@@ -6,6 +6,17 @@ import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTran
 import { PeerID } from '../../src/helpers/PeerID'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { createMockPeerDescriptor } from '../utils/utils'
+
+const BASE_MESSAGE: Message = {
+    serviceId: 'serviceId',
+    messageType: MessageType.RPC,
+    messageId: '1',
+    body: {
+        oneofKind: 'rpcMessage',
+        rpcMessage: RpcMessage.create()
+    }
+}
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
     return new ConnectionManager({
@@ -22,26 +33,8 @@ describe('SimultaneousConnections', () => {
     let simulator: Simulator
     let simTransport1: SimulatorTransport
     let simTransport2: SimulatorTransport
-
-    const peerDescriptor1 = {
-        nodeId: PeerID.fromString('mock1').value,
-        type: NodeType.NODEJS
-    }
-
-    const peerDescriptor2 = {
-        nodeId: PeerID.fromString('mock2').value,
-        type: NodeType.NODEJS
-    }
-
-    const baseMsg: Message = {
-        serviceId: 'serviceId',
-        messageType: MessageType.RPC,
-        messageId: '1',
-        body: {
-            oneofKind: 'rpcMessage',
-            rpcMessage: RpcMessage.create()
-        }
-    }
+    const peerDescriptor1 = createMockPeerDescriptor()
+    const peerDescriptor2 = createMockPeerDescriptor()
 
     beforeEach(async () => {
         simulator = new Simulator()
@@ -58,11 +51,11 @@ describe('SimultaneousConnections', () => {
 
     it('simultanous simulated connection', async () => {
         const msg1: Message = {
-            ...baseMsg,
+            ...BASE_MESSAGE,
             targetDescriptor: peerDescriptor2
         }
         const msg2: Message = {
-            ...baseMsg,
+            ...BASE_MESSAGE,
             targetDescriptor: peerDescriptor1
         }
 
@@ -151,11 +144,11 @@ describe('SimultaneousConnections', () => {
 
         it('Simultaneous Connections', async () => {
             const msg1: Message = {
-                ...baseMsg,
+                ...BASE_MESSAGE,
                 targetDescriptor: wsPeerDescriptor2
             }
             const msg2: Message = {
-                ...baseMsg,
+                ...BASE_MESSAGE,
                 targetDescriptor: wsPeerDescriptor1
             }
 
@@ -235,11 +228,11 @@ describe('SimultaneousConnections', () => {
 
         it('Simultaneous Connections', async () => {
             const msg1: Message = {
-                ...baseMsg,
+                ...BASE_MESSAGE,
                 targetDescriptor: wsPeerDescriptor2
             }
             const msg2: Message = {
-                ...baseMsg,
+                ...BASE_MESSAGE,
                 targetDescriptor: wsPeerDescriptor1
             }
 
@@ -310,11 +303,11 @@ describe('SimultaneousConnections', () => {
 
         it('Simultaneous Connections', async () => {
             const msg1: Message = {
-                ...baseMsg,
+                ...BASE_MESSAGE,
                 targetDescriptor: wrtcPeerDescriptor2
             }
             const msg2: Message = {
-                ...baseMsg,
+                ...BASE_MESSAGE,
                 targetDescriptor: wrtcPeerDescriptor1
             }
 

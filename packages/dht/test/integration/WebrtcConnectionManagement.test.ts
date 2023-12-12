@@ -2,13 +2,13 @@ import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { MetricsContext } from '@streamr/utils'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
@@ -24,19 +24,9 @@ describe('WebRTC Connection Management', () => {
 
     let manager1: ConnectionManager
     let manager2: ConnectionManager
-
     let simulator: Simulator
-
-    const peerDescriptor1: PeerDescriptor = {
-        nodeId: PeerID.fromString('peer1').value,
-        type: NodeType.NODEJS,
-    }
-
-    const peerDescriptor2: PeerDescriptor = {
-        nodeId: PeerID.fromString('peer2').value,
-        type: NodeType.NODEJS,
-    }
-
+    const peerDescriptor1 = createMockPeerDescriptor()
+    const peerDescriptor2 = createMockPeerDescriptor()
     let connectorTransport1: SimulatorTransport
     let connectorTransport2: SimulatorTransport
 
@@ -208,5 +198,34 @@ describe('WebRTC Connection Management', () => {
 
         await disconnectedPromise1
 
+    }, 20000)
+
+    it('failed connections are cleaned up', async () => {
+        const msg: Message = {
+            serviceId,
+            messageType: MessageType.RPC,
+            messageId: '1',
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
+        }
+
+        const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
+            manager1.on('disconnected', () => {
+                resolve()
+            })
+        })
+
+        msg.targetDescriptor = {
+            nodeId: new Uint8Array([0, 0, 0, 0, 0]),
+            type: NodeType.NODEJS,
+        }
+        
+        await Promise.allSettled([
+            manager1.send(msg),
+            disconnectedPromise1
+        ])
+        expect(manager1.getConnection(msg.targetDescriptor!)).toBeUndefined()
     }, 20000)
 })

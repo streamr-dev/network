@@ -4,9 +4,9 @@ import { Handshaker } from './Handshaker'
 import { HandshakeError, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import { PeerIDKey } from '../helpers/PeerID'
-import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
+import { NodeID } from '../helpers/nodeId'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
@@ -56,6 +56,9 @@ export class ManagedConnection extends EventEmitter<Events> {
     private localPeerDescriptor: PeerDescriptor
     protected outgoingConnection?: IConnection
     protected incomingConnection?: IConnection
+
+    // TODO: Temporary debug variable, should be removed in the future.
+    private created = Date.now()
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
@@ -163,8 +166,8 @@ export class ManagedConnection extends EventEmitter<Events> {
         return this
     }
 
-    public get peerIdKey(): PeerIDKey {
-        return keyFromPeerDescriptor(this.remotePeerDescriptor!)
+    public getNodeId(): NodeID {
+        return getNodeIdFromPeerDescriptor(this.remotePeerDescriptor!)
     }
 
     public getLastUsed(): number {
@@ -252,7 +255,12 @@ export class ManagedConnection extends EventEmitter<Events> {
                 result = await runAndRaceEvents3<OutpuBufferEvents>([() => { this.outputBuffer.push(data) }],
                     this.outputBufferEmitter, ['bufferSent', 'bufferSendingFailed'], 15000)  // TODO use config option or named constant?
             } catch (e) {
-                logger.debug(`Connection to ${getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor)} timed out`)
+                logger.debug(`Connection to ${getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor)} timed out`, {
+                    peerDescriptor: this.remotePeerDescriptor,
+                    type: this.connectionType,
+                    lifetime: Date.now() - this.created
+                })
+                await this.close(false)
                 throw new Err.SendFailed('Sending buffer timed out')
             }
 
@@ -307,6 +315,9 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {
+        if (this.closing) {
+            return
+        }
         if (this.replacedByOtherConnection) {
             logger.trace('close() called on replaced connection')
         }
