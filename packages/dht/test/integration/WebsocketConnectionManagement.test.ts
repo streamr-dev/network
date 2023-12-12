@@ -12,6 +12,8 @@ import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 
+const SERVICE_ID = 'test'
+
 const createConfig = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
     return {
         createConnectorFacade: () => new DefaultConnectorFacade({
@@ -24,13 +26,10 @@ const createConfig = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultCon
 
 describe('Websocket Connection Management', () => {
 
-    const serviceId = 'test'
     let wsServerManager: ConnectionManager
     let noWsServerManager: ConnectionManager
     let biggerNoWsServerManager: ConnectionManager
-
     const simulator = new Simulator()
-
     const wsServerConnectorPeerDescriptor: PeerDescriptor = {
         nodeId: PeerID.fromString('2').value,
         type: NodeType.NODEJS,
@@ -40,12 +39,10 @@ describe('Websocket Connection Management', () => {
             tls: false
         }
     }
-
     const noWsServerConnectorPeerDescriptor: PeerDescriptor = {
         nodeId: PeerID.fromString('1').value,
         type: NodeType.NODEJS,
     }
-
     const biggerNoWsServerConnectorPeerDescriptor: PeerDescriptor = {
         nodeId: PeerID.fromString('3').value,
         type: NodeType.NODEJS,
@@ -96,7 +93,7 @@ describe('Websocket Connection Management', () => {
 
     it('Can open connections to serverless peer with smaller peerId', (done) => {
         const dummyMessage: Message = {
-            serviceId,
+            serviceId: SERVICE_ID,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
@@ -118,7 +115,7 @@ describe('Websocket Connection Management', () => {
 
     it('Can open connections to serverless peer with bigger peerId', (done) => {
         const dummyMessage: Message = {
-            serviceId,
+            serviceId: SERVICE_ID,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
@@ -140,7 +137,7 @@ describe('Websocket Connection Management', () => {
 
     it('Failed connection requests are cleaned up', async () => {
         const dummyMessage: Message = {
-            serviceId,
+            serviceId: SERVICE_ID,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
@@ -162,7 +159,7 @@ describe('Websocket Connection Management', () => {
     
     it('Can open connections to peer with server', async () => {
         const dummyMessage: Message = {
-            serviceId,
+            serviceId: SERVICE_ID,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
@@ -185,7 +182,7 @@ describe('Websocket Connection Management', () => {
 
     it('Connecting to self throws', async () => {
         const dummyMessage: Message = {
-            serviceId,
+            serviceId: SERVICE_ID,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
