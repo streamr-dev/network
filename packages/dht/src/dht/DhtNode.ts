@@ -32,7 +32,6 @@ import {
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Any } from '../proto/google/protobuf/any'
 import {
-    areEqualPeerDescriptors,
     getNodeIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
@@ -298,10 +297,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.storeManager!.onNewContact(peerDescriptor)
         })
         this.bindRpcLocalMethods()
-        if ((this.connectionManager !== undefined) && (this.config.entryPoints !== undefined) && this.config.entryPoints.length > 0
-            && !areEqualPeerDescriptors(this.config.entryPoints[0], this.localPeerDescriptor!)) {
-            this.connectToEntryPoint(this.config.entryPoints[0])
-        }
     }
 
     private initPeerManager() {
@@ -427,13 +422,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public getNumberOfNeighbors(): number {
         return this.peerManager!.getNumberOfNeighbors()
-    }
-
-    private connectToEntryPoint(entryPoint: PeerDescriptor): void {
-        this.connectionManager!.lockConnection(entryPoint, 'temporary-layer0-connection')
-        this.entryPointDisconnectTimeout = setTimeout(() => {
-            this.connectionManager!.unlockConnection(entryPoint, 'temporary-layer0-connection')
-        }, 10 * 1000)  // TODO use config option or named constant?
     }
 
     public removeContact(contact: PeerDescriptor): void {
