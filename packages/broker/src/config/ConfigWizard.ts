@@ -1,8 +1,8 @@
 import { checkbox, confirm, input, password, select } from '@inquirer/prompts'
-import { config as cfg } from '@streamr/config'
+import { config as cfg, config } from '@streamr/config'
 import { toEthereumAddress } from '@streamr/utils'
 import chalk from 'chalk'
-import { Wallet } from 'ethers'
+import { BigNumber, Wallet, ethers, providers, utils } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { chmodSync, existsSync, mkdirSync, writeFileSync } from 'fs'
 import { produce } from 'immer'
@@ -14,41 +14,53 @@ import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
 import * as BrokerConfigSchema from './config.schema.json'
 import { ConfigFile, getDefaultFile } from './config'
 
+const MinBalance = utils.parseEther('0.1')
+
 export const start = async (): Promise<void> => {
-    const logger = {
-        info: (...args: any[]) => {
-            console.info(chalk.bgGrey(' '), ...args)
-        },
-        error: (...args: any[]) => {
-            console.error(chalk.bgRed.black('!'), ...args)
-        },
+    function notify(...args: unknown[]) {
+        console.info(chalk.bgGrey(' '), ...args)
     }
 
     console.info()
 
-    logger.info()
+    notify()
 
-    logger.info(' ', chalk.whiteBright.bold('Welcome to the Streamr Network!'))
+    notify(' ', chalk.whiteBright.bold('Welcome to the Streamr Network!'))
 
-    logger.info(' ', 'This Config Wizard will help you setup your node.')
+    notify(' ', 'This Config Wizard will help you setup your node.')
 
-    logger.info(' ', 'The steps are documented here:')
+    notify(' ', 'The steps are documented here:')
 
-    logger.info(
+    notify(
         ' ',
         'https://docs.streamr.network/guides/how-to-run-streamr-node#config-wizard'
     )
 
-    logger.info()
+    notify()
 
     console.info()
 
     try {
+        await getOperatorNodeAddresses(
+            'mumbai',
+            '0x840dfd80761a12eed54d0c3b05abeda4bb7ee9d8'
+        )
+
         const privateKey = await getPrivateKey()
+
+        const nodeAddress = new Wallet(privateKey).address
 
         const network = await getNetwork()
 
-        const operatorPlugins = await getOperatorPlugins()
+        const operator = await getOperatorAddress()
+
+        const operatorPlugins = operator
+            ? {
+                  operator: {
+                      operatorContractAddress: operator,
+                  },
+              }
+            : {}
 
         const { http, ...pubsubPlugins } = await getPubsubPlugins()
 
@@ -82,46 +94,95 @@ export const start = async (): Promise<void> => {
 
         console.info()
 
-        logger.info()
+        notify()
 
-
-        logger.info(
+        notify(
             chalk.greenBright('✓'),
             chalk.bold.whiteBright(
                 `Congratulations, you've set up your Streamr Network node!`
             )
         )
 
-        logger.info(
-            ` `,
-            `Your node address is ${chalk.greenBright(
-                new Wallet(privateKey).address
-            )}`
-        )
+        notify(` `, `Your node address is ${chalk.greenBright(nodeAddress)}`)
 
-        logger.info(
+        if (operator) {
+            try {
+                const balance = await getNativeBalance(network, nodeAddress)
+
+                let content = `Your node address has ${formatBalance(balance)}`
+
+                if (balance.lt(MinBalance)) {
+                    content = `${content}. You'll need to fund it with a small amount of MATIC tokens.`
+                }
+
+                notify(
+                    balance.lt(MinBalance) ? chalk.yellowBright('!') : ` `,
+                    content
+                )
+            } catch (e) {
+                notify(
+                    chalk.redBright('✗'),
+                    "Fetching your node's balance failed"
+                )
+            }
+        }
+
+        notify(
             ` `,
             `Your node's generated name is ${chalk.greenBright(
                 getNodeMnemonic(privateKey)
             )}`
         )
 
-        logger.info()
+        if (operator) {
+            try {
+                const nodes = await getOperatorNodeAddresses(network, operator)
 
-        logger.info(` `, `You can start your Streamr node now with`)
+                const hub =
+                    network === 'polygon'
+                        ? 'https://streamr.network/hub'
+                        : 'https://mumbai.streamr.network/hub'
 
-        logger.info(` `, chalk.whiteBright(`streamr-broker ${storagePath}`))
+                if (!nodes.includes(nodeAddress.toLowerCase())) {
+                    notify()
 
-        logger.info()
+                    notify(
+                        chalk.yellowBright('!'),
+                        `You will need to pair your node with your Operator:`
+                    )
 
-        logger.info(` `, `For environment specific run instructions, see`)
+                    notify(
+                        ` `,
+                        chalk.whiteBright(
+                            `${hub}/network/operators/${operator}`
+                        )
+                    )
+                }
+            } catch (e) {
+                notify()
 
-        logger.info(
+                notify(chalk.redBright('✗'), 'Failed to fetch operator nodes')
+            }
+        }
+
+        notify()
+
+        notify(` `, `You can start your Streamr node now with`)
+
+        notify(` `, chalk.whiteBright(`streamr-broker ${storagePath}`))
+
+        notify()
+
+        notify(` `, `For environment specific run instructions, see`)
+
+        notify(
             ` `,
-            `https://docs.streamr.network/guides/how-to-run-streamr-node`
+            chalk.whiteBright(
+                `https://docs.streamr.network/guides/how-to-run-streamr-node`
+            )
         )
 
-        logger.info()
+        notify()
 
         console.info()
     } catch (e: any) {
@@ -205,7 +266,7 @@ async function getNetwork() {
 /**
  * Lets the user gather and configure desired operator plugins.
  */
-async function getOperatorPlugins() {
+async function getOperatorAddress() {
     const setupOperator = await confirm({
         message:
             'Do you wish to participate in earning rewards by staking on stream Sponsorships?',
@@ -213,19 +274,17 @@ async function getOperatorPlugins() {
     })
 
     if (!setupOperator) {
-        return {}
+        return undefined
     }
 
-    return {
-        operator: {
-            operatorContractAddress: await input({
-                message: 'Enter your Operator address:',
-                validate(value) {
-                    return isAddress(value) ? true : 'Invalid ethereum address'
-                },
-            }),
+    const operator = await input({
+        message: 'Enter your Operator address:',
+        validate(value) {
+            return isAddress(value) ? true : 'Invalid ethereum address'
         },
-    }
+    })
+
+    return operator.toLowerCase()
 }
 
 interface PubsubPlugin {
@@ -399,4 +458,51 @@ function getMumbaiConfig(config: ConfigFile): ConfigFile {
             theGraphUrl,
         }
     })
+}
+
+async function getNativeBalance(
+    network: 'polygon' | 'mumbai',
+    address: string
+): Promise<BigNumber> {
+    const url = config[network].rpcEndpoints[0]?.url || ''
+
+    if (!/^https?:/i.test(url)) {
+        throw new Error('Invalid RPC')
+    }
+
+    return new providers.JsonRpcProvider(url).getBalance(address)
+}
+
+function formatBalance(value: BigNumber): string {
+    return chalk.whiteBright(
+        `${utils
+            .formatEther(value)
+            .replace(/\.(\d+)/, (f) => f.substring(0, 3))} MATIC`
+    )
+}
+
+async function getOperatorNodeAddresses(
+    network: 'polygon' | 'mumbai',
+    operatorAddress: string
+): Promise<string[]> {
+    const url = config[network].theGraphUrl
+
+    const resp = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({
+            query: `query {operator(id: "${operatorAddress}") {nodes}}`,
+        }),
+    })
+
+    const { data } = z
+        .object({
+            data: z.object({
+                operator: z.object({ nodes: z.array(z.string()) }),
+            }),
+        })
+        .parse(await resp.json())
+
+    return data.operator.nodes
+
+    return [] as string[]
 }
