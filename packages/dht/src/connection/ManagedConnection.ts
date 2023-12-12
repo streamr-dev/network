@@ -13,8 +13,6 @@ export interface ManagedConnectionEvents {
     handshakeRequest: (source: PeerDescriptor, target?: PeerDescriptor) => void
     handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
     handshakeFailed: () => void
-    bufferSentByOtherConnection: () => void
-    closing: () => void
 }
 
 interface OutputBufferEvents {
@@ -284,7 +282,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         logger.trace('bufferSentByOtherConnection reported')
         this.bufferSentbyOtherConnection = true
         this.outputBufferEmitter.emit('bufferSent')
-        this.emit('bufferSentByOtherConnection')
     }
 
     public acceptHandshake(): void {
@@ -319,7 +316,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.closing = true
         
         this.outputBufferEmitter.emit('bufferSendingFailed')
-        this.emit('closing')
        
         if (this.implementation) {
             await this.implementation?.close(gracefulLeave)
@@ -334,8 +330,6 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     public destroy(): void {
         this.closing = true
-        
-        this.emit('closing')
         if (!this.stopped) {
             this.stopped = true
 
