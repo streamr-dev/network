@@ -5,28 +5,20 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { 
     Message,
     MessageType,
-    NodeType,
     PeerDescriptor,
     RouteMessageAck,
     RouteMessageError,
     RouteMessageWrapper
 } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createWrappedClosestPeersRequest } from '../utils/utils'
+import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 import { NodeID } from '../../src/helpers/nodeId'
 
 describe('Router', () => {
-    let router: Router
 
-    const peerId = PeerID.fromString('router')
-    const peerDescriptor1: PeerDescriptor = {
-        nodeId: peerId.value,
-        type: NodeType.NODEJS
-    }
-    const peerDescriptor2: PeerDescriptor = {
-        nodeId: PeerID.fromString('destination').value,
-        type: NodeType.NODEJS
-    }
+    let router: Router
+    const peerDescriptor1 = createMockPeerDescriptor()
+    const peerDescriptor2 = createMockPeerDescriptor()
     const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1)
     const message: Message = {
         serviceId: 'unknown',
