@@ -21,15 +21,31 @@ import { ConfigFile, getDefaultFile } from './config'
 export const start = async (): Promise<void> => {
     const logger = {
         info: (...args: any[]) => {
-            console.info(chalk.bgWhite.black(':'), ...args)
+            console.info(chalk.bgGrey(' '), ...args)
         },
         error: (...args: any[]) => {
             console.error(chalk.bgRed.black('!'), ...args)
         },
-        success: (tick: boolean, ...args: unknown[]) => {
-            console.info(tick ? chalk.greenBright('✓') : ' ', ...args)
-        },
     }
+
+    console.info()
+
+    logger.info()
+
+    logger.info(' ', chalk.whiteBright.bold('Welcome to the Streamr Network!'))
+
+    logger.info(' ', 'This Config Wizard will help you setup your node.')
+
+    logger.info(' ', 'The steps are documented here:')
+
+    logger.info(
+        ' ',
+        'https://docs.streamr.network/guides/how-to-run-streamr-node#config-wizard'
+    )
+
+    logger.info()
+
+    console.info()
 
     try {
         const privateKey = await getPrivateKey()
@@ -69,27 +85,45 @@ export const start = async (): Promise<void> => {
             network === 'polygon' ? config : getMumbaiConfig(config)
         )
 
-        const lines = [
+        console.info()
+
+        logger.info(
+            chalk.greenBright('✓'),
             chalk.bold.whiteBright(
                 `Congratulations, you've set up your Streamr Network node!`
-            ),
+            )
+        )
+
+        logger.info(
+            ` `,
             `Your node address is ${chalk.greenBright(
                 new Wallet(privateKey).address
-            )}`,
+            )}`
+        )
+
+        logger.info(
+            ` `,
             `Your node's generated name is ${chalk.greenBright(
                 getNodeMnemonic(privateKey)
-            )}`,
-            ``,
-            `You can start your Streamr node now with`,
-            chalk.whiteBright(`streamr-broker ${storagePath}`),
-            ``,
-            `For environment specific run instructions, see`,
-            `https://docs.streamr.network/guides/how-to-run-streamr-node`,
-        ]
+            )}`
+        )
 
-        logger.success(false)
+        logger.info()
 
-        lines.forEach((line, index) => logger.success(!index, line))
+        logger.info(` `, `You can start your Streamr node now with`)
+
+        logger.info(` `, chalk.whiteBright(`streamr-broker ${storagePath}`))
+
+        logger.info()
+
+        logger.info(` `, `For environment specific run instructions, see`)
+
+        logger.info(
+            ` `,
+            `https://docs.streamr.network/guides/how-to-run-streamr-node`
+        )
+
+        console.info()
     } catch (e: any) {
         if (typeof e.message === 'string' && /force closed/i.test(e.message)) {
             return
