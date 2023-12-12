@@ -12,7 +12,6 @@ const K = 4
 
 describe('Storing data in DHT', () => {
 
-    let entryPoint: DhtNode
     let nodes: DhtNode[]
     const simulator = new Simulator(LatencyType.REAL)
 
@@ -22,7 +21,7 @@ describe('Storing data in DHT', () => {
 
     beforeEach(async () => {
         nodes = []
-        entryPoint = await createMockConnectionDhtNode(simulator,
+        const entryPoint = await createMockConnectionDhtNode(simulator,
             createRandomNodeId(), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
