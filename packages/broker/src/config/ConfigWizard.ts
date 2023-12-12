@@ -87,6 +87,9 @@ export const start = async (): Promise<void> => {
 
         console.info()
 
+        logger.info()
+
+
         logger.info(
             chalk.greenBright('✓'),
             chalk.bold.whiteBright(
@@ -122,6 +125,8 @@ export const start = async (): Promise<void> => {
             ` `,
             `https://docs.streamr.network/guides/how-to-run-streamr-node`
         )
+
+        logger.info()
 
         console.info()
     } catch (e: any) {
