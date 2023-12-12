@@ -1,8 +1,7 @@
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DataEntry } from '../../proto/packages/dht/protos/DhtRpc'
 import { MapWithTtl } from '../../helpers/MapWithTtl'
-import { NodeID } from '../../helpers/nodeId'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
 
 type Key = Uint8Array
 
@@ -21,7 +20,7 @@ export class LocalDataStore {
 
     public storeEntry(dataEntry: DataEntry): boolean {
         const dataKey = PeerID.fromValue(dataEntry.key).toKey()
-        const creatorNodeId = getNodeIdFromPeerDescriptor(dataEntry.creator!)
+        const creatorNodeId = getNodeIdFromBinary(dataEntry.creator!)
         if (!this.store.has(dataKey)) {
             this.store.set(dataKey, new MapWithTtl((e) => Math.min(e.ttl, this.maxTtl)))
         }

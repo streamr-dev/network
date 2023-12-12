@@ -22,9 +22,9 @@ export interface StoreDataRequest {
      */
     data?: Any;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor creator = 3;
+     * @generated from protobuf field: bytes creator = 3;
      */
-    creator?: PeerDescriptor;
+    creator: Uint8Array;
     /**
      * @generated from protobuf field: google.protobuf.Timestamp createdAt = 4;
      */
@@ -87,9 +87,9 @@ export interface DataEntry {
      */
     data?: Any;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor creator = 3;
+     * @generated from protobuf field: bytes creator = 3;
      */
-    creator?: PeerDescriptor;
+    creator: Uint8Array;
     /**
      * @generated from protobuf field: google.protobuf.Timestamp createdAt = 4;
      */
@@ -675,7 +675,7 @@ class StoreDataRequest$Type extends MessageType$<StoreDataRequest> {
         super("dht.StoreDataRequest", [
             { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "data", kind: "message", T: () => Any },
-            { no: 3, name: "creator", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "creator", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 4, name: "createdAt", kind: "message", T: () => Timestamp },
             { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
@@ -740,7 +740,7 @@ class DataEntry$Type extends MessageType$<DataEntry> {
         super("dht.DataEntry", [
             { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "data", kind: "message", T: () => Any },
-            { no: 3, name: "creator", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "creator", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 4, name: "createdAt", kind: "message", T: () => Timestamp },
             { no: 5, name: "storedAt", kind: "message", T: () => Timestamp },
             { no: 6, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },

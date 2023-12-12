@@ -3,8 +3,8 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { createMockConnectionDhtNode, createMockPeerDescriptor } from '../utils/utils'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { createRandomNodeId, getNodeIdFromBinary } from '../../src/helpers/nodeId'
 
 describe('DhtNodeExternalApi', () => {
 
@@ -49,7 +49,7 @@ describe('DhtNodeExternalApi', () => {
         await remote.storeDataViaPeer(key, data, dhtNode1.getLocalPeerDescriptor())
         const foundData = await remote.findDataViaPeer(key, dhtNode1.getLocalPeerDescriptor())
         expect(areEqualPeerDescriptors(Any.unpack(foundData[0].data!, PeerDescriptor), storedPeerDescriptor)).toEqual(true)
-        expect(areEqualPeerDescriptors(foundData[0].creator!, remote.getLocalPeerDescriptor())).toEqual(true)
+        expect(getNodeIdFromBinary(foundData[0].creator!)).toEqual(getNodeIdFromPeerDescriptor(remote.getLocalPeerDescriptor()))
     })
   
 })

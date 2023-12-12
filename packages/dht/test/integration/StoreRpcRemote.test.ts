@@ -10,6 +10,7 @@ import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { StoreRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { StoreRpcRemote } from '../../src/dht/store/StoreRpcRemote'
 import { Any } from '../../src/proto/google/protobuf/any'
+import { createRandomNodeId } from '../../src/helpers/nodeId'
 
 describe('StoreRpcRemote', () => {
 
@@ -29,6 +30,7 @@ describe('StoreRpcRemote', () => {
     const request: StoreDataRequest = {
         key: clientPeerDescriptor.nodeId,
         data,
+        creator: createRandomNodeId(),
         ttl: 10
     }
 
