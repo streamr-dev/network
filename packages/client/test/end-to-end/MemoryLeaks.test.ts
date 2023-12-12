@@ -260,15 +260,22 @@ describe('MemoryLeaks', () => {
                     const sub1Done = new Defer<undefined>()
                     const received1: any[] = []
                     const SOME_MESSAGES = Math.floor(MAX_MESSAGES / 2)
+                    let unsubscribePromise: Promise<void> | undefined
+                    
                     let sub1: Subscription | undefined = await client.subscribe(stream, async (msg: any) => {
                         received1.push(msg)
                         if (received1.length === SOME_MESSAGES) {
                             if (!sub1) { return }
-                            await sub1.unsubscribe()
+                            
+                            // For some reason awaiting the unsubscribe to finish
+                            // inside the callback hangs, so we do it outside
+                            
+                            unsubscribePromise = sub1.unsubscribe()
                             // unsub early
                             sub1Done.resolve(undefined)
                         }
                     })
+                   
                     const sub1LeakId = 'sub1 ' + instanceId(sub1)
                     leaksDetector.add(sub1LeakId, sub1)
 
@@ -286,6 +293,7 @@ describe('MemoryLeaks', () => {
                     await publishTestMessages(MAX_MESSAGES)
                     await sub1Done
                     await sub2Done
+                    await unsubscribePromise
                     // eslint-disable-next-line require-atomic-updates
                     sub1 = undefined
                     await wait(1000)
