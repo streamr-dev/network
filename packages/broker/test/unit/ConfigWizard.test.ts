@@ -116,14 +116,9 @@ describe('Config wizard', () => {
 
         expect(config.plugins).toBeEmptyObject()
 
-        expect('httpServer' in config).toBe(false)
+        expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config).not.toMatchObject({
-            client: {
-                contracts: expect.anything(),
-                network: expect.anything(),
-            },
-        })
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
         const summary = logs.join('\n')
 
@@ -138,7 +133,7 @@ describe('Config wizard', () => {
         expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
     })
 
-    it('prints out the generated private key onto the screen', async () => {
+    it('prints out the generated private key onto the screen if told to', async () => {
         await expect([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey({ type: 'Y' }, 'enter', {
@@ -178,14 +173,9 @@ describe('Config wizard', () => {
 
         expect(config.plugins).toBeEmptyObject()
 
-        expect('httpServer' in config).toBe(false)
+        expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config).not.toMatchObject({
-            client: {
-                contracts: expect.anything(),
-                network: expect.anything(),
-            },
-        })
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
         const summary = logs.join('\n')
 
@@ -256,14 +246,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect('httpServer' in config).toBe(false)
+        expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config).not.toMatchObject({
-            client: {
-                contracts: expect.anything(),
-                network: expect.anything(),
-            },
-        })
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
         const summary = logs.join('\n')
 
@@ -300,7 +285,7 @@ describe('Config wizard', () => {
         expect(existsSync(storagePath)).toBe(false)
     })
 
-    it('enables WebSocket plugin on the default port', async () => {
+    it('enables websocket plugin on the default port', async () => {
         await expect([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
@@ -337,14 +322,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect('httpServer' in config).toBe(false)
+        expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config).not.toMatchObject({
-            client: {
-                contracts: expect.anything(),
-                network: expect.anything(),
-            },
-        })
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
         const summary = logs.join('\n')
 
@@ -359,7 +339,7 @@ describe('Config wizard', () => {
         expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
     })
 
-    it('enables WebSocket plugin on a custom port', async () => {
+    it('enables websocket plugin on a custom port', async () => {
         await expect([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
@@ -396,14 +376,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect('httpServer' in config).toBe(false)
+        expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config).not.toMatchObject({
-            client: {
-                contracts: expect.anything(),
-                network: expect.anything(),
-            },
-        })
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
         const summary = logs.join('\n')
 
@@ -418,7 +393,7 @@ describe('Config wizard', () => {
         expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
     })
 
-    it('enables MQTT plugin on the default port', async () => {
+    it('enables mqtt plugin on the default port', async () => {
         await expect([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
@@ -459,14 +434,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect('httpServer' in config).toBe(false)
+        expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config).not.toMatchObject({
-            client: {
-                contracts: expect.anything(),
-                network: expect.anything(),
-            },
-        })
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
         const summary = logs.join('\n')
 
@@ -481,7 +451,7 @@ describe('Config wizard', () => {
         expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
     })
 
-    it('enables MQTT plugin on a custom port', async () => {
+    it('enables mqtt plugin on a custom port', async () => {
         await expect([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
@@ -522,14 +492,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect('httpServer' in config).toBe(false)
+        expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config).not.toMatchObject({
-            client: {
-                contracts: expect.anything(),
-                network: expect.anything(),
-            },
-        })
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
         const summary = logs.join('\n')
 
@@ -544,7 +509,7 @@ describe('Config wizard', () => {
         expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
     })
 
-    it('enables HTTP plugin on the default port', async () => {
+    it('enables http plugin on the default port', async () => {
         await expect([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
@@ -586,14 +551,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect('httpServer' in config).toBe(false)
+        expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config).not.toMatchObject({
-            client: {
-                contracts: expect.anything(),
-                network: expect.anything(),
-            },
-        })
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
         const summary = logs.join('\n')
 
@@ -608,7 +568,7 @@ describe('Config wizard', () => {
         expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
     })
 
-    it('enables HTTP plugin on a custom port', async () => {
+    it('enables http plugin on a custom port', async () => {
         await expect([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
@@ -652,12 +612,7 @@ describe('Config wizard', () => {
 
         expect(config.httpServer.port).toEqual(4000)
 
-        expect(config).not.toMatchObject({
-            client: {
-                contracts: expect.anything(),
-                network: expect.anything(),
-            },
-        })
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
         const summary = logs.join('\n')
 
@@ -724,14 +679,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect('httpServer' in config).toBe(false)
+        expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config).not.toMatchObject({
-            client: {
-                contracts: expect.anything(),
-                network: expect.anything(),
-            },
-        })
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
         const summary = logs.join('\n')
 
@@ -800,12 +750,7 @@ describe('Config wizard', () => {
 
         expect(config.httpServer.port).toEqual(4000)
 
-        expect(config).not.toMatchObject({
-            client: {
-                contracts: expect.anything(),
-                network: expect.anything(),
-            },
-        })
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
         const summary = logs.join('\n')
 
@@ -907,14 +852,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect('httpServer' in config).toBe(false)
+        expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config).not.toMatchObject({
-            client: {
-                contracts: expect.anything(),
-                network: expect.anything(),
-            },
-        })
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
         const summary = logs.join('\n')
 
@@ -985,14 +925,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect('httpServer' in config).toBe(false)
+        expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config).not.toMatchObject({
-            client: {
-                contracts: expect.anything(),
-                network: expect.anything(),
-            },
-        })
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
         const summary = logs.join('\n')
 
@@ -1131,7 +1066,7 @@ describe('Config wizard', () => {
         })
     })
 
-    it('creates a Mumbai environment config file', async () => {
+    it('creates a Mumbai-flavoured config file', async () => {
         await expect([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
@@ -1167,8 +1102,6 @@ describe('Config wizard', () => {
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
-        console.log(readFileSync(storagePath).toString('utf-8'))
-
         expect(config).toMatchObject({
             client: {
                 auth: {
@@ -1192,7 +1125,7 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect('httpServer' in config).toBe(false)
+        expect(config).not.toContainAnyKeys(['httpServer'])
 
         expect(config.client.network.controlLayer.entryPoints[0]).toMatchObject({
             nodeId: expect.stringMatching(/\w/),
