@@ -101,6 +101,8 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
                 }
                 return
             }).catch((err) => {
+                // if the interleave request fails the connections is likely lost. 
+                // The disconnect listener in RandomGraphNode should handle clean up.
                 logger.trace('interleaveRequest failed', err)
             }).finally(() => {
                 this.config.ongoingInterleaves.delete(nodeId)

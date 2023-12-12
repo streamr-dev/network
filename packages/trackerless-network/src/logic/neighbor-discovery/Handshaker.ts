@@ -62,7 +62,7 @@ export class Handshaker implements IHandshaker {
             createDeliveryRpcRemote: (target: PeerDescriptor) => this.createDeliveryRpcRemote(target)
         })
         this.config.rpcCommunicator.registerRpcMethod(InterleaveRequest, InterleaveResponse, 'interleaveRequest',
-            (req: InterleaveRequest, context) => this.rpcLocal.interleaveRequest(req, context), { timeout: 3000 })
+            (req: InterleaveRequest, context) => this.rpcLocal.interleaveRequest(req, context), { timeout: 4000 })
         this.config.rpcCommunicator.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake',
             (req: StreamPartHandshakeRequest, context) => this.rpcLocal.handshake(req, context))
     }

@@ -46,7 +46,7 @@ export class HandshakeRpcRemote extends RpcRemote<IHandshakeRpcClient> {
         }
         const options = this.formDhtRpcOptions({
             doNotConnect: true,
-            timeout: 2500
+            timeout: 3000
         })
         try {
             const res = await this.getClient().interleaveRequest(request, options)
