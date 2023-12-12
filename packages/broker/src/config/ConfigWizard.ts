@@ -2,7 +2,7 @@ import { checkbox, confirm, input, password, select } from '@inquirer/prompts'
 import { config as cfg, config } from '@streamr/config'
 import { toEthereumAddress } from '@streamr/utils'
 import chalk from 'chalk'
-import { BigNumber, Wallet, ethers, providers, utils } from 'ethers'
+import { BigNumber, Wallet, providers, utils } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { chmodSync, existsSync, mkdirSync, writeFileSync } from 'fs'
 import { produce } from 'immer'
@@ -41,11 +41,6 @@ export const start = async (): Promise<void> => {
     console.info()
 
     try {
-        await getOperatorNodeAddresses(
-            'mumbai',
-            '0x840dfd80761a12eed54d0c3b05abeda4bb7ee9d8'
-        )
-
         const privateKey = await getPrivateKey()
 
         const nodeAddress = new Wallet(privateKey).address
@@ -99,13 +94,22 @@ export const start = async (): Promise<void> => {
         notify(
             chalk.greenBright('✓'),
             chalk.bold.whiteBright(
-                `Congratulations, you've set up your Streamr Network node!`
+                `Congratulations, you've setup your Streamr node!`
             )
         )
 
         notify(` `, `Your node address is ${chalk.greenBright(nodeAddress)}`)
 
         if (operator) {
+            const resume = progress(
+                (f) =>
+                    `${chalk.bgGrey(
+                        ' '
+                    )}   Your node address has ${chalk.whiteBright(
+                        `${chalk.gray(f)} MATIC`
+                    )} ${chalk.gray(`– checking balance…`)}`
+            )
+
             try {
                 const balance = await getNativeBalance(network, nodeAddress)
 
@@ -115,11 +119,15 @@ export const start = async (): Promise<void> => {
                     content = `${content}. You'll need to fund it with a small amount of MATIC tokens.`
                 }
 
+                resume()
+
                 notify(
                     balance.lt(MinBalance) ? chalk.yellowBright('!') : ` `,
                     content
                 )
             } catch (e) {
+                resume()
+
                 notify(
                     chalk.redBright('✗'),
                     "Fetching your node's balance failed"
@@ -135,6 +143,15 @@ export const start = async (): Promise<void> => {
         )
 
         if (operator) {
+            notify()
+
+            const resume = progress(
+                (f) =>
+                    `${chalk.bgGrey(' ')}   ${chalk.gray(
+                        `Checking if your node has been paired with your Operator… ${f}`
+                    )}`
+            )
+
             try {
                 const nodes = await getOperatorNodeAddresses(network, operator)
 
@@ -143,23 +160,23 @@ export const start = async (): Promise<void> => {
                         ? 'https://streamr.network/hub'
                         : 'https://mumbai.streamr.network/hub'
 
-                if (!nodes.includes(nodeAddress.toLowerCase())) {
-                    notify()
+                resume()
 
+                if (!nodes.includes(nodeAddress.toLowerCase())) {
                     notify(
                         chalk.yellowBright('!'),
                         `You will need to pair your node with your Operator:`
                     )
-
-                    notify(
-                        ` `,
-                        chalk.whiteBright(
-                            `${hub}/network/operators/${operator}`
-                        )
-                    )
+                } else {
+                    notify(` `, `Your node has been paired with your Operator:`)
                 }
+
+                notify(
+                    ` `,
+                    chalk.whiteBright(`${hub}/network/operators/${operator}`)
+                )
             } catch (e) {
-                notify()
+                resume()
 
                 notify(chalk.redBright('✗'), 'Failed to fetch operator nodes')
             }
@@ -503,6 +520,36 @@ async function getOperatorNodeAddresses(
         .parse(await resp.json())
 
     return data.operator.nodes
+}
 
-    return [] as string[]
+function progress(fn: (frame: string) => string): () => void {
+    const frames = '◢◣◤◥'
+
+    let frameNo = 0
+
+    let intervalId: NodeJS.Timeout | undefined
+
+    function tick() {
+        process.stdout.clearLine(0)
+
+        process.stdout.cursorTo(0)
+
+        process.stdout.write(fn(frames[frameNo]))
+
+        frameNo = (frameNo + 1) % frames.length
+
+        setTimeout
+    }
+
+    tick()
+
+    intervalId = setInterval(tick, 400)
+
+    return () => {
+        clearInterval(intervalId)
+
+        process.stdout.clearLine(0)
+
+        process.stdout.cursorTo(0)
+    }
 }
