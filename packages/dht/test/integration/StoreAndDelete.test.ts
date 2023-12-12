@@ -25,7 +25,6 @@ describe('Storing data in DHT', () => {
         entryPoint = await createMockConnectionDhtNode(simulator,
             createRandomNodeId(), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
-        nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
             const node = await createMockConnectionDhtNode(simulator, 
                 undefined, K, MAX_CONNECTIONS, 60000)
