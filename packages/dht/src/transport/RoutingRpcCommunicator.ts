@@ -43,7 +43,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
             const sendOpts = (msg.header.response !== undefined)
                 ? {
                     // typically we already have a connection, but if it has disconnected for some reason
-                    // maybe the receiver has gone offline (or it is no longer a neighbord) and therefore there
+                    // the receiver could have gone offline (or it is no longer a neighbor) and therefore there
                     // is no point for trying form a new connection
                     connect: false,
                     // TODO maybe this options could be removed?
