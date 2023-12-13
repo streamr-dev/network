@@ -40,7 +40,10 @@ export const getEthersOverrides = (config: Pick<StrictStreamrClientConfig, 'cont
     const overrides = chainConfig.overrides ?? {}
     if (chainConfig.highGasPriceStrategy) {
         const primaryProvider = getStreamRegistryChainProviders(config)[0]
-        const gasPriceStrategy = (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000') 
+        const gasPriceStrategy = (estimatedGasPrice: BigNumber) => {
+            const INCREASE_PERCENTAGE = 30
+            return estimatedGasPrice.mul(100 + INCREASE_PERCENTAGE).div(100)
+        }
         return {
             ...overrides,
             gasPrice: primaryProvider.getGasPrice().then(gasPriceStrategy)
