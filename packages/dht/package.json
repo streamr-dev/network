@@ -40,7 +40,6 @@
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
     "node-datachannel": "^0.4.3",
-    "sinon": "15.1.2",
     "uuid": "^9.0.1",
     "websocket": "^1.0.34"
   },
