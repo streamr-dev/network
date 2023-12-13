@@ -95,6 +95,9 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
             // Run this with then catch instead of setImmediate to avoid changes in state
             // eslint-disable-next-line promise/catch-or-return
             remote.interleaveRequest(requester).then((response) => {
+                // If response is accepted, remove the furthest node from the target neighbors
+                // and unlock the connection
+                // If response is not accepted, keep the furthest node as a neighbor
                 if (response.accepted) {
                     this.config.targetNeighbors.remove(furthest.getPeerDescriptor())
                     this.config.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.config.streamPartId)
