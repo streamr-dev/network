@@ -1,14 +1,14 @@
 import {
     AutoCertifierClient,
     HasSessionRequest,
-    HasSessionResponse, 
+    HasSessionResponse,
     CertifiedSubdomain,
     SERVICE_ID as AUTO_CERTIFIER_SERVICE_ID,
     HasSession
 } from '@streamr/autocertifier-client'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { Logger, waitForEvent3 } from '@streamr/utils'
-import { ITransport } from '../../transport/ITransport' 
+import { Logger, withTimeout } from '@streamr/utils'
+import { ITransport } from '../../transport/ITransport'
 
 const START_TIMEOUT = 60 * 1000
 
@@ -20,14 +20,14 @@ const defaultAutoCertifierClientFactory = (
 ) => new AutoCertifierClient(
     configFile,
     wsServerPort,
-    autoCertifierUrl, 
+    autoCertifierUrl,
     (_serviceId: string, rpcMethodName: string, method: HasSession) => {
         autoCertifierRpcCommunicator.registerRpcMethod(
             HasSessionRequest,
             HasSessionResponse,
             rpcMethodName,
             method
-        )                       
+        )
     }
 )
 
@@ -36,7 +36,6 @@ export interface IAutoCertifierClient {
     stop(): void
     on(eventName: string, cb: (subdomain: CertifiedSubdomain) => void): void
 }
-
 interface AutoCertifierClientFacadeConfig {
     url: string
     configFile: string
@@ -57,12 +56,13 @@ export class AutoCertifierClientFacade {
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly setHost: (host: string) => void
     private readonly updateCertificate: (certificate: string, privateKey: string) => void
+    private abortController = new AbortController()
 
     constructor(config: AutoCertifierClientFacadeConfig) {
         this.setHost = config.setHost
         this.updateCertificate = config.updateCertificate
         this.rpcCommunicator = new ListeningRpcCommunicator(AUTO_CERTIFIER_SERVICE_ID, config.transport)
-        this.autoCertifierClient = config.createClientFactory ? config.createClientFactory() 
+        this.autoCertifierClient = config.createClientFactory ? config.createClientFactory()
             : defaultAutoCertifierClientFactory(
                 config.configFile,
                 config.url,
@@ -77,13 +77,18 @@ export class AutoCertifierClientFacade {
             this.updateCertificate(subdomain.certificate, subdomain.privateKey)
             logger.trace(`Updated certificate`)
         })
-        await Promise.all([
-            waitForEvent3(this.autoCertifierClient as any, 'updatedCertificate', START_TIMEOUT),
-            this.autoCertifierClient.start()
-        ])
+
+        // waiting for 'updatedCertificate' event is not needed here because
+        // all paths of this.autoCertifierClient.start() will block until 'updatedCertificate' 
+        // event is emitted or an exception is thrown
+
+        await withTimeout(this.autoCertifierClient.start(), START_TIMEOUT,
+            'AutoCertifierClient.start() timed out', this.abortController.signal)
+
     }
 
     stop(): void {
+        this.abortController.abort()
         this.autoCertifierClient.stop()
         this.rpcCommunicator.destroy()
     }
