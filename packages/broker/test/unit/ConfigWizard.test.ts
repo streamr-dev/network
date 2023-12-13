@@ -1608,11 +1608,9 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
 
     jest.spyOn(process.stdout, 'write').mockImplementation(() => true)
 
-    if (typeof process.stdout.cursorTo === 'function') {
+    if (process.stdout.isTTY) {
         jest.spyOn(process.stdout, 'cursorTo').mockImplementation(() => true)
-    }
 
-    if (typeof process.stdout.clearLine === 'function') {
         jest.spyOn(process.stdout, 'clearLine').mockImplementation(() => true)
     }
 

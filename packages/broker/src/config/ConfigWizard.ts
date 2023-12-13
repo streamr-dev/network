@@ -478,9 +478,11 @@ function progress(fn: (frame: string) => string): () => void {
     let frameNo = 0
 
     function tick() {
-        process.stdout.clearLine(0)
+        if (process.stdout.isTTY) {
+            process.stdout.clearLine(0)
 
-        process.stdout.cursorTo(0)
+            process.stdout.cursorTo(0)
+        }
 
         process.stdout.write(fn(frames[frameNo]))
 
@@ -494,9 +496,11 @@ function progress(fn: (frame: string) => string): () => void {
     return () => {
         clearInterval(intervalId)
 
-        process.stdout.clearLine(0)
+        if (process.stdout.isTTY) {
+            process.stdout.clearLine(0)
 
-        process.stdout.cursorTo(0)
+            process.stdout.cursorTo(0)
+        }
     }
 }
 
