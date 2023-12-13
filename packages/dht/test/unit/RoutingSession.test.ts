@@ -45,7 +45,7 @@ describe('RoutingSession', () => {
         session = new RoutingSession({
             rpcCommunicator: rpcCommunicator,
             localPeerDescriptor: mockPeerDescriptor1,
-            messageToRoute: routedMessage,
+            routedMessage,
             connections, 
             parallelism: 2,
             mode: RoutingMode.ROUTE

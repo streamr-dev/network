@@ -68,7 +68,7 @@ export enum RoutingMode { ROUTE, FORWARD, RECURSIVE }
 interface RoutingSessionConfig {
     rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
-    messageToRoute: RouteMessageWrapper
+    routedMessage: RouteMessageWrapper
     connections: Map<NodeID, DhtNodeRpcRemote>
     parallelism: number
     mode: RoutingMode
@@ -88,10 +88,10 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     constructor(config: RoutingSessionConfig) {
         super()
         this.config = config
-        const previousPeer = getPreviousPeer(config.messageToRoute)
+        const previousPeer = getPreviousPeer(config.routedMessage)
         const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
         this.contactList = new SortedContactList({
-            referenceId: getNodeIdFromPeerDescriptor(config.messageToRoute.destinationPeer!),
+            referenceId: getNodeIdFromPeerDescriptor(config.routedMessage.destinationPeer!),
             maxSize: 10000,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             nodeIdDistanceLimit: previousId,
@@ -150,8 +150,8 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             return false
         }
         const msg = {
-            ...this.config.messageToRoute,
-            routingPath: this.config.messageToRoute.routingPath.concat([this.config.localPeerDescriptor])
+            ...this.config.routedMessage,
+            routingPath: this.config.routedMessage.routingPath.concat([this.config.localPeerDescriptor])
         }
         if (this.config.mode === RoutingMode.FORWARD) {
             return contact.getRouterRpcRemote().forwardMessage(msg)

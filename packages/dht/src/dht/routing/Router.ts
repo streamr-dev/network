@@ -167,20 +167,20 @@ export class Router implements IRouter {
     }
 
     private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedNode?: PeerDescriptor): RoutingSession {
-        const excludedPeers = new Set<NodeID>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
+        const excludedNodeIDs = new Set<NodeID>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
         if (excludedNode) {
-            excludedPeers.add(getNodeIdFromPeerDescriptor(excludedNode))
+            excludedNodeIDs.add(getNodeIdFromPeerDescriptor(excludedNode))
         }
         logger.trace('routing session created with connections: ' + this.config.connections.size)
         return new RoutingSession({
             rpcCommunicator: this.config.rpcCommunicator,
             localPeerDescriptor: this.config.localPeerDescriptor,
-            messageToRoute: routedMessage,
+            routedMessage,
             connections: this.config.connections,
             // TODO use config option or named constant?
             parallelism: areEqualPeerDescriptors(this.config.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
-            excludedNodeIDs: excludedPeers
+            excludedNodeIDs
         })
     }
 
