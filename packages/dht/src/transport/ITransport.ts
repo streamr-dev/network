@@ -7,8 +7,13 @@ export interface TransportEvents {
 }
 
 export interface SendOptions {
-    doNotConnect?: boolean
-    doNotMindStopped?: boolean
+    connect: boolean
+    sendIfStopped: boolean
+}
+
+export const DEFAULT_SEND_OPTIONS = {
+    connect: true,
+    sendIfStopped: false
 }
 
 export interface ITransport {

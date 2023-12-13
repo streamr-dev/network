@@ -5,5 +5,6 @@ export interface DhtRpcOptions extends ProtoRpcOptions {
     targetDescriptor?: PeerDescriptor
     sourceDescriptor?: PeerDescriptor
     clientId?: number
-    doNotConnect?: boolean
+    connect?: boolean
+    sendIfStopped?: boolean
 }
