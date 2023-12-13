@@ -14,7 +14,7 @@ export interface SortedContactListConfig {
     // if set, the list can't contain any contacts which are futher away than this limit
     nodeIdDistanceLimit?: NodeID
     // if set, the list can't contain contacts with these ids
-    excludedNodeIDs?: Set<NodeID>
+    excludedNodeIds?: Set<NodeID>
 }
 
 export class SortedContactList<C extends { getNodeId: () => NodeID }> extends EventEmitter<Events<C>> {
@@ -40,7 +40,7 @@ export class SortedContactList<C extends { getNodeId: () => NodeID }> extends Ev
     }
 
     public addContact(contact: C): void {
-        if (this.config.excludedNodeIDs !== undefined && this.config.excludedNodeIDs.has(contact.getNodeId())) {
+        if (this.config.excludedNodeIds !== undefined && this.config.excludedNodeIds.has(contact.getNodeId())) {
             return
         }
 

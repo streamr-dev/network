@@ -28,19 +28,9 @@ interface ForwardingTableEntry {
     peerDescriptors: PeerDescriptor[]
 }
 
-export interface IRouter {
-    doRouteMessage(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RouteMessageAck
-    send(msg: Message, reachableThrough: PeerDescriptor[]): void
-    isMostLikelyDuplicate(requestId: string): boolean
-    addToDuplicateDetector(requestId: string): void
-    addRoutingSession(session: RoutingSession): void
-    removeRoutingSession(sessionId: string): void
-    stop(): void
-}
-
 const logger = new Logger(module)
 
-export class Router implements IRouter {
+export class Router {
 
     private readonly forwardingTable: Map<NodeID, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
@@ -167,9 +157,9 @@ export class Router implements IRouter {
     }
 
     private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedNode?: PeerDescriptor): RoutingSession {
-        const excludedNodeIDs = new Set<NodeID>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
+        const excludedNodeIds = new Set<NodeID>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
         if (excludedNode) {
-            excludedNodeIDs.add(getNodeIdFromPeerDescriptor(excludedNode))
+            excludedNodeIds.add(getNodeIdFromPeerDescriptor(excludedNode))
         }
         logger.trace('routing session created with connections: ' + this.config.connections.size)
         return new RoutingSession({
@@ -180,7 +170,7 @@ export class Router implements IRouter {
             // TODO use config option or named constant?
             parallelism: areEqualPeerDescriptors(this.config.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
-            excludedNodeIDs
+            excludedNodeIds
         })
     }
 

@@ -19,10 +19,10 @@ import { MockRouter } from '../utils/mock/Router'
 import { MockTransport } from '../utils/mock/Transport'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
-import { IRouter } from '../../src/dht/routing/Router'
+import { Router } from '../../src/dht/routing/Router'
 import { ITransport } from '../../src/exports'
 
-const createMockRouter = (error?: RouteMessageError): Partial<IRouter> => {
+const createMockRouter = (error?: RouteMessageError): Partial<Router> => {
     return {
         doRouteMessage: (routedMessage: RouteMessageWrapper) => {
             return {
@@ -61,7 +61,7 @@ describe('RecursiveOperationManager', () => {
     const rpcCommunicator = new FakeRpcCommunicator()
 
     const createRecursiveOperationManager = (
-        router: IRouter = new MockRouter(),
+        router: Router = new MockRouter() as any,
         transport: ITransport = new MockTransport()
     ): RecursiveOperationManager => {
         return new RecursiveOperationManager({
@@ -91,7 +91,7 @@ describe('RecursiveOperationManager', () => {
     })
 
     it('RecursiveOperationManager server throws if payload is not RecursiveOperationRequest', async () => {
-        const manager = createRecursiveOperationManager(new MockRouter())
+        const manager = createRecursiveOperationManager(new MockRouter() as any)
         const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1)
         const badMessage: Message = {
             serviceId: 'unknown',

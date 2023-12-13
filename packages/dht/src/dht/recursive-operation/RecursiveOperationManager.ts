@@ -7,7 +7,7 @@ import {
     RouteMessageError,
     RouteMessageWrapper
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { IRouter } from '../routing/Router'
+import { Router } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, hexToBinary, runAndWaitForEvents3, wait } from '@streamr/utils'
@@ -32,22 +32,18 @@ interface RecursiveOperationManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
     connections: Map<NodeID, DhtNodeRpcRemote>
-    router: IRouter
+    router: Router
     localPeerDescriptor: PeerDescriptor
     serviceId: ServiceID
     localDataStore: LocalDataStore
     addContact: (contact: PeerDescriptor) => void
 }
 
-export interface IRecursiveOperationManager {
-    execute(targetId: Uint8Array, operation: RecursiveOperation): Promise<RecursiveOperationResult>
-}
-
 export interface RecursiveOperationResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
 
 const logger = new Logger(module)
 
-export class RecursiveOperationManager implements IRecursiveOperationManager {
+export class RecursiveOperationManager {
 
     private ongoingSessions: Map<string, RecursiveOperationSession> = new Map()
     private stopped = false
