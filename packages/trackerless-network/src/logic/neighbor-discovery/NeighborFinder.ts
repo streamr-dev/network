@@ -12,13 +12,7 @@ interface FindNeighborsSessionConfig {
 const INITIAL_WAIT = 100
 const INTERVAL = 250
 
-export interface INeighborFinder {
-    start(excluded?: NodeID[]): void
-    stop(): void
-    isRunning(): boolean
-}
-
-export class NeighborFinder implements INeighborFinder {
+export class NeighborFinder {
     private readonly abortController: AbortController
     private readonly config: FindNeighborsSessionConfig
     private running = false
