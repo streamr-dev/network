@@ -12,6 +12,7 @@ import {
 } from '@inquirer/prompts'
 import chalk from 'chalk'
 import { Wallet, providers, utils } from 'ethers'
+import { v4 as uuidMock } from 'uuid'
 
 const checkbox = checkboxMock as jest.MockedFunction<any>
 
@@ -22,6 +23,17 @@ const input = inputMock as jest.MockedFunction<any>
 const password = passwordMock as jest.MockedFunction<any>
 
 const select = selectMock as jest.MockedFunction<any>
+
+const uuid = uuidMock as jest.MockedFunction<any>
+
+jest.mock('uuid', () => {
+    const uuid = jest.requireActual('uuid')
+
+    return {
+        ...uuid,
+        v4: jest.fn(uuid.v4),
+    }
+})
 
 jest.mock('@inquirer/prompts', () => {
     const inquirer = jest.requireActual('@inquirer/prompts')
@@ -1426,6 +1438,23 @@ describe('Config wizard', () => {
         expect(summary).toInclude(
             `https://mumbai.streamr.network/hub/network/operators/${OperatorAddress.toLowerCase()}`
         )
+    })
+
+    it('generates an api key', async () => {
+        uuid.mockImplementation(() => '5ebecbcf-5adf-4fc6-9e99-631e8e64cc9b')
+
+        await scenario([
+            Step.privateKeySource('enter'),
+            Step.revealPrivateKey('enter'),
+            Step.network('enter'),
+            Step.rewards({ type: 'n' }, 'enter'),
+            Step.pubsub({ type: 'n' }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter'),
+        ])
+
+        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+
+        expect(config.apiAuthentication.keys).toEqual(['NWViZWNiY2Y1YWRmNGZjNjllOTk2MzFlOGU2NGNjOWI'])
     })
 })
 

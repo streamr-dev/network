@@ -7,6 +7,7 @@ import { isAddress } from 'ethers/lib/utils'
 import { chmodSync, existsSync, mkdirSync, writeFileSync } from 'fs'
 import { produce } from 'immer'
 import path from 'path'
+import { v4 as uuid } from 'uuid'
 import { z } from 'zod'
 import {
     CURRENT_CONFIGURATION_VERSION,
@@ -58,6 +59,10 @@ export async function start(): Promise<void> {
 
         const httpServer = http?.port ? { port: http.port } : undefined
 
+        const apiKey = Buffer.from(uuid().replace(/-/g, ''))
+            .toString('base64')
+            .replace(/[^\da-z]/gi, '')
+
         let config: ConfigFile = {
             $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
             client: {
@@ -70,6 +75,9 @@ export async function start(): Promise<void> {
                 ...pubsubPlugins,
             },
             httpServer,
+            apiAuthentication: {
+                keys: [apiKey]
+            }
         }
 
         if (network === 'mumbai') {
