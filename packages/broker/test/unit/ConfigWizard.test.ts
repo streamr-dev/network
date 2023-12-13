@@ -1608,9 +1608,13 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
 
     jest.spyOn(process.stdout, 'write').mockImplementation(() => true)
 
-    jest.spyOn(process.stdout, 'cursorTo').mockImplementation(() => true)
+    if (typeof process.stdout.cursorTo === 'function') {
+        jest.spyOn(process.stdout, 'cursorTo').mockImplementation(() => true)
+    }
 
-    jest.spyOn(process.stdout, 'clearLine').mockImplementation(() => true)
+    if (typeof process.stdout.clearLine === 'function') {
+        jest.spyOn(process.stdout, 'clearLine').mockImplementation(() => true)
+    }
 
     void [checkbox, confirm, input, password, select].forEach((prompt) => {
         prompt.mockImplementation(async (config: any) => {
