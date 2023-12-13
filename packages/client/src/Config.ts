@@ -467,7 +467,10 @@ const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrCli
         } as any
     }) as any
     if (environmentId === 'polygon') {
-        config.contracts.ethereumNetwork = config.contracts.ethereumNetwork ?? { highGasPriceStrategy: true }
+        config.contracts.ethereumNetwork = { 
+            highGasPriceStrategy: true,
+            ...config.contracts.ethereumNetwork
+        }
     }
     if (environmentId === 'dev2') {
         // TODO config the 30s default for "dev2 in" @streamr/config and remove this explicit timeout
