@@ -40,33 +40,29 @@ export interface IRouter {
 const logger = new Logger(module)
 
 export class Router implements IRouter {
-    
-    private readonly rpcCommunicator: RoutingRpcCommunicator
-    private readonly localPeerDescriptor: PeerDescriptor
-    private readonly connections: Map<NodeID, DhtNodeRpcRemote>
+
     private readonly forwardingTable: Map<NodeID, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     // TODO use config option or named constant?
     private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
     private stopped = false
+    private readonly config: RouterConfig
 
     constructor(config: RouterConfig) {
-        this.rpcCommunicator = config.rpcCommunicator
-        this.localPeerDescriptor = config.localPeerDescriptor
-        this.connections = config.connections
-        this.registerLocalRpcMethods(config)
+        this.config = config
+        this.registerLocalRpcMethods()
     }
 
-    private registerLocalRpcMethods(config: RouterConfig) {
+    private registerLocalRpcMethods() {
         const rpcLocal = new RouterRpcLocal({
             doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => this.doRouteMessage(routedMessage, mode),
-            addContact: (contact: PeerDescriptor, setActive: boolean) => config.addContact(contact, setActive),
+            addContact: (contact: PeerDescriptor, setActive: boolean) => this.config.addContact(contact, setActive),
             setForwardingEntries: (routedMessage: RouteMessageWrapper) => this.setForwardingEntries(routedMessage),
             duplicateRequestDetector: this.duplicateRequestDetector,
-            localPeerDescriptor: this.localPeerDescriptor,
-            connectionManager: config.connectionManager
+            localPeerDescriptor: this.config.localPeerDescriptor,
+            connectionManager: this.config.connectionManager
         })
-        this.rpcCommunicator.registerRpcMethod(
+        this.config.rpcCommunicator.registerRpcMethod(
             RouteMessageWrapper,
             RouteMessageAck,
             'routeMessage',
@@ -77,7 +73,7 @@ export class Router implements IRouter {
                 return rpcLocal.routeMessage(routedMessage)
             }
         )
-        this.rpcCommunicator.registerRpcMethod(
+        this.config.rpcCommunicator.registerRpcMethod(
             RouteMessageWrapper,
             RouteMessageAck,
             'forwardMessage',
@@ -92,7 +88,7 @@ export class Router implements IRouter {
     }
 
     public send(msg: Message, reachableThrough: PeerDescriptor[]): void {
-        msg.sourceDescriptor = this.localPeerDescriptor
+        msg.sourceDescriptor = this.config.localPeerDescriptor
         const targetPeerDescriptor = msg.targetDescriptor!
         const forwardingEntry = this.forwardingTable.get(getNodeIdFromPeerDescriptor(targetPeerDescriptor))
         if (forwardingEntry && forwardingEntry.peerDescriptors.length > 0) {
@@ -101,7 +97,7 @@ export class Router implements IRouter {
                 message: msg,
                 requestId: v4(),
                 destinationPeer: forwardingPeer,
-                sourcePeer: this.localPeerDescriptor,
+                sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
                 routingPath: []
             }
@@ -116,7 +112,7 @@ export class Router implements IRouter {
                 message: msg,
                 requestId: v4(),
                 destinationPeer: targetPeerDescriptor,
-                sourcePeer: this.localPeerDescriptor,
+                sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
                 routingPath: []
             }
@@ -174,14 +170,14 @@ export class Router implements IRouter {
         if (excludedNode) {
             excludedPeers.add(getNodeIdFromPeerDescriptor(excludedNode))
         }
-        logger.trace('routing session created with connections: ' + this.connections.size)
+        logger.trace('routing session created with connections: ' + this.config.connections.size)
         return new RoutingSession({
-            rpcCommunicator: this.rpcCommunicator,
-            localPeerDescriptor: this.localPeerDescriptor,
+            rpcCommunicator: this.config.rpcCommunicator,
+            localPeerDescriptor: this.config.localPeerDescriptor,
             messageToRoute: routedMessage,
-            connections: this.connections,
+            connections: this.config.connections,
             // TODO use config option or named constant?
-            parallelism: areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
+            parallelism: areEqualPeerDescriptors(this.config.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
             excludedNodeIDs: excludedPeers
         })
@@ -218,7 +214,7 @@ export class Router implements IRouter {
 
     private setForwardingEntries(routedMessage: RouteMessageWrapper): void {
         const reachableThroughWithoutSelf = routedMessage.reachableThrough.filter((peer) => {
-            return !areEqualPeerDescriptors(peer, this.localPeerDescriptor)
+            return !areEqualPeerDescriptors(peer, this.config.localPeerDescriptor)
         })
         
         if (reachableThroughWithoutSelf.length > 0) {
