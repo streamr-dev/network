@@ -492,6 +492,6 @@ export class ContractFacade {
     }
 
     getEthersOverrides(): Overrides {
-        return this.config.getEthersOverrides?.() ?? {}
+        return this.config.getEthersOverrides()
     }
 }
