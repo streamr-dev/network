@@ -19,6 +19,7 @@ export interface RouterConfig {
     connections: Map<NodeID, DhtNodeRpcRemote>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     connectionManager?: ConnectionManager
+    // TODO use this or remove the config option?
     rpcRequestTimeout?: number
 }
 
