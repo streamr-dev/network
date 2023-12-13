@@ -70,7 +70,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             signer,
             operatorContractAddress,
             theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl,
-            ethersOverrides: () => streamrClient.getEthersOverrides()
+            getEthersOverrides: () => streamrClient.getEthersOverrides()
         }
 
         const redundancyFactor = await fetchRedundancyFactor(serviceConfig)
