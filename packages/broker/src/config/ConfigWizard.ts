@@ -17,28 +17,15 @@ import { ConfigFile, getDefaultFile } from './config'
 const MinBalance = utils.parseEther('0.1')
 
 export const start = async (): Promise<void> => {
-    function notify(...args: unknown[]) {
-        console.info(chalk.bgGrey(' '), ...args)
-    }
-
-    console.info()
-
-    notify()
-
-    notify(' ', chalk.whiteBright.bold('Welcome to the Streamr Network!'))
-
-    notify(' ', 'This Config Wizard will help you setup your node.')
-
-    notify(' ', 'The steps are documented here:')
-
-    notify(
-        ' ',
-        'https://docs.streamr.network/guides/how-to-run-streamr-node#config-wizard'
-    )
-
-    notify()
-
-    console.info()
+    log(`
+        >
+        > ***Welcome to the Streamr Network!***
+        > This Config Wizard will help you setup your node.
+        >
+        > The steps are documented here:
+        > *https://docs.streamr.network/guides/how-to-run-streamr-node#config-wizard*
+        >
+    `)
 
     try {
         const privateKey = await getPrivateKey()
@@ -87,121 +74,98 @@ export const start = async (): Promise<void> => {
             network === 'polygon' ? config : getMumbaiConfig(config)
         )
 
-        console.info()
-
-        notify()
-
-        notify(
-            chalk.greenBright('✓'),
-            chalk.bold.whiteBright(
-                `Congratulations, you've setup your Streamr node!`
-            )
-        )
-
-        notify(` `, `Your node address is ${chalk.greenBright(nodeAddress)}`)
+        log(`
+            >
+            > ~ *Congratulations, you've setup your Streamr node!*
+            > Your node address is ${chalk.greenBright(nodeAddress)}
+            > Your node's generated name is ${chalk.greenBright(
+                getNodeMnemonic(privateKey)
+            )}
+        `)
 
         if (operator) {
-            const resume = progress(
-                (f) =>
-                    `${chalk.bgGrey(
-                        ' '
-                    )}   Your node address has ${chalk.whiteBright(
-                        `${chalk.gray(f)} MATIC`
-                    )} ${chalk.gray(`– checking balance…`)}`
+            const resume = progress((f) =>
+                style(
+                    `> Your node address has *${f} MATIC* _– checking balance…_`
+                )
             )
 
             try {
                 const balance = await getNativeBalance(network, nodeAddress)
 
-                let content = `Your node address has ${formatBalance(balance)}`
-
-                if (balance.lt(MinBalance)) {
-                    content = `${content}. You'll need to fund it with a small amount of MATIC tokens.`
-                }
+                const content = `Your node address has *${utils
+                    .formatEther(balance)
+                    .replace(/\.(\d+)/, (f) => f.substring(0, 3))} MATIC*`
 
                 resume()
 
-                notify(
-                    balance.lt(MinBalance) ? chalk.yellowBright('!') : ` `,
-                    content
-                )
+                if (balance.lt(MinBalance)) {
+                    log(`
+                        > ! ${content}. You'll need to fund it with a small amount of MATIC tokens.
+                    `)
+                } else {
+                    log(`> ${content}`)
+                }
             } catch (e) {
                 resume()
 
-                notify(
-                    chalk.redBright('✗'),
-                    "Fetching your node's balance failed"
-                )
+                log('> x Failed to fetch node\'s balance')
             }
         }
 
-        notify(
-            ` `,
-            `Your node's generated name is ${chalk.greenBright(
-                getNodeMnemonic(privateKey)
-            )}`
-        )
-
         if (operator) {
-            notify()
+            log('> ')
 
-            const resume = progress(
-                (f) =>
-                    `${chalk.bgGrey(' ')}   ${chalk.gray(
-                        `Checking if your node has been paired with your Operator… ${f}`
-                    )}`
+            const resume = progress((f) =>
+                style(`
+                    > _Checking if your node has been paired with your Operator… ${f}_
+                `)
             )
 
             try {
                 const nodes = await getOperatorNodeAddresses(network, operator)
+
+                resume()
 
                 const hub =
                     network === 'polygon'
                         ? 'https://streamr.network/hub'
                         : 'https://mumbai.streamr.network/hub'
 
-                resume()
-
-                if (!nodes.includes(nodeAddress.toLowerCase())) {
-                    notify(
-                        chalk.yellowBright('!'),
-                        `You will need to pair your node with your Operator:`
-                    )
+                if (nodes) {
+                    if (!nodes.includes(nodeAddress.toLowerCase())) {
+                        log(
+                            '> ! You will need to pair your node with your Operator:'
+                        )
+                    } else {
+                        log('> Your node has been paired with your Operator:')
+                    }
                 } else {
-                    notify(` `, `Your node has been paired with your Operator:`)
+                    log(`
+                    > x Your Operator could not be found on the **${network.replace(
+                        /\w/,
+                        (l) => l.toUpperCase()
+                    )}** network, see
+                    `)
                 }
 
-                notify(
-                    ` `,
-                    chalk.whiteBright(`${hub}/network/operators/${operator}`)
-                )
+                log(`> *${hub}/network/operators/${operator}*`)
             } catch (e) {
                 resume()
 
-                notify(chalk.redBright('✗'), 'Failed to fetch operator nodes')
+                log('> x Failed to fetch operator nodes')
             }
         }
 
-        notify()
-
-        notify(` `, `You can start your Streamr node now with`)
-
-        notify(` `, chalk.whiteBright(`streamr-broker ${storagePath}`))
-
-        notify()
-
-        notify(` `, `For environment specific run instructions, see`)
-
-        notify(
-            ` `,
-            chalk.whiteBright(
-                `https://docs.streamr.network/guides/how-to-run-streamr-node`
-            )
-        )
-
-        notify()
-
-        console.info()
+        log(`
+            >
+            > You can start your Streamr node now with
+            > *streamr-broker ${storagePath}*
+            >
+            > For environment specific run instructions, see
+            > *https://docs.streamr.network/guides/how-to-run-streamr-node*
+            >
+        `)
     } catch (e: any) {
         if (typeof e.message === 'string' && /force closed/i.test(e.message)) {
             return
@@ -490,36 +454,31 @@ async function getNativeBalance(
     return new providers.JsonRpcProvider(url).getBalance(address)
 }
 
-function formatBalance(value: BigNumber): string {
-    return chalk.whiteBright(
-        `${utils
-            .formatEther(value)
-            .replace(/\.(\d+)/, (f) => f.substring(0, 3))} MATIC`
-    )
-}
-
 async function getOperatorNodeAddresses(
     network: 'polygon' | 'mumbai',
     operatorAddress: string
-): Promise<string[]> {
+): Promise<null | string[]> {
     const url = config[network].theGraphUrl
 
     const resp = await fetch(url, {
         method: 'POST',
         body: JSON.stringify({
-            query: `query {operator(id: "${operatorAddress}") {nodes}}`,
+            query: `query { operator(id: "${operatorAddress}") { nodes } }`,
         }),
     })
 
     const { data } = z
         .object({
             data: z.object({
-                operator: z.object({ nodes: z.array(z.string()) }),
+                operator: z.union([
+                    z.null(),
+                    z.object({ nodes: z.array(z.string()) }),
+                ]),
             }),
         })
         .parse(await resp.json())
 
-    return data.operator.nodes
+    return data.operator?.nodes || null
 }
 
 function progress(fn: (frame: string) => string): () => void {
@@ -552,4 +511,38 @@ function progress(fn: (frame: string) => string): () => void {
 
         process.stdout.cursorTo(0)
     }
+}
+
+function style(message: string) {
+    let result = message
+
+    const filters: [RegExp, chalk.Chalk][] = [
+        [/\*\*([^\*]+)\*\*/g, chalk.bold],
+        [/\*([^\*]+)\*/g, chalk.whiteBright],
+        [/_([^_]+)_/g, chalk.gray],
+    ]
+
+    for (const [regexp, colorer] of filters) {
+        result = result.replace(regexp, (_, m) => colorer(m))
+    }
+
+    return result
+        .replace(
+            /^[^\S\r\n]*(>?)[^\S\r\n]*([!x~]?)[^\S\r\n]*/gim,
+            (_, indent, decorator) =>
+                [
+                    indent && chalk.bgGray(' '),
+                    decorator === '!' && chalk.yellowBright.bold(' ! '),
+                    decorator === 'x' && chalk.redBright.bold(' ✗ '),
+                    decorator === '~' && chalk.greenBright.bold(' ✓ '),
+                    decorator === '' && '   ',
+                ]
+                    .filter(Boolean)
+                    .join('')
+        )
+        .trim()
+}
+
+function log(message = '') {
+    console.info(style(message))
 }
