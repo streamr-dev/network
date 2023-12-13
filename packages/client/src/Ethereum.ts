@@ -38,7 +38,7 @@ const getRpcProviders = (connectionInfo: ChainConnectionInfo, pollInterval?: num
 export const getEthersOverrides = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Overrides => {
     const chainConfig = config.contracts.ethereumNetwork
     const overrides = chainConfig.overrides ?? {}
-    if (chainConfig.highGasPriceStrategy) {
+    if ((chainConfig.highGasPriceStrategy) && (chainConfig.overrides?.gasPrice === undefined)) {
         const primaryProvider = getStreamRegistryChainProviders(config)[0]
         const gasPriceStrategy = (estimatedGasPrice: BigNumber) => {
             const INCREASE_PERCENTAGE = 30
