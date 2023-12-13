@@ -18,9 +18,9 @@ import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
 import * as BrokerConfigSchema from './config.schema.json'
 import { ConfigFile, getDefaultFile } from './config'
 
-const MinBalance = utils.parseEther('0.1')
+const MIN_BALANCE = utils.parseEther('0.1')
 
-export const start = async (): Promise<void> => {
+export async function start(): Promise<void> {
     log(`
         >
         > ***Welcome to the Streamr Network!***
@@ -56,9 +56,9 @@ export const start = async (): Promise<void> => {
 
         const storagePath = await getStoragePath()
 
-        const httpServer = http?.port ? { port: http.port } : void 0
+        const httpServer = http?.port ? { port: http.port } : undefined
 
-        const config: ConfigFile = {
+        let config: ConfigFile = {
             $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
             client: {
                 auth: {
@@ -72,9 +72,13 @@ export const start = async (): Promise<void> => {
             httpServer,
         }
 
+        if (network === 'mumbai') {
+            config = getMumbaiConfig(config)
+        }
+
         persistConfig(
             storagePath,
-            network === 'polygon' ? config : getMumbaiConfig(config)
+            config,
         )
 
         log(`
@@ -98,7 +102,7 @@ export const start = async (): Promise<void> => {
 
                 resume()
 
-                if (balance.lt(MinBalance)) {
+                if (balance.lt(MIN_BALANCE)) {
                     log(`
                         > ! ${content}. You'll need to fund it with a small amount of MATIC tokens.
                     `)
@@ -174,7 +178,7 @@ export const start = async (): Promise<void> => {
 /**
  * Generates a mnemonic for a given private key.
  */
-export const getNodeMnemonic = (privateKey: string): string => {
+export function getNodeMnemonic(privateKey: string): string {
     return generateMnemonicFromAddress(
         toEthereumAddress(new Wallet(privateKey).address)
     )
@@ -183,7 +187,7 @@ export const getNodeMnemonic = (privateKey: string): string => {
 /**
  * Lets the user generate a private key or import an existing private key.
  */
-async function getPrivateKey() {
+async function getPrivateKey(): Promise<string> {
     const privateKeySource = await select<'Generate' | 'Import'>({
         message:
             'Do you want to generate a new Ethereum private key or import an existing one?',
@@ -225,8 +229,8 @@ async function getPrivateKey() {
 /**
  * Lets the user decide the desired network for their node.
  */
-async function getNetwork() {
-    return select<'polygon' | 'mumbai'>({
+async function getNetwork(): Promise<'polygon' | 'mumbai'> {
+    return select<Awaited<ReturnType<typeof getNetwork>>>({
         message:
             'Which network do you want to configure your node to connect to?',
         choices: [
@@ -242,8 +246,10 @@ async function getNetwork() {
 
 /**
  * Lets the user gather and configure desired operator plugins.
+ * @returns A valid Ethereum address if the user decide to participate
+ * in earning rewards, and `undefined` otherwise.
  */
-async function getOperatorAddress() {
+async function getOperatorAddress(): Promise<string | undefined> {
     const setupOperator = await confirm({
         message:
             'Do you wish to participate in earning rewards by staking on stream Sponsorships?',
@@ -270,7 +276,7 @@ interface PubsubPlugin {
 
 type PubsubPluginKey = 'websocket' | 'mqtt' | 'http'
 
-const DefaultPort: Record<PubsubPluginKey, number> = {
+const DEFAULT_PORTS: Record<PubsubPluginKey, number> = {
     websocket: WebsocketConfigSchema.properties.port.default,
     mqtt: MqttConfigSchema.properties.port.default,
     http: BrokerConfigSchema.properties.httpServer.properties.port.default,
@@ -279,7 +285,7 @@ const DefaultPort: Record<PubsubPluginKey, number> = {
 /**
  * Lets the user select and configure desired pub/sub plugins.
  */
-async function getPubsubPlugins() {
+async function getPubsubPlugins(): Promise<Partial<Record<PubsubPluginKey, PubsubPlugin>>> {
     const setupPubsub = await confirm({
         message:
             'Do you wish to use your node for data publishing/subscribing?',
@@ -299,10 +305,10 @@ async function getPubsubPlugins() {
         ],
     })
 
-    const pubsubPlugins: Partial<Record<PubsubPluginKey, PubsubPlugin>> = {}
+    const pubsubPlugins: Awaited<ReturnType<typeof getPubsubPlugins>> = {}
 
     for (const key of keys) {
-        const defaultPort = DefaultPort[key]
+        const defaultPort = DEFAULT_PORTS[key]
 
         const port = Number(
             await input({
@@ -324,7 +330,7 @@ async function getPubsubPlugins() {
                                         ([pluginKey, plugin]) =>
                                             value ===
                                             (plugin.port ||
-                                                DefaultPort[
+                                                DEFAULT_PORTS[
                                                     pluginKey as PubsubPluginKey
                                                 ])
                                     ) || []
@@ -355,7 +361,7 @@ async function getPubsubPlugins() {
 /**
  * Lets the user decide where to write the config file.
  */
-async function getStoragePath() {
+async function getStoragePath(): Promise<string> {
     // eslint-disable-next-line no-constant-condition
     while (true) {
         const path = await input({
@@ -377,9 +383,9 @@ async function getStoragePath() {
 }
 
 /**
- * Writes given config structure into a file.
+ * Writes the config into a file.
  */
-function persistConfig(storagePath: string, config: ConfigFile) {
+function persistConfig(storagePath: string, config: ConfigFile): void {
     const dirPath = path.dirname(storagePath)
 
     if (!existsSync(dirPath)) {
@@ -394,7 +400,7 @@ function persistConfig(storagePath: string, config: ConfigFile) {
 }
 
 /**
- * Adjusts the given config for the Mumbai test environment.
+ * Adjusts `config` for the Mumbai test environment.
  */
 function getMumbaiConfig(config: ConfigFile): ConfigFile {
     return produce(config, (draft) => {
@@ -437,6 +443,10 @@ function getMumbaiConfig(config: ConfigFile): ConfigFile {
     })
 }
 
+/**
+ * Gets a wallet balance of the network-native token for the given
+ * wallet address.
+ */
 async function getNativeBalance(
     network: 'polygon' | 'mumbai',
     address: string
@@ -450,6 +460,10 @@ async function getNativeBalance(
     return new providers.JsonRpcProvider(url).getBalance(address)
 }
 
+/**
+ * Gets an array of node addresses associated with the given operator
+ * contract address on the given network.
+ */
 async function getOperatorNodeAddresses(
     network: 'polygon' | 'mumbai',
     operatorAddress: string
@@ -477,12 +491,22 @@ async function getOperatorNodeAddresses(
     return data.operator?.nodes || null
 }
 
+/**
+ * Prints out an animated busyness indicator and does not move on
+ * to the next line until torn down.
+ * @returns A teardown callback that cleans up the line and brings
+ * the cursor to BOL.
+ */
 function progress(fn: (frame: string) => string): () => void {
     const frames = '◢◣◤◥'
 
     let frameNo = 0
 
     function tick() {
+        /**
+         * `isTTY` is false in CI which also means `clearLine` and
+         * `cursorTo` are not functions.
+         */
         if (process.stdout.isTTY) {
             process.stdout.clearLine(0)
 
@@ -501,6 +525,10 @@ function progress(fn: (frame: string) => string): () => void {
     return () => {
         clearInterval(intervalId)
 
+        /**
+         * `isTTY` is false in CI which also means `clearLine` and
+         * `cursorTo` are not functions.
+         */
         if (process.stdout.isTTY) {
             process.stdout.clearLine(0)
 
@@ -509,7 +537,18 @@ function progress(fn: (frame: string) => string): () => void {
     }
 }
 
-function style(message: string) {
+/**
+ * Formats the given message with colors and styles with the use
+ * of a markdown-ish syntax, like:
+ * - \*\*bold\*\*,
+ * - \_dim\_,
+ * - \*bright white\*,
+ * - \> indent normally,
+ * - \> ! indent as a warning,
+ * - \> x indent as an error, and
+ * - \> ~ indent as a confirmation or success.
+ */
+function style(message: string): string {
     let result = message
 
     const filters: [RegExp, chalk.Chalk][] = [
@@ -539,6 +578,6 @@ function style(message: string) {
         .trim()
 }
 
-function log(message = '') {
+function log(message = ''): void {
     console.info(style(message))
 }

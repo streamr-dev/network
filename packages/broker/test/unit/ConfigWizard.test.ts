@@ -1608,6 +1608,10 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
 
     jest.spyOn(process.stdout, 'write').mockImplementation(() => true)
 
+    /**
+     * `isTTY` is false in CI which also means `clearLine` and
+     * `cursorTo` are not functions.
+     */
     if (process.stdout.isTTY) {
         jest.spyOn(process.stdout, 'cursorTo').mockImplementation(() => true)
 
