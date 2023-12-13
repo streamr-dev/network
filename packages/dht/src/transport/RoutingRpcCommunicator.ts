@@ -44,7 +44,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
                 ? {
                     // typically we already have a connection, but if it has disconnected for some reason
                     // the receiver could have gone offline (or it is no longer a neighbor) and therefore there
-                    // is no point for trying form a new connection
+                    // is no point in trying form a new connection
                     connect: false,
                     // TODO maybe this options could be removed?
                     sendIfStopped: true
