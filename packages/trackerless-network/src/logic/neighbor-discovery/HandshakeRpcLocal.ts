@@ -100,10 +100,8 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
                     this.config.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.config.streamPartId)
                 }
                 return
-            }).catch((err) => {
-                // if the interleave request fails the connections is likely lost. 
-                // The disconnect listener in RandomGraphNode should handle clean up.
-                logger.trace('interleaveRequest failed', err)
+            }).catch(() => {
+                // no-op: InterleaveRequest cannot reject
             }).finally(() => {
                 this.config.ongoingInterleaves.delete(nodeId)
             })

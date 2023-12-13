@@ -112,7 +112,7 @@ describe('HandshakeRpcLocal', () => {
         expect(handshakeWithInterleaving).toHaveBeenCalledTimes(1)
     })
 
-    it('rejects handshakes if interleaving is to the requestor is ongoing', async () => {
+    it('rejects handshakes if interleaving to the requestor is ongoing', async () => {
         targetNeighbors.add(createMockDeliveryRpcRemote())
         targetNeighbors.add(createMockDeliveryRpcRemote())
         targetNeighbors.add(createMockDeliveryRpcRemote())
