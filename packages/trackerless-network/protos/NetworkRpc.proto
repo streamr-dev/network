@@ -17,7 +17,7 @@ service ProxyConnectionRpc {
 
 service HandshakeRpc {
   rpc handshake (StreamPartHandshakeRequest) returns (StreamPartHandshakeResponse);
-  rpc interleaveNotice (InterleaveNotice) returns (google.protobuf.Empty);
+  rpc interleaveRequest (InterleaveRequest) returns (InterleaveResponse);
 }
 
 service NeighborUpdateRpc {
@@ -103,10 +103,13 @@ message StreamPartHandshakeResponse {
   optional dht.PeerDescriptor interleaveTargetDescriptor = 3;
 }
 
-message InterleaveNotice {
-  string streamPartId = 1;
+message InterleaveRequest {
   // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  dht.PeerDescriptor interleaveTargetDescriptor = 2;
+  dht.PeerDescriptor interleaveTargetDescriptor = 1;
+}
+
+message InterleaveResponse {
+  bool accepted = 1;
 }
 
 message LeaveStreamPartNotice {
