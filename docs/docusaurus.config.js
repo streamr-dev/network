@@ -61,7 +61,10 @@ const config = {
         [
             "classic",
             /** @type {import('@docusaurus/preset-classic').Options} */
-            ({
+            ({  
+                googleTagManager: {
+                    containerId: 'GTM-W9HTMKM',
+                },
                 docs: {
                     routeBasePath: "/",
                     sidebarPath: require.resolve("./sidebars.js"),
@@ -85,7 +88,7 @@ const config = {
 
     themeConfig:
         /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
-        ({
+        ({  
             navbar: {
                 title: "Streamr",
                 logo: {
