@@ -58,11 +58,15 @@ interface ProxyDefinition {
     userId: EthereumAddress
 }
 
+interface Events {
+    message: (message: StreamMessage) => void
+}
+
 const logger = new Logger(module)
 
 const SERVICE_ID = 'system/proxy-client'
 
-export class ProxyClient extends EventEmitter {
+export class ProxyClient extends EventEmitter<Events> {
 
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly deliveryRpcLocal: DeliveryRpcLocal
