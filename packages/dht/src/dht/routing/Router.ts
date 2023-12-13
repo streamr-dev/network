@@ -175,16 +175,16 @@ export class Router implements IRouter {
             excludedPeers.add(getNodeIdFromPeerDescriptor(excludedNode))
         }
         logger.trace('routing session created with connections: ' + this.connections.size)
-        return new RoutingSession(
-            this.rpcCommunicator,
-            this.localPeerDescriptor,
-            routedMessage,
-            this.connections,
+        return new RoutingSession({
+            rpcCommunicator: this.rpcCommunicator,
+            localPeerDescriptor: this.localPeerDescriptor,
+            messageToRoute: routedMessage,
+            connections: this.connections,
             // TODO use config option or named constant?
-            areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
+            parallelism: areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
-            excludedPeers
-        )
+            excludedNodeIDs: excludedPeers
+        })
     }
 
     public isMostLikelyDuplicate(requestId: string): boolean {
