@@ -14,7 +14,7 @@ import {
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Logger } from '@streamr/utils'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { HandshakeRpcRemote } from './HandshakeRpcRemote'
+import { HandshakeRpcRemote, INTERLEAVE_REQUEST_TIMEOUT } from './HandshakeRpcRemote'
 import { HandshakeRpcLocal } from './HandshakeRpcLocal'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
@@ -62,7 +62,7 @@ export class Handshaker implements IHandshaker {
             createDeliveryRpcRemote: (target: PeerDescriptor) => this.createDeliveryRpcRemote(target)
         })
         this.config.rpcCommunicator.registerRpcMethod(InterleaveRequest, InterleaveResponse, 'interleaveRequest',
-            (req: InterleaveRequest, context) => this.rpcLocal.interleaveRequest(req, context), { timeout: 4000 })
+            (req: InterleaveRequest, context) => this.rpcLocal.interleaveRequest(req, context), { timeout: INTERLEAVE_REQUEST_TIMEOUT })
         this.config.rpcCommunicator.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake',
             (req: StreamPartHandshakeRequest, context) => this.rpcLocal.handshake(req, context))
     }

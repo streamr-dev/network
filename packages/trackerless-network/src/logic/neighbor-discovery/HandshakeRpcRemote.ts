@@ -12,6 +12,8 @@ interface HandshakeResponse {
     interleaveTargetDescriptor?: PeerDescriptor
 }
 
+export const INTERLEAVE_REQUEST_TIMEOUT = 15000
+
 export class HandshakeRpcRemote extends RpcRemote<IHandshakeRpcClient> {
 
     async handshake(
@@ -46,7 +48,7 @@ export class HandshakeRpcRemote extends RpcRemote<IHandshakeRpcClient> {
         }
         const options = this.formDhtRpcOptions({
             doNotConnect: true,
-            timeout: 3000
+            timeout: INTERLEAVE_REQUEST_TIMEOUT
         })
         try {
             const res = await this.getClient().interleaveRequest(request, options)
