@@ -40,9 +40,9 @@ export class DeliveryRpcLocal implements IDeliveryRpc {
 
     async leaveStreamPartNotice(message: LeaveStreamPartNotice, context: ServerCallContext): Promise<Empty> {
         if (message.streamPartId === this.config.streamPartId) {
-            const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-            const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
-            this.config.onLeaveNotice(senderId, message.isEntryPoint)
+            const sourcePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+            const sourceId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
+            this.config.onLeaveNotice(sourceId, message.isEntryPoint)
         }
         return Empty
     }

@@ -57,7 +57,7 @@ export interface StrictRandomGraphNodeConfig {
     inspector: IInspector
     temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
     localNodeIsEntryPoint: () => boolean
-    onEntryPointLeaveDetected: () => Promise<void>
+    handleEntryPointLeave: () => Promise<void>
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
     rpcRequestTimeout?: number
 }
@@ -82,25 +82,25 @@ export class RandomGraphNode extends EventEmitter<Events> {
             rpcCommunicator: this.config.rpcCommunicator,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
-            onLeaveNotice: (senderId: NodeID, sourceIsStreamEntryPoint: boolean) => {
+            onLeaveNotice: (sourceId: NodeID, sourceIsStreamEntryPoint: boolean) => {
                 if (this.abortController.signal.aborted) {
                     return
                 }
-                const contact = this.config.nearbyNodeView.get(senderId)
-                || this.config.randomNodeView.get(senderId)
-                || this.config.targetNeighbors.get(senderId)
-                || this.config.proxyConnectionRpcLocal?.getConnection(senderId )?.remote
+                const contact = this.config.nearbyNodeView.get(sourceId)
+                || this.config.randomNodeView.get(sourceId)
+                || this.config.targetNeighbors.get(sourceId)
+                || this.config.proxyConnectionRpcLocal?.getConnection(sourceId )?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
                     this.config.layer1Node.removeContact(contact.getPeerDescriptor())
                     this.config.targetNeighbors.remove(contact.getPeerDescriptor())
                     this.config.nearbyNodeView.remove(contact.getPeerDescriptor())
                     this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.streamPartId)
-                    this.config.neighborFinder.start([senderId])
-                    this.config.proxyConnectionRpcLocal?.removeConnection(senderId)
+                    this.config.neighborFinder.start([sourceId])
+                    this.config.proxyConnectionRpcLocal?.removeConnection(sourceId)
                 }
                 if (sourceIsStreamEntryPoint) {
-                    setImmediate(() => this.config.onEntryPointLeaveDetected())
+                    setImmediate(() => this.config.handleEntryPointLeave())
                 }
             },
             markForInspection: (senderId: NodeID, messageId: MessageID) => this.config.inspector.markMessage(senderId, messageId)

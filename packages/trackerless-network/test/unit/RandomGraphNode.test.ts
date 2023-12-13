@@ -43,7 +43,7 @@ describe('RandomGraphNode', () => {
             neighborFinder: new MockNeighborFinder(),
             streamPartId: StreamPartIDUtils.parse('stream#0'),
             localNodeIsEntryPoint: () => false,
-            onEntryPointLeaveDetected: async () => {}
+            handleEntryPointLeave: async () => {}
         })
         await randomGraphNode.start()
     })

@@ -52,7 +52,7 @@ describe('random graph with real connections', () => {
                 connectionLocker: epDhtNode.getTransport() as ConnectionManager,
                 localPeerDescriptor: epPeerDescriptor,
                 localNodeIsEntryPoint: () => false,
-                onEntryPointLeaveDetected: async () => {}
+                handleEntryPointLeave: async () => {}
             }
         )
         randomGraphNode2 = createRandomGraphNode({
@@ -62,7 +62,7 @@ describe('random graph with real connections', () => {
             connectionLocker: dhtNode1.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode1.getLocalPeerDescriptor(),
             localNodeIsEntryPoint: () => false,
-            onEntryPointLeaveDetected: async () => {}
+            handleEntryPointLeave: async () => {}
         })
         randomGraphNode3 = createRandomGraphNode({
             streamPartId,
@@ -71,7 +71,7 @@ describe('random graph with real connections', () => {
             connectionLocker: dhtNode2.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode2.getLocalPeerDescriptor(),
             localNodeIsEntryPoint: () => false,
-            onEntryPointLeaveDetected: async () => {}
+            handleEntryPointLeave: async () => {}
         })
         randomGraphNode4 = createRandomGraphNode({
             streamPartId,
@@ -80,7 +80,7 @@ describe('random graph with real connections', () => {
             connectionLocker: dhtNode3.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode3.getLocalPeerDescriptor(),
             localNodeIsEntryPoint: () => false,
-            onEntryPointLeaveDetected: async () => {}
+            handleEntryPointLeave: async () => {}
         })
         randomGraphNode5 = createRandomGraphNode({
             streamPartId,
@@ -89,7 +89,7 @@ describe('random graph with real connections', () => {
             connectionLocker: dhtNode4.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode4.getLocalPeerDescriptor(),
             localNodeIsEntryPoint: () => false,
-            onEntryPointLeaveDetected: async () => {}
+            handleEntryPointLeave: async () => {}
         })
         await epDhtNode.joinDht([epPeerDescriptor])
         await Promise.all([

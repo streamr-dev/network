@@ -62,7 +62,7 @@ describe('RandomGraphNode-DhtNode', () => {
             localPeerDescriptor: peerDescriptors[i],
             neighborUpdateInterval: 2000,
             localNodeIsEntryPoint: () => false,
-            onEntryPointLeaveDetected: async () => {}
+            handleEntryPointLeave: async () => {}
         }))
 
         entryPointRandomGraphNode = createRandomGraphNode({
@@ -73,7 +73,7 @@ describe('RandomGraphNode-DhtNode', () => {
             localPeerDescriptor: entrypointDescriptor,
             neighborUpdateInterval: 2000,
             localNodeIsEntryPoint: () => false,
-            onEntryPointLeaveDetected: async () => {}
+            handleEntryPointLeave: async () => {}
         })
 
         await dhtEntryPoint.start()
