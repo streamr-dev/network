@@ -20,7 +20,6 @@ export interface RouterConfig {
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     connectionManager?: ConnectionManager
     rpcRequestTimeout?: number
-
 }
 
 interface ForwardingTableEntry {
@@ -41,6 +40,7 @@ export interface IRouter {
 const logger = new Logger(module)
 
 export class Router implements IRouter {
+    
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly connections: Map<NodeID, DhtNodeRpcRemote>
