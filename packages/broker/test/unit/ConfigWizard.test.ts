@@ -11,7 +11,7 @@ import {
     select as selectMock,
 } from '@inquirer/prompts'
 import chalk from 'chalk'
-import { Wallet } from 'ethers'
+import { Wallet, providers, utils } from 'ethers'
 
 const checkbox = checkboxMock as jest.MockedFunction<any>
 
@@ -56,6 +56,12 @@ describe('Config wizard', () => {
 
     let storagePath = path.join(tempDir, 'config.json')
 
+    let fakeBalance = jest.fn(() => '0.0')
+
+    let fakeFetchResponseBody = jest.fn(
+        () => '{"data":{"operator":{"nodes":[]}}}'
+    )
+
     beforeEach(() => {
         jest.clearAllMocks()
 
@@ -65,6 +71,17 @@ describe('Config wizard', () => {
 
         jest.spyOn(Wallet, 'createRandom').mockImplementation(
             () => new Wallet(GeneratedPrivateKey)
+        )
+
+        jest.spyOn(global, 'fetch').mockImplementation(() =>
+            Promise.resolve(new Response(fakeFetchResponseBody()))
+        )
+
+        jest.spyOn(
+            providers.JsonRpcProvider.prototype,
+            'getBalance'
+        ).mockImplementation(() =>
+            Promise.resolve(utils.parseEther(fakeBalance()))
         )
     })
 
@@ -1097,7 +1114,7 @@ describe('Config wizard', () => {
         })
     })
 
-    it('creates a Mumbai-flavoured config file', async () => {
+    it('creates a mumbai-flavoured config file', async () => {
         const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
@@ -1189,6 +1206,226 @@ describe('Config wizard', () => {
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
         expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+    })
+
+    it('tells the user to fund their node address if the balance is too low', async () => {
+        fakeBalance.mockImplementation(() => '0.091')
+
+        const { logs } = await scenario([
+            Step.privateKeySource('enter'),
+            Step.revealPrivateKey('enter'),
+            Step.network('enter'),
+            Step.rewards('enter'),
+            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.pubsub({ type: 'n' }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter'),
+        ])
+
+        const summary = logs.join('\n')
+
+        expect(summary).toMatch(/has 0\.09 matic/i)
+
+        expect(summary).toMatch(/you'll need to fund it with/i)
+    })
+
+    it('just tells the user their node address balance if the balance is high enough', async () => {
+        fakeBalance.mockImplementation(() => '0.113')
+
+        const { logs } = await scenario([
+            Step.privateKeySource('enter'),
+            Step.revealPrivateKey('enter'),
+            Step.network('enter'),
+            Step.rewards('enter'),
+            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.pubsub({ type: 'n' }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter'),
+        ])
+
+        const summary = logs.join('\n')
+
+        expect(summary).toMatch(/has 0\.11 matic/i)
+
+        expect(summary).not.toMatch(/you'll need to fund it with/i)
+    })
+
+    it('reports balance check failures', async () => {
+        jest.spyOn(
+            providers.JsonRpcProvider.prototype,
+            'getBalance'
+        ).mockRejectedValue(new Error('whatever'))
+
+        const { logs } = await scenario([
+            Step.privateKeySource('enter'),
+            Step.revealPrivateKey('enter'),
+            Step.network('enter'),
+            Step.rewards('enter'),
+            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.pubsub({ type: 'n' }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter'),
+        ])
+
+        const summary = logs.join('\n')
+
+        expect(summary).toMatch(/failed to fetch node\'s balance/i)
+
+        expect(summary).not.toMatch(/has \d+.\d+ matic/i)
+
+        expect(summary).not.toMatch(/you'll need to fund it with/i)
+    })
+
+    it('tells the user if their node and the operator are paired', async () => {
+        fakeFetchResponseBody.mockImplementation(
+            () =>
+                '{"data":{"operator":{"nodes":["0x909dc59ff7a3b23126bc6f86ad44dd808fd424dc"]}}}'
+        )
+
+        const { logs } = await scenario([
+            Step.privateKeySource('enter'),
+            Step.revealPrivateKey('enter'),
+            Step.network('enter'),
+            Step.rewards('enter'),
+            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.pubsub({ type: 'n' }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter'),
+        ])
+
+        const summary = logs.join('\n')
+
+        expect(summary).not.toMatch(/you will need to pair/i)
+
+        expect(summary).toMatch(/node has been paired with your operator/i)
+
+        expect(summary).not.toMatch(
+            /operator could not be found on the polygon network/i
+        )
+
+        expect(summary).not.toMatch(/failed to fetch operator nodes/i)
+    })
+
+    it('tells the user if their node and the operator are NOT paired', async () => {
+        fakeFetchResponseBody.mockImplementation(
+            () => '{"data":{"operator":{"nodes":[]}}}'
+        )
+
+        const { logs } = await scenario([
+            Step.privateKeySource('enter'),
+            Step.revealPrivateKey('enter'),
+            Step.network('enter'),
+            Step.rewards('enter'),
+            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.pubsub({ type: 'n' }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter'),
+        ])
+
+        const summary = logs.join('\n')
+
+        expect(summary).toMatch(/you will need to pair/i)
+
+        expect(summary).not.toMatch(/node has been paired with your operator/i)
+
+        expect(summary).not.toMatch(
+            /operator could not be found on the polygon network/i
+        )
+
+        expect(summary).not.toMatch(/failed to fetch operator nodes/i)
+    })
+
+    it('tells the user that their operator could not be found in the selected network', async () => {
+        fakeFetchResponseBody.mockImplementation(
+            () => '{"data":{"operator":null}}'
+        )
+
+        const { logs } = await scenario([
+            Step.privateKeySource('enter'),
+            Step.revealPrivateKey('enter'),
+            Step.network('enter'),
+            Step.rewards('enter'),
+            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.pubsub({ type: 'n' }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter'),
+        ])
+
+        const summary = logs.join('\n')
+
+        expect(summary).not.toMatch(/you will need to pair/i)
+
+        expect(summary).not.toMatch(/node has been paired with your operator/i)
+
+        expect(summary).toMatch(
+            /operator could not be found on the polygon network/i
+        )
+
+        expect(summary).not.toMatch(/failed to fetch operator nodes/i)
+    })
+
+    it('reports pairing check failures', async () => {
+        jest.spyOn(global, 'fetch').mockRejectedValue(new Error('whatever'))
+
+        const { logs } = await scenario([
+            Step.privateKeySource('enter'),
+            Step.revealPrivateKey('enter'),
+            Step.network('enter'),
+            Step.rewards('enter'),
+            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.pubsub({ type: 'n' }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter'),
+        ])
+
+        const summary = logs.join('\n')
+
+        expect(summary).not.toMatch(/you will need to pair/i)
+
+        expect(summary).not.toMatch(/node has been paired with your operator/i)
+
+        expect(summary).not.toMatch(
+            /operator could not be found on the polygon network/i
+        )
+
+        expect(summary).toMatch(/failed to fetch operator nodes/i)
+    })
+
+    it('displays proper mainnet operator url', async () => {
+        const { logs } = await scenario([
+            Step.privateKeySource('enter'),
+            Step.revealPrivateKey('enter'),
+            Step.network('enter'),
+            Step.rewards('enter'),
+            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.pubsub({ type: 'n' }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter'),
+        ])
+
+        const summary = logs.join('\n')
+
+        expect(summary).toInclude(
+            `https://streamr.network/hub/network/operators/${OperatorAddress.toLowerCase()}`
+        )
+
+        expect(summary).not.toInclude(
+            `https://mumbai.streamr.network/hub/network/operators/${OperatorAddress.toLowerCase()}`
+        )
+    })
+
+    it('displays proper mumbai operator url', async () => {
+        const { logs } = await scenario([
+            Step.privateKeySource('enter'),
+            Step.revealPrivateKey('enter'),
+            Step.network({ keypress: 'down' }, 'enter'),
+            Step.rewards('enter'),
+            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.pubsub({ type: 'n' }, 'enter'),
+            Step.storage({ type: storagePath }, 'enter'),
+        ])
+
+        const summary = logs.join('\n')
+
+        expect(summary).not.toInclude(
+            `https://streamr.network/hub/network/operators/${OperatorAddress.toLowerCase()}`
+        )
+
+        expect(summary).toInclude(
+            `https://mumbai.streamr.network/hub/network/operators/${OperatorAddress.toLowerCase()}`
+        )
     })
 })
 
@@ -1368,6 +1605,12 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
             logs.push(log)
         }
     })
+
+    jest.spyOn(process.stdout, 'write').mockImplementation(() => true)
+
+    jest.spyOn(process.stdout, 'cursorTo').mockImplementation(() => true)
+
+    jest.spyOn(process.stdout, 'clearLine').mockImplementation(() => true)
 
     void [checkbox, confirm, input, password, select].forEach((prompt) => {
         prompt.mockImplementation(async (config: any) => {
