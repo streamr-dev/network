@@ -19,10 +19,10 @@ export class DeliveryRpcRemote extends RpcRemote<IDeliveryRpcClient> {
         })
     }
 
-    leaveStreamPartNotice(localNodeIsEntryPoint: boolean): void {
+    leaveStreamPartNotice(isLocalNodeEntryPoint: boolean): void {
         const notification: LeaveStreamPartNotice = {
             streamPartId: this.getServiceId(),
-            isEntryPoint: localNodeIsEntryPoint
+            isEntryPoint: isLocalNodeEntryPoint
         }
         const options = this.formDhtRpcOptions({
             notification: true

@@ -16,7 +16,7 @@ export interface DeliveryRpcLocalConfig {
     streamPartId: StreamPartID
     markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
     broadcast: (message: StreamMessage, previousNode?: NodeID) => void
-    onLeaveNotice(senderId: NodeID, localNodeIsEntryPoint: boolean): void
+    onLeaveNotice(senderId: NodeID, isLocalNodeEntryPoint: boolean): void
     markForInspection(senderId: NodeID, messageId: MessageID): void
     rpcCommunicator: ListeningRpcCommunicator
 }

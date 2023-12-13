@@ -57,7 +57,7 @@ export interface StrictRandomGraphNodeConfig {
     numOfTargetNeighbors: number
     inspector: IInspector
     temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
-    localNodeIsEntryPoint: () => boolean
+    isLocalNodeEntryPoint: () => boolean
 
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
     rpcRequestTimeout?: number
@@ -288,7 +288,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
         this.abortController.abort()
         this.config.proxyConnectionRpcLocal?.stop()
-        this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice(this.config.localNodeIsEntryPoint()))
+        this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice(this.config.isLocalNodeEntryPoint()))
         this.config.rpcCommunicator.destroy()
         this.removeAllListeners()
         this.config.nearbyNodeView.stop()

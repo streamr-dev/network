@@ -174,7 +174,7 @@ export class EntryPointDiscovery {
         logger.trace(`Network split avoided`)
     }
 
-    public localNodeIsEntryPoint(): boolean {
+    public isLocalNodeEntryPoint(): boolean {
         return this.localPeerDescriptorStored
     }
 
