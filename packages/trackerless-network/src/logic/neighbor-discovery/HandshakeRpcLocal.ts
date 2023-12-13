@@ -52,7 +52,8 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         } else if (this.config.targetNeighbors.size() + this.config.ongoingHandshakes.size < this.config.maxNeighborCount) {
             return this.acceptHandshake(request, senderDescriptor)
         } else if (this.config.targetNeighbors.size(getInterleaveSourceIds()) - this.config.ongoingInterleaves.size >= 2) {
-            // TODO use config option or named constant? (or is this always >1?)
+            // Do not accept the handshakes requests if the target neighbor count can potentially drop below 2 
+            // due to interleaving. This ensures that a stable number of connections is kept during high churn.
             return this.acceptHandshakeWithInterleaving(request, senderDescriptor)
         } else {
             return this.rejectHandshake(request)
