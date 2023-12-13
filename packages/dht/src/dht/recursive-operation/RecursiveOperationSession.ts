@@ -73,8 +73,6 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             (req: RecursiveOperationResponse) => rpcLocal.sendResponse(req))
     }
 
-    // TODO why we use serviceId of RecursiveOperationManager? (could we use this.id,
-    // i.e. the same service we use when we create ListeningRpcCommunicator in this class)
     public start(serviceId: ServiceID): void {
         const routeMessage = this.wrapRequest(serviceId)
         this.config.doRouteRequest(routeMessage)
