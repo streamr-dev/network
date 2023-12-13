@@ -36,13 +36,11 @@ export const start = async (): Promise<void> => {
 
         const operator = await getOperatorAddress()
 
-        const operatorPlugins = operator
-            ? {
-                  operator: {
-                      operatorContractAddress: operator,
-                  },
-              }
-            : {}
+        const operatorPlugins = operator ? {
+            operator: {
+                operatorContractAddress: operator,
+            },
+        } : {}
 
         const { http, ...pubsubPlugins } = await getPubsubPlugins()
 
@@ -78,16 +76,12 @@ export const start = async (): Promise<void> => {
             >
             > ~ *Congratulations, you've setup your Streamr node!*
             > Your node address is ${chalk.greenBright(nodeAddress)}
-            > Your node's generated name is ${chalk.greenBright(
-                getNodeMnemonic(privateKey)
-            )}
+            > Your node's generated name is ${chalk.greenBright(getNodeMnemonic(privateKey))}
         `)
 
         if (operator) {
             const resume = progress((f) =>
-                style(
-                    `> Your node address has *${f} MATIC* _– checking balance…_`
-                )
+                style(`> Your node address has *${f} MATIC* _– checking balance…_`)
             )
 
             try {
@@ -142,10 +136,7 @@ export const start = async (): Promise<void> => {
                     }
                 } else {
                     log(`
-                    > x Your Operator could not be found on the **${network.replace(
-                        /\w/,
-                        (l) => l.toUpperCase()
-                    )}** network, see
+                        > x Your Operator could not be found on the **${network.replace(/\w/, (l) => l.toUpperCase())}** network, see
                     `)
                 }
 
@@ -486,8 +477,6 @@ function progress(fn: (frame: string) => string): () => void {
 
     let frameNo = 0
 
-    let intervalId: NodeJS.Timeout | undefined
-
     function tick() {
         process.stdout.clearLine(0)
 
@@ -496,13 +485,11 @@ function progress(fn: (frame: string) => string): () => void {
         process.stdout.write(fn(frames[frameNo]))
 
         frameNo = (frameNo + 1) % frames.length
-
-        setTimeout
     }
 
     tick()
 
-    intervalId = setInterval(tick, 400)
+    const intervalId = setInterval(tick, 400)
 
     return () => {
         clearInterval(intervalId)
@@ -517,8 +504,8 @@ function style(message: string) {
     let result = message
 
     const filters: [RegExp, chalk.Chalk][] = [
-        [/\*\*([^\*]+)\*\*/g, chalk.bold],
-        [/\*([^\*]+)\*/g, chalk.whiteBright],
+        [/\*\*([^*]+)\*\*/g, chalk.bold],
+        [/\*([^*]+)\*/g, chalk.whiteBright],
         [/_([^_]+)_/g, chalk.gray],
     ]
 

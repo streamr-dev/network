@@ -56,9 +56,9 @@ describe('Config wizard', () => {
 
     let storagePath = path.join(tempDir, 'config.json')
 
-    let fakeBalance = jest.fn(() => '0.0')
+    const fakeBalance = jest.fn(() => '0.0')
 
-    let fakeFetchResponseBody = jest.fn(
+    const fakeFetchResponseBody = jest.fn(
         () => '{"data":{"operator":{"nodes":[]}}}'
     )
 
@@ -1266,7 +1266,7 @@ describe('Config wizard', () => {
 
         const summary = logs.join('\n')
 
-        expect(summary).toMatch(/failed to fetch node\'s balance/i)
+        expect(summary).toMatch(/failed to fetch node's balance/i)
 
         expect(summary).not.toMatch(/has \d+.\d+ matic/i)
 
