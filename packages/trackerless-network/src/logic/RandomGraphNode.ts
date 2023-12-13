@@ -36,6 +36,7 @@ import { StreamPartID } from '@streamr/protocol'
 export interface Events {
     message: (message: StreamMessage) => void
     targetNeighborConnected: (nodeId: NodeID) => void
+    entryPointLeaveDetected: () => void
 }
 
 export interface StrictRandomGraphNodeConfig {
@@ -57,7 +58,7 @@ export interface StrictRandomGraphNodeConfig {
     inspector: IInspector
     temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
     localNodeIsEntryPoint: () => boolean
-    handleEntryPointLeave: () => Promise<void>
+
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
     rpcRequestTimeout?: number
 }
@@ -100,7 +101,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                     this.config.proxyConnectionRpcLocal?.removeConnection(sourceId)
                 }
                 if (sourceIsStreamEntryPoint) {
-                    setImmediate(() => this.config.handleEntryPointLeave())
+                    this.emit('entryPointLeaveDetected')
                 }
             },
             markForInspection: (senderId: NodeID, messageId: MessageID) => this.config.inspector.markMessage(senderId, messageId)
