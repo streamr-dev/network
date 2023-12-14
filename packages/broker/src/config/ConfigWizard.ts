@@ -6,6 +6,7 @@ import { BigNumber, Wallet, providers, utils } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { chmodSync, existsSync, mkdirSync, writeFileSync } from 'fs'
 import { produce } from 'immer'
+import capitalize from 'lodash/capitalize'
 import path from 'path'
 import { v4 as uuid } from 'uuid'
 import { z } from 'zod'
@@ -16,8 +17,8 @@ import {
 import { generateMnemonicFromAddress } from '../helpers/generateMnemonicFromAddress'
 import * as MqttConfigSchema from '../plugins/mqtt/config.schema.json'
 import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
-import * as BrokerConfigSchema from './config.schema.json'
 import { ConfigFile, getDefaultFile } from './config'
+import * as BrokerConfigSchema from './config.schema.json'
 
 const MIN_BALANCE = utils.parseEther('0.1')
 
@@ -153,7 +154,7 @@ export async function start(): Promise<void> {
                     }
                 } else {
                     log(`
-                        > x Your Operator could not be found on the **${network.replace(/\w/, (l) => l.toUpperCase())}** network, see
+                        > x Your Operator could not be found on the **${capitalize(network)}** network, see
                     `)
                 }
 
