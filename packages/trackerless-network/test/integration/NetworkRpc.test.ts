@@ -9,7 +9,7 @@ import { waitForCondition } from '@streamr/utils'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { createStreamMessage } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { Simulator, DhtCallContext } from '@streamr/dht'
+import { DhtCallContext } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 
@@ -20,7 +20,6 @@ describe('Network RPC', () => {
     let recvCounter = 0
 
     beforeEach(() => {
-        Simulator.useFakeTimers()
         rpcCommunicator1 = new RpcCommunicator()
         rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {
@@ -40,7 +39,6 @@ describe('Network RPC', () => {
     afterEach(() => {
         rpcCommunicator1.stop()
         rpcCommunicator2.stop()
-        Simulator.useFakeTimers(false)
     })
 
     it('sends Data', async () => {

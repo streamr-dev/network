@@ -8,10 +8,10 @@ import {
 import { v4 } from 'uuid'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { Remote } from './contact/Remote'
-import { PeerID } from '../helpers/PeerID'
-import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { RpcRemote } from './contact/RpcRemote'
+import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../types/ServiceID'
+import { NodeID } from '../helpers/nodeId'
 
 const logger = new Logger(module)
 
@@ -21,7 +21,7 @@ export interface KBucketContact {
     vectorClock: number
 }
 
-export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBucketContact {
+export class DhtNodeRpcRemote extends RpcRemote<IDhtNodeRpcClient> implements KBucketContact {
 
     private static counter = 0
     public vectorClock: number
@@ -35,14 +35,14 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
         rpcRequestTimeout?: number
     ) {
         super(localPeerDescriptor, peerDescriptor, serviceId, client, rpcRequestTimeout)
-        this.id = this.getPeerId().value
+        this.id = this.getPeerDescriptor().nodeId
         this.vectorClock = DhtNodeRpcRemote.counter++
     }
 
-    async getClosestPeers(kademliaId: Uint8Array): Promise<PeerDescriptor[]> {
+    async getClosestPeers(nodeId: Uint8Array): Promise<PeerDescriptor[]> {
         logger.trace(`Requesting getClosestPeers on ${this.getServiceId()} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: ClosestPeersRequest = {
-            kademliaId,
+            nodeId,
             requestId: v4()
         }
         try {
@@ -84,7 +84,7 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
         })
     }
 
-    getPeerId(): PeerID {
-        return peerIdFromPeerDescriptor(this.getPeerDescriptor())
+    getNodeId(): NodeID {
+        return getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
     }
 }

@@ -159,7 +159,7 @@ export async function inspectTarget({
     logger.info('Inspecting nodes of operator', {
         targetOperator: target.operatorAddress,
         targetStreamPart: target.streamPart,
-        targetNodes: targetPeerDescriptors.map(({ id }) => id),
+        targetNodes: targetPeerDescriptors.map(({ nodeId }) => nodeId),
         targetSponsorship: target.sponsorshipAddress
     })
 
@@ -178,7 +178,7 @@ export async function inspectTarget({
                 logger.info('Inspection done (no issue detected)', {
                     targetOperator: target.operatorAddress,
                     targetStreamPart: target.streamPart,
-                    targetNode: descriptor.id,
+                    targetNode: descriptor.nodeId,
                     targetSponsorship: target.sponsorshipAddress
                 })
                 return true
@@ -188,7 +188,7 @@ export async function inspectTarget({
         logger.info('Inspection done (issue detected)', {
             targetOperator: target.operatorAddress,
             targetStreamPart: target.streamPart,
-            targetNodes: targetPeerDescriptors.map(({ id }) => id),
+            targetNodes: targetPeerDescriptors.map(({ nodeId }) => nodeId),
             targetSponsorship: target.sponsorshipAddress
         })
         return false

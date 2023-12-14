@@ -1,17 +1,17 @@
-import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
 import {
     areEqualPeerDescriptors,
     getNodeIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
 import { IRouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Remote } from '../contact/Remote'
+import { RpcRemote } from '../contact/RpcRemote'
 import { Logger } from '@streamr/utils'
 import { getPreviousPeer } from './getPreviousPeer'
 
 const logger = new Logger(module)
 
-export class RouterRpcRemote extends Remote<IRouterRpcClient> {
+export class RouterRpcRemote extends RpcRemote<IRouterRpcClient> {
 
     async routeMessage(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
@@ -22,16 +22,17 @@ export class RouterRpcRemote extends Remote<IRouterRpcClient> {
             reachableThrough: params.reachableThrough ?? [],
             routingPath: params.routingPath
         }
-        const options = this.formDhtRpcOptions()
+        const options = this.formDhtRpcOptions({
+            connect: false
+        })
         try {
             const ack = await this.getClient().routeMessage(message, options)
             // Success signal if sent to destination and error includes duplicate
-            if (
-                areEqualPeerDescriptors(params.destinationPeer!, this.getPeerDescriptor())
-                && ack.error.includes('duplicate')
+            if (ack.error === RouteMessageError.DUPLICATE
+                && areEqualPeerDescriptors(params.destinationPeer!, this.getPeerDescriptor())
             ) {
                 return true
-            } else if (ack.error.length > 0) {
+            } else if (ack.error !== undefined) {
                 return false
             }
         } catch (err) {
@@ -54,10 +55,12 @@ export class RouterRpcRemote extends Remote<IRouterRpcClient> {
             reachableThrough: params.reachableThrough ?? [],
             routingPath: params.routingPath
         }
-        const options = this.formDhtRpcOptions()
+        const options = this.formDhtRpcOptions({
+            connect: false
+        })
         try {
             const ack = await this.getClient().forwardMessage(message, options)
-            if (ack.error.length > 0) {
+            if (ack.error !== undefined) {
                 return false
             }
         } catch (err) {

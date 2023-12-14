@@ -12,13 +12,7 @@ interface FindNeighborsSessionConfig {
 const INITIAL_WAIT = 100
 const INTERVAL = 250
 
-export interface INeighborFinder {
-    start(excluded?: NodeID[]): void
-    stop(): void
-    isRunning(): boolean
-}
-
-export class NeighborFinder implements INeighborFinder {
+export class NeighborFinder {
     private readonly abortController: AbortController
     private readonly config: FindNeighborsSessionConfig
     private running = false
@@ -34,6 +28,7 @@ export class NeighborFinder implements INeighborFinder {
         }
         const newExcludes = await this.config.doFindNeighbors(excluded)
         if (this.config.targetNeighbors.size() < this.config.minCount && newExcludes.length < this.config.nearbyNodeView.size()) {
+            // TODO should we catch possible promise rejection?
             setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL, this.abortController.signal)
         } else {
             this.running = false
@@ -49,6 +44,7 @@ export class NeighborFinder implements INeighborFinder {
             return
         }
         this.running = true
+        // TODO should we catch possible promise rejection?
         setAbortableTimeout(() => this.findNeighbors(excluded), INITIAL_WAIT, this.abortController.signal)
     }
 

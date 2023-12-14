@@ -21,7 +21,7 @@ describe('StreamrChallenger', () => {
     let mockTransport: SimulatorTransport
 
     const mockPeerDescriptor1: PeerDescriptor = {
-        kademliaId: PeerID.fromString('AutoCertifierClient').value,
+        nodeId: PeerID.fromString('AutoCertifierClient').value,
         type: NodeType.NODEJS,
         websocket: {
             host: '127.0.0.1',

@@ -4,16 +4,25 @@ import {
     ExternalFindDataResponse,
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
+    RecursiveOperation,
     PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { FindResult } from './find/Finder'
+import { RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
 import { Any } from '../proto/google/protobuf/any'
 
 interface ExternalApiRpcLocalConfig {
-    startFind: (idToFind: Uint8Array, fetchData: boolean, excludedPeer: PeerDescriptor) => Promise<FindResult>
-    storeDataToDht: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
+    executeRecursiveOperation: (
+        targetId: Uint8Array,
+        operation: RecursiveOperation,
+        excludedPeer: PeerDescriptor
+    ) => Promise<RecursiveOperationResult>
+    storeDataToDht: (
+        key: Uint8Array,
+        data: Any,
+        creator: PeerDescriptor
+    ) => Promise<PeerDescriptor[]>
 }
 
 export class ExternalApiRpcLocal implements IExternalApiRpc {
@@ -26,19 +35,13 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
 
     async externalFindData(findDataRequest: ExternalFindDataRequest, context: ServerCallContext): Promise<ExternalFindDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const result = await this.config.startFind(findDataRequest.kademliaId, true, senderPeerDescriptor)
-        if (result.dataEntries) {
-            return ExternalFindDataResponse.create({ dataEntries: result.dataEntries })
-        } else {
-            return ExternalFindDataResponse.create({ 
-                dataEntries: [],
-                error: 'Could not find data with the given key' 
-            })
-        }
+        const result = await this.config.executeRecursiveOperation(findDataRequest.key, RecursiveOperation.FETCH_DATA, senderPeerDescriptor)
+        return ExternalFindDataResponse.create({ entries: result.dataEntries ?? [] })
     }
 
-    async externalStoreData(request: ExternalStoreDataRequest): Promise<ExternalStoreDataResponse> {
-        const result = await this.config.storeDataToDht(request.key, request.data!)
+    async externalStoreData(request: ExternalStoreDataRequest, context: ServerCallContext): Promise<ExternalStoreDataResponse> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const result = await this.config.storeDataToDht(request.key, request.data!, senderPeerDescriptor)
         return ExternalStoreDataResponse.create({
             storers: result
         })

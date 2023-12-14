@@ -2,7 +2,7 @@
 
 import { SimulationNode } from './SimulationNode'
 import fs from 'fs'
-import { PeerID } from '../../../src/helpers/PeerID'
+import { getNodeIdFromBinary } from '../../../src/helpers/nodeId'
 
 export class KademliaSimulation {
     
@@ -17,7 +17,7 @@ export class KademliaSimulation {
 
     constructor() {
         if (!fs.existsSync('test/data/nodeids.json')) {
-            throw ('Cannot find test/data/nodeids.json, please run "npm run prepare-kademlia-simulation first"')
+            throw new Error('Cannot find test/data/nodeids.json, please run "npm run prepare-kademlia-simulation first"')
         }
         this.dhtIds = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
         this.groundTruth = JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
@@ -25,7 +25,7 @@ export class KademliaSimulation {
 
     public run(): void {
         for (let i = 0; i < KademliaSimulation.NUM_NODES; i++) {
-            const node = new SimulationNode(PeerID.fromValue(Buffer.from(this.dhtIds[i].data.slice(0, KademliaSimulation.ID_LENGTH))))
+            const node = new SimulationNode(getNodeIdFromBinary(Buffer.from(this.dhtIds[i].data.slice(0, KademliaSimulation.ID_LENGTH))))
             this.nodeNamesById[JSON.stringify(node.getContact().id)] = i
             this.nodes.push(node)
             node.joinDht(this.nodes[0])

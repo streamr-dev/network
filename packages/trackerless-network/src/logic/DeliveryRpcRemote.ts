@@ -1,4 +1,4 @@
-import { Remote } from '@streamr/dht'
+import { RpcRemote } from '@streamr/dht'
 import { Logger } from '@streamr/utils'
 import {
     LeaveStreamPartNotice,
@@ -8,7 +8,7 @@ import { IDeliveryRpcClient } from '../proto/packages/trackerless-network/protos
 
 const logger = new Logger(module)
 
-export class DeliveryRpcRemote extends Remote<IDeliveryRpcClient> {
+export class DeliveryRpcRemote extends RpcRemote<IDeliveryRpcClient> {
 
     async sendStreamMessage(msg: StreamMessage): Promise<void> {
         const options = this.formDhtRpcOptions({

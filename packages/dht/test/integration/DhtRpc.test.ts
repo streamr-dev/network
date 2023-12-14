@@ -1,27 +1,22 @@
-import { getMockPeers, MockDhtRpc } from '../utils/utils'
+import { createMockDhtRpc, createMockPeerDescriptor, createMockPeers } from '../utils/utils'
 import { ProtoRpcClient, RpcCommunicator, RpcError, toProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { generateId } from '../utils/utils'
-import { ClosestPeersRequest, ClosestPeersResponse, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { ClosestPeersRequest, ClosestPeersResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { wait } from '@streamr/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('DhtRpc', () => {
+
     let rpcCommunicator1: RpcCommunicator<DhtCallContext>
     let rpcCommunicator2: RpcCommunicator<DhtCallContext>
     let client1: ProtoRpcClient<DhtNodeRpcClient>
     let client2: ProtoRpcClient<DhtNodeRpcClient>
-
-    const peerDescriptor1: PeerDescriptor = {
-        kademliaId: generateId('peer1'),
-        type: NodeType.NODEJS
-    }
-
-    const peerDescriptor2: PeerDescriptor = {
-        kademliaId: generateId('peer2'),
-        type: NodeType.NODEJS
-    }
+    const peerDescriptor1 = createMockPeerDescriptor()
+    const peerDescriptor2 = createMockPeerDescriptor()
+    const neighbors = createMockPeers()
+    const mockDhtRpc = createMockDhtRpc(neighbors)
 
     const outgoingListener2 = (message: RpcMessage) => {
         rpcCommunicator1.handleIncomingMessage(message)
@@ -29,10 +24,10 @@ describe('DhtRpc', () => {
 
     beforeEach(() => {
         rpcCommunicator1 = new RpcCommunicator()
-        rpcCommunicator1.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.getClosestPeers)
+        rpcCommunicator1.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.getClosestPeers)
 
         rpcCommunicator2 = new RpcCommunicator()
-        rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.getClosestPeers)
+        rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.getClosestPeers)
 
         rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {
             rpcCommunicator2.handleIncomingMessage(message)
@@ -51,24 +46,24 @@ describe('DhtRpc', () => {
 
     it('Happy path', async () => {
         const response1 = client1.getClosestPeers(
-            { kademliaId: peerDescriptor1.kademliaId, requestId: '1' },
+            { nodeId: peerDescriptor1.nodeId, requestId: '1' },
             {
                 sourceDescriptor: peerDescriptor1,
                 targetDescriptor: peerDescriptor2,
             }
         )
         const res1 = await response1
-        expect(res1.peers).toEqual(getMockPeers())
+        expect(res1.peers.map((p) => getNodeIdFromPeerDescriptor(p))).toEqual(neighbors.map((n) => getNodeIdFromPeerDescriptor(n)))
 
         const response2 = client2.getClosestPeers(
-            { kademliaId: peerDescriptor2.kademliaId, requestId: '1' },
+            { nodeId: peerDescriptor2.nodeId, requestId: '1' },
             {
                 sourceDescriptor: peerDescriptor2,
                 targetDescriptor: peerDescriptor1
             }
         )
         const res2 = await response2
-        expect(res2.peers).toEqual(getMockPeers())
+        expect(res2.peers.map((p) => getNodeIdFromPeerDescriptor(p))).toEqual(neighbors.map((n) => getNodeIdFromPeerDescriptor(n)))
     })
 
     it('Default RPC timeout, client side', async () => {
@@ -77,7 +72,7 @@ describe('DhtRpc', () => {
             await wait(3000)
         })
         const response2 = client2.getClosestPeers(
-            { kademliaId: peerDescriptor2.kademliaId, requestId: '1' },
+            { nodeId: peerDescriptor2.nodeId, requestId: '1' },
             {
                 sourceDescriptor: peerDescriptor2,
                 targetDescriptor: peerDescriptor1
@@ -92,7 +87,7 @@ describe('DhtRpc', () => {
         let timeout: NodeJS.Timeout
 
         async function respondGetClosestPeersWithTimeout(): Promise<ClosestPeersResponse> {
-            const neighbors = getMockPeers()
+            const neighbors = createMockPeers()
             const response: ClosestPeersResponse = {
                 peers: neighbors,
                 requestId: 'why am i still here'
@@ -103,7 +98,7 @@ describe('DhtRpc', () => {
 
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', respondGetClosestPeersWithTimeout)
         const response = client2.getClosestPeers(
-            { kademliaId: peerDescriptor2.kademliaId, requestId: '1' },
+            { nodeId: peerDescriptor2.nodeId, requestId: '1' },
             {
                 sourceDescriptor: peerDescriptor2,
                 targetDescriptor: peerDescriptor1

@@ -7,7 +7,7 @@ import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/prot
 import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { NodeList } from '../NodeList'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
-import { INeighborFinder } from './NeighborFinder'
+import { NeighborFinder } from './NeighborFinder'
 import { StreamPartID } from '@streamr/protocol'
 
 interface NeighborUpdateRpcLocalConfig {
@@ -15,7 +15,7 @@ interface NeighborUpdateRpcLocalConfig {
     streamPartId: StreamPartID
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
-    neighborFinder: INeighborFinder
+    neighborFinder: NeighborFinder
     rpcCommunicator: ListeningRpcCommunicator
 }
 

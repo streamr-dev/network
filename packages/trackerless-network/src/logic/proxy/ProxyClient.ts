@@ -27,6 +27,7 @@ import { markAndCheckDuplicate } from '../utils'
 import { ProxyConnectionRpcRemote } from './ProxyConnectionRpcRemote'
 import { formStreamPartDeliveryServiceId } from '../formStreamPartDeliveryServiceId'
 
+// TODO use config option or named constant?
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -57,11 +58,15 @@ interface ProxyDefinition {
     userId: EthereumAddress
 }
 
+interface Events {
+    message: (message: StreamMessage) => void
+}
+
 const logger = new Logger(module)
 
 const SERVICE_ID = 'system/proxy-client'
 
-export class ProxyClient extends EventEmitter {
+export class ProxyClient extends EventEmitter<Events> {
 
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly deliveryRpcLocal: DeliveryRpcLocal
@@ -77,6 +82,7 @@ export class ProxyClient extends EventEmitter {
         super()
         this.config = config
         this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(config.streamPartId), config.transport)
+        // TODO use config option or named constant?
         this.targetNeighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor), 1000)
         this.deliveryRpcLocal = new DeliveryRpcLocal({
             localPeerDescriptor: this.config.localPeerDescriptor,
@@ -86,6 +92,7 @@ export class ProxyClient extends EventEmitter {
             onLeaveNotice: (senderId: NodeID) => {
                 const contact = this.targetNeighbors.get(senderId)
                 if (contact) {
+                    // TODO should we catch possible promise rejection?
                     setImmediate(() => this.onNodeDisconnected(contact.getPeerDescriptor()))
                 }
             },
@@ -93,6 +100,7 @@ export class ProxyClient extends EventEmitter {
             markForInspection: () => {}
         })
         this.propagation = new Propagation({
+            // TODO use config option or named constant?
             minPropagationTargets: config.minPropagationTargets ?? 2,
             sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
                 const remote = this.targetNeighbors.get(neighborId)
@@ -121,9 +129,9 @@ export class ProxyClient extends EventEmitter {
     ): Promise<void> {
         logger.trace('Setting proxies', { streamPartId: this.config.streamPartId, peerDescriptors: nodes, direction, userId, connectionCount })
         if (connectionCount !== undefined && connectionCount > nodes.length) {
-            throw Error('Cannot set connectionCount above the size of the configured array of nodes')
+            throw new Error('Cannot set connectionCount above the size of the configured array of nodes')
         }
-        const nodesIds = new Map()
+        const nodesIds = new Map<NodeID, PeerDescriptor>()
         nodes.forEach((peerDescriptor) => {
             nodesIds.set(getNodeIdFromPeerDescriptor(peerDescriptor), peerDescriptor)
         })
@@ -243,6 +251,7 @@ export class ProxyClient extends EventEmitter {
         addManagedEventListener<any, any>(
             this.config.transport as any,
             'disconnected',
+            // TODO should we catch possible promise rejection?
             (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor),
             this.abortController.signal
         )

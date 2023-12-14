@@ -122,12 +122,13 @@ export class EntryPointDiscovery {
         if (this.abortController.signal.aborted) {
             return
         }
-        const possibleNetworkSplitDetected = this.config.layer1Node.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT
+        const possibleNetworkSplitDetected = this.config.layer1Node.getNumberOfNeighbors() < NETWORK_SPLIT_AVOIDANCE_LIMIT
         if ((currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) || possibleNetworkSplitDetected) {
             await this.storeSelfAsEntryPoint()
             await this.keepSelfAsEntryPoint()
         }
         if (possibleNetworkSplitDetected) {
+            // TODO should we catch possible promise rejection?
             setImmediate(() => this.avoidNetworkSplit())
         }
     }
@@ -161,10 +162,11 @@ export class EntryPointDiscovery {
         await exponentialRunOff(async () => {
             const rediscoveredEntrypoints = await this.discoverEntryPoints()
             await this.config.layer1Node.joinDht(rediscoveredEntrypoints, false, false)
-            if (this.config.layer1Node!.getBucketSize() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
-                // Filter out nodes that are not in the k-bucket, assumed to be offline
+            if (this.config.layer1Node.getNumberOfNeighbors() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
+                // Filter out nodes that are not neighbors as those nodes are assumed to be offline
                 const nodesToAvoid = rediscoveredEntrypoints
-                    .filter((peer) => !this.config.layer1Node!.getKBucketPeers().includes(peer))
+                    .filter((peer) => !this.config.layer1Node.getAllNeighborPeerDescriptors()
+                        .some((neighbor) => areEqualPeerDescriptors(neighbor, peer)))
                     .map((peer) => getNodeIdFromPeerDescriptor(peer))
                 nodesToAvoid.forEach((node) => this.networkSplitAvoidedNodes.add(node))
                 throw new Error(`Network split is still possible`)

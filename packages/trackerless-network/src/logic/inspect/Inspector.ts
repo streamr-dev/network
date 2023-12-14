@@ -1,4 +1,4 @@
-import { PeerDescriptor, ConnectionLocker, ListeningRpcCommunicator } from '@streamr/dht'
+import { PeerDescriptor, ConnectionLocker, ListeningRpcCommunicator, LockID } from '@streamr/dht'
 import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -14,20 +14,13 @@ interface InspectorConfig {
     rpcCommunicator: ListeningRpcCommunicator
     connectionLocker: ConnectionLocker
     inspectionTimeout?: number
-    openInspectConnection?: (peerDescriptor: PeerDescriptor, lockId: string) => Promise<void>
-}
-
-export interface IInspector {
-    inspect(peerDescriptor: PeerDescriptor): Promise<boolean>
-    markMessage(sender: NodeID, messageId: MessageID): void
-    isInspected(nodeId: NodeID): boolean
-    stop(): void
+    openInspectConnection?: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
 }
 
 const logger = new Logger(module)
 const DEFAULT_TIMEOUT = 60 * 1000
 
-export class Inspector implements IInspector {
+export class Inspector {
 
     private readonly sessions: Map<NodeID, InspectSession> = new Map()
     private readonly streamPartId: StreamPartID
@@ -35,7 +28,7 @@ export class Inspector implements IInspector {
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly connectionLocker: ConnectionLocker
     private readonly inspectionTimeout: number
-    private readonly openInspectConnection: (peerDescriptor: PeerDescriptor, lockId: string) => Promise<void>
+    private readonly openInspectConnection: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
 
     constructor(config: InspectorConfig) {
         this.streamPartId = config.streamPartId
@@ -46,7 +39,7 @@ export class Inspector implements IInspector {
         this.openInspectConnection = config.openInspectConnection ?? this.defaultOpenInspectConnection
     }
 
-    async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: string): Promise<void> {
+    async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: LockID): Promise<void> {
         const rpcRemote = new TemporaryConnectionRpcRemote(this.localPeerDescriptor, peerDescriptor, this.streamPartId, this.client)
         await rpcRemote.openConnection()
         this.connectionLocker.lockConnection(peerDescriptor, lockId)
