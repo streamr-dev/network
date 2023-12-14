@@ -26,7 +26,6 @@ export class PeerDiscovery {
     private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
     private rejoinOngoing = false
     private joinCalled = false
-    private rejoinTimeoutRef?: NodeJS.Timeout
     private readonly abortController: AbortController
     private recoveryIntervalStarted = false
     private readonly config: PeerDiscoveryConfig
@@ -153,10 +152,6 @@ export class PeerDiscovery {
 
     public stop(): void {
         this.abortController.abort()
-        if (this.rejoinTimeoutRef) {
-            clearTimeout(this.rejoinTimeoutRef)
-            this.rejoinTimeoutRef = undefined
-        }
         this.ongoingDiscoverySessions.forEach((session) => {
             session.stop()
         })
