@@ -239,11 +239,13 @@ async function getPrivateKey(): Promise<string> {
     return privateKey
 }
 
+type NetworkKey = 'polygon' | 'mumbai'
+
 /**
  * Lets the user decide the desired network for their node.
  */
-async function getNetwork(): Promise<'polygon' | 'mumbai'> {
-    return select<Awaited<ReturnType<typeof getNetwork>>>({
+async function getNetwork(): Promise<NetworkKey> {
+    return select<NetworkKey>({
         message:
             'Which network do you want to configure your node to connect to?',
         choices: [
