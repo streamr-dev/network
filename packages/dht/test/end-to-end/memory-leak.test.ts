@@ -1,30 +1,28 @@
 import LeakDetector from 'jest-leak-detector'
 import { binaryToHex, waitForCondition } from '@streamr/utils'
-import { randomBytes } from 'crypto'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { Message, MessageType, NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, MessageType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 const MESSAGE_ID = 'mock-message-id'
 
 describe('memory leak', () => {
 
     it('send message', async () => {
-        const entryPointDescriptor = {
-            kademliaId: randomBytes(10),
-            type: NodeType.NODEJS,
+        const entryPointDescriptor = createMockPeerDescriptor({
             websocket: {
                 host: '127.0.0.1',
                 port: 11224,
                 tls: false
             }
-        }
+        })
         let entryPoint: DhtNode | undefined = new DhtNode({
-            peerId: binaryToHex(entryPointDescriptor.kademliaId),
+            peerId: binaryToHex(entryPointDescriptor.nodeId),
             websocketHost: entryPointDescriptor.websocket!.host,
             websocketPortRange: {
-                min: entryPointDescriptor.websocket.port,
-                max: entryPointDescriptor.websocket.port
+                min: entryPointDescriptor.websocket!.port,
+                max: entryPointDescriptor.websocket!.port
             },
             entryPoints: [entryPointDescriptor],
             websocketServerEnableTls: false
@@ -68,6 +66,7 @@ describe('memory leak', () => {
 
         const detector1 = new LeakDetector(entryPoint)
         entryPoint = undefined
+        await detector1.isLeaking()
         expect(await detector1.isLeaking()).toBe(false)
 
         const detector2 = new LeakDetector(sender)

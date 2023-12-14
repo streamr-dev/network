@@ -1,21 +1,19 @@
 /* eslint-disable no-console */
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
+import { NodeID } from '../../src/helpers/nodeId'
 
 describe('Kademlia correctness', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-    let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator()
     const NUM_NODES = 1000
 
-    const nodeIndicesById: Record<string, number> = {}
+    const nodeIndicesById: Record<NodeID, number> = {}
 
     if (!fs.existsSync('test/data/nodeids.json')) {
         console.log('gound truth data does not exist yet, generating..')
@@ -29,20 +27,13 @@ describe('Kademlia correctness', () => {
     beforeEach(async () => {
 
         nodes = []
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data), 8)
+        entryPoint = await createMockConnectionDhtNode(simulator, Uint8Array.from(dhtIds[0].data), 8)
         nodes.push(entryPoint)
-        nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
-        entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS
-        }
+        nodeIndicesById[entryPoint.getNodeId()] = 0
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-
-            const node = await createMockConnectionDhtNode(nodeId, simulator, Uint8Array.from(dhtIds[i].data))
-            nodeIndicesById[node.getNodeId().toKey()] = i
+            const node = await createMockConnectionDhtNode(simulator, Uint8Array.from(dhtIds[i].data))
+            nodeIndicesById[node.getNodeId()] = i
             nodes.push(node)
         }
     })
@@ -55,10 +46,10 @@ describe('Kademlia correctness', () => {
     })
 
     it('Can find correct neighbors', async () => {
-        await entryPoint.joinDht([entrypointDescriptor])
+        await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
 
         await Promise.allSettled(
-            nodes.map((node) => node.joinDht([entrypointDescriptor]))
+            nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()]))
         )
 
         let minimumCorrectNeighbors = Number.MAX_SAFE_INTEGER
@@ -72,17 +63,17 @@ describe('Kademlia correctness', () => {
                 groundTruthString += groundTruth[i + ''][j].name + ','
             }
 
-            const kademliaNeighbors = nodes[i].getClosestContacts().map((p) => PeerID.fromValue(p.kademliaId))
+            const kademliaNeighbors = nodes[i].getClosestContacts().map((p) => getNodeIdFromPeerDescriptor(p))
 
             let kadString = 'kademliaNeighbors: '
             kademliaNeighbors.forEach((neighbor) => {
-                kadString += nodeIndicesById[neighbor.toKey()] + ','
+                kadString += nodeIndicesById[neighbor] + ','
             })
 
             let correctNeighbors = 0
             try {
                 for (let j = 0; j < groundTruth[i + ''].length; j++) {
-                    if (groundTruth[i + ''][j].name != (nodeIndicesById[kademliaNeighbors[j].toKey()] + '')) {
+                    if (groundTruth[i + ''][j].name != (nodeIndicesById[kademliaNeighbors[j]] + '')) {
                         break
                     }
                     correctNeighbors++
@@ -102,7 +93,7 @@ describe('Kademlia correctness', () => {
             }
 
             if (i > 0) {
-                sumKbucketSize += nodes[i].getBucketSize()
+                sumKbucketSize += nodes[i].getNumberOfNeighbors()
                 sumCorrectNeighbors += correctNeighbors
             }
         }

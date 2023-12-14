@@ -1,32 +1,33 @@
-import { PeerID } from '../../../src/helpers/PeerID'
 import type { SimulationNode } from './SimulationNode'
 import { NodeType, PeerDescriptor } from '../../../src/proto/packages/dht/protos/DhtRpc'
+import { NodeID } from '../../../src/helpers/nodeId'
+import { hexToBinary } from '@streamr/utils'
 
 export class Contact {
     private static counter = 0
 
-    public peerId: PeerID
+    public ownId: NodeID
     public id: Uint8Array
     public vectorClock = 0
     public dhtNode: SimulationNode | undefined
 
-    constructor(ownId: PeerID, dhtNode?: SimulationNode) {
-        this.peerId = ownId
+    constructor(ownId: NodeID, dhtNode?: SimulationNode) {
+        this.ownId = ownId
         this.vectorClock = Contact.counter++
         this.dhtNode = dhtNode
-        this.id = ownId.value
+        this.id = hexToBinary(ownId)
     }
 
     getPeerDescriptor(): PeerDescriptor {
         const peerDescriptor: PeerDescriptor = {
-            kademliaId: this.peerId.value,
+            nodeId: hexToBinary(this.ownId),
             type: NodeType.NODEJS
         }
         return peerDescriptor
     }
 
-    getPeerId(): PeerID {
-        return this.peerId
+    getNodeId(): NodeID {
+        return this.ownId
     }
 
 }

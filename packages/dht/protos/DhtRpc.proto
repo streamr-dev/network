@@ -19,22 +19,21 @@ service RouterRpc {
   rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
-service FindRpc {
-  rpc routeFindRequest (RouteMessageWrapper) returns (RouteMessageAck);
+service RecursiveOperationRpc {
+  rpc routeRequest (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
 service StoreRpc {
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
   rpc replicateData (ReplicateDataRequest) returns (google.protobuf.Empty);
-  rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
 }
 
-service FindSessionRpc {
-  rpc sendFindResponse(FindResponse) returns (google.protobuf.Empty);
+service RecursiveOperationSessionRpc {
+  rpc sendResponse(RecursiveOperationResponse) returns (google.protobuf.Empty);
 }
 
 service WebsocketConnectorRpc {
-  rpc requestConnection (WebsocketConnectionRequest) returns (WebsocketConnectionResponse);
+  rpc requestConnection (WebsocketConnectionRequest) returns (google.protobuf.Empty);
 }
 
 service WebrtcConnectorRpc {
@@ -58,10 +57,10 @@ service ExternalApiRpc {
 // Used inside RpcMessage
 
 message StoreDataRequest {
-  bytes kademliaId = 1;
+  bytes key = 1;
   google.protobuf.Any data = 2;
-  PeerDescriptor storer = 3;
-  google.protobuf.Timestamp storerTime = 4;
+  PeerDescriptor creator = 3;
+  google.protobuf.Timestamp createdAt = 4;
   uint32 ttl = 5;
 }
 
@@ -82,27 +81,19 @@ message ReplicateDataRequest {
   DataEntry entry = 1;
 }
 
-message DeleteDataRequest {
-  bytes kademliaId = 1;
-}
-
-message DeleteDataResponse {
-  bool deleted = 1;
-}
-
 message DataEntry {
-  PeerDescriptor storer = 1;
-  bytes kademliaId = 2;
-  google.protobuf.Any data = 3;
-  google.protobuf.Timestamp storedAt = 4; 
-  uint32 ttl = 5;   // milliseconds
-  bool stale = 6;
-  bool deleted = 7;
-  google.protobuf.Timestamp storerTime = 8;
+  bytes key = 1;
+  google.protobuf.Any data = 2;
+  PeerDescriptor creator = 3;
+  google.protobuf.Timestamp createdAt = 4;
+  google.protobuf.Timestamp storedAt = 5; 
+  uint32 ttl = 6;   // milliseconds
+  bool stale = 7;
+  bool deleted = 8;
 }
 
 message ClosestPeersRequest {
-  bytes kademliaId = 1;
+  bytes nodeId = 1;
   string requestId = 2;
 }
 
@@ -111,12 +102,18 @@ message ClosestPeersResponse {
   string requestId = 2;
 }
 
-message FindRequest {
+message RecursiveOperationRequest {
   string sessionId = 1;
-  bool fetchData = 2;
+  RecursiveOperation operation = 2;
 }
 
-message FindResponse {
+enum RecursiveOperation {
+  FIND_NODE = 0;
+  FETCH_DATA = 1;
+  DELETE_DATA = 2;
+}
+
+message RecursiveOperationResponse {
   repeated PeerDescriptor closestConnectedPeers = 1;
   repeated DataEntry dataEntries = 2;
   bool noCloserNodesFound = 3;
@@ -136,7 +133,7 @@ message LeaveNotice {
 }
 
 message PeerDescriptor {
-  bytes kademliaId = 1;
+  bytes nodeId = 1;
   NodeType type = 2;
   ConnectivityMethod udp = 3;
   ConnectivityMethod tcp = 4;
@@ -223,7 +220,7 @@ enum MessageType {
   CONNECTIVITY_RESPONSE = 2;
   HANDSHAKE_REQUEST = 3;
   HANDSHAKE_RESPONSE = 4;
-  FIND_REQUEST = 5;
+  RECURSIVE_OPERATION_REQUEST = 5;
 }
 
 message Message {
@@ -238,7 +235,7 @@ message Message {
     HandshakeRequest handshakeRequest = 8;
     HandshakeResponse handshakeResponse = 9;
     protorpc.RpcMessage rpcMessage = 10;
-    FindRequest findRequest = 11;
+    RecursiveOperationRequest recursiveOperationRequest = 11;
   };
 }
 
@@ -246,10 +243,6 @@ message Message {
 
 // WebSocket
 message WebsocketConnectionRequest {
-}
-
-message WebsocketConnectionResponse {
-  bool accepted = 1;
 }
 
 // WebRTC
@@ -297,7 +290,7 @@ message DisconnectNoticeResponse {
 }
 
 message ExternalFindDataRequest {
-  bytes kademliaId = 1;
+  bytes key = 1;
 }
 
 message ExternalFindDataResponse {
