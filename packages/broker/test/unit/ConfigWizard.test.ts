@@ -132,7 +132,7 @@ describe('Config wizard', () => {
 
         expect(config.plugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer'])
+        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -193,7 +193,7 @@ describe('Config wizard', () => {
 
         expect(config.plugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer'])
+        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -270,7 +270,7 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer'])
+        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -356,7 +356,7 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer'])
+        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -412,7 +412,7 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer'])
+        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -472,7 +472,7 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer'])
+        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -532,7 +532,7 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer'])
+        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -593,7 +593,7 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer'])
+        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -725,7 +725,7 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer'])
+        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -904,7 +904,7 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer'])
+        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -979,7 +979,7 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer'])
+        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -1189,23 +1189,9 @@ describe('Config wizard', () => {
 
         expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config.client.network.controlLayer.entryPoints[0]).toMatchObject(
-            {
-                nodeId: expect.stringMatching(/\w/),
-            }
-        )
+        expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
-        expect(config.client.contracts).toMatchObject({
-            streamRegistryChainAddress:
-                expect.stringMatching(/^0x[\da-f]{40}$/i),
-            streamStorageRegistryChainAddress:
-                expect.stringMatching(/^0x[\da-f]{40}$/i),
-            storageNodeRegistryChainAddress:
-                expect.stringMatching(/^0x[\da-f]{40}$/i),
-            streamRegistryChainRPCs: expect.objectContaining({
-                name: 'mumbai',
-            }),
-        })
+        expect(config.environment).toEqual('mumbai')
 
         const summary = logs.join('\n')
 

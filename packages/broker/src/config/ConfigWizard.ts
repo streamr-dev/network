@@ -1,11 +1,10 @@
 import { checkbox, confirm, input, password, select } from '@inquirer/prompts'
-import { config as cfg, config } from '@streamr/config'
+import { config as streamrConfig } from '@streamr/config'
 import { toEthereumAddress } from '@streamr/utils'
 import chalk from 'chalk'
 import { BigNumber, Wallet, providers, utils } from 'ethers'
 import { isAddress } from 'ethers/lib/utils'
 import { chmodSync, existsSync, mkdirSync, writeFileSync } from 'fs'
-import { produce } from 'immer'
 import capitalize from 'lodash/capitalize'
 import omit from 'lodash/omit'
 import path from 'path'
@@ -87,7 +86,10 @@ export async function start(): Promise<void> {
         }
 
         if (network === 'mumbai') {
-            config = getMumbaiConfig(config)
+            config = {
+                ...config,
+                environment: 'mumbai'
+            }
         }
 
         persistConfig(
@@ -424,50 +426,6 @@ function persistConfig(storagePath: string, config: ConfigFile): void {
 }
 
 /**
- * Adjusts `config` for the Mumbai test environment.
- */
-function getMumbaiConfig(config: ConfigFile): ConfigFile {
-    return produce(config, (draft) => {
-        if (!draft.client) {
-            draft.client = {}
-        }
-
-        draft.client.metrics = false
-
-        const {
-            id: chainId,
-            entryPoints,
-            theGraphUrl,
-            rpcEndpoints: rpcs,
-        } = cfg.mumbai
-
-        draft.client.network = {
-            controlLayer: {
-                entryPoints,
-            },
-        }
-
-        const {
-            StreamRegistry: streamRegistryChainAddress,
-            StreamStorageRegistry: streamStorageRegistryChainAddress,
-            StorageNodeRegistry: storageNodeRegistryChainAddress,
-        } = cfg.mumbai.contracts
-
-        draft.client.contracts = {
-            streamRegistryChainAddress,
-            streamStorageRegistryChainAddress,
-            storageNodeRegistryChainAddress,
-            streamRegistryChainRPCs: {
-                name: 'mumbai',
-                chainId,
-                rpcs,
-            },
-            theGraphUrl,
-        }
-    })
-}
-
-/**
  * Gets a wallet balance of the network-native token for the given
  * wallet address.
  */
@@ -475,7 +433,7 @@ async function getNativeBalance(
     network: 'polygon' | 'mumbai',
     address: string
 ): Promise<BigNumber> {
-    const url = config[network].rpcEndpoints[0]?.url
+    const url = streamrConfig[network].rpcEndpoints[0]?.url
 
     if (!url || !/^https?:/i.test(url)) {
         throw new Error('Invalid RPC')
@@ -492,7 +450,7 @@ async function getOperatorNodeAddresses(
     network: 'polygon' | 'mumbai',
     operatorAddress: string
 ): Promise<null | string[]> {
-    const url = config[network].theGraphUrl
+    const url = streamrConfig[network].theGraphUrl
 
     const resp = await fetch(url, {
         method: 'POST',
