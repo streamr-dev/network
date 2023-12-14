@@ -60,7 +60,7 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
     }
 
     stop(): void {
-        this.connections.forEach((connection) => connection.remote.leaveStreamPartNotice())
+        this.connections.forEach((connection) => connection.remote.leaveStreamPartNotice(false))
         this.connections.clear()
         this.removeAllListeners()
     }
