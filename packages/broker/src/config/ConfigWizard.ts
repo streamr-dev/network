@@ -112,7 +112,7 @@ export async function start(): Promise<void> {
 
                 const content = `Your node address has *${utils
                     .formatEther(balance)
-                    .replace(/\.(\d+)/, (f) => f.substring(0, 3))} MATIC*`
+                    .replace(/\.\d+/, (f) => f.substring(0, 3))} MATIC*`
 
                 resume()
 
