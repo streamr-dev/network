@@ -145,7 +145,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private recursiveOperationManager?: RecursiveOperationManager
     private peerDiscovery?: PeerDiscovery
     private peerManager?: PeerManager
-
     public connectionManager?: ConnectionManager
     private started = false
     private abortController = new AbortController()
