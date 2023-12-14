@@ -475,9 +475,9 @@ async function getNativeBalance(
     network: 'polygon' | 'mumbai',
     address: string
 ): Promise<BigNumber> {
-    const url = config[network].rpcEndpoints[0]?.url || ''
+    const url = config[network].rpcEndpoints[0]?.url
 
-    if (!/^https?:/i.test(url)) {
+    if (!url || !/^https?:/i.test(url)) {
         throw new Error('Invalid RPC')
     }
 
