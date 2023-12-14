@@ -7,6 +7,7 @@ import { isAddress } from 'ethers/lib/utils'
 import { chmodSync, existsSync, mkdirSync, writeFileSync } from 'fs'
 import { produce } from 'immer'
 import capitalize from 'lodash/capitalize'
+import omit from 'lodash/omit'
 import path from 'path'
 import { v4 as uuid } from 'uuid'
 import { z } from 'zod'
@@ -50,15 +51,19 @@ export async function start(): Promise<void> {
 
         const { http, ...pubsubPlugins } = await getPubsubPlugins()
 
+        /**
+         * Port number for the `http` plugin has to be defined within
+         * the `httpServer` object in the config's root. See below.
+         */
         if (http) {
             Object.assign(pubsubPlugins, {
-                http: {},
+                http: omit(http, 'port'),
             })
         }
 
-        const storagePath = await getStoragePath()
-
         const httpServer = http?.port ? { port: http.port } : undefined
+
+        const storagePath = await getStoragePath()
 
         const apiKey = Buffer.from(uuid().replace(/-/g, ''))
             .toString('base64')
