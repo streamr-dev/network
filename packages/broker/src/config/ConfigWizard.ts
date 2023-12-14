@@ -177,6 +177,10 @@ export async function start(): Promise<void> {
         `)
     } catch (e: any) {
         if (typeof e.message === 'string' && /force closed/i.test(e.message)) {
+            /**
+             * Hitting ctrl+c key combination causes the `inquirer` library to throw
+             * the "User force closed the prompt" exception. Let's ignore it.
+             */
             return
         }
 
