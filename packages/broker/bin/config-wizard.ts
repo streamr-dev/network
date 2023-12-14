@@ -8,7 +8,7 @@ program
     .name('broker-config-wizard')
     .description('Run the configuration wizard for the broker')
 
-void (async () => {
+;(async () => {
     try {
         await start()
     } catch (e) {
