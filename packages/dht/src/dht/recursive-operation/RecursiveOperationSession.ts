@@ -99,7 +99,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         const routeMessage: RouteMessageWrapper = {
             message: msg,
             requestId: v4(),
-            destinationPeer: targetDescriptor,
+            target: targetDescriptor.nodeId,
             sourcePeer: this.config.localPeerDescriptor,
             reachableThrough: [],
             routingPath: []

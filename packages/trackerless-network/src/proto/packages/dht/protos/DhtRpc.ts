@@ -253,9 +253,9 @@ export interface RouteMessageWrapper {
      */
     requestId: string;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor destinationPeer = 3;
+     * @generated from protobuf field: bytes target = 3;
      */
-    destinationPeer?: PeerDescriptor;
+    target: Uint8Array;
     /**
      * @generated from protobuf field: dht.Message message = 4;
      */
@@ -874,7 +874,7 @@ class RouteMessageWrapper$Type extends MessageType$<RouteMessageWrapper> {
         super("dht.RouteMessageWrapper", [
             { no: 1, name: "sourcePeer", kind: "message", T: () => PeerDescriptor },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "destinationPeer", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "target", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 4, name: "message", kind: "message", T: () => Message },
             { no: 5, name: "reachableThrough", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 6, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
