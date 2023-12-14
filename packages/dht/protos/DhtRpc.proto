@@ -149,7 +149,6 @@ message ConnectivityMethod {
 enum NodeType {
   NODEJS = 0;
   BROWSER = 1;
-  VIRTUAL = 3;
 }
 
 enum RpcResponseError {

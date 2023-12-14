@@ -7,7 +7,6 @@ import {
     RecursiveOperation,
     RouteMessageWrapper,
     RouteMessageAck,
-    NodeType,
     RecursiveOperationRequest,
     Message,
     MessageType
@@ -79,10 +78,6 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     }
 
     private wrapRequest(serviceId: ServiceID): RouteMessageWrapper {
-        const targetDescriptor: PeerDescriptor = {
-            nodeId: this.config.targetId,
-            type: NodeType.VIRTUAL
-        }
         const request: RecursiveOperationRequest = {
             sessionId: this.getId(),
             operation: this.config.operation
@@ -99,7 +94,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         const routeMessage: RouteMessageWrapper = {
             message: msg,
             requestId: v4(),
-            target: targetDescriptor.nodeId,
+            target: this.config.targetId,
             sourcePeer: this.config.localPeerDescriptor,
             reachableThrough: [],
             routingPath: []
