@@ -20,7 +20,7 @@ describe('stream without default entrypoints', () => {
     let nodes: NetworkNode[]
     let numOfReceivedMessages: number
     const entryPointPeerDescriptor: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 2, 3]),
+        nodeId: new Uint8Array([1, 2, 3]),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
@@ -43,7 +43,6 @@ describe('stream without default entrypoints', () => {
     })
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
         const simulator = new Simulator(LatencyType.REAL)
         nodes = []
         numOfReceivedMessages = 0
@@ -76,7 +75,6 @@ describe('stream without default entrypoints', () => {
     afterEach(async () => {
         await entrypoint.stop()
         await Promise.all(nodes.map((node) => node.stop()))
-        Simulator.useFakeTimers(false)
     })
 
     it('can join stream without configured entrypoints one by one', async () => {

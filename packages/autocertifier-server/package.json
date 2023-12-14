@@ -8,7 +8,8 @@
     "directory": "packages/autocertifier-server"
   },
   "bin": {
-    "autocertifier": "dist/bin/run.js"
+    "autocertifier": "dist/bin/run.js",
+    "copyARecordsToRoute53": "dist/bin/copyARecordsToRoute53.js"
   },
   "main": "dist/src/exports.js",
   "types": "dist/src/exports.d.ts",
@@ -22,10 +23,10 @@
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
     "test": "jest test/unit test/integration",
     "test-unit": "jest test/unit",
-    "test-integration": "jest test/integration",
-    "start": "node dist/src/main.js"
+    "test-integration": "jest test/integration"
   },
   "dependencies": {
+    "@aws-sdk/client-route-53": "^3.454.0",
     "@streamr/autocertifier-client": "100.0.0-pretestnet.4",
     "@streamr/dht": "100.0.0-pretestnet.4",
     "@streamr/utils": "100.0.0-pretestnet.4",
@@ -34,6 +35,7 @@
     "dns2": "^2.1.0",
     "dotenv": "^16.3.1",
     "express": "^4.17.1",
+    "lodash": "^4.17.21",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.0.3",
     "uuid": "^9.0.1"

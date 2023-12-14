@@ -15,7 +15,7 @@ const WEBRTC_TIMEOUT = 15000
 // default timeout for existing connections
 export const EXISTING_CONNECTION_TIMEOUT = 5000
 
-const getRpcTimeout = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: PeerDescriptor): number => {
+const getTimeout = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: PeerDescriptor): number => {
     const connectionType = expectedConnectionType(localPeerDescriptor, remotePeerDescriptor)
     if (connectionType === ConnectionType.WEBSOCKET_CLIENT) {
         return WEBSOCKET_CLIENT_TIMEOUT
@@ -27,25 +27,26 @@ const getRpcTimeout = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor
     return WEBRTC_TIMEOUT
 }
 
-export abstract class Remote<T> {
+export abstract class RpcRemote<T> {
 
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly remotePeerDescriptor: PeerDescriptor
     private readonly serviceId: ServiceID
     private readonly client: ProtoRpcClient<T>
-    private readonly rpcTimeout?: number
+    private readonly timeout?: number
+
     constructor(
         localPeerDescriptor: PeerDescriptor,
         remotePeerDescriptor: PeerDescriptor,
         serviceId: ServiceID,
         client: ProtoRpcClient<T>,
-        rpcTimeout?: number
+        timeout?: number
     ) {
         this.localPeerDescriptor = localPeerDescriptor
         this.remotePeerDescriptor = remotePeerDescriptor
         this.client = client
         this.serviceId = serviceId
-        this.rpcTimeout = rpcTimeout
+        this.timeout = timeout
     }
 
     getPeerDescriptor(): PeerDescriptor {
@@ -56,7 +57,7 @@ export abstract class Remote<T> {
         return this.localPeerDescriptor
     }
 
-    getServiceId(): string {
+    getServiceId(): ServiceID {
         return this.serviceId
     }
 
@@ -68,7 +69,7 @@ export abstract class Remote<T> {
         return {
             sourceDescriptor: this.localPeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor,
-            timeout: this.rpcTimeout ?? getRpcTimeout(this.localPeerDescriptor, this.remotePeerDescriptor),
+            timeout: this.timeout ?? getTimeout(this.localPeerDescriptor, this.remotePeerDescriptor),
             ...opts
         }
     }

@@ -4,25 +4,18 @@ import { Handshaker } from './Handshaker'
 import { HandshakeError, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import { PeerIDKey } from '../helpers/PeerID'
-import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
+import { NodeID } from '../helpers/nodeId'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
     handshakeRequest: (source: PeerDescriptor, target?: PeerDescriptor) => void
     handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
     handshakeFailed: () => void
-    bufferSentByOtherConnection: () => void
-    closing: () => void
 }
 
-interface OutpuBufferEvents {
-    bufferSent: () => void
-    bufferSendingFailed: () => void
-}
-
-interface OutpuBufferEvents {
+interface OutputBufferEvents {
     bufferSent: () => void
     bufferSendingFailed: () => void
 }
@@ -34,28 +27,24 @@ export type Events = ManagedConnectionEvents & ConnectionEvents
 export class ManagedConnection extends EventEmitter<Events> {
 
     private implementation?: IConnection
-
-    private outputBufferEmitter = new EventEmitter<OutpuBufferEvents>()
+    private outputBufferEmitter = new EventEmitter<OutputBufferEvents>()
     private outputBuffer: Uint8Array[] = []
-
     private inputBuffer: Uint8Array[] = []
-
     public connectionId: ConnectionID
     private remotePeerDescriptor?: PeerDescriptor
     public connectionType: ConnectionType
-
     private handshaker?: Handshaker
     private handshakeCompleted = false
-
     private lastUsed: number = Date.now()
     private stopped = false
-    public offeredAsIncoming = false
     private bufferSentbyOtherConnection = false
     private closing = false
     public replacedByOtherConnection = false
     private localPeerDescriptor: PeerDescriptor
     protected outgoingConnection?: IConnection
     protected incomingConnection?: IConnection
+    // TODO: Temporary debug variable, should be removed in the future.
+    private created = Date.now()
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
@@ -85,6 +74,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             this.handshaker.once('handshakeFailed', (error) => {
                 if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR) {
+                    // TODO should we have some handling for this floating promise?
                     this.close(false)
                 } else {
                     logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' handshakeFailed: ' + error)
@@ -162,8 +152,8 @@ export class ManagedConnection extends EventEmitter<Events> {
         return this
     }
 
-    public get peerIdKey(): PeerIDKey {
-        return keyFromPeerDescriptor(this.remotePeerDescriptor!)
+    public getNodeId(): NodeID {
+        return getNodeIdFromPeerDescriptor(this.remotePeerDescriptor!)
     }
 
     public getLastUsed(): number {
@@ -229,7 +219,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.emit('disconnected', gracefulLeave)
     }
 
-    async send(data: Uint8Array, doNotConnect = false): Promise<void> {
+    async send(data: Uint8Array, connect: boolean): Promise<void> {
         if (this.stopped) {
             throw new Err.SendFailed('ManagedConnection is stopped')
         }
@@ -238,20 +228,25 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
         this.lastUsed = Date.now()
 
-        if (doNotConnect && !this.implementation) {
-            throw new Err.ConnectionNotOpen('Connection not open when calling send() with doNotConnect flag')
+        if (!connect && !this.implementation) {
+            throw new Err.ConnectionNotOpen('Connection not open when calling send() with connect flag as false')
         } else if (this.implementation) {
             this.implementation.send(data)
         } else {
             logger.trace('adding data to outputBuffer')
 
-            let result: RunAndRaceEventsReturnType<OutpuBufferEvents>
+            let result: RunAndRaceEventsReturnType<OutputBufferEvents>
 
             try {
-                result = await runAndRaceEvents3<OutpuBufferEvents>([() => { this.outputBuffer.push(data) }],
-                    this.outputBufferEmitter, ['bufferSent', 'bufferSendingFailed'], 15000)
+                result = await runAndRaceEvents3<OutputBufferEvents>([() => { this.outputBuffer.push(data) }],
+                    this.outputBufferEmitter, ['bufferSent', 'bufferSendingFailed'], 15000)  // TODO use config option or named constant?
             } catch (e) {
-                logger.debug(`Connection to ${getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor)} timed out`)
+                logger.debug(`Connection to ${getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor)} timed out`, {
+                    peerDescriptor: this.remotePeerDescriptor,
+                    type: this.connectionType,
+                    lifetime: Date.now() - this.created
+                })
+                await this.close(false)
                 throw new Err.SendFailed('Sending buffer timed out')
             }
 
@@ -280,7 +275,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         logger.trace('bufferSentByOtherConnection reported')
         this.bufferSentbyOtherConnection = true
         this.outputBufferEmitter.emit('bufferSent')
-        this.emit('bufferSentByOtherConnection')
     }
 
     public acceptHandshake(): void {
@@ -306,13 +300,15 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {
+        if (this.closing) {
+            return
+        }
         if (this.replacedByOtherConnection) {
             logger.trace('close() called on replaced connection')
         }
         this.closing = true
         
         this.outputBufferEmitter.emit('bufferSendingFailed')
-        this.emit('closing')
        
         if (this.implementation) {
             await this.implementation?.close(gracefulLeave)
@@ -327,8 +323,6 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     public destroy(): void {
         this.closing = true
-        
-        this.emit('closing')
         if (!this.stopped) {
             this.stopped = true
 

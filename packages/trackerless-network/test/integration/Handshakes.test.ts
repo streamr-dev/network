@@ -20,15 +20,15 @@ import { StreamPartIDUtils } from '@streamr/protocol'
 describe('Handshakes', () => {
 
     const peerDescriptor1: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 1, 1]),
+        nodeId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
     const peerDescriptor2: PeerDescriptor = {
-        kademliaId: new Uint8Array([2, 1, 1]),
+        nodeId: new Uint8Array([2, 1, 1]),
         type: NodeType.NODEJS
     }
     const peerDescriptor3: PeerDescriptor = {
-        kademliaId: new Uint8Array([3, 1, 1]),
+        nodeId: new Uint8Array([3, 1, 1]),
         type: NodeType.NODEJS
     }
     let rpcCommunicator1: ListeningRpcCommunicator
@@ -70,7 +70,6 @@ describe('Handshakes', () => {
     let simulatorTransport3: SimulatorTransport
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
         simulator = new Simulator()
         simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         await simulatorTransport1.start()
@@ -107,7 +106,6 @@ describe('Handshakes', () => {
         await simulatorTransport2.stop()
         await simulatorTransport3.stop()
         simulator.stop()
-        Simulator.useFakeTimers(false)
     })
 
     it('Two nodes can handshake', async () => {

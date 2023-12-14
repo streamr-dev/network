@@ -1,10 +1,13 @@
 import { DuplicateDetector } from '../../src/dht/routing/DuplicateDetector'
 
+const MAX_VALUE_COUNT = 10
+
 describe('Duplicate Detector', () => {
+
     let detector: DuplicateDetector
-    const maxLimit = 10
+
     beforeEach(async () => {
-        detector = new DuplicateDetector(maxLimit, 100)
+        detector = new DuplicateDetector(MAX_VALUE_COUNT, 100)
     })
 
     it('detects duplicates', async () => {
@@ -14,10 +17,10 @@ describe('Duplicate Detector', () => {
     })
 
     it('resets on resetLimit', () => {
-        for (let i = 0; i < maxLimit; i++) {
+        for (let i = 0; i < MAX_VALUE_COUNT; i++) {
             detector.add(`test${i}`)
         }
-        for (let i = 0; i < maxLimit; i++) {
+        for (let i = 0; i < MAX_VALUE_COUNT; i++) {
             expect(detector.isMostLikelyDuplicate(`test${i}`)).toEqual(true)
         }
         detector.add('test10')

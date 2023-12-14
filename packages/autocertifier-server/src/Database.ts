@@ -14,6 +14,7 @@ export class Database {
     // TODO: create statements on demand when needed, no need to hold these as fields
     private createSubdomainStatement?: Statement
     private getSubdomainStatement?: Statement
+    private getAllSubdomainsStatement?: Statement
     private getSubdomainWithTokenStatement?: Statement
     private updateSubdomainIpStatement?: Statement
     private getSubdomainAcmeChallengeStatement?: Statement
@@ -42,6 +43,19 @@ export class Database {
         }
         if (!ret) {
             throw new DatabaseError('Subdomain not found ' + subdomain)
+        }
+        return ret
+    }
+
+    public async getAllSubdomains(): Promise<Array<Subdomain> | undefined> {
+        let ret: Array<Subdomain> | undefined
+        try {
+            ret = await this.getAllSubdomainsStatement!.all()
+        } catch (e) {
+            throw new DatabaseError('Failed to get all subdomains ', e)
+        }
+        if (!ret) {
+            throw new DatabaseError('Subdomain not found ')
         }
         return ret
     }
@@ -97,6 +111,7 @@ export class Database {
 
         this.createSubdomainStatement = await this.db.prepare("INSERT INTO subdomains (subdomainName, ip, port, token) VALUES (?, ?, ?, ?)")
         this.getSubdomainStatement = await this.db.prepare("SELECT * FROM subdomains WHERE subdomainName = ?")
+        this.getAllSubdomainsStatement = await this.db.prepare("SELECT * FROM subdomains")
         this.getSubdomainWithTokenStatement = await this.db.prepare("SELECT * FROM subdomains WHERE subdomainName = ? AND token = ?")
         this.updateSubdomainIpStatement = await this.db.prepare("UPDATE subdomains SET ip = ?, port = ? WHERE subdomainName = ? AND token = ?")
         this.getSubdomainAcmeChallengeStatement = await this.db.prepare("SELECT acmeChallenge FROM subdomains WHERE subdomainName = ?")
@@ -111,6 +126,9 @@ export class Database {
         }
         if (this.getSubdomainStatement) {
             await this.getSubdomainStatement.finalize()
+        }
+        if (this.getAllSubdomainsStatement) {
+            await this.getAllSubdomainsStatement.finalize()
         }
         if (this.getSubdomainWithTokenStatement) {
             await this.getSubdomainWithTokenStatement.finalize()

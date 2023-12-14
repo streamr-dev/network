@@ -38,9 +38,9 @@ describe('RandomGraphNode', () => {
             localPeerDescriptor: peerDescriptor,
             layer1Node,
             connectionLocker: mockConnectionLocker,
-            handshaker: new MockHandshaker(),
-            neighborUpdateManager: new MockNeighborUpdateManager(),
-            neighborFinder: new MockNeighborFinder(),
+            handshaker: new MockHandshaker() as any,
+            neighborUpdateManager: new MockNeighborUpdateManager() as any,
+            neighborFinder: new MockNeighborFinder() as any,
             streamPartId: StreamPartIDUtils.parse('stream#0')
         })
         await randomGraphNode.start()
@@ -88,9 +88,11 @@ describe('RandomGraphNode', () => {
         const peerDescriptor2 = createMockPeerDescriptor()
         layer1Node.addNewRandomPeerToKBucket()
         layer1Node.emit('newContact', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
-        await waitForCondition(() => nearbyNodeView.size() === 3)
+        await waitForCondition(() => {
+            return nearbyNodeView.size() === 3
+        }, 20000)
         expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
         expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
-    })
+    }, 25000)
 
 })

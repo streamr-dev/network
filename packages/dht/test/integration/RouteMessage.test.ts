@@ -1,47 +1,50 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
 import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { Logger, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
+import { Logger, hexToBinary, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils/utils'
-import { PeerID } from '../../src/helpers/PeerID'
+import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { v4 } from 'uuid'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { RoutingMode } from '../../src/dht/routing/RoutingSession'
+import { areEqualNodeIds } from '../../src/helpers/nodeId'
+import { createRandomNodeId } from '../../src/helpers/nodeId'
 
 const logger = new Logger(module)
 
+// TODO refactor the test to not to use PeerID
+const getPeerId = (node: DhtNode) => {
+    return PeerID.fromValue(hexToBinary(node.getNodeId()))
+}
+
+const NUM_NODES = 30
+
 describe('Route Message With Mock Connections', () => {
+
     let entryPoint: DhtNode
     let sourceNode: DhtNode
     let destinationNode: DhtNode
     let routerNodes: DhtNode[]
     let simulator: Simulator
     let entryPointDescriptor: PeerDescriptor
-
-    const entryPointId = '0'
-    const sourceId = 'eeeeeeeee'
-    const destinationId = '000000000'
-    const NUM_NODES = 30
-
     const receiveMatrix: Array<Array<number>> = []
 
     beforeEach(async () => {
         routerNodes = []
         simulator = new Simulator()
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
+        entryPoint = await createMockConnectionDhtNode(simulator, createRandomNodeId())
 
         entryPointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
+            nodeId: hexToBinary(entryPoint.getNodeId()),
             type: NodeType.NODEJS
         }
 
-        sourceNode = await createMockConnectionDhtNode(sourceId, simulator)
-        destinationNode = await createMockConnectionDhtNode(destinationId, simulator)
+        sourceNode = await createMockConnectionDhtNode(simulator, createRandomNodeId())
+        destinationNode = await createMockConnectionDhtNode(simulator, createRandomNodeId())
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId, simulator)
+            const node = await createMockConnectionDhtNode(simulator, PeerID.fromString(`${i}`).value)
             routerNodes.push(node)
         }
 
@@ -134,19 +137,19 @@ describe('Route Message With Mock Connections', () => {
             receiveMatrix.push(arr)
         }
 
-        const numsOfReceivedMessages: Record<string, number> = {}
+        const numsOfReceivedMessages: Record<PeerIDKey, number> = {}
         routerNodes.forEach((node) => {
-            numsOfReceivedMessages[node.getNodeId().toKey()] = 0
+            numsOfReceivedMessages[getPeerId(node).toKey()] = 0
             node.on('message', (msg: Message) => {
-                numsOfReceivedMessages[node.getNodeId().toKey()] = numsOfReceivedMessages[node.getNodeId().toKey()] + 1
+                numsOfReceivedMessages[getPeerId(node).toKey()] = numsOfReceivedMessages[getPeerId(node).toKey()] + 1
                 try {
-                    const target = receiveMatrix[parseInt(node.getNodeId().toString()) - 1]
-                    target[parseInt(PeerID.fromValue(msg.sourceDescriptor!.kademliaId).toString()) - 1]++
+                    const target = receiveMatrix[parseInt(getPeerId(node).toString()) - 1]
+                    target[parseInt(PeerID.fromValue(msg.sourceDescriptor!.nodeId).toString()) - 1]++
                 } catch (e) {
                     console.error(e)
                 }
-                if (parseInt(node.getNodeId().toString()) > routerNodes.length || parseInt(node.getNodeId().toString()) === 0) {
-                    console.error(node.getNodeId().toString())
+                if (parseInt(getPeerId(node).toString()) > routerNodes.length || parseInt(getPeerId(node).toString()) === 0) {
+                    console.error(getPeerId(node).toString())
                 }
             })
         }
@@ -154,7 +157,7 @@ describe('Route Message With Mock Connections', () => {
         await Promise.all(
             routerNodes.map(async (node) =>
                 Promise.all(routerNodes.map(async (receiver) => {
-                    if (!node.getNodeId().equals(receiver.getNodeId())) {
+                    if (!areEqualNodeIds(node.getNodeId(), receiver.getNodeId())) {
                         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getLocalPeerDescriptor())
                         const message: Message = {
                             serviceId: 'nonexisting_service',
@@ -183,7 +186,7 @@ describe('Route Message With Mock Connections', () => {
             , 30000)
         await Promise.all(
             Object.keys(numsOfReceivedMessages).map(async (key) =>
-                waitForCondition(() => numsOfReceivedMessages[key] >= routerNodes.length - 1, 30000)
+                waitForCondition(() => numsOfReceivedMessages[key as PeerIDKey] >= routerNodes.length - 1, 30000)
             )
         )
 

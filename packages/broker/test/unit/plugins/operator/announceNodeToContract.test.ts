@@ -20,19 +20,19 @@ describe('announceNodeToContract', () => {
 
     beforeAll(() => {
         streamrClient = mock<StreamrClient>()
-        streamrClient.getPeerDescriptor.mockResolvedValue({ id: NODE_ID, type: NetworkNodeType.NODEJS })
+        streamrClient.getPeerDescriptor.mockResolvedValue({ nodeId: NODE_ID, type: NetworkNodeType.NODEJS })
     })
 
     it('writes heartbeat immediately if undefined at start', async () => {
         const helper = createHelper(undefined)
         await announceNodeToContract(500, helper, streamrClient)
-        expect(helper.writeHeartbeat).toHaveBeenCalledWith({ id: NODE_ID, type: NetworkNodeType.NODEJS })
+        expect(helper.writeHeartbeat).toHaveBeenCalledWith({ nodeId: NODE_ID, type: NetworkNodeType.NODEJS })
     })
 
     it('writes heartbeat immediately if already stale at start', async () => {
         const helper = createHelper(Date.now() - 600)
         await announceNodeToContract(500, helper, streamrClient)
-        expect(helper.writeHeartbeat).toHaveBeenCalledWith({ id: NODE_ID, type: NetworkNodeType.NODEJS })
+        expect(helper.writeHeartbeat).toHaveBeenCalledWith({ nodeId: NODE_ID, type: NetworkNodeType.NODEJS })
     })
 
     it('does not write heartbeat immediately if not stale at start', async () => {

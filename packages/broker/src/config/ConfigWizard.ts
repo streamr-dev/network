@@ -224,17 +224,8 @@ export const getPrivateKey = (answers: PrivateKeyAnswers): string => {
     return (answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT) ? answers.importPrivateKey! : Wallet.createRandom().privateKey
 }
 
-export const getNodeIdentity = (privateKey: string): {
-    mnemonic: string
-    networkExplorerUrl: string
-} => {
-    const nodeAddress = new Wallet(privateKey).address
-    const mnemonic = generateMnemonicFromAddress(toEthereumAddress(nodeAddress))
-    const networkExplorerUrl = `https://streamr.network/network-explorer/nodes/${nodeAddress}`
-    return {
-        mnemonic,
-        networkExplorerUrl
-    }
+export const getNodeMnemonic = (privateKey: string): string => {
+    return generateMnemonicFromAddress(toEthereumAddress(new Wallet(privateKey).address))
 }
 
 export const start = async (
@@ -254,10 +245,7 @@ export const start = async (
         const storageAnswers = await getStorageAnswers()
         const storagePath = createStorageFile(config, storageAnswers)
         logger.info('Welcome to the Streamr Network')
-        const { mnemonic, networkExplorerUrl } = getNodeIdentity(privateKey)
-        logger.info(`Your node's generated name is ${mnemonic}.`)
-        logger.info('View your node in the Network Explorer:')
-        logger.info(networkExplorerUrl)
+        logger.info(`Your node's generated name is ${getNodeMnemonic(privateKey)}.`)
         logger.info('You can start the broker now with')
         logger.info(`streamr-broker ${storagePath}`)
     } catch (e: any) {
