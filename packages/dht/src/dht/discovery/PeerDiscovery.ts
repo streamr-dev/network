@@ -72,7 +72,7 @@ export class PeerDiscovery {
     private async runSessions(sessions: DiscoverySession[], entryPointDescriptor: PeerDescriptor, retry: boolean): Promise<void> {
         try {
             for (const session of sessions) {
-                this.ongoingDiscoverySessions.set(session.sessionId, session)
+                this.ongoingDiscoverySessions.set(session.id, session)
                 await session.findClosestNodes(this.config.joinTimeout)
             }
         } catch (_e) {
@@ -89,7 +89,7 @@ export class PeerDiscovery {
                     await this.ensureRecoveryIntervalIsRunning()
                 }
             }
-            sessions.forEach((session) => this.ongoingDiscoverySessions.delete(session.sessionId))
+            sessions.forEach((session) => this.ongoingDiscoverySessions.delete(session.id))
         }
     }
 

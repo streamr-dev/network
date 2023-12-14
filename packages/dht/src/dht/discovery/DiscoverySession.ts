@@ -22,7 +22,7 @@ interface DiscoverySessionConfig {
 
 export class DiscoverySession {
     
-    public readonly sessionId = v4()
+    public readonly id = v4()
     private stopped = false
     private emitter = new EventEmitter<DiscoverySessionEvents>()
     private noProgressCounter = 0
