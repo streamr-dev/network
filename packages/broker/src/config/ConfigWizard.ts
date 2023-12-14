@@ -221,7 +221,9 @@ async function getPrivateKey(): Promise<string> {
             message: 'Please provide the private key to import',
             validate(value) {
                 try {
-                    return !!new Wallet(value)
+                    new Wallet(value)
+
+                    return true
                 } catch (_) {
                     return 'Invalid private key provided.'
                 }
@@ -336,7 +338,7 @@ async function getPubsubPlugins(): Promise<Partial<Record<PubsubPluginKey, Pubsu
                 default: defaultPort.toString(),
                 validate(value) {
                     try {
-                        return !!z.coerce
+                        z.coerce
                             .number({
                                 invalid_type_error:
                                     'Non-numeric value provided',
@@ -363,6 +365,8 @@ async function getPubsubPlugins(): Promise<Partial<Record<PubsubPluginKey, Pubsu
                                 }
                             })
                             .parse(value)
+
+                        return true
                     } catch (e: unknown) {
                         return (e as z.ZodError).issues
                             .map(({ message }) => message)
