@@ -42,7 +42,6 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     private lastUsed: number = Date.now()
     private stopped = false
-    public offeredAsIncoming = false
     private bufferSentbyOtherConnection = false
     private closing = false
     public replacedByOtherConnection = false

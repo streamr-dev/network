@@ -395,7 +395,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             return false
         }
         logger.trace('onNewConnection()')
-        connection.offeredAsIncoming = true
         if (!this.acceptNewConnection(connection)) {
             return false
         }
