@@ -160,8 +160,8 @@ enum RpcResponseError {
 }
 
 message RouteMessageWrapper {
-  PeerDescriptor sourcePeer = 1;
-  string requestId = 2;
+  string requestId = 1;
+  PeerDescriptor sourcePeer = 2;
   bytes target = 3;
   Message message = 4;
   repeated PeerDescriptor reachableThrough = 5;
