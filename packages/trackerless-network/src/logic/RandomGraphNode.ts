@@ -32,6 +32,7 @@ import { markAndCheckDuplicate } from './utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { Layer1Node } from './Layer1Node'
 import { StreamPartID } from '@streamr/protocol'
+import { uniqBy } from 'lodash'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -265,14 +266,14 @@ export class RandomGraphNode extends EventEmitter<Events> {
     }
 
     private getNeighborCandidatesFromLayer1(): PeerDescriptor[] {
-        const uniqueNodes = new Set<PeerDescriptor>()
+        const nodes: PeerDescriptor[] = []
         this.config.layer1Node.getClosestContacts(this.config.nodeViewSize).forEach((peer: PeerDescriptor) => {
-            uniqueNodes.add(peer)
+            nodes.push(peer)
         })
         this.config.layer1Node.getAllNeighborPeerDescriptors().forEach((peer: PeerDescriptor) => {
-            uniqueNodes.add(peer)
+            nodes.push(peer)
         })
-        return Array.from(uniqueNodes)
+        return uniqBy(nodes, (p) => getNodeIdFromPeerDescriptor(p))
     }
 
     hasProxyConnection(nodeId: NodeID): boolean {
