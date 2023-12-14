@@ -38,10 +38,6 @@ export interface StoreDataRequest {
  * @generated from protobuf message dht.StoreDataResponse
  */
 export interface StoreDataResponse {
-    /**
-     * @generated from protobuf field: string error = 1;
-     */
-    error: string;
 }
 /**
  * @generated from protobuf message dht.ExternalStoreDataRequest
@@ -688,9 +684,7 @@ export const StoreDataRequest = new StoreDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class StoreDataResponse$Type extends MessageType$<StoreDataResponse> {
     constructor() {
-        super("dht.StoreDataResponse", [
-            { no: 1, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
+        super("dht.StoreDataResponse", []);
     }
 }
 /**

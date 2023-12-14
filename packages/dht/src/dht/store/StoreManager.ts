@@ -130,19 +130,15 @@ export class StoreManager {
             }
             const rpcRemote = this.config.createRpcRemote(closestNodes[i])
             try {
-                const response = await rpcRemote.storeData({
+                await rpcRemote.storeData({
                     key,
                     data,
                     creator,
                     createdAt,
                     ttl
                 })
-                if (!response.error) {
-                    successfulNodes.push(closestNodes[i])
-                    logger.trace('remote.storeData() returned success')
-                } else {
-                    logger.trace('remote.storeData() returned error: ' + response.error)
-                }
+                successfulNodes.push(closestNodes[i])
+                logger.trace('remote.storeData() success')
             } catch (e) {
                 logger.trace('remote.storeData() threw an exception ' + e)
             }

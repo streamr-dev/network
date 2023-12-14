@@ -41,8 +41,7 @@ describe('StoreRpcRemote', () => {
     })
 
     it('storeData happy path', async () => {
-        const response = await rpcRemote.storeData(request)
-        expect(response.error).toBeEmpty()
+        await expect(rpcRemote.storeData(request)).toResolve()
     })
 
     it('storeData rejects', async () => {
@@ -53,11 +52,4 @@ describe('StoreRpcRemote', () => {
             + ' Error: Mock'
         )
     })
-
-    it('storeData response error', async () => {
-        serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', mockStoreRpc.storeDataErrorString)
-        const response = await rpcRemote.storeData(request)
-        expect(response.error).toEqual('Mock')
-    })
-
 })
