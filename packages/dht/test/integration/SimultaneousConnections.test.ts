@@ -8,6 +8,7 @@ import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { MockTransport } from '../utils/mock/Transport'
 
 const BASE_MESSAGE: Message = {
     serviceId: 'serviceId',
@@ -84,8 +85,6 @@ describe('SimultaneousConnections', () => {
 
     describe('Websocket 2 servers', () => {
 
-        let simTransport1: SimulatorTransport
-        let simTransport2: SimulatorTransport
         let connectionManager1: ConnectionManager
         let connectionManager2: ConnectionManager
         
@@ -112,24 +111,16 @@ describe('SimultaneousConnections', () => {
         }
 
         beforeEach(async () => {
-            
-            // SimulatorTransport needs to have exatly same peerDescriptor as ConnectionManager
-            // that is why we need to create new SimulatorTransports here
-            simulator = new Simulator(LatencyType.REAL)
-            simTransport1 = new SimulatorTransport(wsPeerDescriptor1, simulator)
-            await simTransport1.start()
-            simTransport2 = new SimulatorTransport(wsPeerDescriptor2, simulator)
-            await simTransport2.start()
-            
+
             const websocketPortRange = { min: 43432, max: 43433 }
             connectionManager1 = createConnectionManager(wsPeerDescriptor1, {
-                transport: simTransport1,
+                transport: new MockTransport(),
                 websocketPortRange,
                 entryPoints: [wsPeerDescriptor1],
                 websocketServerEnableTls: false
             })
             connectionManager2 = createConnectionManager(wsPeerDescriptor2, {
-                transport: simTransport2,
+                transport: new MockTransport(),
                 websocketPortRange,
                 entryPoints: [wsPeerDescriptor1],
                 websocketServerEnableTls: false
@@ -141,8 +132,6 @@ describe('SimultaneousConnections', () => {
         afterEach(async () => {
             await connectionManager1.stop()
             await connectionManager2.stop()
-            await simTransport1.stop()
-            await simTransport2.stop()
         })
 
         it('Simultaneous Connections', async () => {
