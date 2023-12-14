@@ -145,11 +145,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private recursiveOperationManager?: RecursiveOperationManager
     private peerDiscovery?: PeerDiscovery
     private peerManager?: PeerManager
-
     public connectionManager?: ConnectionManager
     private started = false
     private abortController = new AbortController()
-    private entryPointDisconnectTimeout?: NodeJS.Timeout
 
     constructor(conf: DhtNodeOptions) {
         super()
@@ -552,9 +550,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         logger.trace('stop()')
         this.abortController.abort()
         await this.storeManager!.destroy()
-        if (this.entryPointDisconnectTimeout) {
-            clearTimeout(this.entryPointDisconnectTimeout)
-        }
         this.localDataStore.clear()
         this.peerManager?.stop()
         this.rpcCommunicator!.stop()

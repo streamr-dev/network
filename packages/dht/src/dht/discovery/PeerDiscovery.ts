@@ -26,7 +26,6 @@ export class PeerDiscovery {
     private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
     private rejoinOngoing = false
     private joinCalled = false
-    private rejoinTimeoutRef?: NodeJS.Timeout
     private readonly abortController: AbortController
     private recoveryIntervalStarted = false
     private readonly config: PeerDiscoveryConfig
@@ -73,7 +72,7 @@ export class PeerDiscovery {
     private async runSessions(sessions: DiscoverySession[], entryPointDescriptor: PeerDescriptor, retry: boolean): Promise<void> {
         try {
             for (const session of sessions) {
-                this.ongoingDiscoverySessions.set(session.sessionId, session)
+                this.ongoingDiscoverySessions.set(session.id, session)
                 await session.findClosestNodes(this.config.joinTimeout)
             }
         } catch (_e) {
@@ -90,7 +89,7 @@ export class PeerDiscovery {
                     await this.ensureRecoveryIntervalIsRunning()
                 }
             }
-            sessions.forEach((session) => this.ongoingDiscoverySessions.delete(session.sessionId))
+            sessions.forEach((session) => this.ongoingDiscoverySessions.delete(session.id))
         }
     }
 
@@ -153,10 +152,6 @@ export class PeerDiscovery {
 
     public stop(): void {
         this.abortController.abort()
-        if (this.rejoinTimeoutRef) {
-            clearTimeout(this.rejoinTimeoutRef)
-            this.rejoinTimeoutRef = undefined
-        }
         this.ongoingDiscoverySessions.forEach((session) => {
             session.stop()
         })

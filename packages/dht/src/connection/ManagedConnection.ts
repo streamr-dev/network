@@ -27,29 +27,22 @@ export type Events = ManagedConnectionEvents & ConnectionEvents
 export class ManagedConnection extends EventEmitter<Events> {
 
     private implementation?: IConnection
-
     private outputBufferEmitter = new EventEmitter<OutputBufferEvents>()
     private outputBuffer: Uint8Array[] = []
-
     private inputBuffer: Uint8Array[] = []
-
     public connectionId: ConnectionID
     private remotePeerDescriptor?: PeerDescriptor
     public connectionType: ConnectionType
-
     private handshaker?: Handshaker
     private handshakeCompleted = false
-
     private lastUsed: number = Date.now()
     private stopped = false
-    public offeredAsIncoming = false
     private bufferSentbyOtherConnection = false
     private closing = false
     public replacedByOtherConnection = false
     private localPeerDescriptor: PeerDescriptor
     protected outgoingConnection?: IConnection
     protected incomingConnection?: IConnection
-
     // TODO: Temporary debug variable, should be removed in the future.
     private created = Date.now()
 
