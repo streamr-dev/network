@@ -59,7 +59,7 @@ service ExternalApiRpc {
 message StoreDataRequest {
   bytes key = 1;
   google.protobuf.Any data = 2;
-  PeerDescriptor creator = 3;
+  bytes creator = 3;
   google.protobuf.Timestamp createdAt = 4;
   uint32 ttl = 5;
 }
@@ -83,7 +83,7 @@ message ReplicateDataRequest {
 message DataEntry {
   bytes key = 1;
   google.protobuf.Any data = 2;
-  PeerDescriptor creator = 3;
+  bytes creator = 3;
   google.protobuf.Timestamp createdAt = 4;
   google.protobuf.Timestamp storedAt = 5; 
   uint32 ttl = 6;   // milliseconds

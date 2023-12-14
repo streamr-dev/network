@@ -22,7 +22,7 @@ describe('EntryPointDiscovery', () => {
     const fakeData: DataEntry = {
         key: Uint8Array.from([1, 2, 3]),
         data: Any.pack(peerDescriptor, PeerDescriptor),
-        creator: peerDescriptor,
+        creator: peerDescriptor.nodeId,
         ttl: 1000,
         stale: false,
         deleted: false
@@ -31,7 +31,7 @@ describe('EntryPointDiscovery', () => {
     const fakeDeletedData: DataEntry = {
         key: Uint8Array.from([1, 2, 3]),
         data: Any.pack(deletedPeerDescriptor, PeerDescriptor),
-        creator: deletedPeerDescriptor,
+        creator: deletedPeerDescriptor.nodeId,
         ttl: 1000,
         stale: false,
         deleted: true
