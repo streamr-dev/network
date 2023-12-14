@@ -5,7 +5,7 @@ import {
 import { Any } from '../../proto/google/protobuf/any'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { IRecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
+import { RecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, executeSafePromise } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
@@ -21,7 +21,7 @@ import { getDistance } from '../PeerManager'
 
 interface StoreManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
-    recursiveOperationManager: IRecursiveOperationManager
+    recursiveOperationManager: RecursiveOperationManager
     localPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
     serviceId: ServiceID

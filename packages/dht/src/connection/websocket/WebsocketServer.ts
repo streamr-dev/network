@@ -33,24 +33,18 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
     private httpServer?: HttpServer | HttpsServer
     private wsServer?: WsServer
     private readonly abortController = new AbortController()
-    private readonly portRange: PortRange
-    private readonly tlsCertificate?: TlsCertificate
-    private readonly enableTls: boolean
-    private readonly maxMessageSize: number
+    private readonly config: WebsocketServerConfig
 
     constructor(config: WebsocketServerConfig) {
         super()
-        this.portRange = config.portRange
-        this.enableTls = config.enableTls
-        this.tlsCertificate = config.tlsCertificate
-        this.maxMessageSize = config.maxMessageSize ?? 1048576
+        this.config = config
     }
 
     public async start(): Promise<number> {
-        const ports = range(this.portRange.min, this.portRange.max + 1)
+        const ports = range(this.config.portRange.min, this.config.portRange.max + 1)
         for (const port of ports) {
             try {
-                await asAbortable(this.startServer(port, this.enableTls), this.abortController.signal)
+                await asAbortable(this.startServer(port, this.config.enableTls), this.abortController.signal)
                 return port
             } catch (err) {
                 if (err.originalError?.code === 'EADDRINUSE') {
@@ -60,7 +54,9 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                 }
             }
         }
-        throw new WebsocketServerStartError(`Failed to start WebSocket server on any port in range: ${this.portRange.min}-${this.portRange.min}`)
+        throw new WebsocketServerStartError(
+            `Failed to start WebSocket server on any port in range: ${this.config.portRange.min}-${this.config.portRange.min}`
+        )
     }
 
     // If tlsCertificate has been given the tls boolean is ignored
@@ -72,10 +68,10 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
             response.end()
         }
         return new Promise((resolve, reject) => {
-            if (this.tlsCertificate) {
+            if (this.config.tlsCertificate) {
                 this.httpServer = createHttpsServer({
-                    key: fs.readFileSync(this.tlsCertificate.privateKeyFileName),
-                    cert: fs.readFileSync(this.tlsCertificate.certFileName)
+                    key: fs.readFileSync(this.config.tlsCertificate.privateKeyFileName),
+                    cert: fs.readFileSync(this.config.tlsCertificate.certFileName)
                 }, requestListener)
             } else if (!tls) {
                 this.httpServer = createHttpServer(requestListener)
@@ -160,19 +156,19 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
     }
 
     private createWsServer(httpServer: HttpServer | HttpsServer): WsServer {
+        const maxReceivedMessageSize = this.config.maxMessageSize ?? 1048576
         // Use the real nodejs WebSocket server in Electron tests
-
         if (typeof NodeJsWsServer !== 'undefined') {
             return new NodeJsWsServer({
                 httpServer,
                 autoAcceptConnections: false,
-                maxReceivedMessageSize: this.maxMessageSize
+                maxReceivedMessageSize
             })
         } else {
             return this.wsServer = new WsServer({
                 httpServer,
                 autoAcceptConnections: false,
-                maxReceivedMessageSize: this.maxMessageSize
+                maxReceivedMessageSize
             })
         }
     }
