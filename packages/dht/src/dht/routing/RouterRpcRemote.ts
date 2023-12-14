@@ -23,7 +23,7 @@ export class RouterRpcRemote extends RpcRemote<IRouterRpcClient> {
             routingPath: params.routingPath
         }
         const options = this.formDhtRpcOptions({
-            doNotConnect: true
+            connect: false
         })
         try {
             const ack = await this.getClient().routeMessage(message, options)
@@ -56,7 +56,7 @@ export class RouterRpcRemote extends RpcRemote<IRouterRpcClient> {
             routingPath: params.routingPath
         }
         const options = this.formDhtRpcOptions({
-            doNotConnect: true
+            connect: false
         })
         try {
             const ack = await this.getClient().forwardMessage(message, options)

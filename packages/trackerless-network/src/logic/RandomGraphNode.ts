@@ -20,13 +20,13 @@ import { IDeliveryRpc } from '../proto/packages/trackerless-network/protos/Netwo
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
 import { Logger, addManagedEventListener } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { IHandshaker } from './neighbor-discovery/Handshaker'
+import { Handshaker } from './neighbor-discovery/Handshaker'
 import { Propagation } from './propagation/Propagation'
-import { INeighborFinder } from './neighbor-discovery/NeighborFinder'
-import { INeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
+import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
+import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
 import { DeliveryRpcLocal } from './DeliveryRpcLocal'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
-import { IInspector } from './inspect/Inspector'
+import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
@@ -48,13 +48,13 @@ export interface StrictRandomGraphNodeConfig {
     nearbyNodeView: NodeList
     randomNodeView: NodeList
     targetNeighbors: NodeList
-    handshaker: IHandshaker
-    neighborFinder: INeighborFinder
-    neighborUpdateManager: INeighborUpdateManager
+    handshaker: Handshaker
+    neighborFinder: NeighborFinder
+    neighborUpdateManager: NeighborUpdateManager
     propagation: Propagation
     rpcCommunicator: ListeningRpcCommunicator
     numOfTargetNeighbors: number
-    inspector: IInspector
+    inspector: Inspector
     temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
     rpcRequestTimeout?: number
