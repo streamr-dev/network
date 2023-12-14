@@ -35,6 +35,11 @@ export const getDefaultFile = (): string => {
     return path.join(os.homedir(), relativePath)
 }
 
+export const getLegacyDefaultFile = (): string => {
+    const relativePath = '/.streamr/broker-config.json'
+    return path.join(os.homedir(), relativePath)
+}
+
 export function overrideConfigToEnvVarsIfGiven(config: Config): void {
 
     const parseValue = (value: string) => {

@@ -1,8 +1,7 @@
-import os from 'os'
 import fs from 'fs'
 import path from 'path'
 import cloneDeep from 'lodash/cloneDeep'
-import { ConfigFile, getDefaultFile } from './config'
+import { ConfigFile, getDefaultFile, getLegacyDefaultFile } from './config'
 
 export const CURRENT_CONFIGURATION_VERSION = 2
 
@@ -145,7 +144,7 @@ export const readConfigAndMigrateIfNeeded = (fileName: string | undefined): Conf
     let explicitTargetFile = undefined
     if (fileName === undefined) {
         const defaultTargetFile = getDefaultFile()
-        const legacyTargetFile = path.join(os.homedir(), '.streamr/broker-config.json')
+        const legacyTargetFile = getLegacyDefaultFile()
         fileName = [defaultTargetFile, legacyTargetFile].find((file) => fs.existsSync(file))
         if (fileName === undefined) {
             /*
