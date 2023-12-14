@@ -179,22 +179,14 @@ export const mockRouterRpc: IRouterRpcWithError = {
 
 interface IStoreRpcWithError extends IStoreRpc {
     throwStoreDataError: (request: StoreDataRequest) => Promise<StoreDataResponse>
-    storeDataErrorString: (request: StoreDataRequest) => Promise<StoreDataResponse>
 }
 
 export const mockStoreRpc: IStoreRpcWithError = {
     async storeData(): Promise<StoreDataResponse> {
-        return {
-            error: ''
-        }
+        return {}
     },
     async throwStoreDataError(): Promise<StoreDataResponse> {
         throw new Error('Mock')
-    },
-    async storeDataErrorString(): Promise<StoreDataResponse> {
-        return {
-            error: 'Mock'
-        }
     },
     async replicateData(): Promise<Empty> {
         return {}

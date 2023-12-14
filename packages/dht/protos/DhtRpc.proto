@@ -65,7 +65,6 @@ message StoreDataRequest {
 }
 
 message StoreDataResponse {
-  string error = 1;
 }
 
 message ExternalStoreDataRequest {
