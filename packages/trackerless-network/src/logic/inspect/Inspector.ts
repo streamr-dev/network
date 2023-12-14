@@ -17,17 +17,10 @@ interface InspectorConfig {
     openInspectConnection?: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
 }
 
-export interface IInspector {
-    inspect(peerDescriptor: PeerDescriptor): Promise<boolean>
-    markMessage(sender: NodeID, messageId: MessageID): void
-    isInspected(nodeId: NodeID): boolean
-    stop(): void
-}
-
 const logger = new Logger(module)
 const DEFAULT_TIMEOUT = 60 * 1000
 
-export class Inspector implements IInspector {
+export class Inspector {
 
     private readonly sessions: Map<NodeID, InspectSession> = new Map()
     private readonly streamPartId: StreamPartID

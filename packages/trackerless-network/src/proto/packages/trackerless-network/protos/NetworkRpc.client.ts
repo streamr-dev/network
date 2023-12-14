@@ -7,7 +7,8 @@ import type { TemporaryConnectionRequest } from "./NetworkRpc";
 import { NeighborUpdateRpc } from "./NetworkRpc";
 import type { NeighborUpdate } from "./NetworkRpc";
 import { HandshakeRpc } from "./NetworkRpc";
-import type { InterleaveNotice } from "./NetworkRpc";
+import type { InterleaveResponse } from "./NetworkRpc";
+import type { InterleaveRequest } from "./NetworkRpc";
 import type { StreamPartHandshakeResponse } from "./NetworkRpc";
 import type { StreamPartHandshakeRequest } from "./NetworkRpc";
 import { ProxyConnectionRpc } from "./NetworkRpc";
@@ -94,9 +95,9 @@ export interface IHandshakeRpcClient {
      */
     handshake(input: StreamPartHandshakeRequest, options?: RpcOptions): UnaryCall<StreamPartHandshakeRequest, StreamPartHandshakeResponse>;
     /**
-     * @generated from protobuf rpc: interleaveNotice(InterleaveNotice) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: interleaveRequest(InterleaveRequest) returns (InterleaveResponse);
      */
-    interleaveNotice(input: InterleaveNotice, options?: RpcOptions): UnaryCall<InterleaveNotice, Empty>;
+    interleaveRequest(input: InterleaveRequest, options?: RpcOptions): UnaryCall<InterleaveRequest, InterleaveResponse>;
 }
 /**
  * @generated from protobuf service HandshakeRpc
@@ -115,11 +116,11 @@ export class HandshakeRpcClient implements IHandshakeRpcClient, ServiceInfo {
         return stackIntercept<StreamPartHandshakeRequest, StreamPartHandshakeResponse>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: interleaveNotice(InterleaveNotice) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: interleaveRequest(InterleaveRequest) returns (InterleaveResponse);
      */
-    interleaveNotice(input: InterleaveNotice, options?: RpcOptions): UnaryCall<InterleaveNotice, Empty> {
+    interleaveRequest(input: InterleaveRequest, options?: RpcOptions): UnaryCall<InterleaveRequest, InterleaveResponse> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<InterleaveNotice, Empty>("unary", this._transport, method, opt, input);
+        return stackIntercept<InterleaveRequest, InterleaveResponse>("unary", this._transport, method, opt, input);
     }
 }
 /**

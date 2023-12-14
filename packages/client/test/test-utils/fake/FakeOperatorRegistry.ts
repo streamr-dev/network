@@ -1,7 +1,7 @@
+import { Methods } from '@streamr/test-utils'
 import { Lifecycle, scoped } from 'tsyringe'
-import { OperatorRegistry } from '../../../src/registry/OperatorRegistry'
 import { NetworkPeerDescriptor } from '../../../src/Config'
-import { Methods } from '../types'
+import { OperatorRegistry } from '../../../src/registry/OperatorRegistry'
 
 export const fakeEntrypoint = {
     nodeId: 'dadc0ded',

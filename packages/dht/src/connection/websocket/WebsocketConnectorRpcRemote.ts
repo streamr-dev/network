@@ -1,7 +1,6 @@
 import {
     PeerDescriptor,
-    WebsocketConnectionRequest,
-    WebsocketConnectionResponse
+    WebsocketConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { IWebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger } from '@streamr/utils'
@@ -21,7 +20,7 @@ export class WebsocketConnectorRpcRemote extends RpcRemote<IWebsocketConnectorRp
         super(localPeerDescriptor, remotePeerDescriptor, 'DUMMY', client)
     }
 
-    async requestConnection(): Promise<WebsocketConnectionResponse> {
+    async requestConnection(): Promise<void> {
         logger.trace(`Requesting WebSocket connection from ${getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor())}`)
         const request: WebsocketConnectionRequest = {}
         const options = this.formDhtRpcOptions()

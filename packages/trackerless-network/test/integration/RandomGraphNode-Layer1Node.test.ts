@@ -27,8 +27,6 @@ describe('RandomGraphNode-DhtNode', () => {
         })
     })
     beforeEach(async () => {
-
-        Simulator.useFakeTimers()
         const simulator = new Simulator()
         const entrypointCm = new SimulatorTransport(
             entrypointDescriptor,
@@ -62,7 +60,8 @@ describe('RandomGraphNode-DhtNode', () => {
             transport: cms[i],
             connectionLocker: cms[i],
             localPeerDescriptor: peerDescriptors[i],
-            neighborUpdateInterval: 2000
+            neighborUpdateInterval: 2000,
+            isLocalNodeEntryPoint: () => false
         }))
 
         entryPointRandomGraphNode = createRandomGraphNode({
@@ -71,7 +70,8 @@ describe('RandomGraphNode-DhtNode', () => {
             transport: entrypointCm,
             connectionLocker: entrypointCm,
             localPeerDescriptor: entrypointDescriptor,
-            neighborUpdateInterval: 2000
+            neighborUpdateInterval: 2000,
+            isLocalNodeEntryPoint: () => false
         })
 
         await dhtEntryPoint.start()
@@ -84,7 +84,6 @@ describe('RandomGraphNode-DhtNode', () => {
         entryPointRandomGraphNode.stop()
         await Promise.all(layer1Nodes.map((node) => node.stop()))
         await Promise.all(graphNodes.map((node) => node.stop()))
-        Simulator.useFakeTimers(false)
     })
 
     it('happy path single node ', async () => {

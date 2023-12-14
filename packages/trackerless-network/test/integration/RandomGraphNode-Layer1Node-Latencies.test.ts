@@ -19,7 +19,6 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
 
     const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => createMockPeerDescriptor())
     beforeEach(async () => {
-        Simulator.useFakeTimers()
         const simulator = new Simulator(LatencyType.FIXED, 50)
         const entrypointCm = new SimulatorTransport(entrypointDescriptor, simulator)
         const cms: SimulatorTransport[] = range(numOfNodes).map((i) =>
@@ -43,14 +42,16 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             layer1Node: layer1Nodes[i],
             transport: cms[i],
             connectionLocker: cms[i],
-            localPeerDescriptor: peerDescriptors[i]
+            localPeerDescriptor: peerDescriptors[i],
+            isLocalNodeEntryPoint: () => false
         }))
         entryPointRandomGraphNode = createRandomGraphNode({
             streamPartId,
             layer1Node: dhtEntryPoint,
             transport: entrypointCm,
             connectionLocker: entrypointCm,
-            localPeerDescriptor: entrypointDescriptor
+            localPeerDescriptor: entrypointDescriptor,
+            isLocalNodeEntryPoint: () => false
         })
 
         await dhtEntryPoint.start()
@@ -63,7 +64,6 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         entryPointRandomGraphNode.stop()
         await Promise.all(layer1Nodes.map((node) => node.stop()))
         await Promise.all(graphNodes.map((node) => node.stop()))
-        Simulator.useFakeTimers(false)
     })
 
     it('happy path single node', async () => {

@@ -31,6 +31,13 @@ export interface ControlLayerConfig {
     entryPoints?: NetworkPeerDescriptor[]
 
     /**
+     * The maximum number of connections before unwanted connections are clean up.
+     * This is a soft limit, meaning that the number of connections may exceed the count temporarily.
+     * Locked connections such as the ones used for stream operations are not counted towards this limit.
+    */
+    maxConnections?: number
+
+    /**
      * If true, an attempt is made to discover additional network entrypoint nodes
      * by querying them from The Graph. If false, only the nodes
      * listed in entryPoints are used.

@@ -1,7 +1,8 @@
+import { Methods } from '@streamr/test-utils'
 import { NodeID } from '../../../src/identifiers'
-import { IHandshaker } from '../../../src/logic/neighbor-discovery/Handshaker'
+import { Handshaker } from '../../../src/logic/neighbor-discovery/Handshaker'
 
-export class MockHandshaker implements IHandshaker {
+export class MockHandshaker implements Methods<Handshaker> {
 
     // eslint-disable-next-line class-methods-use-this
     getOngoingHandshakes(): Set<NodeID> {
