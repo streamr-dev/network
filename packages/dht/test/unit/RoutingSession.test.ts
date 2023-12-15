@@ -6,6 +6,7 @@ import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { NodeID } from '../../src/helpers/nodeId'
+import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 
 describe('RoutingSession', () => {
 
@@ -36,11 +37,11 @@ describe('RoutingSession', () => {
     }
 
     const createMockDhtNodeRpcRemote = (destination: PeerDescriptor): DhtNodeRpcRemote => {
-        return new DhtNodeRpcRemote(mockPeerDescriptor1, destination, {} as any, 'router')
+        return new DhtNodeRpcRemote(mockPeerDescriptor1, destination, undefined as any, rpcCommunicator)
     }
 
     beforeEach(() => {
-        rpcCommunicator = new RoutingRpcCommunicator('mock', async () => {})
+        rpcCommunicator = new MockRpcCommunicator()
         connections = new Map()
         session = new RoutingSession({
             rpcCommunicator: rpcCommunicator,

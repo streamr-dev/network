@@ -19,7 +19,6 @@ import { DeliveryRpcRemote } from './DeliveryRpcRemote'
 import { IDeliveryRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
 import { Logger, addManagedEventListener } from '@streamr/utils'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from './neighbor-discovery/Handshaker'
 import { Propagation } from './propagation/Propagation'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
@@ -201,7 +200,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.localPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
+                this.config.rpcCommunicator,
+                DeliveryRpcClient,
                 this.config.rpcRequestTimeout
             )
         ))
@@ -214,7 +214,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
                     this.config.localPeerDescriptor,
                     descriptor,
                     this.config.streamPartId,
-                    toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
+                    this.config.rpcCommunicator,
+                    DeliveryRpcClient,
                     this.config.rpcRequestTimeout
 
                 )
@@ -231,7 +232,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.localPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
+                this.config.rpcCommunicator,
+                DeliveryRpcClient,
                 this.config.rpcRequestTimeout
             )
         ))
@@ -250,7 +252,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.localPeerDescriptor,
                 descriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
+                this.config.rpcCommunicator,
+                DeliveryRpcClient,
                 this.config.rpcRequestTimeout
             )
         ))

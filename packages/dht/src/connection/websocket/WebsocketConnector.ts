@@ -18,7 +18,6 @@ import { WebsocketServer } from './WebsocketServer'
 import { sendConnectivityRequest } from '../connectivityChecker'
 import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
 import { ServerWebsocket } from './ServerWebsocket'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from '../Handshaker'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
@@ -263,7 +262,9 @@ export class WebsocketConnector {
             const remoteConnector = new WebsocketConnectorRpcRemote(
                 localPeerDescriptor,
                 targetPeerDescriptor,
-                toProtoRpcClient(new WebsocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+                'DUMMY',
+                this.rpcCommunicator,
+                WebsocketConnectorRpcClient
             )
             remoteConnector.requestConnection().then(() => {
                 logger.trace('Sent WebsocketConnectionRequest notification to peer', { targetPeerDescriptor })

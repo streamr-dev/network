@@ -9,7 +9,6 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     HandshakeRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -60,7 +59,8 @@ describe('HandshakeRpcRemote', () => {
             clientNode,
             serverNode,
             'test-stream-part',
-            toProtoRpcClient(new HandshakeRpcClient(clientRpc.getRpcClientTransport()))
+            clientRpc,
+            HandshakeRpcClient
         )
     })
 
