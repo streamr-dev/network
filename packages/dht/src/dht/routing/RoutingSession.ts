@@ -12,7 +12,7 @@ import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
-import { NodeID } from '../../helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
 
 const logger = new Logger(module)
 
@@ -91,7 +91,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousPeer = getPreviousPeer(config.routedMessage)
         const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
         this.contactList = new SortedContactList({
-            referenceId: getNodeIdFromPeerDescriptor(config.routedMessage.destinationPeer!),
+            referenceId: getNodeIdFromBinary(config.routedMessage.target),
             maxSize: 10000,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             nodeIdDistanceLimit: previousId,

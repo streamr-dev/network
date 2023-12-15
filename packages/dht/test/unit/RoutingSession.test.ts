@@ -32,7 +32,7 @@ describe('RoutingSession', () => {
         requestId: 'REQ',
         routingPath: [],
         reachableThrough: [],
-        destinationPeer: mockPeerDescriptor1,
+        target: mockPeerDescriptor1.nodeId,
         sourcePeer: mockPeerDescriptor2
     }
 

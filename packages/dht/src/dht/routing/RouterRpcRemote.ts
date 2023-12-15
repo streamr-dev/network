@@ -1,7 +1,6 @@
-import { Logger } from '@streamr/utils'
+import { Logger, areEqualBinaries } from '@streamr/utils'
 import { v4 } from 'uuid'
 import {
-    areEqualPeerDescriptors,
     getNodeIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
 import { RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
@@ -15,7 +14,7 @@ export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
 
     async routeMessage(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
-            destinationPeer: params.destinationPeer,
+            target: params.target,
             sourcePeer: params.sourcePeer,
             message: params.message,
             requestId: params.requestId ?? v4(),
@@ -29,7 +28,7 @@ export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
             const ack = await this.getClient().routeMessage(message, options)
             // Success signal if sent to destination and error includes duplicate
             if (ack.error === RouteMessageError.DUPLICATE
-                && areEqualPeerDescriptors(params.destinationPeer!, this.getPeerDescriptor())
+                && areEqualBinaries(params.target, this.getPeerDescriptor().nodeId)
             ) {
                 return true
             } else if (ack.error !== undefined) {
@@ -48,7 +47,7 @@ export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
 
     async forwardMessage(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
-            destinationPeer: params.destinationPeer,
+            target: params.target,
             sourcePeer: params.sourcePeer,
             message: params.message,
             requestId: params.requestId ?? v4(),

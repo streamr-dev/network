@@ -37,7 +37,7 @@ describe('Router', () => {
         requestId: 'REQ',
         routingPath: [],
         reachableThrough: [],
-        destinationPeer: peerDescriptor1,
+        target: peerDescriptor1.nodeId,
         sourcePeer: peerDescriptor2
     }
     let connections: Map<NodeID, DhtNodeRpcRemote>
@@ -64,7 +64,7 @@ describe('Router', () => {
     it('doRouteMessage without connections', async () => {
         const ack = await rpcCommunicator.callRpcMethod('routeMessage', {
             message,
-            destinationPeer: peerDescriptor2,
+            target: peerDescriptor2.nodeId,
             requestId: v4(),
             sourcePeer: peerDescriptor1,
             reachableThrough: [],
@@ -77,7 +77,7 @@ describe('Router', () => {
         connections.set(PeerID.fromString('test').toNodeId(), createMockDhtNodeRpcRemote(peerDescriptor2))
         const ack = await rpcCommunicator.callRpcMethod('routeMessage', {
             message,
-            destinationPeer: peerDescriptor2,
+            target: peerDescriptor2.nodeId,
             requestId: v4(),
             sourcePeer: peerDescriptor1,
             reachableThrough: [],
