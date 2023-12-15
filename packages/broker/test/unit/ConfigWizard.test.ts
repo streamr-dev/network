@@ -1612,8 +1612,8 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
     jest.spyOn(console, 'info').mockImplementation((...args: unknown[]) => {
         const log = args
             .join('')
-            // eslint-disable-next-line no-control-regex
-            .replace(/\x1B\[\d+m/g, '')
+            // Remove colors.
+            .replace(/\x1B\[\d+m/g, '') // eslint-disable-line no-control-regex
             .trim()
 
         if (log) {
