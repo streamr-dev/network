@@ -19,7 +19,7 @@ import {
     ExternalStoreDataResponse,
     RecursiveOperation,
 } from '../proto/packages/dht/protos/DhtRpc'
-import { ITransport, TransportEvents } from '../transport/ITransport'
+import { ITransport, SendOptions, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { DhtNodeRpcClient, ExternalApiRpcClient, StoreRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
@@ -27,6 +27,7 @@ import {
     MetricsContext,
     hexToBinary,
     merge,
+    strictly,
     waitForCondition
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -133,7 +134,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
     return ret
 }
 
-export class DhtNode extends EventEmitter<Events> implements ITransport {
+export class DhtNode extends EventEmitter<Events> implements strictly<DhtNode, ITransport> {
 
     private readonly config: StrictDhtNodeOptions
     private rpcCommunicator?: RoutingRpcCommunicator
@@ -428,7 +429,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.peerManager!.handlePeerLeaving(contact)
     }
 
-    public async send(msg: Message): Promise<void> {
+    public async send(msg: Message, _opts?: SendOptions): Promise<void> {
         if (!this.started || this.abortController.signal.aborted) {
             return
         }
