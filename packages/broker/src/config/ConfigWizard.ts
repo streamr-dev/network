@@ -70,7 +70,7 @@ export async function start(): Promise<void> {
             .toString('base64')
             .replace(/[^\da-z]/gi, '')
 
-        let config: ConfigFile = {
+        const config: ConfigFile = {
             $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
             environment: environmentId,
             client: {
@@ -84,14 +84,11 @@ export async function start(): Promise<void> {
             },
             httpServer,
             apiAuthentication: {
-                keys: [apiKey]
+                keys: [apiKey],
             },
         }
 
-        persistConfig(
-            storagePath,
-            config,
-        )
+        persistConfig(storagePath, config)
 
         log(`
             >
@@ -101,12 +98,17 @@ export async function start(): Promise<void> {
         `)
 
         if (operator) {
-            const resume = progress((f) =>
-                style(`> Your node address has *${f} MATIC* _– checking balance…_`)
+            const resume = animateLine((spinner) =>
+                style(
+                    `> Your node address has *${spinner} MATIC* _– checking balance…_`
+                )
             )
 
             try {
-                const balance = await getNativeBalance(environmentId, nodeAddress)
+                const balance = await getNativeBalance(
+                    environmentId,
+                    nodeAddress
+                )
 
                 const content = `Your node address has *${Number(
                     utils.formatEther(balance)
@@ -131,14 +133,17 @@ export async function start(): Promise<void> {
         if (operator) {
             log('> ')
 
-            const resume = progress((f) =>
+            const resume = animateLine((spinner) =>
                 style(`
-                    > _Checking if your node has been paired with your Operator… ${f}_
+                    > _Checking if your node has been paired with your Operator… ${spinner}_
                 `)
             )
 
             try {
-                const nodes = await getOperatorNodeAddresses(environmentId, operator)
+                const nodes = await getOperatorNodeAddresses(
+                    environmentId,
+                    operator
+                )
 
                 resume()
 
@@ -473,7 +478,7 @@ async function getOperatorNodeAddresses(
  * @returns A teardown callback that cleans up the line and brings
  * the cursor to BOL.
  */
-function progress(fn: (frame: string) => string): () => void {
+function animateLine(fn: (spinner: string) => string): () => void {
     const frames = '◢◣◤◥'
 
     let frameNo = 0
