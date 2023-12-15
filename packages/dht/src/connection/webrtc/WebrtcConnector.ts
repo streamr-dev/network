@@ -62,7 +62,6 @@ export class WebrtcConnector {
     private readonly ongoingConnectAttempts: Map<NodeID, ManagedWebrtcConnection> = new Map()
     private localPeerDescriptor?: PeerDescriptor
     private stopped = false
-    private iceServers: IceServer[]
     private config: WebrtcConnectorConfig
 
     constructor(
@@ -70,7 +69,6 @@ export class WebrtcConnector {
         onNewConnection: (connection: ManagedConnection) => boolean
     ) {
         this.config = config
-        this.iceServers = config.iceServers ?? []
         this.rpcCommunicator = new ListeningRpcCommunicator(WebrtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000  // TODO use config option or named constant?
         })
@@ -142,7 +140,7 @@ export class WebrtcConnector {
 
         const connection = new NodeWebrtcConnection({
             remotePeerDescriptor: targetPeerDescriptor,
-            iceServers: this.iceServers,
+            iceServers: this.config.iceServers,
             bufferThresholdLow: this.config.bufferThresholdLow,
             bufferThresholdHigh: this.config.bufferThresholdHigh,
             connectingTimeout: this.config.connectionTimeout,

@@ -29,6 +29,7 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
+        logger.trace('storeData()')
         const { key, data, creator, createdAt, ttl } = request
         const selfIsOneOfClosestPeers = this.config.selfIsOneOfClosestPeers(key)
         this.config.localDataStore.storeEntry({ 
@@ -44,8 +45,7 @@ export class StoreRpcLocal implements IStoreRpc {
         if (!selfIsOneOfClosestPeers) {
             this.config.localDataStore.setAllEntriesAsStale(key)
         }
-        logger.trace('storeData()')
-        return StoreDataResponse.create()
+        return {}
     }
 
     public async replicateData(request: ReplicateDataRequest, context: ServerCallContext): Promise<Empty> {

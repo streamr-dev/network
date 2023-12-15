@@ -60,7 +60,8 @@ describe('RandomGraphNode-DhtNode', () => {
             transport: cms[i],
             connectionLocker: cms[i],
             localPeerDescriptor: peerDescriptors[i],
-            neighborUpdateInterval: 2000
+            neighborUpdateInterval: 2000,
+            isLocalNodeEntryPoint: () => false
         }))
 
         entryPointRandomGraphNode = createRandomGraphNode({
@@ -69,7 +70,8 @@ describe('RandomGraphNode-DhtNode', () => {
             transport: entrypointCm,
             connectionLocker: entrypointCm,
             localPeerDescriptor: entrypointDescriptor,
-            neighborUpdateInterval: 2000
+            neighborUpdateInterval: 2000,
+            isLocalNodeEntryPoint: () => false
         })
 
         await dhtEntryPoint.start()
