@@ -40,3 +40,40 @@ export type strictly<C, I> = {
         // else if not a function in I, pass it through 
         : I[k]
 }
+
+/**  
+* Ensures that the callback passed as an argument has exactly the same
+* parameter types as in the type definition. This utility type is
+* to be used in the definitions of functions that take callbacks as arguments.
+* No action from the callers of the function is required.
+* @param C - placeholder parameter for the type of the callback function passed as an argument
+* to the function call. NOTE: the function needs to be converted to a generic in order to use strictCb. 
+* The compiler will automatically infer parameter C from the context when the function is called, and 
+* the caller of the function does not need to know that the function is generic. 
+* @param I - F the usual type definition of the callback function. 
+* @returns - strict callback function type that causes a compiler error if the parameters
+* of the callback passed as an argument do not match exactly the parameters of the callback type definition
+* @example ```ts  fetchValue<C>(callback: strictCb<C, (result: string) => void>): void {
+        callback('some value')
+    } ```
+*/
+
+export type strictCb<C, F extends (...args: any) => any> = 
+    C extends (...args: infer B) => infer Q
+        ? ( F extends (...args: infer A) => infer R
+            ? ( A extends B
+                ? ( B extends A
+                    ? ( Q extends R
+                        ? ( R extends Q
+                            ? C
+                            : F & 'The return values of the callbacks differ'
+                        )
+                        : F & 'The return values of the callbacks differ'
+                    )
+                    : F & 'The types of the parameters of the callbacks differ'
+                )
+                : F & 'The types of the parameters of the callbacks differ' 
+            ) 
+            : F & 'The callback is not a function'
+        )
+        : F & 'The callback is not a function'
