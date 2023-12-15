@@ -58,6 +58,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@inquirer/testing": "^2.1.9",
     "@streamr/dht": "100.0.0-pretestnet.4",
     "@streamr/test-utils": "100.0.0-pretestnet.4",
     "@types/cors": "^2.8.17",

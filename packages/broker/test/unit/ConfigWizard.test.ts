@@ -1,257 +1,213 @@
 import { mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
+import { getNodeMnemonic, start } from '../../src/config/ConfigWizard'
+import { render } from '@inquirer/testing'
 import {
-    PROMPTS,
-    DEFAULT_CONFIG_PORTS,
-    createStorageFile,
-    getConfig,
-    getPrivateKey,
-    getNodeMnemonic,
-    start,
-    PluginAnswers,
-    PrivateKeyAnswers,
-    StorageAnswers
-} from '../../src/config/ConfigWizard'
-import { readFileSync } from 'fs'
-import { createBroker } from '../../src/broker'
-import { needsMigration } from '../../src/config/migration'
-import { fastPrivateKey } from '@streamr/test-utils'
+    checkbox as checkboxMock,
+    confirm as confirmMock,
+    input as inputMock,
+    password as passwordMock,
+    select as selectMock,
+} from '@inquirer/prompts'
 
-const MOCK_PRIVATE_KEY = '0x1234567890123456789012345678901234567890123456789012345678901234'
+const checkbox = checkboxMock as jest.MockedFunction<any>
 
-const createMockLogger = () => {
-    const messages: string[] = []
+const confirm = confirmMock as jest.MockedFunction<any>
+
+const input = inputMock as jest.MockedFunction<any>
+
+const password = passwordMock as jest.MockedFunction<any>
+
+const select = selectMock as jest.MockedFunction<any>
+
+jest.mock('@inquirer/prompts', () => {
+    const inquirer = jest.requireActual('@inquirer/prompts')
+
     return {
-        info: (message: string) => messages.push(message),
-        warn: console.warn,
-        error: console.error,
-        messages
+        ...inquirer,
+        checkbox: jest.fn(inquirer.checkbox),
+        confirm: jest.fn(inquirer.confirm),
+        input: jest.fn(inquirer.input),
+        password: jest.fn(inquirer.password),
+        select: jest.fn(inquirer.select),
     }
+})
+
+type AnswerMock = {
+    prompt: jest.MockedFunction<any>
+    question: RegExp
+    action: (r: Awaited<ReturnType<typeof render>>) => void
 }
 
-describe('ConfigWizard', () => {
-    const importPrivateKeyPrompt = PROMPTS.privateKey[1]
-    const portPrompt = PROMPTS.plugins[1]
+describe('Config wizard', () => {
+    let answers: string[] = []
 
-    describe('importPrivateKey validate', () => {
-        it('happy path, prefixed', () => {
-            const validate = importPrivateKeyPrompt.validate!
-            const privateKey = `0x${fastPrivateKey()}`
-            expect(validate(privateKey)).toBe(true)
-        })
+    let logs: string[] = []
 
-        it('happy path, no prefix', () => {
-            const validate = importPrivateKeyPrompt.validate!
-            const privateKey = fastPrivateKey()
-            expect(validate(privateKey)).toBe(true)
-        })
+    let tempDir = mkdtempSync(path.join(os.tmpdir(), 'test-config-wizard'))
 
-        it('invalid data', () => {
-            const validate = importPrivateKeyPrompt.validate!
-            const privateKey = '0xInvalidPrivateKey'
-            expect(validate(privateKey)).toBe(`Invalid private key provided.`)
-        })
-    })
+    beforeEach(() => {
+        jest.clearAllMocks()
 
-    describe('plugin port validation', () => {
-        it('happy path: numeric value', () => {
-            const validate = portPrompt.validate!
-            expect(validate(7070)).toBe(true)
-        })
+        answers = []
 
-        it('happy path: string value', () => {
-            const validate = portPrompt.validate!
-            expect(validate('7070')).toBe(true)
-        })
+        logs = []
 
-        it('invalid data: out-of-range number', () => {
-            const validate = portPrompt.validate!
-            const port = 10000000000
-            expect(validate(port)).toBe(`Out of range port ${port} provided (valid range 1024-49151)`)
-        })
+        jest.spyOn(console, 'info').mockImplementation((...args: unknown[]) => {
+            const log = args
+                .join('')
+                .replace(/\x1B\[\d+m/g, '')
+                .trim()
 
-        it('invalid data: float-point number', () => {
-            const validate = portPrompt.validate!
-            const port = 55.55
-            expect(validate(port)).toBe(`Non-integer value provided`)
-        })
-
-        it('invalid data: non-numeric', () => {
-            const validate = portPrompt.validate!
-            const port = 'Not A Number!'
-            expect(validate(port)).toBe(`Non-numeric value provided`)
-        })
-    })
-
-    describe('createStorageFile', () => {
-        const CONFIG: any = {}
-        let tmpDataDir: string
-
-        beforeAll(() => {
-            tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
-        })
-
-        it('happy path; create directories if needed', async () => {
-            const dirPath = tmpDataDir + '/newdir1/newdir2/'
-            const configPath = dirPath + 'test-config.json'
-            const configFileLocation: string = createStorageFile(CONFIG, {
-                storagePath: configPath
-            })
-            expect(configFileLocation).toBe(configPath)
-            expect(existsSync(configFileLocation)).toBe(true)
-        })
-
-        it('should throw when no permissions on path', async () => {
-            const dirPath = '/home/'
-            const configPath = dirPath + 'test-config.json'
-            expect(() => createStorageFile(CONFIG, {
-                storagePath: configPath
-            })).toThrow()
-        })
-
-    })
-
-    describe('getPrivateKey', () => {
-        it('should exercise the `generate` path', () => {
-            const privateKey = getPrivateKey({
-                generateOrImportPrivateKey: 'Generate'
-            })
-            expect(privateKey).toBeDefined()
-            expect(privateKey).toMatch(/^0x[0-9a-f]{64}$/)
-        })
-
-        it('should exercise the `import` path', () => {
-            const importPrivateKey = fastPrivateKey()
-            const answers: PrivateKeyAnswers = {
-                generateOrImportPrivateKey: 'Import',
-                importPrivateKey
+            if (log) {
+                logs.push(log)
             }
-            const privateKey = getPrivateKey(answers)
-            expect(privateKey).toBe(privateKey)
         })
-
     })
 
-    describe('getConfig', () => {
-        const assertValidPort = (port: number | string, pluginName = 'websocket') => {
-            const numericPort = (typeof port === 'string') ? parseInt(port) : port
-            const pluginsAnswers: PluginAnswers = {
-                enabledApiPlugins: [pluginName],
-                websocketPort: String(port)
-            }
-            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
-            expect(config.plugins[pluginName].port).toBe(numericPort)
+    afterAll(() => {
+        jest.clearAllMocks()
+    })
+
+    const inquirer = jest.requireActual('@inquirer/prompts')
+
+    function getActualPrompt(promptMock: jest.MockedFunction<any>) {
+        switch (promptMock) {
+            case checkbox:
+                return inquirer.checkbox
+            case confirm:
+                return inquirer.confirm
+            case input:
+                return inquirer.input
+            case password:
+                return inquirer.password
+            case select:
+                return inquirer.select
+            default:
+                throw 'Unknown prompt mock'
         }
+    }
 
-        it('should exercise the plugin port assignation path with a number', () => {
-            assertValidPort(3737)
-        })
+    function mockAnswers(mocks: AnswerMock[]) {
+        void [checkbox, confirm, input, password, select].forEach(
+            (prompt, i) => {
+                prompt.mockImplementation(async (config: any) => {
+                    const inc = mocks.find(
+                        (inc) =>
+                            inc.prompt === prompt &&
+                            inc.question.test(config.message)
+                    )
 
-        it('should exercise the plugin port assignation path with a stringified number', () => {
-            assertValidPort('3737')
-        })
+                    if (!inc) {
+                        throw `Invalid mock for ${config.message}`
+                    }
 
-        it('should exercise the happy path with default answers', () => {
-            const pluginsAnswers: PluginAnswers = {
-                enabledApiPlugins: [ 'websocket', 'mqtt', 'http' ],
-                websocketPort: String(DEFAULT_CONFIG_PORTS.WS),
-                mqttPort: String(DEFAULT_CONFIG_PORTS.MQTT),
-                httpPort: String(DEFAULT_CONFIG_PORTS.HTTP)
+                    const r = await render(getActualPrompt(prompt), config)
+
+                    inc.action(r)
+
+                    const answer = await r.answer
+
+                    answers.push(answer)
+
+                    return answer
+                })
             }
-            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
-            expect(config.plugins.websocket).toMatchObject({})
-            expect(config.plugins.mqtt).toMatchObject({})
-            expect(config.plugins.http).toMatchObject({})
-            expect(config.httpServer).toBe(undefined)
-        })
+        )
+    }
 
-        it('should exercise the happy path with user-provided data', () => {
-            const pluginsAnswers: PluginAnswers = {
-                enabledApiPlugins: [ 'websocket', 'mqtt', 'http' ],
-                websocketPort: '3170',
-                mqttPort: '3171',
-                httpPort: '3172'
-            }
-            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
-            expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort!))
-            expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort!))
-            expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.httpPort!))
-            expect(config.plugins.http).toMatchObject({})
-        })
-
-    })
-
-    describe('identity', () => {
-        it('happy path', () => {
-            const privateKey = '0x9a2f3b058b9b457f9f954e62ea9fd2cefe2978736ffb3ef2c1782ccfad9c411d'
-            const mnemonic = getNodeMnemonic(privateKey)
-            expect(mnemonic).toBe('Mountain Until Gun')
-        })
-    })
-
-    describe('user flow', () => {
-
-        const assertValidFlow = async (pluginAnswers: PluginAnswers, assertPluginConfig: (config: any) => void) => {
-            const tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
-            const privateKeyAnswers: PrivateKeyAnswers = {
-                generateOrImportPrivateKey: 'Import',
-                importPrivateKey: '0x1234567890123456789012345678901234567890123456789012345678901234'
-            }
-            const storageAnswers: StorageAnswers = {
-                storagePath: tmpDataDir + 'test-config.json'
-            }
-            const logger = createMockLogger()
-            await start(
-                jest.fn().mockResolvedValue(privateKeyAnswers),
-                jest.fn().mockResolvedValue(pluginAnswers),
-                jest.fn().mockResolvedValue(storageAnswers),
-                logger
-            )
-            expect(logger.messages).toEqual([
-                'Welcome to the Streamr Network',
-                'Your node\'s generated name is Company Session Mix.',
-                'You can start the broker now with',
-                `streamr-broker ${storageAnswers.storagePath}`,
-            ])
-            const fileContent = readFileSync(storageAnswers.storagePath).toString()
-            const config = JSON.parse(fileContent)
-            expect(config.client.auth.privateKey).toBe(privateKeyAnswers.importPrivateKey)
-            expect(config.apiAuthentication).toBeDefined()
-            expect(config.apiAuthentication.keys).toBeDefined()
-            expect(config.apiAuthentication.keys.length).toBe(1)
-            assertPluginConfig(config)
-            expect(needsMigration(config)).toBe(false)
-            return expect(createBroker(config)).resolves.toBeDefined()
-        }
-
-        it('no plugins', async () => {
-            await assertValidFlow({
-                enabledApiPlugins: []
-            },
-            (config: any) => {
-                expect(config.plugins).toEqual({})
-                expect(config.httpServer).toBe(undefined)
-            })
-        })
-
-        it('all plugins', async () => {
-            const pluginAnswers: PluginAnswers = {
-                enabledApiPlugins: [ 'websocket', 'mqtt', 'http' ],
-                websocketPort: '3170',
-                mqttPort: '3171',
-                httpPort: '3172'
-            }
-            await assertValidFlow(
-                pluginAnswers,
-                (config: any) => {
-                    expect(Object.keys(config.plugins)).toIncludeSameMembers(['websocket', 'mqtt', 'http'])
-                    expect(config.plugins.websocket.port).toBe(parseInt(pluginAnswers.websocketPort!))
-                    expect(config.plugins.mqtt.port).toBe(parseInt(pluginAnswers.mqttPort!))
-                    expect(config.plugins.http).toMatchObject({})
-                    expect(config.httpServer.port).toBe(parseInt(pluginAnswers.httpPort!))
+    function act(...actions: ({ type: string } | { keypress: string })[]) {
+        return ({ events, ...r }: Awaited<ReturnType<typeof render>>) => {
+            actions.forEach((action) => {
+                if ('type' in action) {
+                    return void events.type(action.type)
                 }
+
+                events.keypress(action.keypress)
+            })
+        }
+    }
+
+    it('creates a config file', async () => {
+        const storagePath = path.join(tempDir, 'config.json')
+
+        mockAnswers([
+            {
+                prompt: select,
+                question: /want to generate/i,
+                action: act({ keypress: 'enter' }),
+            },
+            {
+                prompt: confirm,
+                question: /sensitive information on screen/i,
+                action: act({ keypress: 'enter' }),
+            },
+            {
+                prompt: select,
+                question: /which network/i,
+                action: act({ keypress: 'enter' }),
+            },
+            {
+                prompt: confirm,
+                question: /participate in earning rewards/i,
+                action: act({ type: 'n' }, { keypress: 'enter' }),
+            },
+            {
+                prompt: confirm,
+                question: /node for data publishing/i,
+                action: act({ type: 'n' }, { keypress: 'enter' }),
+            },
+            {
+                prompt: input,
+                question: /path to store/i,
+                action: act(
+                    {
+                        type: storagePath,
+                    },
+                    { keypress: 'enter' }
+                ),
+            },
+        ])
+
+        await start()
+
+        expect(answers.length).toEqual(6)
+
+        const [source, reveal, network, rewards, pubsub, filePath] = answers
+
+        expect(source).toEqual('Generate')
+
+        expect(reveal).toEqual(false)
+
+        expect(network).toEqual('polygon')
+
+        expect(rewards).toEqual(false)
+
+        expect(pubsub).toEqual(false)
+
+        expect(filePath).toEqual(storagePath)
+
+        expect(existsSync(storagePath)).toBe(true)
+
+        const summary = logs.join('\n')
+
+        expect(summary).toMatch(/congratulations/i)
+
+        expect(summary).toMatch(/your node address is 0x[\da-f]{40}\n/i)
+
+        expect(summary).toMatch(/generated name is( \w+){3}\n/i)
+
+        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+    })
+})
+
+describe('getNodeMnemonic', () => {
+    it('gives a mnemonic for a private key', () => {
+        expect(
+            getNodeMnemonic(
+                '0x9a2f3b058b9b457f9f954e62ea9fd2cefe2978736ffb3ef2c1782ccfad9c411d'
             )
-        })
+        ).toEqual('Mountain Until Gun')
     })
 })

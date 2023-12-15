@@ -10,7 +10,7 @@ import path from 'path'
 import { z } from 'zod'
 import {
     CURRENT_CONFIGURATION_VERSION,
-    formSchemaUrl
+    formSchemaUrl,
 } from '../config/migration'
 import { generateMnemonicFromAddress } from '../helpers/generateMnemonicFromAddress'
 import * as MqttConfigSchema from '../plugins/mqtt/config.schema.json'
@@ -28,7 +28,7 @@ export const start = async () => {
         },
         success: (tick: boolean, ...args: unknown[]) => {
             console.info(tick ? chalk.greenBright('✓') : ' ', ...args)
-        }
+        },
     }
 
     try {
@@ -42,7 +42,7 @@ export const start = async () => {
 
         if (httpServer) {
             Object.assign(pubsubPlugins, {
-                http: {}
+                http: {},
             })
         }
 
@@ -52,18 +52,18 @@ export const start = async () => {
             $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
             client: {
                 auth: {
-                    privateKey
-                }
+                    privateKey,
+                },
             },
             plugins: {
                 ...operatorPlugins,
-                ...pubsubPlugins
+                ...pubsubPlugins,
             },
             httpServer: httpServer?.port
                 ? {
-                      port: httpServer.port
+                      port: httpServer.port,
                   }
-                : void 0
+                : void 0,
         }
 
         persistConfig(
@@ -86,20 +86,18 @@ export const start = async () => {
             chalk.whiteBright(`streamr-broker ${storagePath}`),
             ``,
             `For environment specific run instructions, see`,
-            `https://docs.streamr.network/guides/how-to-run-streamr-node`
+            `https://docs.streamr.network/guides/how-to-run-streamr-node`,
         ]
 
         logger.success(false)
 
         lines.forEach((line, index) => logger.success(!index, line))
     } catch (e: any) {
-        if (/force closed/i.test(e.message)) {
+        if (typeof e.message === 'string' && /force closed/i.test(e.message)) {
             return
         }
 
-        logger.error(
-            `Streamr Node Config Wizard encountered an error:\n${e.message}`
-        )
+        throw e
     }
 }
 
@@ -119,7 +117,7 @@ async function getPrivateKey() {
     const privateKeySource = await select<'Generate' | 'Import'>({
         message:
             'Do you want to generate a new Ethereum private key or import an existing one?',
-        choices: [{ value: 'Generate' }, { value: 'Import' }]
+        choices: [{ value: 'Generate' }, { value: 'Import' }],
     })
 
     const privateKey = await (async () => {
@@ -135,7 +133,7 @@ async function getPrivateKey() {
                 } catch (_) {}
 
                 return 'Invalid private key provided.'
-            }
+            },
         })
     })()
 
@@ -146,7 +144,7 @@ async function getPrivateKey() {
             default: false,
             transformer(value) {
                 return value ? `Your node's private key: ${privateKey}` : 'no'
-            }
+            },
         })
     }
 
@@ -164,10 +162,10 @@ async function getNetwork() {
             { value: 'polygon', name: 'Streamr 1.0 testnet + Polygon' },
             {
                 value: 'mumbai',
-                name: 'Streamr 1.0 testing environment + Mumbai'
-            }
+                name: 'Streamr 1.0 testing environment + Mumbai',
+            },
         ],
-        default: 'polygon'
+        default: 'polygon',
     })
 }
 
@@ -178,7 +176,7 @@ async function getOperatorPlugins() {
     const setupOperator = await confirm({
         message:
             'Do you wish to participate in earning rewards by staking on stream Sponsorships?',
-        default: true
+        default: true,
     })
 
     if (!setupOperator) {
@@ -191,9 +189,9 @@ async function getOperatorPlugins() {
                 message: 'Enter your Operator address:',
                 validate(value) {
                     return isAddress(value) ? true : 'Invalid ethereum address'
-                }
-            })
-        }
+                },
+            }),
+        },
     }
 }
 
@@ -204,7 +202,7 @@ type PubsubPluginKey = 'websocket' | 'mqtt' | 'http'
 const DefaultPort: Record<PubsubPluginKey, number> = {
     websocket: WebsocketConfigSchema.properties.port.default,
     mqtt: MqttConfigSchema.properties.port.default,
-    http: BrokerConfigSchema.properties.httpServer.properties.port.default
+    http: BrokerConfigSchema.properties.httpServer.properties.port.default,
 }
 
 /**
@@ -214,7 +212,7 @@ async function getPubsubPlugins() {
     const setupPubsub = await confirm({
         message:
             'Do you wish to use your node for data publishing/subscribing?',
-        default: true
+        default: true,
     })
 
     if (!setupPubsub) {
@@ -226,8 +224,8 @@ async function getPubsubPlugins() {
         choices: [
             { value: 'websocket', name: 'WebSocket' },
             { value: 'mqtt', name: 'MQTT' },
-            { value: 'http', name: 'HTTP' }
-        ]
+            { value: 'http', name: 'HTTP' },
+        ],
     })
 
     const pubsubPlugins: Partial<Record<PubsubPluginKey, PubsubPlugin>> = {}
@@ -243,7 +241,8 @@ async function getPubsubPlugins() {
                     try {
                         return !!z.coerce
                             .number({
-                                invalid_type_error: 'Non-numeric value provided'
+                                invalid_type_error:
+                                    'Non-numeric value provided',
                             })
                             .int('Non-integer value provided')
                             .min(1024)
@@ -254,7 +253,7 @@ async function getPubsubPlugins() {
                             .map(({ message }) => message)
                             .join(', ')
                     }
-                }
+                },
             })
         )
 
@@ -271,14 +270,14 @@ async function getStoragePath() {
     while (true) {
         const path = await input({
             message: 'Select a path to store the generated config in',
-            default: getDefaultFile()
+            default: getDefaultFile(),
         })
 
         const proceed =
             !existsSync(path) ||
             (await confirm({
                 message: `The selected destination ${path} already exists. Do you want to overwrite it?`,
-                default: false
+                default: false,
             }))
 
         if (proceed) {
@@ -295,7 +294,7 @@ function persistConfig(storagePath: string, config: ConfigFile) {
 
     if (!existsSync(dirPath)) {
         mkdirSync(dirPath, {
-            recursive: true
+            recursive: true,
         })
     }
 
@@ -317,19 +316,19 @@ function getMumbaiConfig(config: ConfigFile): ConfigFile {
             id: chainId,
             entryPoints,
             theGraphUrl,
-            rpcEndpoints: rpcs
+            rpcEndpoints: rpcs,
         } = cfg.mumbai
 
         draft.client.network = {
             controlLayer: {
-                entryPoints
-            }
+                entryPoints,
+            },
         }
 
         const {
             StreamRegistry: streamRegistryChainAddress,
             StreamStorageRegistry: streamStorageRegistryChainAddress,
-            StorageNodeRegistry: storageNodeRegistryChainAddress
+            StorageNodeRegistry: storageNodeRegistryChainAddress,
         } = cfg.mumbai.contracts
 
         draft.client.contracts = {
@@ -339,9 +338,9 @@ function getMumbaiConfig(config: ConfigFile): ConfigFile {
             streamRegistryChainRPCs: {
                 name: 'mumbai',
                 chainId,
-                rpcs
+                rpcs,
             },
-            theGraphUrl
+            theGraphUrl,
         }
     })
 }
