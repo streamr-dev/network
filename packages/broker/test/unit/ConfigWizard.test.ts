@@ -132,7 +132,9 @@ describe('Config wizard', () => {
 
         expect(config.plugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
+        expect(config).not.toContainAnyKeys(['httpServer'])
+
+        expect(config.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -193,7 +195,9 @@ describe('Config wizard', () => {
 
         expect(config.plugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
+        expect(config).not.toContainAnyKeys(['httpServer'])
+
+        expect(config.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -270,7 +274,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
+        expect(config).not.toContainAnyKeys(['httpServer'])
+
+        expect(config.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -356,7 +362,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
+        expect(config).not.toContainAnyKeys(['httpServer'])
+
+        expect(config.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -412,7 +420,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
+        expect(config).not.toContainAnyKeys(['httpServer'])
+
+        expect(config.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -472,7 +482,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
+        expect(config).not.toContainAnyKeys(['httpServer'])
+
+        expect(config.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -532,7 +544,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
+        expect(config).not.toContainAnyKeys(['httpServer'])
+
+        expect(config.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -593,7 +607,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
+        expect(config).not.toContainAnyKeys(['httpServer'])
+
+        expect(config.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -725,7 +741,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
+        expect(config).not.toContainAnyKeys(['httpServer'])
+
+        expect(config.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -904,7 +922,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
+        expect(config).not.toContainAnyKeys(['httpServer'])
+
+        expect(config.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -979,7 +999,9 @@ describe('Config wizard', () => {
 
         expect(otherPlugins).toBeEmptyObject()
 
-        expect(config).not.toContainAnyKeys(['httpServer', 'environment'])
+        expect(config).not.toContainAnyKeys(['httpServer'])
+
+        expect(config.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -1440,7 +1462,9 @@ describe('Config wizard', () => {
 
         const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
 
-        expect(config.apiAuthentication.keys).toEqual(['NWViZWNiY2Y1YWRmNGZjNjllOTk2MzFlOGU2NGNjOWI'])
+        expect(config.apiAuthentication.keys).toEqual([
+            'NWViZWNiY2Y1YWRmNGZjNjllOTk2MzFlOGU2NGNjOWI',
+        ])
     })
 })
 
