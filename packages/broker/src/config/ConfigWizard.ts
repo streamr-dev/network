@@ -152,7 +152,7 @@ export async function start(): Promise<void> {
                         ? 'https://streamr.network/hub'
                         : 'https://mumbai.streamr.network/hub'
 
-                if (nodes) {
+                if (nodes !== undefined) {
                     if (!nodes.includes(nodeAddress.toLowerCase())) {
                         log(
                             '> ! You will need to pair your node with your Operator:'
@@ -448,7 +448,7 @@ async function getNativeBalance(
 async function getOperatorNodeAddresses(
     environmentId: EnvironmentId,
     operatorAddress: string
-): Promise<null | string[]> {
+): Promise<string[] | undefined> {
     const url = streamrConfig[environmentId].theGraphUrl
 
     const resp = await fetch(url, {
@@ -469,7 +469,7 @@ async function getOperatorNodeAddresses(
         })
         .parse(await resp.json())
 
-    return data.operator?.nodes || null
+    return data.operator ? data.operator.nodes : undefined
 }
 
 /**
