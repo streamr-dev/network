@@ -112,6 +112,21 @@ describe('StoreManager', () => {
                 expect(setStale).toHaveBeenCalledTimes(1)
                 expect(setStale).toHaveBeenCalledWith(DATA_ENTRY.key, getNodeIdFromBinary(DATA_ENTRY.creator), true)
             })
+
+            it('this node has less than redundancyFactor neighbors', async () => {
+                const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
+                const setStale = jest.fn<undefined, [Key, NodeID]>()
+                const manager = createStoreManager(
+                    NODES_CLOSEST_TO_DATA[3],
+                    [NODES_CLOSEST_TO_DATA[0], NODES_CLOSEST_TO_DATA[1]],
+                    replicateData,
+                    setStale
+                )
+                manager.onNewContact({ nodeId: NODES_CLOSEST_TO_DATA[4], type: NodeType.NODEJS })
+                await wait(50)
+                expect(replicateData).not.toHaveBeenCalled()
+                expect(setStale).toHaveBeenCalledTimes(0)
+            })
         })
     })
 })
