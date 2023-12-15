@@ -3,7 +3,7 @@ import { ConnectivityMethod, NodeType, PeerDescriptor } from '../proto/packages/
 import { isPrivateIPv4 } from './AddressTools'
 
 export const canOpenConnectionFromBrowser = (websocketServer: ConnectivityMethod): boolean => {
-    const hasPrivateAddress = ((websocketServer.host === 'localhost') || isPrivateIPv4(websocketServer.host))
+    const hasPrivateAddress = ((websocketServer.host === '127.0.0.1') || isPrivateIPv4(websocketServer.host))
     return websocketServer.tls || hasPrivateAddress
 }
 
