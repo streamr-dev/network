@@ -1,12 +1,12 @@
-import { EXISTING_CONNECTION_TIMEOUT, RpcRemote } from '../contact/RpcRemote'
-import { IStoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import {
     ReplicateDataRequest,
     StoreDataRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { EXISTING_CONNECTION_TIMEOUT, RpcRemote } from '../contact/RpcRemote'
 
-export class StoreRpcRemote extends RpcRemote<IStoreRpcClient> {
+export class StoreRpcRemote extends RpcRemote<StoreRpcClient> {
 
     async storeData(request: StoreDataRequest): Promise<void> {
         const options = this.formDhtRpcOptions()

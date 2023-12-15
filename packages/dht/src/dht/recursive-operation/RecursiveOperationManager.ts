@@ -19,7 +19,6 @@ import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { RecursiveOperationSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { SortedContactList } from '../contact/SortedContactList'
 import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
@@ -156,7 +155,8 @@ export class RecursiveOperationManager {
                 this.config.localPeerDescriptor,
                 targetPeerDescriptor,
                 serviceId,
-                toProtoRpcClient(new RecursiveOperationSessionRpcClient(remoteCommunicator.getRpcClientTransport())),
+                remoteCommunicator,
+                RecursiveOperationSessionRpcClient,
                 // TODO use config option or named constant?
                 10000
             )

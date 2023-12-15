@@ -13,7 +13,6 @@ import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { ManagedConnection } from '../ManagedConnection'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     areEqualPeerDescriptors,
     getNodeIdFromPeerDescriptor,
@@ -171,7 +170,9 @@ export class WebrtcConnector {
         const remoteConnector = new WebrtcConnectorRpcRemote(
             this.localPeerDescriptor!,
             targetPeerDescriptor,
-            toProtoRpcClient(new WebrtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+            'DUMMY',
+            this.rpcCommunicator,
+            WebrtcConnectorRpcClient
         )
 
         connection.on('localCandidate', (candidate: string, mid: string) => {

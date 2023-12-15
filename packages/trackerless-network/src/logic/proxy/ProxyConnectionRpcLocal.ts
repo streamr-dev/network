@@ -10,7 +10,6 @@ import {
 import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
 import { DhtCallContext, ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { EventEmitter } from 'eventemitter3'
 import { EthereumAddress, Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
@@ -98,7 +97,8 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
                 this.config.localPeerDescriptor,
                 senderPeerDescriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                this.config.rpcCommunicator,
+                DeliveryRpcClient
             )
         })
         const response: ProxyConnectionResponse = {

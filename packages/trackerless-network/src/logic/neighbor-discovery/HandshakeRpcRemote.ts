@@ -3,7 +3,7 @@ import { Logger, hexToBinary } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { InterleaveRequest, InterleaveResponse, StreamPartHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { IHandshakeRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { HandshakeRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 
 const logger = new Logger(module)
 
@@ -14,7 +14,7 @@ interface HandshakeResponse {
 
 export const INTERLEAVE_REQUEST_TIMEOUT = 15000
 
-export class HandshakeRpcRemote extends RpcRemote<IHandshakeRpcClient> {
+export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
 
     async handshake(
         neighborIds: NodeID[],

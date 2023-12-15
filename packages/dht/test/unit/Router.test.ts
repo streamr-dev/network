@@ -13,6 +13,7 @@ import {
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 import { NodeID } from '../../src/helpers/nodeId'
+import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 
 describe('Router', () => {
 
@@ -43,7 +44,7 @@ describe('Router', () => {
     const rpcCommunicator = new FakeRpcCommunicator()
 
     const createMockDhtNodeRpcRemote = (destination: PeerDescriptor): DhtNodeRpcRemote => {
-        return new DhtNodeRpcRemote(peerDescriptor1, destination, {} as any, 'router')
+        return new DhtNodeRpcRemote(peerDescriptor1, destination, undefined as any, new MockRpcCommunicator())
     }
 
     beforeEach(() => {
