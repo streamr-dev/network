@@ -27,7 +27,7 @@ import {
     MetricsContext,
     hexToBinary,
     merge,
-    strictly,
+    sI,
     waitForCondition
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -134,7 +134,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
     return ret
 }
 
-export class DhtNode extends EventEmitter<Events> implements strictly<DhtNode, ITransport> {
+export class DhtNode extends EventEmitter<Events> implements sI<DhtNode, ITransport> {
 
     private readonly config: StrictDhtNodeOptions
     private rpcCommunicator?: RoutingRpcCommunicator

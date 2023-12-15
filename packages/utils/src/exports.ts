@@ -41,7 +41,7 @@ import { executeSafePromise } from './executeSafePromise'
 import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries } from './binaryUtils'
 import { filePathToNodeFormat } from './filePathToNodeFormat'
 import { retry } from './retry'
-import { strictCb, strictly } from './strictly'
+import { sF, sI } from './strictly'
 
 export {
     BrandedString,
@@ -96,8 +96,8 @@ export {
     areEqualBinaries,
     filePathToNodeFormat,
     retry,
-    strictly,
-    strictCb
+    sI,
+    sF
 }
 
 export {
