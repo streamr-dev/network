@@ -84,7 +84,7 @@ describe('Route Message With Mock Connections', () => {
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
             sourceNode.router!.doRouteMessage({
                 message,
-                destinationPeer: destinationNode.getLocalPeerDescriptor(),
+                target: destinationNode.getLocalPeerDescriptor().nodeId,
                 requestId: v4(),
                 sourcePeer: sourceNode.getLocalPeerDescriptor(),
                 reachableThrough: [],
@@ -116,7 +116,7 @@ describe('Route Message With Mock Connections', () => {
             }
             sourceNode.router!.doRouteMessage({
                 message,
-                destinationPeer: destinationNode.getLocalPeerDescriptor(),
+                target: destinationNode.getLocalPeerDescriptor().nodeId,
                 requestId: v4(),
                 sourcePeer: sourceNode.getLocalPeerDescriptor(),
                 reachableThrough: [],
@@ -172,7 +172,7 @@ describe('Route Message With Mock Connections', () => {
                         }
                         node.router!.doRouteMessage({
                             message,
-                            destinationPeer: receiver.getLocalPeerDescriptor(),
+                            target: receiver.getLocalPeerDescriptor().nodeId,
                             sourcePeer: node.getLocalPeerDescriptor(),
                             requestId: v4(),
                             reachableThrough: [],
@@ -208,7 +208,7 @@ describe('Route Message With Mock Connections', () => {
 
         const routeMessageWrapper: RouteMessageWrapper = {
             message: closestPeersRequestMessage,
-            destinationPeer: destinationNode.getLocalPeerDescriptor(),
+            target: destinationNode.getLocalPeerDescriptor().nodeId,
             requestId: v4(),
             sourcePeer: sourceNode.getLocalPeerDescriptor(),
             reachableThrough: [entryPointDescriptor],
@@ -240,7 +240,7 @@ describe('Route Message With Mock Connections', () => {
             message: requestMessage,
             requestId: v4(),
             sourcePeer: sourceNode.getLocalPeerDescriptor(),
-            destinationPeer: entryPoint.getLocalPeerDescriptor()!,
+            target: entryPoint.getLocalPeerDescriptor()!.nodeId,
             reachableThrough: [],
             routingPath: []
         }
