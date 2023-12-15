@@ -15,7 +15,7 @@ import { LocalDataStore } from './LocalDataStore'
 interface StoreRpcLocalConfig {
     localDataStore: LocalDataStore
     replicateDataToNeighbors: (incomingPeer: PeerDescriptor, dataEntry: DataEntry) => void
-    selfIsOneOfClosestPeers: (key: Uint8Array) => boolean
+    selfIsWithinRedundancyFactor: (key: Uint8Array) => boolean
 }
 
 const logger = new Logger(module)
@@ -31,7 +31,7 @@ export class StoreRpcLocal implements IStoreRpc {
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         logger.trace('storeData()')
         const { key, data, creator, createdAt, ttl } = request
-        const selfIsOneOfClosestPeers = this.config.selfIsOneOfClosestPeers(key)
+        const selfIsOneOfClosestPeers = this.config.selfIsWithinRedundancyFactor(key)
         this.config.localDataStore.storeEntry({ 
             key, 
             data,
@@ -55,7 +55,7 @@ export class StoreRpcLocal implements IStoreRpc {
         if (wasStored) {
             this.config.replicateDataToNeighbors((context as DhtCallContext).incomingSourceDescriptor!, request.entry!)
         }
-        if (!this.config.selfIsOneOfClosestPeers(dataEntry.key)) {
+        if (!this.config.selfIsWithinRedundancyFactor(dataEntry.key)) {
             this.config.localDataStore.setAllEntriesAsStale(dataEntry.key)
         }
         logger.trace('server-side replicateData() at end')
