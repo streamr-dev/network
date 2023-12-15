@@ -108,9 +108,9 @@ export async function start(): Promise<void> {
             try {
                 const balance = await getNativeBalance(environmentId, nodeAddress)
 
-                const content = `Your node address has *${utils
-                    .formatEther(balance)
-                    .replace(/\.\d+/, (f) => f.substring(0, 3))} MATIC*`
+                const content = `Your node address has *${Number(
+                    utils.formatEther(balance)
+                ).toFixed(2)} MATIC*`
 
                 resume()
 
