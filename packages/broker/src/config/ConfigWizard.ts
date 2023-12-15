@@ -22,6 +22,8 @@ import * as BrokerConfigSchema from './config.schema.json'
 
 const MIN_BALANCE = utils.parseEther('0.1')
 
+type EnvironmentId = 'polygon' | 'mumbai'
+
 export async function start(): Promise<void> {
     log(`
         >
@@ -38,7 +40,7 @@ export async function start(): Promise<void> {
 
         const nodeAddress = new Wallet(privateKey).address
 
-        const network = await getNetwork()
+        const environmentId = await getEnvironmentId()
 
         const operator = await getOperatorAddress()
 
@@ -70,6 +72,7 @@ export async function start(): Promise<void> {
 
         let config: ConfigFile = {
             $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
+            environment: environmentId,
             client: {
                 auth: {
                     privateKey,
@@ -82,14 +85,7 @@ export async function start(): Promise<void> {
             httpServer,
             apiAuthentication: {
                 keys: [apiKey]
-            }
-        }
-
-        if (network === 'mumbai') {
-            config = {
-                ...config,
-                environment: 'mumbai'
-            }
+            },
         }
 
         persistConfig(
@@ -110,7 +106,7 @@ export async function start(): Promise<void> {
             )
 
             try {
-                const balance = await getNativeBalance(network, nodeAddress)
+                const balance = await getNativeBalance(environmentId, nodeAddress)
 
                 const content = `Your node address has *${utils
                     .formatEther(balance)
@@ -142,12 +138,12 @@ export async function start(): Promise<void> {
             )
 
             try {
-                const nodes = await getOperatorNodeAddresses(network, operator)
+                const nodes = await getOperatorNodeAddresses(environmentId, operator)
 
                 resume()
 
                 const hub =
-                    network === 'polygon'
+                    environmentId === 'polygon'
                         ? 'https://streamr.network/hub'
                         : 'https://mumbai.streamr.network/hub'
 
@@ -161,7 +157,7 @@ export async function start(): Promise<void> {
                     }
                 } else {
                     log(`
-                        > x Your Operator could not be found on the **${capitalize(network)}** network, see
+                        > x Your Operator could not be found on the **${capitalize(environmentId)}** network, see
                     `)
                 }
 
@@ -248,13 +244,11 @@ async function getPrivateKey(): Promise<string> {
     return privateKey
 }
 
-type NetworkKey = 'polygon' | 'mumbai'
-
 /**
  * Lets the user decide the desired network for their node.
  */
-async function getNetwork(): Promise<NetworkKey> {
-    return select<NetworkKey>({
+async function getEnvironmentId(): Promise<EnvironmentId> {
+    return select<EnvironmentId>({
         message:
             'Which network do you want to configure your node to connect to?',
         choices: [
@@ -430,10 +424,10 @@ function persistConfig(storagePath: string, config: ConfigFile): void {
  * wallet address.
  */
 async function getNativeBalance(
-    network: 'polygon' | 'mumbai',
+    environmentId: EnvironmentId,
     address: string
 ): Promise<BigNumber> {
-    const url = streamrConfig[network].rpcEndpoints[0]?.url
+    const url = streamrConfig[environmentId].rpcEndpoints[0]?.url
 
     if (!url || !/^https?:/i.test(url)) {
         throw new Error('Invalid RPC')
@@ -447,10 +441,10 @@ async function getNativeBalance(
  * contract address on the given network.
  */
 async function getOperatorNodeAddresses(
-    network: 'polygon' | 'mumbai',
+    environmentId: EnvironmentId,
     operatorAddress: string
 ): Promise<null | string[]> {
-    const url = streamrConfig[network].theGraphUrl
+    const url = streamrConfig[environmentId].theGraphUrl
 
     const resp = await fetch(url, {
         method: 'POST',
