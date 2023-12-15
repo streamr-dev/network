@@ -45,7 +45,6 @@
     "ethers": "^5.4.7",
     "express": "^4.17.1",
     "heap": "^0.2.6",
-    "immer": "^10.0.3",
     "lodash": "^4.17.21",
     "merge2": "^1.4.1",
     "nat-type-identifier": "^2.0.9",
