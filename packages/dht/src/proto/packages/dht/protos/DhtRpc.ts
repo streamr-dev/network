@@ -245,17 +245,17 @@ export interface ConnectivityMethod {
  */
 export interface RouteMessageWrapper {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor sourcePeer = 1;
-     */
-    sourcePeer?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string requestId = 2;
+     * @generated from protobuf field: string requestId = 1;
      */
     requestId: string;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor destinationPeer = 3;
+     * @generated from protobuf field: dht.PeerDescriptor sourcePeer = 2;
      */
-    destinationPeer?: PeerDescriptor;
+    sourcePeer?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: bytes target = 3;
+     */
+    target: Uint8Array;
     /**
      * @generated from protobuf field: dht.Message message = 4;
      */
@@ -561,11 +561,7 @@ export enum NodeType {
     /**
      * @generated from protobuf enum value: BROWSER = 1;
      */
-    BROWSER = 1,
-    /**
-     * @generated from protobuf enum value: VIRTUAL = 3;
-     */
-    VIRTUAL = 3
+    BROWSER = 1
 }
 /**
  * @generated from protobuf enum dht.RpcResponseError
@@ -872,9 +868,9 @@ export const ConnectivityMethod = new ConnectivityMethod$Type();
 class RouteMessageWrapper$Type extends MessageType$<RouteMessageWrapper> {
     constructor() {
         super("dht.RouteMessageWrapper", [
-            { no: 1, name: "sourcePeer", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "destinationPeer", kind: "message", T: () => PeerDescriptor },
+            { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "sourcePeer", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "target", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 4, name: "message", kind: "message", T: () => Message },
             { no: 5, name: "reachableThrough", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 6, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }

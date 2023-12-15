@@ -149,7 +149,6 @@ message ConnectivityMethod {
 enum NodeType {
   NODEJS = 0;
   BROWSER = 1;
-  VIRTUAL = 3;
 }
 
 enum RpcResponseError {
@@ -160,9 +159,9 @@ enum RpcResponseError {
 }
 
 message RouteMessageWrapper {
-  PeerDescriptor sourcePeer = 1;
-  string requestId = 2;
-  PeerDescriptor destinationPeer = 3;
+  string requestId = 1;
+  PeerDescriptor sourcePeer = 2;
+  bytes target = 3;
   Message message = 4;
   repeated PeerDescriptor reachableThrough = 5;
   repeated PeerDescriptor routingPath = 6;
