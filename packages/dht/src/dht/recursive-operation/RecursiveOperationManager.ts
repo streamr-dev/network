@@ -105,6 +105,17 @@ export class RecursiveOperationManager {
                 true
             )
             return session.getResults()
+        } else if (
+            this.config.connections.size > 1 
+            && !this.isPeerCloserToIdThanSelf(this.getClosestConnections(targetId, 5)[0], getNodeIdFromBinary(targetId))
+        ) {
+            const data = this.config.localDataStore.getEntries(targetId)
+            session.onResponseReceived(
+                [this.config.localPeerDescriptor],
+                [this.config.localPeerDescriptor],
+                Array.from(data.values()),
+                true
+            )
         }
         this.ongoingSessions.set(session.getId(), session)
         if (waitForCompletion === true) {
