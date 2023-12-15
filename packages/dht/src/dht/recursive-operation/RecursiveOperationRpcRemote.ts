@@ -20,7 +20,7 @@ export class RecursiveOperationRpcRemote extends RpcRemote<IRecursiveOperationRp
             routingPath: params.routingPath
         }
         const options = this.formDhtRpcOptions({
-            doNotConnect: true
+            connect: false
         })
         try {
             const ack = await this.getClient().routeRequest(message, options)

@@ -10,17 +10,7 @@ import { getRegionDelayMatrix } from './pings'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import Heap from 'heap'
 import { debugVars } from '../../helpers/debugHelpers'
-import * as sinon from 'sinon'
 import { NodeID } from '../../helpers/nodeId'
-
-// TODO take this from @streamr/test-utils (we can't access devDependencies as Simulator
-// is currently in "src" directory instead of "test" directory)
-// eslint-disable-next-line no-underscore-dangle
-declare let _streamr_electron_test: any
-export function isRunningInElectron(): boolean {
-    // eslint-disable-next-line no-underscore-dangle
-    return typeof _streamr_electron_test !== 'undefined'
-}
 
 const logger = new Logger(module)
 
@@ -121,22 +111,6 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     })
 
     private simulatorTimeout?: NodeJS.Timeout
-    private static clock: sinon.SinonFakeTimers | undefined
-
-    static useFakeTimers(on = true): void {
-        if (!isRunningInElectron()) {  // never use fake timers in browser environment
-            if (on) {
-                if (!Simulator.clock) {
-                    Simulator.clock = sinon.useFakeTimers()
-                }
-            } else {
-                if (Simulator.clock) {
-                    Simulator.clock.restore()
-                    Simulator.clock = undefined
-                }
-            }
-        }
-    }
 
     constructor(latencyType: LatencyType = LatencyType.NONE, fixedLatency?: number) {
         super()
@@ -311,11 +285,6 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         const timeDifference = firstOperationTime - currentTime
 
         this.simulatorTimeout = setTimeout(this.executeQueuedOperations, timeDifference)
-       
-        if (Simulator.clock) {
-            // TODO should we have some handling for this floating promise?
-            Simulator.clock.runAllAsync()
-        }
     }
 
     private scheduleOperation(operation: SimulatorOperation) {

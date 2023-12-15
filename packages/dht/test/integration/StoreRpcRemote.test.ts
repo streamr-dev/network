@@ -1,6 +1,5 @@
 import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import {
-    PeerDescriptor,
     StoreDataRequest,
     StoreDataResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -8,8 +7,9 @@ import { createMockPeerDescriptor, mockStoreRpc } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { StoreRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { StoreRpcRemote } from '../../src/dht/store/StoreRpcRemote'
-import { Any } from '../../src/proto/google/protobuf/any'
+import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { createRandomNodeId } from '../../src/helpers/nodeId'
 
 const SERVICE_ID = 'test'
 
@@ -20,10 +20,11 @@ describe('StoreRpcRemote', () => {
     let serverRpcCommunicator: RpcCommunicator
     const clientPeerDescriptor = createMockPeerDescriptor()
     const serverPeerDescriptor = createMockPeerDescriptor()
-    const data = Any.pack(clientPeerDescriptor, PeerDescriptor)
+    const data = createMockDataEntry()
     const request: StoreDataRequest = {
-        key: clientPeerDescriptor.nodeId,
-        data,
+        key: data.key,
+        data: data.data,
+        creator: createRandomNodeId(),
         ttl: 10
     }
 
@@ -42,8 +43,7 @@ describe('StoreRpcRemote', () => {
     })
 
     it('storeData happy path', async () => {
-        const response = await rpcRemote.storeData(request)
-        expect(response.error).toBeEmpty()
+        await expect(rpcRemote.storeData(request)).toResolve()
     })
 
     it('storeData rejects', async () => {
@@ -54,11 +54,4 @@ describe('StoreRpcRemote', () => {
             + ' Error: Mock'
         )
     })
-
-    it('storeData response error', async () => {
-        serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', mockStoreRpc.storeDataErrorString)
-        const response = await rpcRemote.storeData(request)
-        expect(response.error).toEqual('Mock')
-    })
-
 })

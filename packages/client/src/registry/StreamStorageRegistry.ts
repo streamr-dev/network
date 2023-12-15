@@ -6,7 +6,7 @@ import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
-import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
+import { getStreamRegistryChainProviders, getEthersOverrides } from '../Ethereum'
 import { Stream } from '../Stream'
 import { StreamFactory } from '../StreamFactory'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -114,7 +114,7 @@ export class StreamStorageRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('Add stream to storage node', { streamId, nodeAddress })
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.config)
         await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 
@@ -122,7 +122,7 @@ export class StreamStorageRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('Remove stream from storage node', { streamId, nodeAddress })
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.config)
         await waitForTx(this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 

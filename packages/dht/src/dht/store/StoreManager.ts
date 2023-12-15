@@ -5,9 +5,9 @@ import {
 import { Any } from '../../proto/google/protobuf/any'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { IRecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
+import { RecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Logger, executeSafePromise } from '@streamr/utils'
+import { Logger, executeSafePromise, hexToBinary } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { StoreRpcRemote } from './StoreRpcRemote'
 import { Timestamp } from '../../proto/google/protobuf/timestamp'
@@ -15,13 +15,13 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
 import { ServiceID } from '../../types/ServiceID'
 import { findIndex } from 'lodash'
-import { areEqualNodeIds, getNodeIdFromDataKey } from '../../helpers/nodeId'
+import { NodeID, areEqualNodeIds, getNodeIdFromBinary, getNodeIdFromDataKey } from '../../helpers/nodeId'
 import { StoreRpcLocal } from './StoreRpcLocal'
 import { getDistance } from '../PeerManager'
 
 interface StoreManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
-    recursiveOperationManager: IRecursiveOperationManager
+    recursiveOperationManager: RecursiveOperationManager
     localPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
     serviceId: ServiceID
@@ -93,7 +93,7 @@ export class StoreManager {
                 })
             }
         } else if (!this.selfIsOneOfClosestPeers(dataEntry.key)) {
-            this.config.localDataStore.setStale(dataEntry.key, getNodeIdFromPeerDescriptor(dataEntry.creator!), true)
+            this.config.localDataStore.setStale(dataEntry.key, getNodeIdFromBinary(dataEntry.creator), true)
         }
     }
 
@@ -106,7 +106,7 @@ export class StoreManager {
         }
     }
 
-    public async storeDataToDht(key: Uint8Array, data: Any, creator: PeerDescriptor): Promise<PeerDescriptor[]> {
+    public async storeDataToDht(key: Uint8Array, data: Any, creator: NodeID): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.config.serviceId}`)
         const result = await this.config.recursiveOperationManager.execute(key, RecursiveOperation.FIND_NODE)
         const closestNodes = result.closestNodes
@@ -118,7 +118,7 @@ export class StoreManager {
                 this.config.localDataStore.storeEntry({
                     key, 
                     data,
-                    creator,
+                    creator: hexToBinary(creator),
                     createdAt,
                     storedAt: Timestamp.now(), 
                     ttl, 
@@ -130,19 +130,15 @@ export class StoreManager {
             }
             const rpcRemote = this.config.createRpcRemote(closestNodes[i])
             try {
-                const response = await rpcRemote.storeData({
+                await rpcRemote.storeData({
                     key,
                     data,
-                    creator,
+                    creator: hexToBinary(creator),
                     createdAt,
                     ttl
                 })
-                if (!response.error) {
-                    successfulNodes.push(closestNodes[i])
-                    logger.trace('remote.storeData() returned success')
-                } else {
-                    logger.trace('remote.storeData() returned error: ' + response.error)
-                }
+                successfulNodes.push(closestNodes[i])
+                logger.trace('remote.storeData() success')
             } catch (e) {
                 logger.trace('remote.storeData() threw an exception ' + e)
             }

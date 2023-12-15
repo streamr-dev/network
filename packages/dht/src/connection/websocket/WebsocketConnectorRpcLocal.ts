@@ -24,16 +24,14 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
     }
 
     public async requestConnection(_request: WebsocketConnectionRequest, context: ServerCallContext): Promise<Empty> {
+        if (this.config.abortSignal.aborted) {
+            return {}
+        }
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        setImmediate(() => {
-            if (this.config.abortSignal.aborted) {
-                return
-            }
-            if (!this.config.hasConnection(senderPeerDescriptor)) {
-                const connection = this.config.connect(senderPeerDescriptor)
-                this.config.onNewConnection(connection)
-            }
-        })
+        if (!this.config.hasConnection(senderPeerDescriptor)) {
+            const connection = this.config.connect(senderPeerDescriptor)
+            this.config.onNewConnection(connection)
+        }
         return {}
     }
 }

@@ -58,7 +58,6 @@ import { StoreRpcRemote } from './store/StoreRpcRemote'
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    joinCompleted: () => void
     newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
 }
@@ -147,11 +146,9 @@ export class DhtNode extends EventEmitter<Events> implements strictly<DhtNode, I
     private recursiveOperationManager?: RecursiveOperationManager
     private peerDiscovery?: PeerDiscovery
     private peerManager?: PeerManager
-
     public connectionManager?: ConnectionManager
     private started = false
     private abortController = new AbortController()
-    private entryPointDisconnectTimeout?: NodeJS.Timeout
 
     constructor(conf: DhtNodeOptions) {
         super()
@@ -371,7 +368,7 @@ export class DhtNode extends EventEmitter<Events> implements strictly<DhtNode, I
             executeRecursiveOperation: (key: Uint8Array, operation: RecursiveOperation, excludedPeer: PeerDescriptor) => {
                 return this.executeRecursiveOperation(key, operation, excludedPeer)
             },
-            storeDataToDht: (key: Uint8Array, data: Any, creator?: PeerDescriptor) => this.storeDataToDht(key, data, creator)
+            storeDataToDht: (key: Uint8Array, data: Any, creator?: NodeID) => this.storeDataToDht(key, data, creator)
         })
         this.rpcCommunicator!.registerRpcMethod(
             ExternalFindDataRequest,
@@ -459,11 +456,11 @@ export class DhtNode extends EventEmitter<Events> implements strictly<DhtNode, I
         return this.recursiveOperationManager!.execute(key, operation, excludedPeer)
     }
 
-    public async storeDataToDht(key: Uint8Array, data: Any, creator?: PeerDescriptor): Promise<PeerDescriptor[]> {
+    public async storeDataToDht(key: Uint8Array, data: Any, creator?: NodeID): Promise<PeerDescriptor[]> {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
         }
-        return this.storeManager!.storeDataToDht(key, data, creator ?? this.localPeerDescriptor!)
+        return this.storeManager!.storeDataToDht(key, data, creator ?? getNodeIdFromPeerDescriptor(this.localPeerDescriptor!))
     }
 
     public async storeDataViaPeer(key: Uint8Array, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
@@ -554,9 +551,6 @@ export class DhtNode extends EventEmitter<Events> implements strictly<DhtNode, I
         logger.trace('stop()')
         this.abortController.abort()
         await this.storeManager!.destroy()
-        if (this.entryPointDisconnectTimeout) {
-            clearTimeout(this.entryPointDisconnectTimeout)
-        }
         this.localDataStore.clear()
         this.peerManager?.stop()
         this.rpcCommunicator!.stop()
