@@ -198,6 +198,7 @@ message ConnectivityResponse {
 message HandshakeRequest {
   PeerDescriptor sourcePeerDescriptor = 1;
   optional PeerDescriptor targetPeerDescriptor = 2;
+  string version = 3;
 }
 
 message HandshakeResponse {
@@ -208,6 +209,7 @@ message HandshakeResponse {
 enum HandshakeError {
   DUPLICATE_CONNECTION = 0;
   INVALID_TARGET_PEER_DESCRIPTOR = 1;
+  UNSUPPORTED_VERSION = 2;
 }
 
 // Wraps all messages

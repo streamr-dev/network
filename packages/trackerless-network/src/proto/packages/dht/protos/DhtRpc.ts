@@ -334,6 +334,10 @@ export interface HandshakeRequest {
      * @generated from protobuf field: optional dht.PeerDescriptor targetPeerDescriptor = 2;
      */
     targetPeerDescriptor?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: string version = 3;
+     */
+    version: string;
 }
 /**
  * @generated from protobuf message dht.HandshakeResponse
@@ -615,7 +619,11 @@ export enum HandshakeError {
     /**
      * @generated from protobuf enum value: INVALID_TARGET_PEER_DESCRIPTOR = 1;
      */
-    INVALID_TARGET_PEER_DESCRIPTOR = 1
+    INVALID_TARGET_PEER_DESCRIPTOR = 1,
+    /**
+     * @generated from protobuf enum value: UNSUPPORTED_VERSION = 2;
+     */
+    UNSUPPORTED_VERSION = 2
 }
 // Wraps all messages
 
@@ -928,7 +936,8 @@ class HandshakeRequest$Type extends MessageType$<HandshakeRequest> {
     constructor() {
         super("dht.HandshakeRequest", [
             { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "targetPeerDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 2, name: "targetPeerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

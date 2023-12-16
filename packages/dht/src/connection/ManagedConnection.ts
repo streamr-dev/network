@@ -10,7 +10,7 @@ import { NodeID } from '../helpers/nodeId'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
-    handshakeRequest: (source: PeerDescriptor, target?: PeerDescriptor) => void
+    handshakeRequest: (source: PeerDescriptor, version: string, target?: PeerDescriptor) => void
     handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
     handshakeFailed: () => void
 }
@@ -99,9 +99,13 @@ export class ManagedConnection extends EventEmitter<Events> {
         } else {
             if (incomingConnection) {
                 this.handshaker = new Handshaker(this.localPeerDescriptor, incomingConnection)
-                this.handshaker.on('handshakeRequest', (sourcePeerDescriptor: PeerDescriptor, targetPeerDescriptor?: PeerDescriptor) => {
+                this.handshaker.on('handshakeRequest', (
+                    sourcePeerDescriptor: PeerDescriptor,
+                    version: string,
+                    targetPeerDescriptor?: PeerDescriptor
+                ) => {
                     this.setRemotePeerDescriptor(sourcePeerDescriptor)
-                    this.emit('handshakeRequest', sourcePeerDescriptor, targetPeerDescriptor)
+                    this.emit('handshakeRequest', sourcePeerDescriptor, version, targetPeerDescriptor)
                 })
 
                 incomingConnection.on('disconnected', this.onDisconnected)
