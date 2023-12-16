@@ -1,11 +1,24 @@
 import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
-import { Simulator } from '../../src/connection/simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { PeerID } from '../../src/helpers/PeerID'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { createMockPeerDescriptor } from '../utils/utils'
+import { getRandomRegion } from '../../src/connection/simulator/pings'
+import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { MockTransport } from '../utils/mock/Transport'
+
+const BASE_MESSAGE: Message = {
+    serviceId: 'serviceId',
+    messageType: MessageType.RPC,
+    messageId: '1',
+    body: {
+        oneofKind: 'rpcMessage',
+        rpcMessage: RpcMessage.create()
+    }
+}
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
     return new ConnectionManager({
@@ -22,29 +35,11 @@ describe('SimultaneousConnections', () => {
     let simulator: Simulator
     let simTransport1: SimulatorTransport
     let simTransport2: SimulatorTransport
-
-    const peerDescriptor1 = {
-        nodeId: PeerID.fromString('mock1').value,
-        type: NodeType.NODEJS
-    }
-
-    const peerDescriptor2 = {
-        nodeId: PeerID.fromString('mock2').value,
-        type: NodeType.NODEJS
-    }
-
-    const baseMsg: Message = {
-        serviceId: 'serviceId',
-        messageType: MessageType.RPC,
-        messageId: '1',
-        body: {
-            oneofKind: 'rpcMessage',
-            rpcMessage: RpcMessage.create()
-        }
-    }
+    const peerDescriptor1 = createMockPeerDescriptor({ region: getRandomRegion() })
+    const peerDescriptor2 = createMockPeerDescriptor({ region: getRandomRegion() })
 
     beforeEach(async () => {
-        simulator = new Simulator()
+        simulator = new Simulator(LatencyType.REAL)
         simTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         await simTransport1.start()
         simTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
@@ -58,11 +53,11 @@ describe('SimultaneousConnections', () => {
 
     it('simultanous simulated connection', async () => {
         const msg1: Message = {
-            ...baseMsg,
+            ...BASE_MESSAGE,
             targetDescriptor: peerDescriptor2
         }
         const msg2: Message = {
-            ...baseMsg,
+            ...BASE_MESSAGE,
             targetDescriptor: peerDescriptor1
         }
 
@@ -90,50 +85,42 @@ describe('SimultaneousConnections', () => {
 
     describe('Websocket 2 servers', () => {
 
-        let simTransport1: SimulatorTransport
-        let simTransport2: SimulatorTransport
         let connectionManager1: ConnectionManager
         let connectionManager2: ConnectionManager
         
         const wsPeerDescriptor1: PeerDescriptor = {
-            nodeId: PeerID.fromString('mock1').value,
+            nodeId: createRandomNodeId(),
             type: NodeType.NODEJS,
             websocket: {
                 host: '127.0.0.1',
                 port: 43432,
                 tls: false
-            }
+            },
+            region: getRandomRegion()
         }
 
         const wsPeerDescriptor2: PeerDescriptor = {
-            nodeId: PeerID.fromString('mock2').value,
+            nodeId: createRandomNodeId(),
             type: NodeType.NODEJS,
             websocket: {
                 host: '127.0.0.1',
                 port: 43433,
                 tls: false
-            }
+            },
+            region: getRandomRegion()
         }
 
         beforeEach(async () => {
-            
-            // SimulatorTransport needs to have exatly same peerDescriptor as ConnectionManager
-            // that is why we need to create new SimulatorTransports here
-            simulator = new Simulator()
-            simTransport1 = new SimulatorTransport(wsPeerDescriptor1, simulator)
-            await simTransport1.start()
-            simTransport2 = new SimulatorTransport(wsPeerDescriptor2, simulator)
-            await simTransport2.start()
-            
+
             const websocketPortRange = { min: 43432, max: 43433 }
             connectionManager1 = createConnectionManager(wsPeerDescriptor1, {
-                transport: simTransport1,
+                transport: new MockTransport(),
                 websocketPortRange,
                 entryPoints: [wsPeerDescriptor1],
                 websocketServerEnableTls: false
             })
             connectionManager2 = createConnectionManager(wsPeerDescriptor2, {
-                transport: simTransport2,
+                transport: new MockTransport(),
                 websocketPortRange,
                 entryPoints: [wsPeerDescriptor1],
                 websocketServerEnableTls: false
@@ -145,17 +132,15 @@ describe('SimultaneousConnections', () => {
         afterEach(async () => {
             await connectionManager1.stop()
             await connectionManager2.stop()
-            await simTransport1.stop()
-            await simTransport2.stop()
         })
 
         it('Simultaneous Connections', async () => {
             const msg1: Message = {
-                ...baseMsg,
+                ...BASE_MESSAGE,
                 targetDescriptor: wsPeerDescriptor2
             }
             const msg2: Message = {
-                ...baseMsg,
+                ...BASE_MESSAGE,
                 targetDescriptor: wsPeerDescriptor1
             }
 
@@ -192,22 +177,20 @@ describe('SimultaneousConnections', () => {
         let connectionManager2: ConnectionManager
 
         const wsPeerDescriptor1: PeerDescriptor = {
-            nodeId: PeerID.fromString('mock1').value,
+            nodeId: createRandomNodeId(),
             type: NodeType.NODEJS,
             websocket: {
                 host: '127.0.0.1',
                 port: 43432,
                 tls: false
-            }
+            },
+            region: getRandomRegion()
         }
 
-        const wsPeerDescriptor2: PeerDescriptor = {
-            nodeId: PeerID.fromString('mock2').value,
-            type: NodeType.NODEJS
-        }
+        const wsPeerDescriptor2 = createMockPeerDescriptor({ region: getRandomRegion() })
 
         beforeEach(async () => {
-            simulator = new Simulator()
+            simulator = new Simulator(LatencyType.REAL)
             simTransport1 = new SimulatorTransport(wsPeerDescriptor1, simulator)
             await simTransport1.start()
             simTransport2 = new SimulatorTransport(wsPeerDescriptor2, simulator)
@@ -235,11 +218,11 @@ describe('SimultaneousConnections', () => {
 
         it('Simultaneous Connections', async () => {
             const msg1: Message = {
-                ...baseMsg,
+                ...BASE_MESSAGE,
                 targetDescriptor: wsPeerDescriptor2
             }
             const msg2: Message = {
-                ...baseMsg,
+                ...BASE_MESSAGE,
                 targetDescriptor: wsPeerDescriptor1
             }
 
@@ -275,18 +258,11 @@ describe('SimultaneousConnections', () => {
         let connectionManager1: ConnectionManager
         let connectionManager2: ConnectionManager
 
-        const wrtcPeerDescriptor1: PeerDescriptor = {
-            nodeId: PeerID.fromString('mock1').value,
-            type: NodeType.NODEJS
-        }
-
-        const wrtcPeerDescriptor2: PeerDescriptor = {
-            nodeId: PeerID.fromString('mock2').value,
-            type: NodeType.NODEJS
-        }
+        const wrtcPeerDescriptor1 = createMockPeerDescriptor({ region: getRandomRegion() })
+        const wrtcPeerDescriptor2 = createMockPeerDescriptor({ region: getRandomRegion() })
 
         beforeEach(async () => {
-            simulator = new Simulator()
+            simulator = new Simulator(LatencyType.REAL)
             simTransport1 = new SimulatorTransport(wrtcPeerDescriptor1, simulator)
             await simTransport1.start()
             simTransport2 = new SimulatorTransport(wrtcPeerDescriptor2, simulator)
@@ -310,11 +286,11 @@ describe('SimultaneousConnections', () => {
 
         it('Simultaneous Connections', async () => {
             const msg1: Message = {
-                ...baseMsg,
+                ...BASE_MESSAGE,
                 targetDescriptor: wrtcPeerDescriptor2
             }
             const msg2: Message = {
-                ...baseMsg,
+                ...BASE_MESSAGE,
                 targetDescriptor: wrtcPeerDescriptor1
             }
 

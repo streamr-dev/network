@@ -13,7 +13,6 @@ import {
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { waitForCondition } from '@streamr/utils'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
@@ -73,7 +72,8 @@ describe('DeliveryRpcRemote', () => {
             clientNode,
             serverNode,
             STREAM_PART_ID,
-            toProtoRpcClient(new DeliveryRpcClient(clientRpc.getRpcClientTransport()))
+            clientRpc,
+            DeliveryRpcClient
         )
     })
 
@@ -97,7 +97,7 @@ describe('DeliveryRpcRemote', () => {
     })
 
     it('leaveNotice', async () => {
-        rpcRemote.leaveStreamPartNotice()
+        rpcRemote.leaveStreamPartNotice(false)
         await waitForCondition(() => recvCounter === 1)
     })
 

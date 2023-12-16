@@ -1,5 +1,4 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
@@ -66,7 +65,9 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
             const remoteConnector = new WebrtcConnectorRpcRemote(
                 this.config.getLocalPeerDescriptor(),
                 remotePeer,
-                toProtoRpcClient(new WebrtcConnectorRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                'DUMMY', 
+                this.config.rpcCommunicator,
+                WebrtcConnectorRpcClient
             )
             connection.on('localCandidate', (candidate: string, mid: string) => {
                 remoteConnector.sendIceCandidate(candidate, mid, connection!.connectionId.toString())

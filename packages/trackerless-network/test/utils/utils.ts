@@ -16,6 +16,8 @@ import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { NodeID } from '../../src/identifiers'
 import { Layer1Node } from '../../src/logic/Layer1Node'
+import { DeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { RpcCommunicator } from '@streamr/proto-rpc'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -45,7 +47,8 @@ export const createMockRandomGraphNodeAndDhtNode = async (
         layer1Node,
         connectionLocker: mockCm,
         localPeerDescriptor,
-        rpcRequestTimeout: 5000
+        rpcRequestTimeout: 5000,
+        isLocalNodeEntryPoint: () => false
     })
     return [layer1Node, randomGraphNode]
 }
@@ -90,7 +93,13 @@ export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'n
 }
 
 export const createMockDeliveryRpcRemote = (remotePeerDescriptor?: PeerDescriptor): DeliveryRpcRemote => {
-    return new DeliveryRpcRemote(createMockPeerDescriptor(), remotePeerDescriptor ?? createMockPeerDescriptor(), 'mock', {} as any)
+    return new DeliveryRpcRemote(
+        createMockPeerDescriptor(),
+        remotePeerDescriptor ?? createMockPeerDescriptor(),
+        'mock',
+        new RpcCommunicator(),
+        DeliveryRpcClient
+    )
 }
 
 export const createMockHandshakeRpcRemote = (): HandshakeRpcRemote => {
@@ -98,10 +107,8 @@ export const createMockHandshakeRpcRemote = (): HandshakeRpcRemote => {
         createMockPeerDescriptor(),
         createMockPeerDescriptor(), 
         'mock',
-        {
-            handshake: async () => {},
-            interleaveNotice: async () => {}
-        } as any
+        new RpcCommunicator(),
+        HandshakeRpcClient
     )
 }
 

@@ -149,9 +149,6 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
 }
 
 export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDescriptor): NetworkPeerDescriptor {
-    if (descriptor.type === NodeType.VIRTUAL) {
-        throw new Error('nodeType "virtual" not supported')
-    }
     return {
         ...descriptor,
         nodeId: binaryToHex(descriptor.nodeId),

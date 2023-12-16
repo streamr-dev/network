@@ -108,7 +108,7 @@
                                 }
                             },
                             "default": {
-                                "enabled": true,
+                                "enabled": false,
                                 "maxEntryPoints": 5,
                                 "maxQueryResults": 50,
                                 "maxHeartbeatAgeHours": 24
@@ -127,6 +127,10 @@
                         },
                         "peerDescriptor": {
                             "$ref": "#/definitions/peerDescriptor"
+                        },
+                        "maxConnections": {
+                            "type": "number",
+                            "default": 80
                         },
                         "tlsCertificate": {
                             "description": "Files to use for TLS",
@@ -288,14 +292,18 @@
                 "streamRegistryChainRPCs": {
                     "$ref": "#/definitions/chainConnectionInfoList"
                 },
-                "ethereumNetworks": {
+                "ethereumNetwork": {
                     "type": "object",
-                    "default": {
-                        "polygon": {
-                            "chainId": 137,
-                            "highGasPriceStrategy": true
+                    "additionalProperties": false,
+                    "properties": {
+                        "overrides": {
+                            "type": "object"
+                        },
+                        "highGasPriceStrategy": {
+                            "type": "boolean"
                         }
-                    }
+                    },
+                    "default": {}
                 },
                 "theGraphUrl": {
                     "type": "string",

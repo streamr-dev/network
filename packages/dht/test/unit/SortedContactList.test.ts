@@ -1,6 +1,6 @@
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { PeerID } from '../../src/helpers/PeerID'
-import { NodeID, getNodeIdFromBinary } from '../../src/helpers/nodeId'
+import { NodeID, createRandomNodeId, getNodeIdFromBinary } from '../../src/helpers/nodeId'
 
 const createItem = (nodeId: Uint8Array): { getNodeId: () => NodeID, getPeerId: () => PeerID } => {
     return { 
@@ -10,6 +10,7 @@ const createItem = (nodeId: Uint8Array): { getNodeId: () => NodeID, getPeerId: (
 }
 
 describe('SortedContactList', () => {
+
     const item0 = createItem(new Uint8Array([0, 0, 0, 0]))
     const item1 = createItem(new Uint8Array([0, 0, 0, 1]))
     const item2 = createItem(new Uint8Array([0, 0, 0, 2]))
@@ -61,6 +62,8 @@ describe('SortedContactList', () => {
         list.addContact(item3)
         list.addContact(item2)
         expect(list.getSize()).toEqual(3)
+        expect(list.getAllContacts()).toEqual([item1, item2, item3])
+        expect(list.getContactIds()).toEqual([item1.getNodeId(), item2.getNodeId(), item3.getNodeId()])
         expect(onContactRemoved).toBeCalledWith(item4, [item1, item2, item3])
         expect(list.getContact(item4.getNodeId())).toBeFalsy()
     })
@@ -69,6 +72,9 @@ describe('SortedContactList', () => {
         const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 8, allowToContainReferenceId: false, emitEvents: true })
         const onContactRemoved = jest.fn()
         list.on('contactRemoved', onContactRemoved)
+        list.removeContact(getNodeIdFromBinary(createRandomNodeId()))
+        list.addContact(item3)
+        list.removeContact(item3.getNodeId())
         list.addContact(item4)
         list.addContact(item3)
         list.addContact(item2)
@@ -78,9 +84,14 @@ describe('SortedContactList', () => {
         expect(list.getContact(item2.getNodeId())).toBeFalsy()
         expect(list.getContactIds()).toEqual(list.getContactIds().sort(list.compareIds))
         expect(list.getAllContacts()).toEqual([item1, item3, item4])
-        expect(onContactRemoved).toBeCalledWith(item2, [item1, item3, item4])
         const ret = list.removeContact(getNodeIdFromBinary(Buffer.from([0, 0, 0, 6])))
         expect(ret).toEqual(false)
+        list.removeContact(item3.getNodeId())
+        list.removeContact(getNodeIdFromBinary(createRandomNodeId()))
+        expect(list.getAllContacts()).toEqual([item1, item4])
+        expect(onContactRemoved).toHaveBeenNthCalledWith(1, item3, [])
+        expect(onContactRemoved).toHaveBeenNthCalledWith(2, item2, [item1, item3, item4])
+        expect(onContactRemoved).toHaveBeenNthCalledWith(3, item3, [item1, item4])
     })
 
     it('get closest contacts', () => {
