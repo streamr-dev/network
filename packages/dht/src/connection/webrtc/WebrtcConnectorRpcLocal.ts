@@ -89,7 +89,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
             if (this.config.ongoingConnectAttempts.has(nodeId)) {
                 this.config.ongoingConnectAttempts.delete(nodeId)
             }
-            if (isCompatibleVersion(sourceVersion, version)) {
+            if (!isCompatibleVersion(sourceVersion, version)) {
                 managedConnection!.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else {
                 managedConnection!.acceptHandshake()

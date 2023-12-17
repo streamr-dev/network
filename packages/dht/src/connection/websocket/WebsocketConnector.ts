@@ -299,7 +299,7 @@ export class WebsocketConnector {
         const nodeId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
             const ongoingConnectRequest = this.ongoingConnectRequests.get(nodeId)!
-            if (isCompatibleVersion(sourceVersion, version)) {
+            if (!isCompatibleVersion(sourceVersion, version)) {
                 ongoingConnectRequest.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else {
                 ongoingConnectRequest.attachImplementation(serverWebsocket)
@@ -315,7 +315,7 @@ export class WebsocketConnector {
                 targetPeerDescriptor
             )
             managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
-            if (isCompatibleVersion(sourceVersion, version)) {
+            if (!isCompatibleVersion(sourceVersion, version)) {
                 managedConnection.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 managedConnection.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
