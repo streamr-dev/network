@@ -5,6 +5,8 @@ import { Message, HandshakeRequest, HandshakeResponse, MessageType, PeerDescript
 import { IConnection } from './IConnection'
 import { version } from '../../package.json'
 
+const BEFORE_TESTNET_TWO_VERSION = '100.0.0-before-testnet-two.0'
+
 const logger = new Logger(module)
 
 interface HandshakerEvents {
@@ -35,7 +37,12 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
             if (message.body.oneofKind === 'handshakeRequest') {
                 logger.trace('handshake request received')
                 const handshake = message.body.handshakeRequest
-                this.emit('handshakeRequest', handshake.sourcePeerDescriptor!, handshake.version, handshake.targetPeerDescriptor)
+                this.emit(
+                    'handshakeRequest',
+                    handshake.sourcePeerDescriptor!, 
+                    handshake.version ?? BEFORE_TESTNET_TWO_VERSION,
+                    handshake.targetPeerDescriptor
+                )
             }
             if (message.body.oneofKind === 'handshakeResponse') {
                 logger.trace('handshake response received')
