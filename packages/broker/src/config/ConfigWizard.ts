@@ -72,11 +72,11 @@ export async function start(): Promise<void> {
 
         const config: ConfigFile = {
             $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
-            environment: environmentId,
             client: {
                 auth: {
                     privateKey,
                 },
+                environment: environmentId,
             },
             plugins: {
                 ...operatorPlugins,
