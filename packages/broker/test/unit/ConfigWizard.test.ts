@@ -134,7 +134,7 @@ describe('Config wizard', () => {
 
         expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config.environment).toEqual('polygon')
+        expect(config.client.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -197,7 +197,7 @@ describe('Config wizard', () => {
 
         expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config.environment).toEqual('polygon')
+        expect(config.client.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -276,7 +276,7 @@ describe('Config wizard', () => {
 
         expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config.environment).toEqual('polygon')
+        expect(config.client.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -364,7 +364,7 @@ describe('Config wizard', () => {
 
         expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config.environment).toEqual('polygon')
+        expect(config.client.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -422,7 +422,7 @@ describe('Config wizard', () => {
 
         expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config.environment).toEqual('polygon')
+        expect(config.client.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -484,7 +484,7 @@ describe('Config wizard', () => {
 
         expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config.environment).toEqual('polygon')
+        expect(config.client.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -546,7 +546,7 @@ describe('Config wizard', () => {
 
         expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config.environment).toEqual('polygon')
+        expect(config.client.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -609,7 +609,7 @@ describe('Config wizard', () => {
 
         expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config.environment).toEqual('polygon')
+        expect(config.client.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -743,7 +743,7 @@ describe('Config wizard', () => {
 
         expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config.environment).toEqual('polygon')
+        expect(config.client.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -924,7 +924,7 @@ describe('Config wizard', () => {
 
         expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config.environment).toEqual('polygon')
+        expect(config.client.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -1001,7 +1001,7 @@ describe('Config wizard', () => {
 
         expect(config).not.toContainAnyKeys(['httpServer'])
 
-        expect(config.environment).toEqual('polygon')
+        expect(config.client.environment).toEqual('polygon')
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
@@ -1213,7 +1213,7 @@ describe('Config wizard', () => {
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
-        expect(config.environment).toEqual('mumbai')
+        expect(config.client.environment).toEqual('mumbai')
 
         const summary = logs.join('\n')
 
