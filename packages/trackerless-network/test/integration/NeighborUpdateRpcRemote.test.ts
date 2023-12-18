@@ -5,7 +5,6 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NeighborUpdateRpcRemote } from '../../src/logic/neighbor-discovery/NeighborUpdateRpcRemote'
 import { NeighborUpdate } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import {
@@ -64,7 +63,8 @@ describe('NeighborUpdateRpcRemote', () => {
             clientNode,
             serverNode,
             'test-stream-part',
-            toProtoRpcClient(new NeighborUpdateRpcClient(clientRpc.getRpcClientTransport()))
+            clientRpc,
+            NeighborUpdateRpcClient
         )
     })
 

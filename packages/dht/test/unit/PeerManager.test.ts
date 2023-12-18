@@ -4,6 +4,7 @@ import { NodeID, createRandomNodeId, getNodeIdFromBinary } from '../../src/helpe
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { range, sampleSize, sortBy, without } from 'lodash'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
+import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 
 describe('PeerManager', () => {
 
@@ -12,7 +13,7 @@ describe('PeerManager', () => {
         const manager = new PeerManager({
             localNodeId: getNodeIdFromBinary(createRandomNodeId()),
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => {
-                return new DhtNodeRpcRemote(undefined as any, peerDescriptor, undefined as any, '')
+                return new DhtNodeRpcRemote(undefined as any, peerDescriptor, undefined as any, new MockRpcCommunicator())
             }
         } as any)
         manager.handleNewPeers(nodeIds.map((n) => ({ nodeId: hexToBinary(n), type: NodeType.NODEJS })))

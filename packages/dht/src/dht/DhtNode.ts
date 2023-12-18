@@ -21,7 +21,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
-import { DhtNodeRpcClient, ExternalApiRpcClient, StoreRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { ExternalApiRpcClient, StoreRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
     MetricsContext,
@@ -29,7 +29,6 @@ import {
     merge,
     waitForCondition
 } from '@streamr/utils'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Any } from '../proto/google/protobuf/any'
 import {
     getNodeIdFromPeerDescriptor
@@ -156,7 +155,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             joinParallelism: 3,
             maxNeighborListSize: 200,
             numberOfNodesPerKBucket: 8,
-            joinNoProgressLimit: 4,
+            joinNoProgressLimit: 5,
             dhtJoinTimeout: 60000,
             peerDiscoveryQueryBatchSize: 5,
             maxConnections: 80,
@@ -285,7 +284,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                     this.localPeerDescriptor!,
                     contact,
                     this.config.serviceId,
-                    toProtoRpcClient(new StoreRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
+                    this.rpcCommunicator!,
+                    StoreRpcClient,
                     this.config.rpcRequestTimeout
                 )
             }
@@ -362,7 +362,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping',
             (req: PingRequest, context) => dhtNodeRpcLocal.ping(req, context))
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
-            (req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(req, context))
+            (_req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(context))
         const externalApiRpcLocal = new ExternalApiRpcLocal({
             executeRecursiveOperation: (key: Uint8Array, operation: RecursiveOperation, excludedPeer: PeerDescriptor) => {
                 return this.executeRecursiveOperation(key, operation, excludedPeer)
@@ -467,7 +467,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.localPeerDescriptor!,
             peer,
             this.config.serviceId,
-            toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            this.rpcCommunicator!,
+            ExternalApiRpcClient
         )
         return await rpcRemote.storeData(key, data)
     }
@@ -491,7 +492,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.localPeerDescriptor!,
             peer,
             this.config.serviceId,
-            toProtoRpcClient(new ExternalApiRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            this.rpcCommunicator!,
+            ExternalApiRpcClient
         )
         return await rpcRemote.externalFindData(key)
     }
@@ -570,8 +572,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return new DhtNodeRpcRemote(
             this.localPeerDescriptor!,
             peerDescriptor,
-            toProtoRpcClient(new DhtNodeRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
             this.config.serviceId,
+            this.rpcCommunicator!,
             this.config.rpcRequestTimeout
         )
     }

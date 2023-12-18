@@ -11,7 +11,7 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
-import { NodeID } from '../../helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -81,11 +81,10 @@ export class Router {
         const targetPeerDescriptor = msg.targetDescriptor!
         const forwardingEntry = this.forwardingTable.get(getNodeIdFromPeerDescriptor(targetPeerDescriptor))
         if (forwardingEntry && forwardingEntry.peerDescriptors.length > 0) {
-            const forwardingPeer = forwardingEntry.peerDescriptors[0]
             const forwardedMessage: RouteMessageWrapper = {
                 message: msg,
                 requestId: v4(),
-                destinationPeer: forwardingPeer,
+                target: forwardingEntry.peerDescriptors[0].nodeId,
                 sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
                 routingPath: []
@@ -100,7 +99,7 @@ export class Router {
             const routedMessage: RouteMessageWrapper = {
                 message: msg,
                 requestId: v4(),
-                destinationPeer: targetPeerDescriptor,
+                target: targetPeerDescriptor.nodeId,
                 sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
                 routingPath: []
@@ -119,7 +118,7 @@ export class Router {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
         logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
-            + `to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`)
+            + `to ${getNodeIdFromBinary(routedMessage.target)}`)
         const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         const contacts = session.updateAndGetRoutablePeers()
         if (contacts.length > 0) {

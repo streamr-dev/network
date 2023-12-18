@@ -5,7 +5,6 @@ import { Empty } from '../proto/google/protobuf/empty'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
-    LeaveNotice,
     PeerDescriptor,
     PingRequest,
     PingResponse
@@ -50,7 +49,7 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
         return response
     }
 
-    async leaveNotice(_request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
+    async leaveNotice(context: ServerCallContext): Promise<Empty> {
         // TODO check signature??
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
         logger.trace('received leave notice: ' + getNodeIdFromPeerDescriptor(sender))

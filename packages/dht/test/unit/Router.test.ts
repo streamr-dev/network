@@ -13,6 +13,7 @@ import {
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 import { NodeID } from '../../src/helpers/nodeId'
+import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 
 describe('Router', () => {
 
@@ -36,14 +37,14 @@ describe('Router', () => {
         requestId: 'REQ',
         routingPath: [],
         reachableThrough: [],
-        destinationPeer: peerDescriptor1,
+        target: peerDescriptor1.nodeId,
         sourcePeer: peerDescriptor2
     }
     let connections: Map<NodeID, DhtNodeRpcRemote>
     const rpcCommunicator = new FakeRpcCommunicator()
 
     const createMockDhtNodeRpcRemote = (destination: PeerDescriptor): DhtNodeRpcRemote => {
-        return new DhtNodeRpcRemote(peerDescriptor1, destination, {} as any, 'router')
+        return new DhtNodeRpcRemote(peerDescriptor1, destination, undefined as any, new MockRpcCommunicator())
     }
 
     beforeEach(() => {
@@ -63,7 +64,7 @@ describe('Router', () => {
     it('doRouteMessage without connections', async () => {
         const ack = await rpcCommunicator.callRpcMethod('routeMessage', {
             message,
-            destinationPeer: peerDescriptor2,
+            target: peerDescriptor2.nodeId,
             requestId: v4(),
             sourcePeer: peerDescriptor1,
             reachableThrough: [],
@@ -76,7 +77,7 @@ describe('Router', () => {
         connections.set(PeerID.fromString('test').toNodeId(), createMockDhtNodeRpcRemote(peerDescriptor2))
         const ack = await rpcCommunicator.callRpcMethod('routeMessage', {
             message,
-            destinationPeer: peerDescriptor2,
+            target: peerDescriptor2.nodeId,
             requestId: v4(),
             sourcePeer: peerDescriptor1,
             reachableThrough: [],

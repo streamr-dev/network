@@ -6,7 +6,6 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     HandshakeRpcClient
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -116,7 +115,8 @@ describe('Handshakes', () => {
                 peerDescriptor2,
                 peerDescriptor1,
                 streamPartId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
+                rpcCommunicator2,
+                HandshakeRpcClient
             )
         )
         expect(res).toEqual(true)
@@ -131,7 +131,8 @@ describe('Handshakes', () => {
                 peerDescriptor2,
                 peerDescriptor1,
                 streamPartId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
+                rpcCommunicator2,
+                HandshakeRpcClient
             )
         )
         expect(res).toEqual(true)
@@ -146,7 +147,8 @@ describe('Handshakes', () => {
                 peerDescriptor2,
                 peerDescriptor1,
                 streamPartId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
+                rpcCommunicator2,
+                HandshakeRpcClient
             )
         )
         expect(res).toEqual(false)
@@ -162,7 +164,8 @@ describe('Handshakes', () => {
                 peerDescriptor2,
                 peerDescriptor1,
                 streamPartId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
+                rpcCommunicator2,
+                HandshakeRpcClient
             )
         )
         expect(res).toEqual(true)

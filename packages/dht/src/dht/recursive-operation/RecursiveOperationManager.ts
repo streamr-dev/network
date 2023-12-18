@@ -10,7 +10,7 @@ import {
 import { Router } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Logger, hexToBinary, runAndWaitForEvents3, wait } from '@streamr/utils'
+import { Logger, areEqualBinaries, hexToBinary, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationSessionRpcRemote } from './RecursiveOperationSessionRpcRemote'
 import { RecursiveOperationSession, RecursiveOperationSessionEvents } from './RecursiveOperationSession'
@@ -19,7 +19,6 @@ import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { RecursiveOperationSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { SortedContactList } from '../contact/SortedContactList'
 import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
@@ -167,7 +166,8 @@ export class RecursiveOperationManager {
                 this.config.localPeerDescriptor,
                 targetPeerDescriptor,
                 serviceId,
-                toProtoRpcClient(new RecursiveOperationSessionRpcClient(remoteCommunicator.getRpcClientTransport())),
+                remoteCommunicator,
+                RecursiveOperationSessionRpcClient,
                 // TODO use config option or named constant?
                 10000
             )
@@ -180,17 +180,17 @@ export class RecursiveOperationManager {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
-        const targetId = getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)
+        const targetId = getNodeIdFromBinary(routedMessage.target)
         const request = (routedMessage.message!.body as { recursiveOperationRequest: RecursiveOperationRequest }).recursiveOperationRequest
         // TODO use config option or named constant?
-        const closestPeersToDestination = this.getClosestConnections(routedMessage.destinationPeer!.nodeId, 5)
+        const closestPeersToDestination = this.getClosestConnections(routedMessage.target, 5)
         const dataEntries = (request.operation === RecursiveOperation.FETCH_DATA) 
             ? Array.from(this.config.localDataStore.getEntries(hexToBinary(targetId)).values())
             : []
         if (request.operation === RecursiveOperation.DELETE_DATA) {
             this.config.localDataStore.markAsDeleted(hexToBinary(targetId), getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!))
         }
-        if (areEqualPeerDescriptors(this.config.localPeerDescriptor, routedMessage.destinationPeer!)) {
+        if (areEqualBinaries(this.config.localPeerDescriptor.nodeId, routedMessage.target)) {
             // TODO this is also very similar case to what we do at line 255, could simplify the code paths?
             this.sendResponse(
                 routedMessage.routingPath,

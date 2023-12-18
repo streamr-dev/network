@@ -1,10 +1,10 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Empty } from '../../proto/google/protobuf/empty'
 import {
+    HandshakeError,
     IceCandidate,
     PeerDescriptor,
     RtcAnswer,
@@ -19,6 +19,8 @@ import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
 import { NodeID } from '../../helpers/nodeId'
+import { version } from '../../../package.json'
+import { isCompatibleVersion } from '../../helpers/versionCompatibility'
 
 const logger = new Logger(module)
 
@@ -66,7 +68,9 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
             const remoteConnector = new WebrtcConnectorRpcRemote(
                 this.config.getLocalPeerDescriptor(),
                 remotePeer,
-                toProtoRpcClient(new WebrtcConnectorRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                'DUMMY', 
+                this.config.rpcCommunicator,
+                WebrtcConnectorRpcClient
             )
             connection.on('localCandidate', (candidate: string, mid: string) => {
                 remoteConnector.sendIceCandidate(candidate, mid, connection!.connectionId.toString())
@@ -81,11 +85,15 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         connection!.setConnectionId(request.connectionId)
         connection!.setRemoteDescription(request.description, 'offer')
 
-        managedConnection.on('handshakeRequest', () => {
+        managedConnection.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, sourceVersion: string) => {
             if (this.config.ongoingConnectAttempts.has(nodeId)) {
                 this.config.ongoingConnectAttempts.delete(nodeId)
             }
-            managedConnection!.acceptHandshake()
+            if (!isCompatibleVersion(sourceVersion, version)) {
+                managedConnection!.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
+            } else {
+                managedConnection!.acceptHandshake()
+            }
         })
         return {}
     }

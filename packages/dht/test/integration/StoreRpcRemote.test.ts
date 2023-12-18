@@ -1,4 +1,4 @@
-import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
+import { RpcCommunicator } from '@streamr/proto-rpc'
 import {
     StoreDataRequest,
     StoreDataResponse
@@ -38,8 +38,7 @@ describe('StoreRpcRemote', () => {
         serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
-        const client = toProtoRpcClient(new StoreRpcClient(clientRpcCommunicator.getRpcClientTransport()))
-        rpcRemote = new StoreRpcRemote(clientPeerDescriptor, serverPeerDescriptor, SERVICE_ID, client)
+        rpcRemote = new StoreRpcRemote(clientPeerDescriptor, serverPeerDescriptor, SERVICE_ID, clientRpcCommunicator, StoreRpcClient)
     })
 
     it('storeData happy path', async () => {

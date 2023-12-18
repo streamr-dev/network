@@ -8,12 +8,11 @@ import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/pr
 import { RouterRpcRemote } from './RouterRpcRemote'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
-import { NodeID } from '../../helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
 
 const logger = new Logger(module)
 
@@ -30,14 +29,16 @@ class RemoteContact extends Contact {
             localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
-            toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport())),
+            rpcCommunicator,
+            RouterRpcClient,
             EXISTING_CONNECTION_TIMEOUT
         )
         this.recursiveOperationRpcRemote = new RecursiveOperationRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
-            toProtoRpcClient(new RecursiveOperationRpcClient(rpcCommunicator.getRpcClientTransport())),
+            rpcCommunicator,
+            RecursiveOperationRpcClient,
             EXISTING_CONNECTION_TIMEOUT
         )
     }
@@ -90,7 +91,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousPeer = getPreviousPeer(config.routedMessage)
         const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
         this.contactList = new SortedContactList({
-            referenceId: getNodeIdFromPeerDescriptor(config.routedMessage.destinationPeer!),
+            referenceId: getNodeIdFromBinary(config.routedMessage.target),
             maxSize: 10000,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             nodeIdDistanceLimit: previousId,
