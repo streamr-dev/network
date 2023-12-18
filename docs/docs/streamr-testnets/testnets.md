@@ -24,7 +24,7 @@ To earn DATA tokens on Polygon you must be willing to hold and stake DATA tokens
 :::
 
 ## Current node software version
-Use node version: `v100.0.0-testnet-one.4`. Do not use the `latest` tag release.
+Use node version: `v100.0.0-testnet-two.1`. Do not use the `latest` tag release.
 
 ## Schedules
 Keep a close eye on this page as these dates may change based on the findings of each testnet.
@@ -54,7 +54,7 @@ The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your O
 You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 **What are the differences between Mumbai and Testnet 1?**
-This `v100.0.0-testnet-one.4` version can be used to connect to Testnet 1 **or** the Mumbai network. 
+This `v100.0.0-testnet-two.1` version can be used to connect to Testnet 1 **or** the Mumbai network. 
 
 The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator.md#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator.md#testnet-node-config) is a much shorter version.
 
