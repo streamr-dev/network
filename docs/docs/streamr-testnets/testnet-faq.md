@@ -4,6 +4,23 @@ sidebar_position: 2
 
 # Testnet FAQs
 ## General
+#### Migrating from Brubeck to Streamr 1.0 
+If you’ve been running a Streamr node in the past you might be familiar with a two step process– run some software and stake some tokens, i.e. a software step and a blockchain step. Behind the scenes, the Streamr core team would validate user’s stake and transfer tokens to node runner wallets at the end of each month. This has worked, but it's been highly centralized. With the introduction of stream Sponsorships, Operators, Sponsors and Delegators we now have everything we need for a peer to peer decentralized and market based incentivization on Streamr. The most important role is the Operator, so let's learn how to become one.
+
+:::info Streamr 1.0 network versus the Brubeck (older) network
+- You can run ~~up to 5 nodes per IP address~~ any number of nodes from the same IP address, although one node per machine is recommended
+- Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships at any time
+- You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
+- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `v100.0.0-testnet-one.3`. The `latest` tag still points to the previous milestone (Brubeck) software.
+- There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
+:::
+
+#### Migrating from the Mumbai testing environment to Stream 1.0
+If you've created your node in the Mumbai testing environment and you want to participate in the incentivized testnets with real token rewards and risks, then you'll need to recreate your Operator using the Streamr Network [Hub](https://streamr.network/hub/network/operators). The same funding and pairing steps that you did for your Mumbai Operator need to be repeated here too. The testnets and the future 1.0 mainnet will run on the Polygon Blockchain.
+
+- **Node version:** The `pretestnet` tagged releases shouldn't be used anymore, instead use `v100.0.0-testnet-one.3`. 
+- **Node config:** Your node config should resemble the [Testnet 1 config template](../guides/become-an-operator.md#testnet-node-config).
+
 #### What are the differences between the "pretestnet" and Testnet 1?
 This `v100.0.0-testnet-one.4` version can be used to connect to Testnet 1 **or** the Mumbai testing environment. 
 
@@ -194,6 +211,19 @@ Operators will want to stake on whatever pays best (within the limits of how muc
 - Sponsorship 2 is paying 40% on 10M staked, so you adding all of your tokens there wouldn't change the APY that much (to 36%)
 - Assuming the volume of data in both streams can be handled by the operator's nodes, an Optimal Operator would compute how much tokens they should stake on each Sponsorship to earn the best combined yield. In the optimal end result, both Sponsorships will be paying the same APY, therefore removing the "anomaly" of the first Sponsorship and returning the market to equilibrium.
 
+<!-- 
+TODO
+DATA delegated to an Operator are converted in StreamrOp tokens, and explain why and how 1 DATA ≠ 1 StreamrOp.
+
+This is especially confusing in the Undelegate pop-up where Streamr currently tells us we can undelegate X DATA which is false in fact.
+We can undelegate/withdraw X StreamrOp tokens which will be converted in DATA tokens that we will receive in our wallet, for a total value of Y DATA tokens initially delegated + Z DATA tokens we gained as interest.
+ -->
+
+<!-- TODO Is it possible to reduce the stake without withdrawal penalty by leaving the min stake at the sponsorship? 
+The Operator can always reduce down to min stake without penalty. The reasoning is that the operator is still doing the same promised work regardless of the size of the stake.
+-->
+
+
 #### Can Operators get all their tokens out, if they for example want to stop running nodes? What happens to delegations then?
 Normally owners need to provide at least 5% of the operator’s total value and keep it in the operator, while 95% can come from delegators. Owners can’t withdraw below this limit and keep operating. However, if they want to quit, they can unstake from all sponsorships and then withdraw all their tokens from the Operator. This is allowed as a special case.
 
@@ -252,6 +282,12 @@ Eventually, yes. If there's not enough available balance on the Operator you hav
 
 #### Do uncollected earnings impact my undelegation amount (Operator withdrawal)?
 Yes. Uncollected earnings are not counted in the undelegation process. If these uncollected earnings are significant and you want them to be counted then you could manually trigger the collection of earnings before undelegating.
+
+<!--TODO I have delegated my DATA to StreamRouter (0xe8e5737e23bc94b9f052d520b51a4087947cd164)
+Are the earnings transferred to my wallet automatically after a period of time or will I have to claim them from the operator page?
+
+Your earned tokens accumulate on the Operator, your share is calculated at the time of undelegation (withdrawal from the Operator). If there's uncollected earnings that are significant, you may want to manually trigger collection so they're apart of your shares before undelegating.
+ -->
 
 ## Slashing & kicking
 #### What are the penalties for Testnet 1?

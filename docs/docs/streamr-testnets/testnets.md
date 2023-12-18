@@ -10,7 +10,7 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 
 The 1.0 testnets will be launched with the technical parameters set out in: [SIP-16](https://snapshot.org/#/streamr.eth/proposal/0xf95e691103efc4ce9ebd2ed22da3df6df446f982e6e34df1180a9a5366b3060f)
 
-:::info Important
+:::info
 To earn DATA tokens on Polygon you must be willing to hold and stake DATA tokens on Polygon smart contracts that we call [Sponsorships](../streamr-network/incentives/stream-sponsorships.md). See [how to get DATA](../streamr-testnets/testnet-faq.md#how-do-i-get-data-tokens)
 :::
 
@@ -19,7 +19,7 @@ To earn DATA tokens on Polygon you must be willing to hold and stake DATA tokens
 2. Stake your [Operator](../streamr-network/network-roles/operators.md) on [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md), and/or,
 3. [Delegate](../streamr-network/network-roles/delegators.md) your `DATA` tokens onto other Operators
 
-:::info Important
+:::info
 - **Do NOT** create or sponsor Sponsorships. If you do tokens will be irreversibly sent to that Sponsorship contract. There is no undo for this.
 :::
 
@@ -36,17 +36,17 @@ Keep a close eye on this page as these dates may change based on the findings of
 - **Testnet 1 will have reduced slashing penalties of 0.01% instead of 10%**
 
 ### Testnet 2
-- Start date: 18th December to 8th January
+- Start date: 18th December to 8th January (tentative)
 - Reward pool: 1.5 million DATA
 - Duration: 21 days
 
 ### Testnet 3
-- Start date: 15th January to 29th January
+- Start date: 15th January to 29th January (tentative)
 - Reward pool: 2.5 million DATA
 - Duration: 14 days
 
 ### Testnet Sponsorships
-Each testnet will have a set of Sponsorships that will be the source of incentivization. These will be visible on [The Hub](https://streamr.network/hub/network) (release TBA).
+Each testnet will have a set of Sponsorships that will be the source of incentivization. These will be visible on [The Hub](https://streamr.network/hub/network/sponsorships).
 
 ### The Mumbai test environment
 The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens.
@@ -66,6 +66,7 @@ Don’t use the `pretestnet` releases anymore.
 - Tutorial videos. Follow at your own risk. Note that version numbers and exact instructions may change over time.
 - [StreamrRUN - A Streamr Node in 3 minutes, by Logic Ethos](https://www.youtube.com/watch?v=tGTdaNTtjLY)
 - [Manage your Streamr Node in 1 minute, by Logic Ethos](https://www.youtube.com/watch?v=V6yS0bCt13g)
+<!-- TODO Autoharvestor https://github.com/Tocard/Streamr_auto_harvest_earning -->
 
 ### Bounty prizes
 We're offering DATA prizes for quality contributions to the following categories:
@@ -76,7 +77,7 @@ We're offering DATA prizes for quality contributions to the following categories
 ### Safety
 **Please be aware of some important safety tips during the testnets:**
 
-:::info Important
+:::info
 Your tokens are at risk by participating in these testnets - [the risks are real](../streamr-network/network-roles/operators.md#operator-risks).
 :::
 
