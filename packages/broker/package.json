@@ -31,7 +31,7 @@
     "@streamr/network-tracker": "8.5.5",
     "@streamr/protocol": "8.5.5",
     "@streamr/utils": "8.5.5",
-    "aedes": "^0.50.0",
+    "aedes": "^0.50.1",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "cassandra-driver": "^4.7.2",
@@ -50,7 +50,7 @@
     "qs": "^6.10.1",
     "streamr-client": "8.5.5",
     "uuid": "^9.0.1",
-    "ws": "^8.14.2"
+    "ws": "^8.15.1"
   },
   "devDependencies": {
     "@streamr/test-utils": "8.5.5",
