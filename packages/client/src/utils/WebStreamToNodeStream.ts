@@ -32,7 +32,6 @@ async function pull(fromBrowserStream: ReadableStream, toNodeStream: PassThrough
     reader.closed.finally(() => { // eslint-disable-line promise/catch-or-return
         toNodeStream.off('close', cleanup)
     })
-    // toNodeStream.once('error', cleanup)
 
     try {
         while (true) {
