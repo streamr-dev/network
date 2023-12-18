@@ -83,7 +83,7 @@ It will suggest you to pair your node with your Operator, and to visit this page
 
 If you're running a node to become an Operator, then you could now jump back to [Step 3 of becoming an Operator](./become-an-operator.md#step-3-pair-your-node-with-your-operator-contract) to add your Operator contract address into the node config before starting your node.
 
-### Step 5: Start your Streamr node
+### Step 4: Start your Streamr node
 
 #### Linux / macOS instructions
 
@@ -110,7 +110,7 @@ The `--restart` option enables a restart policy of `unless-stopped`. This means 
 
 The `-d` option starts your Docker container and node in detached mode, meaning it runs in the background and you can check in on and follow the logs as you please. The alternative is to start it in attached mode, which requires you to keep the window open to keep the node running. The latter is not practical in most cases unless you use a terminal multiplexer such as `tmux` or `screen` to detach.
 
-### Step 6: Follow the node logs
+### Step 5: Follow the node logs
 Since you started the node in detached mode, you won't see the log streamed to your screen automatically when you start the node. Run the command below to see and follow the logs.
 
 :::info
@@ -156,22 +156,29 @@ npm install -g streamr-broker@100.0.0-testnet-two.1
 
 There can be plenty of output from npm. If the installation fails with an error, you should address it before continuing.
 
-### Step 2a: Configure your node with streamr-broker-init
-- Run `streamr-broker-init` to generate a configuration file using a step-by-step wizard. Answer the questions by using arrow keys and ‘enter’ to navigate.
-- Generate or Import Ethereum private key: Generate one unless you have one you want to use with the node
-- Plugins to enable: Hit enter (do not select/enable any additional plugins)
-- Path to store the configuration: Press 'enter' to use the default path
+### Step 2: Configure your node
+To activate the **Config Wizard**, run,
+```
+streamr-broker-init
+``` 
 
-The wizard asks if you would like it to display your Ethereum private key. From here, you should copy-paste it to a safe place! You can also find it later in the configuration file, which is saved by default to `.streamr/config/default.json` under your home directory.
+#### Using the Config Wizard
+1. The Config Wizard will first ask, would you like to generate or import an Ethereum private key. If you're unsure, choose to ***generate***. If you'd like to use an existing wallet that you're familiar with or your are copying a  config from another node then you could choose to ***import***. Node address can be reused in your node fleet, if you choose to run more than one node for redundancy purposes.
+2. Which network? Choose ***Streamr 1.0 testnet + Polygon*** if you'd like to participate in the testnet rewards. If you'd like to test your node operation with fake tokens then opt for ***Mumbai***.
+3. Do you want to participate in earning? If yes, provide your **Operator address**. This is found at the top of your Operator page:
 
-### Step 2b: Update the node config file
-If you want to become an Operator in the testnet, you need to manually modify the node config file to include your Operator contract address.
+![image](@site/static/img/operator-address.png)
 
-Find the config file generated in step 2a and take a backup copy. Then replace the config file with the [testnet config](./become-an-operator.md#testnet-node-config) using a text editor. Replace YOUR_OPERATOR_CONTRACT_ADDRESS with your newly deployed Operator contract's address (find it on the Operator page, there's a "Copy address" button next to it), and NODE_PRIVATE_KEY with the private key in your automatically generated backup. If you previously generated a node signing key then you can also keep using that `privateKey`.
+4. Next, do you want to use your node for other things, like data publishing/subscribing? If you're just here to "mine your bandwidth" then you can decline this option.
+5. Lastly, select a path to store your config file. Go with what's suggested if you're unsure and save the path for later incase you need it.
 
-If you intend to test your Operator in the Mumbai environment, the same above advice applies, but use instead the [Mumbai testnet config](./become-an-operator.md#mumbai-node-config) using a text editor. Replace YOUR_OPERATOR_CONTRACT_ADDRESS with your newly deployed Operator contract's address (find it on the Operator page, there's a "Copy address" button next to it), and NODE_PRIVATE_KEY with the private key in your automatically generated backup. If you previously generated a node signing key then you can also keep using that `privateKey`.
+The Config Wizard now outputs your node address along with a few links and tips. 
 
-### Step 4: Start the Streamr node
+It will suggest you to pair your node with your Operator, and to visit this page for the next instructions on how to "turn on" your node.
+
+If you're running a node to become an Operator, then you could now jump back to [Step 3 of becoming an Operator](./become-an-operator.md#step-3-pair-your-node-with-your-operator-contract) to add your Operator contract address into the node config before starting your node.
+
+### Step 3: Start the Streamr node
 To start your Streamr node, run,
 ```
 streamr-broker PATH_TO_CONFIG_FILE
