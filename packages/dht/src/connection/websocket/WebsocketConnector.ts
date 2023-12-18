@@ -304,8 +304,8 @@ export class WebsocketConnector {
             } else {
                 ongoingConnectRequest.attachImplementation(serverWebsocket)
                 ongoingConnectRequest.acceptHandshake()
-                this.ongoingConnectRequests.delete(nodeId)
             }
+            this.ongoingConnectRequests.delete(nodeId)
         } else {
             const managedConnection = new ManagedConnection(
                 this.localPeerDescriptor!,
