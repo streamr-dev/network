@@ -29,16 +29,17 @@ Use node version: `v100.0.0-testnet-two.1`. Do not use the `latest` tag release.
 ## Schedules
 Keep a close eye on this page as these dates may change based on the findings of each testnet.
 
-### Testnet 1
+### Testnet 1 - Completed!
 - Start date: 4PM CET / 15:00 UTC, 5th December to 12th December
 - Reward pool: 1 million DATA
 - Duration: 7 days
-- **Testnet 1 will have reduced slashing penalties of 0.01% instead of 10%**
+- **Testnet 1 had a reduced slashing penalties of 0.01% instead of 10%**
 
 ### Testnet 2
-- Start date: 18th December to 8th January (tentative)
+- Start date: 21st December to 8th January (tentative)
 - Reward pool: 1.5 million DATA
-- Duration: 21 days
+- Duration: 18 days
+- **Testnet 1 will have reduced slashing penalties of 0.01% instead of 10%**
 
 ### Testnet 3
 - Start date: 15th January to 29th January (tentative)

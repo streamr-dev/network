@@ -12,7 +12,7 @@ sidebar_position: 6
 ### Testnet schedule
 Checkout the official [Streamr Testnets page](../streamr-testnets/testnets.md) for the latest news and updates related to the incentivized three testnets running over December 2023 and January 2024.
 
-### Migrating from a older network
+### Migrating from an older network
 See these helpful FAQs advice on:
 - [Migrating from Brubeck to Streamr 1.0](../streamr-testnets/testnet-faq.md#migrating-from-brubeck-to-streamr-10).
 - [Migrating from the Mumbai testing environment to Streamr 1.0](../streamr-testnets/testnet-faq.md#migrating-from-the-mumbai-testing-environment-to-stream-10).
@@ -99,28 +99,8 @@ A typical node fleet may have 2 - 10 nodes and use a node [Redundancy Factor](..
 
 Checkout the [Testnet FAQ](../streamr-testnets/testnet-faq#what-is-the-advantage-of-operators-running-multiple-nodes) for more commentary on running multiple nodes.
 
-<div id="testnet-configuration-node-config"></div>
-
-## Testnet node config
-Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/default.json). 
-
-```json
-{
-    "client": {
-        "auth": {
-            "privateKey": "NODE_PRIVATE_KEY"
-        }
-    },
-    "plugins": {
-        "operator": {
-            "operatorContractAddress": "OPERATOR_CONTRACT_ADDRESS"
-        }
-    }
-}
-```
-
 ## The Mumbai test environment
-The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens.
+The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens. You'll need to use the [Mumbai node config](./how-to-run-streamr-node.md#mumbai-node-config).
 
 You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 

@@ -283,11 +283,8 @@ Eventually, yes. If there's not enough available balance on the Operator you hav
 #### Do uncollected earnings impact my undelegation amount (Operator withdrawal)?
 Yes. Uncollected earnings are not counted in the undelegation process. If these uncollected earnings are significant and you want them to be counted then you could manually trigger the collection of earnings before undelegating.
 
-<!--TODO I have delegated my DATA to StreamRouter (0xe8e5737e23bc94b9f052d520b51a4087947cd164)
-Are the earnings transferred to my wallet automatically after a period of time or will I have to claim them from the operator page?
-
-Your earned tokens accumulate on the Operator, your share is calculated at the time of undelegation (withdrawal from the Operator). If there's uncollected earnings that are significant, you may want to manually trigger collection so they're apart of your shares before undelegating.
- -->
+#### I have delegated my DATA to an Operator. Are the earnings transferred to my wallet automatically after a period of time or will I have to claim them from the operator page?
+Your earned tokens accumulate on the Operator and your share is calculated at the time of undelegation (withdrawal from the Operator). If there's uncollected earnings that are significant, you may want to manually trigger collection so they're made apart of your share (which maps to earnings) before undelegating.
 
 ## Slashing & kicking
 #### What are the penalties for Testnet 1?
