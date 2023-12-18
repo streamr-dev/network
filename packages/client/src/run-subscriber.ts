@@ -25,8 +25,10 @@ const main = async () => {
         console.log('total connections (CM): ' + (node.stack.getLayer0Node().getTransport() as ConnectionManager).getAllConnectionPeerDescriptors().length)
         // @ts-expect-error private
         console.log('total connections: (DHTNODE)' + (node.stack.getLayer0Node() as DhtNode).getNumberOfConnections())
-        const stream = StreamPartIDUtils.parse('0x80da975ba0978d8df26b5ab3c2758a00d7ee298a/operator/coordination#0')
-        console.log('total stream neighbors on 0x80da975ba0978d8df26b5ab3c2758a00d7ee298a/operator/coordination: ' + node.getNeighbors(stream).length)
+        const stream1 = StreamPartIDUtils.parse('0x80da975ba0978d8df26b5ab3c2758a00d7ee298a/operator/coordination#0')
+        console.log('total stream neighbors on 0x80da975ba0978d8df26b5ab3c2758a00d7ee298a/operator/coordination: ' + node.getNeighbors(stream1).length)
+        const stream2 = StreamPartIDUtils.parse('0x6ee2d67541640f62ff44d5b1b417255437ed36cd/operator/coordination#0')
+        console.log('total stream neighbors on 0x6ee2d67541640f62ff44d5b1b417255437ed36cd/operator/coordination: ' + node.getNeighbors(stream2).length)
     }, 10000)
 
     // await client.subscribe({
@@ -74,6 +76,14 @@ const main = async () => {
 
     await client.subscribe({
         streamId: "0x80da975ba0978d8df26b5ab3c2758a00d7ee298a/operator/coordination",
+        partition: 0
+    }, () => {
+        numOfMessagesPerTenSeconds += 1
+        numOfMessagesPerMinute += 1
+    })
+
+    await client.subscribe({
+        streamId: "0x6ee2d67541640f62ff44d5b1b417255437ed36cd/operator/coordination",
         partition: 0
     }, () => {
         numOfMessagesPerTenSeconds += 1
