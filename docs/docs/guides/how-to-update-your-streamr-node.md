@@ -10,7 +10,7 @@ Keeping your node up to date is very important as new releases contain bug fixes
 This guide is meant for Linux and MacOS. Windows Powershell commands will be slightly different.
 :::
 
-To update your Streamr node from `v100.0.0-testnet-one.3` to `v100.0.0-testnet-one.4` (for example), run:
+To update your Streamr node from `v100.0.0-testnet-two.1` to `v100.0.0-testnet-one.4` (for example), run:
 
 ```
 sudo docker stop streamr && sudo docker rm streamr && sudo docker container prune --force
