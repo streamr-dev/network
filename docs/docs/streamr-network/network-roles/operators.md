@@ -20,6 +20,13 @@ Operators represent themselves on-chain with an Operator smart contract and itâ€
 
 Operators can join or leave Sponsorships at any time, subject to conditions like minimum stake and penalties for early withdrawal or misconduct. Under normal conditions their staked DATA tokens are returned in full.
 
+## StreamrOperator tokens
+When DATA is delegated to Operators, the Delegator receives `StreamrOperator` tokens, which are unique to each Operator. They are essentially a bookkeeping mechanism to represent what fraction of an Operator's total value each Delegator holds.
+
+They are essentially the "LP tokens" of Streamr. They are minted when a delegation happens, and burned when an undelegation happens. In most cases, Delegators don't need to care about the `StreamrOperator` tokens or interact with them directly in any way.
+
+In the beginning, when the Operator is first funded (usually by the owner), 1 OperatorToken = 1 DATA. Then, when the Operator earns rewards, the value of each OperatorToken increases, because there's now more DATA that can be claimed against those OperatorTokens. When undelegating, the Delegator receives their share of the total value of the Operator according to the amount of OperatorTokens they hold, which typically adds up to their original delegation plus their share of any earnings due to the now-increased valuation of the OperatorTokens within the Operator contracts.
+
 ### Streamr node interactions
 The "leader" node in the Operator's fleet of Streamr nodes will send heartbeat transactions once per day to the Operator contract. The transaction includes the contact details for the node.
 
